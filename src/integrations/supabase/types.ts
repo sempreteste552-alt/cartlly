@@ -112,6 +112,57 @@ export type Database = {
         }
         Relationships: []
       }
+      store_settings: {
+        Row: {
+          accent_color: string
+          created_at: string
+          custom_domain: string | null
+          id: string
+          logo_url: string | null
+          payment_boleto: boolean
+          payment_credit_card: boolean
+          payment_debit_card: boolean
+          payment_pix: boolean
+          primary_color: string
+          secondary_color: string
+          store_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          logo_url?: string | null
+          payment_boleto?: boolean
+          payment_credit_card?: boolean
+          payment_debit_card?: boolean
+          payment_pix?: boolean
+          primary_color?: string
+          secondary_color?: string
+          store_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string
+          created_at?: string
+          custom_domain?: string | null
+          id?: string
+          logo_url?: string | null
+          payment_boleto?: boolean
+          payment_credit_card?: boolean
+          payment_debit_card?: boolean
+          payment_pix?: boolean
+          primary_color?: string
+          secondary_color?: string
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
