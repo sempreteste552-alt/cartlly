@@ -4,9 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Upload, X, Loader2 } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 
 interface ProductFormProps {
   open: boolean;
@@ -18,6 +20,7 @@ interface ProductFormProps {
     stock: number;
     image_url: string | null;
     published: boolean;
+    category_id: string | null;
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
@@ -30,15 +33,15 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [stock, setStock] = useState(initialData?.stock?.toString() ?? "0");
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [published, setPublished] = useState(initialData?.published ?? false);
+  const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "");
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
+  const { data: categories } = useCategories();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      return alert("Arquivo muito grande. Máximo 5MB.");
-    }
+    if (file.size > 5 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 5MB.");
     const url = await uploadImage.mutateAsync(file);
     setImageUrl(url);
   };
@@ -52,18 +55,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       stock: parseInt(stock) || 0,
       image_url: imageUrl || null,
       published,
+      category_id: categoryId || null,
     });
   };
 
-  // Reset form when dialog opens with new data
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
-      setName("");
-      setDescription("");
-      setPrice("");
-      setStock("0");
-      setImageUrl("");
-      setPublished(false);
+      setName(""); setDescription(""); setPrice(""); setStock("0");
+      setImageUrl(""); setPublished(false); setCategoryId("");
     }
     onOpenChange(isOpen);
   };
@@ -83,6 +82,21 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} placeholder="Descrição do produto" rows={3} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Categoria</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sem categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem categoria</SelectItem>
+                {categories?.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -106,10 +120,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                 </button>
               </div>
             ) : (
-              <div
-                onClick={() => fileRef.current?.click()}
-                className="flex h-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors"
-              >
+              <div onClick={() => fileRef.current?.click()} className="flex h-32 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors">
                 {uploadImage.isPending ? (
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 ) : (
