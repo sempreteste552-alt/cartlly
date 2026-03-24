@@ -117,11 +117,14 @@ export type Database = {
           accent_color: string
           created_at: string
           custom_domain: string | null
+          gateway_environment: string
+          gateway_public_key: string | null
           id: string
           logo_url: string | null
           payment_boleto: boolean
           payment_credit_card: boolean
           payment_debit_card: boolean
+          payment_gateway: string | null
           payment_pix: boolean
           primary_color: string
           secondary_color: string
@@ -133,11 +136,14 @@ export type Database = {
           accent_color?: string
           created_at?: string
           custom_domain?: string | null
+          gateway_environment?: string
+          gateway_public_key?: string | null
           id?: string
           logo_url?: string | null
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
+          payment_gateway?: string | null
           payment_pix?: boolean
           primary_color?: string
           secondary_color?: string
@@ -149,11 +155,14 @@ export type Database = {
           accent_color?: string
           created_at?: string
           custom_domain?: string | null
+          gateway_environment?: string
+          gateway_public_key?: string | null
           id?: string
           logo_url?: string | null
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
+          payment_gateway?: string | null
           payment_pix?: boolean
           primary_color?: string
           secondary_color?: string
