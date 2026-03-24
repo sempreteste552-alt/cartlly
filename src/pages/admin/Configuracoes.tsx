@@ -5,47 +5,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload, X, Palette, CreditCard, Store, Globe, ShieldCheck, Zap } from "lucide-react";
+import { Loader2, Upload, X, Palette, CreditCard, Store, Globe, ShieldCheck, Zap, MapPin, Phone, MessageCircle, Share2, Image, Clock, Trash2 } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
+import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const GATEWAYS = [
-  {
-    id: "mercadopago",
-    name: "Mercado Pago",
-    description: "Gateway líder na América Latina. Aceita PIX, cartões, boleto.",
-    publicKeyLabel: "Public Key",
-    publicKeyPlaceholder: "APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    docsUrl: "https://www.mercadopago.com.br/developers/pt/docs",
-    color: "#009ee3",
-  },
-  {
-    id: "pagbank",
-    name: "PagBank (PagSeguro)",
-    description: "Soluções completas de pagamento do PagSeguro.",
-    publicKeyLabel: "Token Público",
-    publicKeyPlaceholder: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-    docsUrl: "https://dev.pagbank.uol.com.br",
-    color: "#41b64f",
-  },
-  {
-    id: "pagarme",
-    name: "Pagar.me",
-    description: "Infraestrutura de pagamentos da Stone Co.",
-    publicKeyLabel: "Public Key",
-    publicKeyPlaceholder: "pk_xxxxxxxxxxxxxxxxxxxxxxxx",
-    docsUrl: "https://docs.pagar.me",
-    color: "#65a300",
-  },
+  { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3" },
+  { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f" },
+  { id: "pagarme", name: "Pagar.me", description: "Infraestrutura de pagamentos da Stone Co.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://docs.pagar.me", color: "#65a300" },
 ];
 
 export default function Configuracoes() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const uploadLogo = useUploadStoreLogo();
+  const { data: banners } = useStoreBanners();
+  const createBanner = useCreateBanner();
+  const deleteBanner = useDeleteBanner();
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerFileRef = useRef<HTMLInputElement>(null);
 
   const [storeName, setStoreName] = useState("");
+  const [storeDescription, setStoreDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#6d28d9");
   const [secondaryColor, setSecondaryColor] = useState("#f5f3ff");
@@ -55,13 +40,27 @@ export default function Configuracoes() {
   const [paymentCreditCard, setPaymentCreditCard] = useState(false);
   const [paymentDebitCard, setPaymentDebitCard] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
-  const [paymentGateway, setPaymentGateway] = useState<string>("");
+  const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
+  // New fields
+  const [storeAddress, setStoreAddress] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+  const [storeWhatsapp, setStoreWhatsapp] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [sellViaWhatsapp, setSellViaWhatsapp] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(true);
+  const [storeLocation, setStoreLocation] = useState("");
 
   useEffect(() => {
     if (settings) {
       setStoreName(settings.store_name);
+      setStoreDescription((settings as any).store_description ?? "");
       setLogoUrl(settings.logo_url ?? "");
       setPrimaryColor(settings.primary_color);
       setSecondaryColor(settings.secondary_color);
@@ -74,6 +73,18 @@ export default function Configuracoes() {
       setPaymentGateway(settings.payment_gateway ?? "");
       setGatewayPublicKey(settings.gateway_public_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+      setStoreAddress((settings as any).store_address ?? "");
+      setStorePhone((settings as any).store_phone ?? "");
+      setStoreWhatsapp((settings as any).store_whatsapp ?? "");
+      setGoogleMapsUrl((settings as any).google_maps_url ?? "");
+      setFacebookUrl((settings as any).facebook_url ?? "");
+      setInstagramUrl((settings as any).instagram_url ?? "");
+      setTiktokUrl((settings as any).tiktok_url ?? "");
+      setTwitterUrl((settings as any).twitter_url ?? "");
+      setYoutubeUrl((settings as any).youtube_url ?? "");
+      setSellViaWhatsapp((settings as any).sell_via_whatsapp ?? false);
+      setStoreOpen((settings as any).store_open ?? true);
+      setStoreLocation((settings as any).store_location ?? "");
     }
   }, [settings]);
 
@@ -83,6 +94,18 @@ export default function Configuracoes() {
     if (file.size > 2 * 1024 * 1024) return alert("Máximo 2MB para logo.");
     const url = await uploadLogo.mutateAsync(file);
     setLogoUrl(url);
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB para banner.");
+    const ext = file.name.split(".").pop();
+    const fileName = `banner-${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type });
+    if (error) { toast.error("Erro no upload: " + error.message); return; }
+    const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
+    createBanner.mutate({ imageUrl: urlData.publicUrl });
   };
 
   const handleSave = () => {
@@ -102,17 +125,26 @@ export default function Configuracoes() {
       payment_gateway: paymentGateway || null,
       gateway_public_key: gatewayPublicKey.trim() || null,
       gateway_environment: gatewayEnvironment,
-    });
+      store_address: storeAddress.trim() || null,
+      store_phone: storePhone.trim() || null,
+      store_whatsapp: storeWhatsapp.trim() || null,
+      google_maps_url: googleMapsUrl.trim() || null,
+      store_description: storeDescription.trim() || null,
+      facebook_url: facebookUrl.trim() || null,
+      instagram_url: instagramUrl.trim() || null,
+      tiktok_url: tiktokUrl.trim() || null,
+      twitter_url: twitterUrl.trim() || null,
+      youtube_url: youtubeUrl.trim() || null,
+      sell_via_whatsapp: sellViaWhatsapp,
+      store_open: storeOpen,
+      store_location: storeLocation.trim() || null,
+    } as any);
   };
 
   const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   return (
@@ -122,19 +154,37 @@ export default function Configuracoes() {
         <p className="text-muted-foreground">Personalize sua loja</p>
       </div>
 
+      {/* Store Open/Closed */}
+      <Card className="border-border">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Clock className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">Status da Loja</p>
+              <p className="text-xs text-muted-foreground">Quando fechada, exibe "Loja em manutenção"</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={storeOpen ? "default" : "secondary"}>{storeOpen ? "Aberta" : "Fechada"}</Badge>
+            <Switch checked={storeOpen} onCheckedChange={setStoreOpen} />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Store Info */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Store className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Informações da Loja</CardTitle>
-          </div>
-          <CardDescription>Nome e identidade visual</CardDescription>
+          <div className="flex items-center gap-2"><Store className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Informações da Loja</CardTitle></div>
+          <CardDescription>Nome, descrição e identidade visual</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="storeName">Nome da Loja</Label>
-            <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Minha Loja" maxLength={100} />
+            <Label>Nome da Loja</Label>
+            <Input value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Minha Loja" maxLength={100} />
+          </div>
+          <div className="space-y-2">
+            <Label>Descrição</Label>
+            <Textarea value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} placeholder="Breve descrição da sua loja" maxLength={500} />
           </div>
           <div className="space-y-2">
             <Label>Logo</Label>
@@ -142,9 +192,7 @@ export default function Configuracoes() {
               {logoUrl ? (
                 <div className="relative">
                   <img src={logoUrl} alt="Logo" className="h-20 w-20 rounded-lg object-contain border border-border bg-card p-1" />
-                  <button type="button" onClick={() => setLogoUrl("")} className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground">
-                    <X className="h-3 w-3" />
-                  </button>
+                  <button type="button" onClick={() => setLogoUrl("")} className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
                 <div onClick={() => fileRef.current?.click()} className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors">
@@ -158,42 +206,116 @@ export default function Configuracoes() {
         </CardContent>
       </Card>
 
+      {/* Banners */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Image className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Banners</CardTitle></div>
+          <CardDescription>Carrossel de banners na página inicial da loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            {banners?.map((b) => (
+              <div key={b.id} className="relative group">
+                <img src={b.image_url} alt="Banner" className="w-full h-24 rounded-lg object-cover border border-border" />
+                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteBanner.mutate(b.id)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => bannerFileRef.current?.click()}>
+            <Upload className="mr-2 h-4 w-4" /> Adicionar Banner
+          </Button>
+          <input ref={bannerFileRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+        </CardContent>
+      </Card>
+
+      {/* Contact & Location */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Contato e Localização</CardTitle></div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input value={storePhone} onChange={(e) => setStorePhone(e.target.value)} placeholder="(11) 3333-3333" maxLength={20} />
+            </div>
+            <div className="space-y-2">
+              <Label>WhatsApp</Label>
+              <Input value={storeWhatsapp} onChange={(e) => setStoreWhatsapp(e.target.value)} placeholder="5511999999999" maxLength={20} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Endereço</Label>
+            <Input value={storeAddress} onChange={(e) => setStoreAddress(e.target.value)} placeholder="Rua, número, cidade - UF" maxLength={300} />
+          </div>
+          <div className="space-y-2">
+            <Label>Localização (exibida no topo)</Label>
+            <Input value={storeLocation} onChange={(e) => setStoreLocation(e.target.value)} placeholder="São Paulo, SP" maxLength={100} />
+          </div>
+          <div className="space-y-2">
+            <Label>Link Google Maps</Label>
+            <Input value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." maxLength={500} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* WhatsApp selling */}
+      <Card className="border-border">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="h-5 w-5 text-green-500" />
+            <div>
+              <p className="font-medium">Vender via WhatsApp</p>
+              <p className="text-xs text-muted-foreground">Permite que clientes finalizem pedidos pelo WhatsApp</p>
+            </div>
+          </div>
+          <Switch checked={sellViaWhatsapp} onCheckedChange={setSellViaWhatsapp} />
+        </CardContent>
+      </Card>
+
+      {/* Social URLs */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Share2 className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Redes Sociais</CardTitle></div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[
+            { label: "Instagram", value: instagramUrl, set: setInstagramUrl, placeholder: "https://instagram.com/sualoja" },
+            { label: "Facebook", value: facebookUrl, set: setFacebookUrl, placeholder: "https://facebook.com/sualoja" },
+            { label: "TikTok", value: tiktokUrl, set: setTiktokUrl, placeholder: "https://tiktok.com/@sualoja" },
+            { label: "YouTube", value: youtubeUrl, set: setYoutubeUrl, placeholder: "https://youtube.com/@sualoja" },
+            { label: "Twitter / X", value: twitterUrl, set: setTwitterUrl, placeholder: "https://x.com/sualoja" },
+          ].map((s) => (
+            <div key={s.label} className="space-y-1">
+              <Label className="text-xs">{s.label}</Label>
+              <Input value={s.value} onChange={(e) => s.set(e.target.value)} placeholder={s.placeholder} maxLength={300} />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Colors */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Cores da Loja</CardTitle>
-          </div>
-          <CardDescription>Personalize as cores do seu front-end</CardDescription>
+          <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: "Primária", id: "primaryColor", value: primaryColor, set: setPrimaryColor },
-              { label: "Secundária", id: "secondaryColor", value: secondaryColor, set: setSecondaryColor },
-              { label: "Destaque", id: "accentColor", value: accentColor, set: setAccentColor },
+              { label: "Primária", value: primaryColor, set: setPrimaryColor },
+              { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
+              { label: "Destaque", value: accentColor, set: setAccentColor },
             ].map((c) => (
-              <div key={c.id} className="space-y-2">
-                <Label htmlFor={c.id}>{c.label}</Label>
+              <div key={c.label} className="space-y-2">
+                <Label>{c.label}</Label>
                 <div className="flex items-center gap-2">
-                  <input type="color" id={c.id} value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
                   <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
                 </div>
               </div>
             ))}
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
-            <div className="flex gap-3 items-center">
-              <div className="h-10 w-10 rounded-lg" style={{ backgroundColor: primaryColor }} />
-              <div className="h-10 w-10 rounded-lg" style={{ backgroundColor: secondaryColor }} />
-              <div className="h-10 w-10 rounded-lg" style={{ backgroundColor: accentColor }} />
-              <div className="ml-2 flex-1 rounded-lg p-3" style={{ backgroundColor: secondaryColor }}>
-                <div className="h-3 w-24 rounded" style={{ backgroundColor: primaryColor }} />
-                <div className="mt-2 h-2 w-16 rounded" style={{ backgroundColor: accentColor, opacity: 0.6 }} />
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -201,25 +323,18 @@ export default function Configuracoes() {
       {/* Payment Methods */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Formas de Pagamento</CardTitle>
-          </div>
-          <CardDescription>Selecione os métodos aceitos na loja</CardDescription>
+          <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Formas de Pagamento</CardTitle></div>
         </CardHeader>
         <CardContent className="space-y-3">
           {[
             { label: "PIX", desc: "Pagamento instantâneo", value: paymentPix, set: setPaymentPix },
-            { label: "Boleto Bancário", desc: "Compensação em 1-3 dias úteis", value: paymentBoleto, set: setPaymentBoleto },
-            { label: "Cartão de Crédito", desc: "Parcelamento disponível", value: paymentCreditCard, set: setPaymentCreditCard },
+            { label: "Boleto Bancário", desc: "1-3 dias úteis", value: paymentBoleto, set: setPaymentBoleto },
+            { label: "Cartão de Crédito", desc: "Parcelamento", value: paymentCreditCard, set: setPaymentCreditCard },
             { label: "Cartão de Débito", desc: "Débito à vista", value: paymentDebitCard, set: setPaymentDebitCard },
-          ].map((method) => (
-            <div key={method.label} className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div>
-                <p className="text-sm font-medium">{method.label}</p>
-                <p className="text-xs text-muted-foreground">{method.desc}</p>
-              </div>
-              <Switch checked={method.value} onCheckedChange={method.set} />
+          ].map((m) => (
+            <div key={m.label} className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div><p className="text-sm font-medium">{m.label}</p><p className="text-xs text-muted-foreground">{m.desc}</p></div>
+              <Switch checked={m.value} onCheckedChange={m.set} />
             </div>
           ))}
         </CardContent>
@@ -228,111 +343,40 @@ export default function Configuracoes() {
       {/* Payment Gateway */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Gateway de Pagamento</CardTitle>
-          </div>
-          <CardDescription>Configure o processador de pagamentos da loja</CardDescription>
+          <div className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Gateway de Pagamento</CardTitle></div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Gateway selection */}
-          <div className="space-y-2">
-            <Label>Provedor</Label>
-            <Select value={paymentGateway || "none"} onValueChange={(v) => setPaymentGateway(v === "none" ? "" : v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um gateway" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                {GATEWAYS.map((gw) => (
-                  <SelectItem key={gw.id} value={gw.id}>{gw.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Gateway cards */}
-          {!paymentGateway && (
-            <div className="grid gap-3">
-              {GATEWAYS.map((gw) => (
-                <div
-                  key={gw.id}
-                  onClick={() => setPaymentGateway(gw.id)}
-                  className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-primary/50 transition-colors"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: gw.color + "18" }}>
-                    <CreditCard className="h-5 w-5" style={{ color: gw.color }} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{gw.name}</p>
-                    <p className="text-xs text-muted-foreground">{gw.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Selected gateway config */}
+          <Select value={paymentGateway || "none"} onValueChange={(v) => setPaymentGateway(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {GATEWAYS.map((gw) => <SelectItem key={gw.id} value={gw.id}>{gw.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           {selectedGateway && (
             <div className="space-y-4 rounded-lg border border-border p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-md" style={{ backgroundColor: selectedGateway.color + "18" }}>
-                    <CreditCard className="h-4 w-4" style={{ color: selectedGateway.color }} />
-                  </div>
-                  <span className="font-medium text-sm">{selectedGateway.name}</span>
-                </div>
-                <Badge variant={gatewayEnvironment === "production" ? "default" : "secondary"}>
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" style={{ color: selectedGateway.color }} />
+                <span className="font-medium text-sm">{selectedGateway.name}</span>
+                <Badge variant={gatewayEnvironment === "production" ? "default" : "secondary"} className="ml-auto">
                   {gatewayEnvironment === "production" ? "Produção" : "Sandbox"}
                 </Badge>
               </div>
-
+              <Select value={gatewayEnvironment} onValueChange={setGatewayEnvironment}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sandbox">Sandbox</SelectItem>
+                  <SelectItem value="production">Produção</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="space-y-2">
-                <Label>Ambiente</Label>
-                <Select value={gatewayEnvironment} onValueChange={setGatewayEnvironment}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
-                    <SelectItem value="production">Produção</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>{selectedGateway.publicKeyLabel}</Label>
+                <Input value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs" maxLength={500} />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="publicKey">{selectedGateway.publicKeyLabel}</Label>
-                <Input
-                  id="publicKey"
-                  value={gatewayPublicKey}
-                  onChange={(e) => setGatewayPublicKey(e.target.value)}
-                  placeholder={selectedGateway.publicKeyPlaceholder}
-                  maxLength={500}
-                  className="font-mono text-xs"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Chave pública para integração no front-end.
-                </p>
-              </div>
-
               <div className="flex items-start gap-2 rounded-md bg-muted p-3">
                 <ShieldCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                <div className="text-xs text-muted-foreground">
-                  <p className="font-medium text-foreground">Chave secreta (Secret Key)</p>
-                  <p className="mt-0.5">
-                    A chave secreta do {selectedGateway.name} deve ser configurada como variável de ambiente segura no backend, nunca no front-end.
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">A chave secreta deve ser configurada no backend.</p>
               </div>
-
-              <a
-                href={selectedGateway.docsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-xs text-primary hover:underline"
-              >
-                Documentação do {selectedGateway.name} →
-              </a>
             </div>
           )}
         </CardContent>
@@ -341,22 +385,17 @@ export default function Configuracoes() {
       {/* Domain */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Domínio</CardTitle>
-          </div>
-          <CardDescription>Configure o endereço da sua loja</CardDescription>
+          <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Domínio</CardTitle></div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="domain">Domínio personalizado</Label>
-            <Input id="domain" value={customDomain} onChange={(e) => setCustomDomain(e.target.value)} placeholder="minhaloja.com.br" maxLength={255} />
-            <p className="text-xs text-muted-foreground">Opcional. Configure o DNS do seu domínio para apontar para a loja.</p>
+            <Label>Domínio personalizado</Label>
+            <Input value={customDomain} onChange={(e) => setCustomDomain(e.target.value)} placeholder="minhaloja.com.br" maxLength={255} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Save button */}
+      {/* Save */}
       <div className="flex justify-end pb-6">
         <Button onClick={handleSave} disabled={updateSettings.isPending} size="lg">
           {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
