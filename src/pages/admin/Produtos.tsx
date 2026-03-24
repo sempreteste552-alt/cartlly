@@ -3,48 +3,51 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
+import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
+  const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const createCategory = useCreateCategory();
+  const deleteCategory = useDeleteCategory();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [catDialogOpen, setCatDialogOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+
+  const filteredProducts = products?.filter((p) => {
+    if (filterCategory === "all") return true;
+    if (filterCategory === "none") return !p.category_id;
+    return p.category_id === filterCategory;
+  });
 
   const handleCreate = (data: any) => {
+    if (data.category_id === "none") data.category_id = null;
     createProduct.mutate(data, { onSuccess: () => setFormOpen(false) });
-  };
-
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
   };
 
   const handleUpdate = (data: any) => {
     if (!editingProduct) return;
+    if (data.category_id === "none") data.category_id = null;
     updateProduct.mutate({ id: editingProduct.id, ...data }, { onSuccess: () => setEditingProduct(null) });
   };
 
@@ -55,6 +58,12 @@ export default function Produtos() {
   const handleDelete = () => {
     if (!deleteId) return;
     deleteProduct.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+  };
+
+  const handleAddCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    createCategory.mutate(newCatName, { onSuccess: () => setNewCatName("") });
   };
 
   const formatPrice = (price: number) =>
@@ -75,13 +84,38 @@ export default function Produtos() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
           <p className="text-muted-foreground">Gerencie o catálogo da sua loja</p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Produto
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
+            <Tag className="mr-2 h-4 w-4" />
+            Categorias
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Produto
+          </Button>
+        </div>
       </div>
 
-      {!products?.length ? (
+      {/* Filter */}
+      {categories && categories.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filtrar:</span>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas categorias</SelectItem>
+              <SelectItem value="none">Sem categoria</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {!filteredProducts?.length ? (
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-muted-foreground/40" />
@@ -100,6 +134,7 @@ export default function Produtos() {
               <TableRow>
                 <TableHead className="w-16">Imagem</TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>Categoria</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>Estoque</TableHead>
                 <TableHead>Status</TableHead>
@@ -107,7 +142,7 @@ export default function Produtos() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     {product.image_url ? (
@@ -119,6 +154,13 @@ export default function Produtos() {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>
+                    {product.categories?.name ? (
+                      <Badge variant="secondary">{product.categories.name}</Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>{formatPrice(product.price)}</TableCell>
                   <TableCell>
                     <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>
@@ -126,15 +168,11 @@ export default function Produtos() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Switch
-                      checked={product.published}
-                      onCheckedChange={() => handleTogglePublished(product)}
-                      aria-label="Publicar produto"
-                    />
+                    <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
+                      <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
@@ -149,40 +187,49 @@ export default function Produtos() {
         </Card>
       )}
 
-      {/* Create form */}
-      <ProductForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={handleCreate}
-        loading={createProduct.isPending}
-      />
-
-      {/* Edit form */}
-      <ProductForm
-        open={!!editingProduct}
-        onOpenChange={(open) => !open && setEditingProduct(null)}
-        onSubmit={handleUpdate}
-        initialData={editingProduct}
-        loading={updateProduct.isPending}
-      />
+      {/* Create / Edit forms */}
+      <ProductForm open={formOpen} onOpenChange={setFormOpen} onSubmit={handleCreate} loading={createProduct.isPending} />
+      <ProductForm open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)} onSubmit={handleUpdate} initialData={editingProduct} loading={updateProduct.isPending} />
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover produto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O produto será removido permanentemente.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Remover
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Categories management dialog */}
+      <Dialog open={catDialogOpen} onOpenChange={setCatDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Gerenciar Categorias</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddCategory} className="flex gap-2">
+            <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="Nova categoria" maxLength={100} />
+            <Button type="submit" size="sm" disabled={createCategory.isPending}>Adicionar</Button>
+          </form>
+          <div className="mt-2 space-y-1 max-h-60 overflow-auto">
+            {categories?.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma categoria criada</p>
+            )}
+            {categories?.map((cat) => (
+              <div key={cat.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                <span className="text-sm">{cat.name}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteCategory.mutate(cat.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

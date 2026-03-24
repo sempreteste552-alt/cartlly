@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
-export type Product = Tables<"products">;
+export type Product = Tables<"products"> & { categories?: { name: string } | null };
 export type ProductInsert = TablesInsert<"products">;
 export type ProductUpdate = TablesUpdate<"products">;
 
@@ -16,7 +16,7 @@ export function useProducts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("*, categories(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Product[];
