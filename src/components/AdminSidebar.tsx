@@ -91,7 +91,7 @@ export function AdminSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                  <a href="/loja" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
                     <ExternalLink className="h-4 w-4" />
                     {!collapsed && <span>Ver Loja</span>}
                   </a>
