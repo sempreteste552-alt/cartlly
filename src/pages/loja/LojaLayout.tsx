@@ -1,0 +1,242 @@
+import { useState } from "react";
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { usePublicStoreSettings } from "@/hooks/usePublicStore";
+import { useCart, type CartItem } from "@/hooks/useCart";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+
+export interface LojaContextType {
+  cart: ReturnType<typeof useCart>;
+  settings: any;
+  searchTerm: string;
+  setSearchTerm: (s: string) => void;
+}
+
+import { createContext, useContext } from "react";
+const LojaContext = createContext<LojaContextType | null>(null);
+export const useLojaContext = () => useContext(LojaContext)!;
+
+export default function LojaLayout() {
+  const { data: settings, isLoading } = usePublicStoreSettings();
+  const cart = useCart();
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+
+  // Store closed check
+  if (!isLoading && settings && !settings.store_open) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl">🚧</div>
+          <h1 className="text-3xl font-bold">Loja Fechada</h1>
+          <p className="text-gray-400">Estamos temporariamente fechados. Volte em breve!</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      </div>
+    );
+  }
+
+  const storeName = settings?.store_name || "Loja";
+
+  return (
+    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm }}>
+      <div className="min-h-screen bg-white text-black">
+        {/* Top bar */}
+        <div className="bg-black text-white text-xs py-1">
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {settings?.store_phone && (
+                <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{settings.store_phone}</span>
+              )}
+              {settings?.store_location && (
+                <span className="flex items-center gap-1 hidden sm:flex"><MapPin className="h-3 w-3" />{settings.store_location}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">Instagram</a>}
+              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">Facebook</a>}
+              {settings?.store_whatsapp && (
+                <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-gray-300">
+                  <MessageCircle className="h-3 w-3" /> WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+            {/* Mobile menu */}
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
+              {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+
+            {/* Logo */}
+            <Link to="/loja" className="flex items-center gap-2 shrink-0">
+              {settings?.logo_url ? (
+                <img src={settings.logo_url} alt={storeName} className="h-8 max-w-[120px] object-contain" />
+              ) : (
+                <span className="text-xl font-bold">{storeName}</span>
+              )}
+            </Link>
+
+            {/* Search */}
+            <div className="flex-1 max-w-xl mx-auto hidden sm:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar produtos..."
+                  className="pl-9 bg-gray-50 border-gray-300 rounded-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && navigate("/loja")}
+                />
+              </div>
+            </div>
+
+            {/* Cart */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cart.count > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-black text-white">
+                      {cart.count}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md">
+                <SheetHeader>
+                  <SheetTitle>Carrinho ({cart.count})</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-3 flex-1 overflow-auto">
+                  {cart.items.length === 0 ? (
+                    <p className="text-center text-gray-500 py-8">Carrinho vazio</p>
+                  ) : (
+                    cart.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
+                        ) : (
+                          <div className="h-16 w-16 rounded bg-gray-100" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.name}</p>
+                          <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
+                            <span className="text-sm w-6 text-center">{item.quantity}</span>
+                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity + 1)}>+</Button>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={() => cart.removeItem(item.id)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {cart.items.length > 0 && (
+                  <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total</span>
+                      <span>{formatPrice(cart.total)}</span>
+                    </div>
+                    <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja/checkout")}>
+                      Finalizar Compra
+                    </Button>
+                    {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
+                      <Button
+                        variant="outline"
+                        className="w-full border-green-500 text-green-600 hover:bg-green-50"
+                        onClick={() => {
+                          const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${formatPrice(i.price * i.quantity)}`).join("\n");
+                          const text = `Olá! Gostaria de fazer o pedido:\n\n${msg}\n\nTotal: ${formatPrice(cart.total)}`;
+                          window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+                        }}
+                      >
+                        <MessageCircle className="mr-2 h-4 w-4" /> Pedir via WhatsApp
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Mobile search */}
+          <div className="sm:hidden px-4 pb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar produtos..."
+                className="pl-9 bg-gray-50 border-gray-300 rounded-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main>
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-black text-white mt-12">
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="font-bold text-lg mb-3">{storeName}</h3>
+                {settings?.store_description && <p className="text-gray-400 text-sm">{settings.store_description}</p>}
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">Contato</h3>
+                <div className="space-y-2 text-sm text-gray-400">
+                  {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
+                  {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
+                  {settings?.store_address && <p>📍 {settings.store_address}</p>}
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">Redes Sociais</h3>
+                <div className="flex gap-3">
+                  {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Instagram</a>}
+                  {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Facebook</a>}
+                  {settings?.tiktok_url && <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">TikTok</a>}
+                  {settings?.youtube_url && <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">YouTube</a>}
+                  {settings?.twitter_url && <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Twitter</a>}
+                </div>
+                {settings?.google_maps_url && (
+                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm mt-3 inline-flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Ver no Google Maps
+                  </a>
+                )}
+              </div>
+            </div>
+            <Separator className="my-6 bg-gray-800" />
+            <p className="text-center text-xs text-gray-500">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
+          </div>
+        </footer>
+      </div>
+    </LojaContext.Provider>
+  );
+}
