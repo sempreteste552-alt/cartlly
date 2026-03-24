@@ -4,9 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Upload, X, Palette, CreditCard, Store, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Upload, X, Palette, CreditCard, Store, Globe, ShieldCheck, Zap } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
+
+const GATEWAYS = [
+  {
+    id: "mercadopago",
+    name: "Mercado Pago",
+    description: "Gateway líder na América Latina. Aceita PIX, cartões, boleto.",
+    publicKeyLabel: "Public Key",
+    publicKeyPlaceholder: "APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    docsUrl: "https://www.mercadopago.com.br/developers/pt/docs",
+    color: "#009ee3",
+  },
+  {
+    id: "pagbank",
+    name: "PagBank (PagSeguro)",
+    description: "Soluções completas de pagamento do PagSeguro.",
+    publicKeyLabel: "Token Público",
+    publicKeyPlaceholder: "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+    docsUrl: "https://dev.pagbank.uol.com.br",
+    color: "#41b64f",
+  },
+  {
+    id: "pagarme",
+    name: "Pagar.me",
+    description: "Infraestrutura de pagamentos da Stone Co.",
+    publicKeyLabel: "Public Key",
+    publicKeyPlaceholder: "pk_xxxxxxxxxxxxxxxxxxxxxxxx",
+    docsUrl: "https://docs.pagar.me",
+    color: "#65a300",
+  },
+];
 
 export default function Configuracoes() {
   const { data: settings, isLoading } = useStoreSettings();
@@ -24,6 +55,9 @@ export default function Configuracoes() {
   const [paymentCreditCard, setPaymentCreditCard] = useState(false);
   const [paymentDebitCard, setPaymentDebitCard] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
+  const [paymentGateway, setPaymentGateway] = useState<string>("");
+  const [gatewayPublicKey, setGatewayPublicKey] = useState("");
+  const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
 
   useEffect(() => {
     if (settings) {
@@ -37,6 +71,9 @@ export default function Configuracoes() {
       setPaymentCreditCard(settings.payment_credit_card);
       setPaymentDebitCard(settings.payment_debit_card);
       setCustomDomain(settings.custom_domain ?? "");
+      setPaymentGateway(settings.payment_gateway ?? "");
+      setGatewayPublicKey(settings.gateway_public_key ?? "");
+      setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
     }
   }, [settings]);
 
@@ -62,8 +99,13 @@ export default function Configuracoes() {
       payment_credit_card: paymentCreditCard,
       payment_debit_card: paymentDebitCard,
       custom_domain: customDomain.trim() || null,
+      payment_gateway: paymentGateway || null,
+      gateway_public_key: gatewayPublicKey.trim() || null,
+      gateway_environment: gatewayEnvironment,
     });
   };
+
+  const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
 
   if (isLoading) {
     return (
@@ -105,15 +147,8 @@ export default function Configuracoes() {
                   </button>
                 </div>
               ) : (
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors"
-                >
-                  {uploadLogo.isPending ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  ) : (
-                    <Upload className="h-5 w-5 text-muted-foreground" />
-                  )}
+                <div onClick={() => fileRef.current?.click()} className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-primary/50 transition-colors">
+                  {uploadLogo.isPending ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
                 </div>
               )}
               <p className="text-xs text-muted-foreground">PNG ou JPG, máximo 2MB</p>
@@ -134,29 +169,20 @@ export default function Configuracoes() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="primaryColor">Primária</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" id="primaryColor" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                <Input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+            {[
+              { label: "Primária", id: "primaryColor", value: primaryColor, set: setPrimaryColor },
+              { label: "Secundária", id: "secondaryColor", value: secondaryColor, set: setSecondaryColor },
+              { label: "Destaque", id: "accentColor", value: accentColor, set: setAccentColor },
+            ].map((c) => (
+              <div key={c.id} className="space-y-2">
+                <Label htmlFor={c.id}>{c.label}</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" id={c.id} value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="secondaryColor">Secundária</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" id="secondaryColor" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                <Input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="accentColor">Destaque</Label>
-              <div className="flex items-center gap-2">
-                <input type="color" id="accentColor" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
-              </div>
-            </div>
+            ))}
           </div>
-          {/* Preview */}
           <div className="rounded-lg border border-border p-4">
             <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
             <div className="flex gap-3 items-center">
@@ -196,6 +222,119 @@ export default function Configuracoes() {
               <Switch checked={method.value} onCheckedChange={method.set} />
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Payment Gateway */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Gateway de Pagamento</CardTitle>
+          </div>
+          <CardDescription>Configure o processador de pagamentos da loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Gateway selection */}
+          <div className="space-y-2">
+            <Label>Provedor</Label>
+            <Select value={paymentGateway || "none"} onValueChange={(v) => setPaymentGateway(v === "none" ? "" : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um gateway" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {GATEWAYS.map((gw) => (
+                  <SelectItem key={gw.id} value={gw.id}>{gw.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Gateway cards */}
+          {!paymentGateway && (
+            <div className="grid gap-3">
+              {GATEWAYS.map((gw) => (
+                <div
+                  key={gw.id}
+                  onClick={() => setPaymentGateway(gw.id)}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:border-primary/50 transition-colors"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: gw.color + "18" }}>
+                    <CreditCard className="h-5 w-5" style={{ color: gw.color }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{gw.name}</p>
+                    <p className="text-xs text-muted-foreground">{gw.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Selected gateway config */}
+          {selectedGateway && (
+            <div className="space-y-4 rounded-lg border border-border p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md" style={{ backgroundColor: selectedGateway.color + "18" }}>
+                    <CreditCard className="h-4 w-4" style={{ color: selectedGateway.color }} />
+                  </div>
+                  <span className="font-medium text-sm">{selectedGateway.name}</span>
+                </div>
+                <Badge variant={gatewayEnvironment === "production" ? "default" : "secondary"}>
+                  {gatewayEnvironment === "production" ? "Produção" : "Sandbox"}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ambiente</Label>
+                <Select value={gatewayEnvironment} onValueChange={setGatewayEnvironment}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
+                    <SelectItem value="production">Produção</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="publicKey">{selectedGateway.publicKeyLabel}</Label>
+                <Input
+                  id="publicKey"
+                  value={gatewayPublicKey}
+                  onChange={(e) => setGatewayPublicKey(e.target.value)}
+                  placeholder={selectedGateway.publicKeyPlaceholder}
+                  maxLength={500}
+                  className="font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Chave pública para integração no front-end.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-md bg-muted p-3">
+                <ShieldCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                <div className="text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground">Chave secreta (Secret Key)</p>
+                  <p className="mt-0.5">
+                    A chave secreta do {selectedGateway.name} deve ser configurada como variável de ambiente segura no backend, nunca no front-end.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={selectedGateway.docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-xs text-primary hover:underline"
+              >
+                Documentação do {selectedGateway.name} →
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
 
