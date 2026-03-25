@@ -1,21 +1,29 @@
 import { useState } from "react";
-import { useAllTenants } from "@/hooks/useUserRole";
+import { useAllTenants, useAllPlans } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
+  const { data: plans } = useAllPlans();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
+
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -50,6 +58,61 @@ export default function SuperAdminTenants() {
     else { toast.success("Tenant desbloqueado"); queryClient.invalidateQueries({ queryKey: ["all_tenants"] }); }
   };
 
+  const openAssignPlan = (tenant: any) => {
+    setSelectedTenant(tenant);
+    setSelectedPlanId(tenant.subscription?.plan_id || "");
+    setPlanDialogOpen(true);
+  };
+
+  const handleAssignPlan = async () => {
+    if (!selectedTenant || !selectedPlanId) return;
+    const userId = selectedTenant.user_id;
+
+    if (selectedTenant.subscription) {
+      // Update existing subscription
+      const { error } = await supabase
+        .from("tenant_subscriptions")
+        .update({
+          plan_id: selectedPlanId,
+          status: "active",
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        } as any)
+        .eq("user_id", userId);
+      if (error) { toast.error("Erro: " + error.message); return; }
+    } else {
+      // Create new subscription
+      const { error } = await supabase
+        .from("tenant_subscriptions")
+        .insert({
+          user_id: userId,
+          plan_id: selectedPlanId,
+          status: "active",
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        } as any);
+      if (error) { toast.error("Erro: " + error.message); return; }
+    }
+
+    toast.success("Plano atribuído com sucesso!");
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+    setPlanDialogOpen(false);
+  };
+
+  const handleRemovePlan = async () => {
+    if (!selectedTenant?.subscription) return;
+    const { error } = await supabase
+      .from("tenant_subscriptions")
+      .delete()
+      .eq("user_id", selectedTenant.user_id);
+    if (error) toast.error("Erro: " + error.message);
+    else {
+      toast.success("Plano removido");
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      setPlanDialogOpen(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
   }
@@ -58,7 +121,7 @@ export default function SuperAdminTenants() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Tenants</h1>
-        <p className="text-muted-foreground">Gerenciar todas as lojas da plataforma</p>
+        <p className="text-muted-foreground">Gerenciar todas as lojas da plataforma ({tenants?.length || 0} tenants)</p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -66,7 +129,7 @@ export default function SuperAdminTenants() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar tenant..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {["all", "active", "trial", "blocked", "no_plan"].map((f) => (
             <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)}>
               {{ all: "Todos", active: "Ativos", trial: "Teste", blocked: "Bloqueados", no_plan: "Sem plano" }[f]}
@@ -89,7 +152,14 @@ export default function SuperAdminTenants() {
                     </div>
                     <div>
                       <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">{tenant.store?.store_name || "Sem loja"} {tenant.store?.store_slug ? `• /${tenant.store.store_slug}` : ""}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {tenant.store?.store_name || "Sem loja"} {tenant.store?.store_slug ? `• /${tenant.store.store_slug}` : ""}
+                      </p>
+                      {tenant.subscription?.tenant_plans && (
+                        <p className="text-xs text-primary font-medium mt-0.5">
+                          Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -116,12 +186,13 @@ export default function SuperAdminTenants() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "/loja", "_blank")}>
+                        <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
                           <Eye className="mr-2 h-4 w-4" /> Ver Loja
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info("Funcionalidade em desenvolvimento")}>
-                          <Mail className="mr-2 h-4 w-4" /> Enviar Mensagem
+                        <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
+                          <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {tenant.subscription?.status !== "blocked" ? (
                           <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
                             <Ban className="mr-2 h-4 w-4" /> Bloquear
@@ -140,6 +211,54 @@ export default function SuperAdminTenants() {
           ))
         )}
       </div>
+
+      {/* Assign Plan Dialog */}
+      <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5" />
+              Gerenciar Plano — {selectedTenant?.display_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Plano</Label>
+              <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
+                <SelectContent>
+                  {plans?.filter(p => p.active).map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/mês (até {plan.max_products} produtos)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedTenant?.subscription && (
+              <div className="rounded-lg border border-border p-3 text-sm">
+                <p className="text-muted-foreground">Plano atual: <span className="font-medium text-foreground">{(selectedTenant.subscription.tenant_plans as any)?.name || "—"}</span></p>
+                <p className="text-muted-foreground">Status: <Badge variant="outline" className="ml-1">{selectedTenant.subscription.status}</Badge></p>
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              {selectedTenant?.subscription && (
+                <Button variant="destructive" size="sm" onClick={handleRemovePlan}>
+                  Remover Plano
+                </Button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" onClick={() => setPlanDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={handleAssignPlan} disabled={!selectedPlanId}>
+                  {selectedTenant?.subscription ? "Alterar Plano" : "Atribuir Plano"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

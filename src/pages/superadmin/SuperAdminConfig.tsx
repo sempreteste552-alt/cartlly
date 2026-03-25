@@ -1,22 +1,200 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+interface PlatformConfig {
+  platform_name: string;
+  platform_email: string;
+  default_trial_days: number;
+  auto_confirm_emails: boolean;
+  maintenance_mode: boolean;
+  allow_new_registrations: boolean;
+  default_plan_id: string;
+  mercadopago_global_key: string;
+  pagbank_global_key: string;
+}
+
+const defaultConfig: PlatformConfig = {
+  platform_name: "Cartlly",
+  platform_email: "",
+  default_trial_days: 7,
+  auto_confirm_emails: false,
+  maintenance_mode: false,
+  allow_new_registrations: true,
+  default_plan_id: "",
+  mercadopago_global_key: "",
+  pagbank_global_key: "",
+};
 
 export default function SuperAdminConfig() {
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
+
+  const { isLoading } = useQuery({
+    queryKey: ["platform_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("*");
+      if (error) throw error;
+
+      const merged = { ...defaultConfig };
+      data?.forEach((row: any) => {
+        if (row.key in merged) {
+          (merged as any)[row.key] = row.value?.value ?? (merged as any)[row.key];
+        }
+      });
+      setConfig(merged);
+      return data;
+    },
+  });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const entries = Object.entries(config);
+      for (const [key, val] of entries) {
+        const { data: existing } = await supabase
+          .from("platform_settings")
+          .select("id")
+          .eq("key", key)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("platform_settings")
+            .update({ value: { value: val } as any, updated_at: new Date().toISOString() } as any)
+            .eq("key", key);
+        } else {
+          await supabase
+            .from("platform_settings")
+            .insert({ key, value: { value: val } as any } as any);
+        }
+      }
+      toast.success("Configurações salvas!");
+      queryClient.invalidateQueries({ queryKey: ["platform_settings"] });
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateField = (key: keyof PlatformConfig, value: any) => {
+    setConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  if (isLoading) return <Skeleton className="h-64" />;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Configurações</h1>
-        <p className="text-muted-foreground">Configurações globais da plataforma</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Configurações</h1>
+          <p className="text-muted-foreground">Configurações globais da plataforma</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+          Salvar
+        </Button>
       </div>
 
+      {/* General */}
       <Card className="border-border">
-        <CardContent className="flex flex-col items-center justify-center p-12">
-          <Settings className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium">Em desenvolvimento</h3>
-          <p className="text-sm text-muted-foreground text-center mt-2 max-w-md">
-            Configurações de credenciais de pagamento globais (Mercado Pago / PagBank), 
-            teste de conexão, configurações de email e automações.
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Globe className="h-5 w-5 text-primary" /> Geral
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Nome da Plataforma</Label>
+              <Input value={config.platform_name} onChange={e => updateField("platform_name", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail da Plataforma</Label>
+              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@cartlly.com" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Dias de Teste Padrão</Label>
+            <Input type="number" value={config.default_trial_days} onChange={e => updateField("default_trial_days", parseInt(e.target.value) || 7)} className="max-w-32" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Shield className="h-5 w-5 text-primary" /> Segurança e Acesso
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Permitir Novos Cadastros</Label>
+              <p className="text-xs text-muted-foreground">Permitir que novos lojistas criem contas</p>
+            </div>
+            <Switch checked={config.allow_new_registrations} onCheckedChange={v => updateField("allow_new_registrations", v)} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Auto-confirmar E-mails</Label>
+              <p className="text-xs text-muted-foreground">Pular verificação de e-mail no cadastro</p>
+            </div>
+            <Switch checked={config.auto_confirm_emails} onCheckedChange={v => updateField("auto_confirm_emails", v)} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 p-3 bg-destructive/5">
+            <div>
+              <Label className="text-destructive">Modo Manutenção</Label>
+              <p className="text-xs text-muted-foreground">Bloqueia acesso de tenants à plataforma</p>
+            </div>
+            <Switch checked={config.maintenance_mode} onCheckedChange={v => updateField("maintenance_mode", v)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Gateways */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CreditCard className="h-5 w-5 text-primary" /> Gateways Globais
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Chaves globais de gateway que serão usadas como fallback quando tenants não tiverem suas próprias chaves configuradas.
           </p>
+          <div className="space-y-2">
+            <Label>Mercado Pago — Access Token Global</Label>
+            <Input
+              type="password"
+              value={config.mercadopago_global_key}
+              onChange={e => updateField("mercadopago_global_key", e.target.value)}
+              placeholder="TEST-xxxx..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>PagBank — Token Global</Label>
+            <Input
+              type="password"
+              value={config.pagbank_global_key}
+              onChange={e => updateField("pagbank_global_key", e.target.value)}
+              placeholder="Token PagBank..."
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
