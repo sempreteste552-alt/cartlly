@@ -141,7 +141,7 @@ export default function LojaHome() {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -151,6 +151,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   buttonTextColor: string;
   primaryColor: string;
   accentColor: string;
+  wishlist: ReturnType<typeof import("@/hooks/useWishlist").useWishlist>;
 }) {
   const handleShare = async (e: React.MouseEvent, product: any) => {
     e.preventDefault();
