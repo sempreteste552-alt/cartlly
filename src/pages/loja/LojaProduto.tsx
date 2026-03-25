@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw } from "lucide-react";
+import { ProductReviews } from "@/components/ProductReviews";
 
 export default function LojaProduto() {
   const { id } = useParams();
@@ -125,6 +126,9 @@ export default function LojaProduto() {
           )}
         </div>
       </div>
+
+      {/* Reviews */}
+      <ProductReviews productId={product.id} />
 
       {/* Similar products */}
       {similarProducts.length > 0 && (
