@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Check, Package } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Sparkles, Check, Package, ImagePlus, FileText, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCategories, useCreateCategory } from "@/hooks/useCategories";
-import { useCreateProduct } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 
 interface AICatalogImportProps {
@@ -28,33 +28,62 @@ interface ExtractedProduct {
 export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const { user } = useAuth();
   const { data: categories } = useCategories();
-  const createCategory = useCreateCategory();
-  const createProduct = useCreateProduct();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [catalogText, setCatalogText] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [products, setProducts] = useState<ExtractedProduct[]>([]);
   const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<"input" | "review">("input");
+  const [inputMode, setInputMode] = useState<"text" | "image">("text");
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + imageFiles.length > 5) {
+      toast.error("Máximo de 5 imagens");
+      return;
+    }
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith("image/")) { toast.error(`${f.name} não é uma imagem`); return false; }
+      if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} excede 10MB`); return false; }
+      return true;
+    });
+
+    setImageFiles((prev) => [...prev, ...validFiles]);
+    validFiles.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string]);
+      reader.readAsDataURL(f);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleAnalyze = async () => {
-    if (!catalogText.trim()) return toast.error("Cole o texto do catálogo");
+    if (inputMode === "text" && !catalogText.trim()) return toast.error("Cole o texto do catálogo");
+    if (inputMode === "image" && imagePreviews.length === 0) return toast.error("Adicione ao menos uma imagem");
     setAnalyzing(true);
+
     try {
-      const { data, error } = await supabase.functions.invoke("ai-catalog", {
-        body: {
-          catalogText: catalogText.trim(),
-          existingCategories: categories?.map((c) => c.name) ?? [],
-        },
-      });
+      const body: any = { existingCategories: categories?.map((c) => c.name) ?? [] };
+
+      if (inputMode === "text") {
+        body.catalogText = catalogText.trim();
+      } else {
+        body.catalogImages = imagePreviews; // base64 data URLs
+      }
+
+      const { data, error } = await supabase.functions.invoke("ai-catalog", { body });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       const extracted = (data?.products || []).map((p: any) => ({ ...p, selected: true }));
-      if (extracted.length === 0) {
-        toast.error("Nenhum produto encontrado no texto");
-        return;
-      }
+      if (extracted.length === 0) { toast.error("Nenhum produto encontrado"); return; }
       setProducts(extracted);
       setStep("review");
       toast.success(`${extracted.length} produtos encontrados!`);
@@ -66,7 +95,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   };
 
   const toggleProduct = (i: number) => {
-    setProducts((prev) => prev.map((p, idx) => idx === i ? { ...p, selected: !p.selected } : p));
+    setProducts((prev) => prev.map((p, idx) => (idx === i ? { ...p, selected: !p.selected } : p)));
   };
 
   const handleImport = async () => {
@@ -75,7 +104,6 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
     setImporting(true);
 
     try {
-      // Create missing categories
       const existingCatNames = categories?.map((c) => c.name.toLowerCase()) ?? [];
       const newCategories = [...new Set(selected.map((p) => p.category))].filter(
         (c) => !existingCatNames.includes(c.toLowerCase())
@@ -93,7 +121,6 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
         if (!error && data) catMap[catName.toLowerCase()] = data.id;
       }
 
-      // Create products
       let created = 0;
       for (const p of selected) {
         const categoryId = catMap[p.category.toLowerCase()] || null;
@@ -111,10 +138,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
 
       toast.success(`${created} produtos importados com sucesso!`);
       onOpenChange(false);
-      setStep("input");
-      setCatalogText("");
-      setProducts([]);
-      // Refresh queries
+      resetState();
       window.location.reload();
     } catch (err: any) {
       toast.error("Erro ao importar: " + err.message);
@@ -123,11 +147,19 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
     }
   };
 
+  const resetState = () => {
+    setStep("input");
+    setCatalogText("");
+    setProducts([]);
+    setImageFiles([]);
+    setImagePreviews([]);
+  };
+
   const formatPrice = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { setStep("input"); setProducts([]); } onOpenChange(o); }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) resetState(); onOpenChange(o); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -139,32 +171,91 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
         {step === "input" ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Cole o texto do seu catálogo (lista de produtos, planilha copiada, descrição em texto livre).
-              A IA irá analisar e extrair os produtos automaticamente.
+              Cole um texto ou envie imagens do seu catálogo. A IA irá escanear e extrair os produtos automaticamente.
             </p>
-            <div className="space-y-2">
-              <Label>Texto do Catálogo</Label>
-              <Textarea
-                value={catalogText}
-                onChange={(e) => setCatalogText(e.target.value)}
-                placeholder={`Exemplo:\nCamiseta Básica Preta - R$ 49,90 - Tam P, M, G\nCalça Jeans Slim - R$ 129,90 - Estoque: 25\nTênis Runner Pro - R$ 299,00 - Esportivo`}
-                rows={10}
-                maxLength={10000}
-              />
-              <p className="text-xs text-muted-foreground">{catalogText.length}/10000 caracteres</p>
-            </div>
+
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "text" | "image")}>
+              <TabsList className="w-full">
+                <TabsTrigger value="text" className="flex-1 gap-2">
+                  <FileText className="h-4 w-4" /> Texto
+                </TabsTrigger>
+                <TabsTrigger value="image" className="flex-1 gap-2">
+                  <ImagePlus className="h-4 w-4" /> Imagem
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="text" className="space-y-2 mt-4">
+                <Label>Texto do Catálogo</Label>
+                <Textarea
+                  value={catalogText}
+                  onChange={(e) => setCatalogText(e.target.value)}
+                  placeholder={`Exemplo:\nCamiseta Básica Preta - R$ 49,90 - Tam P, M, G\nCalça Jeans Slim - R$ 129,90 - Estoque: 25`}
+                  rows={10}
+                  maxLength={10000}
+                />
+                <p className="text-xs text-muted-foreground">{catalogText.length}/10000 caracteres</p>
+              </TabsContent>
+
+              <TabsContent value="image" className="space-y-4 mt-4">
+                <Label>Imagens do Catálogo (máx. 5)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Envie fotos de cardápios, tabelas de preços, catálogos impressos ou screenshots. A IA fará a leitura visual (OCR).
+                </p>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {imagePreviews.map((src, i) => (
+                      <div key={i} className="relative group rounded-lg overflow-hidden border border-border">
+                        <img src={src} alt={`Catálogo ${i + 1}`} className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(i)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {imagePreviews.length < 5 && (
+                  <Button
+                    variant="outline"
+                    className="w-full border-dashed h-20"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImagePlus className="mr-2 h-5 w-5" />
+                    Adicionar Imagens
+                  </Button>
+                )}
+              </TabsContent>
+            </Tabs>
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button onClick={handleAnalyze} disabled={analyzing || !catalogText.trim()}>
+              <Button
+                onClick={handleAnalyze}
+                disabled={analyzing || (inputMode === "text" ? !catalogText.trim() : imagePreviews.length === 0)}
+              >
                 {analyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Analisar com IA
+                {analyzing ? "Escaneando..." : "Analisar com IA"}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {products.filter((p) => p.selected).length} de {products.length} produtos selecionados para importação.
+              {products.filter((p) => p.selected).length} de {products.length} produtos selecionados.
             </p>
 
             <div className="space-y-2 max-h-[50vh] overflow-y-auto">
