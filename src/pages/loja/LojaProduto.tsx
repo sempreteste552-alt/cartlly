@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 import { ProductReviews } from "@/components/ProductReviews";
 
@@ -33,7 +35,8 @@ export default function LojaProduto() {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
-
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [customerName, setCustomerName] = useState("");
   // Group variants by type
   const variantGroups = useMemo(() => {
     if (!variants || variants.length === 0) return {};
@@ -181,15 +184,66 @@ export default function LojaProduto() {
               <Button
                 variant="outline"
                 className="border-green-500 text-green-600 hover:bg-green-50 h-12"
-                onClick={() => {
-                  const text = `Olá! Tenho interesse no produto:\n\n${product.name}\nPreço: ${formatPrice(product.price)}\n\n${product.image_url || ""}`;
-                  window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
-                }}
+                onClick={() => setWhatsappDialogOpen(true)}
               >
                 <MessageCircle className="mr-2 h-5 w-5" /> WhatsApp
               </Button>
             )}
           </div>
+
+          {/* WhatsApp Name Dialog */}
+          <Dialog open={whatsappDialogOpen} onOpenChange={setWhatsappDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-green-600" />
+                  Falar pelo WhatsApp
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Informe seu nome para enviarmos uma mensagem sobre este produto.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="customer-name">Seu nome</Label>
+                  <Input
+                    id="customer-name"
+                    placeholder="Digite seu nome..."
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                </div>
+                <div className="rounded-lg border p-3 bg-muted/50 text-sm space-y-1">
+                  <p className="font-medium">{product.name}</p>
+                  <p className="text-muted-foreground">{formatPrice(effectivePrice)}</p>
+                </div>
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={!customerName.trim()}
+                  onClick={() => {
+                    const selectedVarText = Object.entries(selectedVariants)
+                      .filter(([, val]) => val)
+                      .map(([type, varId]) => {
+                        const v = variants?.find((vr) => vr.id === varId);
+                        return v ? `${variantTypeLabels[type] || type}: ${v.variant_value}` : "";
+                      })
+                      .filter(Boolean)
+                      .join("\n");
+
+                    const text = `Olá! Meu nome é *${customerName.trim()}* e tenho interesse no produto:\n\n📦 *${product.name}*\n💰 Preço: *${formatPrice(effectivePrice)}*${selectedVarText ? `\n🏷️ ${selectedVarText}` : ""}\n\nGostaria de mais informações!`;
+                    window.open(
+                      `https://wa.me/${settings!.store_whatsapp!.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`,
+                      "_blank"
+                    );
+                    setWhatsappDialogOpen(false);
+                    setCustomerName("");
+                  }}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" /> Enviar Mensagem
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <Separator />
 
