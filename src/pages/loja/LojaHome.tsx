@@ -2,13 +2,15 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
+import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Package, Star } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 
 export default function LojaHome() {
   const { data: products, isLoading: prodLoading } = usePublicProducts();
@@ -18,6 +20,7 @@ export default function LojaHome() {
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
+  const { data: productImagesMap } = usePublicProductImages(productIds);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -102,13 +105,13 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
             <div key={catName}>
               <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">{catName}</h2>
-              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} />
+              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} />
             </div>
           ))
         )}
@@ -117,27 +120,28 @@ export default function LojaHome() {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
   ratings?: Record<string, { average: number; count: number }>;
+  productImagesMap?: Record<string, string[]>;
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {products.map((product) => {
         const r = ratings?.[product.id];
+        const additionalImages = productImagesMap?.[product.id] ?? [];
         return (
           <Link key={product.id} to={`/loja/produto/${product.id}`} className="group">
             <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
-              <div className="aspect-square bg-gray-50 overflow-hidden">
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="h-12 w-12 text-gray-300" />
-                  </div>
-                )}
+              <div className="aspect-square overflow-hidden">
+                <ProductImageSlideshow
+                  mainImage={product.image_url}
+                  additionalImages={additionalImages}
+                  alt={product.name}
+                  className="group-hover:scale-[1.02] transition-transform duration-300"
+                />
               </div>
               <div className="p-3">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>

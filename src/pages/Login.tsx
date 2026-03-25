@@ -51,7 +51,7 @@ export default function Login() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/admin");
+        navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
       toast.error(error.message || "Erro ao autenticar");
