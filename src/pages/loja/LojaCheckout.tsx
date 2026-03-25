@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, MessageCircle, Ticket, X } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
+import ShippingCalculator from "@/components/ShippingCalculator";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
