@@ -3,6 +3,7 @@ import {
   Package,
   ShoppingCart,
   Settings,
+  Ticket,
   ExternalLink,
   LogOut,
   Store,
