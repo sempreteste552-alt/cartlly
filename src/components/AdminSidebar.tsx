@@ -11,6 +11,8 @@ import {
   Truck,
   Zap,
   Users,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
@@ -32,6 +34,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -54,6 +57,7 @@ export function AdminSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
+  const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
 
   const isActive = (path: string) => {
@@ -120,6 +124,18 @@ export function AdminSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              {pushNotifs.isSupported && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => pushNotifs.isSubscribed ? pushNotifs.unsubscribe() : pushNotifs.subscribe()}
+                    disabled={pushNotifs.loading}
+                    className="hover:bg-sidebar-accent/50"
+                  >
+                    {pushNotifs.isSubscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                    {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href={storeSlug ? `/loja/${storeSlug}` : "/loja"} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">

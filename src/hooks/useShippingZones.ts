@@ -23,6 +23,7 @@ export function useShippingZones() {
       const { data, error } = await supabase
         .from("shipping_zones")
         .select("*")
+        .eq("user_id", user!.id)
         .order("cep_start", { ascending: true });
       if (error) throw error;
       return data as ShippingZone[];
