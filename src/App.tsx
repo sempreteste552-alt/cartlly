@@ -12,6 +12,9 @@ import Produtos from "./pages/admin/Produtos";
 import Pedidos from "./pages/admin/Pedidos";
 import Configuracoes from "./pages/admin/Configuracoes";
 import Cupons from "./pages/admin/Cupons";
+import Gateway from "./pages/admin/Gateway";
+import Frete from "./pages/admin/Frete";
+import Pagamentos from "./pages/admin/Pagamentos";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
@@ -52,6 +55,9 @@ const App = () => (
               <Route path="pedidos" element={<Pedidos />} />
               <Route path="cupons" element={<Cupons />} />
               <Route path="config" element={<Configuracoes />} />
+              <Route path="gateway" element={<Gateway />} />
+              <Route path="frete" element={<Frete />} />
+              <Route path="pagamentos" element={<Pagamentos />} />
             </Route>
             {/* Default store */}
             <Route path="/loja" element={<LojaLayout />}>

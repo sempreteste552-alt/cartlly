@@ -1,0 +1,234 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
+import { toast } from "sonner";
+
+const GATEWAYS = [
+  { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
+  { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
+  { id: "pagarme", name: "Pagar.me", description: "Infraestrutura de pagamentos da Stone Co.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://docs.pagar.me", color: "#65a300", testEndpoint: "" },
+];
+
+type TestStatus = "idle" | "testing" | "success" | "error";
+
+export default function Gateway() {
+  const { data: settings, isLoading } = useStoreSettings();
+  const updateSettings = useUpdateStoreSettings();
+
+  const [paymentGateway, setPaymentGateway] = useState("");
+  const [gatewayPublicKey, setGatewayPublicKey] = useState("");
+  const [gatewaySecretKey, setGatewaySecretKey] = useState("");
+  const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
+  const [testStatus, setTestStatus] = useState<TestStatus>("idle");
+  const [testMessage, setTestMessage] = useState("");
+
+  useEffect(() => {
+    if (settings) {
+      setPaymentGateway(settings.payment_gateway ?? "");
+      setGatewayPublicKey(settings.gateway_public_key ?? "");
+      setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
+      setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+    }
+  }, [settings]);
+
+  const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
+
+  const handleTestApi = async () => {
+    if (!paymentGateway || !gatewayPublicKey) {
+      toast.error("Configure o gateway e a chave pública primeiro.");
+      return;
+    }
+    setTestStatus("testing");
+    setTestMessage("");
+
+    try {
+      // Test by calling create-payment edge function with a test flag
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/create-payment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ test: true, gateway: paymentGateway }),
+        }
+      );
+      const data = await response.json();
+
+      if (response.ok || data.test_ok) {
+        setTestStatus("success");
+        setTestMessage(`Gateway ${selectedGateway?.name} está respondendo. Ambiente: ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}`);
+      } else {
+        setTestStatus("error");
+        setTestMessage(data.error || "Gateway não respondeu corretamente.");
+      }
+    } catch (err: any) {
+      setTestStatus("error");
+      setTestMessage("Erro de conexão: " + err.message);
+    }
+  };
+
+  const handleSave = () => {
+    if (!settings) return;
+    updateSettings.mutate({
+      id: settings.id,
+      payment_gateway: paymentGateway || null,
+      gateway_public_key: gatewayPublicKey.trim() || null,
+      gateway_secret_key: gatewaySecretKey.trim() || null,
+      gateway_environment: gatewayEnvironment,
+    } as any);
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Gateway de Pagamento</h1>
+        <p className="text-muted-foreground">Configure seu gateway para processar pagamentos</p>
+      </div>
+
+      {/* Gateway Status Card */}
+      <Card className={`border-border ${paymentGateway ? "border-l-4" : ""}`} style={paymentGateway && selectedGateway ? { borderLeftColor: selectedGateway.color } : {}}>
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <Zap className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium">Status</p>
+              <p className="text-xs text-muted-foreground">
+                {paymentGateway ? `${selectedGateway?.name} - ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}` : "Nenhum gateway configurado"}
+              </p>
+            </div>
+          </div>
+          <Badge variant={paymentGateway ? (gatewayEnvironment === "production" ? "default" : "secondary") : "outline"}>
+            {paymentGateway ? (gatewayEnvironment === "production" ? "Ativo" : "Sandbox") : "Inativo"}
+          </Badge>
+        </CardContent>
+      </Card>
+
+      {/* Gateway Selection */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Selecionar Gateway</CardTitle></div>
+          <CardDescription>Escolha o processador de pagamentos</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Select value={paymentGateway || "none"} onValueChange={(v) => setPaymentGateway(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {GATEWAYS.map((gw) => <SelectItem key={gw.id} value={gw.id}>{gw.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          {selectedGateway && (
+            <div className="space-y-4 rounded-lg border border-border p-4">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" style={{ color: selectedGateway.color }} />
+                <span className="font-medium text-sm">{selectedGateway.name}</span>
+                <span className="text-xs text-muted-foreground ml-1">— {selectedGateway.description}</span>
+              </div>
+
+              <Select value={gatewayEnvironment} onValueChange={setGatewayEnvironment}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
+                  <SelectItem value="production">Produção</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="space-y-2">
+                <Label>{selectedGateway.publicKeyLabel}</Label>
+                <Input value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs" maxLength={500} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Chave Secreta / Access Token</Label>
+                <Input type="password" value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs" maxLength={500} />
+              </div>
+
+              <div className="flex items-start gap-2 rounded-md bg-muted p-3">
+                <ShieldCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                <p className="text-xs text-muted-foreground">Suas chaves são armazenadas de forma segura e usadas apenas no servidor.</p>
+              </div>
+
+              {/* Webhook URL */}
+              <div className="rounded-md bg-blue-50 dark:bg-blue-950 p-3 text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">URL do Webhook (configure no painel do gateway):</p>
+                <code className="block bg-blue-100 dark:bg-blue-900 p-2 rounded text-[10px] break-all">
+                  {`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/payment-webhook?gateway=${paymentGateway}`}
+                </code>
+              </div>
+
+              {/* Docs link */}
+              <a href={selectedGateway.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                📖 Ver documentação do {selectedGateway.name}
+              </a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* API Test */}
+      {selectedGateway && (
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Teste de API</CardTitle></div>
+            <CardDescription>Verifique se as credenciais estão funcionando</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Gateway</p>
+                <p className="font-medium">{selectedGateway.name}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Ambiente</p>
+                <p className="font-medium">{gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Chave Pública</p>
+                <p className="font-mono text-xs truncate">{gatewayPublicKey ? `${gatewayPublicKey.slice(0, 12)}...` : "Não configurada"}</p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Chave Secreta</p>
+                <p className="font-mono text-xs">{gatewaySecretKey ? "••••••••" : "Não configurada"}</p>
+              </div>
+            </div>
+
+            <Button onClick={handleTestApi} disabled={testStatus === "testing"} variant="outline" className="w-full">
+              {testStatus === "testing" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {testStatus === "idle" && <Zap className="mr-2 h-4 w-4" />}
+              {testStatus === "success" && <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />}
+              {testStatus === "error" && <XCircle className="mr-2 h-4 w-4 text-red-500" />}
+              {testStatus === "testing" ? "Testando..." : "Testar Conexão"}
+            </Button>
+
+            {testMessage && (
+              <div className={`rounded-lg p-3 text-sm flex items-start gap-2 ${
+                testStatus === "success" ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300"
+              }`}>
+                {testStatus === "success" ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
+                <p>{testMessage}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-end pb-6">
+        <Button onClick={handleSave} disabled={updateSettings.isPending} size="lg">
+          {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar Gateway
+        </Button>
+      </div>
+    </div>
+  );
+}
