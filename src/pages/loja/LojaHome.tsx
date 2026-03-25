@@ -220,7 +220,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   className="w-full mt-2"
                   size="sm"
                   style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-                  disabled={product.stock <= 0}
+                  disabled={product.stock <= 0 && !(product as any).made_to_order}
                   onClick={(e) => {
                     e.preventDefault();
                     cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
