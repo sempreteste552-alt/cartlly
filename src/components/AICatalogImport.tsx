@@ -197,9 +197,9 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
               </TabsContent>
 
               <TabsContent value="image" className="space-y-4 mt-4">
-                <Label>Imagens do Catálogo (máx. 5)</Label>
+                <Label>Imagens do Catálogo (máx. 10)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Envie fotos de cardápios, tabelas de preços, catálogos impressos ou screenshots. A IA fará a leitura visual (OCR).
+                  Aceita JPG, PNG, WebP, HEIC, BMP, GIF, TIFF — até 20MB por imagem. Envie fotos de cardápios, tabelas, catálogos impressos ou screenshots.
                 </p>
 
                 <input
