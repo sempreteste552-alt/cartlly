@@ -4,6 +4,7 @@ import { useLojaContext } from "./LojaLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useValidateCoupon } from "@/hooks/useCoupons";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import { useCreateReview } from "@/hooks/useProductReviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -22,9 +23,11 @@ export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
   const navigate = useNavigate();
   const { customer } = useCustomerAuth();
+  const createReview = useCreateReview();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<CheckoutPhase>("info");
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -33,7 +36,11 @@ export default function LojaCheckout() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Auto-fill from customer profile
+  // Review state
+  const [reviewRatings, setReviewRatings] = useState<Record<string, number>>({});
+  const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
+  const [reviewsSubmitted, setReviewsSubmitted] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (customer) {
       setName(customer.name || "");
@@ -141,10 +148,14 @@ export default function LojaCheckout() {
     if (!phone.trim()) return toast.error("Informe seu telefone");
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
 
+    // Save items before clearing cart
+    const savedItems = [...cart.items];
+
     setLoading(true);
     try {
       const order = await createOrder();
       setOrderId(order.id);
+      setOrderItems(savedItems);
 
       if (viaWhatsApp && settings?.store_whatsapp) {
         const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${formatPrice(i.price * i.quantity)}`).join("\n");
@@ -154,10 +165,8 @@ export default function LojaCheckout() {
         cart.clearCart();
         setPhase("success");
       } else if (hasGateway) {
-        // Go to payment step
         setPhase("payment");
       } else {
-        // No gateway, just complete
         cart.clearCart();
         setPhase("success");
       }
@@ -168,22 +177,121 @@ export default function LojaCheckout() {
     }
   };
 
+  const handleSubmitReview = async (productId: string) => {
+    const rating = reviewRatings[productId];
+    if (!rating) return toast.error("Selecione uma nota");
+    try {
+      await createReview.mutateAsync({
+        product_id: productId,
+        customer_name: name || "Cliente",
+        customer_email: email || undefined,
+        rating,
+        comment: reviewComments[productId] || undefined,
+      });
+      setReviewsSubmitted((prev) => new Set(prev).add(productId));
+      toast.success("Avaliação enviada! Obrigado!");
+    } catch {
+      toast.error("Erro ao enviar avaliação");
+    }
+  };
+
+  const handleShareProduct = async (item: any) => {
+    const url = `${window.location.origin}/loja/produto/${item.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: item.name, text: `Confira: ${item.name}`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    }
+  };
+
   if (phase === "success") {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-        <h1 className="text-2xl font-bold mt-4">Pedido Realizado!</h1>
-        <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso.</p>
-        {orderId && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-gray-500">Código de rastreio:</p>
-            <code className="block bg-gray-100 rounded-lg p-3 font-mono text-sm">{orderId.slice(0, 8)}</code>
-            <Button variant="outline" className="mt-2" onClick={() => navigate(`/loja/rastreio/${orderId.slice(0, 8)}`)}>
-              📦 Rastrear Pedido
-            </Button>
-          </div>
+      <div className="max-w-lg mx-auto px-4 py-10">
+        <div className="text-center mb-8">
+          <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+          <h1 className="text-2xl font-bold mt-4">Pedido Realizado!</h1>
+          <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso.</p>
+          {orderId && (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-gray-500">Código de rastreio:</p>
+              <code className="block bg-gray-100 rounded-lg p-3 font-mono text-sm">{orderId.slice(0, 8)}</code>
+              <Button variant="outline" className="mt-2" onClick={() => navigate(`/loja/rastreio/${orderId.slice(0, 8)}`)}>
+                📦 Rastrear Pedido
+              </Button>
+            </div>
+          )}
+          <Button className="mt-4 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
+        </div>
+
+        {/* Review prompt */}
+        {orderItems.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Avalie seus produtos
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">Sua opinião nos ajuda a melhorar!</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {orderItems.map((item) => (
+                <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {item.image_url && <img src={item.image_url} alt={item.name} className="h-12 w-12 rounded object-cover" />}
+                      <p className="font-medium text-sm">{item.name}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => handleShareProduct(item)} title="Compartilhar">
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {reviewsSubmitted.has(item.id) ? (
+                    <p className="text-sm text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
+                  ) : (
+                    <>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setReviewRatings((prev) => ({ ...prev, [item.id]: star }))}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${
+                                (reviewRatings[item.id] || 0) >= star
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <Textarea
+                        placeholder="Deixe um comentário (opcional)"
+                        value={reviewComments[item.id] || ""}
+                        onChange={(e) => setReviewComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        className="text-sm"
+                        rows={2}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleSubmitReview(item.id)}
+                        disabled={!reviewRatings[item.id] || createReview.isPending}
+                      >
+                        {createReview.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                        Enviar Avaliação
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         )}
-        <Button className="mt-4 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
       </div>
     );
   }
@@ -198,6 +306,7 @@ export default function LojaCheckout() {
           total={finalTotal}
           settings={settings}
           onSuccess={() => {
+            setOrderItems([...cart.items]);
             cart.clearCart();
             setPhase("success");
           }}
