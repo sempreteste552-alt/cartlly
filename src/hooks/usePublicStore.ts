@@ -4,16 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 export function usePublicProducts(storeUserId?: string) {
   return useQuery({
     queryKey: ["public_products", storeUserId],
+    enabled: !!storeUserId,
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*, categories(name)")
         .eq("published", true)
+        .eq("user_id", storeUserId!)
         .order("created_at", { ascending: false });
-      if (storeUserId) {
-        query = query.eq("user_id", storeUserId);
-      }
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -54,12 +52,13 @@ export function usePublicStoreBySlug(slug: string | undefined) {
 export function usePublicCategories(storeUserId?: string) {
   return useQuery({
     queryKey: ["public_categories", storeUserId],
+    enabled: !!storeUserId,
     queryFn: async () => {
-      let query = supabase.from("categories").select("*").order("name");
-      if (storeUserId) {
-        query = query.eq("user_id", storeUserId);
-      }
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("user_id", storeUserId!)
+        .order("name");
       if (error) throw error;
       return data;
     },
@@ -77,7 +76,6 @@ export function useAllProductReviews(productIds: string[]) {
         .select("product_id, rating")
         .in("product_id", productIds);
       if (error) throw error;
-      // Compute averages
       const map: Record<string, { sum: number; count: number }> = {};
       data?.forEach((r: any) => {
         if (!map[r.product_id]) map[r.product_id] = { sum: 0, count: 0 };

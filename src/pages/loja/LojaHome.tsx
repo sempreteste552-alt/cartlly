@@ -19,7 +19,6 @@ export default function LojaHome() {
   const { data: products, isLoading: prodLoading } = usePublicProducts(storeUserId);
   const { data: banners } = usePublicBanners(storeUserId);
   const { data: categories } = usePublicCategories(storeUserId);
-  const { cart, searchTerm, settings, storeUserId } = useLojaContext();
   const wishlist = useWishlist(storeUserId);
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);

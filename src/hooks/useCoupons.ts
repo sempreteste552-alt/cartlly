@@ -12,6 +12,7 @@ export function useCoupons() {
       const { data, error } = await supabase
         .from("coupons")
         .select("*")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -90,12 +91,10 @@ export function useValidateCoupon() {
       if (error) throw error;
       if (!data) throw new Error("Cupom inválido ou expirado");
 
-      // Check expiry
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
         throw new Error("Cupom expirado");
       }
 
-      // Check usage limit
       if (data.max_uses && data.used_count >= data.max_uses) {
         throw new Error("Cupom atingiu o limite de usos");
       }

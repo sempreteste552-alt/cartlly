@@ -23,14 +23,14 @@ export function useStoreBanners() {
 export function usePublicBanners(userId?: string) {
   return useQuery({
     queryKey: ["public_banners", userId],
+    enabled: !!userId,
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("store_banners")
         .select("*")
         .eq("active", true)
+        .eq("user_id", userId!)
         .order("sort_order", { ascending: true });
-      if (userId) query = query.eq("user_id", userId);
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

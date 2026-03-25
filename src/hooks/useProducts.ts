@@ -17,6 +17,7 @@ export function useProducts() {
       const { data, error } = await supabase
         .from("products")
         .select("*, categories(name)")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Product[];
