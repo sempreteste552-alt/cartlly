@@ -16,6 +16,7 @@ import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
 import LojaCheckout from "./pages/loja/LojaCheckout";
+import LojaRastreio from "./pages/loja/LojaRastreio";
 import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
