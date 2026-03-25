@@ -1,14 +1,8 @@
-Multi-tenant SaaS e-commerce platform (Cartlly). Portuguese UI.
-- Backend: Lovable Cloud (Supabase) - PostgreSQL, auth, storage, realtime
-- Design: Dark sidebar admin (hsl 224 30% 12%), primary purple (hsl 243 75% 59%). Public store: black & white theme.
-- Auth: Supabase email/password with auto-profile trigger. Super admin by fixed email (admin@cartlly.com).
-- Roles: app_role enum (super_admin, tenant), user_roles table, has_role() security definer function
-- Routes: /login, /superadmin/*, /admin/*, /loja (home, produto/:id, checkout, rastreio, rastreio/:orderId), /loja/:slug/*
-- Tables: profiles, products, categories, orders (shipping_cost, shipping_cep, shipping_method), order_items, order_status_history, store_settings (shipping_enabled, shipping_flat_rate, shipping_free_above, gateway_secret_key), store_banners, product_reviews, user_roles, product_images, tenant_plans, tenant_subscriptions, coupons, payments
-- Realtime: orders, order_status_history tables enabled
-- Payment Gateways: Mercado Pago + PagBank (per-tenant credentials). Methods: PIX, Cartão de Crédito, Boleto. Edge functions: create-payment, payment-webhook
-- Shipping: Calculator by CEP in checkout, configurable flat rate and free shipping threshold
-- Features: Super admin panel, Product CRUD, AI catalog import (text + image OCR), Order management with visual timeline, Order tracking page with realtime updates, Shipping calculator, Banners (image + video), Cart, Checkout with coupon + shipping + payment gateway, WhatsApp ordering, Product reviews, Dynamic dashboard, Configurable colors, Multi-tenant via slug
-- Plans: Básico R$49.90, Profissional R$89.90, 7-day free trial
-- Buckets: product-images, store-assets (both public)
-- Edge Functions: ai-catalog, create-payment, payment-webhook
+Admin store management system (Loja Admin V0). Portuguese UI language.
+- Backend: Lovable Cloud (Supabase) - PostgreSQL, auth, storage
+- Design: Dark sidebar (hsl 224 30% 12%), primary purple (hsl 243 75% 59%)
+- Auth: Supabase email/password with auto-profile creation trigger
+- Routes: /login, /admin (dashboard), /admin/produtos, /admin/pedidos, /admin/config, /loja, /loja/rastreio
+- Tables: profiles, products, product_variants, categories, orders, order_items, order_status_history, payments, coupons, store_settings, store_banners, product_images, product_reviews, shipping_zones, user_roles, tenant_plans, tenant_subscriptions
+- Features: Multi-gateway payments (MercadoPago/PagBank), product variants (color/size/model), ViaCEP shipping zones, realtime order tracking, advanced analytics dashboard, coupon system
+- Gateways: mercadopago, pagbank, pagarme - credentials per tenant
