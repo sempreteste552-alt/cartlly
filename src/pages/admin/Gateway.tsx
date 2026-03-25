@@ -93,6 +93,7 @@ export default function Gateway() {
   }
 
   return (
+    <LockedFeature isLocked={gatewayLocked} featureName="Gateway de Pagamento" logoUrl={settings?.logo_url || undefined}>
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Gateway de Pagamento</h1>
