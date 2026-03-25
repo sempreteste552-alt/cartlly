@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/AdminLayout";
 import Login from "./pages/Login";
+import ContaEmAnalise from "./pages/ContaEmAnalise";
 import Dashboard from "./pages/admin/Dashboard";
 import Produtos from "./pages/admin/Produtos";
 import Pedidos from "./pages/admin/Pedidos";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/loja" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
             {/* Super Admin */}
             <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
               <Route index element={<SuperAdminDashboard />} />

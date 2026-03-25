@@ -30,6 +30,7 @@ export default function Login() {
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {
+        // ProtectedRoute will check profile status and redirect if pending
         navigate("/admin", { replace: true });
       }
     }
@@ -53,7 +54,7 @@ export default function Login() {
           setLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -61,11 +62,14 @@ export default function Login() {
             emailRedirectTo: window.location.origin,
           },
         });
-        if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+        if (signUpError) throw signUpError;
+        // Sign out after signup so user sees the pending screen on next login
+        await supabase.auth.signOut();
+        toast.success("Conta criada! Sua conta está em análise pelo administrador.");
+        setIsRegister(false);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) throw loginError;
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
