@@ -211,6 +211,8 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
+                ) : (product as any).made_to_order ? (
+                  <p className="text-xs mt-1" style={{ color: primaryColor }}>📦 Sob encomenda</p>
                 ) : (
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
