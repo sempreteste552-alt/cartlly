@@ -58,6 +58,8 @@ const App = () => (
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
               <Route path="checkout" element={<LojaCheckout />} />
+              <Route path="rastreio" element={<LojaRastreio />} />
+              <Route path="rastreio/:orderId" element={<LojaRastreio />} />
             </Route>
             {/* Multi-tenant: store by slug */}
             <Route path="/loja/:slug" element={<LojaLayout />}>
