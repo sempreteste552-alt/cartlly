@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Upload, X, Loader2, GripVertical } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { AIProductTools } from "@/components/AIProductTools";
 
 interface ProductFormProps {
   open: boolean;
@@ -104,8 +105,20 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
 
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} placeholder="Descrição do produto" rows={3} />
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} placeholder="Descrição do produto" rows={3} />
           </div>
+
+          {/* AI Tools */}
+          <AIProductTools
+            name={name}
+            description={description}
+            price={price}
+            category={categories?.find(c => c.id === categoryId)?.name || ""}
+            imageUrl={imageUrl}
+            onApplyDescription={setDescription}
+            onApplyName={setName}
+            onApplyPrice={setPrice}
+          />
 
           <div className="space-y-2">
             <Label>Categoria</Label>
