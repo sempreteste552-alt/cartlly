@@ -1,0 +1,134 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from "@supabase/supabase-js";
+
+export function useCustomerAuth() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [customer, setCustomer] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load customer profile when user changes
+  useEffect(() => {
+    if (!user) {
+      setCustomer(null);
+      return;
+    }
+    loadCustomerProfile(user.id);
+  }, [user]);
+
+  const loadCustomerProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("auth_user_id", userId)
+      .maybeSingle();
+    setCustomer(data);
+  };
+
+  const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name, is_customer: true },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+
+    if (data.user) {
+      const { error: customerErr } = await supabase.from("customers").insert({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name,
+        email,
+      } as any);
+      if (customerErr) throw customerErr;
+    }
+
+    return data;
+  };
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const updateProfile = async (updates: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
+    cpf?: string;
+  }) => {
+    if (!user) throw new Error("Não autenticado");
+    const { data, error } = await supabase
+      .from("customers")
+      .update({ ...updates, updated_at: new Date().toISOString() } as any)
+      .eq("auth_user_id", user.id)
+      .select()
+      .single();
+    if (error) throw error;
+    setCustomer(data);
+    return data;
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  const getOrders = async (storeUserId: string) => {
+    if (!customer) return [];
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("user_id", storeUserId)
+      .eq("customer_email", customer.email)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  };
+
+  return {
+    session,
+    user,
+    customer,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+    updateProfile,
+    resetPassword,
+    getOrders,
+    refreshProfile: () => user && loadCustomerProfile(user.id),
+  };
+}
