@@ -18,6 +18,7 @@ import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/use
 import { ProductForm } from "@/components/ProductForm";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AICatalogImport } from "@/components/AICatalogImport";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
