@@ -42,6 +42,7 @@ export default function Configuracoes() {
   const [customDomain, setCustomDomain] = useState("");
   const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
+  const [gatewaySecretKey, setGatewaySecretKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   // New fields
   const [storeAddress, setStoreAddress] = useState("");
@@ -76,6 +77,7 @@ export default function Configuracoes() {
       setPaymentGateway(settings.payment_gateway ?? "");
       setGatewayPublicKey(settings.gateway_public_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+      setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setStoreAddress((settings as any).store_address ?? "");
       setStorePhone((settings as any).store_phone ?? "");
       setStoreWhatsapp((settings as any).store_whatsapp ?? "");
@@ -131,6 +133,7 @@ export default function Configuracoes() {
       custom_domain: customDomain.trim() || null,
       payment_gateway: paymentGateway || null,
       gateway_public_key: gatewayPublicKey.trim() || null,
+      gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
       store_address: storeAddress.trim() || null,
       store_phone: storePhone.trim() || null,
@@ -388,9 +391,19 @@ export default function Configuracoes() {
                 <Label>{selectedGateway.publicKeyLabel}</Label>
                 <Input value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs" maxLength={500} />
               </div>
+              <div className="space-y-2">
+                <Label>Chave Secreta / Access Token</Label>
+                <Input type="password" value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs" maxLength={500} />
+              </div>
               <div className="flex items-start gap-2 rounded-md bg-muted p-3">
                 <ShieldCheck className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                <p className="text-xs text-muted-foreground">A chave secreta deve ser configurada no backend.</p>
+                <p className="text-xs text-muted-foreground">Suas chaves são armazenadas de forma segura e usadas apenas no servidor para processar pagamentos.</p>
+              </div>
+              <div className="rounded-md bg-blue-50 dark:bg-blue-950 p-3 text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">URL do Webhook (configure no painel do gateway):</p>
+                <code className="block bg-blue-100 dark:bg-blue-900 p-2 rounded text-[10px] break-all">
+                  {`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/payment-webhook?gateway=${paymentGateway}`}
+                </code>
               </div>
             </div>
           )}

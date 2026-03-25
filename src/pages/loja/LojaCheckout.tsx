@@ -12,12 +12,16 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, MessageCircle, Ticket, X } from "lucide-react";
 import { toast } from "sonner";
+import PaymentStep from "@/components/PaymentStep";
+
+type CheckoutPhase = "info" | "payment" | "success";
 
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [phase, setPhase] = useState<CheckoutPhase>("info");
+  const [orderId, setOrderId] = useState<string | null>(null);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -26,7 +30,6 @@ export default function LojaCheckout() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -41,6 +44,8 @@ export default function LojaCheckout() {
     : 0;
 
   const finalTotal = Math.max(0, cart.total - discountAmount);
+
+  const hasGateway = settings?.payment_gateway && (settings as any)?.gateway_secret_key;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -66,6 +71,52 @@ export default function LojaCheckout() {
     setCouponCode("");
   };
 
+  const createOrder = async () => {
+    const userId = settings?.user_id;
+    if (!userId) throw new Error("Loja não configurada");
+
+    const { data: order, error: orderErr } = await supabase
+      .from("orders")
+      .insert({
+        user_id: userId,
+        customer_name: name.trim(),
+        customer_email: email.trim() || null,
+        customer_phone: phone.trim(),
+        customer_address: address.trim() || null,
+        notes: notes.trim() || null,
+        total: finalTotal,
+        whatsapp_order: false,
+        status: "pendente",
+        coupon_code: appliedCoupon?.code || null,
+        discount_amount: discountAmount,
+      } as any)
+      .select()
+      .single();
+    if (orderErr) throw orderErr;
+
+    const items = cart.items.map((i) => ({
+      order_id: order.id,
+      product_id: i.id,
+      product_name: i.name,
+      product_image: i.image_url,
+      quantity: i.quantity,
+      unit_price: i.price,
+    }));
+    const { error: itemsErr } = await supabase.from("order_items").insert(items);
+    if (itemsErr) throw itemsErr;
+
+    await supabase.from("order_status_history").insert({ order_id: order.id, status: "pendente" });
+
+    if (appliedCoupon) {
+      await supabase
+        .from("coupons")
+        .update({ used_count: appliedCoupon.used_count + 1 } as any)
+        .eq("id", appliedCoupon.id);
+    }
+
+    return order;
+  };
+
   const handleSubmit = async (viaWhatsApp = false) => {
     if (!name.trim()) return toast.error("Informe seu nome");
     if (!phone.trim()) return toast.error("Informe seu telefone");
@@ -73,58 +124,24 @@ export default function LojaCheckout() {
 
     setLoading(true);
     try {
-      const userId = settings?.user_id;
-      if (!userId) throw new Error("Loja não configurada");
-
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({
-          user_id: userId,
-          customer_name: name.trim(),
-          customer_email: email.trim() || null,
-          customer_phone: phone.trim(),
-          customer_address: address.trim() || null,
-          notes: notes.trim() || null,
-          total: finalTotal,
-          whatsapp_order: viaWhatsApp,
-          status: "pendente",
-          coupon_code: appliedCoupon?.code || null,
-          discount_amount: discountAmount,
-        } as any)
-        .select()
-        .single();
-      if (orderErr) throw orderErr;
-
-      const items = cart.items.map((i) => ({
-        order_id: order.id,
-        product_id: i.id,
-        product_name: i.name,
-        product_image: i.image_url,
-        quantity: i.quantity,
-        unit_price: i.price,
-      }));
-      const { error: itemsErr } = await supabase.from("order_items").insert(items);
-      if (itemsErr) throw itemsErr;
-
-      await supabase.from("order_status_history").insert({ order_id: order.id, status: "pendente" });
-
-      // Increment coupon usage
-      if (appliedCoupon) {
-        await supabase
-          .from("coupons")
-          .update({ used_count: appliedCoupon.used_count + 1 } as any)
-          .eq("id", appliedCoupon.id);
-      }
+      const order = await createOrder();
+      setOrderId(order.id);
 
       if (viaWhatsApp && settings?.store_whatsapp) {
         const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${formatPrice(i.price * i.quantity)}`).join("\n");
         const couponLine = appliedCoupon ? `\n🎟️ *Cupom:* ${appliedCoupon.code} (-${formatPrice(discountAmount)})` : "";
         const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+        cart.clearCart();
+        setPhase("success");
+      } else if (hasGateway) {
+        // Go to payment step
+        setPhase("payment");
+      } else {
+        // No gateway, just complete
+        cart.clearCart();
+        setPhase("success");
       }
-
-      cart.clearCart();
-      setSuccess(true);
     } catch (err: any) {
       toast.error("Erro ao criar pedido: " + err.message);
     } finally {
@@ -132,13 +149,31 @@ export default function LojaCheckout() {
     }
   };
 
-  if (success) {
+  if (phase === "success") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
         <h1 className="text-2xl font-bold mt-4">Pedido Realizado!</h1>
         <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso. Acompanhe pelo WhatsApp ou email.</p>
         <Button className="mt-6 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
+      </div>
+    );
+  }
+
+  if (phase === "payment" && orderId) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">Pagamento</h1>
+        <PaymentStep
+          orderId={orderId}
+          storeUserId={settings?.user_id}
+          total={finalTotal}
+          settings={settings}
+          onSuccess={() => {
+            cart.clearCart();
+            setPhase("success");
+          }}
+        />
       </div>
     );
   }
@@ -250,10 +285,17 @@ export default function LojaCheckout() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Finalizar Pedido
-          </Button>
+          {hasGateway ? (
+            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ir para Pagamento
+            </Button>
+          ) : (
+            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Finalizar Pedido
+            </Button>
+          )}
           {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
             <Button
               variant="outline"
