@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Package, User, LogOut } from "lucide-react";
+import { Loader2, Package, User, LogOut, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import { useWishlist } from "@/hooks/useWishlist";
+import { Link } from "react-router-dom";
 
 interface CustomerProfileModalProps {
   open: boolean;
@@ -18,6 +20,7 @@ interface CustomerProfileModalProps {
 
 export function CustomerProfileModal({ open, onOpenChange, storeUserId }: CustomerProfileModalProps) {
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
+  const { wishlistIds } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
@@ -102,9 +105,15 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId }: Custom
           </DialogTitle>
         </DialogHeader>
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Meus Dados</TabsTrigger>
-            <TabsTrigger value="orders">Meus Pedidos</TabsTrigger>
+            <TabsTrigger value="orders">Pedidos</TabsTrigger>
+            <TabsTrigger value="wishlist" className="flex items-center gap-1">
+              <Heart className="h-3 w-3" /> Favoritos
+              {wishlistIds.size > 0 && (
+                <span className="ml-1 text-xs bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center">{wishlistIds.size}</span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -189,6 +198,23 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId }: Custom
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="wishlist">
+            <div className="py-4 text-center text-sm text-gray-500">
+              {wishlistIds.size === 0 ? (
+                <div>
+                  <Heart className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhum favorito ainda</p>
+                  <p className="text-xs mt-1">Toque no ❤️ nos produtos para salvar</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="font-medium text-gray-700">Você tem {wishlistIds.size} favorito(s)</p>
+                  <p className="text-xs mt-1">Seus produtos favoritos aparecem com ❤️ na loja</p>
+                </div>
               )}
             </div>
           </TabsContent>
