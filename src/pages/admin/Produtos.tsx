@@ -63,7 +63,21 @@ export default function Produtos() {
   const handleUpdate = (data: any) => {
     if (!editingProduct) return;
     if (data.category_id === "none") data.category_id = null;
-    updateProduct.mutate({ id: editingProduct.id, ...data }, { onSuccess: () => setEditingProduct(null) });
+    const { additionalImages, ...productData } = data;
+    updateProduct.mutate({ id: editingProduct.id, ...productData }, {
+      onSuccess: async () => {
+        if (additionalImages?.length > 0) {
+          for (let i = 0; i < additionalImages.length; i++) {
+            await supabase.from("product_images").insert({
+              product_id: editingProduct.id,
+              image_url: additionalImages[i],
+              sort_order: i + 100,
+            } as any);
+          }
+        }
+        setEditingProduct(null);
+      },
+    });
   };
 
   const handleTogglePublished = (product: Product) => {
