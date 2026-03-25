@@ -208,15 +208,45 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Nome</Label>
+                  <Label htmlFor="displayName">Seu Nome</Label>
                   <Input
                     id="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Seu nome"
+                    placeholder="Seu nome completo"
                     required
                     className="h-11 border-border/50 focus:border-blue-500 transition-colors"
                   />
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="storeName">Nome da Loja</Label>
+                  <Input
+                    id="storeName"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    placeholder="Ex: Moda Fashion"
+                    required
+                    className="h-11 border-border/50 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
+                  <div className="flex items-center gap-0">
+                    <span className="inline-flex h-11 items-center rounded-l-md border border-r-0 border-border/50 bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
+                    <Input
+                      id="storeSlug"
+                      value={storeSlug}
+                      onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      placeholder="moda-fashion"
+                      required
+                      className="h-11 rounded-l-none border-border/50 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
               )}
               <div className="space-y-2">
