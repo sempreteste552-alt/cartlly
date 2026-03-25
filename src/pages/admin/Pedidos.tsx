@@ -14,6 +14,11 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 export default function Pedidos() {
+  const STATUS_ICONS: Record<string, any> = {
+    pendente: Clock, processando: Package, enviado: Truck, entregue: CheckCircle, cancelado: XCircle,
+  };
+  const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entregue"];
+
   const { data: orders, isLoading } = useOrders();
   const updateStatus = useUpdateOrderStatus();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -22,6 +27,17 @@ export default function Pedidos() {
   const selectedOrder = orders?.find((o) => o.id === selectedOrderId);
   const { data: orderItems } = useOrderItems(selectedOrderId);
   const { data: statusHistory } = useOrderStatusHistory(selectedOrderId);
+
+  // Realtime for orders
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-orders-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        // Refetch handled by react-query invalidation
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const filteredOrders = orders?.filter((o) => filterStatus === "all" || o.status === filterStatus);
 
