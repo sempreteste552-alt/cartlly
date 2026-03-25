@@ -223,6 +223,57 @@ export default function LojaLayout() {
           </div>
         </header>
 
+        {/* Mobile Menu with staggered animation */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-white border-b border-gray-100 ${
+            mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+            {[
+              { icon: Home, label: "Início", to: basePath, delay: "0ms" },
+              { icon: Package, label: "Produtos", to: basePath, delay: "80ms" },
+              { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout`, delay: "160ms" },
+              ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true, delay: "240ms" }] : []),
+              ...(settings?.instagram_url ? [{ icon: Tag, label: "Instagram", to: settings.instagram_url, external: true, delay: "320ms" }] : []),
+              ...(settings?.store_phone ? [{ icon: Phone, label: settings.store_phone, to: `tel:${settings.store_phone}`, external: true, delay: "400ms" }] : []),
+              ...(settings?.store_address ? [{ icon: MapPin, label: settings.store_address, to: settings.google_maps_url || "#", external: true, delay: "480ms" }] : []),
+            ].map((item: any, i) => (
+              <div
+                key={i}
+                className="transition-all duration-500 ease-out"
+                style={{
+                  transitionDelay: mobileMenu ? item.delay : "0ms",
+                  opacity: mobileMenu ? 1 : 0,
+                  transform: mobileMenu ? "translateX(0)" : "translateX(-24px)",
+                }}
+              >
+                {item.external ? (
+                  <a
+                    href={item.to}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
+                    onClick={() => setMobileMenu(false)}
+                  >
+                    <item.icon className="h-5 w-5 text-gray-400" />
+                    <span>{item.label}</span>
+                  </a>
+                ) : (
+                  <Link
+                    to={item.to}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
+                    onClick={() => setMobileMenu(false)}
+                  >
+                    <item.icon className="h-5 w-5 text-gray-400" />
+                    <span>{item.label}</span>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
+
         <main>
           <Outlet />
         </main>
