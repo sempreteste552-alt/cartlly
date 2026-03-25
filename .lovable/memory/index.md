@@ -3,9 +3,10 @@ Multi-tenant SaaS e-commerce platform (Cartlly). Portuguese UI.
 - Design: Dark sidebar admin (hsl 224 30% 12%), primary purple (hsl 243 75% 59%). Public store: black & white theme.
 - Auth: Supabase email/password with auto-profile trigger. Super admin by fixed email (admin@cartlly.com).
 - Roles: app_role enum (super_admin, tenant), user_roles table, has_role() security definer function
-- Routes: /login, /superadmin (dashboard, tenants, planos, notificacoes, config), /admin (dashboard, produtos, pedidos, config), /loja (home, produto/:id, checkout), /loja/:slug (multi-tenant)
-- Tables: profiles, products, categories, orders, order_items, order_status_history, store_settings, store_banners, product_reviews, user_roles, product_images, tenant_plans, tenant_subscriptions
-- Store settings: name, logo, colors, payment methods, gateway, address, phone, whatsapp, social URLs, google maps, open/closed, sell_via_whatsapp, location, description, store_slug (unique), admin_primary_color, admin_accent_color
-- Features: Super admin panel (tenant management, plans, block/unblock), Product CRUD with categories, Multiple images per product with hover slideshow, Order management with status flow, Public store with carousel banners, cart, checkout, WhatsApp ordering, product reviews with stars, dynamic dashboard with charts, configurable admin+store colors, multi-tenant via slug routing
+- Routes: /login, /superadmin (dashboard, tenants, planos, notificacoes, config), /admin (dashboard, produtos, pedidos, cupons, config), /loja (home, produto/:id, checkout), /loja/:slug (multi-tenant)
+- Tables: profiles, products, categories, orders, order_items, order_status_history, store_settings, store_banners, product_reviews, user_roles, product_images, tenant_plans, tenant_subscriptions, coupons
+- Orders: now include coupon_code and discount_amount columns
+- Features: Super admin panel, Product CRUD with categories, Multiple images per product with hover slideshow, Cupons de desconto com validação no checkout, AI catalog import via edge function (ai-catalog), Order management, Public store with carousel banners, cart, checkout with coupon support, WhatsApp ordering, product reviews, dynamic dashboard, configurable colors, multi-tenant via slug
 - Plans: Básico R$49.90, Profissional R$89.90, 7-day free trial
 - Buckets: product-images, store-assets (both public)
+- Edge Functions: ai-catalog (Lovable AI powered product extraction)
