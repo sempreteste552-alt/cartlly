@@ -209,6 +209,9 @@ export default function Produtos() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
+                        <Layers className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
