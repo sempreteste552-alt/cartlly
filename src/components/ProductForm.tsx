@@ -105,8 +105,20 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
 
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
-            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} placeholder="Descrição do produto" rows={3} />
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} placeholder="Descrição do produto" rows={3} />
           </div>
+
+          {/* AI Tools */}
+          <AIProductTools
+            name={name}
+            description={description}
+            price={price}
+            category={categories?.find(c => c.id === categoryId)?.name || ""}
+            imageUrl={imageUrl}
+            onApplyDescription={setDescription}
+            onApplyName={setName}
+            onApplyPrice={setPrice}
+          />
 
           <div className="space-y-2">
             <Label>Categoria</Label>
