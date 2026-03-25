@@ -253,6 +253,7 @@ export default function LojaCheckout() {
               subtotal={cart.total}
               onSelectShipping={setSelectedShipping}
               selectedShipping={selectedShipping}
+              storeUserId={settings?.user_id}
             />
           </CardContent>
         </Card>
