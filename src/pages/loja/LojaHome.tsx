@@ -63,7 +63,13 @@ export default function LojaHome() {
             <CarouselContent>
               {banners.map((banner) => (
                 <CarouselItem key={banner.id}>
-                  {banner.link_url ? (
+                  {(banner as any).media_type === "video" ? (
+                    <video
+                      src={banner.image_url}
+                      className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
+                      autoPlay muted loop playsInline
+                    />
+                  ) : banner.link_url ? (
                     <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
                       <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
                     </a>

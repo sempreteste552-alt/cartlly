@@ -1,0 +1,1 @@
+ALTER TABLE public.store_banners ADD COLUMN media_type text NOT NULL DEFAULT 'image';

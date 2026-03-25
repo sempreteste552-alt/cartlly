@@ -359,6 +359,7 @@ export type Database = {
           id: string
           image_url: string
           link_url: string | null
+          media_type: string
           sort_order: number
           user_id: string
         }
@@ -368,6 +369,7 @@ export type Database = {
           id?: string
           image_url: string
           link_url?: string | null
+          media_type?: string
           sort_order?: number
           user_id: string
         }
@@ -377,6 +379,7 @@ export type Database = {
           id?: string
           image_url?: string
           link_url?: string | null
+          media_type?: string
           sort_order?: number
           user_id?: string
         }

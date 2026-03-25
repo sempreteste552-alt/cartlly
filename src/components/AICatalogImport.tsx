@@ -41,13 +41,13 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + imageFiles.length > 5) {
-      toast.error("Máximo de 5 imagens");
+    if (files.length + imageFiles.length > 10) {
+      toast.error("Máximo de 10 imagens");
       return;
     }
     const validFiles = files.filter((f) => {
       if (!f.type.startsWith("image/")) { toast.error(`${f.name} não é uma imagem`); return false; }
-      if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} excede 10MB`); return false; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`${f.name} excede 20MB`); return false; }
       return true;
     });
 
@@ -197,15 +197,15 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
               </TabsContent>
 
               <TabsContent value="image" className="space-y-4 mt-4">
-                <Label>Imagens do Catálogo (máx. 5)</Label>
+                <Label>Imagens do Catálogo (máx. 10)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Envie fotos de cardápios, tabelas de preços, catálogos impressos ou screenshots. A IA fará a leitura visual (OCR).
+                  Aceita JPG, PNG, WebP, HEIC, BMP, GIF, TIFF — até 20MB por imagem. Envie fotos de cardápios, tabelas, catálogos impressos ou screenshots.
                 </p>
 
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/heic,image/heif,image/*"
                   multiple
                   className="hidden"
                   onChange={handleImageSelect}
@@ -228,7 +228,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                   </div>
                 )}
 
-                {imagePreviews.length < 5 && (
+                {imagePreviews.length < 10 && (
                   <Button
                     variant="outline"
                     className="w-full border-dashed h-20"
