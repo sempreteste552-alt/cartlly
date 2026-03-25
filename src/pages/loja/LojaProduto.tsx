@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import { useProductImages } from "@/hooks/useProductImages";
+import { useProductVariants } from "@/hooks/useProductVariants";
 import { useLojaContext } from "./LojaLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
