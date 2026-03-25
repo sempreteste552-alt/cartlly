@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, MessageCircle, Ticket, X } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
+import ShippingCalculator from "@/components/ShippingCalculator";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
@@ -33,6 +34,7 @@ export default function LojaCheckout() {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<{ method: string; price: number; days: string } | null>(null);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -43,7 +45,8 @@ export default function LojaCheckout() {
       : Math.min(appliedCoupon.discount_value, cart.total)
     : 0;
 
-  const finalTotal = Math.max(0, cart.total - discountAmount);
+  const shippingCost = selectedShipping?.price || 0;
+  const finalTotal = Math.max(0, cart.total - discountAmount + shippingCost);
 
   const hasGateway = settings?.payment_gateway && (settings as any)?.gateway_secret_key;
 
@@ -85,6 +88,9 @@ export default function LojaCheckout() {
         customer_address: address.trim() || null,
         notes: notes.trim() || null,
         total: finalTotal,
+        shipping_cost: shippingCost,
+        shipping_method: selectedShipping?.method || null,
+        shipping_cep: null,
         whatsapp_order: false,
         status: "pendente",
         coupon_code: appliedCoupon?.code || null,
@@ -154,8 +160,17 @@ export default function LojaCheckout() {
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
         <h1 className="text-2xl font-bold mt-4">Pedido Realizado!</h1>
-        <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso. Acompanhe pelo WhatsApp ou email.</p>
-        <Button className="mt-6 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
+        <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso.</p>
+        {orderId && (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-500">Código de rastreio:</p>
+            <code className="block bg-gray-100 rounded-lg p-3 font-mono text-sm">{orderId.slice(0, 8)}</code>
+            <Button variant="outline" className="mt-2" onClick={() => navigate(`/loja/rastreio/${orderId.slice(0, 8)}`)}>
+              📦 Rastrear Pedido
+            </Button>
+          </div>
+        )}
+        <Button className="mt-4 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
       </div>
     );
   }
@@ -217,10 +232,28 @@ export default function LojaCheckout() {
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
             )}
+            {shippingCost > 0 && (
+              <div className="flex justify-between text-sm">
+                <span>Frete ({selectedShipping?.method})</span>
+                <span>{formatPrice(shippingCost)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>{formatPrice(finalTotal)}</span>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Shipping Calculator */}
+        <Card>
+          <CardContent className="p-4">
+            <ShippingCalculator
+              settings={settings}
+              subtotal={cart.total}
+              onSelectShipping={setSelectedShipping}
+              selectedShipping={selectedShipping}
+            />
           </CardContent>
         </Card>
 

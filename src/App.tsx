@@ -16,6 +16,7 @@ import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
 import LojaCheckout from "./pages/loja/LojaCheckout";
+import LojaRastreio from "./pages/loja/LojaRastreio";
 import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
@@ -57,12 +58,16 @@ const App = () => (
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
               <Route path="checkout" element={<LojaCheckout />} />
+              <Route path="rastreio" element={<LojaRastreio />} />
+              <Route path="rastreio/:orderId" element={<LojaRastreio />} />
             </Route>
             {/* Multi-tenant: store by slug */}
             <Route path="/loja/:slug" element={<LojaLayout />}>
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
               <Route path="checkout" element={<LojaCheckout />} />
+              <Route path="rastreio" element={<LojaRastreio />} />
+              <Route path="rastreio/:orderId" element={<LojaRastreio />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

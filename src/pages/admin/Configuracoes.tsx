@@ -60,6 +60,9 @@ export default function Configuracoes() {
   const [storeSlug, setStoreSlug] = useState("");
   const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
   const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
+  const [shippingEnabled, setShippingEnabled] = useState(false);
+  const [shippingFlatRate, setShippingFlatRate] = useState("");
+  const [shippingFreeAbove, setShippingFreeAbove] = useState("");
 
   useEffect(() => {
     if (settings) {
@@ -93,6 +96,9 @@ export default function Configuracoes() {
       setStoreSlug((settings as any).store_slug ?? "");
       setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
       setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
+      setShippingEnabled((settings as any).shipping_enabled ?? false);
+      setShippingFlatRate(String((settings as any).shipping_flat_rate ?? ""));
+      setShippingFreeAbove(String((settings as any).shipping_free_above ?? ""));
     }
   }, [settings]);
 
@@ -151,6 +157,9 @@ export default function Configuracoes() {
       store_slug: storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null,
       admin_primary_color: adminPrimaryColor,
       admin_accent_color: adminAccentColor,
+      shipping_enabled: shippingEnabled,
+      shipping_flat_rate: shippingFlatRate ? Number(shippingFlatRate) : null,
+      shipping_free_above: shippingFreeAbove ? Number(shippingFreeAbove) : null,
     } as any);
   };
 
@@ -290,6 +299,36 @@ export default function Configuracoes() {
             </div>
           </div>
           <Switch checked={sellViaWhatsapp} onCheckedChange={setSellViaWhatsapp} />
+        </CardContent>
+      </Card>
+
+      {/* Shipping */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Frete</CardTitle></div>
+          <CardDescription>Configure opções de entrega para sua loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Calculadora de Frete</p>
+              <p className="text-xs text-muted-foreground">Exibe cálculo de frete no checkout</p>
+            </div>
+            <Switch checked={shippingEnabled} onCheckedChange={setShippingEnabled} />
+          </div>
+          {shippingEnabled && (
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div className="space-y-2">
+                <Label>Valor fixo do frete (R$)</Label>
+                <Input type="number" step="0.01" value={shippingFlatRate} onChange={(e) => setShippingFlatRate(e.target.value)} placeholder="15.00" />
+              </div>
+              <div className="space-y-2">
+                <Label>Frete grátis acima de (R$)</Label>
+                <Input type="number" step="0.01" value={shippingFreeAbove} onChange={(e) => setShippingFreeAbove(e.target.value)} placeholder="200.00" />
+                <p className="text-xs text-muted-foreground">Deixe vazio para não oferecer frete grátis</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
