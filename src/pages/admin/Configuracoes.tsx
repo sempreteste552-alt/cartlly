@@ -302,6 +302,36 @@ export default function Configuracoes() {
         </CardContent>
       </Card>
 
+      {/* Shipping */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Frete</CardTitle></div>
+          <CardDescription>Configure opções de entrega para sua loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Calculadora de Frete</p>
+              <p className="text-xs text-muted-foreground">Exibe cálculo de frete no checkout</p>
+            </div>
+            <Switch checked={shippingEnabled} onCheckedChange={setShippingEnabled} />
+          </div>
+          {shippingEnabled && (
+            <div className="space-y-3 rounded-lg border border-border p-4">
+              <div className="space-y-2">
+                <Label>Valor fixo do frete (R$)</Label>
+                <Input type="number" step="0.01" value={shippingFlatRate} onChange={(e) => setShippingFlatRate(e.target.value)} placeholder="15.00" />
+              </div>
+              <div className="space-y-2">
+                <Label>Frete grátis acima de (R$)</Label>
+                <Input type="number" step="0.01" value={shippingFreeAbove} onChange={(e) => setShippingFreeAbove(e.target.value)} placeholder="200.00" />
+                <p className="text-xs text-muted-foreground">Deixe vazio para não oferecer frete grátis</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Social URLs */}
       <Card className="border-border">
         <CardHeader>
