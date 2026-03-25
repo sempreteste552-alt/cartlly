@@ -21,7 +21,18 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Redirect logged-in users
+  useEffect(() => {
+    if (user) {
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        navigate("/superadmin", { replace: true });
+      } else {
+        navigate("/admin", { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
+
     e.preventDefault();
     setLoading(true);
 
