@@ -62,8 +62,8 @@ export default function Login() {
           },
         });
         if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-      } else {
+        toast.success("Conta criada! Sua conta está em análise pelo administrador.");
+        setIsRegister(false);
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
