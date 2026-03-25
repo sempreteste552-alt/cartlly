@@ -195,6 +195,8 @@ export default function LojaProduto() {
 
           {product.stock > 0 ? (
             <Badge className="bg-green-100 text-green-800">Em estoque ({product.stock} unid.)</Badge>
+          ) : (product as any).made_to_order ? (
+            <Badge style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>📦 Sob encomenda</Badge>
           ) : (
             <Badge variant="destructive">Esgotado</Badge>
           )}
