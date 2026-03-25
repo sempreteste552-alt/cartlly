@@ -234,6 +234,7 @@ export default function LojaLayout() {
               { icon: Home, label: "Início", to: basePath, delay: "0ms" },
               { icon: Package, label: "Produtos", to: basePath, delay: "80ms" },
               { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout`, delay: "160ms" },
+              { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio`, delay: "200ms" },
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true, delay: "240ms" }] : []),
               ...(settings?.instagram_url ? [{ icon: Tag, label: "Instagram", to: settings.instagram_url, external: true, delay: "320ms" }] : []),
               ...(settings?.store_phone ? [{ icon: Phone, label: settings.store_phone, to: `tel:${settings.store_phone}`, external: true, delay: "400ms" }] : []),
