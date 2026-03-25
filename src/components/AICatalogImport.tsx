@@ -41,13 +41,13 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + imageFiles.length > 5) {
-      toast.error("Máximo de 5 imagens");
+    if (files.length + imageFiles.length > 10) {
+      toast.error("Máximo de 10 imagens");
       return;
     }
     const validFiles = files.filter((f) => {
       if (!f.type.startsWith("image/")) { toast.error(`${f.name} não é uma imagem`); return false; }
-      if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} excede 10MB`); return false; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`${f.name} excede 20MB`); return false; }
       return true;
     });
 
