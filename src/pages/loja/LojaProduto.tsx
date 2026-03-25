@@ -127,6 +127,9 @@ export default function LojaProduto() {
         </div>
       </div>
 
+      {/* Reviews */}
+      <ProductReviews productId={product.id} />
+
       {/* Similar products */}
       {similarProducts.length > 0 && (
         <div className="mt-12">
