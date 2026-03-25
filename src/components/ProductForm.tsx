@@ -205,6 +205,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
+              <Label htmlFor="made_to_order" className="text-sm font-medium">Sob Encomenda</Label>
+              <p className="text-xs text-muted-foreground">Produto vendido sob encomenda (não sai do ar quando estoque zera)</p>
+            </div>
+            <Switch id="made_to_order" checked={madeToOrder} onCheckedChange={setMadeToOrder} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
               <Label htmlFor="published" className="text-sm font-medium">Publicado</Label>
               <p className="text-xs text-muted-foreground">Produto visível na loja</p>
             </div>
