@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
