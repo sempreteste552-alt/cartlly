@@ -34,6 +34,7 @@ export default function LojaCheckout() {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState<{ method: string; price: number; days: string } | null>(null);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
