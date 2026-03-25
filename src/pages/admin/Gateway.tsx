@@ -235,5 +235,6 @@ export default function Gateway() {
         </Button>
       </div>
     </div>
+    </LockedFeature>
   );
 }
