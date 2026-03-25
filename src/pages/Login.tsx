@@ -1,127 +1,168 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Eye, EyeOff, Store } from "lucide-react";
+"use client"
 
-export default function Login() {
-  const navigate = useNavigate();
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+import { useActionState, useEffect, useState } from "react"
+import { loginAction } from "@/lib/actions/auth"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
-    try {
-      if (isRegister) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { display_name: displayName },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate("/admin");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao autenticar");
-    } finally {
-      setLoading(false);
+export default function LoginPage() {
+  const [state, formAction, isPending] = useActionState(loginAction, null)
+  const router = useRouter()
+
+  const message = "Bem-vindo à Cartly 🛒"
+  const [text, setText] = useState("")
+
+  useEffect(() => {
+    let i = 0
+    const interval = setInterval(() => {
+      setText(message.slice(0, i))
+      i++
+      if (i > message.length) clearInterval(interval)
+    }, 50)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    if (state?.statusRedirect) {
+      router.push(state.statusRedirect)
     }
-  };
+  }, [state?.statusRedirect, router])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border shadow-lg">
-        <CardHeader className="text-center space-y-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <Store className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            {isRegister ? "Criar Conta Admin" : "Painel Administrativo"}
-          </CardTitle>
-          <CardDescription>
-            {isRegister
-              ? "Preencha os dados para criar sua conta"
-              : "Entre com suas credenciais para acessar o painel"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Nome</Label>
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 transition-colors duration-300">
+
+      {/* Glow fundo */}
+      <div className="absolute -z-10 h-[500px] w-[500px] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" />
+
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-md">
+
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/logo.png" 
+            alt="AtendaAi" 
+            className="h-24 w-24 object-contain drop-shadow-lg" 
+          />
+        </div>
+
+        {/* Texto digitando */}
+        <div className="text-center mb-8">
+          <h2
+            className="text-3xl font-bold text-foreground"
+            style={{
+              fontFamily: "cursive",
+              textShadow: "0 0 10px rgba(34,197,94,0.5)",
+            }}
+          >
+            {text}
+            <span className="animate-pulse">|</span>
+          </h2>
+
+          <p className="text-muted-foreground mt-3">
+            Acesse seu painel e continue aumentando suas vendas com seu cardápio digital.
+          </p>
+        </div>
+
+        {/* ===== CARD COM BORDA GIRANDO IGUAL REGISTRO ===== */}
+        <div className="relative rounded-2xl p-[3px] overflow-hidden">
+
+          {/* Camada girando */}
+          <div className="absolute inset-0 rounded-2xl animate-spin-slow bg-gradient-to-r from-green-400 via-green-600 to-green-400 blur-sm opacity-80"></div>
+
+          {/* Card real */}
+          <div className="relative rounded-2xl bg-card p-6 shadow-2xl">
+
+            <form action={formAction} className="flex flex-col gap-4">
+
+              {state?.error && (
+                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                  {state.error}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email">E-mail</Label>
                 <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Seu nome"
+                  id="email"
+                  name="email"
+                  type="email"
                   required
+                  placeholder="seu@email.com"
+                  className="focus-visible:ring-green-500"
                 />
               </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@loja.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-green-500 hover:underline font-medium"
+                  >
+                    Esqueceu sua senha?
+                  </Link>
+                </div>
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  name="password"
+                  type="password"
                   required
-                  minLength={6}
+                  placeholder="Digite sua senha"
+                  className="focus-visible:ring-green-500"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Carregando..." : isRegister ? "Criar Conta" : "Entrar"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            {isRegister ? "Já tem uma conta?" : "Não tem uma conta?"}{" "}
-            <button
-              onClick={() => setIsRegister(!isRegister)}
-              className="font-medium text-primary hover:underline"
-            >
-              {isRegister ? "Fazer login" : "Criar conta"}
-            </button>
+
+              {/* ===== BOTÃO COM MESMO EFEITO GIRANDO ===== */}
+              <div className="relative rounded-full p-[2px] overflow-hidden mt-2">
+
+                {/* Borda girando */}
+                <div className="absolute inset-0 animate-spin-slow bg-gradient-to-r from-green-400 via-green-600 to-green-400 blur-sm opacity-90"></div>
+
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="relative w-full rounded-full bg-green-500 text-white font-semibold py-3 transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97] disabled:opacity-60 shadow-[0_0_20px_rgba(34,197,94,0.6)]"
+                >
+                  {isPending ? "Entrando..." : "Acessar meu painel"}
+                </button>
+
+              </div>
+
+              <p className="text-sm text-muted-foreground text-center mt-4">
+                Ainda não tem conta?{" "}
+                <Link
+                  href="/register"
+                  className="text-green-500 hover:underline font-medium"
+                >
+                  Criar conta
+                </Link>
+              </p>
+
+            </form>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+      </div>
+
+      {/* Animação global */}
+      <style global jsx>{`
+        @keyframes spinSlow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .animate-spin-slow {
+          animation: spinSlow 6s linear infinite;
+        }
+      `}</style>
     </div>
-  );
+  )
 }
