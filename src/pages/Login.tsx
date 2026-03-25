@@ -32,7 +32,7 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
