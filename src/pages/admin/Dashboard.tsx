@@ -132,7 +132,14 @@ export default function Dashboard() {
     return { total: orders.length, withCoupon: withCoupon.length, totalDiscount };
   }, [orders]);
 
-  const recentOrders = orders?.slice(0, 5) ?? [];
+  // Filtered orders by status
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    if (statusFilter === "todos") return orders;
+    return orders.filter((o) => o.status === statusFilter);
+  }, [orders, statusFilter]);
+
+  const recentOrders = filteredOrders.slice(0, 10);
 
   const stats = [
     { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", color: "text-blue-500" },
