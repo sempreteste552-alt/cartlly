@@ -49,6 +49,7 @@ const App = () => (
               <Route index element={<Dashboard />} />
               <Route path="produtos" element={<Produtos />} />
               <Route path="pedidos" element={<Pedidos />} />
+              <Route path="cupons" element={<Cupons />} />
               <Route path="config" element={<Configuracoes />} />
             </Route>
             {/* Default store */}
