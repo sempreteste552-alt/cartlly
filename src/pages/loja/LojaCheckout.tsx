@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLojaContext } from "./LojaLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { useValidateCoupon } from "@/hooks/useCoupons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, CheckCircle, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LojaCheckout() {
@@ -16,6 +18,7 @@ export default function LojaCheckout() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,8 +26,45 @@ export default function LojaCheckout() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+
+  const discountAmount = appliedCoupon
+    ? appliedCoupon.discount_type === "percentage"
+      ? (cart.total * appliedCoupon.discount_value) / 100
+      : Math.min(appliedCoupon.discount_value, cart.total)
+    : 0;
+
+  const finalTotal = Math.max(0, cart.total - discountAmount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    if (!settings?.user_id) return toast.error("Loja não configurada");
+    setCouponLoading(true);
+    try {
+      const coupon = await validateCoupon.mutateAsync({ code: couponCode, storeUserId: settings.user_id });
+      if (coupon.min_order_value && cart.total < coupon.min_order_value) {
+        toast.error(`Pedido mínimo de ${formatPrice(coupon.min_order_value)} para este cupom`);
+        return;
+      }
+      setAppliedCoupon(coupon);
+      toast.success("Cupom aplicado!");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
 
   const handleSubmit = async (viaWhatsApp = false) => {
     if (!name.trim()) return toast.error("Informe seu nome");
@@ -33,11 +73,9 @@ export default function LojaCheckout() {
 
     setLoading(true);
     try {
-      // Find the store owner user_id from settings
       const userId = settings?.user_id;
       if (!userId) throw new Error("Loja não configurada");
 
-      // Create order
       const { data: order, error: orderErr } = await supabase
         .from("orders")
         .insert({
@@ -47,15 +85,16 @@ export default function LojaCheckout() {
           customer_phone: phone.trim(),
           customer_address: address.trim() || null,
           notes: notes.trim() || null,
-          total: cart.total,
+          total: finalTotal,
           whatsapp_order: viaWhatsApp,
           status: "pendente",
-        })
+          coupon_code: appliedCoupon?.code || null,
+          discount_amount: discountAmount,
+        } as any)
         .select()
         .single();
       if (orderErr) throw orderErr;
 
-      // Create order items
       const items = cart.items.map((i) => ({
         order_id: order.id,
         product_id: i.id,
@@ -67,12 +106,20 @@ export default function LojaCheckout() {
       const { error: itemsErr } = await supabase.from("order_items").insert(items);
       if (itemsErr) throw itemsErr;
 
-      // Status history
       await supabase.from("order_status_history").insert({ order_id: order.id, status: "pendente" });
+
+      // Increment coupon usage
+      if (appliedCoupon) {
+        await supabase
+          .from("coupons")
+          .update({ used_count: appliedCoupon.used_count + 1 } as any)
+          .eq("id", appliedCoupon.id);
+      }
 
       if (viaWhatsApp && settings?.store_whatsapp) {
         const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${formatPrice(i.price * i.quantity)}`).join("\n");
-        const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}\n\n*Total: ${formatPrice(cart.total)}*`;
+        const couponLine = appliedCoupon ? `\n🎟️ *Cupom:* ${appliedCoupon.code} (-${formatPrice(discountAmount)})` : "";
+        const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
       }
 
@@ -121,10 +168,54 @@ export default function LojaCheckout() {
               </div>
             ))}
             <Separator />
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
+            <div className="flex justify-between text-sm">
+              <span>Subtotal</span>
               <span>{formatPrice(cart.total)}</span>
             </div>
+            {appliedCoupon && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="flex items-center gap-1">
+                  <Ticket className="h-3.5 w-3.5" />
+                  Cupom {appliedCoupon.code}
+                  <button onClick={removeCoupon} className="text-gray-400 hover:text-destructive"><X className="h-3 w-3" /></button>
+                </span>
+                <span>-{formatPrice(discountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>{formatPrice(finalTotal)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Coupon */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Código do cupom"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="pl-9 font-mono"
+                  disabled={!!appliedCoupon}
+                />
+              </div>
+              {appliedCoupon ? (
+                <Button variant="outline" onClick={removeCoupon}><X className="h-4 w-4" /></Button>
+              ) : (
+                <Button variant="outline" onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()}>
+                  {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
+                </Button>
+              )}
+            </div>
+            {appliedCoupon && (
+              <Badge className="mt-2 bg-green-100 text-green-800">
+                {appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}% de desconto` : `${formatPrice(appliedCoupon.discount_value)} de desconto`}
+              </Badge>
+            )}
           </CardContent>
         </Card>
 
