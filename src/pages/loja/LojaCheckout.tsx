@@ -232,10 +232,28 @@ export default function LojaCheckout() {
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
             )}
+            {shippingCost > 0 && (
+              <div className="flex justify-between text-sm">
+                <span>Frete ({selectedShipping?.method})</span>
+                <span>{formatPrice(shippingCost)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
               <span>{formatPrice(finalTotal)}</span>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Shipping Calculator */}
+        <Card>
+          <CardContent className="p-4">
+            <ShippingCalculator
+              settings={settings}
+              subtotal={cart.total}
+              onSelectShipping={setSelectedShipping}
+              selectedShipping={selectedShipping}
+            />
           </CardContent>
         </Card>
 
