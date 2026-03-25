@@ -211,6 +211,8 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
+                ) : (product as any).made_to_order ? (
+                  <p className="text-xs mt-1" style={{ color: primaryColor }}>📦 Sob encomenda</p>
                 ) : (
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
@@ -218,7 +220,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   className="w-full mt-2"
                   size="sm"
                   style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-                  disabled={product.stock <= 0}
+                  disabled={product.stock <= 0 && !(product as any).made_to_order}
                   onClick={(e) => {
                     e.preventDefault();
                     cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });

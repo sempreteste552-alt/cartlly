@@ -195,6 +195,8 @@ export default function LojaProduto() {
 
           {product.stock > 0 ? (
             <Badge className="bg-green-100 text-green-800">Em estoque ({product.stock} unid.)</Badge>
+          ) : (product as any).made_to_order ? (
+            <Badge style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>📦 Sob encomenda</Badge>
           ) : (
             <Badge variant="destructive">Esgotado</Badge>
           )}
@@ -203,7 +205,7 @@ export default function LojaProduto() {
             <Button
               className="flex-1 h-12 text-base"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-              disabled={product.stock <= 0}
+              disabled={product.stock <= 0 && !(product as any).made_to_order}
               onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho

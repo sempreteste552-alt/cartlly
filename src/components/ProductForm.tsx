@@ -22,6 +22,7 @@ interface ProductFormProps {
     image_url: string | null;
     published: boolean;
     category_id: string | null;
+    made_to_order: boolean;
     additionalImages?: string[];
   }) => void;
   initialData?: Product | null;
@@ -35,6 +36,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [stock, setStock] = useState(initialData?.stock?.toString() ?? "0");
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [published, setPublished] = useState(initialData?.published ?? false);
+  const [madeToOrder, setMadeToOrder] = useState((initialData as any)?.made_to_order ?? false);
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -79,6 +81,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       image_url: imageUrl || null,
       published,
       category_id: categoryId || null,
+      made_to_order: madeToOrder,
       additionalImages,
     });
   };
@@ -86,7 +89,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setCategoryId(""); setAdditionalImages([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setAdditionalImages([]);
     }
     onOpenChange(isOpen);
   };
@@ -198,6 +201,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             </div>
             <input ref={additionalFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
             <p className="text-xs text-muted-foreground">As imagens adicionais aparecem no slideshow do card do produto</p>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label htmlFor="made_to_order" className="text-sm font-medium">Sob Encomenda</Label>
+              <p className="text-xs text-muted-foreground">Produto vendido sob encomenda (não sai do ar quando estoque zera)</p>
+            </div>
+            <Switch id="made_to_order" checked={madeToOrder} onCheckedChange={setMadeToOrder} />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
