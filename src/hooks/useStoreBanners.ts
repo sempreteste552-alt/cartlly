@@ -41,10 +41,10 @@ export function useCreateBanner() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ imageUrl, linkUrl }: { imageUrl: string; linkUrl?: string }) => {
+    mutationFn: async ({ imageUrl, linkUrl, mediaType }: { imageUrl: string; linkUrl?: string; mediaType?: string }) => {
       const { error } = await supabase
         .from("store_banners")
-        .insert({ user_id: user!.id, image_url: imageUrl, link_url: linkUrl || null });
+        .insert({ user_id: user!.id, image_url: imageUrl, link_url: linkUrl || null, media_type: mediaType || "image" } as any);
       if (error) throw error;
     },
     onSuccess: () => {

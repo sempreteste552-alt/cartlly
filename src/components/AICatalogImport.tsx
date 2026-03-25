@@ -228,7 +228,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                   </div>
                 )}
 
-                {imagePreviews.length < 5 && (
+                {imagePreviews.length < 10 && (
                   <Button
                     variant="outline"
                     className="w-full border-dashed h-20"
