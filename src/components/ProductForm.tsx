@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Upload, X, Loader2, GripVertical } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { AIProductTools } from "@/components/AIProductTools";
 
 interface ProductFormProps {
   open: boolean;
