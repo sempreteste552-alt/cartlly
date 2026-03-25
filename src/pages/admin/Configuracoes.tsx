@@ -42,6 +42,7 @@ export default function Configuracoes() {
   const [customDomain, setCustomDomain] = useState("");
   const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
+  const [gatewaySecretKey, setGatewaySecretKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   // New fields
   const [storeAddress, setStoreAddress] = useState("");
