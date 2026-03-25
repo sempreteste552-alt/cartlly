@@ -372,16 +372,77 @@ export default function Configuracoes() {
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /><CardTitle className="text-lg">URL e Domínio</CardTitle></div>
+          <CardDescription>Configure o endereço da sua loja</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Slug */}
           <div className="space-y-2">
             <Label>Slug da Loja</Label>
-            <Input value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="minha-loja" maxLength={50} />
-            {storeSlug && <p className="text-xs text-muted-foreground">Acessível em: <span className="font-mono font-medium">/loja/{storeSlug}</span></p>}
+            <div className="flex items-center gap-0">
+              <span className="inline-flex h-10 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
+              <Input
+                value={storeSlug}
+                onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="minha-loja"
+                maxLength={50}
+                className="rounded-l-none"
+              />
+            </div>
+            {storeSlug && (
+              <p className="text-xs text-muted-foreground">
+                Acessível em: <span className="font-mono font-medium text-primary">{window.location.origin}/loja/{storeSlug}</span>
+              </p>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label>Domínio personalizado</Label>
-            <Input value={customDomain} onChange={(e) => setCustomDomain(e.target.value)} placeholder="minhaloja.com.br" maxLength={255} />
+
+          {/* Custom Domain */}
+          <div className="space-y-3">
+            <Label>Domínio Personalizado</Label>
+            <Input
+              value={customDomain}
+              onChange={(e) => setCustomDomain(e.target.value)}
+              placeholder="www.minhaloja.com.br"
+              maxLength={255}
+            />
+            {customDomain && (
+              <div className="rounded-lg border border-border bg-muted/50 p-4 space-y-3">
+                <p className="text-sm font-medium text-foreground">📋 Instruções de configuração DNS</p>
+                <p className="text-xs text-muted-foreground">Para apontar <span className="font-mono font-medium text-foreground">{customDomain}</span> para sua loja, configure os seguintes registros no painel do seu provedor de domínio:</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Tipo</th>
+                        <th className="text-left py-2 pr-3 text-muted-foreground font-medium">Nome/Host</th>
+                        <th className="text-left py-2 text-muted-foreground font-medium">Valor/Destino</th>
+                      </tr>
+                    </thead>
+                    <tbody className="font-mono">
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">A</Badge></td>
+                        <td className="py-2 pr-3">@</td>
+                        <td className="py-2 text-primary font-medium">185.158.133.1</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">A</Badge></td>
+                        <td className="py-2 pr-3">www</td>
+                        <td className="py-2 text-primary font-medium">185.158.133.1</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">TXT</Badge></td>
+                        <td className="py-2 pr-3">_lovable</td>
+                        <td className="py-2 text-primary font-medium break-all">lovable_verify={settings?.id?.slice(0, 12) || "..."}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div className="space-y-1 pt-1">
+                  <p className="text-xs text-muted-foreground">⏳ A propagação DNS pode levar até <strong>72 horas</strong>.</p>
+                  <p className="text-xs text-muted-foreground">🔒 O certificado SSL (HTTPS) será provisionado automaticamente.</p>
+                  <p className="text-xs text-muted-foreground">💡 Se usar Cloudflare, ative o modo proxy nas configurações avançadas.</p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
