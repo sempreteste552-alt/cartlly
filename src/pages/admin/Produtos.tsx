@@ -12,10 +12,11 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
+import { ProductVariantsManager } from "@/components/ProductVariantsManager";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AICatalogImport } from "@/components/AICatalogImport";
@@ -36,6 +37,7 @@ export default function Produtos() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
+  const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
@@ -207,6 +209,9 @@ export default function Produtos() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
+                        <Layers className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -268,6 +273,15 @@ export default function Produtos() {
 
       {/* AI Catalog Import */}
       <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />
+
+      {/* Variants Manager */}
+      {variantsProductId && (
+        <ProductVariantsManager
+          productId={variantsProductId}
+          open={!!variantsProductId}
+          onOpenChange={(open) => !open && setVariantsProductId(null)}
+        />
+      )}
     </div>
   );
 }

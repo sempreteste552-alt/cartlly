@@ -16,13 +16,24 @@ interface ShippingCalculatorProps {
   subtotal: number;
   onSelectShipping: (option: ShippingOption | null) => void;
   selectedShipping: ShippingOption | null;
+  storeUserId?: string;
 }
 
-export default function ShippingCalculator({ settings, subtotal, onSelectShipping, selectedShipping }: ShippingCalculatorProps) {
+interface ViaCepResponse {
+  cep: string;
+  logradouro: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro?: boolean;
+}
+
+export default function ShippingCalculator({ settings, subtotal, onSelectShipping, selectedShipping, storeUserId }: ShippingCalculatorProps) {
   const [cep, setCep] = useState("");
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<ShippingOption[]>([]);
   const [calculated, setCalculated] = useState(false);
+  const [addressInfo, setAddressInfo] = useState<ViaCepResponse | null>(null);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -43,83 +54,119 @@ export default function ShippingCalculator({ settings, subtotal, onSelectShippin
     setLoading(true);
     setCalculated(false);
     onSelectShipping(null);
+    setAddressInfo(null);
 
     try {
-      // Simulate shipping calculation based on store settings
-      const shippingOptions: ShippingOption[] = [];
-      const flatRate = settings?.shipping_flat_rate;
-      const baseCost = settings?.shipping_base_cost || 0;
-      const freeAbove = settings?.shipping_free_above;
+      // Fetch address from ViaCEP
+      const viaCepRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const viaCepData: ViaCepResponse = await viaCepRes.json();
 
-      // Free shipping check
-      if (freeAbove && subtotal >= freeAbove) {
-        shippingOptions.push({
-          method: "Frete Grátis",
-          price: 0,
-          days: "5-8 dias úteis",
-        });
+      if (viaCepData.erro) {
+        toast.error("CEP não encontrado. Verifique o número.");
+        setLoading(false);
+        return;
       }
 
-      // Standard shipping
-      if (flatRate && flatRate > 0) {
-        shippingOptions.push({
-          method: "Padrão",
-          price: flatRate,
-          days: "5-10 dias úteis",
-        });
-      } else if (baseCost > 0) {
-        shippingOptions.push({
-          method: "Padrão",
-          price: baseCost,
-          days: "5-10 dias úteis",
-        });
+      setAddressInfo(viaCepData);
+
+      // Try to find matching shipping zones
+      let shippingOptions: ShippingOption[] = [];
+
+      // Fetch zones for this store
+      if (storeUserId) {
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: zones } = await supabase
+            .from("shipping_zones")
+            .select("*")
+            .eq("user_id", storeUserId)
+            .eq("active", true);
+
+          if (zones && zones.length > 0) {
+            const cepNum = parseInt(cleanCep);
+            const matchingZones = zones.filter((z: any) => {
+              const start = parseInt(z.cep_start);
+              const end = parseInt(z.cep_end);
+              return cepNum >= start && cepNum <= end;
+            });
+
+            matchingZones.forEach((z: any) => {
+              shippingOptions.push({
+                method: z.zone_name,
+                price: Number(z.price),
+                days: z.estimated_days,
+              });
+            });
+          }
+        } catch {
+          // fallback to settings
+        }
       }
 
-      // Express (simulated as 1.8x of standard)
-      const standardPrice = flatRate || baseCost;
-      if (standardPrice > 0) {
-        shippingOptions.push({
-          method: "Expresso",
-          price: Math.round(standardPrice * 1.8 * 100) / 100,
-          days: "2-4 dias úteis",
-        });
-      }
-
-      // If no shipping config, use fallback
+      // Fallback: use store settings
       if (shippingOptions.length === 0) {
-        // Simple distance-based simulation using CEP region
+        const flatRate = settings?.shipping_flat_rate;
+        const baseCost = settings?.shipping_base_cost || 0;
+        const freeAbove = settings?.shipping_free_above;
+
+        if (freeAbove && subtotal >= freeAbove) {
+          shippingOptions.push({ method: "Frete Grátis", price: 0, days: "5-8 dias úteis" });
+        }
+
+        if (flatRate && flatRate > 0) {
+          shippingOptions.push({ method: "Padrão", price: flatRate, days: "5-10 dias úteis" });
+        } else if (baseCost > 0) {
+          shippingOptions.push({ method: "Padrão", price: baseCost, days: "5-10 dias úteis" });
+        }
+
+        const standardPrice = flatRate || baseCost;
+        if (standardPrice > 0) {
+          shippingOptions.push({
+            method: "Expresso",
+            price: Math.round(standardPrice * 1.8 * 100) / 100,
+            days: "2-4 dias úteis",
+          });
+        }
+      }
+
+      // Ultimate fallback: region-based
+      if (shippingOptions.length === 0) {
         const region = parseInt(cleanCep.charAt(0));
         const baseFee = 9.90 + region * 2.5;
-        
         shippingOptions.push(
           { method: "Econômico", price: Math.round(baseFee * 100) / 100, days: "8-12 dias úteis" },
           { method: "Padrão", price: Math.round(baseFee * 1.5 * 100) / 100, days: "5-8 dias úteis" },
           { method: "Expresso", price: Math.round(baseFee * 2.5 * 100) / 100, days: "2-4 dias úteis" },
         );
-
         if (subtotal >= 200) {
           shippingOptions.unshift({ method: "Frete Grátis", price: 0, days: "8-15 dias úteis" });
         }
       }
 
+      // Check free shipping on matched zones too
+      const freeAbove = settings?.shipping_free_above;
+      if (freeAbove && subtotal >= freeAbove && !shippingOptions.some((o) => o.price === 0)) {
+        shippingOptions.unshift({ method: "Frete Grátis", price: 0, days: "5-8 dias úteis" });
+      }
+
       setOptions(shippingOptions);
       setCalculated(true);
     } catch {
-      toast.error("Erro ao calcular frete");
+      toast.error("Erro ao calcular frete. Tente novamente.");
     } finally {
       setLoading(false);
     }
-  }, [cep, settings, subtotal, onSelectShipping]);
+  }, [cep, settings, subtotal, onSelectShipping, storeUserId]);
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Truck className="h-4 w-4 text-gray-500" />
+        <Truck className="h-4 w-4 text-muted-foreground" />
         <Label className="text-sm font-medium">Calcular Frete</Label>
       </div>
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="00000-000"
             value={cep}
@@ -134,6 +181,15 @@ export default function ShippingCalculator({ settings, subtotal, onSelectShippin
         </Button>
       </div>
 
+      {addressInfo && (
+        <div className="rounded-lg bg-muted/50 p-3 text-sm animate-fade-in">
+          <p className="font-medium">{addressInfo.localidade} - {addressInfo.uf}</p>
+          {addressInfo.logradouro && (
+            <p className="text-xs text-muted-foreground">{addressInfo.logradouro}{addressInfo.bairro ? `, ${addressInfo.bairro}` : ""}</p>
+          )}
+        </div>
+      )}
+
       {calculated && options.length > 0 && (
         <div className="space-y-2 animate-fade-in">
           {options.map((opt, i) => (
@@ -142,13 +198,13 @@ export default function ShippingCalculator({ settings, subtotal, onSelectShippin
               onClick={() => onSelectShipping(opt)}
               className={`w-full flex items-center justify-between rounded-lg border p-3 text-left transition-all text-sm ${
                 selectedShipping?.method === opt.method
-                  ? "border-black bg-gray-50 ring-1 ring-black"
-                  : "border-gray-200 hover:border-gray-400"
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-border hover:border-primary/50"
               }`}
             >
               <div>
                 <p className="font-medium">{opt.method}</p>
-                <p className="text-xs text-gray-500">{opt.days}</p>
+                <p className="text-xs text-muted-foreground">{opt.days}</p>
               </div>
               <span className={`font-bold ${opt.price === 0 ? "text-green-600" : ""}`}>
                 {opt.price === 0 ? "Grátis" : formatPrice(opt.price)}

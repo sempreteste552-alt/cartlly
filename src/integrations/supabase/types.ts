@@ -358,6 +358,47 @@ export type Database = {
           },
         ]
       }
+      product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          price_modifier: number
+          product_id: string
+          sku: string | null
+          stock: number
+          variant_type: string
+          variant_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_modifier?: number
+          product_id: string
+          sku?: string | null
+          stock?: number
+          variant_type?: string
+          variant_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_modifier?: number
+          product_id?: string
+          sku?: string | null
+          stock?: number
+          variant_type?: string
+          variant_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
@@ -435,6 +476,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_zones: {
+        Row: {
+          active: boolean
+          cep_end: string
+          cep_start: string
+          created_at: string
+          estimated_days: string
+          id: string
+          price: number
+          user_id: string
+          zone_name: string
+        }
+        Insert: {
+          active?: boolean
+          cep_end: string
+          cep_start: string
+          created_at?: string
+          estimated_days?: string
+          id?: string
+          price?: number
+          user_id: string
+          zone_name: string
+        }
+        Update: {
+          active?: boolean
+          cep_end?: string
+          cep_start?: string
+          created_at?: string
+          estimated_days?: string
+          id?: string
+          price?: number
+          user_id?: string
+          zone_name?: string
+        }
+        Relationships: []
+      }
       store_banners: {
         Row: {
           active: boolean
@@ -483,6 +560,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           logo_url: string | null
+          low_stock_threshold: number
           payment_boleto: boolean
           payment_credit_card: boolean
           payment_debit_card: boolean
@@ -497,6 +575,7 @@ export type Database = {
           shipping_free_above: number | null
           shipping_per_km: number
           store_address: string | null
+          store_cep: string | null
           store_description: string | null
           store_location: string | null
           store_name: string
@@ -524,6 +603,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
+          low_stock_threshold?: number
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -538,6 +618,7 @@ export type Database = {
           shipping_free_above?: number | null
           shipping_per_km?: number
           store_address?: string | null
+          store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
           store_name?: string
@@ -565,6 +646,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           logo_url?: string | null
+          low_stock_threshold?: number
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -579,6 +661,7 @@ export type Database = {
           shipping_free_above?: number | null
           shipping_per_km?: number
           store_address?: string | null
+          store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
           store_name?: string

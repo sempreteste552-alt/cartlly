@@ -2,11 +2,13 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import { useProductImages } from "@/hooks/useProductImages";
+import { useProductVariants } from "@/hooks/useProductVariants";
 import { useLojaContext } from "./LojaLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 import { ProductReviews } from "@/components/ProductReviews";
 
@@ -14,6 +16,7 @@ export default function LojaProduto() {
   const { id } = useParams();
   const { data: products } = usePublicProducts();
   const { data: productImages } = useProductImages(id);
+  const { data: variants } = useProductVariants(id);
   const { cart, settings } = useLojaContext();
 
   const product = products?.find((p) => p.id === id);
@@ -29,6 +32,31 @@ export default function LojaProduto() {
   }, [product, productImages]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  // Group variants by type
+  const variantGroups = useMemo(() => {
+    if (!variants || variants.length === 0) return {};
+    const groups: Record<string, typeof variants> = {};
+    variants.forEach((v) => {
+      if (!groups[v.variant_type]) groups[v.variant_type] = [];
+      groups[v.variant_type].push(v);
+    });
+    return groups;
+  }, [variants]);
+
+  const variantTypeLabels: Record<string, string> = { color: "Cor", size: "Tamanho", model: "Modelo" };
+
+  // Calculate price with variant modifiers
+  const effectivePrice = useMemo(() => {
+    if (!product) return 0;
+    let price = product.price;
+    Object.values(selectedVariants).forEach((variantId) => {
+      const v = variants?.find((vr) => vr.id === variantId);
+      if (v) price += v.price_modifier;
+    });
+    return price;
+  }, [product, selectedVariants, variants]);
 
   const similarProducts = useMemo(() => {
     if (!product || !products) return [];
@@ -99,11 +127,41 @@ export default function LojaProduto() {
           <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
 
           <div className="space-y-1">
-            <p className="text-3xl font-bold">{formatPrice(product.price)}</p>
+            <p className="text-3xl font-bold">{formatPrice(effectivePrice)}</p>
             <p className="text-sm text-green-600">
-              ou 12x de {formatPrice(product.price / 12)} sem juros
+              ou 12x de {formatPrice(effectivePrice / 12)} sem juros
             </p>
           </div>
+
+          {/* Variant selectors */}
+          {Object.keys(variantGroups).length > 0 && (
+            <div className="space-y-3">
+              {Object.entries(variantGroups).map(([type, vars]) => (
+                <div key={type} className="space-y-2">
+                  <Label className="text-sm font-medium">{variantTypeLabels[type] || type}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {vars.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariants((prev) => ({ ...prev, [type]: prev[type] === v.id ? "" : v.id }))}
+                        disabled={v.stock === 0}
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                          selectedVariants[type] === v.id
+                            ? "border-black bg-black text-white"
+                            : v.stock === 0
+                            ? "border-gray-200 text-gray-300 cursor-not-allowed line-through"
+                            : "border-gray-300 hover:border-black"
+                        }`}
+                      >
+                        {v.variant_value}
+                        {v.stock > 0 && v.stock <= 3 && <span className="text-[10px] ml-1 text-amber-500">(últimas {v.stock})</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {product.stock > 0 ? (
             <Badge className="bg-green-100 text-green-800">Em estoque ({product.stock} unid.)</Badge>
@@ -115,7 +173,7 @@ export default function LojaProduto() {
             <Button
               className="flex-1 bg-black text-white hover:bg-gray-800 h-12 text-base"
               disabled={product.stock <= 0}
-              onClick={() => cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url })}
+              onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
             </Button>
