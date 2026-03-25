@@ -41,6 +41,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/loja" replace />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin */}
             <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
               <Route index element={<SuperAdminDashboard />} />
