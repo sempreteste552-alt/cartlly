@@ -31,6 +31,31 @@ export default function LojaProduto() {
   }, [product, productImages]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+
+  // Group variants by type
+  const variantGroups = useMemo(() => {
+    if (!variants || variants.length === 0) return {};
+    const groups: Record<string, typeof variants> = {};
+    variants.forEach((v) => {
+      if (!groups[v.variant_type]) groups[v.variant_type] = [];
+      groups[v.variant_type].push(v);
+    });
+    return groups;
+  }, [variants]);
+
+  const variantTypeLabels: Record<string, string> = { color: "Cor", size: "Tamanho", model: "Modelo" };
+
+  // Calculate price with variant modifiers
+  const effectivePrice = useMemo(() => {
+    if (!product) return 0;
+    let price = product.price;
+    Object.values(selectedVariants).forEach((variantId) => {
+      const v = variants?.find((vr) => vr.id === variantId);
+      if (v) price += v.price_modifier;
+    });
+    return price;
+  }, [product, selectedVariants, variants]);
 
   const similarProducts = useMemo(() => {
     if (!product || !products) return [];
