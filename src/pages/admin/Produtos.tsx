@@ -37,6 +37,7 @@ export default function Produtos() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
+  const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
