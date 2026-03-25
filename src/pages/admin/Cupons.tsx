@@ -209,18 +209,12 @@ export default function Cupons() {
           <p className="text-muted-foreground">Crie e gerencie cupons para sua loja</p>
         </div>
         <div className="flex gap-2">
-          {hasFeature("ai") ? (
-            <Button variant="outline" onClick={handleAISuggest} disabled={aiLoading}>
+          <LockedFeature isLocked={isLocked("ai_tools")} featureName="Sugestões IA">
+            <Button variant="outline" onClick={handleAISuggest} disabled={aiLoading || isLocked("ai_tools")}>
               <Sparkles className="mr-2 h-4 w-4" />
               {aiLoading ? "Gerando..." : "Sugestões IA"}
             </Button>
-          ) : (
-            <LockedFeature featureName="Sugestões IA" compact>
-              <Button variant="outline" disabled>
-                <Sparkles className="mr-2 h-4 w-4" /> Sugestões IA
-              </Button>
-            </LockedFeature>
-          )}
+          </LockedFeature>
           <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo Cupom</Button>
         </div>
       </div>
