@@ -57,6 +57,7 @@ export function AdminSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
+  const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
 
   const isActive = (path: string) => {
