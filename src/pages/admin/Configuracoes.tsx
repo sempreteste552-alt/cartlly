@@ -144,6 +144,9 @@ export default function Configuracoes() {
       sell_via_whatsapp: sellViaWhatsapp,
       store_open: storeOpen,
       store_location: storeLocation.trim() || null,
+      store_slug: storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null,
+      admin_primary_color: adminPrimaryColor,
+      admin_accent_color: adminAccentColor,
     } as any);
   };
 
