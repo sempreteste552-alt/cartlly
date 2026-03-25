@@ -273,6 +273,15 @@ export default function Produtos() {
 
       {/* AI Catalog Import */}
       <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />
+
+      {/* Variants Manager */}
+      {variantsProductId && (
+        <ProductVariantsManager
+          productId={variantsProductId}
+          open={!!variantsProductId}
+          onOpenChange={(open) => !open && setVariantsProductId(null)}
+        />
+      )}
     </div>
   );
 }
