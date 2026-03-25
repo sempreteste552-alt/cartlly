@@ -105,7 +105,24 @@ export default function Login() {
           setLoading(false);
           return;
         }
-        const { error: signUpError } = await supabase.auth.signUp({
+        const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+        if (!slug) {
+          toast.error("Defina um slug válido para sua loja.");
+          setLoading(false);
+          return;
+        }
+        // Check slug availability
+        const { data: existingSlug } = await supabase
+          .from("store_settings")
+          .select("id")
+          .eq("store_slug", slug)
+          .maybeSingle();
+        if (existingSlug) {
+          toast.error("Este slug já está em uso. Escolha outro.");
+          setLoading(false);
+          return;
+        }
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -114,6 +131,14 @@ export default function Login() {
           },
         });
         if (signUpError) throw signUpError;
+        // Create store_settings with slug and store name
+        if (signUpData.user) {
+          await supabase.from("store_settings").insert({
+            user_id: signUpData.user.id,
+            store_name: storeName.trim() || displayName || "Minha Loja",
+            store_slug: slug,
+          });
+        }
         await supabase.auth.signOut();
         toast.success("Conta criada! Sua conta está em análise pelo administrador.");
         setIsRegister(false);
