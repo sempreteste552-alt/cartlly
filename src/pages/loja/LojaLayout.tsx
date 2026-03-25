@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
 import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart, type CartItem } from "@/hooks/useCart";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Tag, Mail, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
