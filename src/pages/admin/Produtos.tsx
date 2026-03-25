@@ -265,6 +265,9 @@ export default function Produtos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Catalog Import */}
+      <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />
     </div>
   );
 }
