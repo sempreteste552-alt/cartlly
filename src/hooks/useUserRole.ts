@@ -32,7 +32,7 @@ export function useAllTenants() {
     queryFn: async () => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("*");
+        .select("*, status");
       if (error) throw error;
 
       // Get store settings for each tenant
