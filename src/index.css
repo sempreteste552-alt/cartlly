@@ -104,12 +104,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-  }
+  } 
 } 
 
-#lovable-badge {
+/* Oculta a marca d’água do Lovable de forma genérica */
+#lovable-badge,
+[class*="lovable"],
+[id*="lovable"] {
   display: none !important;
-}
-
-  
 }
