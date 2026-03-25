@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,53 @@ import cartlyLogo from "@/assets/cartly-logo.png";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
+const LOGIN_PHRASES = [
+  "Bem-vindo de volta à sua loja! 🏪",
+  "Seus clientes estão esperando... 🚀",
+  "Hora de faturar! 💰",
+  "Sua loja, seu sucesso! ✨",
+];
+
+const REGISTER_PHRASES = [
+  "Seja bem-vindo à Cartly! 🎉",
+  "Você está prestes a faturar muito! 💎",
+  "Monte sua loja em minutos! ⚡",
+  "O futuro do seu negócio começa aqui! 🌟",
+];
+
+function useTypewriter(phrases: string[], speed = 60, pause = 2500) {
+  const [text, setText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[phraseIndex];
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        setText(current.slice(0, charIndex + 1));
+        setCharIndex((c) => c + 1);
+        if (charIndex + 1 === current.length) {
+          setTimeout(() => setIsDeleting(true), pause);
+        }
+      } else {
+        setText(current.slice(0, charIndex - 1));
+        setCharIndex((c) => c - 1);
+        if (charIndex <= 1) {
+          setIsDeleting(false);
+          setPhraseIndex((p) => (p + 1) % phrases.length);
+          setCharIndex(0);
+        }
+      }
+    }, isDeleting ? speed / 2 : speed);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, phraseIndex, phrases, speed, pause]);
+
+  return text;
+}
+
 export default function Login() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,12 +72,14 @@ export default function Login() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const loginText = useTypewriter(LOGIN_PHRASES);
+  const registerText = useTypewriter(REGISTER_PHRASES);
+
   useEffect(() => {
     if (user) {
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {
-        // ProtectedRoute will check profile status and redirect if pending
         navigate("/admin", { replace: true });
       }
     }
@@ -63,7 +112,6 @@ export default function Login() {
           },
         });
         if (signUpError) throw signUpError;
-        // Sign out after signup so user sees the pending screen on next login
         await supabase.auth.signOut();
         toast.success("Conta criada! Sua conta está em análise pelo administrador.");
         setIsRegister(false);
@@ -81,135 +129,173 @@ export default function Login() {
 
   const getTitle = () => {
     if (isForgotPassword) return "Redefinir Senha";
-    if (isRegister) return "Criar Conta Admin";
+    if (isRegister) return "Criar Conta";
     return "Painel Administrativo";
   };
 
-  const getDescription = () => {
-    if (isForgotPassword) return "Informe seu e-mail para receber o link de redefinição";
-    if (isRegister) return "Preencha os dados para criar sua conta";
-    return "Entre com suas credenciais para acessar o painel";
-  };
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md border-border shadow-lg">
-        <CardHeader className="text-center space-y-3">
-          <img src={cartlyLogo} alt="Cartly" className="mx-auto h-16 w-auto" />
-          <CardTitle className="text-2xl font-bold tracking-tight">{getTitle()}</CardTitle>
-          <CardDescription>{getDescription()}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && !isForgotPassword && (
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Nome</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Seu nome"
-                  required
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@loja.com"
-                required
-              />
-            </div>
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
+      {/* Background decorations */}
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Rotating blue glow border */}
+        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8, #3b82f6)",
+              animation: "spin 3s linear infinite",
+            }}
+          />
+        </div>
+        {/* Inner glow pulse */}
+        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
+
+        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
+          <CardHeader className="text-center space-y-4 pt-8">
+            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-16 w-auto drop-shadow-lg" />
+            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+              {getTitle()}
+            </CardTitle>
+
+            {/* Typewriter text */}
             {!isForgotPassword && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
+              <div className="h-8 flex items-center justify-center">
+                <p className="text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                  {isRegister ? registerText : loginText}
+                  <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse align-middle" />
+                </p>
+              </div>
+            )}
+
+            {isForgotPassword && (
+              <CardDescription>Informe seu e-mail para receber o link de redefinição</CardDescription>
+            )}
+          </CardHeader>
+
+          <CardContent className="pb-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Nome</Label>
                   <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Seu nome"
                     required
-                    minLength={6}
+                    className="h-11 border-border/50 focus:border-blue-500 transition-colors"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
                 </div>
-                {!isRegister && (
-                  <button
-                    type="button"
-                    onClick={() => setIsForgotPassword(true)}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Esqueceu sua senha?
-                  </button>
-                )}
-              </div>
-            )}
-            {isRegister && !isForgotPassword && (
-              <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={acceptedTerms}
-                  onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@loja.com"
+                  required
+                  className="h-11 border-border/50 focus:border-blue-500 transition-colors"
                 />
-                <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
-                  Li e aceito os{" "}
-                  <a href="/termos" target="_blank" className="text-primary hover:underline font-medium">
-                    Termos de Uso
-                  </a>{" "}
-                  e a{" "}
-                  <a href="/privacidade" target="_blank" className="text-primary hover:underline font-medium">
-                    Política de Privacidade
-                  </a>
-                </label>
               </div>
-            )}
-            <Button type="submit" className="w-full" disabled={loading || (isRegister && !acceptedTerms)}>
-              {loading
-                ? "Carregando..."
-                : isForgotPassword
-                ? "Enviar Link"
-                : isRegister
-                ? "Criar Conta"
-                : "Entrar"}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            {isForgotPassword ? (
-              <button
-                onClick={() => setIsForgotPassword(false)}
-                className="font-medium text-primary hover:underline"
+              {!isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                      className="h-11 border-border/50 focus:border-blue-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {!isRegister && (
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPassword(true)}
+                      className="text-xs text-blue-500 hover:underline"
+                    >
+                      Esqueceu sua senha?
+                    </button>
+                  )}
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                    Li e aceito os{" "}
+                    <a href="/termos" target="_blank" className="text-blue-500 hover:underline font-medium">
+                      Termos de Uso
+                    </a>{" "}
+                    e a{" "}
+                    <a href="/privacidade" target="_blank" className="text-blue-500 hover:underline font-medium">
+                      Política de Privacidade
+                    </a>
+                  </label>
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
+                disabled={loading || (isRegister && !acceptedTerms)}
               >
-                Voltar ao login
-              </button>
-            ) : (
-              <>
-                {isRegister ? "Já tem uma conta?" : "Não tem uma conta?"}{" "}
+                {loading
+                  ? "Carregando..."
+                  : isForgotPassword
+                  ? "Enviar Link"
+                  : isRegister
+                  ? "Criar Conta"
+                  : "Entrar"}
+              </Button>
+            </form>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {isForgotPassword ? (
                 <button
-                  onClick={() => {
-                    setIsRegister(!isRegister);
-                    setAcceptedTerms(false);
-                  }}
-                  className="font-medium text-primary hover:underline"
+                  onClick={() => setIsForgotPassword(false)}
+                  className="font-medium text-blue-500 hover:underline"
                 >
-                  {isRegister ? "Fazer login" : "Criar conta"}
+                  Voltar ao login
                 </button>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              ) : (
+                <>
+                  {isRegister ? "Já tem uma conta?" : "Não tem uma conta?"}{" "}
+                  <button
+                    onClick={() => {
+                      setIsRegister(!isRegister);
+                      setAcceptedTerms(false);
+                    }}
+                    className="font-medium text-blue-500 hover:underline"
+                  >
+                    {isRegister ? "Fazer login" : "Criar conta"}
+                  </button>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
