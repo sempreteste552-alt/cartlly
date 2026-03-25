@@ -357,6 +357,19 @@ export default function LojaLayout() {
           </div>
         </footer>
 
+        {/* Floating WhatsApp Button */}
+        {settings?.store_whatsapp && (
+          <a
+            href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-fade-in"
+            title="Fale conosco pelo WhatsApp"
+          >
+            <MessageCircle className="h-7 w-7" />
+          </a>
+        )}
+
         {/* Auth modals */}
         {settings?.user_id && (
           <>
