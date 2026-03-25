@@ -56,6 +56,9 @@ export default function Configuracoes() {
   const [sellViaWhatsapp, setSellViaWhatsapp] = useState(false);
   const [storeOpen, setStoreOpen] = useState(true);
   const [storeLocation, setStoreLocation] = useState("");
+  const [storeSlug, setStoreSlug] = useState("");
+  const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
+  const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
 
   useEffect(() => {
     if (settings) {
