@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Store } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import cartlyLogo from "@/assets/cartly-logo.png";
 
 const SUPER_ADMIN_EMAIL = "admin@cartlly.com";
 
