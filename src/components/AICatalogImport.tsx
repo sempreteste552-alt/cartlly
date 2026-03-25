@@ -205,7 +205,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/heic,image/heif,image/*"
                   multiple
                   className="hidden"
                   onChange={handleImageSelect}
