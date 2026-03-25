@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2 } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart } from "lucide-react";
+import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
 import { toast } from "sonner";
 
@@ -21,7 +22,8 @@ export default function LojaProduto() {
   const { data: products } = usePublicProducts();
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
-  const { cart, settings } = useLojaContext();
+  const { cart, settings, storeUserId } = useLojaContext();
+  const wishlist = useWishlist(storeUserId);
 
   const product = products?.find((p) => p.id === id);
 
@@ -143,9 +145,14 @@ export default function LojaProduto() {
 
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
-            <Button variant="ghost" size="icon" onClick={handleShare} title="Compartilhar">
-              <Share2 className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title="Favoritar">
+                <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleShare} title="Compartilhar">
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-1">

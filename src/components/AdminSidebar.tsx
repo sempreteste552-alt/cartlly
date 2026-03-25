@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
@@ -68,11 +69,12 @@ export function AdminSidebar() {
             <Store className="h-5 w-5" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1">
               <span className="text-sm font-bold text-sidebar-foreground">Minha Loja</span>
               <span className="text-xs text-sidebar-foreground/60">Admin V0</span>
             </div>
           )}
+          {!collapsed && <AdminNotificationsBell />}
         </div>
       </SidebarHeader>
 
