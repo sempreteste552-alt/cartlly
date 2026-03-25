@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import { toast } from "sonner";
+import { LockedFeature } from "@/components/LockedFeature";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
@@ -20,6 +22,8 @@ type TestStatus = "idle" | "testing" | "success" | "error";
 export default function Gateway() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
+  const { isLocked } = usePlanFeatures();
+  const gatewayLocked = isLocked("gateway");
 
   const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
@@ -89,6 +93,7 @@ export default function Gateway() {
   }
 
   return (
+    <LockedFeature isLocked={gatewayLocked} featureName="Gateway de Pagamento" logoUrl={settings?.logo_url || undefined}>
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Gateway de Pagamento</h1>
@@ -230,5 +235,6 @@ export default function Gateway() {
         </Button>
       </div>
     </div>
+    </LockedFeature>
   );
 }

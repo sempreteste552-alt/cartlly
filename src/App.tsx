@@ -14,6 +14,7 @@ import Configuracoes from "./pages/admin/Configuracoes";
 import Cupons from "./pages/admin/Cupons";
 import Gateway from "./pages/admin/Gateway";
 import Frete from "./pages/admin/Frete";
+import Clientes from "./pages/admin/Clientes";
 import Pagamentos from "./pages/admin/Pagamentos";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="gateway" element={<Gateway />} />
               <Route path="frete" element={<Frete />} />
               <Route path="pagamentos" element={<Pagamentos />} />
+              <Route path="clientes" element={<Clientes />} />
             </Route>
             {/* Default store */}
             <Route path="/loja" element={<LojaLayout />}>

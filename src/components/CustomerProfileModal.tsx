@@ -1,0 +1,199 @@
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Package, User, LogOut } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+
+interface CustomerProfileModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  storeUserId: string;
+}
+
+export function CustomerProfileModal({ open, onOpenChange, storeUserId }: CustomerProfileModalProps) {
+  const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
+  const [tab, setTab] = useState("profile");
+  const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [cep, setCep] = useState("");
+  const [cpf, setCpf] = useState("");
+
+  useEffect(() => {
+    if (customer) {
+      setName(customer.name || "");
+      setPhone(customer.phone || "");
+      setAddress(customer.address || "");
+      setCity(customer.city || "");
+      setState(customer.state || "");
+      setCep(customer.cep || "");
+      setCpf(customer.cpf || "");
+    }
+  }, [customer]);
+
+  useEffect(() => {
+    if (tab === "orders" && open) {
+      loadOrders();
+    }
+  }, [tab, open]);
+
+  const loadOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const data = await getOrders(storeUserId);
+      setOrders(data);
+    } catch {
+      toast.error("Erro ao carregar pedidos");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await updateProfile({ name, phone, address, city, state, cep, cpf });
+      toast.success("Dados atualizados!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    onOpenChange(false);
+    toast.success("Desconectado com sucesso");
+  };
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("pt-BR");
+
+  const statusColors: Record<string, string> = {
+    pendente: "bg-yellow-100 text-yellow-800",
+    confirmado: "bg-blue-100 text-blue-800",
+    enviado: "bg-purple-100 text-purple-800",
+    entregue: "bg-green-100 text-green-800",
+    cancelado: "bg-red-100 text-red-800",
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" /> Minha Conta
+          </DialogTitle>
+        </DialogHeader>
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">Meus Dados</TabsTrigger>
+            <TabsTrigger value="orders">Meus Pedidos</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile">
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF</Label>
+                  <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Endereço</Label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número, bairro" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label>Cidade</Label>
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Estado</Label>
+                  <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="UF" maxLength={2} />
+                </div>
+                <div className="space-y-2">
+                  <Label>CEP</Label>
+                  <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSave} disabled={loading} className="flex-1 bg-black text-white hover:bg-gray-800">
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar Dados
+                </Button>
+                <Button variant="outline" onClick={handleSignOut} className="text-red-500 hover:text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" /> Sair
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <div className="space-y-3 pt-2">
+              {ordersLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Package className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhum pedido encontrado</p>
+                </div>
+              ) : (
+                orders.map((order) => (
+                  <div key={order.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">#{order.id.slice(0, 8)}</span>
+                      <Badge className={statusColors[order.status] || "bg-gray-100 text-gray-800"}>
+                        {order.status}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-500">{formatDate(order.created_at)}</p>
+                    <Separator />
+                    <div className="space-y-1">
+                      {order.order_items?.map((item: any) => (
+                        <div key={item.id} className="flex justify-between text-xs">
+                          <span>{item.quantity}x {item.product_name}</span>
+                          <span>{formatPrice(item.unit_price * item.quantity)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-between font-medium text-sm pt-1">
+                      <span>Total</span>
+                      <span>{formatPrice(order.total)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}

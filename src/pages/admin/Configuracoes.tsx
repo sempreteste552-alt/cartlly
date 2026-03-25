@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export default function Configuracoes() {
   const [storeName, setStoreName] = useState("");
   const [storeDescription, setStoreDescription] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [logoSize, setLogoSize] = useState(32);
   const [primaryColor, setPrimaryColor] = useState("#6d28d9");
   const [secondaryColor, setSecondaryColor] = useState("#f5f3ff");
   const [accentColor, setAccentColor] = useState("#8b5cf6");
@@ -43,12 +45,19 @@ export default function Configuracoes() {
   const [storeSlug, setStoreSlug] = useState("");
   const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
   const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
+  // Marquee
+  const [marqueeEnabled, setMarqueeEnabled] = useState(false);
+  const [marqueeText, setMarqueeText] = useState("");
+  const [marqueeSpeed, setMarqueeSpeed] = useState(50);
+  const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
+  const [marqueeTextColor, setMarqueeTextColor] = useState("#ffffff");
 
   useEffect(() => {
     if (settings) {
       setStoreName(settings.store_name);
       setStoreDescription((settings as any).store_description ?? "");
       setLogoUrl(settings.logo_url ?? "");
+      setLogoSize((settings as any).logo_size ?? 32);
       setPrimaryColor(settings.primary_color);
       setSecondaryColor(settings.secondary_color);
       setAccentColor(settings.accent_color);
@@ -67,6 +76,11 @@ export default function Configuracoes() {
       setStoreSlug((settings as any).store_slug ?? "");
       setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
       setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
+      setMarqueeEnabled((settings as any).marquee_enabled ?? false);
+      setMarqueeText((settings as any).marquee_text ?? "");
+      setMarqueeSpeed((settings as any).marquee_speed ?? 50);
+      setMarqueeBgColor((settings as any).marquee_bg_color ?? "#000000");
+      setMarqueeTextColor((settings as any).marquee_text_color ?? "#ffffff");
     }
   }, [settings]);
 
@@ -116,6 +130,12 @@ export default function Configuracoes() {
       store_slug: storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null,
       admin_primary_color: adminPrimaryColor,
       admin_accent_color: adminAccentColor,
+      marquee_enabled: marqueeEnabled,
+      marquee_text: marqueeText.trim(),
+      marquee_speed: marqueeSpeed,
+      marquee_bg_color: marqueeBgColor,
+      marquee_text_color: marqueeTextColor,
+      logo_size: logoSize,
     } as any);
   };
 
@@ -147,6 +167,54 @@ export default function Configuracoes() {
         </CardContent>
       </Card>
 
+      {/* Marquee / Letreiro */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
+          <CardDescription>Texto animado exibido no topo da loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Ativar Letreiro</Label>
+            <Switch checked={marqueeEnabled} onCheckedChange={setMarqueeEnabled} />
+          </div>
+          {marqueeEnabled && (
+            <>
+              <div className="space-y-2">
+                <Label>Texto do Letreiro</Label>
+                <Input value={marqueeText} onChange={(e) => setMarqueeText(e.target.value)} placeholder="🔥 Promoção de verão! Até 50% OFF em todos os produtos!" maxLength={300} />
+              </div>
+              <div className="space-y-2">
+                <Label>Velocidade ({marqueeSpeed}%)</Label>
+                <Slider value={[marqueeSpeed]} onValueChange={([v]) => setMarqueeSpeed(v)} min={10} max={100} step={5} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Cor de Fundo</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Cor do Texto</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
+                </div>
+              </div>
+              {/* Preview */}
+              <div className="rounded-lg overflow-hidden border border-border">
+                <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
+                  <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Store Info */}
       <Card className="border-border">
         <CardHeader>
@@ -167,7 +235,7 @@ export default function Configuracoes() {
             <div className="flex items-center gap-4">
               {logoUrl ? (
                 <div className="relative">
-                  <img src={logoUrl} alt="Logo" className="h-20 w-20 rounded-lg object-contain border border-border bg-card p-1" />
+                  <img src={logoUrl} alt="Logo" className="rounded-lg object-contain border border-border bg-card p-1" style={{ height: `${logoSize}px` }} />
                   <button type="button" onClick={() => setLogoUrl("")} className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
@@ -178,6 +246,11 @@ export default function Configuracoes() {
               <p className="text-xs text-muted-foreground">PNG ou JPG, máximo 2MB</p>
             </div>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
+          </div>
+          <div className="space-y-2">
+            <Label>Tamanho da Logo ({logoSize}px)</Label>
+            <Slider value={[logoSize]} onValueChange={([v]) => setLogoSize(v)} min={24} max={120} step={4} />
+            <p className="text-xs text-muted-foreground">Altura da logo no cabeçalho da loja</p>
           </div>
         </CardContent>
       </Card>

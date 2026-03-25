@@ -2,12 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
 import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart, type CartItem } from "@/hooks/useCart";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Tag, Mail, Info, Truck } from "lucide-react";
+import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Tag, Mail, Info, Truck, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { StoreMarquee } from "@/components/StoreMarquee";
+import { CustomerAuthModal } from "@/components/CustomerAuthModal";
+import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -25,6 +29,7 @@ export default function LojaLayout() {
   const { slug } = useParams();
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { data: defaultSettings, isLoading: defaultLoading } = usePublicStoreSettings();
+  const { user, customer } = useCustomerAuth();
 
   const settings = slug ? settingsBySlug : defaultSettings;
   const isLoading = slug ? slugLoading : defaultLoading;
@@ -32,12 +37,18 @@ export default function LojaLayout() {
   const cart = useCart();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
   const basePath = slug ? `/loja/${slug}` : "/loja";
+
+  // Logo size from settings (default 32 = h-8)
+  const logoSize = (settings as any)?.logo_size || 32;
+  const logoSizeClass = `max-w-[${Math.max(80, logoSize * 4)}px]`;
 
   // Apply store colors as CSS vars
   useEffect(() => {
@@ -89,6 +100,16 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
       <div className="min-h-screen bg-white text-black">
+        {/* Marquee ticker */}
+        {(settings as any)?.marquee_enabled && (settings as any)?.marquee_text && (
+          <StoreMarquee
+            text={(settings as any).marquee_text}
+            speed={(settings as any).marquee_speed}
+            bgColor={(settings as any).marquee_bg_color}
+            textColor={(settings as any).marquee_text_color}
+          />
+        )}
+
         {/* Top bar */}
         <div className="bg-black text-white text-xs py-1">
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
@@ -101,8 +122,18 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">Instagram</a>}
-              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300">Facebook</a>}
+              {/* Customer login/profile */}
+              {user && customer ? (
+                <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:text-gray-300">
+                  <User className="h-3 w-3" /> {customer.name?.split(" ")[0] || "Conta"}
+                </button>
+              ) : (
+                <button onClick={() => setAuthModalOpen(true)} className="flex items-center gap-1 hover:text-gray-300">
+                  <User className="h-3 w-3" /> Entrar
+                </button>
+              )}
+              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 hidden sm:inline">Instagram</a>}
+              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 hidden sm:inline">Facebook</a>}
               {settings?.store_whatsapp && (
                 <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-gray-300">
                   <MessageCircle className="h-3 w-3" /> WhatsApp
@@ -121,7 +152,12 @@ export default function LojaLayout() {
 
             <Link to={basePath} className="flex items-center gap-2 shrink-0">
               {settings?.logo_url ? (
-                <img src={settings.logo_url} alt={storeName} className="h-8 max-w-[120px] object-contain" />
+                <img
+                  src={settings.logo_url}
+                  alt={storeName}
+                  style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
+                  className="object-contain"
+                />
               ) : (
                 <span className="text-xl font-bold">{storeName}</span>
               )}
@@ -139,6 +175,11 @@ export default function LojaLayout() {
                 />
               </div>
             </div>
+
+            {/* Customer icon on header for mobile */}
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+              <User className="h-5 w-5" />
+            </Button>
 
             <Sheet>
               <SheetTrigger asChild>
@@ -223,7 +264,7 @@ export default function LojaLayout() {
           </div>
         </header>
 
-        {/* Mobile Menu with staggered animation */}
+        {/* Mobile Menu */}
         <div
           className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-white border-b border-gray-100 ${
             mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
@@ -315,6 +356,14 @@ export default function LojaLayout() {
             <p className="text-center text-xs text-gray-500">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>
+
+        {/* Auth modals */}
+        {settings?.user_id && (
+          <>
+            <CustomerAuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} storeUserId={settings.user_id} />
+            <CustomerProfileModal open={profileModalOpen} onOpenChange={setProfileModalOpen} storeUserId={settings.user_id} />
+          </>
+        )}
       </div>
     </LojaContext.Provider>
   );

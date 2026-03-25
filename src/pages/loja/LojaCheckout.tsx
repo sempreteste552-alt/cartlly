@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLojaContext } from "./LojaLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useValidateCoupon } from "@/hooks/useCoupons";
+import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ type CheckoutPhase = "info" | "payment" | "success";
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
   const navigate = useNavigate();
+  const { customer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<CheckoutPhase>("info");
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -30,6 +32,17 @@ export default function LojaCheckout() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Auto-fill from customer profile
+  useEffect(() => {
+    if (customer) {
+      setName(customer.name || "");
+      setEmail(customer.email || "");
+      setPhone(customer.phone || "");
+      const fullAddress = [customer.address, customer.city, customer.state, customer.cep].filter(Boolean).join(", ");
+      if (fullAddress) setAddress(fullAddress);
+    }
+  }, [customer]);
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);

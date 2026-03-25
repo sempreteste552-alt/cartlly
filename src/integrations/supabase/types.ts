@@ -77,6 +77,54 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          address: string | null
+          auth_user_id: string
+          cep: string | null
+          city: string | null
+          cpf: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          state: string | null
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          auth_user_id: string
+          cep?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          state?: string | null
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          auth_user_id?: string
+          cep?: string | null
+          city?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          state?: string | null
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -559,8 +607,14 @@ export type Database = {
           google_maps_url: string | null
           id: string
           instagram_url: string | null
+          logo_size: number
           logo_url: string | null
           low_stock_threshold: number
+          marquee_bg_color: string
+          marquee_enabled: boolean
+          marquee_speed: number
+          marquee_text: string | null
+          marquee_text_color: string
           payment_boleto: boolean
           payment_credit_card: boolean
           payment_debit_card: boolean
@@ -602,8 +656,14 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
+          logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
+          marquee_bg_color?: string
+          marquee_enabled?: boolean
+          marquee_speed?: number
+          marquee_text?: string | null
+          marquee_text_color?: string
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -645,8 +705,14 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
+          logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
+          marquee_bg_color?: string
+          marquee_enabled?: boolean
+          marquee_speed?: number
+          marquee_text?: string | null
+          marquee_text_color?: string
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
