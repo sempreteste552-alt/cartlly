@@ -133,6 +133,7 @@ export default function Configuracoes() {
       custom_domain: customDomain.trim() || null,
       payment_gateway: paymentGateway || null,
       gateway_public_key: gatewayPublicKey.trim() || null,
+      gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
       store_address: storeAddress.trim() || null,
       store_phone: storePhone.trim() || null,
