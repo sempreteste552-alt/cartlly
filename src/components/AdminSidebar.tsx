@@ -41,6 +41,8 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { data: settings } = useStoreSettings();
+  const storeSlug = (settings as any)?.store_slug;
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";
