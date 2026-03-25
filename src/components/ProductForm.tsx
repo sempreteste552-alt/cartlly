@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, GripVertical } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 
@@ -21,6 +21,7 @@ interface ProductFormProps {
     image_url: string | null;
     published: boolean;
     category_id: string | null;
+    additionalImages?: string[];
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
@@ -34,7 +35,9 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [published, setPublished] = useState(initialData?.published ?? false);
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "");
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const additionalFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
 
@@ -44,6 +47,25 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
     if (file.size > 5 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 5MB.");
     const url = await uploadImage.mutateAsync(file);
     setImageUrl(url);
+  };
+
+  const handleAdditionalFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    if (additionalImages.length + files.length > 9) {
+      alert("Máximo de 9 imagens adicionais.");
+      return;
+    }
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > 5 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 5MB.`); continue; }
+      const url = await uploadImage.mutateAsync(files[i]);
+      setAdditionalImages((prev) => [...prev, url]);
+    }
+    if (additionalFileRef.current) additionalFileRef.current.value = "";
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -56,20 +78,21 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       image_url: imageUrl || null,
       published,
       category_id: categoryId || null,
+      additionalImages,
     });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setCategoryId("");
+      setImageUrl(""); setPublished(false); setCategoryId(""); setAdditionalImages([]);
     }
     onOpenChange(isOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? "Editar Produto" : "Novo Produto"}</DialogTitle>
         </DialogHeader>
@@ -110,8 +133,9 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             </div>
           </div>
 
+          {/* Main Image */}
           <div className="space-y-2">
-            <Label>Imagem</Label>
+            <Label>Imagem Principal</Label>
             {imageUrl ? (
               <div className="relative inline-block">
                 <img src={imageUrl} alt="Preview" className="h-32 w-32 rounded-lg object-cover border border-border" />
@@ -132,6 +156,35 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
               </div>
             )}
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          </div>
+
+          {/* Additional Images */}
+          <div className="space-y-2">
+            <Label>Imagens Adicionais ({additionalImages.length}/9)</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {additionalImages.map((url, i) => (
+                <div key={i} className="relative group">
+                  <img src={url} alt={`Extra ${i + 1}`} className="h-20 w-full rounded-md object-cover border border-border" />
+                  <button type="button" onClick={() => removeAdditionalImage(i)} className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {additionalImages.length < 9 && (
+                <div
+                  onClick={() => additionalFileRef.current?.click()}
+                  className="flex h-20 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border hover:border-primary/50 transition-colors"
+                >
+                  {uploadImage.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+              )}
+            </div>
+            <input ref={additionalFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
+            <p className="text-xs text-muted-foreground">As imagens adicionais aparecem no slideshow do card do produto</p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
