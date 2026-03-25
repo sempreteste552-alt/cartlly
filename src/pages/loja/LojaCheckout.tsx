@@ -33,6 +33,17 @@ export default function LojaCheckout() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Auto-fill from customer profile
+  useEffect(() => {
+    if (customer) {
+      setName(customer.name || "");
+      setEmail(customer.email || "");
+      setPhone(customer.phone || "");
+      const fullAddress = [customer.address, customer.city, customer.state, customer.cep].filter(Boolean).join(", ");
+      if (fullAddress) setAddress(fullAddress);
+    }
+  }, [customer]);
+
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponLoading, setCouponLoading] = useState(false);
