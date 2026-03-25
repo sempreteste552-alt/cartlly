@@ -81,6 +81,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       image_url: imageUrl || null,
       published,
       category_id: categoryId || null,
+      made_to_order: madeToOrder,
       additionalImages,
     });
   };
