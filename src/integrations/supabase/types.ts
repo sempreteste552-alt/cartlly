@@ -655,13 +655,18 @@ export type Database = {
           accent_color: string
           admin_accent_color: string
           admin_primary_color: string
+          button_color: string
+          button_text_color: string
           created_at: string
           custom_domain: string | null
           facebook_url: string | null
+          footer_bg_color: string
+          footer_text_color: string
           gateway_environment: string
           gateway_public_key: string | null
           gateway_secret_key: string | null
           google_maps_url: string | null
+          header_bg_color: string
           id: string
           instagram_url: string | null
           logo_size: number
@@ -704,13 +709,18 @@ export type Database = {
           accent_color?: string
           admin_accent_color?: string
           admin_primary_color?: string
+          button_color?: string
+          button_text_color?: string
           created_at?: string
           custom_domain?: string | null
           facebook_url?: string | null
+          footer_bg_color?: string
+          footer_text_color?: string
           gateway_environment?: string
           gateway_public_key?: string | null
           gateway_secret_key?: string | null
           google_maps_url?: string | null
+          header_bg_color?: string
           id?: string
           instagram_url?: string | null
           logo_size?: number
@@ -753,13 +763,18 @@ export type Database = {
           accent_color?: string
           admin_accent_color?: string
           admin_primary_color?: string
+          button_color?: string
+          button_text_color?: string
           created_at?: string
           custom_domain?: string | null
           facebook_url?: string | null
+          footer_bg_color?: string
+          footer_text_color?: string
           gateway_environment?: string
           gateway_public_key?: string | null
           gateway_secret_key?: string | null
           google_maps_url?: string | null
+          header_bg_color?: string
           id?: string
           instagram_url?: string | null
           logo_size?: number
