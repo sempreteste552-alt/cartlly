@@ -35,7 +35,7 @@ export default function Cupons() {
   const createCoupon = useCreateCoupon();
   const updateCoupon = useUpdateCoupon();
   const deleteCoupon = useDeleteCoupon();
-  const { hasFeature } = usePlanFeatures();
+  const { features, isLocked } = usePlanFeatures();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
