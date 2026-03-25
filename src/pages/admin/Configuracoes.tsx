@@ -77,6 +77,7 @@ export default function Configuracoes() {
       setPaymentGateway(settings.payment_gateway ?? "");
       setGatewayPublicKey(settings.gateway_public_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+      setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setStoreAddress((settings as any).store_address ?? "");
       setStorePhone((settings as any).store_phone ?? "");
       setStoreWhatsapp((settings as any).store_whatsapp ?? "");
