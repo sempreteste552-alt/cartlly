@@ -266,6 +266,9 @@ export default function SuperAdminTenants() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
+                            <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
                             <Eye className="mr-2 h-4 w-4" /> Ver Loja
                           </DropdownMenuItem>
