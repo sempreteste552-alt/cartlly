@@ -44,6 +44,16 @@ export default function SuperAdminTenants() {
     return matchSearch && matchFilter;
   }) ?? [];
 
+  const notifyTenant = async (userId: string, action: string) => {
+    try {
+      await supabase.functions.invoke("notify-tenant-status", {
+        body: { userId, action },
+      });
+    } catch (e) {
+      console.error("Falha ao notificar tenant:", e);
+    }
+  };
+
   const handleApprove = async (userId: string) => {
     const { error } = await supabase
       .from("profiles")
@@ -51,7 +61,8 @@ export default function SuperAdminTenants() {
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Conta aprovada!");
+      toast.success("Conta aprovada! Notificação enviada.");
+      notifyTenant(userId, "approved");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
@@ -63,7 +74,8 @@ export default function SuperAdminTenants() {
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Conta rejeitada");
+      toast.success("Conta rejeitada. Notificação enviada.");
+      notifyTenant(userId, "rejected");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
@@ -75,7 +87,8 @@ export default function SuperAdminTenants() {
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Tenant bloqueado");
+      toast.success("Tenant bloqueado. Notificação enviada.");
+      notifyTenant(userId, "blocked");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
@@ -87,7 +100,8 @@ export default function SuperAdminTenants() {
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Tenant desbloqueado");
+      toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
+      notifyTenant(userId, "approved");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
