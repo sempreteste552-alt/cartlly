@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
