@@ -36,6 +36,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [stock, setStock] = useState(initialData?.stock?.toString() ?? "0");
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [published, setPublished] = useState(initialData?.published ?? false);
+  const [madeToOrder, setMadeToOrder] = useState((initialData as any)?.made_to_order ?? false);
   const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
