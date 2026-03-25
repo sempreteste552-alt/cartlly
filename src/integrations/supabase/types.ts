@@ -205,6 +205,80 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          boleto_barcode: string | null
+          boleto_expiration: string | null
+          boleto_url: string | null
+          card_brand: string | null
+          card_last_four: string | null
+          created_at: string
+          gateway: string
+          gateway_payment_id: string | null
+          id: string
+          method: string
+          order_id: string
+          pix_expiration: string | null
+          pix_qr_code: string | null
+          pix_qr_code_base64: string | null
+          raw_response: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          boleto_barcode?: string | null
+          boleto_expiration?: string | null
+          boleto_url?: string | null
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          gateway: string
+          gateway_payment_id?: string | null
+          id?: string
+          method: string
+          order_id: string
+          pix_expiration?: string | null
+          pix_qr_code?: string | null
+          pix_qr_code_base64?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          boleto_barcode?: string | null
+          boleto_expiration?: string | null
+          boleto_url?: string | null
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          gateway?: string
+          gateway_payment_id?: string | null
+          id?: string
+          method?: string
+          order_id?: string
+          pix_expiration?: string | null
+          pix_qr_code?: string | null
+          pix_qr_code_base64?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_images: {
         Row: {
           created_at: string
@@ -395,6 +469,7 @@ export type Database = {
           facebook_url: string | null
           gateway_environment: string
           gateway_public_key: string | null
+          gateway_secret_key: string | null
           google_maps_url: string | null
           id: string
           instagram_url: string | null
@@ -430,6 +505,7 @@ export type Database = {
           facebook_url?: string | null
           gateway_environment?: string
           gateway_public_key?: string | null
+          gateway_secret_key?: string | null
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
@@ -465,6 +541,7 @@ export type Database = {
           facebook_url?: string | null
           gateway_environment?: string
           gateway_public_key?: string | null
+          gateway_secret_key?: string | null
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
