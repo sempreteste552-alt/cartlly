@@ -45,6 +45,11 @@ export default function Configuracoes() {
   const [storeSlug, setStoreSlug] = useState("");
   const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
   const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
+  const [buttonColor, setButtonColor] = useState("#000000");
+  const [buttonTextColor, setButtonTextColor] = useState("#ffffff");
+  const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
+  const [footerBgColor, setFooterBgColor] = useState("#000000");
+  const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   // Marquee
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
   const [marqueeText, setMarqueeText] = useState("");
