@@ -172,10 +172,64 @@ export default function Pedidos() {
                     <p className="text-sm font-medium">{formatPrice(item.quantity * item.unit_price)}</p>
                   </div>
                 ))}
+                {/* Shipping info */}
+                {(selectedOrder as any).shipping_cost > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Frete ({(selectedOrder as any).shipping_method || "Padrão"})</span>
+                    <span>{formatPrice((selectedOrder as any).shipping_cost)}</span>
+                  </div>
+                )}
+                {selectedOrder.discount_amount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Desconto {selectedOrder.coupon_code && `(${selectedOrder.coupon_code})`}</span>
+                    <span>-{formatPrice(selectedOrder.discount_amount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-2 border-t border-border">
                   <span className="font-medium">Total</span>
                   <span className="font-bold">{formatPrice(selectedOrder.total)}</span>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Status Progress Bar */}
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Progresso do Pedido</p>
+                {selectedOrder.status === "cancelado" ? (
+                  <div className="flex items-center gap-2 text-destructive">
+                    <XCircle className="h-5 w-5" />
+                    <span className="text-sm font-medium">Pedido Cancelado</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between relative px-2">
+                    <div className="absolute top-4 left-6 right-6 h-1 bg-muted rounded-full">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-700"
+                        style={{ width: `${Math.max(0, (STATUS_STEPS.indexOf(selectedOrder.status as OrderStatus) / (STATUS_STEPS.length - 1)) * 100)}%` }}
+                      />
+                    </div>
+                    {STATUS_STEPS.map((step, i) => {
+                      const info = ORDER_STATUS_MAP[step];
+                      const Icon = STATUS_ICONS[step] || Clock;
+                      const stepIdx = STATUS_STEPS.indexOf(selectedOrder.status as OrderStatus);
+                      const isCompleted = i <= stepIdx;
+                      const isCurrent = i === stepIdx;
+                      return (
+                        <div key={step} className="flex flex-col items-center relative z-10">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                            isCompleted ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                          } ${isCurrent ? "ring-2 ring-primary/30 scale-110" : ""}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <span className={`text-[10px] mt-1 ${isCompleted ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                            {info.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -203,25 +257,51 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              {/* Status history */}
+              {/* Status history timeline */}
               {statusHistory && statusHistory.length > 0 && (
                 <>
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Histórico</p>
-                    <div className="space-y-1">
-                      {statusHistory.map((h) => (
-                        <div key={h.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>{ORDER_STATUS_MAP[h.status as OrderStatus]?.label || h.status}</span>
-                          <span>—</span>
-                          <span>{format(new Date(h.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}</span>
-                        </div>
-                      ))}
+                    <div className="relative pl-6">
+                      <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-border" />
+                      {statusHistory.map((h, i) => {
+                        const Icon = STATUS_ICONS[h.status] || Clock;
+                        return (
+                          <div key={h.id} className="relative flex items-start gap-3 pb-3 last:pb-0">
+                            <div className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center ${
+                              i === statusHistory.length - 1 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            }`}>
+                              <Icon className="h-3 w-3" />
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-xs font-medium">{ORDER_STATUS_MAP[h.status as OrderStatus]?.label || h.status}</p>
+                              <p className="text-[10px] text-muted-foreground">{format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
               )}
+
+              {/* Tracking link */}
+              <Separator />
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Link de Rastreio</p>
+                <div className="flex gap-2">
+                  <code className="flex-1 text-xs bg-muted p-2 rounded break-all">
+                    {window.location.origin}/loja/rastreio/{selectedOrder.id.slice(0, 8)}
+                  </code>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/loja/rastreio/${selectedOrder.id.slice(0, 8)}`);
+                    toast.success("Link copiado!");
+                  }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
               {selectedOrder.notes && (
                 <>
