@@ -22,6 +22,8 @@ type TestStatus = "idle" | "testing" | "success" | "error";
 export default function Gateway() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
+  const { isLocked } = usePlanFeatures();
+  const gatewayLocked = isLocked("gateway");
 
   const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
