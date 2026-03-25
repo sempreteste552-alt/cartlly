@@ -18,7 +18,8 @@ export default function LojaHome() {
   const { data: products, isLoading: prodLoading } = usePublicProducts();
   const { data: banners } = usePublicBanners();
   const { data: categories } = usePublicCategories();
-  const { cart, searchTerm, settings } = useLojaContext();
+  const { cart, searchTerm, settings, storeUserId } = useLojaContext();
+  const wishlist = useWishlist(storeUserId);
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
