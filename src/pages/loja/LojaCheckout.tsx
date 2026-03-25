@@ -21,6 +21,7 @@ type CheckoutPhase = "info" | "payment" | "success";
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
   const navigate = useNavigate();
+  const { customer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<CheckoutPhase>("info");
   const [orderId, setOrderId] = useState<string | null>(null);
