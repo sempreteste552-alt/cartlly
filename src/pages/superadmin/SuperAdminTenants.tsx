@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
@@ -24,6 +25,8 @@ export default function SuperAdminTenants() {
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
   const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailTenant, setDetailTenant] = useState<any>(null);
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -263,6 +266,9 @@ export default function SuperAdminTenants() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
+                            <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
                             <Eye className="mr-2 h-4 w-4" /> Ver Loja
                           </DropdownMenuItem>
@@ -337,6 +343,13 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant Detail Dialog */}
+      <TenantDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        tenant={detailTenant}
+      />
     </div>
   );
 }
