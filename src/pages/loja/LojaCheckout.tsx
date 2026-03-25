@@ -45,7 +45,8 @@ export default function LojaCheckout() {
       : Math.min(appliedCoupon.discount_value, cart.total)
     : 0;
 
-  const finalTotal = Math.max(0, cart.total - discountAmount);
+  const shippingCost = selectedShipping?.price || 0;
+  const finalTotal = Math.max(0, cart.total - discountAmount + shippingCost);
 
   const hasGateway = settings?.payment_gateway && (settings as any)?.gateway_secret_key;
 
