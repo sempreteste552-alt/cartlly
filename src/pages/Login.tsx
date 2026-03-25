@@ -9,7 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Store } from "lucide-react";
 
+const SUPER_ADMIN_EMAIL = "admin@cartlly.com";
+
 export default function Login() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
