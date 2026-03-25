@@ -126,11 +126,41 @@ export default function LojaProduto() {
           <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
 
           <div className="space-y-1">
-            <p className="text-3xl font-bold">{formatPrice(product.price)}</p>
+            <p className="text-3xl font-bold">{formatPrice(effectivePrice)}</p>
             <p className="text-sm text-green-600">
-              ou 12x de {formatPrice(product.price / 12)} sem juros
+              ou 12x de {formatPrice(effectivePrice / 12)} sem juros
             </p>
           </div>
+
+          {/* Variant selectors */}
+          {Object.keys(variantGroups).length > 0 && (
+            <div className="space-y-3">
+              {Object.entries(variantGroups).map(([type, vars]) => (
+                <div key={type} className="space-y-2">
+                  <Label className="text-sm font-medium">{variantTypeLabels[type] || type}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {vars.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariants((prev) => ({ ...prev, [type]: prev[type] === v.id ? "" : v.id }))}
+                        disabled={v.stock === 0}
+                        className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                          selectedVariants[type] === v.id
+                            ? "border-black bg-black text-white"
+                            : v.stock === 0
+                            ? "border-gray-200 text-gray-300 cursor-not-allowed line-through"
+                            : "border-gray-300 hover:border-black"
+                        }`}
+                      >
+                        {v.variant_value}
+                        {v.stock > 0 && v.stock <= 3 && <span className="text-[10px] ml-1 text-amber-500">(últimas {v.stock})</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {product.stock > 0 ? (
             <Badge className="bg-green-100 text-green-800">Em estoque ({product.stock} unid.)</Badge>
@@ -142,7 +172,7 @@ export default function LojaProduto() {
             <Button
               className="flex-1 bg-black text-white hover:bg-gray-800 h-12 text-base"
               disabled={product.stock <= 0}
-              onClick={() => cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url })}
+              onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
             </Button>
