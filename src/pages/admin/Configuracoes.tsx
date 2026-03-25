@@ -157,6 +157,9 @@ export default function Configuracoes() {
       store_slug: storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null,
       admin_primary_color: adminPrimaryColor,
       admin_accent_color: adminAccentColor,
+      shipping_enabled: shippingEnabled,
+      shipping_flat_rate: shippingFlatRate ? Number(shippingFlatRate) : null,
+      shipping_free_above: shippingFreeAbove ? Number(shippingFreeAbove) : null,
     } as any);
   };
 
