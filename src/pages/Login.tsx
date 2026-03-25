@@ -30,6 +30,7 @@ export default function Login() {
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {
+        // ProtectedRoute will check profile status and redirect if pending
         navigate("/admin", { replace: true });
       }
     }
