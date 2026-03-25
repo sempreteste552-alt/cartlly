@@ -182,13 +182,22 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   alt={product.name}
                   className="group-hover:scale-[1.02] transition-transform duration-300"
                 />
-                <button
-                  onClick={(e) => handleShare(e, product)}
-                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm"
-                  title="Compartilhar"
-                >
-                  <Share2 className="h-4 w-4 text-gray-700" />
-                </button>
+                <div className="absolute top-2 right-2 flex flex-col gap-1">
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }}
+                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-sm transition-all"
+                    title="Favoritar"
+                  >
+                    <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
+                  </button>
+                  <button
+                    onClick={(e) => handleShare(e, product)}
+                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm"
+                    title="Compartilhar"
+                  >
+                    <Share2 className="h-4 w-4 text-gray-700" />
+                  </button>
+                </div>
               </div>
               <div className="p-3">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
