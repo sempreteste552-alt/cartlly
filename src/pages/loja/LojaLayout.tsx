@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
-import { useCart, type CartItem } from "@/hooks/useCart";
+import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Tag, Mail, Info, Truck, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -40,25 +40,29 @@ export default function LojaLayout() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
   const basePath = slug ? `/loja/${slug}` : "/loja";
+  const logoSize = settings?.logo_size || 32;
 
-  // Logo size from settings (default 32 = h-8)
-  const logoSize = (settings as any)?.logo_size || 32;
-  const logoSizeClass = `max-w-[${Math.max(80, logoSize * 4)}px]`;
-
-  // Apply store colors as CSS vars
+  // Apply store colors as CSS custom properties for the entire store
   useEffect(() => {
     if (settings) {
       const root = document.documentElement;
-      root.style.setProperty("--store-primary", settings.primary_color || "#000000");
-      root.style.setProperty("--store-accent", settings.accent_color || "#333333");
+      root.style.setProperty("--store-primary", settings.primary_color || "#6d28d9");
+      root.style.setProperty("--store-secondary", settings.secondary_color || "#f5f3ff");
+      root.style.setProperty("--store-accent", settings.accent_color || "#8b5cf6");
+      root.style.setProperty("--store-button-bg", settings.button_color || "#000000");
+      root.style.setProperty("--store-button-text", settings.button_text_color || "#ffffff");
       return () => {
         root.style.removeProperty("--store-primary");
+        root.style.removeProperty("--store-secondary");
         root.style.removeProperty("--store-accent");
+        root.style.removeProperty("--store-button-bg");
+        root.style.removeProperty("--store-button-text");
       };
     }
   }, [settings]);
@@ -96,22 +100,33 @@ export default function LojaLayout() {
   }
 
   const storeName = settings?.store_name || "Loja";
+  const primaryColor = settings?.primary_color || "#6d28d9";
+  const headerBgColor = settings?.header_bg_color || "#ffffff";
+  const footerBgColor = settings?.footer_bg_color || "#000000";
+  const footerTextColor = settings?.footer_text_color || "#ffffff";
+  const buttonColor = settings?.button_color || "#000000";
+  const buttonTextColor = settings?.button_text_color || "#ffffff";
+
+  // Bottom nav items for mobile
+  const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
+  const isCheckout = location.pathname.includes("/checkout");
+  const isRastreio = location.pathname.includes("/rastreio");
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
-      <div className="min-h-screen bg-white text-black">
+      <div className="min-h-screen bg-white text-black pb-16 md:pb-0">
         {/* Marquee ticker */}
-        {(settings as any)?.marquee_enabled && (settings as any)?.marquee_text && (
+        {settings?.marquee_enabled && settings?.marquee_text && (
           <StoreMarquee
-            text={(settings as any).marquee_text}
-            speed={(settings as any).marquee_speed}
-            bgColor={(settings as any).marquee_bg_color}
-            textColor={(settings as any).marquee_text_color}
+            text={settings.marquee_text}
+            speed={settings.marquee_speed}
+            bgColor={settings.marquee_bg_color}
+            textColor={settings.marquee_text_color}
           />
         )}
 
         {/* Top bar */}
-        <div className="bg-black text-white text-xs py-1">
+        <div className="text-white text-xs py-1" style={{ backgroundColor: primaryColor }}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {settings?.store_phone && (
@@ -122,20 +137,19 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {/* Customer login/profile */}
               {user && customer ? (
-                <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:text-gray-300">
+                <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                   <User className="h-3 w-3" /> {customer.name?.split(" ")[0] || "Conta"}
                 </button>
               ) : (
-                <button onClick={() => setAuthModalOpen(true)} className="flex items-center gap-1 hover:text-gray-300">
+                <button onClick={() => setAuthModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                   <User className="h-3 w-3" /> Entrar
                 </button>
               )}
-              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 hidden sm:inline">Instagram</a>}
-              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 hidden sm:inline">Facebook</a>}
+              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 hidden sm:inline">Instagram</a>}
+              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 hidden sm:inline">Facebook</a>}
               {settings?.store_whatsapp && (
-                <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-gray-300">
+                <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:opacity-80">
                   <MessageCircle className="h-3 w-3" /> WhatsApp
                 </a>
               )}
@@ -144,7 +158,7 @@ export default function LojaLayout() {
         </div>
 
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-gray-200 shadow-sm" style={{ backgroundColor: settings?.header_bg_color || '#ffffff' }}>
+        <header className="sticky top-0 z-50 border-b border-gray-200 shadow-sm" style={{ backgroundColor: headerBgColor }}>
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -159,7 +173,7 @@ export default function LojaLayout() {
                   className="object-contain"
                 />
               ) : (
-                <span className="text-xl font-bold">{storeName}</span>
+                <span className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</span>
               )}
             </Link>
 
@@ -172,11 +186,11 @@ export default function LojaLayout() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
+                  style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
             </div>
 
-            {/* Customer icon on header for mobile */}
             <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
               <User className="h-5 w-5" />
             </Button>
@@ -186,7 +200,7 @@ export default function LojaLayout() {
                 <Button variant="ghost" size="icon" className="relative">
                   <ShoppingCart className="h-5 w-5" />
                   {cart.count > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-black text-white">
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
                       {cart.count}
                     </Badge>
                   )}
@@ -229,7 +243,7 @@ export default function LojaLayout() {
                       <span>Total</span>
                       <span>{formatPrice(cart.total)}</span>
                     </div>
-                    <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={() => navigate(`${basePath}/checkout`)}>
+                    <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => navigate(`${basePath}/checkout`)}>
                       Finalizar Compra
                     </Button>
                     {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
@@ -272,24 +286,13 @@ export default function LojaLayout() {
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {[
-              { icon: Home, label: "Início", to: basePath, delay: "0ms" },
-              { icon: Package, label: "Produtos", to: basePath, delay: "80ms" },
-              { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout`, delay: "160ms" },
-              { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio`, delay: "200ms" },
-              ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true, delay: "240ms" }] : []),
-              ...(settings?.instagram_url ? [{ icon: Tag, label: "Instagram", to: settings.instagram_url, external: true, delay: "320ms" }] : []),
-              ...(settings?.store_phone ? [{ icon: Phone, label: settings.store_phone, to: `tel:${settings.store_phone}`, external: true, delay: "400ms" }] : []),
-              ...(settings?.store_address ? [{ icon: MapPin, label: settings.store_address, to: settings.google_maps_url || "#", external: true, delay: "480ms" }] : []),
+              { icon: Home, label: "Início", to: basePath },
+              { icon: Package, label: "Produtos", to: basePath },
+              { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout` },
+              { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
+              ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
             ].map((item: any, i) => (
-              <div
-                key={i}
-                className="transition-all duration-500 ease-out"
-                style={{
-                  transitionDelay: mobileMenu ? item.delay : "0ms",
-                  opacity: mobileMenu ? 1 : 0,
-                  transform: mobileMenu ? "translateX(0)" : "translateX(-24px)",
-                }}
-              >
+              <div key={i}>
                 {item.external ? (
                   <a
                     href={item.to}
@@ -298,7 +301,7 @@ export default function LojaLayout() {
                     className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
                     onClick={() => setMobileMenu(false)}
                   >
-                    <item.icon className="h-5 w-5 text-gray-400" />
+                    <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>
                   </a>
                 ) : (
@@ -307,7 +310,7 @@ export default function LojaLayout() {
                     className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
                     onClick={() => setMobileMenu(false)}
                   >
-                    <item.icon className="h-5 w-5 text-gray-400" />
+                    <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>
                   </Link>
                 )}
@@ -321,16 +324,16 @@ export default function LojaLayout() {
         </main>
 
         {/* Footer */}
-        <footer style={{ backgroundColor: settings?.footer_bg_color || '#000000', color: settings?.footer_text_color || '#ffffff' }} className="mt-12">
+        <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
                 <h3 className="font-bold text-lg mb-3">{storeName}</h3>
-                {settings?.store_description && <p className="text-gray-400 text-sm">{settings.store_description}</p>}
+                {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
               </div>
               <div>
                 <h3 className="font-bold mb-3">Contato</h3>
-                <div className="space-y-2 text-sm text-gray-400">
+                <div className="space-y-2 text-sm opacity-60">
                   {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
                   {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
                   {settings?.store_address && <p>📍 {settings.store_address}</p>}
@@ -338,32 +341,88 @@ export default function LojaLayout() {
               </div>
               <div>
                 <h3 className="font-bold mb-3">Redes Sociais</h3>
-                <div className="flex gap-3">
-                  {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Instagram</a>}
-                  {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Facebook</a>}
-                  {settings?.tiktok_url && <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">TikTok</a>}
-                  {settings?.youtube_url && <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">YouTube</a>}
-                  {settings?.twitter_url && <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm">Twitter</a>}
+                <div className="flex gap-3 flex-wrap">
+                  {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Instagram</a>}
+                  {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Facebook</a>}
+                  {settings?.tiktok_url && <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">TikTok</a>}
+                  {settings?.youtube_url && <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">YouTube</a>}
+                  {settings?.twitter_url && <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Twitter</a>}
                 </div>
                 {settings?.google_maps_url && (
-                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white text-sm mt-3 inline-flex items-center gap-1">
+                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm mt-3 inline-flex items-center gap-1">
                     <MapPin className="h-3 w-3" /> Ver no Google Maps
                   </a>
                 )}
               </div>
             </div>
-            <Separator className="my-6 bg-gray-800" />
-            <p className="text-center text-xs text-gray-500">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
+            <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
+            <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>
 
-        {/* Floating WhatsApp Button */}
+        {/* Mobile Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-gray-200 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center justify-around h-14">
+            <Link
+              to={basePath}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              style={{ color: isHomePage ? primaryColor : "#9ca3af" }}
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Início</span>
+            </Link>
+            <button
+              onClick={() => {
+                const searchInput = document.querySelector('input[placeholder="Buscar produtos..."]') as HTMLInputElement;
+                if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
+                else navigate(basePath);
+              }}
+              className="flex flex-col items-center justify-center flex-1 h-full text-gray-400 transition-colors"
+            >
+              <Search className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Buscar</span>
+            </button>
+            <Link
+              to={`${basePath}/checkout`}
+              className="flex flex-col items-center justify-center flex-1 h-full relative transition-colors"
+              style={{ color: isCheckout ? primaryColor : "#9ca3af" }}
+            >
+              <div className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {cart.count > 0 && (
+                  <span className="absolute -top-1.5 -right-2.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: primaryColor }}>
+                    {cart.count}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] mt-0.5 font-medium">Carrinho</span>
+            </Link>
+            <Link
+              to={`${basePath}/rastreio`}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              style={{ color: isRastreio ? primaryColor : "#9ca3af" }}
+            >
+              <Truck className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
+            </Link>
+            <button
+              onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              style={{ color: user ? primaryColor : "#9ca3af" }}
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
+            </button>
+          </div>
+        </nav>
+
+        {/* Floating WhatsApp Button - positioned above bottom nav on mobile */}
         {settings?.store_whatsapp && (
           <a
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-fade-in"
+            className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-fade-in bottom-20 md:bottom-6 right-6"
             title="Fale conosco pelo WhatsApp"
           >
             <MessageCircle className="h-7 w-7" />
