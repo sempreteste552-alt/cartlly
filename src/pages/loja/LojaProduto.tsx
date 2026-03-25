@@ -15,6 +15,7 @@ export default function LojaProduto() {
   const { id } = useParams();
   const { data: products } = usePublicProducts();
   const { data: productImages } = useProductImages(id);
+  const { data: variants } = useProductVariants(id);
   const { cart, settings } = useLojaContext();
 
   const product = products?.find((p) => p.id === id);
