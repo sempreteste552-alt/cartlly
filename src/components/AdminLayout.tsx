@@ -66,6 +66,7 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
+        <AIChatWidget />
       </div>
     </SidebarProvider>
   );
