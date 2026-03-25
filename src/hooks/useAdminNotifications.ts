@@ -1,0 +1,88 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+export interface AdminNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  created_at: string;
+  sender_user_id: string;
+  target_user_id: string | null;
+}
+
+export function useAdminNotifications() {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("admin_notifications")
+      .select("*")
+      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (data) setNotifications(data as AdminNotification[]);
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("admin-notifications")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_notifications" }, (payload) => {
+        const n = payload.new as AdminNotification;
+        if (n.target_user_id === user.id || n.target_user_id === null) {
+          setNotifications((prev) => [n, ...prev]);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  const markAsRead = async (id: string) => {
+    await supabase.from("admin_notifications").update({ read: true }).eq("id", id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await supabase
+      .from("admin_notifications")
+      .update({ read: true })
+      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
+      .eq("read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  return { notifications, loading, unreadCount, markAsRead, markAllAsRead, refresh: loadNotifications };
+}
+
+export function getNotificationEmoji(type: string): string {
+  const emojis: Record<string, string> = {
+    new_order: "🛒",
+    order_confirmed: "✅",
+    order_shipped: "📦",
+    order_delivered: "🎉",
+    order_cancelled: "❌",
+    payment_approved: "💰",
+    payment_refused: "🚫",
+    abandoned_cart: "🛒💨",
+    new_customer: "👤",
+    low_stock: "⚠️",
+    review: "⭐",
+    info: "ℹ️",
+  };
+  return emojis[type] || "🔔";
+}
