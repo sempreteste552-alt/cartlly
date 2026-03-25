@@ -22,7 +22,8 @@ export default function LojaProduto() {
   const { data: products } = usePublicProducts();
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
-  const { cart, settings } = useLojaContext();
+  const { cart, settings, storeUserId } = useLojaContext();
+  const wishlist = useWishlist(storeUserId);
 
   const product = products?.find((p) => p.id === id);
 
