@@ -35,7 +35,8 @@ export default function LojaProduto() {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
-
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [customerName, setCustomerName] = useState("");
   // Group variants by type
   const variantGroups = useMemo(() => {
     if (!variants || variants.length === 0) return {};
