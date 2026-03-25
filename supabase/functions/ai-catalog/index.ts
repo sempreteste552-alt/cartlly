@@ -9,9 +9,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { catalogText, existingCategories } = await req.json();
-    if (!catalogText || typeof catalogText !== "string") {
-      return new Response(JSON.stringify({ error: "catalogText é obrigatório" }), {
+    const { catalogText, catalogImages, existingCategories } = await req.json();
+
+    if ((!catalogText || typeof catalogText !== "string") && (!catalogImages || !Array.isArray(catalogImages) || catalogImages.length === 0)) {
+      return new Response(JSON.stringify({ error: "Envie texto ou imagens do catálogo" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -20,7 +21,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é um assistente especializado em e-commerce. Analise o texto de catálogo de produtos fornecido e extraia os produtos estruturados.
+    const systemPrompt = `Você é um assistente especializado em e-commerce. Analise o catálogo de produtos fornecido (texto ou imagem) e extraia os produtos estruturados.
 
 Para cada produto encontrado, retorne:
 - name: nome do produto
@@ -32,7 +33,24 @@ Para cada produto encontrado, retorne:
 Categorias existentes na loja: ${existingCategories?.join(", ") || "nenhuma"}
 Use categorias existentes quando possível, ou sugira novas.
 
-IMPORTANTE: Retorne APENAS um array JSON válido, sem markdown, sem explicações.`;
+Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os produtos visíveis (tabelas, listas, cardápios, catálogos impressos, etc).`;
+
+    // Build user message content (multimodal)
+    const userContent: any[] = [];
+
+    if (catalogText) {
+      userContent.push({ type: "text", text: `Analise este catálogo e extraia os produtos:\n\n${catalogText}` });
+    }
+
+    if (catalogImages && catalogImages.length > 0) {
+      userContent.push({ type: "text", text: "Analise as imagens abaixo e extraia todos os produtos visíveis:" });
+      for (const img of catalogImages) {
+        userContent.push({
+          type: "image_url",
+          image_url: { url: img },
+        });
+      }
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -41,17 +59,17 @@ IMPORTANTE: Retorne APENAS um array JSON válido, sem markdown, sem explicaçõe
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Analise este catálogo e extraia os produtos:\n\n${catalogText}` },
+          { role: "user", content: userContent },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "extract_products",
-              description: "Extract products from catalog text",
+              description: "Extract products from catalog text or image",
               parameters: {
                 type: "object",
                 properties: {
