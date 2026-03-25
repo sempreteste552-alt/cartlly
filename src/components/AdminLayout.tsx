@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { AIChatWidget } from "@/components/AIChatWidget";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
@@ -65,6 +66,7 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
+        <AIChatWidget />
       </div>
     </SidebarProvider>
   );
