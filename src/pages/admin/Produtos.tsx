@@ -43,7 +43,21 @@ export default function Produtos() {
 
   const handleCreate = (data: any) => {
     if (data.category_id === "none") data.category_id = null;
-    createProduct.mutate(data, { onSuccess: () => setFormOpen(false) });
+    const { additionalImages, ...productData } = data;
+    createProduct.mutate(productData, {
+      onSuccess: async (created: any) => {
+        if (additionalImages?.length > 0) {
+          for (let i = 0; i < additionalImages.length; i++) {
+            await supabase.from("product_images").insert({
+              product_id: created.id,
+              image_url: additionalImages[i],
+              sort_order: i,
+            } as any);
+          }
+        }
+        setFormOpen(false);
+      },
+    });
   };
 
   const handleUpdate = (data: any) => {
