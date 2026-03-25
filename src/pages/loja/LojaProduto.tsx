@@ -83,6 +83,7 @@ export default function LojaProduto() {
     }
   };
 
+  const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
   const buttonTextColor = settings?.button_text_color || "#ffffff";
 
@@ -124,9 +125,8 @@ export default function LojaProduto() {
                 <button
                   key={i}
                   onClick={() => setSelectedImageIndex(i)}
-                  className={`shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors ${
-                    selectedImageIndex === i ? "border-black" : "border-gray-200 hover:border-gray-400"
-                  }`}
+                  className="shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors"
+                  style={{ borderColor: selectedImageIndex === i ? primaryColor : "#e5e7eb" }}
                 >
                   <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -138,7 +138,7 @@ export default function LojaProduto() {
         {/* Product info */}
         <div className="space-y-4">
           {(product as any).categories?.name && (
-            <Badge variant="outline">{(product as any).categories.name}</Badge>
+            <Badge variant="outline" style={{ borderColor: primaryColor, color: primaryColor }}>{(product as any).categories.name}</Badge>
           )}
 
           <div className="flex items-start justify-between gap-2">
@@ -149,7 +149,7 @@ export default function LojaProduto() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-3xl font-bold">{formatPrice(effectivePrice)}</p>
+            <p className="text-3xl font-bold" style={{ color: primaryColor }}>{formatPrice(effectivePrice)}</p>
             <p className="text-sm text-green-600">
               ou 12x de {formatPrice(effectivePrice / 12)} sem juros
             </p>
@@ -167,13 +167,14 @@ export default function LojaProduto() {
                         key={v.id}
                         onClick={() => setSelectedVariants((prev) => ({ ...prev, [type]: prev[type] === v.id ? "" : v.id }))}
                         disabled={v.stock === 0}
-                        className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                        className="px-3 py-1.5 rounded-lg border text-sm font-medium transition-all"
+                        style={
                           selectedVariants[type] === v.id
-                            ? "border-black bg-black text-white"
+                            ? { borderColor: primaryColor, backgroundColor: primaryColor, color: "#fff" }
                             : v.stock === 0
-                            ? "border-gray-200 text-gray-300 cursor-not-allowed line-through"
-                            : "border-gray-300 hover:border-black"
-                        }`}
+                            ? { borderColor: "#e5e7eb", color: "#d1d5db", cursor: "not-allowed", textDecoration: "line-through" }
+                            : { borderColor: "#d1d5db" }
+                        }
                       >
                         {v.variant_value}
                         {v.stock > 0 && v.stock <= 3 && <span className="text-[10px] ml-1 text-amber-500">(últimas {v.stock})</span>}
@@ -268,18 +269,16 @@ export default function LojaProduto() {
           <Separator />
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 rounded-lg bg-gray-50">
-              <Truck className="h-5 w-5 mx-auto text-gray-600" />
-              <p className="text-xs mt-1 text-gray-600">Entrega rápida</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-gray-50">
-              <ShieldCheck className="h-5 w-5 mx-auto text-gray-600" />
-              <p className="text-xs mt-1 text-gray-600">Compra segura</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-gray-50">
-              <RotateCcw className="h-5 w-5 mx-auto text-gray-600" />
-              <p className="text-xs mt-1 text-gray-600">Troca fácil</p>
-            </div>
+            {[
+              { icon: Truck, label: "Entrega rápida" },
+              { icon: ShieldCheck, label: "Compra segura" },
+              { icon: RotateCcw, label: "Troca fácil" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
+                <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
+                <p className="text-xs mt-1 text-gray-600">{label}</p>
+              </div>
+            ))}
           </div>
 
           {product.description && (
@@ -299,7 +298,7 @@ export default function LojaProduto() {
       {/* Similar Products Carousel */}
       {similarProducts.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">Produtos Similares</h2>
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Produtos Similares</h2>
           <Carousel opts={{ align: "start", loop: similarProducts.length > 4 }} className="w-full">
             <CarouselContent className="-ml-3">
               {similarProducts.map((p) => (
@@ -315,7 +314,7 @@ export default function LojaProduto() {
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-medium line-clamp-2">{p.name}</p>
-                        <p className="text-lg font-bold mt-1">{formatPrice(p.price)}</p>
+                        <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
                       </div>
                     </Card>
                   </Link>

@@ -56,8 +56,10 @@ export default function LojaHome() {
     );
   }
 
+  const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
   const buttonTextColor = settings?.button_text_color || "#ffffff";
+  const accentColor = settings?.accent_color || "#8b5cf6";
 
   return (
     <div>
@@ -93,7 +95,14 @@ export default function LojaHome() {
         <div className="max-w-7xl mx-auto px-4 mt-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (
-              <Badge key={cat.id} variant="outline" className="shrink-0 cursor-pointer hover:bg-black hover:text-white transition-colors px-4 py-1.5">
+              <Badge
+                key={cat.id}
+                variant="outline"
+                className="shrink-0 cursor-pointer transition-colors px-4 py-1.5 hover:text-white"
+                style={{ borderColor: primaryColor, color: primaryColor }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = primaryColor; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = primaryColor; }}
+              >
                 {cat.name}
               </Badge>
             ))}
@@ -115,13 +124,13 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
             <div key={catName}>
-              <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">{catName}</h2>
-              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} />
+              <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>{catName}</h2>
+              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} />
             </div>
           ))
         )}
@@ -130,7 +139,7 @@ export default function LojaHome() {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -138,6 +147,8 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   productImagesMap?: Record<string, string[]>;
   buttonColor: string;
   buttonTextColor: string;
+  primaryColor: string;
+  accentColor: string;
 }) {
   const handleShare = async (e: React.MouseEvent, product: any) => {
     e.preventDefault();
@@ -185,7 +196,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                     <span className="text-xs text-gray-400">({r.count})</span>
                   </div>
                 )}
-                <p className="text-lg font-bold mt-1">{formatPrice(product.price)}</p>
+                <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
                 ) : (
