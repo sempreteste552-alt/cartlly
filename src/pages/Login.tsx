@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Store } from "lucide-react";
 
+const SUPER_ADMIN_EMAIL = "admin@cartlly.com";
+
 export default function Login() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
@@ -16,6 +20,17 @@ export default function Login() {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Redirect logged-in users
+  useEffect(() => {
+    if (user) {
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        navigate("/superadmin", { replace: true });
+      } else {
+        navigate("/admin", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +51,7 @@ export default function Login() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/admin");
+        navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
       toast.error(error.message || "Erro ao autenticar");

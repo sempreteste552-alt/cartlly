@@ -15,6 +15,12 @@ import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
 import LojaCheckout from "./pages/loja/LojaCheckout";
+import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
+import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
+import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
+import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
+import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
+import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,13 +35,22 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/loja" replace />} />
             <Route path="/login" element={<Login />} />
+            {/* Super Admin */}
+            <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
+              <Route index element={<SuperAdminDashboard />} />
+              <Route path="tenants" element={<SuperAdminTenants />} />
+              <Route path="planos" element={<SuperAdminPlanos />} />
+              <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
+              <Route path="config" element={<SuperAdminConfig />} />
+            </Route>
+            {/* Tenant Admin */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="produtos" element={<Produtos />} />
               <Route path="pedidos" element={<Pedidos />} />
               <Route path="config" element={<Configuracoes />} />
             </Route>
-            {/* Default store (first store) */}
+            {/* Default store */}
             <Route path="/loja" element={<LojaLayout />}>
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
