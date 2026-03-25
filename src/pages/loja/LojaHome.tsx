@@ -8,9 +8,10 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star, Share2 } from "lucide-react";
+import { ShoppingCart, Star, Share2, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
+import { useWishlist } from "@/hooks/useWishlist";
 import { toast } from "sonner";
 
 export default function LojaHome() {
