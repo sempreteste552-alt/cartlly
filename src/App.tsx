@@ -26,6 +26,7 @@ import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
 import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
 import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/loja" replace />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Super Admin */}
             <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
               <Route index element={<SuperAdminDashboard />} />
