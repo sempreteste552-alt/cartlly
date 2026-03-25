@@ -200,9 +200,14 @@ export default function Produtos() {
                   </TableCell>
                   <TableCell>{formatPrice(product.price)}</TableCell>
                   <TableCell>
-                    <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>
-                      {product.stock}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant={product.stock > 0 ? "secondary" : "destructive"}>
+                        {product.stock}
+                      </Badge>
+                      {(product as any).made_to_order && (
+                        <Badge variant="outline" className="text-[10px]">Encomenda</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
