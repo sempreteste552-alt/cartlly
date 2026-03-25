@@ -318,7 +318,7 @@ export default function Configuracoes() {
             <Switch checked={shippingEnabled} onCheckedChange={setShippingEnabled} />
           </div>
           {shippingEnabled && (
-            <div className="space-y-3 rounded-lg border border-border p-4">
+            <div className="space-y-4 rounded-lg border border-border p-4">
               <div className="space-y-2">
                 <Label>Valor fixo do frete (R$)</Label>
                 <Input type="number" step="0.01" value={shippingFlatRate} onChange={(e) => setShippingFlatRate(e.target.value)} placeholder="15.00" />
@@ -327,6 +327,10 @@ export default function Configuracoes() {
                 <Label>Frete grátis acima de (R$)</Label>
                 <Input type="number" step="0.01" value={shippingFreeAbove} onChange={(e) => setShippingFreeAbove(e.target.value)} placeholder="200.00" />
                 <p className="text-xs text-muted-foreground">Deixe vazio para não oferecer frete grátis</p>
+              </div>
+              <div className="border-t border-border pt-4">
+                <h4 className="text-sm font-medium mb-3">Zonas de Frete por CEP (ViaCEP)</h4>
+                <ShippingZonesManager />
               </div>
             </div>
           )}
