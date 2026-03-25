@@ -11,8 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2 } from "lucide-react";
 import { ProductReviews } from "@/components/ProductReviews";
+import { toast } from "sonner";
 
 export default function LojaProduto() {
   const { id } = useParams();
@@ -23,7 +25,6 @@ export default function LojaProduto() {
 
   const product = products?.find((p) => p.id === id);
 
-  // All images: main + additional
   const allImages = useMemo(() => {
     const images: string[] = [];
     if (product?.image_url) images.push(product.image_url);
@@ -37,7 +38,7 @@ export default function LojaProduto() {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
-  // Group variants by type
+
   const variantGroups = useMemo(() => {
     if (!variants || variants.length === 0) return {};
     const groups: Record<string, typeof variants> = {};
@@ -50,7 +51,6 @@ export default function LojaProduto() {
 
   const variantTypeLabels: Record<string, string> = { color: "Cor", size: "Tamanho", model: "Modelo" };
 
-  // Calculate price with variant modifiers
   const effectivePrice = useMemo(() => {
     if (!product) return 0;
     let price = product.price;
@@ -65,11 +65,26 @@ export default function LojaProduto() {
     if (!product || !products) return [];
     return products
       .filter((p) => p.id !== product.id && p.category_id === product.category_id)
-      .slice(0, 5);
+      .slice(0, 8);
   }, [product, products]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product?.name, text: `Confira: ${product?.name}`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    }
+  };
+
+  const buttonColor = settings?.button_color || "#000000";
+  const buttonTextColor = settings?.button_text_color || "#ffffff";
 
   if (!product) {
     return (
@@ -103,7 +118,6 @@ export default function LojaProduto() {
               </div>
             )}
           </div>
-          {/* Thumbnail strip */}
           {allImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {allImages.map((img, i) => (
@@ -127,7 +141,12 @@ export default function LojaProduto() {
             <Badge variant="outline">{(product as any).categories.name}</Badge>
           )}
 
-          <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+            <Button variant="ghost" size="icon" onClick={handleShare} title="Compartilhar">
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
 
           <div className="space-y-1">
             <p className="text-3xl font-bold">{formatPrice(effectivePrice)}</p>
@@ -174,7 +193,8 @@ export default function LojaProduto() {
 
           <div className="flex gap-3">
             <Button
-              className="flex-1 bg-black text-white hover:bg-gray-800 h-12 text-base"
+              className="flex-1 h-12 text-base"
+              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               disabled={product.stock <= 0}
               onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
             >
@@ -276,28 +296,35 @@ export default function LojaProduto() {
 
       <ProductReviews productId={product.id} />
 
+      {/* Similar Products Carousel */}
       {similarProducts.length > 0 && (
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">Produtos Similares</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {similarProducts.map((p) => (
-              <Link key={p.id} to={`/loja/produto/${p.id}`} className="group">
-                <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
-                  <div className="aspect-square bg-gray-50 overflow-hidden">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium line-clamp-2">{p.name}</p>
-                    <p className="text-lg font-bold mt-1">{formatPrice(p.price)}</p>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <Carousel opts={{ align: "start", loop: similarProducts.length > 4 }} className="w-full">
+            <CarouselContent className="-ml-3">
+              {similarProducts.map((p) => (
+                <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                  <Link to={`/loja/produto/${p.id}`} className="group block">
+                    <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
+                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-medium line-clamp-2">{p.name}</p>
+                        <p className="text-lg font-bold mt-1">{formatPrice(p.price)}</p>
+                      </div>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-0" />
+            <CarouselNext className="right-0" />
+          </Carousel>
         </div>
       )}
     </div>

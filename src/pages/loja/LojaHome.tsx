@@ -8,15 +8,16 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
+import { toast } from "sonner";
 
 export default function LojaHome() {
   const { data: products, isLoading: prodLoading } = usePublicProducts();
   const { data: banners } = usePublicBanners();
   const { data: categories } = usePublicCategories();
-  const { cart, searchTerm } = useLojaContext();
+  const { cart, searchTerm, settings } = useLojaContext();
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
@@ -54,6 +55,9 @@ export default function LojaHome() {
       </div>
     );
   }
+
+  const buttonColor = settings?.button_color || "#000000";
+  const buttonTextColor = settings?.button_text_color || "#ffffff";
 
   return (
     <div>
@@ -111,13 +115,13 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
             <div key={catName}>
               <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">{catName}</h2>
-              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} />
+              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} />
             </div>
           ))
         )}
@@ -126,13 +130,29 @@ export default function LojaHome() {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
   ratings?: Record<string, { average: number; count: number }>;
   productImagesMap?: Record<string, string[]>;
+  buttonColor: string;
+  buttonTextColor: string;
 }) {
+  const handleShare = async (e: React.MouseEvent, product: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/loja/produto/${product.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.name, text: `Confira: ${product.name}`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {products.map((product) => {
@@ -141,13 +161,20 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap }:
         return (
           <Link key={product.id} to={`/loja/produto/${product.id}`} className="group">
             <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
-              <div className="aspect-square overflow-hidden">
+              <div className="aspect-square overflow-hidden relative">
                 <ProductImageSlideshow
                   mainImage={product.image_url}
                   additionalImages={additionalImages}
                   alt={product.name}
                   className="group-hover:scale-[1.02] transition-transform duration-300"
                 />
+                <button
+                  onClick={(e) => handleShare(e, product)}
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white shadow-sm"
+                  title="Compartilhar"
+                >
+                  <Share2 className="h-4 w-4 text-gray-700" />
+                </button>
               </div>
               <div className="p-3">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
@@ -165,8 +192,9 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap }:
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
                 <Button
-                  className="w-full mt-2 bg-black text-white hover:bg-gray-800"
+                  className="w-full mt-2"
                   size="sm"
+                  style={{ backgroundColor: buttonColor, color: buttonTextColor }}
                   disabled={product.stock <= 0}
                   onClick={(e) => {
                     e.preventDefault();

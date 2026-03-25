@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,11 @@ export default function Configuracoes() {
   const [storeSlug, setStoreSlug] = useState("");
   const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
   const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
+  const [buttonColor, setButtonColor] = useState("#000000");
+  const [buttonTextColor, setButtonTextColor] = useState("#ffffff");
+  const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
+  const [footerBgColor, setFooterBgColor] = useState("#000000");
+  const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   // Marquee
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
   const [marqueeText, setMarqueeText] = useState("");
@@ -76,6 +82,11 @@ export default function Configuracoes() {
       setStoreSlug((settings as any).store_slug ?? "");
       setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
       setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
+      setButtonColor((settings as any).button_color ?? "#000000");
+      setButtonTextColor((settings as any).button_text_color ?? "#ffffff");
+      setHeaderBgColor((settings as any).header_bg_color ?? "#ffffff");
+      setFooterBgColor((settings as any).footer_bg_color ?? "#000000");
+      setFooterTextColor((settings as any).footer_text_color ?? "#ffffff");
       setMarqueeEnabled((settings as any).marquee_enabled ?? false);
       setMarqueeText((settings as any).marquee_text ?? "");
       setMarqueeSpeed((settings as any).marquee_speed ?? 50);
@@ -136,6 +147,11 @@ export default function Configuracoes() {
       marquee_bg_color: marqueeBgColor,
       marquee_text_color: marqueeTextColor,
       logo_size: logoSize,
+      button_color: buttonColor,
+      button_text_color: buttonTextColor,
+      header_bg_color: headerBgColor,
+      footer_bg_color: footerBgColor,
+      footer_text_color: footerTextColor,
     } as any);
   };
 
@@ -325,6 +341,7 @@ export default function Configuracoes() {
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
+          <CardDescription>Personalize as cores de toda a vitrine</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
@@ -332,6 +349,48 @@ export default function Configuracoes() {
               { label: "Primária", value: primaryColor, set: setPrimaryColor },
               { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
               { label: "Destaque", value: accentColor, set: setAccentColor },
+            ].map((c) => (
+              <div key={c.label} className="space-y-2">
+                <Label>{c.label}</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Separator />
+          <p className="text-sm font-medium text-foreground">Botões</p>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Cor do Botão", value: buttonColor, set: setButtonColor },
+              { label: "Texto do Botão", value: buttonTextColor, set: setButtonTextColor },
+            ].map((c) => (
+              <div key={c.label} className="space-y-2">
+                <Label>{c.label}</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Button Preview */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Preview:</span>
+            <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>
+              Comprar Agora
+            </button>
+          </div>
+
+          <Separator />
+          <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
+              { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
+              { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
             ].map((c) => (
               <div key={c.label} className="space-y-2">
                 <Label>{c.label}</Label>
