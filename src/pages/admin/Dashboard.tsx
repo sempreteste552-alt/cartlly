@@ -321,10 +321,29 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent orders */}
+      {/* Filtered Orders */}
       <Card className="border-border">
-        <CardHeader><CardTitle className="text-lg">Pedidos Recentes</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-lg">Pedidos</CardTitle>
+          <Tabs value={statusFilter} onValueChange={setStatusFilter} className="mt-2">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="todos">Todos</TabsTrigger>
+              <TabsTrigger value="pendente">Pendente</TabsTrigger>
+              <TabsTrigger value="processando">Processando</TabsTrigger>
+              <TabsTrigger value="enviado">Enviado</TabsTrigger>
+              <TabsTrigger value="entregue">Entregue</TabsTrigger>
+              <TabsTrigger value="cancelado">Cancelado</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-muted-foreground">
+              {filteredOrders.length} pedido{filteredOrders.length !== 1 ? "s" : ""}
+              {statusFilter !== "todos" && ` com status "${statusFilter}"`}
+            </p>
+            <Badge variant="outline">{filteredOrders.reduce((s, o) => s + Number(o.total), 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</Badge>
+          </div>
           {recentOrders.length > 0 ? (
             <div className="space-y-3">
               {recentOrders.map((o) => (
@@ -335,13 +354,15 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold">{formatCurrency(Number(o.total))}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{o.status}</p>
+                    <Badge variant={o.status === "entregue" ? "default" : o.status === "cancelado" ? "destructive" : "secondary"} className="text-[10px]">
+                      {o.status}
+                    </Badge>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhum pedido recente.</p>
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum pedido encontrado.</p>
           )}
         </CardContent>
       </Card>
