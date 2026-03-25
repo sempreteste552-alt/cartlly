@@ -146,6 +146,11 @@ export default function Configuracoes() {
       marquee_bg_color: marqueeBgColor,
       marquee_text_color: marqueeTextColor,
       logo_size: logoSize,
+      button_color: buttonColor,
+      button_text_color: buttonTextColor,
+      header_bg_color: headerBgColor,
+      footer_bg_color: footerBgColor,
+      footer_text_color: footerTextColor,
     } as any);
   };
 
