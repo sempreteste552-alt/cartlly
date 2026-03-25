@@ -26,6 +26,7 @@ import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
 import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
 import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
