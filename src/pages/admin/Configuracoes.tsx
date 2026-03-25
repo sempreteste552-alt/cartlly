@@ -60,6 +60,9 @@ export default function Configuracoes() {
   const [storeSlug, setStoreSlug] = useState("");
   const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
   const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
+  const [shippingEnabled, setShippingEnabled] = useState(false);
+  const [shippingFlatRate, setShippingFlatRate] = useState("");
+  const [shippingFreeAbove, setShippingFreeAbove] = useState("");
 
   useEffect(() => {
     if (settings) {
