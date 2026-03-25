@@ -22,6 +22,7 @@ interface ProductFormProps {
     image_url: string | null;
     published: boolean;
     category_id: string | null;
+    made_to_order: boolean;
     additionalImages?: string[];
   }) => void;
   initialData?: Product | null;
