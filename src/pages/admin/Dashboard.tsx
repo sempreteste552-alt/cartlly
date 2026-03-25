@@ -16,6 +16,7 @@ export default function Dashboard() {
   const { data: products } = useProducts();
   const { data: orders } = useOrders();
   const { user } = useAuth();
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
 
   // Fetch order items for top products analysis
   const { data: allOrderItems } = useQuery({
