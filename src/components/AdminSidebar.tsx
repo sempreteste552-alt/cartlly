@@ -10,6 +10,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +39,8 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { data: settings } = useStoreSettings();
+  const storeSlug = (settings as any)?.store_slug;
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";
@@ -91,7 +94,7 @@ export function AdminSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/loja" target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                  <a href={storeSlug ? `/loja/${storeSlug}` : "/loja"} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
                     <ExternalLink className="h-4 w-4" />
                     {!collapsed && <span>Ver Loja</span>}
                   </a>

@@ -56,6 +56,9 @@ export default function Configuracoes() {
   const [sellViaWhatsapp, setSellViaWhatsapp] = useState(false);
   const [storeOpen, setStoreOpen] = useState(true);
   const [storeLocation, setStoreLocation] = useState("");
+  const [storeSlug, setStoreSlug] = useState("");
+  const [adminPrimaryColor, setAdminPrimaryColor] = useState("#6d28d9");
+  const [adminAccentColor, setAdminAccentColor] = useState("#8b5cf6");
 
   useEffect(() => {
     if (settings) {
@@ -85,6 +88,9 @@ export default function Configuracoes() {
       setSellViaWhatsapp((settings as any).sell_via_whatsapp ?? false);
       setStoreOpen((settings as any).store_open ?? true);
       setStoreLocation((settings as any).store_location ?? "");
+      setStoreSlug((settings as any).store_slug ?? "");
+      setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
+      setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
     }
   }, [settings]);
 
@@ -138,6 +144,9 @@ export default function Configuracoes() {
       sell_via_whatsapp: sellViaWhatsapp,
       store_open: storeOpen,
       store_location: storeLocation.trim() || null,
+      store_slug: storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null,
+      admin_primary_color: adminPrimaryColor,
+      admin_accent_color: adminAccentColor,
     } as any);
   };
 
@@ -379,6 +388,49 @@ export default function Configuracoes() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Store Slug (Multi-tenant) */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /><CardTitle className="text-lg">URL da Loja (Slug)</CardTitle></div>
+          <CardDescription>Identificador único da sua loja para acesso por URL</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2">
+            <Label>Slug</Label>
+            <Input value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="minha-loja" maxLength={50} />
+            {storeSlug && (
+              <p className="text-xs text-muted-foreground">
+                Sua loja ficará acessível em: <span className="font-mono font-medium">/loja/{storeSlug.toLowerCase().replace(/[^a-z0-9-]/g, "")}</span>
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Admin Colors */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores do Painel Admin</CardTitle></div>
+          <CardDescription>Personalize as cores do painel administrativo</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Primária Admin", value: adminPrimaryColor, set: setAdminPrimaryColor },
+              { label: "Destaque Admin", value: adminAccentColor, set: setAdminAccentColor },
+            ].map((c) => (
+              <div key={c.label} className="space-y-2">
+                <Label>{c.label}</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

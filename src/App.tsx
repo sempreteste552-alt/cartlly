@@ -35,7 +35,14 @@ const App = () => (
               <Route path="pedidos" element={<Pedidos />} />
               <Route path="config" element={<Configuracoes />} />
             </Route>
+            {/* Default store (first store) */}
             <Route path="/loja" element={<LojaLayout />}>
+              <Route index element={<LojaHome />} />
+              <Route path="produto/:id" element={<LojaProduto />} />
+              <Route path="checkout" element={<LojaCheckout />} />
+            </Route>
+            {/* Multi-tenant: store by slug */}
+            <Route path="/loja/:slug" element={<LojaLayout />}>
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
               <Route path="checkout" element={<LojaCheckout />} />

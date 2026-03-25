@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
-import { usePublicStoreSettings } from "@/hooks/usePublicStore";
+import { useState, useEffect } from "react";
+import { Outlet, Link, useNavigate, useParams } from "react-router-dom";
+import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart, type CartItem } from "@/hooks/useCart";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export interface LojaContextType {
   settings: any;
   searchTerm: string;
   setSearchTerm: (s: string) => void;
+  storeUserId?: string;
 }
 
 import { createContext, useContext } from "react";
@@ -21,7 +22,13 @@ const LojaContext = createContext<LojaContextType | null>(null);
 export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
-  const { data: settings, isLoading } = usePublicStoreSettings();
+  const { slug } = useParams();
+  const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
+  const { data: defaultSettings, isLoading: defaultLoading } = usePublicStoreSettings();
+
+  const settings = slug ? settingsBySlug : defaultSettings;
+  const isLoading = slug ? slugLoading : defaultLoading;
+
   const cart = useCart();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +37,33 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  // Store closed check
+  const basePath = slug ? `/loja/${slug}` : "/loja";
+
+  // Apply store colors as CSS vars
+  useEffect(() => {
+    if (settings) {
+      const root = document.documentElement;
+      root.style.setProperty("--store-primary", settings.primary_color || "#000000");
+      root.style.setProperty("--store-accent", settings.accent_color || "#333333");
+      return () => {
+        root.style.removeProperty("--store-primary");
+        root.style.removeProperty("--store-accent");
+      };
+    }
+  }, [settings]);
+
+  if (!isLoading && slug && !settings) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl">🔍</div>
+          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
+          <p className="text-gray-400">A loja "{slug}" não existe ou foi removida.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoading && settings && !settings.store_open) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
@@ -54,7 +87,7 @@ export default function LojaLayout() {
   const storeName = settings?.store_name || "Loja";
 
   return (
-    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm }}>
+    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
       <div className="min-h-screen bg-white text-black">
         {/* Top bar */}
         <div className="bg-black text-white text-xs py-1">
@@ -82,13 +115,11 @@ export default function LojaLayout() {
         {/* Header */}
         <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-            {/* Mobile menu */}
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            {/* Logo */}
-            <Link to="/loja" className="flex items-center gap-2 shrink-0">
+            <Link to={basePath} className="flex items-center gap-2 shrink-0">
               {settings?.logo_url ? (
                 <img src={settings.logo_url} alt={storeName} className="h-8 max-w-[120px] object-contain" />
               ) : (
@@ -96,7 +127,6 @@ export default function LojaLayout() {
               )}
             </Link>
 
-            {/* Search */}
             <div className="flex-1 max-w-xl mx-auto hidden sm:block">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -105,12 +135,11 @@ export default function LojaLayout() {
                   className="pl-9 bg-gray-50 border-gray-300 rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && navigate("/loja")}
+                  onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
                 />
               </div>
             </div>
 
-            {/* Cart */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -159,7 +188,7 @@ export default function LojaLayout() {
                       <span>Total</span>
                       <span>{formatPrice(cart.total)}</span>
                     </div>
-                    <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja/checkout")}>
+                    <Button className="w-full bg-black text-white hover:bg-gray-800" onClick={() => navigate(`${basePath}/checkout`)}>
                       Finalizar Compra
                     </Button>
                     {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
@@ -181,7 +210,6 @@ export default function LojaLayout() {
             </Sheet>
           </div>
 
-          {/* Mobile search */}
           <div className="sm:hidden px-4 pb-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -195,7 +223,6 @@ export default function LojaLayout() {
           </div>
         </header>
 
-        {/* Main content */}
         <main>
           <Outlet />
         </main>

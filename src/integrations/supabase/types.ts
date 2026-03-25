@@ -305,6 +305,8 @@ export type Database = {
       store_settings: {
         Row: {
           accent_color: string
+          admin_accent_color: string
+          admin_primary_color: string
           created_at: string
           custom_domain: string | null
           facebook_url: string | null
@@ -328,6 +330,7 @@ export type Database = {
           store_name: string
           store_open: boolean
           store_phone: string | null
+          store_slug: string | null
           store_whatsapp: string | null
           tiktok_url: string | null
           twitter_url: string | null
@@ -337,6 +340,8 @@ export type Database = {
         }
         Insert: {
           accent_color?: string
+          admin_accent_color?: string
+          admin_primary_color?: string
           created_at?: string
           custom_domain?: string | null
           facebook_url?: string | null
@@ -360,6 +365,7 @@ export type Database = {
           store_name?: string
           store_open?: boolean
           store_phone?: string | null
+          store_slug?: string | null
           store_whatsapp?: string | null
           tiktok_url?: string | null
           twitter_url?: string | null
@@ -369,6 +375,8 @@ export type Database = {
         }
         Update: {
           accent_color?: string
+          admin_accent_color?: string
+          admin_primary_color?: string
           created_at?: string
           custom_domain?: string | null
           facebook_url?: string | null
@@ -392,6 +400,7 @@ export type Database = {
           store_name?: string
           store_open?: boolean
           store_phone?: string | null
+          store_slug?: string | null
           store_whatsapp?: string | null
           tiktok_url?: string | null
           twitter_url?: string | null
