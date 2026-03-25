@@ -68,6 +68,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [storeSlug, setStoreSlug] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -103,7 +105,24 @@ export default function Login() {
           setLoading(false);
           return;
         }
-        const { error: signUpError } = await supabase.auth.signUp({
+        const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+        if (!slug) {
+          toast.error("Defina um slug válido para sua loja.");
+          setLoading(false);
+          return;
+        }
+        // Check slug availability
+        const { data: existingSlug } = await supabase
+          .from("store_settings")
+          .select("id")
+          .eq("store_slug", slug)
+          .maybeSingle();
+        if (existingSlug) {
+          toast.error("Este slug já está em uso. Escolha outro.");
+          setLoading(false);
+          return;
+        }
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -112,6 +131,14 @@ export default function Login() {
           },
         });
         if (signUpError) throw signUpError;
+        // Create store_settings with slug and store name
+        if (signUpData.user) {
+          await supabase.from("store_settings").insert({
+            user_id: signUpData.user.id,
+            store_name: storeName.trim() || displayName || "Minha Loja",
+            store_slug: slug,
+          });
+        }
         await supabase.auth.signOut();
         toast.success("Conta criada! Sua conta está em análise pelo administrador.");
         setIsRegister(false);
@@ -181,15 +208,45 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="displayName">Nome</Label>
+                  <Label htmlFor="displayName">Seu Nome</Label>
                   <Input
                     id="displayName"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Seu nome"
+                    placeholder="Seu nome completo"
                     required
                     className="h-11 border-border/50 focus:border-blue-500 transition-colors"
                   />
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="storeName">Nome da Loja</Label>
+                  <Input
+                    id="storeName"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    placeholder="Ex: Moda Fashion"
+                    required
+                    className="h-11 border-border/50 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
+                  <div className="flex items-center gap-0">
+                    <span className="inline-flex h-11 items-center rounded-l-md border border-r-0 border-border/50 bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
+                    <Input
+                      id="storeSlug"
+                      value={storeSlug}
+                      onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      placeholder="moda-fashion"
+                      required
+                      className="h-11 rounded-l-none border-border/50 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
               )}
               <div className="space-y-2">
