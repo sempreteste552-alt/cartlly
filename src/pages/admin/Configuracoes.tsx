@@ -88,6 +88,9 @@ export default function Configuracoes() {
       setSellViaWhatsapp((settings as any).sell_via_whatsapp ?? false);
       setStoreOpen((settings as any).store_open ?? true);
       setStoreLocation((settings as any).store_location ?? "");
+      setStoreSlug((settings as any).store_slug ?? "");
+      setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
+      setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
     }
   }, [settings]);
 
