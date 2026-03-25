@@ -29,6 +29,17 @@ export default function LojaHome() {
     return products.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
   }, [products, searchTerm]);
 
+  const groupedByCategory = useMemo(() => {
+    if (!filtered.length) return {};
+    const groups: Record<string, typeof filtered> = {};
+    filtered.forEach((p) => {
+      const catName = (p as any).categories?.name || "Outros";
+      if (!groups[catName]) groups[catName] = [];
+      groups[catName].push(p);
+    });
+    return groups;
+  }, [filtered]);
+
   if (!prodLoading && (!products || products.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
@@ -40,17 +51,6 @@ export default function LojaHome() {
       </div>
     );
   }
-
-  const groupedByCategory = useMemo(() => {
-    if (!filtered.length) return {};
-    const groups: Record<string, typeof filtered> = {};
-    filtered.forEach((p) => {
-      const catName = (p as any).categories?.name || "Outros";
-      if (!groups[catName]) groups[catName] = [];
-      groups[catName].push(p);
-    });
-    return groups;
-  }, [filtered]);
 
   return (
     <div>
