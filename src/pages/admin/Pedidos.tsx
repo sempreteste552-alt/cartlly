@@ -286,8 +286,47 @@ export default function Pedidos() {
                 </>
               )}
 
-              {/* Tracking link */}
+              {/* Receipt & Tracking */}
               <Separator />
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Comprovante</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={async () => {
+                    try {
+                      toast.loading("Gerando comprovante...", { id: "receipt" });
+                      const { data: { session } } = await supabase.auth.getSession();
+                      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                      const resp = await fetch(
+                        `https://${projectId}.supabase.co/functions/v1/generate-receipt`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${session?.access_token}`,
+                          },
+                          body: JSON.stringify({ orderId: selectedOrder.id }),
+                        }
+                      );
+                      const data = await resp.json();
+                      if (!resp.ok) throw new Error(data.error);
+                      // Open receipt in new tab
+                      const blob = new Blob([data.html], { type: "text/html" });
+                      const url = URL.createObjectURL(blob);
+                      window.open(url, "_blank");
+                      toast.success("Comprovante gerado! Você pode salvar como PDF pelo navegador (Ctrl+P).", { id: "receipt" });
+                    } catch (err: any) {
+                      toast.error("Erro ao gerar comprovante: " + err.message, { id: "receipt" });
+                    }
+                  }}
+                >
+                  <FileText className="h-4 w-4" />
+                  Gerar Comprovante
+                </Button>
+              </div>
+
               <div className="space-y-2">
                 <p className="text-sm font-medium">Link de Rastreio</p>
                 <div className="flex gap-2">
