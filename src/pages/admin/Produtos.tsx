@@ -116,6 +116,10 @@ export default function Produtos() {
           <p className="text-muted-foreground">Gerencie o catálogo da sua loja</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setAiImportOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Importar com IA
+          </Button>
           <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
             <Tag className="mr-2 h-4 w-4" />
             Categorias
