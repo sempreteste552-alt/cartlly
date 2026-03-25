@@ -343,6 +343,13 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant Detail Dialog */}
+      <TenantDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        tenant={detailTenant}
+      />
     </div>
   );
 }
