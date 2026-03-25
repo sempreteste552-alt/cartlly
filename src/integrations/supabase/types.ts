@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          min_order_value: number | null
+          used_count: number
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order_value?: number | null
+          used_count?: number
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order_value?: number | null
+          used_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -114,11 +156,13 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
           created_at: string
           customer_address: string | null
           customer_email: string | null
           customer_name: string
           customer_phone: string | null
+          discount_amount: number
           id: string
           notes: string | null
           status: string
@@ -128,11 +172,13 @@ export type Database = {
           whatsapp_order: boolean
         }
         Insert: {
+          coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
           customer_name: string
           customer_phone?: string | null
+          discount_amount?: number
           id?: string
           notes?: string | null
           status?: string
@@ -142,11 +188,13 @@ export type Database = {
           whatsapp_order?: boolean
         }
         Update: {
+          coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string | null
+          discount_amount?: number
           id?: string
           notes?: string | null
           status?: string

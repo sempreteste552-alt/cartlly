@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
+import { useProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,9 +13,23 @@ import { ProductReviews } from "@/components/ProductReviews";
 export default function LojaProduto() {
   const { id } = useParams();
   const { data: products } = usePublicProducts();
+  const { data: productImages } = useProductImages(id);
   const { cart, settings } = useLojaContext();
 
   const product = products?.find((p) => p.id === id);
+
+  // All images: main + additional
+  const allImages = useMemo(() => {
+    const images: string[] = [];
+    if (product?.image_url) images.push(product.image_url);
+    productImages?.forEach((img: any) => {
+      if (!images.includes(img.image_url)) images.push(img.image_url);
+    });
+    return images;
+  }, [product, productImages]);
+
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const similarProducts = useMemo(() => {
     if (!product || !products) return [];
     return products
@@ -37,19 +52,40 @@ export default function LojaProduto() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Breadcrumb */}
       <Link to="/loja" className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product image */}
-        <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="h-24 w-24 text-gray-200" />
+        {/* Product images */}
+        <div className="space-y-3">
+          <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+            {allImages.length > 0 ? (
+              <img
+                src={allImages[selectedImageIndex] || allImages[0]}
+                alt={product.name}
+                className="w-full h-full object-contain transition-opacity duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Package className="h-24 w-24 text-gray-200" />
+              </div>
+            )}
+          </div>
+          {/* Thumbnail strip */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {allImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImageIndex(i)}
+                  className={`shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors ${
+                    selectedImageIndex === i ? "border-black" : "border-gray-200 hover:border-gray-400"
+                  }`}
+                >
+                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -99,7 +135,6 @@ export default function LojaProduto() {
 
           <Separator />
 
-          {/* Info cards */}
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 rounded-lg bg-gray-50">
               <Truck className="h-5 w-5 mx-auto text-gray-600" />
@@ -127,10 +162,8 @@ export default function LojaProduto() {
         </div>
       </div>
 
-      {/* Reviews */}
       <ProductReviews productId={product.id} />
 
-      {/* Similar products */}
       {similarProducts.length > 0 && (
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">Produtos Similares</h2>

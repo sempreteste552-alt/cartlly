@@ -11,6 +11,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Produtos from "./pages/admin/Produtos";
 import Pedidos from "./pages/admin/Pedidos";
 import Configuracoes from "./pages/admin/Configuracoes";
+import Cupons from "./pages/admin/Cupons";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
@@ -48,6 +49,7 @@ const App = () => (
               <Route index element={<Dashboard />} />
               <Route path="produtos" element={<Produtos />} />
               <Route path="pedidos" element={<Pedidos />} />
+              <Route path="cupons" element={<Cupons />} />
               <Route path="config" element={<Configuracoes />} />
             </Route>
             {/* Default store */}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -11,12 +12,13 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AICatalogImport } from "@/components/AICatalogImport";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -33,6 +35,7 @@ export default function Produtos() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
+  const [aiImportOpen, setAiImportOpen] = useState(false);
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
@@ -42,13 +45,41 @@ export default function Produtos() {
 
   const handleCreate = (data: any) => {
     if (data.category_id === "none") data.category_id = null;
-    createProduct.mutate(data, { onSuccess: () => setFormOpen(false) });
+    const { additionalImages, ...productData } = data;
+    createProduct.mutate(productData, {
+      onSuccess: async (created: any) => {
+        if (additionalImages?.length > 0) {
+          for (let i = 0; i < additionalImages.length; i++) {
+            await supabase.from("product_images").insert({
+              product_id: created.id,
+              image_url: additionalImages[i],
+              sort_order: i,
+            } as any);
+          }
+        }
+        setFormOpen(false);
+      },
+    });
   };
 
   const handleUpdate = (data: any) => {
     if (!editingProduct) return;
     if (data.category_id === "none") data.category_id = null;
-    updateProduct.mutate({ id: editingProduct.id, ...data }, { onSuccess: () => setEditingProduct(null) });
+    const { additionalImages, ...productData } = data;
+    updateProduct.mutate({ id: editingProduct.id, ...productData }, {
+      onSuccess: async () => {
+        if (additionalImages?.length > 0) {
+          for (let i = 0; i < additionalImages.length; i++) {
+            await supabase.from("product_images").insert({
+              product_id: editingProduct.id,
+              image_url: additionalImages[i],
+              sort_order: i + 100,
+            } as any);
+          }
+        }
+        setEditingProduct(null);
+      },
+    });
   };
 
   const handleTogglePublished = (product: Product) => {
@@ -85,6 +116,10 @@ export default function Produtos() {
           <p className="text-muted-foreground">Gerencie o catálogo da sua loja</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setAiImportOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Importar com IA
+          </Button>
           <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
             <Tag className="mr-2 h-4 w-4" />
             Categorias
@@ -230,6 +265,9 @@ export default function Produtos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Catalog Import */}
+      <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />
     </div>
   );
 }

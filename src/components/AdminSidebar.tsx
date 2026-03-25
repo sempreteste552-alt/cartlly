@@ -3,6 +3,7 @@ import {
   Package,
   ShoppingCart,
   Settings,
+  Ticket,
   ExternalLink,
   LogOut,
   Store,
@@ -31,6 +32,7 @@ const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Produtos", url: "/admin/produtos", icon: Package },
   { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart },
+  { title: "Cupons", url: "/admin/cupons", icon: Ticket },
   { title: "Configurações", url: "/admin/config", icon: Settings },
 ];
 
