@@ -89,7 +89,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setCategoryId(""); setAdditionalImages([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setAdditionalImages([]);
     }
     onOpenChange(isOpen);
   };
