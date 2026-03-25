@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Store } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import cartlyLogo from "@/assets/cartly-logo.png";
 
 const SUPER_ADMIN_EMAIL = "admin@cartlly.com";
 
@@ -64,9 +65,7 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardHeader className="text-center space-y-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
-            <Store className="h-7 w-7 text-primary-foreground" />
-          </div>
+          <img src={cartlyLogo} alt="Cartly" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-bold tracking-tight">
             {isRegister ? "Criar Conta Admin" : "Painel Administrativo"}
           </CardTitle>
