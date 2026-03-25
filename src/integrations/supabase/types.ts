@@ -110,6 +110,30 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_wishlist: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          product_id: string
+          store_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          product_id: string
+          store_user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          product_id?: string
+          store_user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
