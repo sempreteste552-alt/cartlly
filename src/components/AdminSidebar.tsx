@@ -10,6 +10,7 @@ import {
   CreditCard,
   Truck,
   Zap,
+  Users,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -36,6 +37,7 @@ const mainItems = [
   { title: "Produtos", url: "/admin/produtos", icon: Package },
   { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart },
   { title: "Cupons", url: "/admin/cupons", icon: Ticket },
+  { title: "Clientes", url: "/admin/clientes", icon: Users },
 ];
 
 const configItems = [

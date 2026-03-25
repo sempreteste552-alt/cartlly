@@ -61,6 +61,7 @@ const App = () => (
               <Route path="gateway" element={<Gateway />} />
               <Route path="frete" element={<Frete />} />
               <Route path="pagamentos" element={<Pagamentos />} />
+              <Route path="clientes" element={<Clientes />} />
             </Route>
             {/* Default store */}
             <Route path="/loja" element={<LojaLayout />}>
