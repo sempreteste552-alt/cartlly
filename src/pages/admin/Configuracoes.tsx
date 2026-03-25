@@ -96,6 +96,9 @@ export default function Configuracoes() {
       setStoreSlug((settings as any).store_slug ?? "");
       setAdminPrimaryColor((settings as any).admin_primary_color ?? "#6d28d9");
       setAdminAccentColor((settings as any).admin_accent_color ?? "#8b5cf6");
+      setShippingEnabled((settings as any).shipping_enabled ?? false);
+      setShippingFlatRate(String((settings as any).shipping_flat_rate ?? ""));
+      setShippingFreeAbove(String((settings as any).shipping_free_above ?? ""));
     }
   }, [settings]);
 
