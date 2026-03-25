@@ -132,7 +132,7 @@ export default function LojaHome() {
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
             <div key={catName}>
               <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>{catName}</h2>
-              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} />
+              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} />
             </div>
           ))
         )}
