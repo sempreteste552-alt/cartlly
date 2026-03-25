@@ -12,10 +12,10 @@ export function useStoreSettings() {
   return useQuery({
     queryKey: ["store_settings", user?.id],
     queryFn: async () => {
-      // Try to get existing settings
       const { data, error } = await supabase
         .from("store_settings")
         .select("*")
+        .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
       // Auto-create if not exists
