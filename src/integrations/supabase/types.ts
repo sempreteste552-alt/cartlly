@@ -165,6 +165,9 @@ export type Database = {
           discount_amount: number
           id: string
           notes: string | null
+          shipping_cep: string | null
+          shipping_cost: number
+          shipping_method: string | null
           status: string
           total: number
           updated_at: string
@@ -181,6 +184,9 @@ export type Database = {
           discount_amount?: number
           id?: string
           notes?: string | null
+          shipping_cep?: string | null
+          shipping_cost?: number
+          shipping_method?: string | null
           status?: string
           total?: number
           updated_at?: string
@@ -197,6 +203,9 @@ export type Database = {
           discount_amount?: number
           id?: string
           notes?: string | null
+          shipping_cep?: string | null
+          shipping_cost?: number
+          shipping_method?: string | null
           status?: string
           total?: number
           updated_at?: string
@@ -482,6 +491,11 @@ export type Database = {
           primary_color: string
           secondary_color: string
           sell_via_whatsapp: boolean
+          shipping_base_cost: number
+          shipping_enabled: boolean
+          shipping_flat_rate: number | null
+          shipping_free_above: number | null
+          shipping_per_km: number
           store_address: string | null
           store_description: string | null
           store_location: string | null
@@ -518,6 +532,11 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           sell_via_whatsapp?: boolean
+          shipping_base_cost?: number
+          shipping_enabled?: boolean
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number
           store_address?: string | null
           store_description?: string | null
           store_location?: string | null
@@ -554,6 +573,11 @@ export type Database = {
           primary_color?: string
           secondary_color?: string
           sell_via_whatsapp?: boolean
+          shipping_base_cost?: number
+          shipping_enabled?: boolean
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number
           store_address?: string | null
           store_description?: string | null
           store_location?: string | null
