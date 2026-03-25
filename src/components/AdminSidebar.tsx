@@ -34,6 +34,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
