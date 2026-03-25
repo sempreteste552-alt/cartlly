@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
+import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { useLojaContext } from "./LojaLayout";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Package } from "lucide-react";
+import { ShoppingCart, Package, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LojaHome() {
@@ -15,6 +15,9 @@ export default function LojaHome() {
   const { data: banners } = usePublicBanners();
   const { data: categories } = usePublicCategories();
   const { cart, searchTerm } = useLojaContext();
+
+  const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
+  const { data: ratings } = useAllProductReviews(productIds);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -26,7 +29,6 @@ export default function LojaHome() {
     return products.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
   }, [products, searchTerm]);
 
-  // Under construction
   if (!prodLoading && (!products || products.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
@@ -39,7 +41,6 @@ export default function LojaHome() {
     );
   }
 
-  // Group by category
   const groupedByCategory = useMemo(() => {
     if (!filtered.length) return {};
     const groups: Record<string, typeof filtered> = {};
@@ -53,7 +54,6 @@ export default function LojaHome() {
 
   return (
     <div>
-      {/* Banner carousel */}
       {banners && banners.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 pt-4">
           <Carousel opts={{ loop: true }} className="w-full">
@@ -76,7 +76,6 @@ export default function LojaHome() {
         </div>
       )}
 
-      {/* Categories bar */}
       {categories && categories.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 mt-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -89,7 +88,6 @@ export default function LojaHome() {
         </div>
       )}
 
-      {/* Products */}
       <div className="max-w-7xl mx-auto px-4 mt-8 space-y-10 pb-8">
         {prodLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -104,13 +102,13 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
             <div key={catName}>
               <h2 className="text-xl font-bold mb-4 border-b border-gray-200 pb-2">{catName}</h2>
-              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} />
+              <ProductGrid products={catProducts} formatPrice={formatPrice} cart={cart} ratings={ratings} />
             </div>
           ))
         )}
@@ -119,44 +117,59 @@ export default function LojaHome() {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart }: { products: any[]; formatPrice: (p: number) => string; cart: ReturnType<typeof import("@/hooks/useCart").useCart> }) {
+function ProductGrid({ products, formatPrice, cart, ratings }: {
+  products: any[];
+  formatPrice: (p: number) => string;
+  cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
+  ratings?: Record<string, { average: number; count: number }>;
+}) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {products.map((product) => (
-        <Link key={product.id} to={`/loja/produto/${product.id}`} className="group">
-          <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
-            <div className="aspect-square bg-gray-50 overflow-hidden">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package className="h-12 w-12 text-gray-300" />
-                </div>
-              )}
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
-              <p className="text-lg font-bold mt-1">{formatPrice(product.price)}</p>
-              {product.stock > 0 ? (
-                <p className="text-xs text-green-600 mt-1">Em estoque</p>
-              ) : (
-                <p className="text-xs text-red-500 mt-1">Esgotado</p>
-              )}
-              <Button
-                className="w-full mt-2 bg-black text-white hover:bg-gray-800"
-                size="sm"
-                disabled={product.stock <= 0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
-                }}
-              >
-                <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
-              </Button>
-            </div>
-          </Card>
-        </Link>
-      ))}
+      {products.map((product) => {
+        const r = ratings?.[product.id];
+        return (
+          <Link key={product.id} to={`/loja/produto/${product.id}`} className="group">
+            <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
+              <div className="aspect-square bg-gray-50 overflow-hidden">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="h-12 w-12 text-gray-300" />
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
+                {r && r.count > 0 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs font-medium">{r.average.toFixed(1)}</span>
+                    <span className="text-xs text-gray-400">({r.count})</span>
+                  </div>
+                )}
+                <p className="text-lg font-bold mt-1">{formatPrice(product.price)}</p>
+                {product.stock > 0 ? (
+                  <p className="text-xs text-green-600 mt-1">Em estoque</p>
+                ) : (
+                  <p className="text-xs text-red-500 mt-1">Esgotado</p>
+                )}
+                <Button
+                  className="w-full mt-2 bg-black text-white hover:bg-gray-800"
+                  size="sm"
+                  disabled={product.stock <= 0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
+                  }}
+                >
+                  <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
+                </Button>
+              </div>
+            </Card>
+          </Link>
+        );
+      })}
     </div>
   );
 }
