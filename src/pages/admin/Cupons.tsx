@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,18 +9,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Ticket, Trash2, Pencil, Loader2 } from "lucide-react";
+import { Plus, Ticket, Trash2, Pencil, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { useCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon } from "@/hooks/useCoupons";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import LockedFeature from "@/components/LockedFeature";
+
+interface AISuggestion {
+  campaign_name: string;
+  code: string;
+  discount_type: "percentage" | "fixed";
+  discount_value: number;
+  min_order_value?: number;
+  max_uses?: number;
+  validity_days: number;
+  target_audience: string;
+  reason: string;
+}
 
 export default function Cupons() {
+  const { user } = useAuth();
   const { data: coupons, isLoading } = useCoupons();
   const createCoupon = useCreateCoupon();
   const updateCoupon = useUpdateCoupon();
   const deleteCoupon = useDeleteCoupon();
+  const { hasFeature } = usePlanFeatures();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("percentage");
@@ -59,7 +81,6 @@ export default function Cupons() {
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
       active,
     };
-
     if (editing) {
       updateCoupon.mutate({ id: editing.id, ...payload }, { onSuccess: () => setFormOpen(false) });
     } else {
@@ -67,20 +88,144 @@ export default function Cupons() {
     }
   };
 
+  const handleAISuggest = async () => {
+    setAiLoading(true);
+    setShowAiPanel(true);
+    try {
+      // Gather store context
+      const { data: products } = await supabase.from("products").select("id, category_id").eq("user_id", user!.id);
+      const { data: orders } = await supabase.from("orders").select("total, created_at").eq("user_id", user!.id);
+      const { data: categories } = await supabase.from("categories").select("name").eq("user_id", user!.id);
+      const { data: customers } = await supabase.from("customers").select("id").eq("store_user_id", user!.id);
+      const { data: settings } = await supabase.from("store_settings").select("store_name").eq("user_id", user!.id).maybeSingle();
+
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthOrders = orders?.filter(o => new Date(o.created_at) >= monthStart) || [];
+      const monthRevenue = monthOrders.reduce((s, o) => s + Number(o.total), 0);
+      const avgTicket = orders?.length ? orders.reduce((s, o) => s + Number(o.total), 0) / orders.length : 0;
+
+      const { data, error } = await supabase.functions.invoke("ai-smart-coupons", {
+        body: {
+          action: "suggest_campaigns",
+          storeContext: {
+            storeName: settings?.store_name || "Minha Loja",
+            totalProducts: products?.length || 0,
+            categories: categories?.map(c => c.name) || [],
+            monthlyOrders: monthOrders.length,
+            monthlyRevenue: monthRevenue,
+            avgTicket,
+            activeCoupons: coupons?.filter((c: any) => c.active).length || 0,
+            totalCustomers: customers?.length || 0,
+          },
+        },
+      });
+
+      if (error) throw error;
+      setAiSuggestions(data.suggestions || []);
+    } catch (e: any) {
+      toast.error("Erro ao gerar sugestões: " + (e.message || "Erro desconhecido"));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applySuggestion = (s: AISuggestion) => {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + s.validity_days);
+
+    setEditing(null);
+    setCode(s.code);
+    setDiscountType(s.discount_type);
+    setDiscountValue(String(s.discount_value));
+    setMinOrderValue(s.min_order_value ? String(s.min_order_value) : "");
+    setMaxUses(s.max_uses ? String(s.max_uses) : "");
+    setExpiresAt(expiryDate.toISOString().slice(0, 16));
+    setActive(true);
+    setFormOpen(true);
+    toast.success(`Campanha "${s.campaign_name}" aplicada! Revise e salve.`);
+  };
+
   const formatPrice = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
+  const aiContent = (
+    <div className="space-y-6">
+      {/* AI Suggestions Panel */}
+      {showAiPanel && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold text-foreground">Sugestões da IA</h3>
+              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setShowAiPanel(false)}>Fechar</Button>
+            </div>
+            {aiLoading ? (
+              <div className="flex items-center justify-center py-8 gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Analisando sua loja e gerando campanhas...</span>
+              </div>
+            ) : aiSuggestions.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">Nenhuma sugestão gerada. Tente novamente.</p>
+            ) : (
+              <div className="grid gap-3">
+                {aiSuggestions.map((s, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-medium text-foreground">{s.campaign_name}</h4>
+                        <Badge variant="outline" className="mt-1 font-mono">{s.code}</Badge>
+                      </div>
+                      <Button size="sm" onClick={() => applySuggestion(s)}>
+                        <Wand2 className="mr-1 h-3 w-3" /> Usar
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{s.reason}</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Badge variant="secondary">
+                        {s.discount_type === "percentage" ? `${s.discount_value}%` : formatPrice(s.discount_value)}
+                      </Badge>
+                      <Badge variant="secondary">{s.validity_days} dias</Badge>
+                      <Badge variant="secondary">🎯 {s.target_audience}</Badge>
+                      {s.min_order_value && <Badge variant="secondary">Mín. {formatPrice(s.min_order_value)}</Badge>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Cupons de Desconto</h1>
           <p className="text-muted-foreground">Crie e gerencie cupons para sua loja</p>
         </div>
-        <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo Cupom</Button>
+        <div className="flex gap-2">
+          {hasFeature("ai") ? (
+            <Button variant="outline" onClick={handleAISuggest} disabled={aiLoading}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              {aiLoading ? "Gerando..." : "Sugestões IA"}
+            </Button>
+          ) : (
+            <LockedFeature featureName="Sugestões IA" compact>
+              <Button variant="outline" disabled>
+                <Sparkles className="mr-2 h-4 w-4" /> Sugestões IA
+              </Button>
+            </LockedFeature>
+          )}
+          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo Cupom</Button>
+        </div>
       </div>
+
+      {aiContent}
 
       {!coupons?.length ? (
         <Card className="border-border">
