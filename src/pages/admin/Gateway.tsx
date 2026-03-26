@@ -24,6 +24,7 @@ export default function Gateway() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const { isLocked } = usePlanFeatures();
+  const { user } = useAuth();
   const gatewayLocked = isLocked("gateway");
 
   const [paymentGateway, setPaymentGateway] = useState("");
