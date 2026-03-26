@@ -10,14 +10,15 @@ export default function SuperAdminDashboard() {
   const { data: plans } = useAllPlans();
 
   const metrics = useMemo(() => {
-    if (!tenants) return { total: 0, active: 0, trial: 0, blocked: 0, totalRevenue: 0, totalProducts: 0, totalOrders: 0 };
+    if (!tenants) return { total: 0, active: 0, trial: 0, blocked: 0, pending: 0, totalRevenue: 0, totalProducts: 0, totalOrders: 0 };
     const active = tenants.filter((t) => t.subscription?.status === "active").length;
     const trial = tenants.filter((t) => t.subscription?.status === "trial").length;
     const blocked = tenants.filter((t) => t.subscription?.status === "blocked" || t.subscription?.status === "expired").length;
+    const pending = tenants.filter((t) => t.status === "pending").length;
     const totalRevenue = tenants.reduce((s, t) => s + (t.orders?.revenue || 0), 0);
     const totalProducts = tenants.reduce((s, t) => s + (t.productCount || 0), 0);
     const totalOrders = tenants.reduce((s, t) => s + (t.orders?.count || 0), 0);
-    return { total: tenants.length, active, trial, blocked, totalRevenue, totalProducts, totalOrders };
+    return { total: tenants.length, active, trial, blocked, pending, totalRevenue, totalProducts, totalOrders };
   }, [tenants]);
 
   const formatCurrency = (v: number) =>
