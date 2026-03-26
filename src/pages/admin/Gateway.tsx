@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle, Power } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
@@ -32,6 +33,7 @@ export default function Gateway() {
   const [gatewaySecretKey, setGatewaySecretKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [maxInstallments, setMaxInstallments] = useState(12);
+  const [gatewayActive, setGatewayActive] = useState(false);
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
   const [testOwner, setTestOwner] = useState<{ name: string; email: string; store: string } | null>(null);
@@ -43,6 +45,8 @@ export default function Gateway() {
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
+      // Gateway is active if it has a gateway selected and keys configured
+      setGatewayActive(!!(settings.payment_gateway && settings.gateway_public_key && (settings as any).gateway_secret_key));
     }
   }, [settings]);
 
@@ -123,21 +127,40 @@ export default function Gateway() {
         <p className="text-muted-foreground">Configure seu gateway para processar pagamentos</p>
       </div>
 
-      {/* Gateway Status Card */}
+      {/* Gateway Status Card with Toggle */}
       <Card className={`border-border ${paymentGateway ? "border-l-4" : ""}`} style={paymentGateway && selectedGateway ? { borderLeftColor: selectedGateway.color } : {}}>
         <CardContent className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <Zap className="h-5 w-5 text-primary" />
+            <Power className={`h-5 w-5 ${gatewayActive ? "text-green-500" : "text-muted-foreground"}`} />
             <div>
-              <p className="font-medium">Status</p>
+              <p className="font-medium">Gateway de Pagamento</p>
               <p className="text-xs text-muted-foreground">
                 {paymentGateway ? `${selectedGateway?.name} - ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}` : "Nenhum gateway configurado"}
               </p>
             </div>
           </div>
-          <Badge variant={paymentGateway ? (gatewayEnvironment === "production" ? "default" : "secondary") : "outline"}>
-            {paymentGateway ? (gatewayEnvironment === "production" ? "Ativo" : "Sandbox") : "Inativo"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant={gatewayActive ? (gatewayEnvironment === "production" ? "default" : "secondary") : "outline"}>
+              {gatewayActive ? (gatewayEnvironment === "production" ? "✅ Ativo" : "🧪 Sandbox") : "❌ Desativado"}
+            </Badge>
+            <Switch
+              checked={gatewayActive}
+              onCheckedChange={(checked) => {
+                if (checked && (!paymentGateway || !gatewayPublicKey || !gatewaySecretKey)) {
+                  toast.error("Configure o gateway e as chaves antes de ativar.");
+                  return;
+                }
+                setGatewayActive(checked);
+                if (settings) {
+                  updateSettings.mutate({
+                    id: settings.id,
+                    payment_gateway: checked ? paymentGateway : null,
+                  } as any);
+                  toast.success(checked ? "✅ Gateway ativado!" : "❌ Gateway desativado!");
+                }
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
