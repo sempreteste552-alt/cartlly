@@ -33,6 +33,7 @@ export default function Gateway() {
   const [gatewaySecretKey, setGatewaySecretKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [maxInstallments, setMaxInstallments] = useState(12);
+  const [gatewayActive, setGatewayActive] = useState(false);
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
   const [testOwner, setTestOwner] = useState<{ name: string; email: string; store: string } | null>(null);
