@@ -28,6 +28,17 @@ export const useLojaContext = () => useContext(LojaContext)!;
 export default function LojaLayout() {
   const { slug } = useParams();
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
+  const { user, customer } = useCustomerAuth();
+  const cart = useCart();
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const settings = settingsBySlug;
+  const isLoading = slugLoading;
 
   // Slug is required — no default store
   if (!slug) {
@@ -41,17 +52,6 @@ export default function LojaLayout() {
       </div>
     );
   }
-
-  const settings = settingsBySlug;
-  const isLoading = slugLoading;
-
-  const cart = useCart();
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
