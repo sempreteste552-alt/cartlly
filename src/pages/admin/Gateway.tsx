@@ -45,6 +45,8 @@ export default function Gateway() {
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
+      // Gateway is active if it has a gateway selected and keys configured
+      setGatewayActive(!!(settings.payment_gateway && settings.gateway_public_key && (settings as any).gateway_secret_key));
     }
   }, [settings]);
 
