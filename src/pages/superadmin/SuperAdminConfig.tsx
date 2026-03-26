@@ -21,6 +21,10 @@ interface PlatformConfig {
   default_plan_id: string;
   mercadopago_global_key: string;
   pagbank_global_key: string;
+  stripe_global_key: string;
+  stripe_webhook_secret: string;
+  mp_webhook_secret: string;
+  gateway_test_mode: boolean;
 }
 
 const defaultConfig: PlatformConfig = {
@@ -33,6 +37,10 @@ const defaultConfig: PlatformConfig = {
   default_plan_id: "",
   mercadopago_global_key: "",
   pagbank_global_key: "",
+  stripe_global_key: "",
+  stripe_webhook_secret: "",
+  mp_webhook_secret: "",
+  gateway_test_mode: true,
 };
 
 export default function SuperAdminConfig() {
