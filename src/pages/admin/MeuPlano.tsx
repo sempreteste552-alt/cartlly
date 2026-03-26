@@ -7,7 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -44,6 +47,14 @@ export default function MeuPlano() {
   const { data: allPlans } = useAllPlans();
   const queryClient = useQueryClient();
   const [confirmDialog, setConfirmDialog] = useState<{ planId: string; planName: string; price: number; type: "upgrade" | "downgrade" } | null>(null);
+  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
+
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [selectedGateway, setSelectedGateway] = useState("stripe");
 
   const { data: currentSub } = useQuery({
     queryKey: ["my_subscription", user?.id],
@@ -56,6 +67,26 @@ export default function MeuPlano() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Check which gateways are configured
+  const { data: platformGateways } = useQuery({
+    queryKey: ["platform_gateways"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", ["stripe_global_key", "mercadopago_global_key"]);
+      const gateways: string[] = [];
+      data?.forEach((s: any) => {
+        const val = s.value?.value;
+        if (val && typeof val === "string" && val.length > 5) {
+          if (s.key === "stripe_global_key") gateways.push("stripe");
+          if (s.key === "mercadopago_global_key") gateways.push("mercadopago");
+        }
+      });
+      return gateways;
     },
   });
 
@@ -98,8 +129,57 @@ export default function MeuPlano() {
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
+  const processPayment = useMutation({
+    mutationFn: async () => {
+      if (!checkoutDialog || !user) throw new Error("Dados insuficientes");
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            plan_id: checkoutDialog.planId,
+            card_number: cardNumber.replace(/\s/g, ""),
+            card_holder: cardHolder,
+            card_expiry: cardExpiry,
+            card_cvv: cardCvv,
+            gateway: selectedGateway,
+          }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Erro ao processar pagamento");
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(`🎉 ${data.message}`);
+      setCheckoutDialog(null);
+      resetCardForm();
+      queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["pending_plan_request"] });
+      queryClient.invalidateQueries({ queryKey: ["plan_features"] });
+    },
+    onError: (e: any) => toast.error("❌ " + e.message),
+  });
+
+  const resetCardForm = () => {
+    setCardNumber("");
+    setCardHolder("");
+    setCardExpiry("");
+    setCardCvv("");
+  };
+
   const currentPlan = currentSub?.tenant_plans as any;
   const currentPrice = currentPlan?.price ?? 0;
+  const isFreePlan = currentPrice === 0;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -115,8 +195,42 @@ export default function MeuPlano() {
     return `${minutes}min`;
   };
 
+  const formatCardNumber = (value: string) => {
+    const nums = value.replace(/\D/g, "").slice(0, 16);
+    return nums.replace(/(.{4})/g, "$1 ").trim();
+  };
+
+  const formatExpiry = (value: string) => {
+    const nums = value.replace(/\D/g, "").slice(0, 4);
+    if (nums.length >= 3) return nums.slice(0, 2) + "/" + nums.slice(2);
+    return nums;
+  };
+
   const statusLabel = currentSub?.status === "active" ? "Ativo" : currentSub?.status === "trial" ? "Teste" : currentSub?.status || "—";
   const statusColor = currentSub?.status === "active" ? "bg-green-500" : currentSub?.status === "trial" ? "bg-amber-500" : "bg-muted";
+
+  const handlePlanAction = (plan: any) => {
+    const isUpgrade = plan.price > currentPrice;
+
+    // Free → Paid: open checkout
+    if (isFreePlan && plan.price > 0) {
+      if (!platformGateways || platformGateways.length === 0) {
+        toast.error("Nenhum gateway de pagamento configurado. Contate o administrador.");
+        return;
+      }
+      setSelectedGateway(platformGateways[0]);
+      setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
+      return;
+    }
+
+    // Paid → different plan: request approval
+    setConfirmDialog({
+      planId: plan.id,
+      planName: plan.name,
+      price: plan.price,
+      type: isUpgrade ? "upgrade" : "downgrade",
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -294,16 +408,11 @@ export default function MeuPlano() {
                       className={`w-full transition-all ${isUpgrade ? "shadow-md hover:shadow-lg" : ""}`}
                       variant={isUpgrade ? "default" : "outline"}
                       disabled={!!pendingRequest}
-                      onClick={() =>
-                        setConfirmDialog({
-                          planId: plan.id,
-                          planName: plan.name,
-                          price: plan.price,
-                          type: isUpgrade ? "upgrade" : "downgrade",
-                        })
-                      }
+                      onClick={() => handlePlanAction(plan)}
                     >
-                      {isUpgrade ? (
+                      {isFreePlan && plan.price > 0 ? (
+                        <><CreditCard className="mr-1 h-4 w-4" /> Assinar Agora</>
+                      ) : isUpgrade ? (
                         <><ArrowUp className="mr-1 h-4 w-4" /> Solicitar Upgrade</>
                       ) : (
                         <><ArrowDown className="mr-1 h-4 w-4" /> Solicitar Downgrade</>
@@ -325,7 +434,7 @@ export default function MeuPlano() {
         </div>
       </div>
 
-      {/* Confirmation dialog */}
+      {/* Confirmation dialog (paid→paid) */}
       <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
         <DialogContent>
           <DialogHeader>
@@ -346,6 +455,112 @@ export default function MeuPlano() {
             >
               {requestChange.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Enviar Solicitação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Checkout dialog (free→paid) */}
+      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); resetCardForm(); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Checkout — {checkoutDialog?.planName}
+            </DialogTitle>
+            <DialogDescription>
+              Pague <strong>{formatPrice(checkoutDialog?.price ?? 0)}/mês</strong> com cartão de crédito ou débito
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Gateway selector */}
+            {platformGateways && platformGateways.length > 1 && (
+              <div className="space-y-2">
+                <Label>Gateway de Pagamento</Label>
+                <Select value={selectedGateway} onValueChange={setSelectedGateway}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platformGateways.includes("stripe") && <SelectItem value="stripe">Stripe</SelectItem>}
+                    {platformGateways.includes("mercadopago") && <SelectItem value="mercadopago">Mercado Pago</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Número do Cartão</Label>
+              <Input
+                placeholder="0000 0000 0000 0000"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                maxLength={19}
+                className="font-mono"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nome no Cartão</Label>
+              <Input
+                placeholder="NOME COMPLETO"
+                value={cardHolder}
+                onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Validade</Label>
+                <Input
+                  placeholder="MM/AA"
+                  value={cardExpiry}
+                  onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                  maxLength={5}
+                  className="font-mono"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>CVV</Label>
+                <Input
+                  placeholder="123"
+                  type="password"
+                  value={cardCvv}
+                  onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  maxLength={4}
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Plano</span>
+                <span className="font-medium">{checkoutDialog?.planName}</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-bold text-primary text-lg">{formatPrice(checkoutDialog?.price ?? 0)}</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setCheckoutDialog(null); resetCardForm(); }}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => processPayment.mutate()}
+              disabled={processPayment.isPending || !cardNumber || !cardHolder || !cardExpiry || !cardCvv}
+              className="min-w-[140px]"
+            >
+              {processPayment.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CreditCard className="mr-2 h-4 w-4" />
+              )}
+              {processPayment.isPending ? "Processando..." : "Pagar"}
             </Button>
           </DialogFooter>
         </DialogContent>
