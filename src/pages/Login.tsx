@@ -156,7 +156,12 @@ export default function Login() {
         setIsRegister(false);
       } else {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if (loginError) throw loginError;
+        if (loginError) {
+          if (loginError.message.includes("Invalid login")) {
+            throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
+          }
+          throw loginError;
+        }
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
