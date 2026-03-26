@@ -148,10 +148,10 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {user && customer ? (
+              {user ? (
                 <div className="flex items-center gap-2">
                   <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
-                    <User className="h-3 w-3" /> {customer.name?.split(" ")[0] || "Conta"}
+                    <User className="h-3 w-3" /> {customer?.name?.split(" ")[0] || "Conta"}
                   </button>
                   <button onClick={() => { signOut(); }} className="flex items-center gap-1 hover:opacity-80 ml-2">
                     <LogOut className="h-3 w-3" /> Sair
@@ -207,8 +207,8 @@ export default function LojaLayout() {
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-              {user && customer ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+              {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </Button>
 
             <Sheet>

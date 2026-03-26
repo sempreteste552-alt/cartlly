@@ -23,7 +23,7 @@ type CheckoutPhase = "info" | "payment" | "success";
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
   const navigate = useNavigate();
-  const { customer } = useCustomerAuth();
+  const { user, customer, loading: authLoading } = useCustomerAuth();
   const createReview = useCreateReview();
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState<CheckoutPhase>("info");
@@ -152,7 +152,12 @@ export default function LojaCheckout() {
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
 
     // Require customer login before payment (not for WhatsApp)
-    if (!viaWhatsApp && !customer) {
+    if (!viaWhatsApp && authLoading) {
+      toast.info("Aguarde, estamos confirmando seu login...");
+      return;
+    }
+
+    if (!viaWhatsApp && !user) {
       toast.info("🔐 Faça login ou crie uma conta para prosseguir com o pagamento");
       setAuthModalOpen(true);
       return;
@@ -458,7 +463,7 @@ export default function LojaCheckout() {
         {/* Actions */}
         <div className="flex flex-col gap-3">
           {hasGateway ? (
-            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading}>
+            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading || authLoading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Ir para Pagamento
             </Button>
