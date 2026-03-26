@@ -32,6 +32,12 @@ export function AIChatWidget() {
   const { isLocked } = usePlanFeatures();
   const aiLocked = isLocked("ai_tools");
 
+  const { data: products } = useProducts();
+  const { data: categories } = useCategories();
+  const { data: coupons } = useCoupons();
+  const { data: orders } = useOrders();
+  const { data: settings } = useStoreSettings();
+
   // If AI is locked, show locked button
   if (aiLocked) {
     return (
@@ -47,12 +53,6 @@ export function AIChatWidget() {
       </div>
     );
   }
-
-  const { data: products } = useProducts();
-  const { data: categories } = useCategories();
-  const { data: coupons } = useCoupons();
-  const { data: orders } = useOrders();
-  const { data: settings } = useStoreSettings();
 
   useEffect(() => {
     if (scrollRef.current) {
