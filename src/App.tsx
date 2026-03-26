@@ -30,6 +30,7 @@ import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
 import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
 import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
+import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
