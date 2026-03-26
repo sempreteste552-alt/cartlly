@@ -7,6 +7,7 @@ import { AIChatWidget } from "@/components/AIChatWidget";
 import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
@@ -81,7 +82,10 @@ export function AdminLayout() {
               <SidebarTrigger className="mr-4" />
               <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">Painel Administrativo</h2>
             </div>
-            <AdminNotificationsBell />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <AdminNotificationsBell />
+            </div>
           </header>
           <main className="flex-1 overflow-auto p-6">
             <Outlet />
