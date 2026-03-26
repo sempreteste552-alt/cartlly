@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Package } from "lucide-react";
+import { Package, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductImageSlideshowProps {
   mainImage: string | null;
@@ -7,6 +7,9 @@ interface ProductImageSlideshowProps {
   alt: string;
   className?: string;
   autoplaySpeed?: number;
+  showThumbnails?: boolean;
+  showArrows?: boolean;
+  glowColor?: string;
 }
 
 export function ProductImageSlideshow({
@@ -14,11 +17,15 @@ export function ProductImageSlideshow({
   additionalImages = [],
   alt,
   className = "",
-  autoplaySpeed = 1000,
+  autoplaySpeed = 3000,
+  showThumbnails = false,
+  showArrows = false,
+  glowColor,
 }: ProductImageSlideshowProps) {
   const allImages = [mainImage, ...additionalImages].filter(Boolean) as string[];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startAutoplay = useCallback(() => {
@@ -33,54 +40,138 @@ export function ProductImageSlideshow({
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    setCurrentIndex(0);
   }, []);
 
   useEffect(() => {
-    if (isHovering) {
+    if (!isHovering) {
       startAutoplay();
     } else {
       stopAutoplay();
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => stopAutoplay();
   }, [isHovering, startAutoplay, stopAutoplay]);
+
+  const goTo = (index: number) => {
+    setCurrentIndex(index);
+    stopAutoplay();
+    if (!isHovering) startAutoplay();
+  };
+
+  const goNext = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    goTo((currentIndex + 1) % allImages.length);
+  };
+
+  const goPrev = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    goTo((currentIndex - 1 + allImages.length) % allImages.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goNext();
+      else goPrev();
+    }
+    setTouchStart(null);
+  };
 
   if (allImages.length === 0) {
     return (
-      <div className={`w-full h-full flex items-center justify-center bg-gray-50 ${className}`}>
-        <Package className="h-12 w-12 text-gray-300" />
+      <div className={`w-full h-full flex items-center justify-center bg-muted/30 ${className}`}>
+        <Package className="h-12 w-12 text-muted-foreground/30" />
       </div>
     );
   }
 
   return (
-    <div
-      className={`relative w-full h-full overflow-hidden ${className}`}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      {allImages.map((src, i) => (
-        <img
-          key={i}
-          src={src}
-          alt={`${alt} ${i + 1}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            i === currentIndex ? "opacity-100" : "opacity-0"
-          }`}
-          loading="lazy"
-        />
-      ))}
+    <div className="flex flex-col gap-2">
+      <div
+        className={`relative w-full h-full overflow-hidden group ${className}`}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {allImages.map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt={`${alt} ${i + 1}`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+              i === currentIndex ? "opacity-100" : "opacity-0"
+            }`}
+            loading="lazy"
+            draggable={false}
+          />
+        ))}
 
-      {/* Dot indicators */}
-      {allImages.length > 1 && isHovering && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-          {allImages.map((_, i) => (
-            <div
+        {/* Glow/smoke effect on hover */}
+        {glowColor && (
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse at center, ${glowColor}25 0%, transparent 70%)`,
+              filter: "blur(20px)",
+            }}
+          />
+        )}
+
+        {/* Navigation arrows */}
+        {showArrows && allImages.length > 1 && (
+          <>
+            <button
+              onClick={goPrev}
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hover:bg-black/60 z-10"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              onClick={goNext}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm hover:bg-black/60 z-10"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        )}
+
+        {/* Dot indicators */}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+            {allImages.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i); }}
+                className={`rounded-full transition-all duration-300 ${
+                  i === currentIndex ? "w-5 h-1.5 bg-white shadow-sm" : "w-1.5 h-1.5 bg-white/50 hover:bg-white/70"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Thumbnails */}
+      {showThumbnails && allImages.length > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1 px-0.5">
+          {allImages.map((src, i) => (
+            <button
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === currentIndex ? "w-4 bg-white" : "w-1.5 bg-white/50"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i); }}
+              className={`shrink-0 h-12 w-12 rounded-md overflow-hidden border-2 transition-all duration-200 ${
+                i === currentIndex ? "ring-1 ring-offset-1 opacity-100" : "opacity-60 hover:opacity-90"
               }`}
-            />
+              style={{ borderColor: i === currentIndex ? (glowColor || "#6d28d9") : "transparent" }}
+            >
+              <img src={src} alt={`${alt} thumb ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+            </button>
           ))}
         </div>
       )}
