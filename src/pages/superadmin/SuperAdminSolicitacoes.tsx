@@ -129,6 +129,7 @@ export default function SuperAdminSolicitacoes() {
 
     await supabase.from("plan_change_requests").update({
       status: "rejected",
+      rejection_reason: rejectReason,
       resolved_at: new Date().toISOString(),
       resolved_by: user!.id,
     } as any).eq("id", selectedRequest.id);
