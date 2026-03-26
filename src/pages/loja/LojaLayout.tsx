@@ -208,7 +208,7 @@ export default function LojaLayout() {
             </div>
 
             <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-              <User className="h-5 w-5" />
+              {user && customer ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </Button>
 
             <Sheet>
