@@ -497,6 +497,15 @@ export default function LojaCheckout() {
           )}
         </div>
       </div>
+
+      {/* Auth modal for checkout gate */}
+      {settings?.user_id && (
+        <CustomerAuthModal
+          open={authModalOpen}
+          onOpenChange={setAuthModalOpen}
+          storeUserId={settings.user_id}
+        />
+      )}
     </div>
   );
 }
