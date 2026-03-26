@@ -907,6 +907,7 @@ export type Database = {
           created_at: string
           current_period_end: string
           current_period_start: string
+          feature_overrides: Json
           id: string
           plan_id: string
           status: string
@@ -918,6 +919,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          feature_overrides?: Json
           id?: string
           plan_id: string
           status?: string
@@ -929,6 +931,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          feature_overrides?: Json
           id?: string
           plan_id?: string
           status?: string

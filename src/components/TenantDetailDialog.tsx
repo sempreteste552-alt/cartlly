@@ -66,10 +66,11 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
       setOrders(ordRes.data || []);
       setCustomers(custRes.data || []);
 
-      // Load features from plan
+      // Load features from plan + tenant overrides
       if (tenant.subscription?.tenant_plans) {
         const planFeatures = (tenant.subscription.tenant_plans as any)?.features || {};
-        setFeatures((prev) => ({ ...prev, ...planFeatures }));
+        const overrides = (tenant.subscription as any)?.feature_overrides || {};
+        setFeatures((prev) => ({ ...prev, ...planFeatures, ...overrides }));
       }
     } catch (e) {
       console.error(e);
@@ -108,11 +109,14 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
     const updatedFeatures = { ...features, [key]: value };
     setFeatures(updatedFeatures);
 
-    // Update plan features
+    // Update feature_overrides on the tenant's subscription (not the plan itself)
+    const currentOverrides = (tenant.subscription as any)?.feature_overrides || {};
+    const newOverrides = { ...currentOverrides, [key]: value };
+
     const { error } = await supabase
-      .from("tenant_plans")
-      .update({ features: updatedFeatures } as any)
-      .eq("id", tenant.subscription.plan_id);
+      .from("tenant_subscriptions")
+      .update({ feature_overrides: newOverrides } as any)
+      .eq("id", tenant.subscription.id);
 
     if (error) {
       toast.error("Erro ao atualizar: " + error.message);
