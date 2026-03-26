@@ -238,11 +238,13 @@ export default function SuperAdminSolicitacoes() {
             </div>
 
             {/* Resolved info for non-pending */}
-            {req.status === "rejected" && req.resolved_at && (
+            {req.status === "rejected" && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
                 <p className="text-xs font-medium text-destructive mb-1">Motivo da Recusa:</p>
                 <p className="text-sm text-foreground">
-                  {/* The reason is stored in the notification message */}
+                  {req.rejection_reason || "Sem motivo informado"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
                   Recusado em {new Date(req.resolved_at).toLocaleDateString("pt-BR")}
                 </p>
               </div>
