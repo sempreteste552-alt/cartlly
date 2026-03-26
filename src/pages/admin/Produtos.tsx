@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
@@ -20,6 +20,9 @@ import { ProductVariantsManager } from "@/components/ProductVariantsManager";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AICatalogImport } from "@/components/AICatalogImport";
+import { LockedFeature } from "@/components/LockedFeature";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { toast } from "sonner";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -29,6 +32,7 @@ export default function Produtos() {
   const deleteProduct = useDeleteProduct();
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
+  const { features, isLocked } = usePlanFeatures();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -38,6 +42,11 @@ export default function Produtos() {
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
+
+  const productCount = products?.length ?? 0;
+  const maxProducts = features.max_products;
+  const atProductLimit = productCount >= maxProducts;
+  const aiLocked = isLocked("ai_tools");
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
@@ -115,18 +124,34 @@ export default function Produtos() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo da sua loja</p>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo da sua loja ({productCount}/{maxProducts} produtos)
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setAiImportOpen(true)}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Importar com IA
-          </Button>
+          {aiLocked ? (
+            <Button variant="outline" disabled title="Faça upgrade para usar IA">
+              <Lock className="mr-2 h-4 w-4" /> Importar com IA
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setAiImportOpen(true)}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Importar com IA
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
             <Tag className="mr-2 h-4 w-4" />
             Categorias
           </Button>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button
+            onClick={() => {
+              if (atProductLimit) {
+                toast.error(`Limite de ${maxProducts} produtos atingido. Faça upgrade do plano.`);
+                return;
+              }
+              setFormOpen(true);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Novo Produto
           </Button>

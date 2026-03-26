@@ -2,13 +2,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -28,6 +29,8 @@ export function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isLocked } = usePlanFeatures();
+  const aiLocked = isLocked("ai_tools");
 
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
@@ -55,6 +58,22 @@ export function AIChatWidget() {
     categories: categories?.map((c) => c.name) || [],
     activeCoupons: coupons?.filter((c: any) => c.active)?.length || 0,
   }), [products, categories, coupons, orders, settings]);
+
+  // If AI is locked, show locked button
+  if (aiLocked) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
+          title="Chat IA bloqueado — Faça upgrade do plano"
+          disabled
+        >
+          <Lock className="h-6 w-6" />
+        </Button>
+      </div>
+    );
+  }
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;

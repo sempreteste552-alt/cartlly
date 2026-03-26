@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { LockedFeature } from "@/components/LockedFeature";
 
 
 interface AISuggestion {
@@ -202,6 +203,7 @@ export default function Cupons() {
   );
 
   return (
+    <LockedFeature isLocked={isLocked("coupons")} featureName="Cupons de Desconto">
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
@@ -345,5 +347,6 @@ export default function Cupons() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </LockedFeature>
   );
 }
