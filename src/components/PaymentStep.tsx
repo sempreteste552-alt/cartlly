@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
@@ -21,7 +24,15 @@ const formatPrice = (price: number) =>
 export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
+  const [showCardForm, setShowCardForm] = useState(false);
   const createPayment = useCreatePayment();
+
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cardInstallments, setCardInstallments] = useState("1");
 
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
@@ -29,14 +40,48 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
+  const formatCardNumber = (v: string) => {
+    const nums = v.replace(/\D/g, "").slice(0, 16);
+    return nums.replace(/(\d{4})(?=\d)/g, "$1 ");
+  };
+
+  const formatExpiry = (v: string) => {
+    const nums = v.replace(/\D/g, "").slice(0, 4);
+    if (nums.length > 2) return nums.slice(0, 2) + "/" + nums.slice(2);
+    return nums;
+  };
+
   const handlePay = async (method: "pix" | "credit_card" | "boleto") => {
+    if (method === "credit_card" && !showCardForm) {
+      setShowCardForm(true);
+      setSelectedMethod(method);
+      return;
+    }
+
+    if (method === "credit_card") {
+      if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+        toast.error("Preencha todos os dados do cartão");
+        return;
+      }
+    }
+
     setSelectedMethod(method);
     try {
-      const result = await createPayment.mutateAsync({
+      const params: any = {
         order_id: orderId,
         method,
         store_user_id: storeUserId,
-      });
+      };
+
+      if (method === "credit_card") {
+        params.card_token = cardNumber.replace(/\s/g, "");
+        params.installments = parseInt(cardInstallments);
+        params.card_holder_name = cardName;
+        params.card_expiry = cardExpiry;
+        params.card_cvv = cardCvv;
+      }
+
+      const result = await createPayment.mutateAsync(params);
       setPaymentData(result);
 
       if (result.paymentResult?.status === "approved") {
@@ -45,7 +90,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
-      setSelectedMethod(null);
+      if (method !== "credit_card") setSelectedMethod(null);
     }
   };
 
@@ -82,16 +127,16 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           </div>
           {pixCode && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500 text-center">Ou copie o código PIX:</p>
+              <p className="text-xs text-muted-foreground text-center">Ou copie o código PIX:</p>
               <div className="flex gap-2">
-                <code className="flex-1 text-xs bg-gray-100 p-2 rounded break-all max-h-20 overflow-auto">{pixCode}</code>
+                <code className="flex-1 text-xs bg-muted p-2 rounded break-all max-h-20 overflow-auto">{pixCode}</code>
                 <Button variant="outline" size="sm" onClick={copyPixCode}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           )}
-          <div className="bg-yellow-50 p-3 rounded-lg text-xs text-yellow-800">
+          <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-xs text-yellow-800 dark:text-yellow-300">
             <p className="font-medium">⏱️ Este código expira em 30 minutos</p>
             <p>Após o pagamento, seu pedido será confirmado automaticamente.</p>
           </div>
@@ -122,9 +167,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           </div>
           {boletoBarcode && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500">Código de barras:</p>
+              <p className="text-xs text-muted-foreground">Código de barras:</p>
               <div className="flex gap-2">
-                <code className="flex-1 text-xs bg-gray-100 p-2 rounded break-all">{boletoBarcode}</code>
+                <code className="flex-1 text-xs bg-muted p-2 rounded break-all">{boletoBarcode}</code>
                 <Button variant="outline" size="sm" onClick={() => {
                   navigator.clipboard.writeText(boletoBarcode);
                   toast.success("Código copiado!");
@@ -157,10 +202,99 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         <CardContent className="text-center space-y-4">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
           <p className="text-lg font-bold">Pagamento processado!</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
           <Button className="w-full" onClick={onSuccess}>Concluir</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Credit card form
+  if (showCardForm && selectedMethod === "credit_card") {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="h-5 w-5" /> Dados do Cartão
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-2xl font-bold text-center">{formatPrice(total)}</p>
+
+          <div className="space-y-2">
+            <Label>Número do Cartão</Label>
+            <Input
+              placeholder="0000 0000 0000 0000"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+              maxLength={19}
+              className="font-mono"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Nome no Cartão</Label>
+            <Input
+              placeholder="NOME COMO NO CARTÃO"
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value.toUpperCase())}
+              maxLength={50}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Validade</Label>
+              <Input
+                placeholder="MM/AA"
+                value={cardExpiry}
+                onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                maxLength={5}
+                className="font-mono"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CVV</Label>
+              <Input
+                placeholder="000"
+                value={cardCvv}
+                onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                maxLength={4}
+                type="password"
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Parcelas</Label>
+            <Select value={cardInstallments} onValueChange={setCardInstallments}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => { setShowCardForm(false); setSelectedMethod(null); }}>
+              Voltar
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={createPayment.isPending}
+              onClick={() => handlePay("credit_card")}
+            >
+              {createPayment.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Pagar {formatPrice(total)}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -175,7 +309,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       <CardContent className="space-y-3">
         <p className="text-2xl font-bold text-center mb-4">{formatPrice(total)}</p>
         {availableMethods.length === 0 && (
-          <p className="text-center text-sm text-gray-500">Nenhuma forma de pagamento configurada.</p>
+          <p className="text-center text-sm text-muted-foreground">Nenhuma forma de pagamento configurada.</p>
         )}
         {availableMethods.map((method) => (
           <Button
@@ -192,12 +326,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             )}
             <div>
               <p className="font-medium">{method.label}</p>
-              <p className="text-xs text-gray-500">{method.desc}</p>
+              <p className="text-xs text-muted-foreground">{method.desc}</p>
             </div>
           </Button>
         ))}
         <Separator />
-        <p className="text-[10px] text-gray-400 text-center">
+        <p className="text-[10px] text-muted-foreground text-center">
           Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
         </p>
       </CardContent>
