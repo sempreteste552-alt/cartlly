@@ -71,7 +71,6 @@ export default function SuperAdminSolicitacoes() {
   const rejectedRequests = requests?.filter((r: any) => r.status === "rejected") || [];
 
   const handleApprove = async (req: any) => {
-    const tenantInfo = getTenantInfo(req.user_id);
 
     // Check if tenant has existing subscription
     const { data: existingSub } = await supabase
