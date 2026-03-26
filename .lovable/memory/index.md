@@ -1,14 +1,14 @@
+# Memory: index.md
+Updated: now
+
 Admin store management system (Loja Admin V0). Portuguese UI language.
 - Backend: Lovable Cloud (Supabase) - PostgreSQL, auth, storage
 - Design: Dark sidebar (hsl 224 30% 12%), primary purple (hsl 243 75% 59%)
 - Auth: Supabase email/password with auto-profile creation trigger
-- Super Admin Email: evelynesantoscruivinel@gmail.com
-- Routes: /login, /admin (dashboard), /admin/produtos, /admin/pedidos, /admin/config, /admin/clientes
-- Tables: profiles, customers, store_settings, push_subscriptions
-- Features: AI tools, AI Chat, Customer auth, Marquee, Feature gating by plan, Web Push
-- Plans control features: gateway, ai_tools, coupons, shipping_zones, banners, custom_domain
-- LockedFeature component shows blur + padlock when feature disabled by plan
-- TENANT ISOLATION: All public hooks MUST filter by storeUserId. Admin hooks filter by user_id.
-- VAPID public key stored in usePushNotifications.ts, secrets: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY
-- Stock auto-management: trigger unpublishes when stock=0, republishes when replenished (except made_to_order)
-- PWA enabled with vite-plugin-pwa
+- Routes: /login, /admin (tenant dashboard), /superadmin, /loja/:slug (store by slug only)
+- NO default /loja route — stores are only accessible via slug
+- "/" redirects to /login, not /loja
+- Tables: profiles (user_id, display_name, avatar_url, status)
+- Tenant isolation: all queries filter by user_id, RLS enforced
+- Push notifications: VAPID keys configured, sw-push.js service worker
+- DB triggers: notify on new orders, customers, payments, plan changes
