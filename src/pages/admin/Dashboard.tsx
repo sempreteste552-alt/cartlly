@@ -35,6 +35,21 @@ export default function Dashboard() {
     enabled: !!orders && orders.length > 0,
   });
 
+  // Fetch payments data
+  const { data: payments } = useQuery({
+    queryKey: ["dashboard_payments", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
