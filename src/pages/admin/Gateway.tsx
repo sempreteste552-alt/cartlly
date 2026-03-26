@@ -127,21 +127,40 @@ export default function Gateway() {
         <p className="text-muted-foreground">Configure seu gateway para processar pagamentos</p>
       </div>
 
-      {/* Gateway Status Card */}
+      {/* Gateway Status Card with Toggle */}
       <Card className={`border-border ${paymentGateway ? "border-l-4" : ""}`} style={paymentGateway && selectedGateway ? { borderLeftColor: selectedGateway.color } : {}}>
         <CardContent className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <Zap className="h-5 w-5 text-primary" />
+            <Power className={`h-5 w-5 ${gatewayActive ? "text-green-500" : "text-muted-foreground"}`} />
             <div>
-              <p className="font-medium">Status</p>
+              <p className="font-medium">Gateway de Pagamento</p>
               <p className="text-xs text-muted-foreground">
                 {paymentGateway ? `${selectedGateway?.name} - ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}` : "Nenhum gateway configurado"}
               </p>
             </div>
           </div>
-          <Badge variant={paymentGateway ? (gatewayEnvironment === "production" ? "default" : "secondary") : "outline"}>
-            {paymentGateway ? (gatewayEnvironment === "production" ? "Ativo" : "Sandbox") : "Inativo"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant={gatewayActive ? (gatewayEnvironment === "production" ? "default" : "secondary") : "outline"}>
+              {gatewayActive ? (gatewayEnvironment === "production" ? "✅ Ativo" : "🧪 Sandbox") : "❌ Desativado"}
+            </Badge>
+            <Switch
+              checked={gatewayActive}
+              onCheckedChange={(checked) => {
+                if (checked && (!paymentGateway || !gatewayPublicKey || !gatewaySecretKey)) {
+                  toast.error("Configure o gateway e as chaves antes de ativar.");
+                  return;
+                }
+                setGatewayActive(checked);
+                if (settings) {
+                  updateSettings.mutate({
+                    id: settings.id,
+                    payment_gateway: checked ? paymentGateway : null,
+                  } as any);
+                  toast.success(checked ? "✅ Gateway ativado!" : "❌ Gateway desativado!");
+                }
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
