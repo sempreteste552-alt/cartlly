@@ -346,5 +346,6 @@ export default function Cupons() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </LockedFeature>
   );
 }
