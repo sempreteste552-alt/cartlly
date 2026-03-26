@@ -66,10 +66,11 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
       setOrders(ordRes.data || []);
       setCustomers(custRes.data || []);
 
-      // Load features from plan
+      // Load features from plan + tenant overrides
       if (tenant.subscription?.tenant_plans) {
         const planFeatures = (tenant.subscription.tenant_plans as any)?.features || {};
-        setFeatures((prev) => ({ ...prev, ...planFeatures }));
+        const overrides = (tenant.subscription as any)?.feature_overrides || {};
+        setFeatures((prev) => ({ ...prev, ...planFeatures, ...overrides }));
       }
     } catch (e) {
       console.error(e);
