@@ -63,6 +63,7 @@ export default function Gateway() {
     toast.info("Salve as configurações antes de testar. Testando com dados salvos...");
     setTestStatus("testing");
     setTestMessage("");
+    setTestOwner(null);
 
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -78,7 +79,10 @@ export default function Gateway() {
 
       if (response.ok || data.test_ok) {
         setTestStatus("success");
-        setTestMessage(`Gateway ${selectedGateway?.name} está respondendo. Ambiente: ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}`);
+        setTestMessage(data.message || `Gateway ${selectedGateway?.name} conectado!`);
+        if (data.owner_name || data.owner_email) {
+          setTestOwner({ name: data.owner_name || "", email: data.owner_email || "", store: data.store_name || "" });
+        }
       } else {
         setTestStatus("error");
         setTestMessage(data.error || "Gateway não respondeu corretamente.");
