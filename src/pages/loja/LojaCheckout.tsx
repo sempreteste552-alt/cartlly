@@ -148,6 +148,12 @@ export default function LojaCheckout() {
     if (!phone.trim()) return toast.error("Informe seu telefone");
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
 
+    // Block if no gateway and not WhatsApp
+    if (!viaWhatsApp && !hasGateway) {
+      toast.error("🔧 Pagamento em manutenção. Envie seu pedido pelo WhatsApp!");
+      return;
+    }
+
     // Save items before clearing cart
     const savedItems = [...cart.items];
 
