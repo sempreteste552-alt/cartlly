@@ -16,6 +16,78 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 
+function AccountEmailChanger() {
+  const [newEmail, setNewEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim()) return toast.error("Informe o novo e-mail");
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+      if (error) throw error;
+      toast.success("E-mail de confirmação enviado para o novo endereço!");
+      setNewEmail("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar e-mail");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Novo E-mail</Label>
+      <div className="flex gap-2">
+        <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="novo@email.com" />
+        <Button onClick={handleChangeEmail} disabled={loading} variant="outline">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alterar"}
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">Você receberá um e-mail de confirmação nos dois endereços</p>
+    </div>
+  );
+}
+
+function AccountPasswordChanger() {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!newPassword.trim()) return toast.error("Informe a nova senha");
+    if (newPassword.length < 6) return toast.error("Senha deve ter no mínimo 6 caracteres");
+    if (newPassword !== confirmPassword) return toast.error("As senhas não coincidem");
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Nova Senha</Label>
+      <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+      <Label>Confirmar Senha</Label>
+      <div className="flex gap-2">
+        <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" />
+        <Button onClick={handleChangePassword} disabled={loading} variant="outline">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alterar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 
 export default function Configuracoes() {
   const { user } = useAuth();
