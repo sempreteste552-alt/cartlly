@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CreatePaymentParams {
   order_id: string;
@@ -7,17 +6,25 @@ interface CreatePaymentParams {
   store_user_id: string;
   card_token?: string;
   installments?: number;
+  card_holder_name?: string;
+  card_expiry?: string;
+  card_cvv?: string;
 }
 
 export function useCreatePayment() {
   return useMutation({
     mutationFn: async (params: CreatePaymentParams) => {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/create-payment`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": anonKey,
+            "Authorization": `Bearer ${anonKey}`,
+          },
           body: JSON.stringify(params),
         }
       );
