@@ -40,19 +40,6 @@ export default function LojaLayout() {
   const settings = settingsBySlug;
   const isLoading = slugLoading;
 
-  // Slug is required — no default store
-  if (!slug) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        <div className="text-center space-y-4 p-8">
-          <div className="text-6xl">🔍</div>
-          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
-        </div>
-      </div>
-    );
-  }
-
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
@@ -77,6 +64,19 @@ export default function LojaLayout() {
       };
     }
   }, [settings]);
+
+  // Slug is required — no default store
+  if (!slug) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl">🔍</div>
+          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
+          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoading && slug && !settings) {
     return (
