@@ -273,7 +273,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             <Select value={cardInstallments} onValueChange={setCardInstallments}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                {Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
                   <SelectItem key={n} value={String(n)}>
                     {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
                   </SelectItem>
