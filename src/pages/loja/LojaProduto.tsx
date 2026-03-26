@@ -18,14 +18,15 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { toast } from "sonner";
 
 export default function LojaProduto() {
-  const { id } = useParams();
-  const { data: products } = usePublicProducts();
+  const { id, slug } = useParams();
+  const { cart, settings, storeUserId } = useLojaContext();
+  const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
-  const { cart, settings, storeUserId } = useLojaContext();
   const wishlist = useWishlist(storeUserId);
 
   const product = products?.find((p) => p.id === id);
+  const basePath = slug ? `/loja/${slug}` : "/loja";
 
   const allImages = useMemo(() => {
     const images: string[] = [];
