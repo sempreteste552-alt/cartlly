@@ -50,18 +50,27 @@ export default function Gateway() {
       toast.error("Configure o gateway e a chave pública primeiro.");
       return;
     }
+    if (!gatewaySecretKey) {
+      toast.error("Configure a chave secreta primeiro.");
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Usuário não autenticado.");
+      return;
+    }
+    // Ensure settings are saved before testing
+    toast.info("Salve as configurações antes de testar. Testando com dados salvos...");
     setTestStatus("testing");
     setTestMessage("");
 
     try {
-      // Test by calling create-payment edge function with a test flag
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/create-payment`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ test: true, gateway: paymentGateway }),
+          body: JSON.stringify({ test: true, gateway: paymentGateway, store_user_id: user.id }),
         }
       );
       const data = await response.json();
