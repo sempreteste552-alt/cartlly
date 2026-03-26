@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { StoreMarquee } from "@/components/StoreMarquee";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -206,6 +207,8 @@ export default function LojaLayout() {
                 />
               </div>
             </div>
+
+            <ThemeToggle className="hidden sm:flex" />
 
             <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
               {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
