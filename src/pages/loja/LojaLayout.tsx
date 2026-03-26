@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User } from "lucide-react";
@@ -28,12 +28,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 export default function LojaLayout() {
   const { slug } = useParams();
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
-  const { data: defaultSettings, isLoading: defaultLoading } = usePublicStoreSettings();
   const { user, customer } = useCustomerAuth();
-
-  const settings = slug ? settingsBySlug : defaultSettings;
-  const isLoading = slug ? slugLoading : defaultLoading;
-
   const cart = useCart();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +36,9 @@ export default function LojaLayout() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const settings = settingsBySlug;
+  const isLoading = slugLoading;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -66,6 +64,19 @@ export default function LojaLayout() {
       };
     }
   }, [settings]);
+
+  // Slug is required — no default store
+  if (!slug) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl">🔍</div>
+          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
+          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoading && slug && !settings) {
     return (

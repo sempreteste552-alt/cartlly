@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
 
-const Index = () => <Navigate to="/loja" replace />;
+const Index = () => <Navigate to="/login" replace />;
 
 export default Index;

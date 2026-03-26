@@ -41,7 +41,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/loja" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
@@ -65,15 +65,8 @@ const App = () => (
               <Route path="pagamentos" element={<Pagamentos />} />
               <Route path="clientes" element={<Clientes />} />
             </Route>
-            {/* Default store */}
-            <Route path="/loja" element={<LojaLayout />}>
-              <Route index element={<LojaHome />} />
-              <Route path="produto/:id" element={<LojaProduto />} />
-              <Route path="checkout" element={<LojaCheckout />} />
-              <Route path="rastreio" element={<LojaRastreio />} />
-              <Route path="rastreio/:orderId" element={<LojaRastreio />} />
-            </Route>
-            {/* Multi-tenant: store by slug */}
+            {/* Multi-tenant: store by slug only — no default /loja */}
+            <Route path="/loja" element={<Navigate to="/login" replace />} />
             <Route path="/loja/:slug" element={<LojaLayout />}>
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
