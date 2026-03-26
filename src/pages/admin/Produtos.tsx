@@ -124,18 +124,34 @@ export default function Produtos() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo da sua loja</p>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo da sua loja ({productCount}/{maxProducts} produtos)
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setAiImportOpen(true)}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Importar com IA
-          </Button>
+          {aiLocked ? (
+            <Button variant="outline" disabled title="Faça upgrade para usar IA">
+              <Lock className="mr-2 h-4 w-4" /> Importar com IA
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={() => setAiImportOpen(true)}>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Importar com IA
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
             <Tag className="mr-2 h-4 w-4" />
             Categorias
           </Button>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button
+            onClick={() => {
+              if (atProductLimit) {
+                toast.error(`Limite de ${maxProducts} produtos atingido. Faça upgrade do plano.`);
+                return;
+              }
+              setFormOpen(true);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Novo Produto
           </Button>
