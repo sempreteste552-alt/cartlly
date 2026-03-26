@@ -224,7 +224,7 @@ export default function Gateway() {
             </div>
           </CardContent>
         </Card>
-      )
+      )}
 
       {/* API Test */}
       {selectedGateway && (
