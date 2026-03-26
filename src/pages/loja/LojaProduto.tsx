@@ -95,7 +95,7 @@ export default function LojaProduto() {
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <Package className="h-16 w-16 mx-auto text-gray-300" />
         <h2 className="text-xl font-bold mt-4">Produto não encontrado</h2>
-        <Link to="/loja" className="text-sm text-gray-500 hover:underline mt-2 inline-block">Voltar para a loja</Link>
+        <Link to={basePath} className="text-sm text-gray-500 hover:underline mt-2 inline-block">Voltar para a loja</Link>
       </div>
     );
   }
