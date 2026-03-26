@@ -21,6 +21,10 @@ interface PlatformConfig {
   default_plan_id: string;
   mercadopago_global_key: string;
   pagbank_global_key: string;
+  stripe_global_key: string;
+  stripe_webhook_secret: string;
+  mp_webhook_secret: string;
+  gateway_test_mode: boolean;
 }
 
 const defaultConfig: PlatformConfig = {
@@ -33,6 +37,10 @@ const defaultConfig: PlatformConfig = {
   default_plan_id: "",
   mercadopago_global_key: "",
   pagbank_global_key: "",
+  stripe_global_key: "",
+  stripe_webhook_secret: "",
+  mp_webhook_secret: "",
+  gateway_test_mode: true,
 };
 
 export default function SuperAdminConfig() {
@@ -170,30 +178,70 @@ export default function SuperAdminConfig() {
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="h-5 w-5 text-primary" /> Gateways Globais
+            <CreditCard className="h-5 w-5 text-primary" /> Gateways de Pagamento
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Chaves globais de gateway que serão usadas como fallback quando tenants não tiverem suas próprias chaves configuradas.
+            Configure os gateways globais. Tenants sem chaves próprias usarão estas configurações.
           </p>
-          <div className="space-y-2">
-            <Label>Mercado Pago — Access Token Global</Label>
-            <Input
-              type="password"
-              value={config.mercadopago_global_key}
-              onChange={e => updateField("mercadopago_global_key", e.target.value)}
-              placeholder="TEST-xxxx..."
-            />
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Modo de Teste</Label>
+              <p className="text-xs text-muted-foreground">Usar ambiente sandbox para todos os gateways</p>
+            </div>
+            <Switch checked={config.gateway_test_mode} onCheckedChange={v => updateField("gateway_test_mode", v)} />
           </div>
-          <div className="space-y-2">
-            <Label>PagBank — Token Global</Label>
-            <Input
-              type="password"
-              value={config.pagbank_global_key}
-              onChange={e => updateField("pagbank_global_key", e.target.value)}
-              placeholder="Token PagBank..."
-            />
+
+          <Separator />
+
+          {/* Stripe */}
+          <div className="space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <span className="h-6 w-6 rounded bg-purple-600 text-white text-xs flex items-center justify-center font-bold">S</span>
+              Stripe
+            </h4>
+            <div className="space-y-2">
+              <Label>Secret Key</Label>
+              <Input type="password" value={config.stripe_global_key} onChange={e => updateField("stripe_global_key", e.target.value)} placeholder="sk_test_..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Webhook Secret</Label>
+              <Input type="password" value={config.stripe_webhook_secret} onChange={e => updateField("stripe_webhook_secret", e.target.value)} placeholder="whsec_..." />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Mercado Pago */}
+          <div className="space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <span className="h-6 w-6 rounded bg-blue-500 text-white text-xs flex items-center justify-center font-bold">MP</span>
+              Mercado Pago
+            </h4>
+            <div className="space-y-2">
+              <Label>Access Token</Label>
+              <Input type="password" value={config.mercadopago_global_key} onChange={e => updateField("mercadopago_global_key", e.target.value)} placeholder="TEST-xxxx..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Webhook Secret</Label>
+              <Input type="password" value={config.mp_webhook_secret} onChange={e => updateField("mp_webhook_secret", e.target.value)} placeholder="Secret..." />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* PagBank */}
+          <div className="space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <span className="h-6 w-6 rounded bg-green-600 text-white text-xs flex items-center justify-center font-bold">PB</span>
+              PagBank
+            </h4>
+            <div className="space-y-2">
+              <Label>Token</Label>
+              <Input type="password" value={config.pagbank_global_key} onChange={e => updateField("pagbank_global_key", e.target.value)} placeholder="Token PagBank..." />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useAllTenants, useAllPlans } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Store, DollarSign, AlertTriangle, Package, ShoppingCart } from "lucide-react";
+import { Users, Store, DollarSign, AlertTriangle, Package, ShoppingCart, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -10,14 +10,15 @@ export default function SuperAdminDashboard() {
   const { data: plans } = useAllPlans();
 
   const metrics = useMemo(() => {
-    if (!tenants) return { total: 0, active: 0, trial: 0, blocked: 0, totalRevenue: 0, totalProducts: 0, totalOrders: 0 };
+    if (!tenants) return { total: 0, active: 0, trial: 0, blocked: 0, pending: 0, totalRevenue: 0, totalProducts: 0, totalOrders: 0 };
     const active = tenants.filter((t) => t.subscription?.status === "active").length;
     const trial = tenants.filter((t) => t.subscription?.status === "trial").length;
     const blocked = tenants.filter((t) => t.subscription?.status === "blocked" || t.subscription?.status === "expired").length;
+    const pending = tenants.filter((t) => t.status === "pending").length;
     const totalRevenue = tenants.reduce((s, t) => s + (t.orders?.revenue || 0), 0);
     const totalProducts = tenants.reduce((s, t) => s + (t.productCount || 0), 0);
     const totalOrders = tenants.reduce((s, t) => s + (t.orders?.count || 0), 0);
-    return { total: tenants.length, active, trial, blocked, totalRevenue, totalProducts, totalOrders };
+    return { total: tenants.length, active, trial, blocked, pending, totalRevenue, totalProducts, totalOrders };
   }, [tenants]);
 
   const formatCurrency = (v: number) =>
@@ -62,6 +63,18 @@ export default function SuperAdminDashboard() {
           </Card>
         ))}
       </div>
+
+      {metrics.pending > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Clock className="h-5 w-5 text-amber-500" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-600">⏳ {metrics.pending} tenant(s) aguardando aprovação</p>
+              <p className="text-xs text-muted-foreground">Vá para a aba Tenants para aprovar ou rejeitar</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {metrics.blocked > 0 && (
         <Card className="border-destructive">
