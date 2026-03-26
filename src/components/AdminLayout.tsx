@@ -84,6 +84,7 @@ export function AdminLayout() {
           </main>
         </div>
         <AIChatWidget />
+        {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
   );
