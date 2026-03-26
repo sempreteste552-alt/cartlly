@@ -199,6 +199,9 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Multi-Store Manager */}
+      <MultiStoreManager />
+
       <div className="grid gap-4 md:grid-cols-2">
         {/* Revenue chart */}
         <Card className="border-border">
