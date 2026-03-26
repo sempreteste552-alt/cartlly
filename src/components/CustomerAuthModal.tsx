@@ -32,7 +32,8 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
       toast.success("Login realizado com sucesso!");
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || "Erro ao fazer login");
+      const msg = err.message || "Erro ao fazer login";
+      toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos." : msg);
     } finally {
       setLoading(false);
     }
