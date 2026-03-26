@@ -20,9 +20,13 @@ interface PlatformConfig {
   allow_new_registrations: boolean;
   default_plan_id: string;
   mercadopago_global_key: string;
+  mercadopago_public_key: string;
+  mercadopago_client_id: string;
+  mercadopago_client_secret: string;
   pagbank_global_key: string;
   stripe_global_key: string;
   stripe_webhook_secret: string;
+  stripe_publishable_key: string;
   mp_webhook_secret: string;
   gateway_test_mode: boolean;
 }
@@ -36,9 +40,13 @@ const defaultConfig: PlatformConfig = {
   allow_new_registrations: true,
   default_plan_id: "",
   mercadopago_global_key: "",
+  mercadopago_public_key: "",
+  mercadopago_client_id: "",
+  mercadopago_client_secret: "",
   pagbank_global_key: "",
   stripe_global_key: "",
   stripe_webhook_secret: "",
+  stripe_publishable_key: "",
   mp_webhook_secret: "",
   gateway_test_mode: true,
 };
@@ -203,6 +211,10 @@ export default function SuperAdminConfig() {
               Stripe
             </h4>
             <div className="space-y-2">
+              <Label>Publishable Key</Label>
+              <Input type="password" value={config.stripe_publishable_key} onChange={e => updateField("stripe_publishable_key", e.target.value)} placeholder="pk_test_..." />
+            </div>
+            <div className="space-y-2">
               <Label>Secret Key</Label>
               <Input type="password" value={config.stripe_global_key} onChange={e => updateField("stripe_global_key", e.target.value)} placeholder="sk_test_..." />
             </div>
@@ -220,14 +232,39 @@ export default function SuperAdminConfig() {
               <span className="h-6 w-6 rounded bg-blue-500 text-white text-xs flex items-center justify-center font-bold">MP</span>
               Mercado Pago
             </h4>
-            <div className="space-y-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Public Key</Label>
+                <Input type="password" value={config.mercadopago_public_key} onChange={e => updateField("mercadopago_public_key", e.target.value)} placeholder="APP_USR-xxxx..." />
+              </div>
+              <div className="space-y-2">
               <Label>Access Token</Label>
               <Input type="password" value={config.mercadopago_global_key} onChange={e => updateField("mercadopago_global_key", e.target.value)} placeholder="TEST-xxxx..." />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Client ID</Label>
+                <Input type="password" value={config.mercadopago_client_id} onChange={e => updateField("mercadopago_client_id", e.target.value)} placeholder="Client ID..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Client Secret</Label>
+                <Input type="password" value={config.mercadopago_client_secret} onChange={e => updateField("mercadopago_client_secret", e.target.value)} placeholder="Client Secret..." />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Webhook Secret</Label>
               <Input type="password" value={config.mp_webhook_secret} onChange={e => updateField("mp_webhook_secret", e.target.value)} placeholder="Secret..." />
             </div>
+          </div>
+
+          <Separator />
+
+          <div className="pt-2">
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Salvar Configurações de Gateway
+            </Button>
           </div>
 
           <Separator />
