@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe } from "lucide-react";
+import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -57,45 +57,45 @@ export default function MeuPlano() {
     },
   });
 
-  const changePlan = useMutation({
+  // Check for pending plan change request
+  const { data: pendingRequest } = useQuery({
+    queryKey: ["pending_plan_request", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_change_requests")
+        .select("*, requested_plan:tenant_plans!plan_change_requests_requested_plan_id_fkey(*)")
+        .eq("user_id", user!.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const requestChange = useMutation({
     mutationFn: async ({ planId, type }: { planId: string; type: "upgrade" | "downgrade" }) => {
-      if (!currentSub) {
-        // Create subscription
-        const { error } = await supabase.from("tenant_subscriptions").insert({
-          user_id: user!.id,
-          plan_id: planId,
-          status: "active",
-        });
-        if (error) throw error;
-      } else {
-        if (type === "upgrade") {
-          const { error } = await supabase
-            .from("tenant_subscriptions")
-            .update({ plan_id: planId, status: "active", updated_at: new Date().toISOString() })
-            .eq("id", currentSub.id);
-          if (error) throw error;
-        } else {
-          // Downgrade: schedule for next period
-          const { error } = await supabase
-            .from("tenant_subscriptions")
-            .update({ plan_id: planId, updated_at: new Date().toISOString() })
-            .eq("id", currentSub.id);
-          if (error) throw error;
-        }
-      }
+      const { error } = await supabase.from("plan_change_requests").insert({
+        user_id: user!.id,
+        current_plan_id: currentSub?.plan_id || null,
+        requested_plan_id: planId,
+        request_type: type,
+      } as any);
+      if (error) throw error;
     },
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
-      queryClient.invalidateQueries({ queryKey: ["plan_features"] });
+      queryClient.invalidateQueries({ queryKey: ["pending_plan_request"] });
       toast.success(
         vars.type === "upgrade"
-          ? "Plano atualizado com sucesso! Novas funcionalidades já estão ativas."
-          : "Downgrade agendado para o próximo ciclo."
+          ? "Solicitação de upgrade enviada! Aguarde aprovação do administrador."
+          : "Solicitação de downgrade enviada! Aguarde aprovação do administrador."
       );
       setConfirmDialog(null);
     },
-    onError: () => {
-      toast.error("Erro ao alterar plano");
+    onError: (e: any) => {
+      toast.error("Erro ao solicitar: " + e.message);
     },
   });
 
@@ -107,12 +107,45 @@ export default function MeuPlano() {
 
   const sortedPlans = allPlans?.sort((a, b) => a.price - b.price) ?? [];
 
+  // Calculate time elapsed since pending request
+  const getElapsedTime = (createdAt: string) => {
+    const diff = Date.now() - new Date(createdAt).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) return `${hours}h ${minutes}min`;
+    return `${minutes}min`;
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Meu Plano</h1>
         <p className="text-muted-foreground">Gerencie sua assinatura e funcionalidades</p>
       </div>
+
+      {/* Pending request card */}
+      {pendingRequest && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 animate-pulse">
+                <Clock className="h-5 w-5 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-amber-700">⏳ Aguardando Aprovação</p>
+                <p className="text-sm text-muted-foreground">
+                  Sua solicitação de {pendingRequest.request_type === "upgrade" ? "upgrade" : "downgrade"} para o plano{" "}
+                  <strong>{(pendingRequest as any).requested_plan?.name || "—"}</strong> está sendo analisada pelo administrador.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Enviada há {getElapsedTime(pendingRequest.created_at)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Current plan summary */}
       <Card className="border-primary/30 bg-primary/5">
@@ -177,17 +210,23 @@ export default function MeuPlano() {
             const isUpgrade = plan.price > currentPrice;
             const isDowngrade = plan.price < currentPrice;
             const planFeatures = (plan.features as Record<string, any>) || {};
+            const hasPendingForThis = pendingRequest?.requested_plan_id === plan.id;
 
             return (
               <Card
                 key={plan.id}
                 className={`relative transition-all duration-300 hover:shadow-lg ${
-                  isCurrent ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40"
+                  isCurrent ? "border-primary ring-2 ring-primary/20" : hasPendingForThis ? "border-amber-500 ring-2 ring-amber-500/20" : "border-border hover:border-primary/40"
                 }`}
               >
                 {isCurrent && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground shadow-sm">Plano Atual</Badge>
+                  </div>
+                )}
+                {hasPendingForThis && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-amber-500 text-white shadow-sm animate-pulse">⏳ Pendente</Badge>
                   </div>
                 )}
 
@@ -226,10 +265,11 @@ export default function MeuPlano() {
                     })}
                   </div>
 
-                  {!isCurrent && (
+                  {!isCurrent && !hasPendingForThis && (
                     <Button
                       className="w-full"
                       variant={isUpgrade ? "default" : "outline"}
+                      disabled={!!pendingRequest}
                       onClick={() =>
                         setConfirmDialog({
                           planId: plan.id,
@@ -241,13 +281,18 @@ export default function MeuPlano() {
                     >
                       {isUpgrade ? (
                         <>
-                          <ArrowUp className="mr-1 h-4 w-4" /> Fazer Upgrade
+                          <ArrowUp className="mr-1 h-4 w-4" /> Solicitar Upgrade
                         </>
                       ) : (
                         <>
-                          <ArrowDown className="mr-1 h-4 w-4" /> Fazer Downgrade
+                          <ArrowDown className="mr-1 h-4 w-4" /> Solicitar Downgrade
                         </>
                       )}
+                    </Button>
+                  )}
+                  {hasPendingForThis && (
+                    <Button className="w-full" variant="outline" disabled>
+                      <Clock className="mr-1 h-4 w-4 animate-spin" /> Aguardando...
                     </Button>
                   )}
                 </CardContent>
@@ -262,18 +307,18 @@ export default function MeuPlano() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {confirmDialog?.type === "upgrade" ? "Confirmar Upgrade" : "Confirmar Downgrade"}
+              {confirmDialog?.type === "upgrade" ? "Solicitar Upgrade" : "Solicitar Downgrade"}
             </DialogTitle>
             <DialogDescription>
               {confirmDialog?.type === "upgrade" ? (
                 <>
-                  Seu plano será atualizado imediatamente para <strong>{confirmDialog.planName}</strong> ({formatPrice(confirmDialog.price)}/mês).
-                  As novas funcionalidades ficam disponíveis agora.
+                  Sua solicitação de upgrade para <strong>{confirmDialog.planName}</strong> ({formatPrice(confirmDialog.price)}/mês)
+                  será enviada ao administrador para aprovação.
                 </>
               ) : (
                 <>
-                  Seu plano será alterado para <strong>{confirmDialog?.planName}</strong> ({formatPrice(confirmDialog?.price ?? 0)}/mês)
-                  no próximo ciclo de cobrança.
+                  Sua solicitação de downgrade para <strong>{confirmDialog?.planName}</strong> ({formatPrice(confirmDialog?.price ?? 0)}/mês)
+                  será enviada ao administrador para aprovação.
                 </>
               )}
             </DialogDescription>
@@ -281,10 +326,11 @@ export default function MeuPlano() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDialog(null)}>Cancelar</Button>
             <Button
-              onClick={() => confirmDialog && changePlan.mutate({ planId: confirmDialog.planId, type: confirmDialog.type })}
-              disabled={changePlan.isPending}
+              onClick={() => confirmDialog && requestChange.mutate({ planId: confirmDialog.planId, type: confirmDialog.type })}
+              disabled={requestChange.isPending}
             >
-              {changePlan.isPending ? "Processando..." : "Confirmar"}
+              {requestChange.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Enviar Solicitação
             </Button>
           </DialogFooter>
         </DialogContent>
