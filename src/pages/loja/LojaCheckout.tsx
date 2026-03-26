@@ -446,13 +446,30 @@ export default function LojaCheckout() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Ir para Pagamento
             </Button>
+          ) : settings?.sell_via_whatsapp && settings?.store_whatsapp ? (
+            <>
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-center space-y-2">
+                <p className="text-4xl">🚧</p>
+                <p className="text-sm font-medium text-yellow-800">Pagamento online em manutenção</p>
+                <p className="text-xs text-yellow-700">Finalize seu pedido pelo WhatsApp</p>
+              </div>
+              <Button
+                className="w-full bg-green-600 text-white hover:bg-green-700 h-12 text-base"
+                onClick={() => handleSubmit(true)}
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <MessageCircle className="mr-2 h-5 w-5" /> Finalizar via WhatsApp
+              </Button>
+            </>
           ) : (
-            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Finalizar Pedido
-            </Button>
+            <div className="bg-red-50 border border-red-300 rounded-lg p-4 text-center space-y-2">
+              <p className="text-4xl">🚧</p>
+              <p className="text-sm font-medium text-red-800">Checkout indisponível</p>
+              <p className="text-xs text-red-700">A loja ainda não configurou um meio de pagamento.</p>
+            </div>
           )}
-          {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
+          {hasGateway && settings?.sell_via_whatsapp && settings?.store_whatsapp && (
             <Button
               variant="outline"
               className="w-full border-green-500 text-green-600 hover:bg-green-50 h-12 text-base"
