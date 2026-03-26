@@ -205,6 +205,39 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Payment Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Pgtos Aprovados</p>
+            <p className="text-2xl font-bold text-green-600">{paymentMetrics.approved}</p>
+            <p className="text-xs text-muted-foreground">{formatCurrency(paymentMetrics.approvedRevenue)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-yellow-500/30 bg-yellow-500/5">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><CreditCard className="h-3 w-3" /> Pendentes/Gerados</p>
+            <p className="text-2xl font-bold text-yellow-600">{paymentMetrics.pending}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-red-500/30 bg-red-500/5">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><XCircle className="h-3 w-3" /> Recusados</p>
+            <p className="text-2xl font-bold text-red-600">{paymentMetrics.rejected}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Conversão por Método</p>
+            <div className="flex gap-3 mt-1">
+              <span className="text-xs">💰 PIX: {paymentMetrics.byMethod.pix}</span>
+              <span className="text-xs">💳 Cartão: {paymentMetrics.byMethod.credit_card}</span>
+              <span className="text-xs">📄 Boleto: {paymentMetrics.byMethod.boleto}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Low stock alert */}
       {metrics.lowStock.length > 0 && (
         <Card className="border-amber-500/50 bg-amber-500/5">
