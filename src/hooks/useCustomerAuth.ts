@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
@@ -194,11 +194,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
   const value = useCustomerAuthState();
 
-  return (
-    <CustomerAuthContext.Provider value={value}>
-      {children}
-    </CustomerAuthContext.Provider>
-  );
+  return createElement(CustomerAuthContext.Provider, { value }, children);
 }
 
 export function useCustomerAuth() {
