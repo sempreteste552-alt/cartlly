@@ -73,7 +73,11 @@ export default function Gateway() {
         `https://${projectId}.supabase.co/functions/v1/create-payment`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
           body: JSON.stringify({ test: true, gateway: paymentGateway, store_user_id: user.id }),
         }
       );
