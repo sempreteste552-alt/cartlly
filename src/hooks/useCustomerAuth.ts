@@ -81,7 +81,12 @@ export function useCustomerAuth() {
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      if (error.message.includes("Invalid login")) {
+        throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
+      }
+      throw error;
+    }
     return data;
   };
 
