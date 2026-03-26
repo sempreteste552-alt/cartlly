@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
-import { usePublicStoreSettings, usePublicStoreBySlug } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User } from "lucide-react";
