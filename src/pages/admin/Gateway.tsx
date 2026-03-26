@@ -33,6 +33,7 @@ export default function Gateway() {
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
+  const [testOwner, setTestOwner] = useState<{ name: string; email: string; store: string } | null>(null);
 
   useEffect(() => {
     if (settings) {
