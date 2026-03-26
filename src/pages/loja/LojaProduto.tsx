@@ -102,7 +102,7 @@ export default function LojaProduto() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <Link to="/loja" className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
+      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
