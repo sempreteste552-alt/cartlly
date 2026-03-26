@@ -30,6 +30,7 @@ import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
 import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
 import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
+import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
               <Route index element={<SuperAdminDashboard />} />
               <Route path="tenants" element={<SuperAdminTenants />} />
+              <Route path="solicitacoes" element={<SuperAdminSolicitacoes />} />
               <Route path="planos" element={<SuperAdminPlanos />} />
               <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
               <Route path="config" element={<SuperAdminConfig />} />

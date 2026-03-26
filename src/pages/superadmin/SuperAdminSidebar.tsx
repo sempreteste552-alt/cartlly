@@ -6,6 +6,7 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
+  FileText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -29,6 +30,7 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { title: "Dashboard", url: "/superadmin", icon: LayoutDashboard },
   { title: "Tenants", url: "/superadmin/tenants", icon: Users },
+  { title: "Solicitações", url: "/superadmin/solicitacoes", icon: FileText },
   { title: "Planos", url: "/superadmin/planos", icon: CreditCard },
   { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell },
   { title: "Configurações", url: "/superadmin/config", icon: Settings },

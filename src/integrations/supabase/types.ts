@@ -398,6 +398,7 @@ export type Database = {
           created_at: string
           current_plan_id: string | null
           id: string
+          rejection_reason: string | null
           request_type: string
           requested_plan_id: string
           resolved_at: string | null
@@ -409,6 +410,7 @@ export type Database = {
           created_at?: string
           current_plan_id?: string | null
           id?: string
+          rejection_reason?: string | null
           request_type?: string
           requested_plan_id: string
           resolved_at?: string | null
@@ -420,6 +422,7 @@ export type Database = {
           created_at?: string
           current_plan_id?: string | null
           id?: string
+          rejection_reason?: string | null
           request_type?: string
           requested_plan_id?: string
           resolved_at?: string | null
