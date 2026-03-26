@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, BarChart3 } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, BarChart3, CreditCard, CheckCircle2, XCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 
