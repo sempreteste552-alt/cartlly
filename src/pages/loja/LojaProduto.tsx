@@ -18,14 +18,15 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { toast } from "sonner";
 
 export default function LojaProduto() {
-  const { id } = useParams();
-  const { data: products } = usePublicProducts();
+  const { id, slug } = useParams();
+  const { cart, settings, storeUserId } = useLojaContext();
+  const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
-  const { cart, settings, storeUserId } = useLojaContext();
   const wishlist = useWishlist(storeUserId);
 
   const product = products?.find((p) => p.id === id);
+  const basePath = slug ? `/loja/${slug}` : "/loja";
 
   const allImages = useMemo(() => {
     const images: string[] = [];
@@ -94,14 +95,14 @@ export default function LojaProduto() {
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <Package className="h-16 w-16 mx-auto text-gray-300" />
         <h2 className="text-xl font-bold mt-4">Produto não encontrado</h2>
-        <Link to="/loja" className="text-sm text-gray-500 hover:underline mt-2 inline-block">Voltar para a loja</Link>
+        <Link to={basePath} className="text-sm text-gray-500 hover:underline mt-2 inline-block">Voltar para a loja</Link>
       </div>
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <Link to="/loja" className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
+      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
@@ -312,7 +313,7 @@ export default function LojaProduto() {
             <CarouselContent className="-ml-3">
               {similarProducts.map((p) => (
                 <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                  <Link to={`/loja/produto/${p.id}`} className="group block">
+                  <Link to={`${basePath}/produto/${p.id}`} className="group block">
                     <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
                       <div className="aspect-square bg-gray-50 overflow-hidden">
                         {p.image_url ? (

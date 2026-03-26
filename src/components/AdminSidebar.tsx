@@ -13,6 +13,7 @@ import {
   Users,
   Bell,
   BellOff,
+  Crown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
@@ -42,6 +43,7 @@ const mainItems = [
   { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart },
   { title: "Cupons", url: "/admin/cupons", icon: Ticket },
   { title: "Clientes", url: "/admin/clientes", icon: Users },
+  { title: "Meu Plano", url: "/admin/plano", icon: Crown },
 ];
 
 const configItems = [
