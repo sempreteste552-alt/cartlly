@@ -393,6 +393,57 @@ export type Database = {
           },
         ]
       }
+      plan_change_requests: {
+        Row: {
+          created_at: string
+          current_plan_id: string | null
+          id: string
+          request_type: string
+          requested_plan_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_plan_id?: string | null
+          id?: string
+          request_type?: string
+          requested_plan_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_plan_id?: string | null
+          id?: string
+          request_type?: string
+          requested_plan_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_change_requests_current_plan_id_fkey"
+            columns: ["current_plan_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_change_requests_requested_plan_id_fkey"
+            columns: ["requested_plan_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           id: string
