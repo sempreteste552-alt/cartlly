@@ -9,6 +9,21 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
+  const { user } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
+
+  // Show welcome message once per session
+  useEffect(() => {
+    const sessionKey = `welcome_shown_${user?.id}`;
+    if (user && !sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, "1");
+      const name = user.user_metadata?.display_name || user.email?.split("@")[0] || "Usuário";
+      setWelcomeName(name);
+      setShowWelcome(true);
+      setTimeout(() => setShowWelcome(false), 4000);
+    }
+  }, [user]);
 
   // Apply admin colors dynamically
   useEffect(() => {
