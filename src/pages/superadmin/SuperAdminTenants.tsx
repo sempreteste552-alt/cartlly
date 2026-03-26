@@ -19,9 +19,24 @@ import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
   const { data: plans } = useAllPlans();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
+
+  // Fetch pending plan change requests
+  const { data: planRequests } = useQuery({
+    queryKey: ["all_plan_change_requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_change_requests")
+        .select("*, requested_plan:tenant_plans!plan_change_requests_requested_plan_id_fkey(*), current_plan:tenant_plans!plan_change_requests_current_plan_id_fkey(*)")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
