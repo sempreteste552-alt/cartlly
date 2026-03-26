@@ -64,6 +64,18 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
+      {metrics.pending > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Clock className="h-5 w-5 text-amber-500" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-600">⏳ {metrics.pending} tenant(s) aguardando aprovação</p>
+              <p className="text-xs text-muted-foreground">Vá para a aba Tenants para aprovar ou rejeitar</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {metrics.blocked > 0 && (
         <Card className="border-destructive">
           <CardContent className="flex items-center gap-3 p-4">
