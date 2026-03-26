@@ -31,6 +31,7 @@ export default function Gateway() {
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
   const [gatewaySecretKey, setGatewaySecretKey] = useState("");
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
+  const [maxInstallments, setMaxInstallments] = useState(12);
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
   const [testOwner, setTestOwner] = useState<{ name: string; email: string; store: string } | null>(null);
@@ -41,6 +42,7 @@ export default function Gateway() {
       setGatewayPublicKey(settings.gateway_public_key ?? "");
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+      setMaxInstallments((settings as any).max_installments ?? 12);
     }
   }, [settings]);
 
@@ -71,7 +73,11 @@ export default function Gateway() {
         `https://${projectId}.supabase.co/functions/v1/create-payment`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
           body: JSON.stringify({ test: true, gateway: paymentGateway, store_user_id: user.id }),
         }
       );
@@ -101,6 +107,7 @@ export default function Gateway() {
       gateway_public_key: gatewayPublicKey.trim() || null,
       gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
+      max_installments: maxInstallments,
     } as any);
   };
 
@@ -196,6 +203,32 @@ export default function Gateway() {
           )}
         </CardContent>
       </Card>
+
+      {/* Installments Config */}
+      {selectedGateway && (
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Parcelamento</CardTitle></div>
+            <CardDescription>Configure o número máximo de parcelas aceitas</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Máximo de Parcelas</Label>
+              <Select value={String(maxInstallments)} onValueChange={(v) => setMaxInstallments(parseInt(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}x {n === 1 ? "(à vista)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Clientes poderão parcelar em até {maxInstallments}x no cartão de crédito</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* API Test */}
       {selectedGateway && (
