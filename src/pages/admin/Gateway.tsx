@@ -10,6 +10,7 @@ import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettin
 import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useAuth } from "@/contexts/AuthContext";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
