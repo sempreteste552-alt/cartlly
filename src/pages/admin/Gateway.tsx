@@ -10,6 +10,7 @@ import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettin
 import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useAuth } from "@/contexts/AuthContext";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
@@ -23,6 +24,7 @@ export default function Gateway() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const { isLocked } = usePlanFeatures();
+  const { user } = useAuth();
   const gatewayLocked = isLocked("gateway");
 
   const [paymentGateway, setPaymentGateway] = useState("");
@@ -48,18 +50,27 @@ export default function Gateway() {
       toast.error("Configure o gateway e a chave pública primeiro.");
       return;
     }
+    if (!gatewaySecretKey) {
+      toast.error("Configure a chave secreta primeiro.");
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Usuário não autenticado.");
+      return;
+    }
+    // Ensure settings are saved before testing
+    toast.info("Salve as configurações antes de testar. Testando com dados salvos...");
     setTestStatus("testing");
     setTestMessage("");
 
     try {
-      // Test by calling create-payment edge function with a test flag
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/create-payment`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ test: true, gateway: paymentGateway }),
+          body: JSON.stringify({ test: true, gateway: paymentGateway, store_user_id: user.id }),
         }
       );
       const data = await response.json();
