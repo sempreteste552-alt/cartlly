@@ -103,6 +103,7 @@ export default function Gateway() {
       gateway_public_key: gatewayPublicKey.trim() || null,
       gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
+      max_installments: maxInstallments,
     } as any);
   };
 
