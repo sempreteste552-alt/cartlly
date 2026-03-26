@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-
 import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -28,7 +28,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 export default function LojaLayout() {
   const { slug } = useParams();
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
-  const { user, customer } = useCustomerAuth();
+  const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -149,9 +149,14 @@ export default function LojaLayout() {
             </div>
             <div className="flex items-center gap-3">
               {user && customer ? (
-                <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
-                  <User className="h-3 w-3" /> {customer.name?.split(" ")[0] || "Conta"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
+                    <User className="h-3 w-3" /> {customer.name?.split(" ")[0] || "Conta"}
+                  </button>
+                  <button onClick={() => { signOut(); }} className="flex items-center gap-1 hover:opacity-80 ml-2">
+                    <LogOut className="h-3 w-3" /> Sair
+                  </button>
+                </div>
               ) : (
                 <button onClick={() => setAuthModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                   <User className="h-3 w-3" /> Entrar
@@ -203,7 +208,7 @@ export default function LojaLayout() {
             </div>
 
             <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-              <User className="h-5 w-5" />
+              {user && customer ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
             </Button>
 
             <Sheet>
