@@ -109,11 +109,14 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
     const updatedFeatures = { ...features, [key]: value };
     setFeatures(updatedFeatures);
 
-    // Update plan features
+    // Update feature_overrides on the tenant's subscription (not the plan itself)
+    const currentOverrides = (tenant.subscription as any)?.feature_overrides || {};
+    const newOverrides = { ...currentOverrides, [key]: value };
+
     const { error } = await supabase
-      .from("tenant_plans")
-      .update({ features: updatedFeatures } as any)
-      .eq("id", tenant.subscription.plan_id);
+      .from("tenant_subscriptions")
+      .update({ feature_overrides: newOverrides } as any)
+      .eq("id", tenant.subscription.id);
 
     if (error) {
       toast.error("Erro ao atualizar: " + error.message);
