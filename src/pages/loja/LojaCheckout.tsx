@@ -16,6 +16,7 @@ import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2 } from "lu
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
+import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
