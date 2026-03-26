@@ -5,6 +5,7 @@ import { Outlet } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { AIChatWidget } from "@/components/AIChatWidget";
 import { WelcomeConfetti } from "@/components/WelcomeConfetti";
+import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function AdminLayout() {
