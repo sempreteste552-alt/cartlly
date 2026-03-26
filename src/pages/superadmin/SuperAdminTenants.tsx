@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useAllTenants, useAllPlans } from "@/hooks/useUserRole";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,17 +12,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
   const { data: plans } = useAllPlans();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
+
+  // Fetch pending plan change requests
+  const { data: planRequests } = useQuery({
+    queryKey: ["all_plan_change_requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_change_requests")
+        .select("*, requested_plan:tenant_plans!plan_change_requests_requested_plan_id_fkey(*), current_plan:tenant_plans!plan_change_requests_current_plan_id_fkey(*)")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
@@ -191,6 +207,97 @@ export default function SuperAdminTenants() {
               <p className="text-xs text-muted-foreground">Revise e aprove para liberar o acesso</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setFilter("pending")}>Ver pendentes</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Plan Change Requests */}
+      {planRequests && planRequests.length > 0 && (
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/10 to-transparent shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              📊 Solicitações de Plano ({planRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {planRequests.map((req: any) => {
+              const tenant = tenants?.find((t) => t.user_id === req.user_id);
+              const handleApprovePlan = async () => {
+                // Update subscription
+                if (tenant?.subscription) {
+                  await supabase.from("tenant_subscriptions").update({
+                    plan_id: req.requested_plan_id,
+                    status: "active",
+                    current_period_start: new Date().toISOString(),
+                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                  } as any).eq("user_id", req.user_id);
+                } else {
+                  await supabase.from("tenant_subscriptions").insert({
+                    user_id: req.user_id,
+                    plan_id: req.requested_plan_id,
+                    status: "active",
+                  } as any);
+                }
+                await supabase.from("plan_change_requests").update({
+                  status: "approved",
+                  resolved_at: new Date().toISOString(),
+                  resolved_by: user!.id,
+                } as any).eq("id", req.id);
+                // Notify tenant
+                await supabase.from("admin_notifications").insert({
+                  sender_user_id: user!.id,
+                  target_user_id: req.user_id,
+                  title: "✅ Solicitação Aprovada",
+                  message: `Seu ${req.request_type} para o plano ${req.requested_plan?.name || "—"} foi aprovado!`,
+                  type: "info",
+                } as any);
+                toast.success("Solicitação aprovada!");
+                queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
+                queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+              };
+              const handleRejectPlan = async () => {
+                await supabase.from("plan_change_requests").update({
+                  status: "rejected",
+                  resolved_at: new Date().toISOString(),
+                  resolved_by: user!.id,
+                } as any).eq("id", req.id);
+                await supabase.from("admin_notifications").insert({
+                  sender_user_id: user!.id,
+                  target_user_id: req.user_id,
+                  title: "❌ Solicitação Recusada",
+                  message: `Seu ${req.request_type} para o plano ${req.requested_plan?.name || "—"} foi recusado.`,
+                  type: "warning",
+                } as any);
+                toast.success("Solicitação recusada");
+                queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
+              };
+
+              return (
+                <div key={req.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-background/60 p-3">
+                  <div className="flex items-center gap-3">
+                    {req.request_type === "upgrade" ? (
+                      <ArrowUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-amber-600" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">{tenant?.display_name || "Tenant"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {req.current_plan?.name || "Grátis"} → {req.requested_plan?.name || "—"} • {new Date(req.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs" onClick={handleApprovePlan}>
+                      <CheckCircle className="mr-1 h-3 w-3" /> Aprovar
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={handleRejectPlan}>
+                      <XCircle className="mr-1 h-3 w-3" /> Recusar
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}

@@ -7,14 +7,90 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+
+function AccountEmailChanger() {
+  const [newEmail, setNewEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim()) return toast.error("Informe o novo e-mail");
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+      if (error) throw error;
+      toast.success("E-mail de confirmação enviado para o novo endereço!");
+      setNewEmail("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar e-mail");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Novo E-mail</Label>
+      <div className="flex gap-2">
+        <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="novo@email.com" />
+        <Button onClick={handleChangeEmail} disabled={loading} variant="outline">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alterar"}
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">Você receberá um e-mail de confirmação nos dois endereços</p>
+    </div>
+  );
+}
+
+function AccountPasswordChanger() {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!newPassword.trim()) return toast.error("Informe a nova senha");
+    if (newPassword.length < 6) return toast.error("Senha deve ter no mínimo 6 caracteres");
+    if (newPassword !== confirmPassword) return toast.error("As senhas não coincidem");
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>Nova Senha</Label>
+      <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+      <Label>Confirmar Senha</Label>
+      <div className="flex gap-2">
+        <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repita a nova senha" />
+        <Button onClick={handleChangePassword} disabled={loading} variant="outline">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Alterar"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
+
 export default function Configuracoes() {
+  const { user } = useAuth();
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const uploadLogo = useUploadStoreLogo();
@@ -503,6 +579,27 @@ export default function Configuracoes() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Account Settings - Change Email & Password */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Conta e Segurança</CardTitle></div>
+          <CardDescription>Altere seu e-mail ou senha de acesso</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">E-mail atual</span>
+            </div>
+            <p className="text-sm text-muted-foreground ml-6">{user?.email || "—"}</p>
+          </div>
+
+          <AccountEmailChanger />
+          <Separator />
+          <AccountPasswordChanger />
         </CardContent>
       </Card>
 
