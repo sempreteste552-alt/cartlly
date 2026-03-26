@@ -29,21 +29,28 @@ Para cada produto encontrado, retorne:
 - price: preço em número (se encontrado, senão 0)
 - category: nome da categoria sugerida
 - stock: quantidade em estoque (se encontrado, senão 10)
+- variants: array de variantes encontradas (cor, tamanho, material, etc). Cada variante deve ter:
+  - variant_type: tipo da variante (ex: "Cor", "Tamanho", "Material")
+  - variant_value: valor da variante (ex: "Preto", "M", "Algodão")
+  - stock: estoque desta variante (se encontrado, senão 5)
+  - price_modifier: modificador de preço (0 se não houver diferença)
+
+IMPORTANTE: Se o catálogo for de roupas, calçados ou acessórios, SEMPRE extraia as variantes de tamanho e cor disponíveis.
+Se um produto tiver múltiplas cores ou tamanhos listados, crie uma variante para cada combinação.
 
 Categorias existentes na loja: ${existingCategories?.join(", ") || "nenhuma"}
 Use categorias existentes quando possível, ou sugira novas.
 
 Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os produtos visíveis (tabelas, listas, cardápios, catálogos impressos, etc).`;
 
-    // Build user message content (multimodal)
     const userContent: any[] = [];
 
     if (catalogText) {
-      userContent.push({ type: "text", text: `Analise este catálogo e extraia os produtos:\n\n${catalogText}` });
+      userContent.push({ type: "text", text: `Analise este catálogo e extraia os produtos com todas as variantes (cor, tamanho, etc):\n\n${catalogText}` });
     }
 
     if (catalogImages && catalogImages.length > 0) {
-      userContent.push({ type: "text", text: "Analise as imagens abaixo e extraia todos os produtos visíveis:" });
+      userContent.push({ type: "text", text: "Analise as imagens abaixo e extraia todos os produtos visíveis com suas variantes (cor, tamanho, etc):" });
       for (const img of catalogImages) {
         userContent.push({
           type: "image_url",
@@ -69,7 +76,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
             type: "function",
             function: {
               name: "extract_products",
-              description: "Extract products from catalog text or image",
+              description: "Extract products from catalog text or image, including variants like color and size",
               parameters: {
                 type: "object",
                 properties: {
@@ -83,6 +90,19 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
                         price: { type: "number" },
                         category: { type: "string" },
                         stock: { type: "number" },
+                        variants: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              variant_type: { type: "string" },
+                              variant_value: { type: "string" },
+                              stock: { type: "number" },
+                              price_modifier: { type: "number" },
+                            },
+                            required: ["variant_type", "variant_value", "stock", "price_modifier"],
+                          },
+                        },
                       },
                       required: ["name", "description", "price", "category", "stock"],
                     },

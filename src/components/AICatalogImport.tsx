@@ -16,12 +16,20 @@ interface AICatalogImportProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ExtractedVariant {
+  variant_type: string;
+  variant_value: string;
+  stock: number;
+  price_modifier: number;
+}
+
 interface ExtractedProduct {
   name: string;
   description: string;
   price: number;
   category: string;
   stock: number;
+  variants?: ExtractedVariant[];
   selected: boolean;
 }
 
@@ -75,7 +83,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
       if (inputMode === "text") {
         body.catalogText = catalogText.trim();
       } else {
-        body.catalogImages = imagePreviews; // base64 data URLs
+        body.catalogImages = imagePreviews;
       }
 
       const { data, error } = await supabase.functions.invoke("ai-catalog", { body });
@@ -122,9 +130,10 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
       }
 
       let created = 0;
+      let variantsCreated = 0;
       for (const p of selected) {
         const categoryId = catMap[p.category.toLowerCase()] || null;
-        const { error } = await supabase.from("products").insert({
+        const { data: createdProduct, error } = await supabase.from("products").insert({
           name: p.name,
           description: p.description,
           price: p.price,
@@ -132,11 +141,31 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
           category_id: categoryId,
           user_id: user!.id,
           published: true,
-        });
-        if (!error) created++;
+        }).select().single();
+
+        if (!error && createdProduct) {
+          created++;
+
+          // Create variants if any
+          if (p.variants && p.variants.length > 0) {
+            for (const v of p.variants) {
+              const { error: varErr } = await supabase.from("product_variants").insert({
+                product_id: createdProduct.id,
+                variant_type: v.variant_type,
+                variant_value: v.variant_value,
+                stock: v.stock,
+                price_modifier: v.price_modifier,
+              } as any);
+              if (!varErr) variantsCreated++;
+            }
+          }
+        }
       }
 
-      toast.success(`${created} produtos importados com sucesso!`);
+      const msg = variantsCreated > 0
+        ? `${created} produtos e ${variantsCreated} variantes importados!`
+        : `${created} produtos importados com sucesso!`;
+      toast.success(msg);
       onOpenChange(false);
       resetState();
       window.location.reload();
@@ -158,6 +187,8 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const formatPrice = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+  const totalVariants = products.reduce((sum, p) => sum + (p.variants?.length || 0), 0);
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) resetState(); onOpenChange(o); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -171,7 +202,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
         {step === "input" ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Cole um texto ou envie imagens do seu catálogo. A IA irá escanear e extrair os produtos automaticamente.
+              Cole um texto ou envie imagens do seu catálogo. A IA irá escanear e extrair os produtos com variantes (cor, tamanho, etc.) automaticamente.
             </p>
 
             <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "text" | "image")}>
@@ -189,7 +220,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                 <Textarea
                   value={catalogText}
                   onChange={(e) => setCatalogText(e.target.value)}
-                  placeholder={`Exemplo:\nCamiseta Básica Preta - R$ 49,90 - Tam P, M, G\nCalça Jeans Slim - R$ 129,90 - Estoque: 25`}
+                  placeholder={`Exemplo:\nCamiseta Básica Preta - R$ 49,90 - Tam P, M, G - Cores: Preto, Branco\nCalça Jeans Slim - R$ 129,90 - Estoque: 25 - Tam 38, 40, 42`}
                   rows={10}
                   maxLength={10000}
                 />
@@ -199,13 +230,13 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
               <TabsContent value="image" className="space-y-4 mt-4">
                 <Label>Imagens do Catálogo (máx. 10)</Label>
                 <p className="text-xs text-muted-foreground">
-                  Aceita JPG, PNG, WebP, HEIC, BMP, GIF, TIFF — até 20MB por imagem. Envie fotos de cardápios, tabelas, catálogos impressos ou screenshots.
+                  Aceita JPG, PNG, WebP — até 20MB por imagem. Envie fotos de catálogos, tabelas ou screenshots.
                 </p>
 
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/tiff,image/heic,image/heif,image/*"
+                  accept="image/*"
                   multiple
                   className="hidden"
                   onChange={handleImageSelect}
@@ -255,7 +286,8 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {products.filter((p) => p.selected).length} de {products.length} produtos selecionados.
+              {products.filter((p) => p.selected).length} de {products.length} produtos selecionados
+              {totalVariants > 0 && ` • ${totalVariants} variantes detectadas`}.
             </p>
 
             <div className="space-y-2 max-h-[50vh] overflow-y-auto">
@@ -282,6 +314,16 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                       <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
                       <span>Estoque: {product.stock}</span>
                     </div>
+                    {/* Show variants */}
+                    {product.variants && product.variants.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {product.variants.map((v, vi) => (
+                          <Badge key={vi} variant="outline" className="text-[10px]">
+                            {v.variant_type}: {v.variant_value}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

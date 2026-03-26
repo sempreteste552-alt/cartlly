@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Loader2, GripVertical } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
+import { useProductImages } from "@/hooks/useProductImages";
 
 interface ProductFormProps {
   open: boolean;
@@ -30,19 +31,45 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading }: ProductFormProps) {
-  const [name, setName] = useState(initialData?.name ?? "");
-  const [description, setDescription] = useState(initialData?.description ?? "");
-  const [price, setPrice] = useState(initialData?.price?.toString() ?? "");
-  const [stock, setStock] = useState(initialData?.stock?.toString() ?? "0");
-  const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
-  const [published, setPublished] = useState(initialData?.published ?? false);
-  const [madeToOrder, setMadeToOrder] = useState((initialData as any)?.made_to_order ?? false);
-  const [categoryId, setCategoryId] = useState(initialData?.category_id ?? "");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("0");
+  const [imageUrl, setImageUrl] = useState("");
+  const [published, setPublished] = useState(false);
+  const [madeToOrder, setMadeToOrder] = useState(false);
+  const [categoryId, setCategoryId] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
+
+  // Load existing additional images when editing
+  const { data: existingImages } = useProductImages(initialData?.id);
+
+  // Sync form state when initialData changes (fixes edit resetting data)
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name ?? "");
+      setDescription(initialData.description ?? "");
+      setPrice(initialData.price?.toString() ?? "");
+      setStock(initialData.stock?.toString() ?? "0");
+      setImageUrl(initialData.image_url ?? "");
+      setPublished(initialData.published ?? false);
+      setMadeToOrder((initialData as any)?.made_to_order ?? false);
+      setCategoryId(initialData.category_id ?? "");
+    }
+  }, [initialData]);
+
+  // Load existing additional images
+  useEffect(() => {
+    if (existingImages && existingImages.length > 0) {
+      setAdditionalImages(existingImages.map((img: any) => img.image_url));
+    } else if (initialData) {
+      setAdditionalImages([]);
+    }
+  }, [existingImages, initialData?.id]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
