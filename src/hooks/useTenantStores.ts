@@ -11,13 +11,13 @@ export function useTenantStores() {
     queryKey: ["tenant_stores", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tenant_stores")
         .select("*")
         .eq("user_id", user!.id)
         .order("created_at");
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
@@ -27,8 +27,8 @@ export function useTenantStores() {
         throw new Error("Limite de 2 lojas por assinatura atingido.");
       }
       const slug = params.store_slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-      // Check slug uniqueness across both tables
-      const { data: existingSlug } = await supabase
+
+      const { data: existingSlug } = await (supabase as any)
         .from("tenant_stores")
         .select("id")
         .eq("store_slug", slug)
@@ -42,13 +42,13 @@ export function useTenantStores() {
         .maybeSingle();
       if (existingStoreSettings) throw new Error("Este slug já está em uso.");
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("tenant_stores")
         .insert({
           user_id: user!.id,
           store_name: params.store_name,
           store_slug: slug,
-        } as any)
+        })
         .select()
         .single();
       if (error) throw error;
@@ -65,7 +65,7 @@ export function useTenantStores() {
 
   const deleteStore = useMutation({
     mutationFn: async (storeId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("tenant_stores")
         .delete()
         .eq("id", storeId)
