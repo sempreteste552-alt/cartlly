@@ -14,11 +14,8 @@ import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useSt
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
+
 
 export default function Configuracoes() {
   const { user } = useAuth();
