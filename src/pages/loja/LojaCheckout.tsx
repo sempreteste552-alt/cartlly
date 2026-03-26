@@ -16,6 +16,7 @@ import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2 } from "lu
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
+import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
@@ -143,10 +144,19 @@ export default function LojaCheckout() {
     return order;
   };
 
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   const handleSubmit = async (viaWhatsApp = false) => {
     if (!name.trim()) return toast.error("Informe seu nome");
     if (!phone.trim()) return toast.error("Informe seu telefone");
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
+
+    // Require customer login before payment (not for WhatsApp)
+    if (!viaWhatsApp && !customer) {
+      toast.info("🔐 Faça login ou crie uma conta para prosseguir com o pagamento");
+      setAuthModalOpen(true);
+      return;
+    }
 
     // Block if no gateway and not WhatsApp
     if (!viaWhatsApp && !hasGateway) {
@@ -487,6 +497,15 @@ export default function LojaCheckout() {
           )}
         </div>
       </div>
+
+      {/* Auth modal for checkout gate */}
+      {settings?.user_id && (
+        <CustomerAuthModal
+          open={authModalOpen}
+          onOpenChange={setAuthModalOpen}
+          storeUserId={settings.user_id}
+        />
+      )}
     </div>
   );
 }
