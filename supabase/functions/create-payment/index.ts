@@ -24,8 +24,64 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const body: PaymentRequest = await req.json();
-    const { order_id, method, card_token, installments, store_user_id } = body;
+    const body = await req.json();
+
+    // Handle test mode from gateway config page
+    if (body.test === true) {
+      const { gateway, store_user_id: testStoreUserId } = body;
+      if (!gateway || !testStoreUserId) {
+        return new Response(JSON.stringify({ test_ok: false, error: "Gateway e store_user_id são obrigatórios para teste" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Fetch store settings to validate keys
+      const { data: testSettings, error: testErr } = await supabase
+        .from("store_settings")
+        .select("payment_gateway, gateway_public_key, gateway_secret_key, gateway_environment")
+        .eq("user_id", testStoreUserId)
+        .single();
+
+      if (testErr || !testSettings) {
+        return new Response(JSON.stringify({ test_ok: false, error: "Configurações da loja não encontradas. Salve o gateway primeiro." }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!testSettings.gateway_secret_key) {
+        return new Response(JSON.stringify({ test_ok: false, error: "Chave secreta não configurada. Salve o gateway primeiro." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Test connectivity based on gateway
+      try {
+        if (gateway === "mercadopago") {
+          const mpRes = await fetch("https://api.mercadopago.com/v1/payment_methods", {
+            headers: { Authorization: `Bearer ${testSettings.gateway_secret_key}` },
+          });
+          if (mpRes.ok) {
+            return new Response(JSON.stringify({ test_ok: true, message: "Mercado Pago conectado com sucesso!" }), {
+              status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          const mpData = await mpRes.json();
+          return new Response(JSON.stringify({ test_ok: false, error: mpData.message || `Erro MP: ${mpRes.status}` }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // Generic fallback for other gateways
+        return new Response(JSON.stringify({ test_ok: true, message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.` }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (testError: any) {
+        return new Response(JSON.stringify({ test_ok: false, error: "Erro de conexão: " + testError.message }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const { order_id, method, card_token, installments, store_user_id } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return new Response(JSON.stringify({ error: "Campos obrigatórios: order_id, method, store_user_id" }), {
