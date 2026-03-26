@@ -1,12 +1,54 @@
-import { useState, useEffect } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
-export function useCustomerAuth() {
+interface CustomerAuthContextValue {
+  session: Session | null;
+  user: User | null;
+  customer: any;
+  loading: boolean;
+  customerLoading: boolean;
+  authReady: boolean;
+  signUp: (email: string, password: string, name: string, storeUserId: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
+    cpf?: string;
+  }) => Promise<any>;
+  resetPassword: (email: string) => Promise<void>;
+  getOrders: (storeUserId: string) => Promise<any[]>;
+  refreshProfile: () => Promise<any>;
+}
+
+const CustomerAuthContext = createContext<CustomerAuthContextValue | null>(null);
+
+function useCustomerAuthState(): CustomerAuthContextValue {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [customer, setCustomer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [customerLoading, setCustomerLoading] = useState(false);
+
+  const loadCustomerProfile = useCallback(async (userId: string) => {
+    setCustomerLoading(true);
+    const { data, error } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("auth_user_id", userId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    setCustomer(data);
+    setCustomerLoading(false);
+    return data;
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -30,19 +72,14 @@ export function useCustomerAuth() {
   useEffect(() => {
     if (!user) {
       setCustomer(null);
+      setCustomerLoading(false);
       return;
     }
-    loadCustomerProfile(user.id);
-  }, [user]);
-
-  const loadCustomerProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("customers")
-      .select("*")
-      .eq("auth_user_id", userId)
-      .maybeSingle();
-    setCustomer(data);
-  };
+    loadCustomerProfile(user.id).catch(() => {
+      setCustomer(null);
+      setCustomerLoading(false);
+    });
+  }, [loadCustomerProfile, user]);
 
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
     // Check if email already exists as a customer for this store
@@ -134,17 +171,42 @@ export function useCustomerAuth() {
     return data ?? [];
   };
 
-  return {
+  return useMemo(() => ({
     session,
     user,
     customer,
     loading,
+    customerLoading,
+    authReady: !loading,
     signUp,
     signIn,
     signOut,
     updateProfile,
     resetPassword,
     getOrders,
-    refreshProfile: () => user && loadCustomerProfile(user.id),
-  };
+    refreshProfile: async () => {
+      if (!user) return null;
+      return loadCustomerProfile(user.id);
+    },
+  }), [session, user, customer, loading, customerLoading, loadCustomerProfile]);
+}
+
+export function CustomerAuthProvider({ children }: { children: ReactNode }) {
+  const value = useCustomerAuthState();
+
+  return (
+    <CustomerAuthContext.Provider value={value}>
+      {children}
+    </CustomerAuthContext.Provider>
+  );
+}
+
+export function useCustomerAuth() {
+  const context = useContext(CustomerAuthContext);
+
+  if (!context) {
+    throw new Error("useCustomerAuth must be used within CustomerAuthProvider");
+  }
+
+  return context;
 }

@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/AdminLayout";
 import Login from "./pages/Login";
@@ -69,7 +70,7 @@ const App = () => (
             </Route>
             {/* Multi-tenant: store by slug only — no default /loja */}
             <Route path="/loja" element={<Navigate to="/login" replace />} />
-            <Route path="/loja/:slug" element={<LojaLayout />}>
+            <Route path="/loja/:slug" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
               <Route index element={<LojaHome />} />
               <Route path="produto/:id" element={<LojaProduto />} />
               <Route path="checkout" element={<LojaCheckout />} />
