@@ -202,6 +202,7 @@ export default function Cupons() {
   );
 
   return (
+    <LockedFeature isLocked={isLocked("coupons")} featureName="Cupons de Desconto">
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
