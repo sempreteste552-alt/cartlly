@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface AdminNotification {
   id: string;
@@ -43,6 +44,12 @@ export function useAdminNotifications() {
         const n = payload.new as AdminNotification;
         if (n.target_user_id === user.id || n.target_user_id === null) {
           setNotifications((prev) => [n, ...prev]);
+          // Pop-up toast for 3 seconds
+          const emoji = getNotificationEmoji(n.type);
+          toast(`${emoji} ${n.title}`, {
+            description: n.message,
+            duration: 3000,
+          });
         }
       })
       .subscribe();

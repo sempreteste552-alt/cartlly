@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useAllTenants, useAllPlans } from "@/hooks/useUserRole";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Store, DollarSign, AlertTriangle, Package, ShoppingCart, Clock } from "lucide-react";
+import PaymentsDashboard from "@/components/PaymentsDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -118,6 +119,11 @@ export default function SuperAdminDashboard() {
           )}
         </CardContent>
       </Card>
+      {/* Payments Dashboard - All tenants */}
+      <div>
+        <h2 className="text-lg font-bold mb-4">💰 Transações de Todos os Tenants</h2>
+        <PaymentsDashboard isSuperAdmin />
+      </div>
     </div>
   );
 }
