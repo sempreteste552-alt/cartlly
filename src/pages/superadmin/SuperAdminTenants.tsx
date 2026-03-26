@@ -211,6 +211,97 @@ export default function SuperAdminTenants() {
         </Card>
       )}
 
+      {/* Plan Change Requests */}
+      {planRequests && planRequests.length > 0 && (
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/10 to-transparent shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              📊 Solicitações de Plano ({planRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {planRequests.map((req: any) => {
+              const tenant = tenants?.find((t) => t.user_id === req.user_id);
+              const handleApprovePlan = async () => {
+                // Update subscription
+                if (tenant?.subscription) {
+                  await supabase.from("tenant_subscriptions").update({
+                    plan_id: req.requested_plan_id,
+                    status: "active",
+                    current_period_start: new Date().toISOString(),
+                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                  } as any).eq("user_id", req.user_id);
+                } else {
+                  await supabase.from("tenant_subscriptions").insert({
+                    user_id: req.user_id,
+                    plan_id: req.requested_plan_id,
+                    status: "active",
+                  } as any);
+                }
+                await supabase.from("plan_change_requests").update({
+                  status: "approved",
+                  resolved_at: new Date().toISOString(),
+                  resolved_by: user!.id,
+                } as any).eq("id", req.id);
+                // Notify tenant
+                await supabase.from("admin_notifications").insert({
+                  sender_user_id: user!.id,
+                  target_user_id: req.user_id,
+                  title: "✅ Solicitação Aprovada",
+                  message: `Seu ${req.request_type} para o plano ${req.requested_plan?.name || "—"} foi aprovado!`,
+                  type: "info",
+                } as any);
+                toast.success("Solicitação aprovada!");
+                queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
+                queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+              };
+              const handleRejectPlan = async () => {
+                await supabase.from("plan_change_requests").update({
+                  status: "rejected",
+                  resolved_at: new Date().toISOString(),
+                  resolved_by: user!.id,
+                } as any).eq("id", req.id);
+                await supabase.from("admin_notifications").insert({
+                  sender_user_id: user!.id,
+                  target_user_id: req.user_id,
+                  title: "❌ Solicitação Recusada",
+                  message: `Seu ${req.request_type} para o plano ${req.requested_plan?.name || "—"} foi recusado.`,
+                  type: "warning",
+                } as any);
+                toast.success("Solicitação recusada");
+                queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
+              };
+
+              return (
+                <div key={req.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-background/60 p-3">
+                  <div className="flex items-center gap-3">
+                    {req.request_type === "upgrade" ? (
+                      <ArrowUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-amber-600" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">{tenant?.display_name || "Tenant"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {req.current_plan?.name || "Grátis"} → {req.requested_plan?.name || "—"} • {new Date(req.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs" onClick={handleApprovePlan}>
+                      <CheckCircle className="mr-1 h-3 w-3" /> Aprovar
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={handleRejectPlan}>
+                      <XCircle className="mr-1 h-3 w-3" /> Recusar
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
