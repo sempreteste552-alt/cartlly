@@ -122,6 +122,13 @@ export default function Login() {
           setLoading(false);
           return;
         }
+        // Check if email already exists in profiles
+        const { data: existingEmail } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("display_name", email)
+          .maybeSingle();
+        // Actually check auth by trying to see if email is used
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -130,7 +137,12 @@ export default function Login() {
             emailRedirectTo: window.location.origin,
           },
         });
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          if (signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")) {
+            throw new Error("Este e-mail já está cadastrado. Faça login.");
+          }
+          throw signUpError;
+        }
         // Create store_settings with slug and store name
         if (signUpData.user) {
           await supabase.from("store_settings").insert({
