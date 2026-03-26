@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       // Fetch store settings to validate keys
       const { data: testSettings, error: testErr } = await supabase
         .from("store_settings")
-        .select("payment_gateway, gateway_public_key, gateway_secret_key, gateway_environment")
+        .select("payment_gateway, gateway_public_key, gateway_secret_key, gateway_environment, store_name")
         .eq("user_id", testStoreUserId)
         .single();
 
@@ -54,6 +54,18 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Get owner profile info
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", testStoreUserId)
+        .single();
+
+      // Get owner email from auth
+      const { data: authData } = await supabase.auth.admin.getUserById(testStoreUserId);
+      const ownerEmail = authData?.user?.email || "";
+      const ownerName = ownerProfile?.display_name || testSettings.store_name || "Proprietário";
+
       // Test connectivity based on gateway
       try {
         if (gateway === "mercadopago") {
@@ -61,7 +73,13 @@ Deno.serve(async (req) => {
             headers: { Authorization: `Bearer ${testSettings.gateway_secret_key}` },
           });
           if (mpRes.ok) {
-            return new Response(JSON.stringify({ test_ok: true, message: "Mercado Pago conectado com sucesso!" }), {
+            return new Response(JSON.stringify({ 
+              test_ok: true, 
+              message: "Mercado Pago conectado com sucesso!",
+              owner_name: ownerName,
+              owner_email: ownerEmail,
+              store_name: testSettings.store_name,
+            }), {
               status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
@@ -71,7 +89,13 @@ Deno.serve(async (req) => {
           });
         }
         // Generic fallback for other gateways
-        return new Response(JSON.stringify({ test_ok: true, message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.` }), {
+        return new Response(JSON.stringify({ 
+          test_ok: true, 
+          message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.`,
+          owner_name: ownerName,
+          owner_email: ownerEmail,
+          store_name: testSettings.store_name,
+        }), {
           status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } catch (testError: any) {

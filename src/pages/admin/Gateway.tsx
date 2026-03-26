@@ -33,6 +33,7 @@ export default function Gateway() {
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
+  const [testOwner, setTestOwner] = useState<{ name: string; email: string; store: string } | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -62,6 +63,7 @@ export default function Gateway() {
     toast.info("Salve as configurações antes de testar. Testando com dados salvos...");
     setTestStatus("testing");
     setTestMessage("");
+    setTestOwner(null);
 
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -77,7 +79,10 @@ export default function Gateway() {
 
       if (response.ok || data.test_ok) {
         setTestStatus("success");
-        setTestMessage(`Gateway ${selectedGateway?.name} está respondendo. Ambiente: ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}`);
+        setTestMessage(data.message || `Gateway ${selectedGateway?.name} conectado!`);
+        if (data.owner_name || data.owner_email) {
+          setTestOwner({ name: data.owner_name || "", email: data.owner_email || "", store: data.store_name || "" });
+        }
       } else {
         setTestStatus("error");
         setTestMessage(data.error || "Gateway não respondeu corretamente.");
@@ -228,11 +233,21 @@ export default function Gateway() {
             </Button>
 
             {testMessage && (
-              <div className={`rounded-lg p-3 text-sm flex items-start gap-2 ${
+              <div className={`rounded-lg p-3 text-sm space-y-2 ${
                 testStatus === "success" ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300"
               }`}>
-                {testStatus === "success" ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
-                <p>{testMessage}</p>
+                <div className="flex items-start gap-2">
+                  {testStatus === "success" ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
+                  <p>{testMessage}</p>
+                </div>
+                {testOwner && testStatus === "success" && (
+                  <div className="border-t border-green-200 dark:border-green-800 pt-2 mt-2 text-xs space-y-1">
+                    <p><span className="font-medium">👤 Proprietário:</span> {testOwner.name}</p>
+                    <p><span className="font-medium">📧 Email:</span> {testOwner.email}</p>
+                    {testOwner.store && <p><span className="font-medium">🏪 Loja:</span> {testOwner.store}</p>}
+                    <p><span className="font-medium">🌐 Ambiente:</span> {gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
