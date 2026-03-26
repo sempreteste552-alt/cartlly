@@ -45,6 +45,17 @@ export function useCustomerAuth() {
   };
 
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
+    // Check if email already exists as a customer for this store
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("email", email)
+      .eq("store_user_id", storeUserId)
+      .maybeSingle();
+    if (existingCustomer) {
+      throw new Error("Este e-mail já está cadastrado nesta loja. Faça login.");
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
