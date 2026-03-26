@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAllPlans } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Edit, Plus, CreditCard, Zap, Brain, Ticket, Truck, Image, Globe } from "lucide-react";
+import { Edit, Plus, CreditCard, Zap, Brain, Ticket, Truck, Image, Globe, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const FEATURE_FLAGS = [
   { key: "gateway", label: "Gateway de Pagamento", icon: Zap, description: "Pagamentos via cartão, PIX, boleto" },
@@ -24,6 +25,7 @@ const FEATURE_FLAGS = [
 ];
 
 export default function SuperAdminPlanos() {
+  const { user } = useAuth();
   const { data: plans, isLoading } = useAllPlans();
   const queryClient = useQueryClient();
   const [editPlan, setEditPlan] = useState<any>(null);
@@ -41,6 +43,117 @@ export default function SuperAdminPlanos() {
     banners: true,
     custom_domain: false,
   });
+
+  // Fetch pending plan change requests
+  const { data: pendingRequests } = useQuery({
+    queryKey: ["plan_change_requests_pending"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_change_requests")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      // Enrich with tenant name and plan names
+      const enriched = [];
+      for (const req of (data || [])) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("user_id", (req as any).user_id)
+          .maybeSingle();
+
+        const { data: reqPlan } = await supabase
+          .from("tenant_plans")
+          .select("name")
+          .eq("id", (req as any).requested_plan_id)
+          .maybeSingle();
+
+        const { data: curPlan } = (req as any).current_plan_id
+          ? await supabase.from("tenant_plans").select("name").eq("id", (req as any).current_plan_id).maybeSingle()
+          : { data: null };
+
+        enriched.push({
+          ...req,
+          tenant_name: profile?.display_name || "Desconhecido",
+          requested_plan_name: reqPlan?.name || "—",
+          current_plan_name: curPlan?.name || "Grátis",
+        });
+      }
+      return enriched;
+    },
+  });
+
+  const handleApproveRequest = async (request: any) => {
+    try {
+      // Update the tenant's subscription
+      const { data: existingSub } = await supabase
+        .from("tenant_subscriptions")
+        .select("id")
+        .eq("user_id", request.user_id)
+        .maybeSingle();
+
+      if (existingSub) {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .update({ plan_id: request.requested_plan_id, status: "active", updated_at: new Date().toISOString() } as any)
+          .eq("id", existingSub.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .insert({ user_id: request.user_id, plan_id: request.requested_plan_id, status: "active" } as any);
+        if (error) throw error;
+      }
+
+      // Mark request as approved
+      const { error: updateErr } = await supabase
+        .from("plan_change_requests")
+        .update({ status: "approved", resolved_at: new Date().toISOString(), resolved_by: user!.id } as any)
+        .eq("id", request.id);
+      if (updateErr) throw updateErr;
+
+      // Notify tenant
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: request.user_id,
+        title: "✅ Plano Aprovado!",
+        message: `Sua solicitação de ${request.request_type} para o plano ${request.requested_plan_name} foi aprovada!`,
+        type: "plan_approved",
+      } as any);
+
+      toast.success("Solicitação aprovada! Plano do tenant atualizado.");
+      queryClient.invalidateQueries({ queryKey: ["plan_change_requests_pending"] });
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+  };
+
+  const handleRejectRequest = async (request: any) => {
+    try {
+      const { error } = await supabase
+        .from("plan_change_requests")
+        .update({ status: "rejected", resolved_at: new Date().toISOString(), resolved_by: user!.id } as any)
+        .eq("id", request.id);
+      if (error) throw error;
+
+      // Notify tenant
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: request.user_id,
+        title: "❌ Solicitação Recusada",
+        message: `Sua solicitação de ${request.request_type} para o plano ${request.requested_plan_name} foi recusada.`,
+        type: "plan_rejected",
+      } as any);
+
+      toast.success("Solicitação recusada.");
+      queryClient.invalidateQueries({ queryKey: ["plan_change_requests_pending"] });
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+  };
 
   const openEdit = (plan: any) => {
     setEditPlan(plan);
@@ -105,6 +218,59 @@ export default function SuperAdminPlanos() {
         </div>
         <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo Plano</Button>
       </div>
+
+      {/* Pending Plan Change Requests */}
+      {pendingRequests && pendingRequests.length > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-600" />
+              Solicitações Pendentes ({pendingRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingRequests.map((req: any) => (
+              <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${req.request_type === "upgrade" ? "bg-green-500/10" : "bg-orange-500/10"}`}>
+                    {req.request_type === "upgrade" ? (
+                      <ArrowUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-orange-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{req.tenant_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {req.current_plan_name} → {req.requested_plan_name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(req.created_at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleApproveRequest(req)}
+                  >
+                    <CheckCircle className="mr-1 h-3 w-3" /> Aprovar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-destructive text-destructive"
+                    onClick={() => handleRejectRequest(req)}
+                  >
+                    <XCircle className="mr-1 h-3 w-3" /> Recusar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plans?.map((plan) => {
