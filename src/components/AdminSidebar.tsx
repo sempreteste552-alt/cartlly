@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNavigate } from "react-router-dom";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -54,13 +56,21 @@ const configItems = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
   const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
+
+  // Auto-close mobile sidebar on route change
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";
