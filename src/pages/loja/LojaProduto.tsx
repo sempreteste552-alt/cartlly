@@ -313,7 +313,7 @@ export default function LojaProduto() {
             <CarouselContent className="-ml-3">
               {similarProducts.map((p) => (
                 <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                  <Link to={`/loja/produto/${p.id}`} className="group block">
+                  <Link to={`${basePath}/produto/${p.id}`} className="group block">
                     <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
                       <div className="aspect-square bg-gray-50 overflow-hidden">
                         {p.image_url ? (
