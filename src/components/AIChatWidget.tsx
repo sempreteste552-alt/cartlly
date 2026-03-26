@@ -2,13 +2,14 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
