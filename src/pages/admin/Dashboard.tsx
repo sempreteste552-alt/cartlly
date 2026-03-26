@@ -157,11 +157,27 @@ export default function Dashboard() {
 
   const recentOrders = filteredOrders.slice(0, 10);
 
+  // Payment metrics
+  const paymentMetrics = useMemo(() => {
+    const all = payments ?? [];
+    const approved = all.filter((p) => p.status === "approved" || p.status === "paid");
+    const rejected = all.filter((p) => p.status === "rejected" || p.status === "refused" || p.status === "cancelled");
+    const pending = all.filter((p) => p.status === "pending");
+    const approvedRevenue = approved.reduce((s, p) => s + Number(p.amount), 0);
+    const avgTicket = approved.length > 0 ? approvedRevenue / approved.length : 0;
+    const byMethod = {
+      pix: all.filter((p) => p.method === "pix").length,
+      credit_card: all.filter((p) => p.method === "credit_card").length,
+      boleto: all.filter((p) => p.method === "boleto").length,
+    };
+    return { approved: approved.length, rejected: rejected.length, pending: pending.length, approvedRevenue, avgTicket, byMethod, total: all.length };
+  }, [payments]);
+
   const stats = [
     { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", color: "text-blue-500" },
     { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, color: "text-purple-500" },
-    { label: "Receita do Mês", value: formatCurrency(metrics.monthRevenue), icon: DollarSign, desc: metrics.revenueGrowth !== 0 ? `${metrics.revenueGrowth > 0 ? "+" : ""}${metrics.revenueGrowth.toFixed(1)}% vs mês anterior` : "Faturamento mensal", color: "text-green-500" },
-    { label: "Ticket Médio", value: metrics.monthOrdersCount > 0 ? formatCurrency(metrics.monthRevenue / metrics.monthOrdersCount) : "R$ 0,00", icon: TrendingUp, desc: "Valor médio por pedido", color: "text-amber-500" },
+    { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos aprovados`, color: "text-green-500" },
+    { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas pagamentos aprovados", color: "text-amber-500" },
     { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, color: "text-cyan-500" },
     { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, color: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground" },
   ];
