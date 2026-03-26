@@ -200,6 +200,32 @@ export default function Gateway() {
         </CardContent>
       </Card>
 
+      {/* Installments Config */}
+      {selectedGateway && (
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Parcelamento</CardTitle></div>
+            <CardDescription>Configure o número máximo de parcelas aceitas</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Máximo de Parcelas</Label>
+              <Select value={String(maxInstallments)} onValueChange={(v) => setMaxInstallments(parseInt(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}x {n === 1 ? "(à vista)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Clientes poderão parcelar em até {maxInstallments}x no cartão de crédito</p>
+            </div>
+          </CardContent>
+        </Card>
+      )
+
       {/* API Test */}
       {selectedGateway && (
         <Card className="border-border">
