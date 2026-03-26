@@ -119,6 +119,11 @@ export default function SuperAdminDashboard() {
           )}
         </CardContent>
       </Card>
+      {/* Payments Dashboard - All tenants */}
+      <div>
+        <h2 className="text-lg font-bold mb-4">💰 Transações de Todos os Tenants</h2>
+        <PaymentsDashboard isSuperAdmin />
+      </div>
     </div>
   );
 }
