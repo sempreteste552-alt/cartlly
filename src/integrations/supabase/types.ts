@@ -782,6 +782,7 @@ export type Database = {
           marquee_speed: number
           marquee_text: string | null
           marquee_text_color: string
+          max_installments: number
           payment_boleto: boolean
           payment_credit_card: boolean
           payment_debit_card: boolean
@@ -836,6 +837,7 @@ export type Database = {
           marquee_speed?: number
           marquee_text?: string | null
           marquee_text_color?: string
+          max_installments?: number
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -890,6 +892,7 @@ export type Database = {
           marquee_speed?: number
           marquee_text?: string | null
           marquee_text_color?: string
+          max_installments?: number
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
