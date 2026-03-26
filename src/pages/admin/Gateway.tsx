@@ -42,6 +42,7 @@ export default function Gateway() {
       setGatewayPublicKey(settings.gateway_public_key ?? "");
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
+      setMaxInstallments((settings as any).max_installments ?? 12);
     }
   }, [settings]);
 
