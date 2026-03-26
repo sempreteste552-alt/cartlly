@@ -233,11 +233,21 @@ export default function Gateway() {
             </Button>
 
             {testMessage && (
-              <div className={`rounded-lg p-3 text-sm flex items-start gap-2 ${
+              <div className={`rounded-lg p-3 text-sm space-y-2 ${
                 testStatus === "success" ? "bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300"
               }`}>
-                {testStatus === "success" ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
-                <p>{testMessage}</p>
+                <div className="flex items-start gap-2">
+                  {testStatus === "success" ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />}
+                  <p>{testMessage}</p>
+                </div>
+                {testOwner && testStatus === "success" && (
+                  <div className="border-t border-green-200 dark:border-green-800 pt-2 mt-2 text-xs space-y-1">
+                    <p><span className="font-medium">👤 Proprietário:</span> {testOwner.name}</p>
+                    <p><span className="font-medium">📧 Email:</span> {testOwner.email}</p>
+                    {testOwner.store && <p><span className="font-medium">🏪 Loja:</span> {testOwner.store}</p>}
+                    <p><span className="font-medium">🌐 Ambiente:</span> {gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
