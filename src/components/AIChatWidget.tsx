@@ -38,22 +38,6 @@ export function AIChatWidget() {
   const { data: orders } = useOrders();
   const { data: settings } = useStoreSettings();
 
-  // If AI is locked, show locked button
-  if (aiLocked) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
-          title="Chat IA bloqueado — Faça upgrade do plano"
-          disabled
-        >
-          <Lock className="h-6 w-6" />
-        </Button>
-      </div>
-    );
-  }
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -74,6 +58,22 @@ export function AIChatWidget() {
     categories: categories?.map((c) => c.name) || [],
     activeCoupons: coupons?.filter((c: any) => c.active)?.length || 0,
   }), [products, categories, coupons, orders, settings]);
+
+  // If AI is locked, show locked button
+  if (aiLocked) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
+          title="Chat IA bloqueado — Faça upgrade do plano"
+          disabled
+        >
+          <Lock className="h-6 w-6" />
+        </Button>
+      </div>
+    );
+  }
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
