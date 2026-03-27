@@ -524,7 +524,7 @@ export default function MeuPlano() {
       </Dialog>
 
       {/* Checkout dialog (Amplopay) */}
-      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); setPaymentResult(null); } }}>
+      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); setPaymentResult(null); setPaymentConfirmed(false); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
