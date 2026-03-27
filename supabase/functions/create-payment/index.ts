@@ -12,6 +12,9 @@ interface PaymentRequest {
   card_token?: string;
   installments?: number;
   store_user_id: string;
+  payer_cpf?: string;
+  payer_first_name?: string;
+  payer_last_name?: string;
 }
 
 Deno.serve(async (req) => {
@@ -116,7 +119,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PAYMENT PROCESSING ====================
-    const { order_id, method, card_token, installments, store_user_id } = body as PaymentRequest;
+    const { order_id, method, card_token, installments, store_user_id, payer_cpf } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return json({ error: "Campos obrigatórios: order_id, method, store_user_id" }, 400);
@@ -159,7 +162,7 @@ Deno.serve(async (req) => {
 
     try {
       if (gateway === "mercadopago") {
-        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments);
+        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
       } else if (gateway === "pagbank") {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment);
       } else if (gateway === "amplopay") {
@@ -239,11 +242,15 @@ async function createMercadoPagoPayment(
   accessToken: string,
   environment: string,
   cardToken?: string,
-  installments?: number
+  installments?: number,
+  payerCpf?: string
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
 
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
+
+  const firstName = order.customer_name?.split(" ")[0] || "Cliente";
+  const lastName = order.customer_name?.split(" ").slice(1).join(" ") || "";
 
   const paymentData: any = {
     transaction_amount: Number(order.total),
@@ -252,10 +259,18 @@ async function createMercadoPagoPayment(
     notification_url: webhookUrl,
     payer: {
       email: order.customer_email || "cliente@email.com",
-      first_name: order.customer_name?.split(" ")[0] || "Cliente",
-      last_name: order.customer_name?.split(" ").slice(1).join(" ") || "",
+      first_name: firstName,
+      last_name: lastName,
     },
   };
+
+  // Add payer identification (CPF) if provided - required for PIX/boleto
+  if (payerCpf) {
+    paymentData.payer.identification = {
+      type: "CPF",
+      number: payerCpf.replace(/\D/g, ""),
+    };
+  }
 
   if (method === "pix") {
     paymentData.payment_method_id = "pix";
@@ -265,6 +280,16 @@ async function createMercadoPagoPayment(
     paymentData.installments = installments || 1;
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
+    // Boleto requires payer address
+    if (order.customer_address) {
+      paymentData.payer.address = {
+        zip_code: order.shipping_cep?.replace(/\D/g, "") || "01000000",
+        street_name: order.customer_address,
+        street_number: "S/N",
+        city: "São Paulo",
+        federal_unit: "SP",
+      };
+    }
   }
 
   const response = await fetch(`${baseUrl}/payments`, {
