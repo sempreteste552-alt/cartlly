@@ -418,7 +418,7 @@ export default function LojaLayout() {
             <Link
               to={`${basePath}/checkout`}
               className="flex flex-col items-center justify-center flex-1 h-full relative transition-colors"
-              style={{ color: isCheckout ? primaryColor : "#9ca3af" }}
+              style={{ color: isCheckout ? primaryColor : undefined }}
             >
               <div className="relative">
                 <ShoppingCart className="h-5 w-5" />
