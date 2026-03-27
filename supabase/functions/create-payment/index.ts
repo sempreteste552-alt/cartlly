@@ -209,6 +209,37 @@ Deno.serve(async (req) => {
     if (paymentResult.status === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", order_id);
       await supabase.from("order_status_history").insert({ order_id, status: "processando" });
+
+      // 🔔 Push: Payment approved (card instant approval)
+      await sendRichPush(store_user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `${order.customer_name || "Cliente"} pagou R$ ${Number(order.total).toFixed(2).replace(".", ",")} via Cartão 💳`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: order_id, method },
+      });
+    }
+
+    // 🔔 Push: PIX generated
+    if (method === "pix" && paymentResult.pix_qr_code) {
+      await sendRichPush(store_user_id, {
+        title: "💰 PIX gerado!",
+        body: `PIX de R$ ${Number(order.total).toFixed(2).replace(".", ",")} gerado para ${order.customer_name || "Cliente"} 🎯`,
+        url: "/admin/pedidos",
+        type: "pix_generated",
+        data: { orderId: order_id, paymentId: payment.id },
+      });
+    }
+
+    // 🔔 Push: Boleto generated
+    if (method === "boleto" && paymentResult.boleto_url) {
+      await sendRichPush(store_user_id, {
+        title: "📄 Boleto gerado!",
+        body: `Boleto de R$ ${Number(order.total).toFixed(2).replace(".", ",")} gerado para ${order.customer_name || "Cliente"} 📋`,
+        url: "/admin/pedidos",
+        type: "boleto_generated",
+        data: { orderId: order_id, paymentId: payment.id },
+      });
     }
 
     return json({ payment, paymentResult });
