@@ -264,12 +264,19 @@ export default function MeuPlano() {
         data.pix.qrCodeBase64 = data.pix.qrCodeBase64 || (data.pix as any).base64;
       }
       setPaymentResult(data);
-      if (data.pix?.qrCode) {
-        // Set expiration 30 minutes from now
+      if (data.method === "PIX" && data.pix?.qrCode) {
         setPixExpiresAt(Date.now() + 30 * 60 * 1000);
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+      } else if (data.method === "CREDIT_CARD") {
+        if (data.card?.status === "approved" || data.status === "approved") {
+          setPaymentConfirmed(true);
+          toast.success("🎉 Pagamento com cartão aprovado!");
+        } else {
+          toast.info("Cobrança no cartão criada! Aguardando confirmação.");
+        }
+      } else if (data.method === "BOLETO") {
+        toast.success("Boleto gerado! Pague antes do vencimento.");
       } else {
-        // Non-PIX: keep checkout dialog open showing pending status
         toast.info("Cobrança criada! Aguardando confirmação do pagamento.");
       }
       queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
