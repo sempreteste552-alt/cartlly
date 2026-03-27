@@ -203,7 +203,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }}
-                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-sm transition-all hover:scale-110"
+                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110"
                     title="Favoritar"
                   >
                     <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
