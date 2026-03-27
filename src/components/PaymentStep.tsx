@@ -15,6 +15,12 @@ import paymentCards from "@/assets/payment-cards.webp";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
+
 interface PaymentStepProps {
   orderId: string;
   storeUserId: string;
@@ -26,11 +32,20 @@ interface PaymentStepProps {
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
+const formatCpf = (v: string) => {
+  const nums = v.replace(/\D/g, "").slice(0, 11);
+  if (nums.length <= 3) return nums;
+  if (nums.length <= 6) return nums.slice(0, 3) + "." + nums.slice(3);
+  if (nums.length <= 9) return nums.slice(0, 3) + "." + nums.slice(3, 6) + "." + nums.slice(6);
+  return nums.slice(0, 3) + "." + nums.slice(3, 6) + "." + nums.slice(6, 9) + "-" + nums.slice(9);
+};
+
 export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [showCardForm, setShowCardForm] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [tokenizing, setTokenizing] = useState(false);
   const createPayment = useCreatePayment();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -40,6 +55,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardInstallments, setCardInstallments] = useState("1");
+  const [cardCpf, setCardCpf] = useState("");
+
+  // PIX/Boleto CPF
+  const [payerCpf, setPayerCpf] = useState("");
 
   // Poll payment status for PIX/Boleto
   useEffect(() => {
@@ -85,6 +104,40 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return nums;
   };
 
+  const generateCardToken = async (): Promise<string> => {
+    const publicKey = settings?.gateway_public_key;
+    if (!publicKey) throw new Error("Chave pública do gateway não configurada");
+
+    if (!window.MercadoPago) {
+      throw new Error("SDK do Mercado Pago não carregado. Recarregue a página.");
+    }
+
+    const mp = new window.MercadoPago(publicKey, {
+      locale: "pt-BR",
+    });
+
+    const [expMonth, expYear] = cardExpiry.split("/");
+    const fullYear = expYear?.length === 2 ? `20${expYear}` : expYear;
+
+    const cardData = {
+      cardNumber: cardNumber.replace(/\s/g, ""),
+      cardholderName: cardName,
+      cardExpirationMonth: expMonth,
+      cardExpirationYear: fullYear,
+      securityCode: cardCvv,
+      identificationType: "CPF",
+      identificationNumber: cardCpf.replace(/\D/g, ""),
+    };
+
+    const tokenResponse = await mp.createCardToken(cardData);
+
+    if (!tokenResponse?.id) {
+      throw new Error("Não foi possível gerar o token do cartão. Verifique os dados.");
+    }
+
+    return tokenResponse.id;
+  };
+
   const handlePay = async (method: "pix" | "credit_card" | "boleto") => {
     if (method === "credit_card" && !showCardForm) {
       setShowCardForm(true);
@@ -92,9 +145,23 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       return;
     }
 
+    // Validate CPF for PIX/Boleto
+    if ((method === "pix" || method === "boleto") && settings?.payment_gateway === "mercadopago") {
+      const cpfClean = payerCpf.replace(/\D/g, "");
+      if (cpfClean.length !== 11) {
+        toast.error("Informe um CPF válido para continuar");
+        return;
+      }
+    }
+
     if (method === "credit_card") {
       if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
         toast.error("Preencha todos os dados do cartão");
+        return;
+      }
+      const cpfClean = cardCpf.replace(/\D/g, "");
+      if (cpfClean.length !== 11) {
+        toast.error("Informe o CPF do titular do cartão");
         return;
       }
     }
@@ -108,11 +175,28 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       };
 
       if (method === "credit_card") {
-        params.card_token = cardNumber.replace(/\s/g, "");
+        // Use Mercado Pago SDK to generate a proper card token
+        if (settings?.payment_gateway === "mercadopago") {
+          setTokenizing(true);
+          try {
+            const token = await generateCardToken();
+            params.card_token = token;
+          } catch (tokenErr: any) {
+            toast.error(tokenErr.message || "Erro ao processar dados do cartão");
+            setTokenizing(false);
+            return;
+          }
+          setTokenizing(false);
+        } else {
+          // For other gateways, send raw (they handle differently)
+          params.card_token = cardNumber.replace(/\s/g, "");
+        }
         params.installments = parseInt(cardInstallments);
-        params.card_holder_name = cardName;
-        params.card_expiry = cardExpiry;
-        params.card_cvv = cardCvv;
+        params.payer_cpf = cardCpf.replace(/\D/g, "");
+      }
+
+      if (method === "pix" || method === "boleto") {
+        params.payer_cpf = payerCpf.replace(/\D/g, "");
       }
 
       const result = await createPayment.mutateAsync(params);
@@ -135,6 +219,21 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       toast.success("Código PIX copiado!");
     }
   };
+
+  // CPF input for PIX/Boleto
+  const CpfField = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <div className="space-y-2">
+      <Label>CPF</Label>
+      <Input
+        placeholder="000.000.000-00"
+        value={value}
+        onChange={(e) => onChange(formatCpf(e.target.value))}
+        maxLength={14}
+        className="font-mono"
+      />
+      <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
+    </div>
+  );
 
   // Show PIX result
   if (paymentData && selectedMethod === "pix") {
@@ -187,7 +286,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>⏱️ Este código expira em 30 minutos. O status será atualizado automaticamente.</p>
             </div>
           )}
-          {/* No manual completion button - payment must be confirmed by the gateway */}
         </CardContent>
       </Card>
     );
@@ -240,7 +338,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>O status será atualizado automaticamente após a compensação.</p>
             </div>
           )}
-          {/* No manual completion - payment must be confirmed by gateway */}
         </CardContent>
       </Card>
     );
@@ -269,6 +366,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Credit card form
   if (showCardForm && selectedMethod === "credit_card") {
+    const isProcessing = createPayment.isPending || tokenizing;
     return (
       <Card>
         <CardHeader>
@@ -324,6 +422,8 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </div>
           </div>
 
+          <CpfField value={cardCpf} onChange={setCardCpf} />
+
           <div className="space-y-2">
             <Label>Parcelas</Label>
             <Select value={cardInstallments} onValueChange={setCardInstallments}>
@@ -344,11 +444,45 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </Button>
             <Button
               className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-base font-bold"
-              disabled={createPayment.isPending}
+              disabled={isProcessing}
               onClick={() => handlePay("credit_card")}
             >
-              {createPayment.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
-              Pagar {formatPrice(total)}
+              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
+              {tokenizing ? "Validando cartão..." : `Pagar ${formatPrice(total)}`}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // PIX/Boleto with CPF pre-step
+  const needsCpf = selectedMethod && (selectedMethod === "pix" || selectedMethod === "boleto") && !paymentData && settings?.payment_gateway === "mercadopago";
+  
+  if (needsCpf) {
+    const isProcessing = createPayment.isPending;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            {selectedMethod === "pix" ? <QrCode className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+            {selectedMethod === "pix" ? "Pagamento via PIX" : "Boleto Bancário"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-2xl font-bold text-center">{formatPrice(total)}</p>
+          <CpfField value={payerCpf} onChange={setPayerCpf} />
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setSelectedMethod(null)}>
+              Voltar
+            </Button>
+            <Button
+              className="flex-1 h-12 text-base font-bold"
+              disabled={isProcessing}
+              onClick={() => handlePay(selectedMethod)}
+            >
+              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+              {selectedMethod === "pix" ? "Gerar QR Code PIX" : "Gerar Boleto"}
             </Button>
           </div>
         </CardContent>
@@ -373,7 +507,16 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             variant="outline"
             className="w-full h-16 justify-start gap-4 text-left"
             disabled={createPayment.isPending}
-            onClick={() => handlePay(method.id)}
+            onClick={() => {
+              if (method.id === "credit_card") {
+                handlePay(method.id);
+              } else if (settings?.payment_gateway === "mercadopago") {
+                // Show CPF step for PIX/Boleto
+                setSelectedMethod(method.id);
+              } else {
+                handlePay(method.id);
+              }
+            }}
           >
             {createPayment.isPending && selectedMethod === method.id ? (
               <Loader2 className="h-6 w-6 animate-spin" />

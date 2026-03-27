@@ -6,9 +6,9 @@ interface CreatePaymentParams {
   store_user_id: string;
   card_token?: string;
   installments?: number;
-  card_holder_name?: string;
-  card_expiry?: string;
-  card_cvv?: string;
+  payer_cpf?: string;
+  payer_first_name?: string;
+  payer_last_name?: string;
 }
 
 export function useCreatePayment() {
