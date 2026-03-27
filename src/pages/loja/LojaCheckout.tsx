@@ -550,7 +550,7 @@ export default function LojaCheckout() {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <h1 className="text-xl font-bold">Carrinho vazio</h1>
-        <Button className="mt-4" variant="outline" onClick={() => navigate("/loja")}>Ver Produtos</Button>
+        <Button className="mt-4" variant="outline" onClick={() => navigate(`/loja/${settings?.store_slug || ""}`)}>Ver Produtos</Button>
       </div>
     );
   }
