@@ -171,6 +171,8 @@ export default function SuperAdminTenants() {
         : "Sua loja foi desbloqueada! Clientes já podem acessá-la novamente.",
       type: "info",
     } as any);
+    const tenant = tenants?.find(t => t.user_id === userId);
+    logAudit(!currentBlocked ? "block_store" : "unblock_store", "store", userId, tenant?.display_name || "—");
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
