@@ -233,7 +233,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-medium">{r.average.toFixed(1)}</span>
-                    <span className="text-xs text-gray-400">({r.count})</span>
+                    <span className="text-xs text-muted-foreground">({r.count})</span>
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
