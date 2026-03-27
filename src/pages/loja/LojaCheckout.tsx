@@ -35,6 +35,9 @@ export default function LojaCheckout() {
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  const [savedFinalTotal, setSavedFinalTotal] = useState<number>(0);
+  const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
+  const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -201,6 +204,9 @@ export default function LojaCheckout() {
         const couponLine = appliedCoupon ? `\n🎟️ *Cupom:* ${appliedCoupon.code} (-${formatPrice(discountAmount)})` : "";
         const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+        setSavedFinalTotal(finalTotal);
+        setSavedDiscountAmount(discountAmount);
+        setSavedShippingCost(shippingCost);
         cart.clearCart();
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
@@ -208,6 +214,9 @@ export default function LojaCheckout() {
       } else if (hasGateway) {
         setPhase("payment");
       } else {
+        setSavedFinalTotal(finalTotal);
+        setSavedDiscountAmount(discountAmount);
+        setSavedShippingCost(shippingCost);
         cart.clearCart();
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
@@ -351,22 +360,22 @@ export default function LojaCheckout() {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatPrice(orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span>
               </div>
-              {discountAmount > 0 && (
+              {savedDiscountAmount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1"><Ticket className="h-3 w-3" /> Desconto</span>
-                  <span>-{formatPrice(discountAmount)}</span>
+                  <span>-{formatPrice(savedDiscountAmount)}</span>
                 </div>
               )}
-              {shippingCost > 0 && (
+              {savedShippingCost > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Frete</span>
-                  <span>{formatPrice(shippingCost)}</span>
+                  <span>{formatPrice(savedShippingCost)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-bold pt-1">
                 <span>Total</span>
-                <span className="text-green-600">{formatPrice(finalTotal)}</span>
+                <span className="text-green-600">{formatPrice(savedFinalTotal)}</span>
               </div>
             </div>
 
@@ -396,14 +405,14 @@ export default function LojaCheckout() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
+          <Button className="w-full" onClick={() => navigate(".")}>
+            🏠 Voltar à Loja
+          </Button>
           {orderId && (
-            <Button variant="outline" className="w-full" onClick={() => navigate(`rastreio/${orderId.slice(0, 8)}`)}>
+            <Button variant="outline" className="w-full" onClick={() => navigate(`rastreio/${orderId}`)}>
               <Package className="mr-2 h-4 w-4" /> Rastrear Pedido
             </Button>
           )}
-          <Button className="w-full" onClick={() => navigate(".")}>
-            Continuar Comprando
-          </Button>
         </div>
 
         {/* Review prompt */}
@@ -486,6 +495,9 @@ export default function LojaCheckout() {
           total={finalTotal}
           settings={settings}
           onSuccess={(method) => {
+            setSavedFinalTotal(finalTotal);
+            setSavedDiscountAmount(discountAmount);
+            setSavedShippingCost(shippingCost);
             setOrderItems([...cart.items]);
             setPaymentMethod(method || "gateway");
             setPaymentDate(new Date());

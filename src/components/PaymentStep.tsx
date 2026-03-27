@@ -43,7 +43,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Poll payment status for PIX/Boleto
   useEffect(() => {
-    if (!paymentData?.payment?.id || selectedMethod === "credit_card") return;
+    if (!paymentData?.payment?.id) return;
     const paymentId = paymentData.payment.id;
 
     const poll = async () => {
@@ -187,9 +187,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>⏱️ Este código expira em 30 minutos. O status será atualizado automaticamente.</p>
             </div>
           )}
-          <Button className="w-full" variant="outline" onClick={() => onSuccess("pix")}>
-            Já realizei o pagamento
-          </Button>
+          {/* No manual completion button - payment must be confirmed by the gateway */}
         </CardContent>
       </Card>
     );
@@ -242,7 +240,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>O status será atualizado automaticamente após a compensação.</p>
             </div>
           )}
-          <Button className="w-full" onClick={() => onSuccess("boleto")}>Concluir</Button>
+          {/* No manual completion - payment must be confirmed by gateway */}
         </CardContent>
       </Card>
     );
