@@ -20,13 +20,11 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 
-// Try to load trust badges - may not exist
-let siteSeguro: string | undefined;
-let compraSegura: string | undefined;
-let paymentCards: string | undefined;
-let pixLogo: string | undefined;
-try { siteSeguro = new URL("@/assets/site-seguro.webp", import.meta.url).href; } catch {}
-try { compraSegura = new URL("@/assets/compra-segura.webp", import.meta.url).href; } catch {}
+// Trust badge imports (optional)
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import pixLogo from "@/assets/pix-logo.webp";
 try { paymentCards = new URL("@/assets/payment-cards.webp", import.meta.url).href; } catch {}
 try { pixLogo = new URL("@/assets/pix-logo.webp", import.meta.url).href; } catch {}
 
