@@ -635,3 +635,27 @@ async function createAmplopayPayment(
 
   return result;
 }
+
+// ===================== RICH PUSH HELPER =====================
+
+async function sendRichPush(targetUserId: string, payload: {
+  title: string; body: string; url?: string; type?: string; data?: any;
+}) {
+  try {
+    const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: targetUserId,
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/admin",
+        type: payload.type || "general",
+        data: payload.data || {},
+        tag: payload.type || "default",
+      }),
+    });
+    if (!resp.ok) { const t = await resp.text(); console.error("sendRichPush failed:", t); }
+    else { await resp.text(); }
+  } catch (e: any) { console.error("sendRichPush error:", e.message); }
+}
