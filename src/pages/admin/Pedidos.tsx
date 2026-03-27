@@ -157,6 +157,34 @@ export default function Pedidos() {
 
               <Separator />
 
+              {/* Payment Info */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Pagamento</p>
+                {orderPayment ? (
+                  <div className="flex items-center gap-3 rounded-md border border-border p-3">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={orderPayment.status === "approved" || orderPayment.status === "paid" ? "default" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "destructive" : "secondary"}>
+                          {orderPayment.status === "approved" || orderPayment.status === "paid" ? "✅ Pago" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "❌ Recusado" : "⏳ Pendente"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Método: <span className="font-medium text-foreground">
+                          {orderPayment.method === "pix" ? "PIX" : orderPayment.method === "credit_card" ? "Cartão de Crédito" : orderPayment.method === "debit_card" ? "Cartão de Débito" : orderPayment.method === "boleto" ? "Boleto" : orderPayment.method}
+                        </span>
+                        {orderPayment.card_brand && ` • ${orderPayment.card_brand}`}
+                        {orderPayment.card_last_four && ` •••• ${orderPayment.card_last_four}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Gateway: {orderPayment.gateway}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Nenhum pagamento registrado</p>
+                )}
+              </div>
+
+              <Separator />
+
               {/* Items */}
               <div className="space-y-2">
                 <p className="text-sm font-medium">Itens</p>
