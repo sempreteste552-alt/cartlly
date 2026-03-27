@@ -7,10 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard } from "lucide-react";
+import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard, MessageCircle, QrCode, FileText, CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -41,20 +38,32 @@ const FEATURE_LABELS: Record<string, string> = {
   custom_domain: "Domínio Personalizado",
 };
 
+type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
+
+interface CheckoutState {
+  planId: string;
+  planName: string;
+  price: number;
+}
+
+interface PaymentResult {
+  success: boolean;
+  transaction_id?: string;
+  pix?: { qrCode?: string; qrCodeBase64?: string };
+  plan_name?: string;
+  status?: string;
+}
+
 export default function MeuPlano() {
   const { user } = useAuth();
   const { features } = usePlanFeatures();
   const { data: allPlans } = useAllPlans();
   const queryClient = useQueryClient();
   const [confirmDialog, setConfirmDialog] = useState<{ planId: string; planName: string; price: number; type: "upgrade" | "downgrade" } | null>(null);
-  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
-
-  // Card form state
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [selectedGateway, setSelectedGateway] = useState("stripe");
+  const [checkoutDialog, setCheckoutDialog] = useState<CheckoutState | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
 
   const { data: currentSub } = useQuery({
     queryKey: ["my_subscription", user?.id],
@@ -70,23 +79,24 @@ export default function MeuPlano() {
     },
   });
 
-  // Check which gateways are configured
-  const { data: platformGateways } = useQuery({
-    queryKey: ["platform_gateways"],
+  // Check if Amplopay gateway is configured
+  const { data: gatewayActive } = useQuery({
+    queryKey: ["amplopay_gateway_active"],
     queryFn: async () => {
       const { data } = await supabase
         .from("platform_settings")
         .select("key, value")
-        .in("key", ["stripe_global_key", "mercadopago_global_key"]);
-      const gateways: string[] = [];
+        .in("key", ["amplopay_public_key", "amplopay_secret_key"]);
+      let hasPublic = false;
+      let hasSecret = false;
       data?.forEach((s: any) => {
         const val = s.value?.value;
         if (val && typeof val === "string" && val.length > 5) {
-          if (s.key === "stripe_global_key") gateways.push("stripe");
-          if (s.key === "mercadopago_global_key") gateways.push("mercadopago");
+          if (s.key === "amplopay_public_key") hasPublic = true;
+          if (s.key === "amplopay_secret_key") hasSecret = true;
         }
       });
-      return gateways;
+      return hasPublic && hasSecret;
     },
   });
 
@@ -130,13 +140,13 @@ export default function MeuPlano() {
   });
 
   const processPayment = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<PaymentResult> => {
       if (!checkoutDialog || !user) throw new Error("Dados insuficientes");
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
+        `https://${projectId}.supabase.co/functions/v1/amplopay-subscribe`,
         {
           method: "POST",
           headers: {
@@ -147,11 +157,7 @@ export default function MeuPlano() {
           body: JSON.stringify({
             user_id: user.id,
             plan_id: checkoutDialog.planId,
-            card_number: cardNumber.replace(/\s/g, ""),
-            card_holder: cardHolder,
-            card_expiry: cardExpiry,
-            card_cvv: cardCvv,
-            gateway: selectedGateway,
+            payment_method: selectedMethod,
           }),
         }
       );
@@ -160,22 +166,21 @@ export default function MeuPlano() {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`🎉 ${data.message}`);
-      setCheckoutDialog(null);
-      resetCardForm();
+      setPaymentResult(data);
+      if (data.pix?.qrCode) {
+        // Show PIX QR code
+        toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+      } else {
+        // For other methods or if PIX was instant
+        setCheckoutDialog(null);
+        setThankYouDialog({ planName: data.plan_name || "", method: selectedMethod });
+      }
       queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
       queryClient.invalidateQueries({ queryKey: ["pending_plan_request"] });
       queryClient.invalidateQueries({ queryKey: ["plan_features"] });
     },
     onError: (e: any) => toast.error("❌ " + e.message),
   });
-
-  const resetCardForm = () => {
-    setCardNumber("");
-    setCardHolder("");
-    setCardExpiry("");
-    setCardCvv("");
-  };
 
   const currentPlan = currentSub?.tenant_plans as any;
   const currentPrice = currentPlan?.price ?? 0;
@@ -195,42 +200,50 @@ export default function MeuPlano() {
     return `${minutes}min`;
   };
 
-  const formatCardNumber = (value: string) => {
-    const nums = value.replace(/\D/g, "").slice(0, 16);
-    return nums.replace(/(.{4})/g, "$1 ").trim();
-  };
-
-  const formatExpiry = (value: string) => {
-    const nums = value.replace(/\D/g, "").slice(0, 4);
-    if (nums.length >= 3) return nums.slice(0, 2) + "/" + nums.slice(2);
-    return nums;
-  };
-
-  const statusLabel = currentSub?.status === "active" ? "Ativo" : currentSub?.status === "trial" ? "Teste" : currentSub?.status || "—";
-  const statusColor = currentSub?.status === "active" ? "bg-green-500" : currentSub?.status === "trial" ? "bg-amber-500" : "bg-muted";
+  const statusLabel = currentSub?.status === "active" ? "Ativo" : currentSub?.status === "trial" ? "Teste" : currentSub?.status === "pending_payment" ? "Aguardando Pagamento" : currentSub?.status || "—";
+  const statusColor = currentSub?.status === "active" ? "bg-green-500" : currentSub?.status === "trial" ? "bg-amber-500" : currentSub?.status === "pending_payment" ? "bg-blue-500" : "bg-muted";
 
   const handlePlanAction = (plan: any) => {
     const isUpgrade = plan.price > currentPrice;
 
     // Free → Paid: open checkout
     if (isFreePlan && plan.price > 0) {
-      if (!platformGateways || platformGateways.length === 0) {
-        toast.error("Nenhum gateway de pagamento configurado. Contate o administrador.");
+      if (!gatewayActive) {
+        toast.error("🔧 Gateway de pagamento em manutenção. Entre em contato via WhatsApp.");
         return;
       }
-      setSelectedGateway(platformGateways[0]);
+      setPaymentResult(null);
+      setSelectedMethod("PIX");
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
       return;
     }
 
-    // Paid → different plan: request approval
+    // Paid → different paid plan: also checkout directly
+    if (plan.price > 0) {
+      if (!gatewayActive) {
+        toast.error("🔧 Gateway de pagamento em manutenção. Entre em contato via WhatsApp.");
+        return;
+      }
+      setPaymentResult(null);
+      setSelectedMethod("PIX");
+      setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
+      return;
+    }
+
+    // Paid → free (downgrade): request approval
     setConfirmDialog({
       planId: plan.id,
       planName: plan.name,
       price: plan.price,
-      type: isUpgrade ? "upgrade" : "downgrade",
+      type: "downgrade",
     });
   };
+
+  const METHOD_OPTIONS: { value: PaymentMethod; label: string; icon: any; emoji: string }[] = [
+    { value: "PIX", label: "PIX", icon: QrCode, emoji: "💰" },
+    { value: "CREDIT_CARD", label: "Cartão de Crédito", icon: CreditCard, emoji: "💳" },
+    { value: "BOLETO", label: "Boleto", icon: FileText, emoji: "🧾" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -244,7 +257,6 @@ export default function MeuPlano() {
       {/* Pending request banner */}
       {pendingRequest && (
         <Card className="border-amber-500/50 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <CardContent className="p-5">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 shrink-0">
@@ -256,11 +268,9 @@ export default function MeuPlano() {
                   Sua solicitação de {pendingRequest.request_type === "upgrade" ? "upgrade" : "downgrade"} para{" "}
                   <strong className="text-foreground">{(pendingRequest as any).requested_plan?.name || "—"}</strong> está em análise.
                 </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="outline" className="border-amber-500/50 text-amber-700 text-xs">
-                    <Clock className="h-3 w-3 mr-1" /> Há {getElapsedTime(pendingRequest.created_at)}
-                  </Badge>
-                </div>
+                <Badge variant="outline" className="border-amber-500/50 text-amber-700 text-xs mt-2">
+                  <Clock className="h-3 w-3 mr-1" /> Há {getElapsedTime(pendingRequest.created_at)}
+                </Badge>
               </div>
             </div>
           </CardContent>
@@ -270,7 +280,6 @@ export default function MeuPlano() {
       {/* Current plan hero */}
       <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden relative shadow-lg">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <CardHeader className="pb-3 relative">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-3 text-xl">
@@ -293,7 +302,7 @@ export default function MeuPlano() {
               { value: formatPrice(currentPrice), label: "Mensalidade", icon: Crown },
               { value: currentSub?.current_period_end ? new Date(currentSub.current_period_end).toLocaleDateString("pt-BR") : "—", label: "Próx. ciclo", icon: Clock },
             ].map((item) => (
-              <div key={item.label} className="text-center p-4 rounded-xl bg-background/80 backdrop-blur border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+              <div key={item.label} className="text-center p-4 rounded-xl bg-background/80 backdrop-blur border border-border/50 shadow-sm">
                 <item.icon className="h-4 w-4 mx-auto text-primary mb-1" />
                 <p className="text-xl font-bold text-primary">{item.value}</p>
                 <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -306,11 +315,7 @@ export default function MeuPlano() {
               const enabled = (features as any)[key];
               const Icon = FEATURE_ICONS[key] || Check;
               return (
-                <Badge
-                  key={key}
-                  variant={enabled ? "default" : "outline"}
-                  className={`transition-all ${enabled ? "shadow-sm" : "opacity-40"}`}
-                >
+                <Badge key={key} variant={enabled ? "default" : "outline"} className={`transition-all ${enabled ? "shadow-sm" : "opacity-40"}`}>
                   {enabled ? <Check className="h-3 w-3 mr-1" /> : <Icon className="h-3 w-3 mr-1" />}
                   {label}
                 </Badge>
@@ -336,12 +341,10 @@ export default function MeuPlano() {
             return (
               <Card
                 key={plan.id}
-                className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group ${
-                  isCurrent
-                    ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10"
-                    : hasPendingForThis
-                    ? "border-amber-500 ring-2 ring-amber-500/20"
-                    : "border-border hover:border-primary/40"
+                className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                  isCurrent ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/10"
+                  : hasPendingForThis ? "border-amber-500 ring-2 ring-amber-500/20"
+                  : "border-border hover:border-primary/40"
                 }`}
               >
                 {isCurrent && (
@@ -389,7 +392,7 @@ export default function MeuPlano() {
                       return (
                         <div key={key} className={`flex items-center gap-2 text-sm py-1 ${enabled ? "text-foreground" : "text-muted-foreground/40 line-through"}`}>
                           {enabled ? (
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                               <Check className="h-3 w-3 text-green-600" />
                             </div>
                           ) : (
@@ -403,28 +406,37 @@ export default function MeuPlano() {
                     })}
                   </div>
 
-                  {!isCurrent && !hasPendingForThis && (
+                  {/* Free plan: no checkout needed */}
+                  {plan.price === 0 && isCurrent && (
+                    <div className="text-center text-sm text-primary font-medium">Seu plano atual</div>
+                  )}
+                  {plan.price === 0 && !isCurrent && (
+                    <Button className="w-full" variant="outline" disabled>
+                      Plano Base
+                    </Button>
+                  )}
+
+                  {/* Paid plans */}
+                  {plan.price > 0 && !isCurrent && !hasPendingForThis && (
                     <Button
                       className={`w-full transition-all ${isUpgrade ? "shadow-md hover:shadow-lg" : ""}`}
                       variant={isUpgrade ? "default" : "outline"}
                       disabled={!!pendingRequest}
                       onClick={() => handlePlanAction(plan)}
                     >
-                      {isFreePlan && plan.price > 0 ? (
-                        <><CreditCard className="mr-1 h-4 w-4" /> Assinar Agora</>
-                      ) : isUpgrade ? (
-                        <><ArrowUp className="mr-1 h-4 w-4" /> Solicitar Upgrade</>
+                      {isUpgrade ? (
+                        <><ArrowUp className="mr-1 h-4 w-4" /> Assinar Agora</>
                       ) : (
                         <><ArrowDown className="mr-1 h-4 w-4" /> Solicitar Downgrade</>
                       )}
                     </Button>
                   )}
-                  {hasPendingForThis && (
+                  {plan.price > 0 && hasPendingForThis && (
                     <Button className="w-full" variant="outline" disabled>
                       <Clock className="mr-1 h-4 w-4 animate-spin" /> Aguardando...
                     </Button>
                   )}
-                  {isCurrent && (
+                  {plan.price > 0 && isCurrent && (
                     <div className="text-center text-sm text-primary font-medium">Seu plano atual</div>
                   )}
                 </CardContent>
@@ -434,17 +446,16 @@ export default function MeuPlano() {
         </div>
       </div>
 
-      {/* Confirmation dialog (paid→paid) */}
+      {/* Confirmation dialog (paid→free downgrade) */}
       <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {confirmDialog?.type === "upgrade" ? <ArrowUp className="h-5 w-5 text-primary" /> : <ArrowDown className="h-5 w-5" />}
-              {confirmDialog?.type === "upgrade" ? "Solicitar Upgrade" : "Solicitar Downgrade"}
+              <ArrowDown className="h-5 w-5" />
+              Solicitar Downgrade
             </DialogTitle>
             <DialogDescription>
-              Sua solicitação de {confirmDialog?.type} para <strong>{confirmDialog?.planName}</strong> ({formatPrice(confirmDialog?.price ?? 0)}/mês)
-              será enviada ao administrador para aprovação.
+              Sua solicitação de downgrade para <strong>{confirmDialog?.planName}</strong> será enviada ao administrador para aprovação.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -460,8 +471,8 @@ export default function MeuPlano() {
         </DialogContent>
       </Dialog>
 
-      {/* Checkout dialog (free→paid) */}
-      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); resetCardForm(); } }}>
+      {/* Checkout dialog (Amplopay) */}
+      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); setPaymentResult(null); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -469,98 +480,143 @@ export default function MeuPlano() {
               Checkout — {checkoutDialog?.planName}
             </DialogTitle>
             <DialogDescription>
-              Pague <strong>{formatPrice(checkoutDialog?.price ?? 0)}/mês</strong> com cartão de crédito ou débito
+              Escolha o método de pagamento para <strong>{formatPrice(checkoutDialog?.price ?? 0)}/mês</strong>
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {/* Gateway selector */}
-            {platformGateways && platformGateways.length > 1 && (
-              <div className="space-y-2">
-                <Label>Gateway de Pagamento</Label>
-                <Select value={selectedGateway} onValueChange={setSelectedGateway}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {platformGateways.includes("stripe") && <SelectItem value="stripe">Stripe</SelectItem>}
-                    {platformGateways.includes("mercadopago") && <SelectItem value="mercadopago">Mercado Pago</SelectItem>}
-                  </SelectContent>
-                </Select>
+          {!paymentResult ? (
+            <div className="space-y-4 py-2">
+              {/* Payment method selector */}
+              <div className="grid grid-cols-3 gap-2">
+                {METHOD_OPTIONS.map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => setSelectedMethod(m.value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                      selectedMethod === m.value
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <span className="text-xl">{m.emoji}</span>
+                    <span className="text-xs font-medium">{m.label}</span>
+                  </button>
+                ))}
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label>Número do Cartão</Label>
-              <Input
-                placeholder="0000 0000 0000 0000"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                maxLength={19}
-                className="font-mono"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Nome no Cartão</Label>
-              <Input
-                placeholder="NOME COMPLETO"
-                value={cardHolder}
-                onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Validade</Label>
-                <Input
-                  placeholder="MM/AA"
-                  value={cardExpiry}
-                  onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                  maxLength={5}
-                  className="font-mono"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CVV</Label>
-                <Input
-                  placeholder="123"
-                  type="password"
-                  value={cardCvv}
-                  onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  maxLength={4}
-                  className="font-mono"
-                />
+              {/* Order summary */}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Plano</span>
+                  <span className="font-medium">{checkoutDialog?.planName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Método</span>
+                  <span className="font-medium">{METHOD_OPTIONS.find(m => m.value === selectedMethod)?.label}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Mensal</span>
+                  <span className="font-bold text-primary text-lg">{formatPrice(checkoutDialog?.price ?? 0)}</span>
+                </div>
               </div>
             </div>
+          ) : (
+            <div className="space-y-4 py-2">
+              {/* PIX QR Code display */}
+              {paymentResult.pix?.qrCode && (
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="p-4 bg-background rounded-xl border border-border">
+                      <QrCode className="h-32 w-32 text-foreground" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Escaneie o QR Code com seu app do banco</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={paymentResult.pix.qrCode}
+                      className="flex-1 text-xs p-2 border border-border rounded bg-muted font-mono truncate"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(paymentResult.pix!.qrCode!);
+                        toast.success("Código PIX copiado!");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                  <Badge variant="outline" className="text-amber-600 border-amber-500/50">
+                    <Clock className="h-3 w-3 mr-1" /> Aguardando pagamento...
+                  </Badge>
+                </div>
+              )}
 
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Plano</span>
-                <span className="font-medium">{checkoutDialog?.planName}</span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-bold text-primary text-lg">{formatPrice(checkoutDialog?.price ?? 0)}</span>
-              </div>
+              {/* Non-PIX result */}
+              {!paymentResult.pix?.qrCode && (
+                <div className="text-center space-y-3 py-4">
+                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+                  <p className="font-bold text-lg">Cobrança criada!</p>
+                  <p className="text-sm text-muted-foreground">
+                    Status: {paymentResult.status}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setCheckoutDialog(null); resetCardForm(); }}>
-              Cancelar
+            <Button variant="outline" onClick={() => { setCheckoutDialog(null); setPaymentResult(null); }}>
+              {paymentResult ? "Fechar" : "Cancelar"}
             </Button>
-            <Button
-              onClick={() => processPayment.mutate()}
-              disabled={processPayment.isPending || !cardNumber || !cardHolder || !cardExpiry || !cardCvv}
-              className="min-w-[140px]"
-            >
-              {processPayment.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CreditCard className="mr-2 h-4 w-4" />
-              )}
-              {processPayment.isPending ? "Processando..." : "Pagar"}
+            {!paymentResult && (
+              <Button
+                onClick={() => processPayment.mutate()}
+                disabled={processPayment.isPending}
+                className="min-w-[140px]"
+              >
+                {processPayment.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="mr-2 h-4 w-4" />
+                )}
+                {processPayment.isPending ? "Processando..." : "Pagar"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Thank you dialog */}
+      <Dialog open={!!thankYouDialog} onOpenChange={() => setThankYouDialog(null)}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="py-6 space-y-4">
+            <PartyPopper className="h-16 w-16 text-primary mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">🎉 Obrigado!</h2>
+            <p className="text-muted-foreground">
+              Seu plano <strong className="text-foreground">{thankYouDialog?.planName}</strong> foi processado com sucesso!
+            </p>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2 text-left">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Plano</span>
+                <span className="font-medium">{thankYouDialog?.planName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Método</span>
+                <span className="font-medium">{thankYouDialog?.method === "PIX" ? "💰 PIX" : thankYouDialog?.method === "CREDIT_CARD" ? "💳 Cartão" : "🧾 Boleto"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Ativo</Badge>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">As funcionalidades do plano serão liberadas após a confirmação do pagamento.</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setThankYouDialog(null)} className="w-full">
+              <CheckCircle2 className="mr-2 h-4 w-4" /> Entendido
             </Button>
           </DialogFooter>
         </DialogContent>
