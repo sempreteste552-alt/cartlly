@@ -243,10 +243,13 @@ async function createMercadoPagoPayment(
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
 
+  const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
+
   const paymentData: any = {
     transaction_amount: Number(order.total),
     description: `Pedido #${order.id.slice(0, 8)}`,
     external_reference: order.id,
+    notification_url: webhookUrl,
     payer: {
       email: order.customer_email || "cliente@email.com",
       first_name: order.customer_name?.split(" ")[0] || "Cliente",
