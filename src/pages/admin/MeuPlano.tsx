@@ -69,6 +69,8 @@ export default function MeuPlano() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [pixExpiresAt, setPixExpiresAt] = useState<number | null>(null);
+  const [pixTimeLeft, setPixTimeLeft] = useState<number>(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Polling: check subscription status every 5s while QR code is shown
