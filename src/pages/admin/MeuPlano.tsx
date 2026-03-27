@@ -80,6 +80,12 @@ export default function MeuPlano() {
   const [pixTimeLeft, setPixTimeLeft] = useState<number>(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+
   // Polling: check subscription status every 5s while QR code is shown
   useEffect(() => {
     if (!paymentResult || !checkoutDialog || paymentConfirmed) {
