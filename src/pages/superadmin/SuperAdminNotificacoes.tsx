@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAllTenants } from "@/hooks/useUserRole";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, Send, Plus, Users, User, Megaphone, AlertTriangle, Info, Tag, Trash2 } from "lucide-react";
+import { Bell, Send, Plus, Users, User, Megaphone, AlertTriangle, Info, Tag, Trash2, Loader2, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
 
 const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
