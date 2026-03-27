@@ -227,7 +227,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 )}
               </div>
 
-              <div className="p-3">
+              <div className="p-3 text-foreground">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
                 {r && r.count > 0 && (
                   <div className="flex items-center gap-1 mt-1">
