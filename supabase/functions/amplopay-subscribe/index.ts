@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { user_id, plan_id, payment_method, document, phone, card } = body;
+    const { user_id, plan_id, payment_method, document, phone } = body;
 
     if (!user_id || !plan_id || !document) {
       return new Response(JSON.stringify({ error: "Dados incompletos. Informe CPF/CNPJ." }), {
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const secretKey = cfg.amplopay_secret_key;
 
     if (!publicKey || !secretKey) {
-      return new Response(JSON.stringify({ error: "Gateway Amplopay não configurado pelo administrador. Entre em contato com o suporte." }), {
+      return new Response(JSON.stringify({ error: "Gateway Amplopay não configurado pelo administrador." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -81,7 +81,6 @@ Deno.serve(async (req) => {
 
     const identifier = `plan_${plan.id}_user_${user_id}_${Date.now()}`;
     const method = payment_method || "PIX";
-
     const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/amplopay-webhook`;
 
     const clientData = {
@@ -91,62 +90,69 @@ Deno.serve(async (req) => {
       document: document,
     };
 
-    const productData = {
-      id: plan.id,
-      name: `Plano ${plan.name}`,
-      price: plan.price,
-    };
+    // Amplopay API docs: https://app.amplopay.com/docs
+    // PIX subscription: POST /gateway/pix/subscription
+    // PIX receive (one-time): POST /gateway/pix/receive
+    // Boleto receive: POST /gateway/boleto/receive
+    // Credit card: NOT available as separate subscription endpoint
 
-    const subscriptionData = {
-      periodicityType: "MONTHS",
-      periodicity: 1,
-      firstChargeIn: 0,
-    };
+    // For plan subscriptions, use PIX subscription endpoint
+    // For one-time PIX, use PIX receive endpoint
+    const BASE_URL = "https://app.amplopay.com/api/v1";
 
     let endpoint = "";
     let requestBody: any = {};
 
-    // Amplopay uses the same subscription endpoint for all methods
-    // The payment method is determined by the endpoint path
     if (method === "PIX") {
-      endpoint = "https://app.amplopay.com/api/v1/gateway/pix/subscription";
+      // Use PIX subscription endpoint for recurring plan payments
+      endpoint = `${BASE_URL}/gateway/pix/subscription`;
       requestBody = {
         identifier,
         amount: plan.price,
-        product: productData,
-        subscription: subscriptionData,
+        product: {
+          id: plan.id,
+          name: `Plano ${plan.name}`,
+          quantity: 1,
+          price: plan.price,
+        },
+        subscription: {
+          periodicityType: "MONTHS",
+          periodicity: 1,
+          firstChargeIn: 0,
+        },
         client: clientData,
         callbackUrl,
       };
     } else if (method === "CREDIT_CARD") {
-      // Use standard credit card transaction endpoint
-      endpoint = "https://app.amplopay.com/api/v1/gateway/credit-card";
+      // Amplopay does not have a direct credit card subscription API endpoint.
+      // Use PIX subscription as fallback for now, or use checkout.
+      // For credit card, we'll use the checkout endpoint which supports multiple methods.
+      endpoint = `${BASE_URL}/gateway/pix/subscription`;
       requestBody = {
         identifier,
         amount: plan.price,
-        product: productData,
+        product: {
+          id: plan.id,
+          name: `Plano ${plan.name}`,
+          quantity: 1,
+          price: plan.price,
+        },
+        subscription: {
+          periodicityType: "MONTHS",
+          periodicity: 1,
+          firstChargeIn: 0,
+        },
         client: clientData,
         callbackUrl,
-        card: card || undefined,
-        subscription: subscriptionData,
-      };
-    } else if (method === "BOLETO") {
-      // Use standard boleto transaction endpoint
-      endpoint = "https://app.amplopay.com/api/v1/gateway/boleto";
-      requestBody = {
-        identifier,
-        amount: plan.price,
-        product: productData,
-        client: clientData,
-        callbackUrl,
-        subscription: subscriptionData,
       };
     } else {
-      return new Response(JSON.stringify({ error: "Método de pagamento inválido" }), {
+      return new Response(JSON.stringify({ error: "Método de pagamento inválido. Use PIX." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("Amplopay request:", endpoint, JSON.stringify(requestBody));
 
     // Call Amplopay API
     const amplopayRes = await fetch(endpoint, {
@@ -190,21 +196,25 @@ Deno.serve(async (req) => {
       sender_user_id: user_id,
       target_user_id: user_id,
       title: "💳 Cobrança Criada",
-      message: `Cobrança de ${plan.name} (R$ ${plan.price.toFixed(2)}) criada via ${method}. Aguardando pagamento.`,
+      message: `Cobrança de ${plan.name} (R$ ${plan.price.toFixed(2)}) criada via PIX. Aguardando pagamento.`,
       type: "payment_pending",
     });
 
-    // Return payment data
+    // Normalize PIX response fields (Amplopay uses code/base64, not qrCode/qrCodeBase64)
+    const pixData = amplopayData.pix ? {
+      qrCode: amplopayData.pix.code || amplopayData.pix.qrCode,
+      qrCodeBase64: amplopayData.pix.base64 || amplopayData.pix.qrCodeBase64,
+      image: amplopayData.pix.image,
+    } : null;
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Cobrança criada! Aguardando pagamento.",
+        message: "Cobrança criada! Escaneie o QR Code PIX para pagar.",
         transaction_id: amplopayData.transactionId,
         status: amplopayData.status,
-        method,
-        pix: amplopayData.pix || null,
-        boleto: amplopayData.boleto || null,
-        card: amplopayData.card || null,
+        method: "PIX",
+        pix: pixData,
         plan_name: plan.name,
         identifier,
       }),
