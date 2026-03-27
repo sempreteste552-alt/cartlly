@@ -433,3 +433,39 @@ async function activatePlanSubscription(supabase: any, userId: string, planId: s
     .eq("user_id", userId)
     .eq("status", "pending");
 }
+
+// ===================== RICH PUSH HELPER =====================
+
+async function sendRichPush(targetUserId: string, payload: {
+  title: string;
+  body: string;
+  url?: string;
+  type?: string;
+  data?: any;
+  tag?: string;
+}) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: targetUserId,
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/admin",
+        type: payload.type || "general",
+        data: payload.data || {},
+        tag: payload.tag || payload.type || "default",
+      }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("sendRichPush failed:", resp.status, text);
+    } else {
+      await resp.text(); // consume body
+    }
+  } catch (e: any) {
+    console.error("sendRichPush error:", e.message);
+  }
+}
