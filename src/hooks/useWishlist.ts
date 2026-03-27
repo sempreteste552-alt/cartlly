@@ -73,5 +73,5 @@ export function useWishlist(storeUserId?: string) {
 
   const isWishlisted = (productId: string) => wishlistIds.has(productId);
 
-  return { wishlistIds, toggleWishlist, isWishlisted, loading, wishlistCount: wishlistIds.size };
+  return { wishlistIds, wishlistProducts, toggleWishlist, isWishlisted, loading, wishlistCount: wishlistIds.size };
 }
