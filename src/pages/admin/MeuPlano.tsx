@@ -693,14 +693,6 @@ export default function MeuPlano() {
                       />
                     </div>
                   </div>
-                  <Button
-                    className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-base font-bold mt-3"
-                    disabled={processPayment.isPending || !cpf || !cardNumber || !cardName || !cardExpiry || !cardCvv}
-                    onClick={() => processPayment.mutate()}
-                  >
-                    {processPayment.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
-                    Pagar {formatPrice(checkoutDialog?.price ?? 0)}
-                  </Button>
                 </div>
               )}
 
