@@ -43,7 +43,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Poll payment status for PIX/Boleto
   useEffect(() => {
-    if (!paymentData?.payment?.id || selectedMethod === "credit_card") return;
+    if (!paymentData?.payment?.id) return;
     const paymentId = paymentData.payment.id;
 
     const poll = async () => {
