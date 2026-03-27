@@ -175,13 +175,15 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
       {products.map((product) => {
         const r = ratings?.[product.id];
         const additionalImages = productImagesMap?.[product.id] ?? [];
+        // Use first additional image as fallback if product.image_url is null
+        const mainImage = product.image_url || additionalImages[0] || null;
+        const extraImages = product.image_url 
+          ? additionalImages 
+          : additionalImages.slice(1);
         return (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card
               className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
-              style={{
-                boxShadow: undefined,
-              }}
             >
               {/* Glow border effect on hover */}
               <div
@@ -194,10 +196,11 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
 
               <div className="aspect-square overflow-hidden relative">
                 <ProductImageSlideshow
-                  mainImage={product.image_url}
-                  additionalImages={additionalImages}
+                  mainImage={mainImage}
+                  additionalImages={extraImages}
                   alt={product.name}
                   showArrows
+                  autoplaySpeed={3500}
                   glowColor={primaryColor}
                 />
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
