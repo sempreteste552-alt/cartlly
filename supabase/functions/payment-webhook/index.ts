@@ -294,9 +294,23 @@ async function handleAmplopay(req: Request, supabase: any) {
   if (newStatus === "approved") {
     await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+    await sendRichPush(payment.user_id, {
+      title: "✅ Pagamento aprovado!",
+      body: `Pagamento de R$ ${Number(payment.amount || 0).toFixed(2).replace(".", ",")} via Amplopay aprovado 💰`,
+      url: "/admin/pedidos",
+      type: "payment_approved",
+      data: { orderId: payment.order_id, paymentId: payment.id },
+    });
   } else if (newStatus === "rejected" || newStatus === "cancelled") {
     await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+    await sendRichPush(payment.user_id, {
+      title: "❌ Pagamento recusado!",
+      body: `Pagamento do pedido #${payment.order_id?.slice(0, 8)} foi recusado.`,
+      url: "/admin/pedidos",
+      type: "payment_rejected",
+      data: { orderId: payment.order_id, paymentId: payment.id },
+    });
   }
 
   return new Response(JSON.stringify({ received: true }), {
