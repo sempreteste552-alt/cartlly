@@ -18,6 +18,11 @@ import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
 import pixLogo from "@/assets/pix-logo.webp";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
+import iconInstagram from "@/assets/icon-instagram.png";
+import iconTiktok from "@/assets/icon-tiktok.png";
+import iconFacebook from "@/assets/icon-facebook.png";
+import iconYoutube from "@/assets/icon-youtube.png";
+import iconLocation from "@/assets/icon-location.png";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
