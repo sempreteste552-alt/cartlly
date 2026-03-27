@@ -83,25 +83,24 @@ export default function SuperAdminConfig() {
     setSaving(true);
     try {
       const entries = Object.entries(config);
+      let errorCount = 0;
       for (const [key, val] of entries) {
-        const { data: existing } = await supabase
+        const { error } = await supabase
           .from("platform_settings")
-          .select("id")
-          .eq("key", key)
-          .maybeSingle();
-
-        if (existing) {
-          await supabase
-            .from("platform_settings")
-            .update({ value: { value: val } as any, updated_at: new Date().toISOString() } as any)
-            .eq("key", key);
-        } else {
-          await supabase
-            .from("platform_settings")
-            .insert({ key, value: { value: val } as any } as any);
+          .upsert(
+            { key, value: { value: val } as any, updated_at: new Date().toISOString() },
+            { onConflict: "key" }
+          );
+        if (error) {
+          console.error(`Erro ao salvar ${key}:`, error);
+          errorCount++;
         }
       }
-      toast.success("Configurações salvas!");
+      if (errorCount > 0) {
+        toast.error(`${errorCount} configuração(ões) falharam ao salvar. Verifique se você tem permissão.`);
+      } else {
+        toast.success("Configurações salvas!");
+      }
       queryClient.invalidateQueries({ queryKey: ["platform_settings"] });
     } catch (e: any) {
       toast.error("Erro: " + e.message);
