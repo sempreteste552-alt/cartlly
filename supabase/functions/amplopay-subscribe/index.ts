@@ -17,11 +17,10 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { user_id, plan_id, payment_method } = body;
-    // payment_method: "PIX" | "CREDIT_CARD" | "BOLETO"
+    const { user_id, plan_id, payment_method, document, phone } = body;
 
-    if (!user_id || !plan_id) {
-      return new Response(JSON.stringify({ error: "Dados incompletos" }), {
+    if (!user_id || !plan_id || !document) {
+      return new Response(JSON.stringify({ error: "Dados incompletos. Informe CPF/CNPJ." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -108,8 +107,8 @@ Deno.serve(async (req) => {
         client: {
           name: tenantName,
           email: tenantEmail,
-          phone: "(00) 0 0000-0000",
-          document: "000.000.000-00",
+          phone: phone || "(00) 0 0000-0000",
+          document: document,
         },
         callbackUrl,
       };
@@ -133,8 +132,8 @@ Deno.serve(async (req) => {
         client: {
           name: tenantName,
           email: tenantEmail,
-          phone: "(00) 0 0000-0000",
-          document: "000.000.000-00",
+          phone: phone || "(00) 0 0000-0000",
+          document: document,
         },
         callbackUrl,
       };

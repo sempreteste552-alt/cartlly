@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard, MessageCircle, QrCode, FileText, CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -62,6 +64,8 @@ export default function MeuPlano() {
   const [confirmDialog, setConfirmDialog] = useState<{ planId: string; planName: string; price: number; type: "upgrade" | "downgrade" } | null>(null);
   const [checkoutDialog, setCheckoutDialog] = useState<CheckoutState | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
 
@@ -158,6 +162,8 @@ export default function MeuPlano() {
             user_id: user.id,
             plan_id: checkoutDialog.planId,
             payment_method: selectedMethod,
+            document: cpf.replace(/\D/g, ""),
+            phone: phone,
           }),
         }
       );
@@ -504,6 +510,40 @@ export default function MeuPlano() {
                 ))}
               </div>
 
+              {/* CPF and Phone */}
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">CPF ou CNPJ *</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={cpf}
+                    onChange={(e) => {
+                      const nums = e.target.value.replace(/\D/g, "").slice(0, 14);
+                      if (nums.length <= 11) {
+                        setCpf(nums.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (_, a, b, c, d) => d ? `${a}.${b}.${c}-${d}` : c ? `${a}.${b}.${c}` : b ? `${a}.${b}` : a));
+                      } else {
+                        setCpf(nums.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, (_, a, b, c, d, e2) => e2 ? `${a}.${b}.${c}/${d}-${e2}` : `${a}.${b}.${c}/${d}`));
+                      }
+                    }}
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Telefone</Label>
+                  <Input
+                    placeholder="(11) 99999-9999"
+                    value={phone}
+                    onChange={(e) => {
+                      const nums = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      if (nums.length > 6) setPhone(`(${nums.slice(0,2)}) ${nums.slice(2,7)}-${nums.slice(7)}`);
+                      else if (nums.length > 2) setPhone(`(${nums.slice(0,2)}) ${nums.slice(2)}`);
+                      else setPhone(nums);
+                    }}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
               {/* Order summary */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -574,7 +614,7 @@ export default function MeuPlano() {
             {!paymentResult && (
               <Button
                 onClick={() => processPayment.mutate()}
-                disabled={processPayment.isPending}
+                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11}
                 className="min-w-[140px]"
               >
                 {processPayment.isPending ? (
