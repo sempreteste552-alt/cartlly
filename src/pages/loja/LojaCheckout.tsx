@@ -67,6 +67,7 @@ export default function LojaCheckout() {
     }
   }, [phase]);
 
+  useEffect(() => {
     if (customer) {
       setName(customer.name || "");
       setEmail(customer.email || "");
