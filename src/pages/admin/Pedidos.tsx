@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 
 export default function Pedidos() {
   const STATUS_ICONS: Record<string, any> = {
