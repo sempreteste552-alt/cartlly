@@ -65,6 +65,21 @@ export default function SuperAdminTenants() {
     return matchSearch && matchFilter;
   }) ?? [];
 
+  const logAudit = async (action: string, targetType: string, targetId: string, targetName: string, details?: any) => {
+    try {
+      await supabase.from("audit_logs").insert({
+        actor_user_id: user!.id,
+        action,
+        target_type: targetType,
+        target_id: targetId,
+        target_name: targetName,
+        details: details || {},
+      } as any);
+    } catch (e) {
+      console.error("Audit log error:", e);
+    }
+  };
+
   const notifyTenant = async (userId: string, action: string) => {
     try {
       await supabase.functions.invoke("notify-tenant-status", {
