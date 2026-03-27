@@ -239,6 +239,11 @@ export default function Configuracoes() {
       header_bg_color: headerBgColor,
       footer_bg_color: footerBgColor,
       footer_text_color: footerTextColor,
+      welcome_coupon_enabled: welcomeCouponEnabled,
+      welcome_coupon_discount_type: welcomeCouponDiscountType,
+      welcome_coupon_discount_value: welcomeCouponDiscountValue,
+      welcome_coupon_min_order: welcomeCouponMinOrder ? Number(welcomeCouponMinOrder) : null,
+      welcome_coupon_expires_days: welcomeCouponExpiresDays,
     } as any);
   };
 
