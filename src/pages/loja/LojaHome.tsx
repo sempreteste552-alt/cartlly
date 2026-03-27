@@ -237,7 +237,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-[10px] text-muted-foreground">
                   ou 12x de {formatPrice(product.price / 12)}
                 </p>
                 {product.stock > 0 ? (
