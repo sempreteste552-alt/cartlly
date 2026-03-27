@@ -267,3 +267,96 @@ function mapAmplopayStatus(status: string): string {
   };
   return map[status] || "pending";
 }
+
+// ===================== PLAN SUBSCRIPTION ACTIVATION =====================
+
+async function checkPlanSubscriptionWebhook(supabase: any, gateway: string, paymentId: string): Promise<boolean> {
+  try {
+    // Get platform gateway key to fetch payment details
+    const keyName = gateway === "mercadopago" ? "mercadopago_global_key" : gateway === "pagbank" ? "pagbank_global_key" : "";
+    if (!keyName) return false;
+
+    const { data: settings } = await supabase.from("platform_settings").select("key, value").eq("key", keyName).single();
+    const accessToken = settings?.value?.value;
+    if (!accessToken) return false;
+
+    let externalRef = "";
+    let status = "";
+
+    if (gateway === "mercadopago") {
+      const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      externalRef = data.external_reference || "";
+      status = data.status;
+    }
+
+    // Check if this is a plan subscription payment
+    const match = externalRef.match(/^plan_(.+)_user_(.+?)(_\d+)?$/);
+    if (!match) return false;
+
+    const planId = match[1];
+    const userId = match[2];
+
+    if (status === "approved") {
+      // Activate subscription
+      const { data: plan } = await supabase.from("tenant_plans").select("name").eq("id", planId).single();
+      await activatePlanSubscription(supabase, userId, planId);
+
+      // Notify
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: userId,
+        target_user_id: userId,
+        title: "✅ Plano Ativado!",
+        message: `Seu plano ${plan?.name || ""} foi ativado com sucesso via ${gateway === "mercadopago" ? "Mercado Pago" : "PagBank"}.`,
+        type: "plan_activated",
+      });
+
+      console.log(`Plan subscription activated: user=${userId}, plan=${planId}`);
+      return true;
+    }
+
+    return false;
+  } catch (e: any) {
+    console.error("checkPlanSubscriptionWebhook error:", e.message);
+    return false;
+  }
+}
+
+async function activatePlanSubscription(supabase: any, userId: string, planId: string) {
+  const now = new Date();
+  const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const { data: existingSub } = await supabase
+    .from("tenant_subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingSub) {
+    await supabase.from("tenant_subscriptions").update({
+      plan_id: planId,
+      status: "active",
+      current_period_start: now.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+      trial_ends_at: null,
+      updated_at: now.toISOString(),
+    }).eq("id", existingSub.id);
+  } else {
+    await supabase.from("tenant_subscriptions").insert({
+      user_id: userId,
+      plan_id: planId,
+      status: "active",
+      current_period_start: now.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+    });
+  }
+
+  // Cancel pending plan change requests
+  await supabase.from("plan_change_requests")
+    .update({ status: "approved", resolved_at: now.toISOString() })
+    .eq("user_id", userId)
+    .eq("status", "pending");
+}
