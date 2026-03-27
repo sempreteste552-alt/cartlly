@@ -28,6 +28,7 @@ export default function Pedidos() {
   const selectedOrder = orders?.find((o) => o.id === selectedOrderId);
   const { data: orderItems } = useOrderItems(selectedOrderId);
   const { data: statusHistory } = useOrderStatusHistory(selectedOrderId);
+  const { data: orderPayment } = useOrderPayment(selectedOrderId);
 
   // Realtime for orders
   useEffect(() => {
