@@ -394,14 +394,14 @@ export default function LojaLayout() {
         </footer>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-gray-200 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-around h-14">
             <Link
               to={basePath}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isHomePage ? primaryColor : "#9ca3af" }}
+              style={{ color: isHomePage ? primaryColor : undefined }}
             >
-              <Home className="h-5 w-5" />
+              <Home className={`h-5 w-5 ${!isHomePage ? "text-muted-foreground" : ""}`} />
               <span className="text-[10px] mt-0.5 font-medium">Início</span>
             </Link>
             <button
@@ -410,7 +410,7 @@ export default function LojaLayout() {
                 if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
                 else navigate(basePath);
               }}
-              className="flex flex-col items-center justify-center flex-1 h-full text-gray-400 transition-colors"
+              className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground transition-colors"
             >
               <Search className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Buscar</span>
