@@ -231,6 +231,11 @@ export default function SuperAdminTenants() {
       } as any);
     }
 
+    logAudit("delete_tenant", "tenant", userId, deletingTenant.display_name || "Sem nome", {
+      store_name: deletingTenant.store?.store_name,
+      products: deletingTenant.productCount,
+      orders: deletingTenant.orders?.count,
+    });
     toast.success("Tenant excluído permanentemente!");
     setDeleteDialogOpen(false);
     setDeletingTenant(null);
