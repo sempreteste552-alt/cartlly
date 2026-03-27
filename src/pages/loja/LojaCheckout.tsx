@@ -35,6 +35,9 @@ export default function LojaCheckout() {
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  const [savedFinalTotal, setSavedFinalTotal] = useState<number>(0);
+  const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
+  const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
