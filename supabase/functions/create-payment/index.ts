@@ -209,6 +209,37 @@ Deno.serve(async (req) => {
     if (paymentResult.status === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", order_id);
       await supabase.from("order_status_history").insert({ order_id, status: "processando" });
+
+      // 🔔 Push: Payment approved (card instant approval)
+      await sendRichPush(store_user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `${order.customer_name || "Cliente"} pagou R$ ${Number(order.total).toFixed(2).replace(".", ",")} via Cartão 💳`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: order_id, method },
+      });
+    }
+
+    // 🔔 Push: PIX generated
+    if (method === "pix" && paymentResult.pix_qr_code) {
+      await sendRichPush(store_user_id, {
+        title: "💰 PIX gerado!",
+        body: `PIX de R$ ${Number(order.total).toFixed(2).replace(".", ",")} gerado para ${order.customer_name || "Cliente"} 🎯`,
+        url: "/admin/pedidos",
+        type: "pix_generated",
+        data: { orderId: order_id, paymentId: payment.id },
+      });
+    }
+
+    // 🔔 Push: Boleto generated
+    if (method === "boleto" && paymentResult.boleto_url) {
+      await sendRichPush(store_user_id, {
+        title: "📄 Boleto gerado!",
+        body: `Boleto de R$ ${Number(order.total).toFixed(2).replace(".", ",")} gerado para ${order.customer_name || "Cliente"} 📋`,
+        url: "/admin/pedidos",
+        type: "boleto_generated",
+        data: { orderId: order_id, paymentId: payment.id },
+      });
     }
 
     return json({ payment, paymentResult });
@@ -603,4 +634,28 @@ async function createAmplopayPayment(
   }
 
   return result;
+}
+
+// ===================== RICH PUSH HELPER =====================
+
+async function sendRichPush(targetUserId: string, payload: {
+  title: string; body: string; url?: string; type?: string; data?: any;
+}) {
+  try {
+    const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: targetUserId,
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/admin",
+        type: payload.type || "general",
+        data: payload.data || {},
+        tag: payload.type || "default",
+      }),
+    });
+    if (!resp.ok) { const t = await resp.text(); console.error("sendRichPush failed:", t); }
+    else { await resp.text(); }
+  } catch (e: any) { console.error("sendRichPush error:", e.message); }
 }

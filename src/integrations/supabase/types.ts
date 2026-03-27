@@ -695,6 +695,53 @@ export type Database = {
         }
         Relationships: []
       }
+      push_logs: {
+        Row: {
+          body: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          status: string
+          subscription_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          status?: string
+          subscription_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          status?: string
+          subscription_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -702,6 +749,7 @@ export type Database = {
           endpoint: string
           id: string
           p256dh: string
+          platform: string
           user_id: string
         }
         Insert: {
@@ -710,6 +758,7 @@ export type Database = {
           endpoint: string
           id?: string
           p256dh: string
+          platform?: string
           user_id: string
         }
         Update: {
@@ -718,6 +767,7 @@ export type Database = {
           endpoint?: string
           id?: string
           p256dh?: string
+          platform?: string
           user_id?: string
         }
         Relationships: []

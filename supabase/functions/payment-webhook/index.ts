@@ -82,7 +82,7 @@ async function handleMercadoPago(req: Request, supabase: any) {
   // Get store settings to fetch payment details from MP
   const { data: settings } = await supabase
     .from("store_settings")
-    .select("gateway_secret_key")
+    .select("gateway_secret_key, store_name")
     .eq("user_id", payment.user_id)
     .single();
 
@@ -99,13 +99,39 @@ async function handleMercadoPago(req: Request, supabase: any) {
       .update({ status: newStatus, raw_response: mpData })
       .eq("id", payment.id);
 
+    // Get order info for push notification
+    const order = payment.orders;
+    const customerName = order?.customer_name || "Cliente";
+    const orderTotal = payment.amount || order?.total || 0;
+    const formattedTotal = `R$ ${Number(orderTotal).toFixed(2).replace(".", ",")}`;
+    const orderId8 = payment.order_id?.slice(0, 8) || "";
+    const methodLabel = payment.method === "pix" ? "PIX" : payment.method === "credit_card" ? "Cartão" : payment.method === "boleto" ? "Boleto" : payment.method;
+
     // Update order status based on payment
     if (newStatus === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+
+      // 🔔 Push: Payment approved
+      await sendRichPush(payment.user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `${customerName} pagou ${formattedTotal} via ${methodLabel} 💰 Pedido #${orderId8}`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: payment.order_id, paymentId: payment.id, method: payment.method },
+      });
     } else if (newStatus === "rejected" || newStatus === "cancelled") {
       await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+
+      // 🔔 Push: Payment rejected
+      await sendRichPush(payment.user_id, {
+        title: "❌ Pagamento recusado!",
+        body: `Pagamento de ${formattedTotal} via ${methodLabel} do pedido #${orderId8} (${customerName}) foi recusado.`,
+        url: "/admin/pedidos",
+        type: "payment_rejected",
+        data: { orderId: payment.order_id, paymentId: payment.id },
+      });
     }
   }
 
@@ -139,7 +165,7 @@ async function handlePagBank(req: Request, supabase: any) {
     // Try by order reference
     const { data: orderPayment } = await supabase
       .from("payments")
-      .select("*")
+      .select("*, orders(customer_name, total)")
       .eq("gateway", "pagbank")
       .eq("order_id", orderId)
       .maybeSingle();
@@ -156,6 +182,23 @@ async function handlePagBank(req: Request, supabase: any) {
       if (newStatus === "approved") {
         await supabase.from("orders").update({ status: "processando" }).eq("id", orderId);
         await supabase.from("order_status_history").insert({ order_id: orderId, status: "pago" });
+        const cName = orderPayment.orders?.customer_name || "Cliente";
+        const cTotal = `R$ ${Number(orderPayment.amount || 0).toFixed(2).replace(".", ",")}`;
+        await sendRichPush(orderPayment.user_id, {
+          title: "✅ Pagamento aprovado!",
+          body: `${cName} pagou ${cTotal} via PagBank 💰`,
+          url: "/admin/pedidos",
+          type: "payment_approved",
+          data: { orderId, paymentId: orderPayment.id },
+        });
+      } else if (newStatus === "rejected") {
+        await sendRichPush(orderPayment.user_id, {
+          title: "❌ Pagamento recusado!",
+          body: `Pagamento do pedido #${orderId.slice(0, 8)} foi recusado no PagBank.`,
+          url: "/admin/pedidos",
+          type: "payment_rejected",
+          data: { orderId, paymentId: orderPayment.id },
+        });
       }
     }
   } else {
@@ -170,6 +213,13 @@ async function handlePagBank(req: Request, supabase: any) {
     if (newStatus === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+      await sendRichPush(payment.user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `Pagamento de R$ ${Number(payment.amount || 0).toFixed(2).replace(".", ",")} via PagBank aprovado 💰`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: payment.order_id, paymentId: payment.id },
+      });
     }
   }
 
@@ -244,9 +294,23 @@ async function handleAmplopay(req: Request, supabase: any) {
   if (newStatus === "approved") {
     await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+    await sendRichPush(payment.user_id, {
+      title: "✅ Pagamento aprovado!",
+      body: `Pagamento de R$ ${Number(payment.amount || 0).toFixed(2).replace(".", ",")} via Amplopay aprovado 💰`,
+      url: "/admin/pedidos",
+      type: "payment_approved",
+      data: { orderId: payment.order_id, paymentId: payment.id },
+    });
   } else if (newStatus === "rejected" || newStatus === "cancelled") {
     await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+    await sendRichPush(payment.user_id, {
+      title: "❌ Pagamento recusado!",
+      body: `Pagamento do pedido #${payment.order_id?.slice(0, 8)} foi recusado.`,
+      url: "/admin/pedidos",
+      type: "payment_rejected",
+      data: { orderId: payment.order_id, paymentId: payment.id },
+    });
   }
 
   return new Response(JSON.stringify({ received: true }), {
@@ -305,13 +369,22 @@ async function checkPlanSubscriptionWebhook(supabase: any, gateway: string, paym
       const { data: plan } = await supabase.from("tenant_plans").select("name").eq("id", planId).single();
       await activatePlanSubscription(supabase, userId, planId);
 
-      // Notify
+      // Notify in-app
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
         target_user_id: userId,
         title: "✅ Plano Ativado!",
         message: `Seu plano ${plan?.name || ""} foi ativado com sucesso via ${gateway === "mercadopago" ? "Mercado Pago" : "PagBank"}.`,
         type: "plan_activated",
+      });
+
+      // 🔔 Push: Plan activated
+      await sendRichPush(userId, {
+        title: "🎉 Plano Ativado!",
+        body: `Seu plano ${plan?.name || ""} está ativo! Aproveite todas as funcionalidades 🚀`,
+        url: "/admin/plano",
+        type: "plan_activated",
+        data: { planId, planName: plan?.name },
       });
 
       console.log(`Plan subscription activated: user=${userId}, plan=${planId}`);
@@ -359,4 +432,40 @@ async function activatePlanSubscription(supabase: any, userId: string, planId: s
     .update({ status: "approved", resolved_at: now.toISOString() })
     .eq("user_id", userId)
     .eq("status", "pending");
+}
+
+// ===================== RICH PUSH HELPER =====================
+
+async function sendRichPush(targetUserId: string, payload: {
+  title: string;
+  body: string;
+  url?: string;
+  type?: string;
+  data?: any;
+  tag?: string;
+}) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: targetUserId,
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/admin",
+        type: payload.type || "general",
+        data: payload.data || {},
+        tag: payload.tag || payload.type || "default",
+      }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error("sendRichPush failed:", resp.status, text);
+    } else {
+      await resp.text(); // consume body
+    }
+  } catch (e: any) {
+    console.error("sendRichPush error:", e.message);
+  }
 }

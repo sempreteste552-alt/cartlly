@@ -6,9 +6,8 @@ const corsHeaders = {
 };
 
 // ============================================================
-// Internal push sender — called from DB webhook or other functions.
-// Accepts: { target_user_id, title, body, url }
-// Uses service role — no user auth required.
+// Internal push sender v2 — Rich payloads with event types + logging
+// Accepts: { target_user_id, title, body, url, type, data, tag }
 // ============================================================
 
 function b64url(buf: Uint8Array): string {
@@ -103,20 +102,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { target_user_id, title, body, url } = await req.json();
+    const body = await req.json();
+    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag } = body;
 
     if (!target_user_id || !title) {
-      return new Response(JSON.stringify({ error: "target_user_id and title required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "target_user_id and title required" }, 400);
     }
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
     if (!vapidPublicKey || !vapidPrivateKey) {
-      return new Response(JSON.stringify({ error: "VAPID not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "VAPID not configured" }, 500);
     }
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -127,51 +123,113 @@ Deno.serve(async (req) => {
       .eq("user_id", target_user_id);
 
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: "No push subscriptions" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Log even if no subs found
+      await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
+      return json({ sent: 0, message: "No push subscriptions" });
     }
 
-    const payloadStr = JSON.stringify({ title, body: body || "", url: url || "/admin" });
+    // Build rich payload
+    const pushPayload: any = {
+      title,
+      body: msgBody || "",
+      url: url || "/admin",
+      type: type || "general",
+      tag: tag || type || "default",
+      data: extraData || {},
+    };
+
+    // Add actions based on event type
+    if (type === "payment_approved" || type === "new_order") {
+      pushPayload.actions = [
+        { action: "view_order", title: "📋 Ver Pedido" },
+      ];
+    } else if (type === "pix_generated" || type === "boleto_generated") {
+      pushPayload.actions = [
+        { action: "view_payment", title: "💰 Ver Pagamento" },
+      ];
+    }
+
+    const payloadStr = JSON.stringify(pushPayload);
     let sent = 0;
+    const failures: string[] = [];
 
     for (const sub of subs) {
       try {
-        const { token, vapidKey } = await generateVapidAuthHeader(sub.endpoint, vapidPublicKey, vapidPrivateKey);
-        const encrypted = await encryptPayload(sub.p256dh, sub.auth, payloadStr);
+        if (sub.platform === "web" || !sub.platform || sub.platform === "") {
+          // Web Push via VAPID
+          const { token, vapidKey } = await generateVapidAuthHeader(sub.endpoint, vapidPublicKey, vapidPrivateKey);
+          const encrypted = await encryptPayload(sub.p256dh, sub.auth, payloadStr);
 
-        const resp = await fetch(sub.endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/octet-stream",
-            "Content-Encoding": "aes128gcm",
-            "Authorization": `vapid t=${token}, k=${vapidKey}`,
-            "TTL": "86400",
-            "Urgency": "high",
-          },
-          body: encrypted,
-        });
+          const resp = await fetch(sub.endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/octet-stream",
+              "Content-Encoding": "aes128gcm",
+              "Authorization": `vapid t=${token}, k=${vapidKey}`,
+              "TTL": "86400",
+              "Urgency": "high",
+            },
+            body: encrypted,
+          });
 
-        if (resp.status === 201 || resp.status === 200) {
-          sent++;
-        } else if (resp.status === 404 || resp.status === 410) {
-          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
-        } else {
-          const text = await resp.text();
-          console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
+          if (resp.status === 201 || resp.status === 200) {
+            sent++;
+            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
+          } else if (resp.status === 404 || resp.status === 410) {
+            await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", "Subscription expired/removed");
+          } else {
+            const text = await resp.text();
+            console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
+            failures.push(`${sub.id}: ${resp.status}`);
+            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+          }
         }
-      } catch (e) {
+        // Future: handle "android"/"ios" platforms via FCM here
+      } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
+        failures.push(`${sub.id}: ${e.message}`);
+        await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
       }
     }
 
-    return new Response(JSON.stringify({ sent, total: subs.length }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ sent, total: subs.length, failures });
   } catch (error: any) {
     console.error("Internal push error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: error.message }, 500);
   }
 });
+
+function json(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function logPush(
+  supabase: any,
+  userId: string,
+  subscriptionId: string | null,
+  eventType: string,
+  title: string,
+  body: string | undefined,
+  payload: any,
+  status: string,
+  errorMessage: string | null
+) {
+  try {
+    await supabase.from("push_logs").insert({
+      user_id: userId,
+      subscription_id: subscriptionId,
+      event_type: eventType,
+      title,
+      body: body || null,
+      payload: payload || {},
+      status,
+      error_message: errorMessage,
+    });
+  } catch (e) {
+    console.error("Failed to log push:", e);
+  }
+}
