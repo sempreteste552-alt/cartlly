@@ -55,14 +55,26 @@ Deno.serve(async (req) => {
 
       try {
         if (gateway === "mercadopago") {
-          const mpRes = await fetch("https://api.mercadopago.com/v1/payment_methods", {
+          // Fetch the actual MP account owner info via /users/me
+          const mpUserRes = await fetch("https://api.mercadopago.com/users/me", {
             headers: { Authorization: `Bearer ${testSettings.gateway_secret_key}` },
           });
-          const mpBody = await mpRes.text();
-          if (mpRes.ok) {
-            return json({ test_ok: true, message: "✅ Mercado Pago conectado com sucesso!", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
+          if (mpUserRes.ok) {
+            const mpUser = await mpUserRes.json();
+            const mpOwnerName = [mpUser.first_name, mpUser.last_name].filter(Boolean).join(" ") || mpUser.nickname || "Proprietário MP";
+            const mpOwnerEmail = mpUser.email || "";
+            const mpSiteId = mpUser.site_id || "";
+            return json({
+              test_ok: true,
+              message: "✅ Mercado Pago conectado com sucesso!",
+              owner_name: mpOwnerName,
+              owner_email: mpOwnerEmail,
+              store_name: mpUser.nickname || testSettings.store_name,
+              mp_site: mpSiteId,
+            });
           }
-          let mpError = `Erro Mercado Pago (${mpRes.status})`;
+          const mpBody = await mpUserRes.text();
+          let mpError = `Erro Mercado Pago (${mpUserRes.status})`;
           try {
             const mpJson = JSON.parse(mpBody);
             mpError = mpJson.message || mpError;

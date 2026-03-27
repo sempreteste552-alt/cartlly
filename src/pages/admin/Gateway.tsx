@@ -298,9 +298,9 @@ export default function Gateway() {
                 </div>
                 {testOwner && testStatus === "success" && (
                   <div className="border-t border-green-200 dark:border-green-800 pt-2 mt-2 text-xs space-y-1">
-                    <p><span className="font-medium">👤 Proprietário:</span> {testOwner.name}</p>
-                    <p><span className="font-medium">📧 Email:</span> {testOwner.email}</p>
-                    {testOwner.store && <p><span className="font-medium">🏪 Loja:</span> {testOwner.store}</p>}
+                    <p><span className="font-medium">👤 Titular da Conta:</span> {testOwner.name}</p>
+                    <p><span className="font-medium">📧 Email da Conta:</span> {testOwner.email}</p>
+                    {testOwner.store && <p><span className="font-medium">🏪 Conta:</span> {testOwner.store}</p>}
                     <p><span className="font-medium">🌐 Ambiente:</span> {gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
                   </div>
                 )}
