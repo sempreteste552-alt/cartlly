@@ -22,7 +22,24 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     },
   });
 
-  if (loading || (!!user && user.email !== SUPER_ADMIN_EMAIL && profileLoading)) {
+  const { data: storeSettings, isLoading: storeLoading } = useQuery({
+    queryKey: ["store_admin_blocked", user?.id],
+    enabled: !!user && user.email !== SUPER_ADMIN_EMAIL,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("admin_blocked, store_blocked")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isNonSuperAdmin = !!user && user.email !== SUPER_ADMIN_EMAIL;
+  const isStillLoading = loading || (isNonSuperAdmin && (profileLoading || storeLoading));
+
+  if (isStillLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -40,11 +57,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Check profile status
-  if (profile?.status === "pending" || profile?.status === "rejected") {
+  if (profile?.status === "pending" || profile?.status === "rejected" || profile?.status === "blocked") {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
-  if (profile?.status === "blocked") {
+  // Check admin panel blocked
+  if ((storeSettings as any)?.admin_blocked === true) {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
