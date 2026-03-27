@@ -110,7 +110,7 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant bloqueado. Notificação enviada.");
       notifyTenant(userId, "blocked");
-      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
 
@@ -123,7 +123,7 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
       notifyTenant(userId, "approved");
-      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
 
