@@ -196,3 +196,68 @@ function mapPagBankStatus(status: string): string {
   };
   return map[status] || "pending";
 }
+
+// ===================== AMPLOPAY =====================
+
+async function handleAmplopay(req: Request, supabase: any) {
+  const body = await req.json();
+  console.log("Amplopay Webhook:", JSON.stringify(body));
+
+  const transactionId = body.transactionId || body.id;
+  const status = body.status;
+
+  if (!transactionId) {
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("gateway", "amplopay")
+    .eq("gateway_payment_id", String(transactionId))
+    .maybeSingle();
+
+  if (!payment) {
+    console.log("Payment not found for Amplopay ID:", transactionId);
+    return new Response(JSON.stringify({ received: true, note: "payment_not_found" }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const newStatus = mapAmplopayStatus(status);
+
+  await supabase
+    .from("payments")
+    .update({ status: newStatus, raw_response: body })
+    .eq("id", payment.id);
+
+  if (newStatus === "approved") {
+    await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+    await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+  } else if (newStatus === "rejected" || newStatus === "cancelled") {
+    await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
+    await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function mapAmplopayStatus(status: string): string {
+  const map: Record<string, string> = {
+    PAID: "approved",
+    CONFIRMED: "approved",
+    RECEIVED: "approved",
+    PENDING: "pending",
+    OVERDUE: "pending",
+    REFUNDED: "refunded",
+    DELETED: "cancelled",
+  };
+  return map[status] || "pending";
+}
