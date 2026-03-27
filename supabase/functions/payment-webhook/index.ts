@@ -165,7 +165,7 @@ async function handlePagBank(req: Request, supabase: any) {
     // Try by order reference
     const { data: orderPayment } = await supabase
       .from("payments")
-      .select("*")
+      .select("*, orders(customer_name, total)")
       .eq("gateway", "pagbank")
       .eq("order_id", orderId)
       .maybeSingle();
@@ -182,6 +182,23 @@ async function handlePagBank(req: Request, supabase: any) {
       if (newStatus === "approved") {
         await supabase.from("orders").update({ status: "processando" }).eq("id", orderId);
         await supabase.from("order_status_history").insert({ order_id: orderId, status: "pago" });
+        const cName = orderPayment.orders?.customer_name || "Cliente";
+        const cTotal = `R$ ${Number(orderPayment.amount || 0).toFixed(2).replace(".", ",")}`;
+        await sendRichPush(orderPayment.user_id, {
+          title: "✅ Pagamento aprovado!",
+          body: `${cName} pagou ${cTotal} via PagBank 💰`,
+          url: "/admin/pedidos",
+          type: "payment_approved",
+          data: { orderId, paymentId: orderPayment.id },
+        });
+      } else if (newStatus === "rejected") {
+        await sendRichPush(orderPayment.user_id, {
+          title: "❌ Pagamento recusado!",
+          body: `Pagamento do pedido #${orderId.slice(0, 8)} foi recusado no PagBank.`,
+          url: "/admin/pedidos",
+          type: "payment_rejected",
+          data: { orderId, paymentId: orderPayment.id },
+        });
       }
     }
   } else {
@@ -196,6 +213,13 @@ async function handlePagBank(req: Request, supabase: any) {
     if (newStatus === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+      await sendRichPush(payment.user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `Pagamento de R$ ${Number(payment.amount || 0).toFixed(2).replace(".", ",")} via PagBank aprovado 💰`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: payment.order_id, paymentId: payment.id },
+      });
     }
   }
 
