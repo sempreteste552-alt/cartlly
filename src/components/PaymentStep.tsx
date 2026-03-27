@@ -220,20 +220,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   };
 
-  // CPF input for PIX/Boleto
-  const CpfField = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <div className="space-y-2">
-      <Label>CPF</Label>
-      <Input
-        placeholder="000.000.000-00"
-        value={value}
-        onChange={(e) => onChange(formatCpf(e.target.value))}
-        maxLength={14}
-        className="font-mono"
-      />
-      <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
-    </div>
-  );
+  // CPF field rendered inline to avoid remount/focus loss
 
   // Show PIX result
   if (paymentData && selectedMethod === "pix") {
@@ -422,7 +409,11 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </div>
           </div>
 
-          <CpfField value={cardCpf} onChange={setCardCpf} />
+          <div className="space-y-2">
+            <Label>CPF do Titular</Label>
+            <Input placeholder="000.000.000-00" value={cardCpf} onChange={(e) => setCardCpf(formatCpf(e.target.value))} maxLength={14} className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
+          </div>
 
           <div className="space-y-2">
             <Label>Parcelas</Label>
@@ -471,7 +462,11 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-2xl font-bold text-center">{formatPrice(total)}</p>
-          <CpfField value={payerCpf} onChange={setPayerCpf} />
+          <div className="space-y-2">
+            <Label>CPF</Label>
+            <Input placeholder="000.000.000-00" value={payerCpf} onChange={(e) => setPayerCpf(formatCpf(e.target.value))} maxLength={14} className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
+          </div>
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setSelectedMethod(null)}>
               Voltar
