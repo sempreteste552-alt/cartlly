@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
+import siteSeguro from "@/assets/site-seguro.webp";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
