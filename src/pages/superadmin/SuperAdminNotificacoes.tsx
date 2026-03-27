@@ -41,6 +41,11 @@ export default function SuperAdminNotificacoes() {
     if (!user) return;
     setTestingPush(true);
     try {
+      if (!isSubscribed && isSupported) {
+        await subscribe();
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
       const { data, error } = await supabase.functions.invoke("send-push", {
         body: {
           title: "🔔 Teste Push — Super Admin",
@@ -53,7 +58,7 @@ export default function SuperAdminNotificacoes() {
       if (data?.sent > 0) {
         toast.success("✅ Push enviado! Verifique seu dispositivo.");
       } else {
-        toast.error("Nenhuma assinatura push encontrada. Ative as notificações primeiro.");
+        toast.error("Não foi possível enviar. Verifique se permitiu notificações no navegador.");
       }
     } catch (err: any) {
       toast.error("Erro ao testar push: " + (err.message || "Erro"));

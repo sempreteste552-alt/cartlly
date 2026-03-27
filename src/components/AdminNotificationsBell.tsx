@@ -35,6 +35,13 @@ export function AdminNotificationsBell() {
     if (!user) return;
     setTestingPush(true);
     try {
+      // Auto-subscribe if not subscribed yet
+      if (!isSubscribed && isSupported) {
+        await subscribe();
+        // Wait briefly for subscription to be saved
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
       const { data, error } = await supabase.functions.invoke("send-push", {
         body: {
           title: "🔔 Teste de Notificação",
@@ -47,7 +54,7 @@ export function AdminNotificationsBell() {
       if (data?.sent > 0) {
         toast.success("✅ Push enviado! Verifique seu dispositivo.");
       } else {
-        toast.error("Nenhuma assinatura push encontrada. Ative as notificações primeiro.");
+        toast.error("Não foi possível enviar. Verifique se permitiu notificações no navegador.");
       }
     } catch (err: any) {
       toast.error("Erro ao testar push: " + (err.message || "Erro"));
