@@ -409,7 +409,11 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </div>
           </div>
 
-          <CpfField value={cardCpf} onChange={setCardCpf} />
+          <div className="space-y-2">
+            <Label>CPF do Titular</Label>
+            <Input placeholder="000.000.000-00" value={cardCpf} onChange={(e) => setCardCpf(formatCpf(e.target.value))} maxLength={14} className="font-mono" />
+            <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
+          </div>
 
           <div className="space-y-2">
             <Label>Parcelas</Label>
