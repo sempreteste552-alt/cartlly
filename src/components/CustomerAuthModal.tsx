@@ -28,7 +28,7 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(email, password, storeUserId);
       toast.success("Login efetuado com sucesso!", { duration: 3000 });
       onOpenChange(false);
     } catch (err: any) {
