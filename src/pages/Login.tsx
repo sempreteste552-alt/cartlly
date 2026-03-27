@@ -200,24 +200,9 @@ export default function Login() {
         <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
 
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
-          <CardHeader className="text-center space-y-3 pt-8">
-            {/* Logo + Selo com efeito de luz girando */}
-            <div className="relative mx-auto w-fit">
-              <div className="absolute -inset-4 rounded-full overflow-hidden">
-                <div
-                  className="absolute inset-0 animate-spin"
-                  style={{
-                    background: "conic-gradient(from 0deg, transparent 30%, #3b82f6 50%, transparent 70%)",
-                    animationDuration: "2.5s",
-                  }}
-                />
-              </div>
-              <div className="absolute -inset-3 rounded-full bg-blue-500/15 blur-lg animate-pulse" />
-              <div className="relative flex flex-col items-center gap-2 bg-card rounded-full px-6 py-3">
-                <img src={cartlyLogo} alt="Cartly" className="h-16 w-auto drop-shadow-lg" />
-                <img src={siteSeguro} alt="Site 100% Seguro" className="h-12 opacity-90" />
-              </div>
-            </div>
+          <CardHeader className="text-center space-y-4 pt-8">
+            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-20 w-auto drop-shadow-lg" />
+            <img src={siteSeguro} alt="Site 100% Seguro" className="mx-auto h-16" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
