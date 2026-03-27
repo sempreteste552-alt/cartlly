@@ -194,6 +194,8 @@ export default function SuperAdminTenants() {
         : "O acesso ao painel administrativo da sua loja foi liberado!",
       type: "info",
     } as any);
+    const tenant = tenants?.find(t => t.user_id === userId);
+    logAudit(!currentBlocked ? "block_admin_panel" : "unblock_admin_panel", "admin_panel", userId, tenant?.display_name || "—");
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
