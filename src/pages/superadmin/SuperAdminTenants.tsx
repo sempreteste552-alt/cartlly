@@ -60,7 +60,7 @@ export default function SuperAdminTenants() {
       (filter === "approved" && t.status === "approved") ||
       (filter === "active" && t.subscription?.status === "active") ||
       (filter === "trial" && t.subscription?.status === "trial") ||
-      (filter === "blocked" && (t.status === "blocked" || t.subscription?.status === "blocked")) ||
+      (filter === "blocked" && (t.status === "blocked" || t.store?.store_blocked || t.store?.admin_blocked)) ||
       (filter === "no_plan" && !t.subscription && t.status === "approved");
     return matchSearch && matchFilter;
   }) ?? [];
