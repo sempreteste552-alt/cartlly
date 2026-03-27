@@ -204,6 +204,9 @@ export default function LojaCheckout() {
         const couponLine = appliedCoupon ? `\n🎟️ *Cupom:* ${appliedCoupon.code} (-${formatPrice(discountAmount)})` : "";
         const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+        setSavedFinalTotal(finalTotal);
+        setSavedDiscountAmount(discountAmount);
+        setSavedShippingCost(shippingCost);
         cart.clearCart();
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
@@ -211,6 +214,9 @@ export default function LojaCheckout() {
       } else if (hasGateway) {
         setPhase("payment");
       } else {
+        setSavedFinalTotal(finalTotal);
+        setSavedDiscountAmount(discountAmount);
+        setSavedShippingCost(shippingCost);
         cart.clearCart();
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
