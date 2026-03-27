@@ -335,13 +335,13 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         ))}
         <Separator />
         {/* Trust badges */}
-        <div className="flex items-center justify-center gap-3 flex-wrap py-2">
-          <img src={siteSeguro} alt="Site Seguro" className="h-8" />
-          <img src={compraSegura} alt="Compra Segura" className="h-8" />
+        <div className="flex items-center justify-center gap-4 flex-wrap py-3">
+          <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
+          <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
         </div>
-        <div className="flex items-center justify-center gap-2 py-1">
-          <img src={paymentCards} alt="Bandeiras aceitas" className="h-6" />
-          <img src={pixLogo} alt="PIX" className="h-6" />
+        <div className="flex items-center justify-center gap-4 py-2">
+          <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
+          <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
         </div>
         <p className="text-[10px] text-muted-foreground text-center">
           Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
