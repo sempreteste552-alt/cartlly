@@ -574,6 +574,39 @@ export default function SuperAdminTenants() {
         onOpenChange={setDetailDialogOpen}
         tenant={detailTenant}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Excluir Tenant Permanentemente
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é irreversível. Todos os dados do tenant serão excluídos permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <p className="text-sm font-medium">{deletingTenant?.display_name || "Sem nome"}</p>
+              <p className="text-xs text-muted-foreground">{deletingTenant?.store?.store_name || "Sem loja"}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {deletingTenant?.productCount || 0} produtos • {deletingTenant?.orders?.count || 0} pedidos
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Serão excluídos: perfil, loja, produtos, pedidos, cupons, configurações e todos os dados relacionados.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteUser}>
+                <Trash2 className="mr-2 h-4 w-4" /> Excluir Permanentemente
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
