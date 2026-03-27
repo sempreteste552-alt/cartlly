@@ -120,7 +120,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
       if (result.paymentResult?.status === "approved") {
         toast.success("Pagamento aprovado!");
-        onSuccess();
+        onSuccess(method);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
