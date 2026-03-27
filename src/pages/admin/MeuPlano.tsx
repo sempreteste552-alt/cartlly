@@ -172,12 +172,17 @@ export default function MeuPlano() {
       return data;
     },
     onSuccess: (data) => {
+      // Normalize Amplopay PIX fields (code/base64 → qrCode/qrCodeBase64)
+      if (data.pix) {
+        data.pix.qrCode = data.pix.qrCode || (data.pix as any).code;
+        data.pix.qrCodeBase64 = data.pix.qrCodeBase64 || (data.pix as any).base64;
+      }
       setPaymentResult(data);
       if (data.pix?.qrCode) {
-        // Show PIX QR code
+        // Show PIX QR code - payment still pending
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
       } else {
-        // For other methods or if PIX was instant
+        // For other methods - payment still pending
         setCheckoutDialog(null);
         setThankYouDialog({ planName: data.plan_name || "", method: selectedMethod });
       }
@@ -567,7 +572,11 @@ export default function MeuPlano() {
                 <div className="text-center space-y-3">
                   <div className="flex items-center justify-center">
                     <div className="p-4 bg-background rounded-xl border border-border">
-                      <QrCode className="h-32 w-32 text-foreground" />
+                      {paymentResult.pix?.qrCodeBase64 ? (
+                        <img src={`data:image/png;base64,${paymentResult.pix.qrCodeBase64}`} alt="QR Code PIX" className="h-48 w-48" />
+                      ) : (
+                        <QrCode className="h-32 w-32 text-foreground" />
+                      )}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">Escaneie o QR Code com seu app do banco</p>
@@ -633,12 +642,12 @@ export default function MeuPlano() {
       <Dialog open={!!thankYouDialog} onOpenChange={() => setThankYouDialog(null)}>
         <DialogContent className="sm:max-w-md text-center">
           <div className="py-6 space-y-4">
-            <PartyPopper className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold text-foreground">🎉 Obrigado!</h2>
+            <Clock className="h-16 w-16 text-amber-500 mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">⏳ Cobrança Criada!</h2>
             <p className="text-muted-foreground">
-              Seu plano <strong className="text-foreground">{thankYouDialog?.planName}</strong> foi processado com sucesso!
+              A cobrança do plano <strong className="text-foreground">{thankYouDialog?.planName}</strong> foi gerada com sucesso!
             </p>
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2 text-left">
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2 text-left">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plano</span>
                 <span className="font-medium">{thankYouDialog?.planName}</span>
@@ -649,10 +658,10 @@ export default function MeuPlano() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Ativo</Badge>
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">Aguardando Pagamento</Badge>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">As funcionalidades do plano serão liberadas após a confirmação do pagamento.</p>
+            <p className="text-xs text-muted-foreground">As funcionalidades do plano serão liberadas <strong>após a confirmação do pagamento</strong>. Você receberá uma notificação quando for aprovado.</p>
           </div>
           <DialogFooter>
             <Button onClick={() => setThankYouDialog(null)} className="w-full">
