@@ -109,6 +109,19 @@ export default function LojaLayout() {
     );
   }
 
+  // Store blocked by super admin
+  if (!isLoading && settings && (settings as any).store_blocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8 max-w-md">
+          <div className="text-6xl">🚫</div>
+          <h1 className="text-3xl font-bold">Loja Indisponível</h1>
+          <p className="text-gray-400">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLoading && settings && !settings.store_open) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">

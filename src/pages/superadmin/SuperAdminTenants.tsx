@@ -9,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
@@ -43,6 +43,8 @@ export default function SuperAdminTenants() {
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTenant, setDeletingTenant] = useState<any>(null);
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -58,7 +60,7 @@ export default function SuperAdminTenants() {
       (filter === "approved" && t.status === "approved") ||
       (filter === "active" && t.subscription?.status === "active") ||
       (filter === "trial" && t.subscription?.status === "trial") ||
-      (filter === "blocked" && (t.status === "blocked" || t.subscription?.status === "blocked")) ||
+      (filter === "blocked" && (t.status === "blocked" || t.store?.store_blocked || t.store?.admin_blocked)) ||
       (filter === "no_plan" && !t.subscription && t.status === "approved");
     return matchSearch && matchFilter;
   }) ?? [];
@@ -127,6 +129,87 @@ export default function SuperAdminTenants() {
     }
   };
 
+  // Block/Unblock Store
+  const handleToggleStoreBlock = async (userId: string, currentBlocked: boolean) => {
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ store_blocked: !currentBlocked } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    const action = !currentBlocked ? "bloqueada" : "desbloqueada";
+    toast.success(`Loja ${action}!`);
+    // Notify tenant
+    await supabase.from("admin_notifications").insert({
+      sender_user_id: user!.id,
+      target_user_id: userId,
+      title: !currentBlocked ? "🚫 Loja Bloqueada" : "✅ Loja Desbloqueada",
+      message: !currentBlocked
+        ? "Sua loja foi bloqueada pelo administrador. Clientes não podem acessá-la."
+        : "Sua loja foi desbloqueada! Clientes já podem acessá-la novamente.",
+      type: "info",
+    } as any);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
+  // Block/Unblock Admin Panel
+  const handleToggleAdminBlock = async (userId: string, currentBlocked: boolean) => {
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ admin_blocked: !currentBlocked } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    const action = !currentBlocked ? "bloqueado" : "desbloqueado";
+    toast.success(`Painel ${action}!`);
+    await supabase.from("admin_notifications").insert({
+      sender_user_id: user!.id,
+      target_user_id: userId,
+      title: !currentBlocked ? "🔒 Painel Bloqueado" : "🔓 Painel Desbloqueado",
+      message: !currentBlocked
+        ? "O acesso ao painel administrativo da sua loja foi bloqueado."
+        : "O acesso ao painel administrativo da sua loja foi liberado!",
+      type: "info",
+    } as any);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
+  // Delete User - states moved to top
+
+  const handleDeleteUser = async () => {
+    if (!deletingTenant) return;
+    const userId = deletingTenant.user_id;
+    // Delete store_settings, profiles, subscriptions, etc. (cascade will handle some)
+    await supabase.from("tenant_subscriptions").delete().eq("user_id", userId);
+    await supabase.from("store_settings").delete().eq("user_id", userId);
+    await supabase.from("products").delete().eq("user_id", userId);
+    await supabase.from("orders").delete().eq("user_id", userId);
+    await supabase.from("categories").delete().eq("user_id", userId);
+    await supabase.from("coupons").delete().eq("user_id", userId);
+    await supabase.from("shipping_zones").delete().eq("user_id", userId);
+    await supabase.from("store_banners").delete().eq("user_id", userId);
+    await supabase.from("admin_notifications").delete().eq("target_user_id", userId);
+    await supabase.from("admin_notifications").delete().eq("sender_user_id", userId);
+    await supabase.from("push_subscriptions").delete().eq("user_id", userId);
+    const { error: profileError } = await supabase.from("profiles").delete().eq("user_id", userId);
+    if (profileError) { toast.error("Erro ao excluir: " + profileError.message); return; }
+
+    // Log notification to all super admins
+    const { data: superAdmins } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
+    for (const sa of (superAdmins || [])) {
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: sa.user_id,
+        title: "🗑️ Tenant Excluído",
+        message: `O tenant "${deletingTenant.display_name || "Sem nome"}" foi excluído permanentemente.`,
+        type: "warning",
+      } as any);
+    }
+
+    toast.success("Tenant excluído permanentemente!");
+    setDeleteDialogOpen(false);
+    setDeletingTenant(null);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
   const openAssignPlan = (tenant: any) => {
     setSelectedTenant(tenant);
     setSelectedPlanId(tenant.subscription?.plan_id || "");
@@ -182,10 +265,20 @@ export default function SuperAdminTenants() {
 
   const getStatusBadge = (tenant: any) => {
     const status = tenant.status;
-    if (status === "pending") return <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>;
-    if (status === "rejected") return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>;
-    if (status === "blocked") return <Badge variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>;
-    return <Badge variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Aprovado</Badge>;
+    const storeBlocked = tenant.store?.store_blocked;
+    const adminBlocked = tenant.store?.admin_blocked;
+    
+    const badges = [];
+    
+    if (status === "pending") badges.push(<Badge key="pending" variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>);
+    else if (status === "rejected") badges.push(<Badge key="rejected" variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>);
+    else if (status === "blocked") badges.push(<Badge key="blocked" variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>);
+    else badges.push(<Badge key="approved" variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Ativo</Badge>);
+    
+    if (storeBlocked) badges.push(<Badge key="store" variant="outline" className="border-orange-500/50 text-orange-600 text-xs"><StoreIcon className="mr-1 h-3 w-3" />Loja bloq.</Badge>);
+    if (adminBlocked) badges.push(<Badge key="admin" variant="outline" className="border-red-500/50 text-red-600 text-xs"><ShieldOff className="mr-1 h-3 w-3" />Painel bloq.</Badge>);
+    
+    return <div className="flex items-center gap-1 flex-wrap">{badges}</div>;
   };
 
   if (isLoading) {
@@ -385,15 +478,37 @@ export default function SuperAdminTenants() {
                             <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {/* Block/Unblock User */}
                           {tenant.status === "blocked" || tenant.status === "rejected" ? (
                             <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
-                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear / Aprovar
+                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
-                              <Ban className="mr-2 h-4 w-4" /> Bloquear
+                              <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
                             </DropdownMenuItem>
                           )}
+                          {/* Block/Unblock Store */}
+                          <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
+                            {tenant.store?.store_blocked ? (
+                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
+                            ) : (
+                              <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
+                            )}
+                          </DropdownMenuItem>
+                          {/* Block/Unblock Admin Panel */}
+                          <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
+                            {tenant.store?.admin_blocked ? (
+                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
+                            ) : (
+                              <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {/* Delete User */}
+                          <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
@@ -459,6 +574,39 @@ export default function SuperAdminTenants() {
         onOpenChange={setDetailDialogOpen}
         tenant={detailTenant}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Excluir Tenant Permanentemente
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é irreversível. Todos os dados do tenant serão excluídos permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <p className="text-sm font-medium">{deletingTenant?.display_name || "Sem nome"}</p>
+              <p className="text-xs text-muted-foreground">{deletingTenant?.store?.store_name || "Sem loja"}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {deletingTenant?.productCount || 0} produtos • {deletingTenant?.orders?.count || 0} pedidos
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Serão excluídos: perfil, loja, produtos, pedidos, cupons, configurações e todos os dados relacionados.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteUser}>
+                <Trash2 className="mr-2 h-4 w-4" /> Excluir Permanentemente
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
