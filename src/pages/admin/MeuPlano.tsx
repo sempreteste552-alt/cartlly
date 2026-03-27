@@ -572,7 +572,11 @@ export default function MeuPlano() {
                 <div className="text-center space-y-3">
                   <div className="flex items-center justify-center">
                     <div className="p-4 bg-background rounded-xl border border-border">
-                      <QrCode className="h-32 w-32 text-foreground" />
+                      {paymentResult.pix?.qrCodeBase64 ? (
+                        <img src={`data:image/png;base64,${paymentResult.pix.qrCodeBase64}`} alt="QR Code PIX" className="h-48 w-48" />
+                      ) : (
+                        <QrCode className="h-32 w-32 text-foreground" />
+                      )}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">Escaneie o QR Code com seu app do banco</p>
