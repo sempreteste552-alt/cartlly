@@ -603,11 +603,14 @@ export default function MeuPlano() {
               {/* Non-PIX result */}
               {!paymentResult.pix?.qrCode && (
                 <div className="text-center space-y-3 py-4">
-                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+                  <Clock className="h-12 w-12 text-amber-500 mx-auto" />
                   <p className="font-bold text-lg">Cobrança criada!</p>
                   <p className="text-sm text-muted-foreground">
-                    Status: {paymentResult.status}
+                    Aguardando confirmação do pagamento. Você receberá uma notificação quando for aprovado.
                   </p>
+                  <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                    <Clock className="h-3 w-3 mr-1" /> Pendente
+                  </Badge>
                 </div>
               )}
             </div>
