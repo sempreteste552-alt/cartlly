@@ -140,7 +140,7 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
-      <div className="min-h-screen bg-white text-black pb-16 md:pb-0">
+      <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
         {/* Marquee ticker */}
         {settings?.marquee_enabled && settings?.marquee_text && (
           <StoreMarquee
