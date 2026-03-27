@@ -303,7 +303,7 @@ export default function LojaLayout() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar produtos..."
-                className="pl-9 bg-gray-50 border-gray-300 rounded-full"
+                className="pl-9 bg-secondary border-border rounded-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
