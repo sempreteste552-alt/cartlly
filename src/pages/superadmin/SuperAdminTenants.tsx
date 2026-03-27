@@ -127,6 +127,89 @@ export default function SuperAdminTenants() {
     }
   };
 
+  // Block/Unblock Store
+  const handleToggleStoreBlock = async (userId: string, currentBlocked: boolean) => {
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ store_blocked: !currentBlocked } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    const action = !currentBlocked ? "bloqueada" : "desbloqueada";
+    toast.success(`Loja ${action}!`);
+    // Notify tenant
+    await supabase.from("admin_notifications").insert({
+      sender_user_id: user!.id,
+      target_user_id: userId,
+      title: !currentBlocked ? "🚫 Loja Bloqueada" : "✅ Loja Desbloqueada",
+      message: !currentBlocked
+        ? "Sua loja foi bloqueada pelo administrador. Clientes não podem acessá-la."
+        : "Sua loja foi desbloqueada! Clientes já podem acessá-la novamente.",
+      type: "info",
+    } as any);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
+  // Block/Unblock Admin Panel
+  const handleToggleAdminBlock = async (userId: string, currentBlocked: boolean) => {
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ admin_blocked: !currentBlocked } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    const action = !currentBlocked ? "bloqueado" : "desbloqueado";
+    toast.success(`Painel ${action}!`);
+    await supabase.from("admin_notifications").insert({
+      sender_user_id: user!.id,
+      target_user_id: userId,
+      title: !currentBlocked ? "🔒 Painel Bloqueado" : "🔓 Painel Desbloqueado",
+      message: !currentBlocked
+        ? "O acesso ao painel administrativo da sua loja foi bloqueado."
+        : "O acesso ao painel administrativo da sua loja foi liberado!",
+      type: "info",
+    } as any);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
+  // Delete User
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTenant, setDeletingTenant] = useState<any>(null);
+
+  const handleDeleteUser = async () => {
+    if (!deletingTenant) return;
+    const userId = deletingTenant.user_id;
+    // Delete store_settings, profiles, subscriptions, etc. (cascade will handle some)
+    await supabase.from("tenant_subscriptions").delete().eq("user_id", userId);
+    await supabase.from("store_settings").delete().eq("user_id", userId);
+    await supabase.from("products").delete().eq("user_id", userId);
+    await supabase.from("orders").delete().eq("user_id", userId);
+    await supabase.from("categories").delete().eq("user_id", userId);
+    await supabase.from("coupons").delete().eq("user_id", userId);
+    await supabase.from("shipping_zones").delete().eq("user_id", userId);
+    await supabase.from("store_banners").delete().eq("user_id", userId);
+    await supabase.from("admin_notifications").delete().eq("target_user_id", userId);
+    await supabase.from("admin_notifications").delete().eq("sender_user_id", userId);
+    await supabase.from("push_subscriptions").delete().eq("user_id", userId);
+    const { error: profileError } = await supabase.from("profiles").delete().eq("user_id", userId);
+    if (profileError) { toast.error("Erro ao excluir: " + profileError.message); return; }
+
+    // Log notification to all super admins
+    const { data: superAdmins } = await supabase.from("user_roles").select("user_id").eq("role", "super_admin");
+    for (const sa of (superAdmins || [])) {
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: sa.user_id,
+        title: "🗑️ Tenant Excluído",
+        message: `O tenant "${deletingTenant.display_name || "Sem nome"}" foi excluído permanentemente.`,
+        type: "warning",
+      } as any);
+    }
+
+    toast.success("Tenant excluído permanentemente!");
+    setDeleteDialogOpen(false);
+    setDeletingTenant(null);
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
   const openAssignPlan = (tenant: any) => {
     setSelectedTenant(tenant);
     setSelectedPlanId(tenant.subscription?.plan_id || "");
