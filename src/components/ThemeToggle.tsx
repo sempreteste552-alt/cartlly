@@ -65,7 +65,14 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setDark((d) => !d)}
+      onClick={() => {
+        setDark((d) => {
+          const next = !d;
+          localStorage.setItem(storageKey, next ? "dark" : "light");
+          window.dispatchEvent(new Event(`theme-change-${storageKey}`));
+          return next;
+        });
+      }}
       className={className}
       title={dark ? "Modo claro" : "Modo escuro"}
     >
