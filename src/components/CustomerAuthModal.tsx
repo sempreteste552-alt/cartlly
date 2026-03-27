@@ -29,11 +29,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     setLoading(true);
     try {
       await signIn(email, password);
-      toast.success("Login realizado com sucesso!");
+      toast.success("Login efetuado com sucesso!", { duration: 3000 });
       onOpenChange(false);
     } catch (err: any) {
       const msg = err.message || "Erro ao fazer login";
-      toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos." : msg);
+      toast.error(msg.includes("Invalid login") || msg.includes("inválidos") ? "E-mail ou senha incorretos. Tente novamente." : msg, { duration: 4000 });
     } finally {
       setLoading(false);
     }
