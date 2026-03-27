@@ -160,6 +160,8 @@ export default function MeuPlano() {
             user_id: user.id,
             plan_id: checkoutDialog.planId,
             payment_method: selectedMethod,
+            document: cpf.replace(/\D/g, ""),
+            phone: phone,
           }),
         }
       );
