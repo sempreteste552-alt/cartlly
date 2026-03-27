@@ -27,6 +27,7 @@ export default function SuperAdminNotificacoes() {
   const { user } = useAuth();
   const { data: tenants } = useAllTenants();
   const queryClient = useQueryClient();
+  const { isSupported, isSubscribed, subscribe, unsubscribe, loading: pushLoading } = usePushNotifications();
 
   const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -34,6 +35,32 @@ export default function SuperAdminNotificacoes() {
   const [type, setType] = useState("info");
   const [targetUserId, setTargetUserId] = useState("all");
   const [sending, setSending] = useState(false);
+  const [testingPush, setTestingPush] = useState(false);
+
+  const handleTestPush = async () => {
+    if (!user) return;
+    setTestingPush(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-push", {
+        body: {
+          title: "🔔 Teste Push — Super Admin",
+          body: "Se você está vendo isso, as notificações push do Super Admin estão funcionando!",
+          url: "/superadmin/notificacoes",
+          targetUserId: user.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.sent > 0) {
+        toast.success("✅ Push enviado! Verifique seu dispositivo.");
+      } else {
+        toast.error("Nenhuma assinatura push encontrada. Ative as notificações primeiro.");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao testar push: " + (err.message || "Erro"));
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["admin_notifications"],
