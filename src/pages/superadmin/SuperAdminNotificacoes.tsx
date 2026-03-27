@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAllTenants } from "@/hooks/useUserRole";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, Send, Plus, Users, User, Megaphone, AlertTriangle, Info, Tag, Trash2 } from "lucide-react";
+import { Bell, Send, Plus, Users, User, Megaphone, AlertTriangle, Info, Tag, Trash2, Loader2, BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
 
 const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
@@ -26,6 +27,7 @@ export default function SuperAdminNotificacoes() {
   const { user } = useAuth();
   const { data: tenants } = useAllTenants();
   const queryClient = useQueryClient();
+  const { isSupported, isSubscribed, subscribe, unsubscribe, loading: pushLoading } = usePushNotifications();
 
   const [formOpen, setFormOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -33,6 +35,32 @@ export default function SuperAdminNotificacoes() {
   const [type, setType] = useState("info");
   const [targetUserId, setTargetUserId] = useState("all");
   const [sending, setSending] = useState(false);
+  const [testingPush, setTestingPush] = useState(false);
+
+  const handleTestPush = async () => {
+    if (!user) return;
+    setTestingPush(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-push", {
+        body: {
+          title: "🔔 Teste Push — Super Admin",
+          body: "Se você está vendo isso, as notificações push do Super Admin estão funcionando!",
+          url: "/superadmin/notificacoes",
+          targetUserId: user.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.sent > 0) {
+        toast.success("✅ Push enviado! Verifique seu dispositivo.");
+      } else {
+        toast.error("Nenhuma assinatura push encontrada. Ative as notificações primeiro.");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao testar push: " + (err.message || "Erro"));
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["admin_notifications"],
@@ -157,7 +185,59 @@ export default function SuperAdminNotificacoes() {
         </Card>
       </div>
 
-      {/* Notification List */}
+      {/* Push Notifications Control */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isSubscribed ? "bg-green-500/10" : "bg-muted"}`}>
+                {isSubscribed ? <BellRing className="h-5 w-5 text-green-600" /> : <BellOff className="h-5 w-5 text-muted-foreground" />}
+              </div>
+              <div>
+                <p className="font-medium text-sm">Push Notifications</p>
+                <p className="text-xs text-muted-foreground">
+                  {!isSupported ? "Não suportado neste navegador" : isSubscribed ? "Ativas — você receberá alertas em tempo real" : "Desativadas — ative para receber alertas"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSubscribed && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestPush}
+                    disabled={testingPush}
+                  >
+                    {testingPush ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Send className="mr-1 h-3 w-3" />}
+                    Testar Push
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={unsubscribe}
+                    disabled={pushLoading}
+                    className="text-destructive"
+                  >
+                    <BellOff className="mr-1 h-3 w-3" /> Desativar
+                  </Button>
+                </>
+              )}
+              {!isSubscribed && isSupported && (
+                <Button
+                  size="sm"
+                  onClick={subscribe}
+                  disabled={pushLoading}
+                >
+                  {pushLoading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <BellRing className="mr-1 h-3 w-3" />}
+                  Ativar Push
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {!notifications?.length ? (
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center p-12">
