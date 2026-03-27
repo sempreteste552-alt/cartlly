@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_store_unique ON public.customers (email, store_user_id);

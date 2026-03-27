@@ -29,11 +29,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     setLoading(true);
     try {
       await signIn(email, password);
-      toast.success("Login realizado com sucesso!");
+      toast.success("Login efetuado com sucesso!", { duration: 3000 });
       onOpenChange(false);
     } catch (err: any) {
       const msg = err.message || "Erro ao fazer login";
-      toast.error(msg.includes("Invalid login") ? "E-mail ou senha inválidos." : msg);
+      toast.error(msg.includes("Invalid login") || msg.includes("inválidos") ? "E-mail ou senha incorretos. Tente novamente." : msg, { duration: 4000 });
     } finally {
       setLoading(false);
     }
@@ -45,10 +45,16 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     setLoading(true);
     try {
       await signUp(email, password, name, storeUserId);
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.", { duration: 4000 });
       setTab("login");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao criar conta");
+      const msg = err.message || "Erro ao criar conta";
+      if (msg.includes("já está cadastrado") || msg.includes("already")) {
+        toast.error("Este e-mail já está registrado nesta loja. Faça login.", { duration: 4000 });
+        setTab("login");
+      } else {
+        toast.error(msg, { duration: 4000 });
+      }
     } finally {
       setLoading(false);
     }

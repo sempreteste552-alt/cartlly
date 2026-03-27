@@ -149,6 +149,17 @@ export default function LojaCheckout() {
   };
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState(false);
+
+  // Auto-proceed after login: when user becomes authenticated while pending
+  useEffect(() => {
+    if (pendingPayment && user && !authLoading) {
+      setPendingPayment(false);
+      setAuthModalOpen(false);
+      // Small delay to let state settle
+      setTimeout(() => handleSubmit(false), 300);
+    }
+  }, [user, authLoading, pendingPayment]);
 
   const handleSubmit = async (viaWhatsApp = false) => {
     if (!name.trim()) return toast.error("Informe seu nome");
@@ -162,6 +173,7 @@ export default function LojaCheckout() {
     }
 
     if (!viaWhatsApp && !user) {
+      setPendingPayment(true);
       toast.info("🔐 Faça login ou crie uma conta para prosseguir com o pagamento");
       setAuthModalOpen(true);
       return;
