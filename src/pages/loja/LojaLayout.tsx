@@ -263,7 +263,7 @@ export default function LojaLayout() {
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity + 1)}>+</Button>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={() => cart.removeItem(item.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => cart.removeItem(item.id)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
