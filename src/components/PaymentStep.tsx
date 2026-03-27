@@ -20,7 +20,7 @@ interface PaymentStepProps {
   storeUserId: string;
   total: number;
   settings: any;
-  onSuccess: () => void;
+  onSuccess: (method?: string) => void;
 }
 
 const formatPrice = (price: number) =>

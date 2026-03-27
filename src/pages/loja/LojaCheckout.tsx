@@ -348,8 +348,10 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
-          onSuccess={() => {
+          onSuccess={(method) => {
             setOrderItems([...cart.items]);
+            setPaymentMethod(method || "gateway");
+            setPaymentDate(new Date());
             cart.clearCart();
             setPhase("success");
           }}
