@@ -82,7 +82,7 @@ async function handleMercadoPago(req: Request, supabase: any) {
   // Get store settings to fetch payment details from MP
   const { data: settings } = await supabase
     .from("store_settings")
-    .select("gateway_secret_key")
+    .select("gateway_secret_key, store_name")
     .eq("user_id", payment.user_id)
     .single();
 
@@ -99,13 +99,39 @@ async function handleMercadoPago(req: Request, supabase: any) {
       .update({ status: newStatus, raw_response: mpData })
       .eq("id", payment.id);
 
+    // Get order info for push notification
+    const order = payment.orders;
+    const customerName = order?.customer_name || "Cliente";
+    const orderTotal = payment.amount || order?.total || 0;
+    const formattedTotal = `R$ ${Number(orderTotal).toFixed(2).replace(".", ",")}`;
+    const orderId8 = payment.order_id?.slice(0, 8) || "";
+    const methodLabel = payment.method === "pix" ? "PIX" : payment.method === "credit_card" ? "Cartão" : payment.method === "boleto" ? "Boleto" : payment.method;
+
     // Update order status based on payment
     if (newStatus === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+
+      // 🔔 Push: Payment approved
+      await sendRichPush(payment.user_id, {
+        title: "✅ Pagamento aprovado!",
+        body: `${customerName} pagou ${formattedTotal} via ${methodLabel} 💰 Pedido #${orderId8}`,
+        url: "/admin/pedidos",
+        type: "payment_approved",
+        data: { orderId: payment.order_id, paymentId: payment.id, method: payment.method },
+      });
     } else if (newStatus === "rejected" || newStatus === "cancelled") {
       await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+
+      // 🔔 Push: Payment rejected
+      await sendRichPush(payment.user_id, {
+        title: "❌ Pagamento recusado!",
+        body: `Pagamento de ${formattedTotal} via ${methodLabel} do pedido #${orderId8} (${customerName}) foi recusado.`,
+        url: "/admin/pedidos",
+        type: "payment_rejected",
+        data: { orderId: payment.order_id, paymentId: payment.id },
+      });
     }
   }
 
