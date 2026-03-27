@@ -189,7 +189,7 @@ export default function LojaLayout() {
         </div>
 
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-gray-200 shadow-sm" style={{ backgroundColor: headerBgColor }}>
+        <header className="sticky top-0 z-50 border-b border-border shadow-sm bg-card">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
