@@ -399,7 +399,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
         </div>
         <p className="text-[10px] text-muted-foreground text-center">
-          Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
+          Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : settings?.payment_gateway === "amplopay" ? "Amplopay" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
         </p>
       </CardContent>
     </Card>
