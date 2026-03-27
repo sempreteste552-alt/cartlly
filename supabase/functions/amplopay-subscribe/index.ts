@@ -107,8 +107,8 @@ Deno.serve(async (req) => {
         client: {
           name: tenantName,
           email: tenantEmail,
-          phone: "(00) 0 0000-0000",
-          document: "000.000.000-00",
+          phone: phone || "(00) 0 0000-0000",
+          document: document,
         },
         callbackUrl,
       };
