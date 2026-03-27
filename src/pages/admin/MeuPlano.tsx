@@ -110,6 +110,26 @@ export default function MeuPlano() {
     };
   }, [paymentResult, checkoutDialog, paymentConfirmed, user, queryClient]);
 
+  // PIX countdown timer (30 min default)
+  useEffect(() => {
+    if (!pixExpiresAt || paymentConfirmed) {
+      setPixTimeLeft(0);
+      return;
+    }
+    const tick = () => {
+      const left = Math.max(0, Math.floor((pixExpiresAt - Date.now()) / 1000));
+      setPixTimeLeft(left);
+      if (left <= 0 && pollingRef.current) {
+        // QR expired — stop polling
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [pixExpiresAt, paymentConfirmed]);
+
   const { data: currentSub } = useQuery({
     queryKey: ["my_subscription", user?.id],
     enabled: !!user,
