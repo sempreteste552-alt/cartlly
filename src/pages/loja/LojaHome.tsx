@@ -178,7 +178,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
         return (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card
-              className="overflow-hidden border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative"
+              className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
               style={{
                 boxShadow: undefined,
               }}
