@@ -187,22 +187,13 @@ export default function Login() {
       </div>
 
       <div className="relative w-full max-w-md">
-        {/* Rotating blue glow border */}
-        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: "conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8, #3b82f6)",
-              animation: "spin 3s linear infinite",
-            }}
-          />
-        </div>
-        {/* Inner glow pulse */}
-        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
+        {/* Subtle border */}
+        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-b from-blue-500/30 to-blue-600/10" />
 
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardHeader className="text-center space-y-4 pt-8">
             <img src={cartlyLogo} alt="Cartly" className="mx-auto h-16 w-auto drop-shadow-lg" />
+            <img src={siteSeguro} alt="Site 100% Seguro" className="mx-auto h-14 opacity-90" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
@@ -371,10 +362,6 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        {/* Trust badge */}
-        <div className="flex justify-center mt-4">
-          <img src={siteSeguro} alt="Site 100% Seguro - SSL Certificado" className="h-10 opacity-80" />
-        </div>
       </div>
     </div>
   );
