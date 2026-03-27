@@ -675,8 +675,13 @@ export default function MeuPlano() {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setCheckoutDialog(null); setPaymentResult(null); }}>
-              {paymentResult ? "Fechar" : "Cancelar"}
+            <Button
+              variant={paymentConfirmed ? "default" : "outline"}
+              onClick={() => { setCheckoutDialog(null); setPaymentResult(null); setPaymentConfirmed(false); }}
+            >
+              {paymentConfirmed ? (
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Fechar</>
+              ) : paymentResult ? "Fechar" : "Cancelar"}
             </Button>
             {!paymentResult && (
               <Button
