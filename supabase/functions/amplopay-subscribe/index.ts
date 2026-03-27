@@ -155,12 +155,25 @@ Deno.serve(async (req) => {
       body: JSON.stringify(requestBody),
     });
 
-    const amplopayData = await amplopayRes.json();
-    console.log("Amplopay response:", JSON.stringify(amplopayData));
+    const amplopayText = await amplopayRes.text();
+    console.log("Amplopay raw response:", amplopayRes.status, amplopayText);
+
+    let amplopayData: any;
+    try {
+      amplopayData = JSON.parse(amplopayText);
+    } catch {
+      return new Response(JSON.stringify({
+        error: `Erro na resposta do gateway: ${amplopayText || "resposta vazia"}`,
+        status_code: amplopayRes.status,
+      }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!amplopayRes.ok) {
       return new Response(JSON.stringify({
-        error: amplopayData.message || "Erro ao criar cobrança no Amplopay",
+        error: amplopayData.message || amplopayData.error || "Erro ao criar cobrança no Amplopay",
         details: amplopayData,
       }), {
         status: 400,
