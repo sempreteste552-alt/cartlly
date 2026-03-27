@@ -762,6 +762,7 @@ export type Database = {
         Row: {
           accent_color: string
           admin_accent_color: string
+          admin_blocked: boolean
           admin_primary_color: string
           button_color: string
           button_text_color: string
@@ -800,6 +801,7 @@ export type Database = {
           shipping_free_above: number | null
           shipping_per_km: number
           store_address: string | null
+          store_blocked: boolean
           store_cep: string | null
           store_description: string | null
           store_location: string | null
@@ -817,6 +819,7 @@ export type Database = {
         Insert: {
           accent_color?: string
           admin_accent_color?: string
+          admin_blocked?: boolean
           admin_primary_color?: string
           button_color?: string
           button_text_color?: string
@@ -855,6 +858,7 @@ export type Database = {
           shipping_free_above?: number | null
           shipping_per_km?: number
           store_address?: string | null
+          store_blocked?: boolean
           store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
@@ -872,6 +876,7 @@ export type Database = {
         Update: {
           accent_color?: string
           admin_accent_color?: string
+          admin_blocked?: boolean
           admin_primary_color?: string
           button_color?: string
           button_text_color?: string
@@ -910,6 +915,7 @@ export type Database = {
           shipping_free_above?: number | null
           shipping_per_km?: number
           store_address?: string | null
+          store_blocked?: boolean
           store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
