@@ -9,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
+import pixLogo from "@/assets/pix-logo.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
 
 interface PaymentStepProps {
   orderId: string;
