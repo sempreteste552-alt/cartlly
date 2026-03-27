@@ -41,7 +41,6 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
   });
 
   useEffect(() => {
-    localStorage.setItem(storageKey, dark ? "dark" : "light");
     if (applyToRoot) {
       if (dark) {
         document.documentElement.classList.add("dark");
@@ -49,7 +48,7 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
         document.documentElement.classList.remove("dark");
       }
     }
-  }, [dark, storageKey, applyToRoot]);
+  }, [dark, applyToRoot]);
 
   // Cleanup: when unmounting an applyToRoot toggle, remove the class
   // so the next layout can set its own.
