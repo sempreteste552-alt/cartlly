@@ -68,6 +68,45 @@ export default function MeuPlano() {
   const [phone, setPhone] = useState("");
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Polling: check subscription status every 5s while QR code is shown
+  useEffect(() => {
+    if (!paymentResult || !checkoutDialog || paymentConfirmed) {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollingRef.current = null;
+      return;
+    }
+
+    const checkPayment = async () => {
+      if (!user || !checkoutDialog) return;
+      const { data } = await supabase
+        .from("tenant_subscriptions")
+        .select("status, plan_id")
+        .eq("user_id", user.id)
+        .eq("plan_id", checkoutDialog.planId)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (data) {
+        setPaymentConfirmed(true);
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        pollingRef.current = null;
+        toast.success("🎉 Pagamento confirmado! Plano ativado.");
+        queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["plan_features"] });
+      }
+    };
+
+    pollingRef.current = setInterval(checkPayment, 5000);
+    // Also check immediately
+    checkPayment();
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [paymentResult, checkoutDialog, paymentConfirmed, user, queryClient]);
 
   const { data: currentSub } = useQuery({
     queryKey: ["my_subscription", user?.id],
