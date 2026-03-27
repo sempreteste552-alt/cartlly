@@ -40,6 +40,9 @@ export function usePlanFeatures() {
         .from("tenant_subscriptions")
         .select("*, tenant_plans(*)")
         .eq("user_id", user!.id)
+        .in("status", ["active", "trial"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (!sub || !sub.tenant_plans) {

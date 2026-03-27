@@ -163,32 +163,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Store pending subscription info for webhook processing
-    // Check if subscription exists
-    const { data: existingSub } = await supabase
-      .from("tenant_subscriptions")
-      .select("id")
-      .eq("user_id", user_id)
-      .maybeSingle();
-
-    if (existingSub) {
-      await supabase
-        .from("tenant_subscriptions")
-        .update({
-          plan_id,
-          status: "pending_payment",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingSub.id);
-    } else {
-      await supabase
-        .from("tenant_subscriptions")
-        .insert({
-          user_id,
-          plan_id,
-          status: "pending_payment",
-        });
-    }
+    // IMPORTANT: do not change the tenant's current subscription yet.
+    // The active plan must only switch after Amplopay confirms payment
+    // through the webhook with TRANSACTION_PAID / COMPLETED.
 
     // Notify tenant
     await supabase.from("admin_notifications").insert({
