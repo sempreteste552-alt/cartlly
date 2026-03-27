@@ -847,6 +847,11 @@ export type Database = {
           twitter_url: string | null
           updated_at: string
           user_id: string
+          welcome_coupon_discount_type: string
+          welcome_coupon_discount_value: number
+          welcome_coupon_enabled: boolean
+          welcome_coupon_expires_days: number
+          welcome_coupon_min_order: number | null
           youtube_url: string | null
         }
         Insert: {
@@ -904,6 +909,11 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_id: string
+          welcome_coupon_discount_type?: string
+          welcome_coupon_discount_value?: number
+          welcome_coupon_enabled?: boolean
+          welcome_coupon_expires_days?: number
+          welcome_coupon_min_order?: number | null
           youtube_url?: string | null
         }
         Update: {
@@ -961,6 +971,11 @@ export type Database = {
           twitter_url?: string | null
           updated_at?: string
           user_id?: string
+          welcome_coupon_discount_type?: string
+          welcome_coupon_discount_value?: number
+          welcome_coupon_enabled?: boolean
+          welcome_coupon_expires_days?: number
+          welcome_coupon_min_order?: number | null
           youtube_url?: string | null
         }
         Relationships: []

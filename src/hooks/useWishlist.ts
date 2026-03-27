@@ -6,11 +6,13 @@ import { toast } from "sonner";
 export function useWishlist(storeUserId?: string) {
   const { customer } = useCustomerAuth();
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadWishlist = useCallback(async () => {
     if (!customer?.id) {
       setWishlistIds(new Set());
+      setWishlistProducts([]);
       return;
     }
     const { data } = await supabase
@@ -18,7 +20,17 @@ export function useWishlist(storeUserId?: string) {
       .select("product_id")
       .eq("customer_id", customer.id);
     if (data) {
-      setWishlistIds(new Set((data as any[]).map((d) => d.product_id)));
+      const ids = (data as any[]).map((d) => d.product_id);
+      setWishlistIds(new Set(ids));
+      if (ids.length > 0) {
+        const { data: products } = await supabase
+          .from("products")
+          .select("id, name, price, image_url")
+          .in("id", ids);
+        setWishlistProducts(products || []);
+      } else {
+        setWishlistProducts([]);
+      }
     }
   }, [customer?.id]);
 
@@ -61,5 +73,5 @@ export function useWishlist(storeUserId?: string) {
 
   const isWishlisted = (productId: string) => wishlistIds.has(productId);
 
-  return { wishlistIds, toggleWishlist, isWishlisted, loading, wishlistCount: wishlistIds.size };
+  return { wishlistIds, wishlistProducts, toggleWishlist, isWishlisted, loading, wishlistCount: wishlistIds.size };
 }

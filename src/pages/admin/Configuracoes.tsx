@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
@@ -133,6 +134,12 @@ export default function Configuracoes() {
   const [marqueeSpeed, setMarqueeSpeed] = useState(50);
   const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
   const [marqueeTextColor, setMarqueeTextColor] = useState("#ffffff");
+  // Welcome coupon
+  const [welcomeCouponEnabled, setWelcomeCouponEnabled] = useState(false);
+  const [welcomeCouponDiscountType, setWelcomeCouponDiscountType] = useState("percentage");
+  const [welcomeCouponDiscountValue, setWelcomeCouponDiscountValue] = useState(10);
+  const [welcomeCouponMinOrder, setWelcomeCouponMinOrder] = useState<string>("");
+  const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
 
   useEffect(() => {
     if (settings) {
@@ -168,6 +175,11 @@ export default function Configuracoes() {
       setMarqueeSpeed((settings as any).marquee_speed ?? 50);
       setMarqueeBgColor((settings as any).marquee_bg_color ?? "#000000");
       setMarqueeTextColor((settings as any).marquee_text_color ?? "#ffffff");
+      setWelcomeCouponEnabled(settings.welcome_coupon_enabled ?? false);
+      setWelcomeCouponDiscountType(settings.welcome_coupon_discount_type ?? "percentage");
+      setWelcomeCouponDiscountValue(settings.welcome_coupon_discount_value ?? 10);
+      setWelcomeCouponMinOrder(settings.welcome_coupon_min_order ? String(settings.welcome_coupon_min_order) : "");
+      setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
     }
   }, [settings]);
 
@@ -228,6 +240,11 @@ export default function Configuracoes() {
       header_bg_color: headerBgColor,
       footer_bg_color: footerBgColor,
       footer_text_color: footerTextColor,
+      welcome_coupon_enabled: welcomeCouponEnabled,
+      welcome_coupon_discount_type: welcomeCouponDiscountType,
+      welcome_coupon_discount_value: welcomeCouponDiscountValue,
+      welcome_coupon_min_order: welcomeCouponMinOrder ? Number(welcomeCouponMinOrder) : null,
+      welcome_coupon_expires_days: welcomeCouponExpiresDays,
     } as any);
   };
 
@@ -579,6 +596,56 @@ export default function Configuracoes() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Welcome Coupon for New Customers */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
+          <CardDescription>Gere automaticamente um cupom de desconto para novos clientes que se cadastrarem</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-sm">Ativar cupom automático</p>
+              <p className="text-xs text-muted-foreground">Novos clientes recebem cupom ao se cadastrar</p>
+            </div>
+            <Switch checked={welcomeCouponEnabled} onCheckedChange={setWelcomeCouponEnabled} />
+          </div>
+          {welcomeCouponEnabled && (
+            <div className="space-y-4 pt-2 border-t border-border">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Tipo de Desconto</Label>
+                  <Select value={welcomeCouponDiscountType} onValueChange={setWelcomeCouponDiscountType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Valor do Desconto</Label>
+                  <Input type="number" value={welcomeCouponDiscountValue} onChange={(e) => setWelcomeCouponDiscountValue(Number(e.target.value))} min={1} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Pedido Mínimo (R$)</Label>
+                  <Input type="number" value={welcomeCouponMinOrder} onChange={(e) => setWelcomeCouponMinOrder(e.target.value)} placeholder="Sem mínimo" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Validade (dias)</Label>
+                  <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} min={1} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O cliente receberá um cupom único (ex: BV-ABC123) ao se cadastrar, válido por {welcomeCouponExpiresDays} dia(s).
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

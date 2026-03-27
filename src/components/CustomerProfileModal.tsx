@@ -20,7 +20,7 @@ interface CustomerProfileModalProps {
 
 export function CustomerProfileModal({ open, onOpenChange, storeUserId }: CustomerProfileModalProps) {
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
-  const { wishlistIds } = useWishlist(storeUserId);
+  const { wishlistIds, wishlistProducts, toggleWishlist } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
@@ -203,17 +203,38 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId }: Custom
           </TabsContent>
 
           <TabsContent value="wishlist">
-            <div className="py-4 text-center text-sm text-gray-500">
+            <div className="py-4">
               {wishlistIds.size === 0 ? (
-                <div>
-                  <Heart className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                <div className="text-center text-sm text-muted-foreground">
+                  <Heart className="h-10 w-10 mx-auto mb-2 text-muted-foreground/30" />
                   <p>Nenhum favorito ainda</p>
                   <p className="text-xs mt-1">Toque no ❤️ nos produtos para salvar</p>
                 </div>
               ) : (
-                <div>
-                  <p className="font-medium text-gray-700">Você tem {wishlistIds.size} favorito(s)</p>
-                  <p className="text-xs mt-1">Seus produtos favoritos aparecem com ❤️ na loja</p>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">{wishlistIds.size} favorito(s)</p>
+                  {wishlistProducts.map((product) => (
+                    <div key={product.id} className="flex items-center gap-3 border rounded-lg p-2">
+                      <div className="h-16 w-16 rounded-md overflow-hidden bg-muted shrink-0">
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-2xl">📦</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{product.name}</p>
+                        <p className="text-sm font-bold text-primary">{formatPrice(product.price)}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleWishlist(product.id)}
+                        className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+                        title="Remover dos favoritos"
+                      >
+                        <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
