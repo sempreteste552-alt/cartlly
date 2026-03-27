@@ -202,11 +202,15 @@ export default function LojaCheckout() {
         const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
         cart.clearCart();
+        setPaymentMethod("whatsapp");
+        setPaymentDate(new Date());
         setPhase("success");
       } else if (hasGateway) {
         setPhase("payment");
       } else {
         cart.clearCart();
+        setPaymentMethod("whatsapp");
+        setPaymentDate(new Date());
         setPhase("success");
       }
     } catch (err: any) {
