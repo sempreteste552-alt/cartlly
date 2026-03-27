@@ -28,6 +28,8 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
+  const storeThemeScope = `store-${slug || "default"}`;
+  const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
@@ -37,6 +39,18 @@ export default function LojaLayout() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Apply dark class on <html> for store scope and remove on unmount
+  useEffect(() => {
+    if (storeDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, [storeDark]);
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
