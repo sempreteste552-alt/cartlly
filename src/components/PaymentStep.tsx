@@ -30,7 +30,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [showCardForm, setShowCardForm] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const createPayment = useCreatePayment();
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
@@ -38,6 +40,33 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardInstallments, setCardInstallments] = useState("1");
+
+  // Poll payment status for PIX/Boleto
+  useEffect(() => {
+    if (!paymentData?.payment?.id || selectedMethod === "credit_card") return;
+    const paymentId = paymentData.payment.id;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("status")
+        .eq("id", paymentId)
+        .single();
+      if (data?.status === "approved" || data?.status === "paid") {
+        setPaymentStatus("approved");
+        toast.success("💰 Pagamento confirmado!");
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setTimeout(() => onSuccess(), 1500);
+      } else if (data?.status === "rejected" || data?.status === "failed") {
+        setPaymentStatus("rejected");
+        toast.error("Pagamento recusado");
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      }
+    };
+
+    pollingRef.current = setInterval(poll, 5000);
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [paymentData?.payment?.id, selectedMethod]);
 
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
