@@ -20,7 +20,7 @@ interface CustomerProfileModalProps {
 
 export function CustomerProfileModal({ open, onOpenChange, storeUserId }: CustomerProfileModalProps) {
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
-  const { wishlistIds } = useWishlist(storeUserId);
+  const { wishlistIds, wishlistProducts, toggleWishlist } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
