@@ -17,6 +17,7 @@ import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
 import pixLogo from "@/assets/pix-logo.webp";
+import whatsappIcon from "@/assets/whatsapp-icon.png";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
