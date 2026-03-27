@@ -79,13 +79,13 @@ export function usePushNotifications() {
       }
 
       // Save to database
-      const { error } = await supabase.from("push_subscriptions" as any).upsert(
+      const { error } = await supabase.from("push_subscriptions").upsert(
         {
           user_id: user.id,
           endpoint: json.endpoint,
           p256dh: json.keys.p256dh,
           auth: json.keys.auth,
-        } as any,
+        },
         { onConflict: "user_id,endpoint" }
       );
 
@@ -113,7 +113,7 @@ export function usePushNotifications() {
           await subscription.unsubscribe();
           // Remove from database
           await supabase
-            .from("push_subscriptions" as any)
+            .from("push_subscriptions")
             .delete()
             .eq("user_id", user.id)
             .eq("endpoint", subscription.endpoint);
