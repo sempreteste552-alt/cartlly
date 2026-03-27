@@ -860,6 +860,20 @@ export default function MeuPlano() {
           )}
 
           <DialogFooter className="gap-2">
+             {!paymentResult && (
+              <Button
+                onClick={() => processPayment.mutate()}
+                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11 || (selectedMethod === "CREDIT_CARD" && (!cardNumber || !cardName || !cardExpiry || !cardCvv))}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-base font-bold"
+              >
+                {processPayment.isPending ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <CreditCard className="mr-2 h-5 w-5" />
+                )}
+                {processPayment.isPending ? "Processando..." : `Pagar ${formatPrice(checkoutDialog?.price ?? 0)}`}
+              </Button>
+            )}
             <Button
               variant={paymentConfirmed ? "default" : "outline"}
               onClick={() => { setCheckoutDialog(null); setPaymentResult(null); setPaymentConfirmed(false); }}
@@ -868,10 +882,6 @@ export default function MeuPlano() {
                 <><CheckCircle2 className="mr-2 h-4 w-4" /> Fechar</>
               ) : paymentResult ? "Fechar" : "Cancelar"}
             </Button>
-            {!paymentResult && (
-              <Button
-                onClick={() => processPayment.mutate()}
-                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11 || (selectedMethod === "CREDIT_CARD" && (!cardNumber || !cardName || !cardExpiry || !cardCvv))}
                 className="min-w-[140px]"
               >
                 {processPayment.isPending ? (
