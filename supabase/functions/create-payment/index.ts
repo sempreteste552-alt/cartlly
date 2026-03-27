@@ -242,11 +242,15 @@ async function createMercadoPagoPayment(
   accessToken: string,
   environment: string,
   cardToken?: string,
-  installments?: number
+  installments?: number,
+  payerCpf?: string
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
 
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
+
+  const firstName = order.customer_name?.split(" ")[0] || "Cliente";
+  const lastName = order.customer_name?.split(" ").slice(1).join(" ") || "";
 
   const paymentData: any = {
     transaction_amount: Number(order.total),
@@ -255,10 +259,18 @@ async function createMercadoPagoPayment(
     notification_url: webhookUrl,
     payer: {
       email: order.customer_email || "cliente@email.com",
-      first_name: order.customer_name?.split(" ")[0] || "Cliente",
-      last_name: order.customer_name?.split(" ").slice(1).join(" ") || "",
+      first_name: firstName,
+      last_name: lastName,
     },
   };
+
+  // Add payer identification (CPF) if provided - required for PIX/boleto
+  if (payerCpf) {
+    paymentData.payer.identification = {
+      type: "CPF",
+      number: payerCpf.replace(/\D/g, ""),
+    };
+  }
 
   if (method === "pix") {
     paymentData.payment_method_id = "pix";
@@ -268,6 +280,16 @@ async function createMercadoPagoPayment(
     paymentData.installments = installments || 1;
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
+    // Boleto requires payer address
+    if (order.customer_address) {
+      paymentData.payer.address = {
+        zip_code: order.shipping_cep?.replace(/\D/g, "") || "01000000",
+        street_name: order.customer_address,
+        street_number: "S/N",
+        city: "São Paulo",
+        federal_unit: "SP",
+      };
+    }
   }
 
   const response = await fetch(`${baseUrl}/payments`, {
