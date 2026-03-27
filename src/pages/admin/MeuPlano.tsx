@@ -860,7 +860,7 @@ export default function MeuPlano() {
           )}
 
           <DialogFooter className="gap-2">
-             {!paymentResult && (
+            {!paymentResult && (
               <Button
                 onClick={() => processPayment.mutate()}
                 disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11 || (selectedMethod === "CREDIT_CARD" && (!cardNumber || !cardName || !cardExpiry || !cardCvv))}
@@ -882,16 +882,6 @@ export default function MeuPlano() {
                 <><CheckCircle2 className="mr-2 h-4 w-4" /> Fechar</>
               ) : paymentResult ? "Fechar" : "Cancelar"}
             </Button>
-                className="min-w-[140px]"
-              >
-                {processPayment.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="mr-2 h-4 w-4" />
-                )}
-                {processPayment.isPending ? "Processando..." : "Pagar"}
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
