@@ -252,7 +252,7 @@ export default function LojaLayout() {
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
                         ) : (
-                          <div className="h-16 w-16 rounded bg-gray-100" />
+                          <div className="h-16 w-16 rounded bg-muted" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.name}</p>
