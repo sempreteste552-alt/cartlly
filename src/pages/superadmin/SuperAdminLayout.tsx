@@ -16,7 +16,7 @@ export default function SuperAdminLayout() {
               <SidebarTrigger className="mr-4" />
               <h2 className="text-sm font-medium text-muted-foreground">Super Admin</h2>
             </div>
-            <ThemeToggle />
+            <ThemeToggle scope="superadmin" />
           </header>
           <main className="flex-1 overflow-auto p-6">
             <Outlet />
