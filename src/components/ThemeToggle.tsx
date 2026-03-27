@@ -41,7 +41,6 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
   });
 
   useEffect(() => {
-    localStorage.setItem(storageKey, dark ? "dark" : "light");
     if (applyToRoot) {
       if (dark) {
         document.documentElement.classList.add("dark");
@@ -49,7 +48,7 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
         document.documentElement.classList.remove("dark");
       }
     }
-  }, [dark, storageKey, applyToRoot]);
+  }, [dark, applyToRoot]);
 
   // Cleanup: when unmounting an applyToRoot toggle, remove the class
   // so the next layout can set its own.
@@ -65,7 +64,14 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setDark((d) => !d)}
+      onClick={() => {
+        setDark((d) => {
+          const next = !d;
+          localStorage.setItem(storageKey, next ? "dark" : "light");
+          window.dispatchEvent(new Event(`theme-change-${storageKey}`));
+          return next;
+        });
+      }}
       className={className}
       title={dark ? "Modo claro" : "Modo escuro"}
     >
@@ -88,10 +94,21 @@ export function useThemeScope(scope: string) {
     return false;
   });
 
+  // Listen for storage changes from ThemeToggle (same tab via custom event)
+  useEffect(() => {
+    const handler = () => {
+      const stored = localStorage.getItem(storageKey);
+      setDark(stored === "dark");
+    };
+    window.addEventListener(`theme-change-${storageKey}`, handler);
+    return () => window.removeEventListener(`theme-change-${storageKey}`, handler);
+  }, [storageKey]);
+
   const toggle = useCallback(() => {
     setDark((d) => {
       const next = !d;
       localStorage.setItem(storageKey, next ? "dark" : "light");
+      window.dispatchEvent(new Event(`theme-change-${storageKey}`));
       return next;
     });
   }, [storageKey]);
