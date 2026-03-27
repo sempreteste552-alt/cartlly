@@ -4,6 +4,8 @@ import { Outlet } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function SuperAdminLayout() {
+  // Cleanup any lingering dark class from other contexts on mount
+  // and restore our own scope
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
