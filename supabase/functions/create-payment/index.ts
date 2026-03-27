@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PAYMENT PROCESSING ====================
-    const { order_id, method, card_token, installments, store_user_id } = body as PaymentRequest;
+    const { order_id, method, card_token, installments, store_user_id, payer_cpf } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return json({ error: "Campos obrigatórios: order_id, method, store_user_id" }, 400);
