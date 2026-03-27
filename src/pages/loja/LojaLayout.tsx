@@ -433,7 +433,7 @@ export default function LojaLayout() {
             <Link
               to={`${basePath}/rastreio`}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isRastreio ? primaryColor : "#9ca3af" }}
+              style={{ color: isRastreio ? primaryColor : undefined }}
             >
               <Truck className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
