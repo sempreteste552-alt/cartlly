@@ -51,8 +51,8 @@ export default function LojaHome() {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
         <div className="text-7xl mb-6">🏗️</div>
-        <h1 className="text-3xl font-bold text-center">Loja em Construção</h1>
-        <p className="text-gray-500 mt-3 text-center max-w-md">
+        <h1 className="text-3xl font-bold text-center text-foreground">Loja em Construção</h1>
+        <p className="text-muted-foreground mt-3 text-center max-w-md">
           Estamos preparando nossos produtos para você. Volte em breve para conferir as novidades!
         </p>
       </div>
@@ -178,7 +178,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
         return (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card
-              className="overflow-hidden border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative"
+              className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
               style={{
                 boxShadow: undefined,
               }}
@@ -203,17 +203,17 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }}
-                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-sm transition-all hover:scale-110"
+                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110"
                     title="Favoritar"
                   >
-                    <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
+                    <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
                   </button>
                   <button
                     onClick={(e) => handleShare(e, product)}
-                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-sm hover:scale-110"
+                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110"
                     title="Compartilhar"
                   >
-                    <Share2 className="h-4 w-4 text-gray-700" />
+                    <Share2 className="h-4 w-4 text-foreground" />
                   </button>
                 </div>
 
@@ -227,17 +227,17 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 )}
               </div>
 
-              <div className="p-3">
+              <div className="p-3 text-foreground">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
                 {r && r.count > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-medium">{r.average.toFixed(1)}</span>
-                    <span className="text-xs text-gray-400">({r.count})</span>
+                    <span className="text-xs text-muted-foreground">({r.count})</span>
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-[10px] text-muted-foreground">
                   ou 12x de {formatPrice(product.price / 12)}
                 </p>
                 {product.stock > 0 ? (

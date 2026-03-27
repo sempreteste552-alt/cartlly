@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
@@ -27,6 +28,24 @@ export function useUserRole() {
 }
 
 export function useAllTenants() {
+  const queryClient = useQueryClient();
+
+  // Realtime subscription for new/updated profiles
+  useEffect(() => {
+    const channel = supabase
+      .channel("tenants-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "plan_change_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
+        queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests_full"] });
+        queryClient.invalidateQueries({ queryKey: ["all_plan_requests_pending"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["all_tenants"],
     queryFn: async () => {

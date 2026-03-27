@@ -83,7 +83,7 @@ export function AdminLayout() {
               <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">Painel Administrativo</h2>
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
+              <ThemeToggle scope="admin" />
               <AdminNotificationsBell />
             </div>
           </header>

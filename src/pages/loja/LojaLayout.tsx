@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { StoreMarquee } from "@/components/StoreMarquee";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -28,6 +28,8 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
+  const storeThemeScope = `store-${slug || "default"}`;
+  const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
@@ -37,6 +39,18 @@ export default function LojaLayout() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Apply dark class on <html> for store scope and remove on unmount
+  useEffect(() => {
+    if (storeDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, [storeDark]);
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
@@ -126,7 +140,7 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
-      <div className="min-h-screen bg-white text-black pb-16 md:pb-0">
+      <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
         {/* Marquee ticker */}
         {settings?.marquee_enabled && settings?.marquee_text && (
           <StoreMarquee
@@ -175,7 +189,7 @@ export default function LojaLayout() {
         </div>
 
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-gray-200 shadow-sm" style={{ backgroundColor: headerBgColor }}>
+        <header className="sticky top-0 z-50 border-b border-border shadow-sm bg-card">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -196,10 +210,10 @@ export default function LojaLayout() {
 
             <div className="flex-1 max-w-xl mx-auto hidden sm:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar produtos..."
-                  className="pl-9 bg-gray-50 border-gray-300 rounded-full"
+                  className="pl-9 bg-secondary border-border rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
@@ -208,7 +222,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
-            <ThemeToggle className="hidden sm:flex" />
+            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
               {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
@@ -231,25 +245,25 @@ export default function LojaLayout() {
                 </SheetHeader>
                 <div className="mt-4 space-y-3 flex-1 overflow-auto">
                   {cart.items.length === 0 ? (
-                    <p className="text-center text-gray-500 py-8">Carrinho vazio</p>
+                    <p className="text-center text-muted-foreground py-8">Carrinho vazio</p>
                   ) : (
                     cart.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
+                      <div key={item.id} className="flex items-center gap-3 border-b border-border pb-3">
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
                         ) : (
-                          <div className="h-16 w-16 rounded bg-gray-100" />
+                          <div className="h-16 w-16 rounded bg-muted" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
+                          <p className="text-sm text-muted-foreground">{formatPrice(item.price)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
                             <span className="text-sm w-6 text-center">{item.quantity}</span>
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity + 1)}>+</Button>
                           </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400" onClick={() => cart.removeItem(item.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => cart.removeItem(item.id)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -257,7 +271,7 @@ export default function LojaLayout() {
                   )}
                 </div>
                 {cart.items.length > 0 && (
-                  <div className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+                  <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
                       <span>{formatPrice(cart.total)}</span>
@@ -286,10 +300,10 @@ export default function LojaLayout() {
 
           <div className="sm:hidden px-4 pb-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar produtos..."
-                className="pl-9 bg-gray-50 border-gray-300 rounded-full"
+                className="pl-9 bg-secondary border-border rounded-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -299,7 +313,7 @@ export default function LojaLayout() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-white border-b border-gray-100 ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-card border-b border-border ${
             mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
@@ -317,7 +331,7 @@ export default function LojaLayout() {
                     href={item.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
@@ -326,7 +340,7 @@ export default function LojaLayout() {
                 ) : (
                   <Link
                     to={item.to}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
@@ -380,14 +394,14 @@ export default function LojaLayout() {
         </footer>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-gray-200 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-around h-14">
             <Link
               to={basePath}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isHomePage ? primaryColor : "#9ca3af" }}
+              style={{ color: isHomePage ? primaryColor : undefined }}
             >
-              <Home className="h-5 w-5" />
+              <Home className={`h-5 w-5 ${!isHomePage ? "text-muted-foreground" : ""}`} />
               <span className="text-[10px] mt-0.5 font-medium">Início</span>
             </Link>
             <button
@@ -396,7 +410,7 @@ export default function LojaLayout() {
                 if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
                 else navigate(basePath);
               }}
-              className="flex flex-col items-center justify-center flex-1 h-full text-gray-400 transition-colors"
+              className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground transition-colors"
             >
               <Search className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Buscar</span>
@@ -404,7 +418,7 @@ export default function LojaLayout() {
             <Link
               to={`${basePath}/checkout`}
               className="flex flex-col items-center justify-center flex-1 h-full relative transition-colors"
-              style={{ color: isCheckout ? primaryColor : "#9ca3af" }}
+              style={{ color: isCheckout ? primaryColor : undefined }}
             >
               <div className="relative">
                 <ShoppingCart className="h-5 w-5" />
@@ -419,7 +433,7 @@ export default function LojaLayout() {
             <Link
               to={`${basePath}/rastreio`}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isRastreio ? primaryColor : "#9ca3af" }}
+              style={{ color: isRastreio ? primaryColor : undefined }}
             >
               <Truck className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
@@ -427,7 +441,7 @@ export default function LojaLayout() {
             <button
               onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
               className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: user ? primaryColor : "#9ca3af" }}
+              style={{ color: user ? primaryColor : undefined }}
             >
               <User className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
