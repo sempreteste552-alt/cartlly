@@ -295,36 +295,27 @@ export default function Pedidos() {
                   variant="outline"
                   size="sm"
                   className="w-full gap-2"
-                  onClick={async () => {
-                    try {
-                      toast.loading("Gerando comprovante...", { id: "receipt" });
-                      const { data: { session } } = await supabase.auth.getSession();
-                      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-                      const resp = await fetch(
-                        `https://${projectId}.supabase.co/functions/v1/generate-receipt`,
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${session?.access_token}`,
-                          },
-                          body: JSON.stringify({ orderId: selectedOrder.id }),
-                        }
-                      );
-                      const data = await resp.json();
-                      if (!resp.ok) throw new Error(data.error);
-                      // Open receipt in new tab
-                      const blob = new Blob([data.html], { type: "text/html" });
-                      const url = URL.createObjectURL(blob);
-                      window.open(url, "_blank");
-                      toast.success("Comprovante gerado! Você pode salvar como PDF pelo navegador (Ctrl+P).", { id: "receipt" });
-                    } catch (err: any) {
-                      toast.error("Erro ao gerar comprovante: " + err.message, { id: "receipt" });
-                    }
+                  onClick={() => {
+                    const subtotal = orderItems?.reduce((acc, i) => acc + i.quantity * i.unit_price, 0) || 0;
+                    generateReceiptPdf({
+                      orderId: selectedOrder.id,
+                      date: format(new Date(selectedOrder.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+                      storeName: "Minha Loja",
+                      customerName: selectedOrder.customer_name,
+                      customerEmail: selectedOrder.customer_email || undefined,
+                      customerPhone: selectedOrder.customer_phone || undefined,
+                      customerAddress: selectedOrder.customer_address || undefined,
+                      items: orderItems?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+                      subtotal,
+                      discount: selectedOrder.discount_amount,
+                      shipping: selectedOrder.shipping_cost,
+                      total: selectedOrder.total,
+                      paymentMethod: selectedOrder.whatsapp_order ? "WhatsApp" : "Pagamento Online",
+                    });
                   }}
                 >
-                  <FileText className="h-4 w-4" />
-                  Gerar Comprovante
+                  <Download className="h-4 w-4" />
+                  Baixar Recibo em PDF
                 </Button>
               </div>
 
