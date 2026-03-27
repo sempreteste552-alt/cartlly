@@ -495,6 +495,9 @@ export default function LojaCheckout() {
           total={finalTotal}
           settings={settings}
           onSuccess={(method) => {
+            setSavedFinalTotal(finalTotal);
+            setSavedDiscountAmount(discountAmount);
+            setSavedShippingCost(shippingCost);
             setOrderItems([...cart.items]);
             setPaymentMethod(method || "gateway");
             setPaymentDate(new Date());
