@@ -56,7 +56,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         setPaymentStatus("approved");
         toast.success("💰 Pagamento confirmado!");
         if (pollingRef.current) clearInterval(pollingRef.current);
-        setTimeout(() => onSuccess(), 1500);
+        setTimeout(() => onSuccess(selectedMethod || undefined), 1500);
       } else if (data?.status === "rejected" || data?.status === "failed") {
         setPaymentStatus("rejected");
         toast.error("Pagamento recusado");
