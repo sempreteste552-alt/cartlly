@@ -228,8 +228,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
           {boletoUrl && (
             <Button className="w-full" variant="outline" onClick={() => window.open(boletoUrl, "_blank")}>
-              <ExternalLink className="mr-2 h-4 w-4" /> Abrir Boleto
+              <ExternalLink className="mr-2 h-4 w-4" /> Abrir Boleto PDF
             </Button>
+          )}
+          {paymentStatus === "approved" ? (
+            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg text-center space-y-2">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="font-bold text-green-700 dark:text-green-300">Pagamento confirmado!</p>
+            </div>
+          ) : (
+            <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-xs text-yellow-800 dark:text-yellow-300">
+              <p className="font-medium flex items-center gap-1"><Clock className="h-3.5 w-3.5 animate-pulse" /> Aguardando pagamento...</p>
+              <p>O status será atualizado automaticamente após a compensação.</p>
+            </div>
           )}
           <Button className="w-full" onClick={onSuccess}>Concluir</Button>
         </CardContent>
