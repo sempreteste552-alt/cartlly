@@ -405,11 +405,11 @@ export default function LojaCheckout() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Button className="w-full" onClick={() => navigate(".")}>
+          <Button className="w-full" onClick={() => navigate("..")}>
             🏠 Voltar à Loja
           </Button>
           {orderId && (
-            <Button variant="outline" className="w-full" onClick={() => navigate(`rastreio/${orderId}`)}>
+            <Button variant="outline" className="w-full" onClick={() => navigate(`../rastreio/${orderId}`)}>
               <Package className="mr-2 h-4 w-4" /> Rastrear Pedido
             </Button>
           )}
