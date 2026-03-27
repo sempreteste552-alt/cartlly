@@ -638,12 +638,12 @@ export default function MeuPlano() {
       <Dialog open={!!thankYouDialog} onOpenChange={() => setThankYouDialog(null)}>
         <DialogContent className="sm:max-w-md text-center">
           <div className="py-6 space-y-4">
-            <PartyPopper className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold text-foreground">🎉 Obrigado!</h2>
+            <Clock className="h-16 w-16 text-amber-500 mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">⏳ Cobrança Criada!</h2>
             <p className="text-muted-foreground">
-              Seu plano <strong className="text-foreground">{thankYouDialog?.planName}</strong> foi processado com sucesso!
+              A cobrança do plano <strong className="text-foreground">{thankYouDialog?.planName}</strong> foi gerada com sucesso!
             </p>
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2 text-left">
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2 text-left">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plano</span>
                 <span className="font-medium">{thankYouDialog?.planName}</span>
@@ -654,10 +654,10 @@ export default function MeuPlano() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Ativo</Badge>
+                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">Aguardando Pagamento</Badge>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">As funcionalidades do plano serão liberadas após a confirmação do pagamento.</p>
+            <p className="text-xs text-muted-foreground">As funcionalidades do plano serão liberadas <strong>após a confirmação do pagamento</strong>. Você receberá uma notificação quando for aprovado.</p>
           </div>
           <DialogFooter>
             <Button onClick={() => setThankYouDialog(null)} className="w-full">
