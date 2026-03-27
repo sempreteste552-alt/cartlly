@@ -113,7 +113,7 @@ export function usePushNotifications() {
           await subscription.unsubscribe();
           // Remove from database
           await supabase
-            .from("push_subscriptions" as any)
+            .from("push_subscriptions")
             .delete()
             .eq("user_id", user.id)
             .eq("endpoint", subscription.endpoint);
