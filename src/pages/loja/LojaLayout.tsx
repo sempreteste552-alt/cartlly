@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { StoreMarquee } from "@/components/StoreMarquee";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
