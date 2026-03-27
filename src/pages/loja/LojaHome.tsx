@@ -206,7 +206,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                     className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-sm transition-all hover:scale-110"
                     title="Favoritar"
                   >
-                    <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
+                    <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
                   </button>
                   <button
                     onClick={(e) => handleShare(e, product)}
