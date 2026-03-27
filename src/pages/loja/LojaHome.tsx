@@ -210,10 +210,10 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   </button>
                   <button
                     onClick={(e) => handleShare(e, product)}
-                    className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-sm hover:scale-110"
+                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110"
                     title="Compartilhar"
                   >
-                    <Share2 className="h-4 w-4 text-gray-700" />
+                    <Share2 className="h-4 w-4 text-foreground" />
                   </button>
                 </div>
 
