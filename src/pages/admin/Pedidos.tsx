@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, XCircle, Copy, FileText, Download } from "lucide-react";
-import { useOrders, useOrderItems, useOrderStatusHistory, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
+import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,6 +28,7 @@ export default function Pedidos() {
   const selectedOrder = orders?.find((o) => o.id === selectedOrderId);
   const { data: orderItems } = useOrderItems(selectedOrderId);
   const { data: statusHistory } = useOrderStatusHistory(selectedOrderId);
+  const { data: orderPayment } = useOrderPayment(selectedOrderId);
 
   // Realtime for orders
   useEffect(() => {
@@ -151,6 +152,34 @@ export default function Pedidos() {
                 {selectedOrder.customer_phone && <p className="text-xs text-muted-foreground">{selectedOrder.customer_phone}</p>}
                 {selectedOrder.customer_address && (
                   <p className="text-xs text-muted-foreground mt-1">{selectedOrder.customer_address}</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Payment Info */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Pagamento</p>
+                {orderPayment ? (
+                  <div className="flex items-center gap-3 rounded-md border border-border p-3">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={orderPayment.status === "approved" || orderPayment.status === "paid" ? "default" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "destructive" : "secondary"}>
+                          {orderPayment.status === "approved" || orderPayment.status === "paid" ? "✅ Pago" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "❌ Recusado" : "⏳ Pendente"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Método: <span className="font-medium text-foreground">
+                          {orderPayment.method === "pix" ? "PIX" : orderPayment.method === "credit_card" ? "Cartão de Crédito" : orderPayment.method === "debit_card" ? "Cartão de Débito" : orderPayment.method === "boleto" ? "Boleto" : orderPayment.method}
+                        </span>
+                        {orderPayment.card_brand && ` • ${orderPayment.card_brand}`}
+                        {orderPayment.card_last_four && ` •••• ${orderPayment.card_last_four}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Gateway: {orderPayment.gateway}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Nenhum pagamento registrado</p>
                 )}
               </div>
 
