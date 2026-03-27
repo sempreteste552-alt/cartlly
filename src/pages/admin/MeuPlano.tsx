@@ -614,7 +614,7 @@ export default function MeuPlano() {
             {!paymentResult && (
               <Button
                 onClick={() => processPayment.mutate()}
-                disabled={processPayment.isPending}
+                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11}
                 className="min-w-[140px]"
               >
                 {processPayment.isPending ? (
