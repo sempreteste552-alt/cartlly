@@ -2,8 +2,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function json(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,254 +25,451 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { user_id, plan_id, card_number, card_holder, card_expiry, card_cvv, gateway } = body;
 
-    if (!user_id || !plan_id || !card_number || !card_holder || !card_expiry || !card_cvv) {
-      return new Response(JSON.stringify({ error: "Dados incompletos" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // ==================== CHECK GATEWAY ====================
+    if (body.action === "check_gateway") {
+      const { data: settings } = await supabase
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", [
+          "plan_gateway",
+          "plan_gateway_public_key",
+          "plan_gateway_secret_key",
+          "mercadopago_global_key",
+          "mercadopago_public_key",
+          "pagbank_global_key",
+          "pagbank_public_key",
+          "pagbank_environment",
+          "amplopay_public_key",
+          "amplopay_secret_key",
+        ]);
+
+      const cfg: Record<string, string> = {};
+      settings?.forEach((s: any) => {
+        cfg[s.key] = s.value?.value ?? s.value ?? "";
+      });
+
+      // Determine active gateway
+      const gateway = cfg.plan_gateway || detectGateway(cfg);
+      const hasKeys = !!getGatewayKeys(gateway, cfg).secretKey;
+
+      return json({
+        gateway: hasKeys ? gateway : null,
+        methods: hasKeys ? getAvailableMethods(gateway) : [],
       });
     }
 
-    // Get plan details
+    // ==================== PROCESS PAYMENT ====================
+    const { user_id, plan_id, payment_method, document, phone, card_token, installments } = body;
+
+    if (!user_id || !plan_id) {
+      return json({ error: "Dados incompletos" }, 400);
+    }
+
+    // Get plan
     const { data: plan, error: planErr } = await supabase
       .from("tenant_plans")
       .select("*")
       .eq("id", plan_id)
       .single();
 
-    if (planErr || !plan) {
-      return new Response(JSON.stringify({ error: "Plano não encontrado" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (plan.price <= 0) {
-      return new Response(JSON.stringify({ error: "Plano gratuito não requer pagamento" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (planErr || !plan) return json({ error: "Plano não encontrado" }, 404);
+    if (plan.price <= 0) return json({ error: "Plano gratuito não requer pagamento" }, 400);
 
     // Get platform gateway settings
     const { data: settings } = await supabase
       .from("platform_settings")
       .select("key, value")
       .in("key", [
-        "stripe_global_key",
-        "stripe_publishable_key",
+        "plan_gateway",
         "mercadopago_global_key",
         "mercadopago_public_key",
-        "gateway_test_mode",
+        "pagbank_global_key",
+        "pagbank_public_key",
+        "pagbank_environment",
+        "amplopay_public_key",
+        "amplopay_secret_key",
       ]);
 
     const cfg: Record<string, string> = {};
     settings?.forEach((s: any) => {
-      cfg[s.key] = s.value?.value ?? "";
+      cfg[s.key] = s.value?.value ?? s.value ?? "";
     });
 
-    const selectedGateway = gateway || "stripe";
-    let paymentResult: any = null;
+    const gateway = cfg.plan_gateway || detectGateway(cfg);
+    const keys = getGatewayKeys(gateway, cfg);
 
-    if (selectedGateway === "stripe") {
-      paymentResult = await processStripe(cfg, plan, card_number, card_holder, card_expiry, card_cvv);
-    } else if (selectedGateway === "mercadopago") {
-      paymentResult = await processMercadoPago(cfg, plan, card_number, card_holder, card_expiry, card_cvv, user_id);
-    } else {
-      return new Response(JSON.stringify({ error: "Gateway não suportado" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!keys.secretKey) {
+      return json({ error: "Gateway de pagamento não configurado pelo administrador. Entre em contato via WhatsApp." }, 400);
     }
 
-    if (!paymentResult.success) {
-      return new Response(JSON.stringify({ error: paymentResult.error || "Pagamento recusado" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Get tenant info
+    const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user_id).single();
+    const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
+    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
+    const tenantName = profile?.display_name || "Tenant";
+
+    const method = payment_method || "PIX";
+    let result: any;
+
+    try {
+      if (gateway === "mercadopago") {
+        result = await processMercadoPago(keys.secretKey, plan, method, tenantEmail, tenantName, document, card_token, installments, user_id);
+      } else if (gateway === "pagbank") {
+        result = await processPagBank(keys.secretKey, cfg.pagbank_environment || "sandbox", plan, method, tenantEmail, tenantName, document, phone, card_token, user_id);
+      } else if (gateway === "amplopay") {
+        result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
+      } else {
+        return json({ error: `Gateway "${gateway}" não suportado` }, 400);
+      }
+    } catch (gwErr: any) {
+      console.error(`Subscribe gateway ${gateway} error:`, gwErr.message);
+      return json({ error: gwErr.message, gateway_error: true }, 502);
     }
 
-    // Payment approved — activate subscription
-    const now = new Date();
-    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    // Check if subscription exists
-    const { data: existingSub } = await supabase
-      .from("tenant_subscriptions")
-      .select("id")
-      .eq("user_id", user_id)
-      .maybeSingle();
-
-    if (existingSub) {
-      await supabase
-        .from("tenant_subscriptions")
-        .update({
-          plan_id,
-          status: "active",
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
-          trial_ends_at: null,
-          updated_at: now.toISOString(),
-        })
-        .eq("id", existingSub.id);
-    } else {
-      await supabase
-        .from("tenant_subscriptions")
-        .insert({
-          user_id,
-          plan_id,
-          status: "active",
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
-        });
+    // If card payment approved immediately, activate subscription
+    if (result.status === "approved") {
+      await activateSubscription(supabase, user_id, plan_id, plan.name, gateway);
     }
 
-    // Cancel any pending plan change requests
-    await supabase
-      .from("plan_change_requests")
-      .update({ status: "approved", resolved_at: now.toISOString() })
-      .eq("user_id", user_id)
-      .eq("status", "pending");
+    // Notify tenant
+    const statusEmoji = result.status === "approved" ? "✅" : "💳";
+    const statusMsg = result.status === "approved"
+      ? `Plano ${plan.name} ativado com sucesso!`
+      : `Cobrança de R$ ${plan.price.toFixed(2)} criada. Aguardando pagamento.`;
 
-    // Notify user
     await supabase.from("admin_notifications").insert({
       sender_user_id: user_id,
       target_user_id: user_id,
-      title: "✅ Plano Ativado!",
-      message: `Seu plano ${plan.name} foi ativado com sucesso. Pagamento via ${selectedGateway === "stripe" ? "Stripe" : "Mercado Pago"}.`,
-      type: "plan_activated",
+      title: `${statusEmoji} ${result.status === "approved" ? "Plano Ativado!" : "Cobrança Criada"}`,
+      message: statusMsg,
+      type: result.status === "approved" ? "plan_activated" : "payment_pending",
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Pagamento aprovado e plano ativado!",
-        plan_name: plan.name,
-        gateway_id: paymentResult.gateway_id,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    console.error("Subscribe error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return json({
+      success: true,
+      status: result.status,
+      method,
+      gateway,
+      plan_name: plan.name,
+      plan_price: plan.price,
+      transaction_id: result.gateway_payment_id,
+      pix: result.pix || null,
+      boleto: result.boleto || null,
+      card: result.card || null,
     });
+  } catch (error: any) {
+    console.error("Subscribe error:", error);
+    return json({ error: error.message }, 500);
   }
 });
 
-async function processStripe(
-  cfg: Record<string, string>,
-  plan: any,
-  cardNumber: string,
-  cardHolder: string,
-  cardExpiry: string,
-  cardCvv: string
-) {
-  const secretKey = cfg.stripe_global_key;
-  if (!secretKey) return { success: false, error: "Stripe não configurado pelo administrador" };
+// ===================== HELPERS =====================
 
-  try {
-    const [expMonth, expYear] = cardExpiry.split("/").map((s: string) => s.trim());
-
-    // Create payment method
-    const pmRes = await fetch("https://api.stripe.com/v1/payment_methods", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(secretKey + ":")}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        type: "card",
-        "card[number]": cardNumber.replace(/\s/g, ""),
-        "card[exp_month]": expMonth,
-        "card[exp_year]": expYear.length === 2 ? `20${expYear}` : expYear,
-        "card[cvc]": cardCvv,
-      }),
-    });
-    const pm = await pmRes.json();
-    if (pm.error) return { success: false, error: pm.error.message };
-
-    // Create payment intent
-    const piRes = await fetch("https://api.stripe.com/v1/payment_intents", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(secretKey + ":")}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        amount: String(Math.round(plan.price * 100)),
-        currency: "brl",
-        payment_method: pm.id,
-        confirm: "true",
-        description: `Assinatura plano ${plan.name}`,
-        "automatic_payment_methods[enabled]": "true",
-        "automatic_payment_methods[allow_redirects]": "never",
-      }),
-    });
-    const pi = await piRes.json();
-
-    if (pi.error) return { success: false, error: pi.error.message };
-    if (pi.status === "succeeded" || pi.status === "requires_capture") {
-      return { success: true, gateway_id: pi.id };
-    }
-    return { success: false, error: `Status: ${pi.status}` };
-  } catch (e: any) {
-    return { success: false, error: e.message };
-  }
+function detectGateway(cfg: Record<string, string>): string {
+  if (cfg.mercadopago_global_key) return "mercadopago";
+  if (cfg.pagbank_global_key) return "pagbank";
+  if (cfg.amplopay_secret_key) return "amplopay";
+  return "";
 }
 
-async function processMercadoPago(
-  cfg: Record<string, string>,
-  plan: any,
-  cardNumber: string,
-  cardHolder: string,
-  cardExpiry: string,
-  cardCvv: string,
-  userId: string
-) {
-  const accessToken = cfg.mercadopago_global_key;
-  if (!accessToken) return { success: false, error: "Mercado Pago não configurado pelo administrador" };
+function getGatewayKeys(gw: string, cfg: Record<string, string>) {
+  if (gw === "mercadopago") return { secretKey: cfg.mercadopago_global_key, publicKey: cfg.mercadopago_public_key };
+  if (gw === "pagbank") return { secretKey: cfg.pagbank_global_key, publicKey: cfg.pagbank_public_key };
+  if (gw === "amplopay") return { secretKey: cfg.amplopay_secret_key, publicKey: cfg.amplopay_public_key };
+  return { secretKey: "", publicKey: "" };
+}
 
-  try {
-    const [expMonth, expYear] = cardExpiry.split("/").map((s: string) => s.trim());
+function getAvailableMethods(gw: string): string[] {
+  if (gw === "mercadopago") return ["PIX", "CREDIT_CARD", "BOLETO"];
+  if (gw === "pagbank") return ["PIX", "CREDIT_CARD", "BOLETO"];
+  if (gw === "amplopay") return ["PIX", "BOLETO"];
+  return [];
+}
 
-    const paymentBody = {
-      transaction_amount: plan.price,
-      description: `Assinatura plano ${plan.name}`,
-      payment_method_id: "visa",
-      payer: { email: `tenant-${userId}@cartlly.com` },
-      card: {
-        card_number: cardNumber.replace(/\s/g, ""),
-        cardholder: { name: cardHolder },
-        expiration_month: parseInt(expMonth),
-        expiration_year: parseInt(expYear.length === 2 ? `20${expYear}` : expYear),
-        security_code: cardCvv,
-      },
-      installments: 1,
-      external_reference: `plan_${plan.id}_user_${userId}`,
-    };
+async function activateSubscription(supabase: any, userId: string, planId: string, planName: string, gateway: string) {
+  const now = new Date();
+  const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const res = await fetch("https://api.mercadopago.com/v1/payments", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        "X-Idempotency-Key": `plan-${plan.id}-${userId}-${Date.now()}`,
-      },
-      body: JSON.stringify(paymentBody),
-    });
-    const data = await res.json();
+  const { data: existingSub } = await supabase
+    .from("tenant_subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-    if (data.status === "approved") {
-      return { success: true, gateway_id: String(data.id) };
-    }
-    return {
-      success: false,
-      error: data.message || data.cause?.[0]?.description || `Status: ${data.status}`,
-    };
-  } catch (e: any) {
-    return { success: false, error: e.message };
+  if (existingSub) {
+    await supabase
+      .from("tenant_subscriptions")
+      .update({
+        plan_id: planId,
+        status: "active",
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        trial_ends_at: null,
+        updated_at: now.toISOString(),
+      })
+      .eq("id", existingSub.id);
+  } else {
+    await supabase
+      .from("tenant_subscriptions")
+      .insert({
+        user_id: userId,
+        plan_id: planId,
+        status: "active",
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+      });
   }
+
+  // Cancel pending plan change requests
+  await supabase
+    .from("plan_change_requests")
+    .update({ status: "approved", resolved_at: now.toISOString() })
+    .eq("user_id", userId)
+    .eq("status", "pending");
+}
+
+// ===================== MERCADO PAGO =====================
+
+async function processMercadoPago(
+  accessToken: string, plan: any, method: string,
+  email: string, name: string, document: string,
+  cardToken?: string, installments?: number, userId?: string
+) {
+  const paymentData: any = {
+    transaction_amount: Number(plan.price),
+    description: `Assinatura plano ${plan.name}`,
+    external_reference: `plan_${plan.id}_user_${userId}`,
+    payer: {
+      email,
+      first_name: name.split(" ")[0],
+      last_name: name.split(" ").slice(1).join(" ") || "",
+      identification: document ? { type: document.replace(/\D/g, "").length > 11 ? "CNPJ" : "CPF", number: document.replace(/\D/g, "") } : undefined,
+    },
+  };
+
+  if (method === "PIX") {
+    paymentData.payment_method_id = "pix";
+  } else if (method === "CREDIT_CARD") {
+    if (!cardToken) throw new Error("Token do cartão é obrigatório. Use o SDK do Mercado Pago para gerar o token.");
+    paymentData.token = cardToken;
+    paymentData.installments = installments || 1;
+  } else if (method === "BOLETO") {
+    paymentData.payment_method_id = "bolbradesco";
+  }
+
+  const res = await fetch("https://api.mercadopago.com/v1/payments", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": `plan-${plan.id}-${userId}-${Date.now()}`,
+    },
+    body: JSON.stringify(paymentData),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error("MP Subscribe Error:", JSON.stringify(data));
+    if (data.message?.includes("access_token")) throw new Error("Access Token do Mercado Pago inválido ou expirado.");
+    throw new Error(data.message || data.cause?.[0]?.description || `Erro HTTP ${res.status} no Mercado Pago`);
+  }
+
+  const statusMap: Record<string, string> = { approved: "approved", pending: "pending", authorized: "pending", in_process: "pending", rejected: "rejected", cancelled: "cancelled" };
+  const status = statusMap[data.status] || "pending";
+
+  const result: any = { gateway_payment_id: String(data.id), status };
+
+  if (method === "PIX" && data.point_of_interaction?.transaction_data) {
+    result.pix = {
+      qrCode: data.point_of_interaction.transaction_data.qr_code,
+      qrCodeBase64: data.point_of_interaction.transaction_data.qr_code_base64,
+      expiration: data.date_of_expiration,
+    };
+  }
+  if (method === "BOLETO" && data.transaction_details) {
+    result.boleto = {
+      url: data.transaction_details.external_resource_url,
+      barcode: data.barcode?.content,
+      dueDate: data.date_of_expiration,
+    };
+  }
+  if (method === "CREDIT_CARD") {
+    result.card = {
+      status,
+      brand: data.payment_method_id,
+      lastFour: data.card?.last_four_digits,
+    };
+  }
+
+  return result;
+}
+
+// ===================== PAGBANK =====================
+
+async function processPagBank(
+  token: string, environment: string, plan: any, method: string,
+  email: string, name: string, document: string, phone: string,
+  cardToken?: string, userId?: string
+) {
+  const baseUrl = environment === "production" ? "https://api.pagseguro.com" : "https://sandbox.api.pagseguro.com";
+  const amountCents = Math.round(Number(plan.price) * 100);
+
+  const orderData: any = {
+    reference_id: `plan_${plan.id}_user_${userId}_${Date.now()}`,
+    customer: {
+      name: name || "Cliente",
+      email: email,
+      tax_id: (document || "00000000000").replace(/\D/g, ""),
+      phones: phone ? [{ country: "55", area: phone.replace(/\D/g, "").slice(0, 2), number: phone.replace(/\D/g, "").slice(2), type: "MOBILE" }] : [],
+    },
+    items: [{ reference_id: plan.id, name: `Plano ${plan.name}`, quantity: 1, unit_amount: amountCents }],
+    charges: [] as any[],
+  };
+
+  if (method === "PIX") {
+    orderData.qr_codes = [{ amount: { value: amountCents }, expiration_date: new Date(Date.now() + 3600 * 1000).toISOString() }];
+  } else if (method === "BOLETO") {
+    orderData.charges.push({
+      reference_id: crypto.randomUUID(),
+      description: `Plano ${plan.name}`,
+      amount: { value: amountCents, currency: "BRL" },
+      payment_method: {
+        type: "BOLETO",
+        boleto: {
+          due_date: new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0],
+          instruction_lines: { line_1: `Assinatura plano ${plan.name}`, line_2: "" },
+          holder: {
+            name: name || "Cliente",
+            tax_id: (document || "00000000000").replace(/\D/g, ""),
+            email,
+            address: { street: "Rua", number: "0", locality: "Centro", city: "São Paulo", region_code: "SP", country: "BRA", postal_code: "01000000" },
+          },
+        },
+      },
+    });
+  } else if (method === "CREDIT_CARD") {
+    if (!cardToken) throw new Error("Token do cartão PagBank é obrigatório.");
+    orderData.charges.push({
+      reference_id: crypto.randomUUID(),
+      description: `Plano ${plan.name}`,
+      amount: { value: amountCents, currency: "BRL" },
+      payment_method: {
+        type: "CREDIT_CARD",
+        installments: 1,
+        capture: true,
+        card: { encrypted: cardToken },
+        holder: { name: name || "Cliente", tax_id: (document || "00000000000").replace(/\D/g, "") },
+      },
+    });
+  }
+
+  const res = await fetch(`${baseUrl}/orders`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(orderData),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error("PagBank Subscribe Error:", JSON.stringify(data));
+    if (res.status === 401) throw new Error("Token do PagBank inválido ou expirado.");
+    throw new Error(data.error_messages?.[0]?.description || `Erro HTTP ${res.status} no PagBank`);
+  }
+
+  const result: any = { gateway_payment_id: data.id, status: "pending" };
+
+  if (method === "PIX" && data.qr_codes?.[0]) {
+    const qr = data.qr_codes[0];
+    result.pix = {
+      qrCode: qr.text,
+      qrCodeBase64: qr.links?.find((l: any) => l.media === "image/png")?.href,
+      expiration: qr.expiration_date,
+    };
+  }
+  if (method === "BOLETO" && data.charges?.[0]) {
+    const charge = data.charges[0];
+    result.boleto = {
+      url: charge.links?.find((l: any) => l.rel === "BOLETO.PDF")?.href,
+      barcode: charge.payment_method?.boleto?.barcode,
+      dueDate: charge.payment_method?.boleto?.due_date,
+    };
+  }
+  if (method === "CREDIT_CARD" && data.charges?.[0]) {
+    const charge = data.charges[0];
+    result.status = charge.status === "PAID" ? "approved" : "pending";
+    result.card = {
+      status: result.status,
+      brand: charge.payment_method?.card?.brand,
+      lastFour: charge.payment_method?.card?.last_digits,
+    };
+  }
+
+  return result;
+}
+
+// ===================== AMPLOPAY =====================
+
+async function processAmplopay(
+  secretKey: string, publicKey: string, plan: any, method: string,
+  email: string, name: string, document: string, phone: string, userId: string
+) {
+  const BASE_URL = "https://app.amplopay.com/api/v1";
+  const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/amplopay-webhook`;
+  const identifier = `plan_${plan.id}_user_${userId}_${Date.now()}`;
+
+  const clientData = { name, email, phone: phone || "(00) 0 0000-0000", document: document?.replace(/\D/g, "") || "00000000000" };
+  const product = { id: plan.id, name: `Plano ${plan.name}`, quantity: 1, price: Number(plan.price) };
+
+  let endpoint = "";
+  let requestBody: any = {};
+
+  if (method === "PIX") {
+    endpoint = `${BASE_URL}/gateway/pix/subscription`;
+    requestBody = {
+      identifier, amount: plan.price, product,
+      subscription: { periodicityType: "MONTHS", periodicity: 1, firstChargeIn: 0 },
+      client: clientData, callbackUrl,
+    };
+  } else if (method === "BOLETO") {
+    endpoint = `${BASE_URL}/gateway/boleto/receive`;
+    requestBody = {
+      identifier, amount: plan.price, product,
+      dueDate: new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0],
+      client: clientData, callbackUrl,
+    };
+  } else {
+    throw new Error("Amplopay suporta apenas PIX e Boleto para assinaturas.");
+  }
+
+  const headers: Record<string, string> = { "Content-Type": "application/json", "x-secret-key": secretKey };
+  if (publicKey) headers["x-public-key"] = publicKey;
+
+  const res = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(requestBody) });
+  const text = await res.text();
+  let data: any;
+  try { data = JSON.parse(text); } catch { throw new Error(`Resposta inválida do Amplopay: ${text.slice(0, 200)}`); }
+
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) throw new Error("Chaves do Amplopay inválidas.");
+    throw new Error(data.message || data.error || `Erro HTTP ${res.status} no Amplopay`);
+  }
+
+  const result: any = { gateway_payment_id: data.transactionId || data.id || identifier, status: "pending" };
+
+  if (method === "PIX" && data.pix) {
+    result.pix = {
+      qrCode: data.pix.code || data.pix.qrCode,
+      qrCodeBase64: data.pix.base64 || data.pix.qrCodeBase64 || data.pix.image,
+    };
+  }
+  if (method === "BOLETO" && data.boleto) {
+    result.boleto = {
+      url: data.boleto.url || data.boleto.bankSlipUrl,
+      barcode: data.boleto.barcode || data.boleto.digitableLine,
+      dueDate: data.boleto.dueDate,
+    };
+  }
+
+  return result;
 }
