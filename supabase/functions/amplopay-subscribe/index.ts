@@ -106,6 +106,8 @@ Deno.serve(async (req) => {
     let endpoint = "";
     let requestBody: any = {};
 
+    // Amplopay uses the same subscription endpoint for all methods
+    // The payment method is determined by the endpoint path
     if (method === "PIX") {
       endpoint = "https://app.amplopay.com/api/v1/gateway/pix/subscription";
       requestBody = {
@@ -117,25 +119,27 @@ Deno.serve(async (req) => {
         callbackUrl,
       };
     } else if (method === "CREDIT_CARD") {
-      endpoint = "https://app.amplopay.com/api/v1/gateway/credit-card/subscription";
+      // Use standard credit card transaction endpoint
+      endpoint = "https://app.amplopay.com/api/v1/gateway/credit-card";
       requestBody = {
         identifier,
         amount: plan.price,
         product: productData,
-        subscription: subscriptionData,
         client: clientData,
         callbackUrl,
         card: card || undefined,
+        subscription: subscriptionData,
       };
     } else if (method === "BOLETO") {
-      endpoint = "https://app.amplopay.com/api/v1/gateway/boleto/subscription";
+      // Use standard boleto transaction endpoint
+      endpoint = "https://app.amplopay.com/api/v1/gateway/boleto";
       requestBody = {
         identifier,
         amount: plan.price,
         product: productData,
-        subscription: subscriptionData,
         client: clientData,
         callbackUrl,
+        subscription: subscriptionData,
       };
     } else {
       return new Response(JSON.stringify({ error: "Método de pagamento inválido" }), {

@@ -65,6 +65,21 @@ export default function SuperAdminTenants() {
     return matchSearch && matchFilter;
   }) ?? [];
 
+  const logAudit = async (action: string, targetType: string, targetId: string, targetName: string, details?: any) => {
+    try {
+      await supabase.from("audit_logs").insert({
+        actor_user_id: user!.id,
+        action,
+        target_type: targetType,
+        target_id: targetId,
+        target_name: targetName,
+        details: details || {},
+      } as any);
+    } catch (e) {
+      console.error("Audit log error:", e);
+    }
+  };
+
   const notifyTenant = async (userId: string, action: string) => {
     try {
       await supabase.functions.invoke("notify-tenant-status", {
@@ -76,6 +91,7 @@ export default function SuperAdminTenants() {
   };
 
   const handleApprove = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "approved" } as any)
@@ -84,12 +100,14 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta aprovada! Notificação enviada.");
       notifyTenant(userId, "approved");
+      logAudit("approve_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
   const handleReject = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "rejected" } as any)
@@ -98,12 +116,14 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta rejeitada. Notificação enviada.");
       notifyTenant(userId, "rejected");
+      logAudit("reject_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
   const handleBlock = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "blocked" } as any)
@@ -112,11 +132,13 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant bloqueado. Notificação enviada.");
       notifyTenant(userId, "blocked");
+      logAudit("block_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
 
   const handleUnblock = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "approved" } as any)
@@ -125,6 +147,7 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
       notifyTenant(userId, "approved");
+      logAudit("unblock_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
@@ -148,6 +171,8 @@ export default function SuperAdminTenants() {
         : "Sua loja foi desbloqueada! Clientes já podem acessá-la novamente.",
       type: "info",
     } as any);
+    const tenant = tenants?.find(t => t.user_id === userId);
+    logAudit(!currentBlocked ? "block_store" : "unblock_store", "store", userId, tenant?.display_name || "—");
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
@@ -169,6 +194,8 @@ export default function SuperAdminTenants() {
         : "O acesso ao painel administrativo da sua loja foi liberado!",
       type: "info",
     } as any);
+    const tenant = tenants?.find(t => t.user_id === userId);
+    logAudit(!currentBlocked ? "block_admin_panel" : "unblock_admin_panel", "admin_panel", userId, tenant?.display_name || "—");
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
@@ -204,6 +231,11 @@ export default function SuperAdminTenants() {
       } as any);
     }
 
+    logAudit("delete_tenant", "tenant", userId, deletingTenant.display_name || "Sem nome", {
+      store_name: deletingTenant.store?.store_name,
+      products: deletingTenant.productCount,
+      orders: deletingTenant.orders?.count,
+    });
     toast.success("Tenant excluído permanentemente!");
     setDeleteDialogOpen(false);
     setDeletingTenant(null);
