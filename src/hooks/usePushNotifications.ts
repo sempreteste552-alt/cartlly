@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const VAPID_PUBLIC_KEY = "BAkMELe9GKyIch9CV9AVvq08ar3SZo6ufoiG1JSEyFR9vY3npksGAO_sMYMDVIdwIfslln0wpkRRDp_behHYPe4";
+const VAPID_PUBLIC_KEY = "BCAULtrTpChA__hHpjRmVSWLWVsbxY7XUp0O3C41EffJXifYDtUwanUeFC0gixBtMQZxnl7ansKJ7bdJGkEjTVw";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
