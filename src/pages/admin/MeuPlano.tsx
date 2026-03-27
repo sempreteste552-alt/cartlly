@@ -263,6 +263,7 @@ export default function MeuPlano() {
         return;
       }
       setPaymentResult(null);
+      setPaymentConfirmed(false);
       setSelectedMethod("PIX");
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
       return;
