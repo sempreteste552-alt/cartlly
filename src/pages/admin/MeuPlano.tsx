@@ -179,16 +179,13 @@ export default function MeuPlano() {
       }
       setPaymentResult(data);
       if (data.pix?.qrCode) {
-        // Show PIX QR code - payment still pending
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
       } else {
-        // For other methods - payment still pending
-        setCheckoutDialog(null);
-        setThankYouDialog({ planName: data.plan_name || "", method: selectedMethod });
+        // Non-PIX: keep checkout dialog open showing pending status
+        toast.info("Cobrança criada! Aguardando confirmação do pagamento.");
       }
       queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
       queryClient.invalidateQueries({ queryKey: ["pending_plan_request"] });
-      queryClient.invalidateQueries({ queryKey: ["plan_features"] });
     },
     onError: (e: any) => toast.error("❌ " + e.message),
   });
