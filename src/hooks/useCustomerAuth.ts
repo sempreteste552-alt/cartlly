@@ -81,6 +81,8 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     });
   }, [loadCustomerProfile, user]);
 
+  const normalizeEmail = (email: string) => email.toLowerCase().trim();
+
   const generateWelcomeCoupon = async (storeUserId: string, customerName: string) => {
     try {
       const { data: storeSettings } = await supabase
@@ -88,10 +90,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         .select("welcome_coupon_enabled, welcome_coupon_discount_type, welcome_coupon_discount_value, welcome_coupon_min_order, welcome_coupon_expires_days")
         .eq("user_id", storeUserId)
         .maybeSingle();
+
       if (!storeSettings?.welcome_coupon_enabled) return;
-      const code = "BV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      const code = `BV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + (storeSettings.welcome_coupon_expires_days || 30));
+
       await supabase.from("coupons").insert({
         user_id: storeUserId,
         code,
@@ -102,7 +107,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         expires_at: expiresAt.toISOString(),
         active: true,
       });
-      // Notify the store owner
+
       await supabase.from("admin_notifications").insert({
         sender_user_id: storeUserId,
         target_user_id: storeUserId,
@@ -116,20 +121,30 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   };
 
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
-    // Check if email already exists as a customer for this store
+    const normalizedEmail = normalizeEmail(email);
+
+    const { data: emailExists, error: emailExistsError } = await (supabase as any).rpc("customer_email_exists_globally", {
+      _email: normalizedEmail,
+    });
+
+    if (emailExistsError) throw emailExistsError;
+    if (emailExists) {
+      throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
+    }
+
     const { data: existingCustomer } = await supabase
       .from("customers")
       .select("id")
-      .eq("email", email.toLowerCase().trim())
+      .eq("email", normalizedEmail)
       .eq("store_user_id", storeUserId)
       .maybeSingle();
+
     if (existingCustomer) {
       throw new Error("Este e-mail já está cadastrado nesta loja. Faça login.");
     }
 
-    // Try to sign up - if user already exists in auth, this will fail
     const { data, error } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password,
       options: {
         data: { display_name: name, is_customer: true },
@@ -138,36 +153,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     });
 
     if (error) {
-      // If user already exists in auth system (from another store), try to sign in instead
       if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-        // Sign in with their credentials to get their user ID
-        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
-          email: email.toLowerCase().trim(),
-          password,
-        });
-        if (signInErr) {
-          throw new Error("Este e-mail já possui conta. Use a senha correta para vincular a esta loja.");
-        }
-        // Create customer record for this store
-        if (signInData.user) {
-          const { error: customerErr } = await supabase.from("customers").insert({
-            auth_user_id: signInData.user.id,
-            store_user_id: storeUserId,
-            name,
-            email: email.toLowerCase().trim(),
-          } as any);
-          if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
-          await generateWelcomeCoupon(storeUserId, name);
-        }
-        return signInData;
+        throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
       }
       throw error;
     }
 
-    // If signup returned a user with fake_signup (user exists but no error), handle it
     if (data.user && !data.session) {
-      // Email confirmation required - create customer record via edge function later
-      // For now, just inform the user
       throw new Error("Verifique seu e-mail para confirmar o cadastro antes de fazer login.");
     }
 
@@ -176,8 +168,9 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
         name,
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
       } as any);
+
       if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
       await generateWelcomeCoupon(storeUserId, name);
     }
@@ -186,10 +179,12 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   };
 
   const signIn = async (email: string, password: string, storeUserId: string) => {
+    const normalizedEmail = normalizeEmail(email);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password,
     });
+
     if (error) {
       if (error.message.includes("Invalid login") || error.message.includes("invalid_credentials")) {
         throw new Error("E-mail ou senha inválidos. Verifique seus dados ou crie uma conta.");
@@ -200,7 +195,6 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    // Verify this user is a customer of THIS specific store
     const { data: customerRecord } = await supabase
       .from("customers")
       .select("id, name, email")
@@ -209,21 +203,8 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       .maybeSingle();
 
     if (!customerRecord) {
-      // User exists in auth but not as customer of this store
-      // Auto-create customer record for this store (they proved their identity via password)
-      const userName = data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente";
-      const { error: insertErr } = await supabase.from("customers").insert({
-        auth_user_id: data.user.id,
-        store_user_id: storeUserId,
-        name: userName,
-        email: data.user.email || email.toLowerCase().trim(),
-      } as any);
-
-      if (insertErr) {
-        // If insert fails, sign out and throw
-        await supabase.auth.signOut();
-        throw new Error("Erro ao vincular conta a esta loja. Tente novamente.");
-      }
+      await supabase.auth.signOut();
+      throw new Error("Esta conta não pertence a esta loja. Use o cadastro correto deste tenant.");
     }
 
     return data;

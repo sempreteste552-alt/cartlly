@@ -49,7 +49,10 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
       setTab("login");
     } catch (err: any) {
       const msg = err.message || "Erro ao criar conta";
-      if (msg.includes("já está cadastrado") || msg.includes("already")) {
+      if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
+        toast.error("Este e-mail já existe em outra conta e não pode ser reaproveitado nesta loja.", { duration: 5000 });
+        setTab("login");
+      } else if (msg.includes("já está cadastrado nesta loja")) {
         toast.error("Este e-mail já está registrado nesta loja. Faça login.", { duration: 4000 });
         setTab("login");
       } else {

@@ -25,15 +25,15 @@ export function usePublicProductImages(productIds: string[]) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_images")
-        .select("*")
+        .select("product_id, image_url, sort_order")
         .in("product_id", productIds)
         .order("sort_order");
       if (error) throw error;
-      // Group by product_id
       const map: Record<string, string[]> = {};
       data?.forEach((img: any) => {
+        if (!img.image_url?.trim()) return;
         if (!map[img.product_id]) map[img.product_id] = [];
-        map[img.product_id].push(img.image_url);
+        if (!map[img.product_id].includes(img.image_url)) map[img.product_id].push(img.image_url);
       });
       return map;
     },

@@ -199,6 +199,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   mainImage={mainImage}
                   additionalImages={extraImages}
                   alt={product.name}
+                  className="h-full w-full"
                   showArrows
                   autoplaySpeed={3500}
                   glowColor={primaryColor}
