@@ -370,6 +370,11 @@ export default function Login() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Trust badge */}
+        <div className="flex justify-center mt-4">
+          <img src={siteSeguro} alt="Site 100% Seguro - SSL Certificado" className="h-10 opacity-80" />
+        </div>
       </div>
     </div>
   );

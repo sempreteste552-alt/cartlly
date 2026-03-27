@@ -464,6 +464,16 @@ export default function LojaCheckout() {
           </CardContent>
         </Card>
 
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-3 flex-wrap py-2">
+          <img src={siteSeguro} alt="Site Seguro" className="h-8" />
+          <img src={compraSegura} alt="Compra Segura" className="h-8" />
+        </div>
+        <div className="flex items-center justify-center gap-2 py-1">
+          <img src={paymentCards} alt="Bandeiras aceitas" className="h-6" />
+          <img src={pixLogo} alt="PIX" className="h-6" />
+        </div>
+
         {/* Actions */}
         <div className="flex flex-col gap-3">
           {hasGateway ? (
