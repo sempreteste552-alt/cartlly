@@ -185,7 +185,59 @@ export default function SuperAdminNotificacoes() {
         </Card>
       </div>
 
-      {/* Notification List */}
+      {/* Push Notifications Control */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isSubscribed ? "bg-green-500/10" : "bg-muted"}`}>
+                {isSubscribed ? <BellRing className="h-5 w-5 text-green-600" /> : <BellOff className="h-5 w-5 text-muted-foreground" />}
+              </div>
+              <div>
+                <p className="font-medium text-sm">Push Notifications</p>
+                <p className="text-xs text-muted-foreground">
+                  {!isSupported ? "Não suportado neste navegador" : isSubscribed ? "Ativas — você receberá alertas em tempo real" : "Desativadas — ative para receber alertas"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSubscribed && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestPush}
+                    disabled={testingPush}
+                  >
+                    {testingPush ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Send className="mr-1 h-3 w-3" />}
+                    Testar Push
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={unsubscribe}
+                    disabled={pushLoading}
+                    className="text-destructive"
+                  >
+                    <BellOff className="mr-1 h-3 w-3" /> Desativar
+                  </Button>
+                </>
+              )}
+              {!isSubscribed && isSupported && (
+                <Button
+                  size="sm"
+                  onClick={subscribe}
+                  disabled={pushLoading}
+                >
+                  {pushLoading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <BellRing className="mr-1 h-3 w-3" />}
+                  Ativar Push
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {!notifications?.length ? (
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center p-12">
