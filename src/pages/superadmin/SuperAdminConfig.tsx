@@ -46,6 +46,8 @@ const defaultConfig: PlatformConfig = {
   mercadopago_client_id: "",
   mercadopago_client_secret: "",
   pagbank_global_key: "",
+  amplopay_public_key: "",
+  amplopay_secret_key: "",
   stripe_global_key: "",
   stripe_webhook_secret: "",
   stripe_publishable_key: "",
