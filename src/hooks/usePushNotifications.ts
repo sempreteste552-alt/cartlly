@@ -23,6 +23,51 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [loading, setLoading] = useState(false);
 
+  const persistSubscription = useCallback(async (subscription: PushSubscription) => {
+    if (!user) throw new Error("Usuário não autenticado");
+
+    const json = subscription.toJSON();
+    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
+      throw new Error("Subscription data incomplete");
+    }
+
+    const { error } = await supabase.from("push_subscriptions").upsert(
+      {
+        user_id: user.id,
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+      },
+      { onConflict: "user_id,endpoint" }
+    );
+
+    if (error) throw error;
+  }, [user]);
+
+  const checkSubscription = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const registration = await navigator.serviceWorker.getRegistration("/sw-push.js");
+      if (!registration) {
+        setIsSubscribed(false);
+        return;
+      }
+
+      const subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        setIsSubscribed(false);
+        return;
+      }
+
+      await persistSubscription(subscription);
+      setIsSubscribed(true);
+    } catch (err) {
+      console.error("Push subscription sync error:", err);
+      setIsSubscribed(false);
+    }
+  }, [user, persistSubscription]);
+
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     setIsSupported(supported);
@@ -31,29 +76,13 @@ export function usePushNotifications() {
       setPermission(Notification.permission);
       checkSubscription();
     }
-  }, [user]);
-
-  const checkSubscription = useCallback(async () => {
-    if (!user) return;
-    try {
-      const registration = await navigator.serviceWorker.getRegistration("/sw-push.js");
-      if (!registration) {
-        setIsSubscribed(false);
-        return;
-      }
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-    } catch {
-      setIsSubscribed(false);
-    }
-  }, [user]);
+  }, [user, checkSubscription]);
 
   const subscribe = useCallback(async () => {
     if (!user || !isSupported) return;
     setLoading(true);
 
     try {
-      // Request permission
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
@@ -63,33 +92,19 @@ export function usePushNotifications() {
         return;
       }
 
-      // Register service worker
       const registration = await navigator.serviceWorker.register("/sw-push.js");
       await navigator.serviceWorker.ready;
 
-      // Subscribe to push
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
+      let subscription = await registration.pushManager.getSubscription();
 
-      const json = subscription.toJSON();
-      if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
-        throw new Error("Subscription data incomplete");
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
       }
 
-      // Save to database
-      const { error } = await supabase.from("push_subscriptions").upsert(
-        {
-          user_id: user.id,
-          endpoint: json.endpoint,
-          p256dh: json.keys.p256dh,
-          auth: json.keys.auth,
-        },
-        { onConflict: "user_id,endpoint" }
-      );
-
-      if (error) throw error;
+      await persistSubscription(subscription);
 
       setIsSubscribed(true);
       toast.success("🔔 Notificações push ativadas!");
@@ -99,7 +114,7 @@ export function usePushNotifications() {
     } finally {
       setLoading(false);
     }
-  }, [user, isSupported]);
+  }, [user, isSupported, persistSubscription]);
 
   const unsubscribe = useCallback(async () => {
     if (!user) return;
@@ -111,7 +126,6 @@ export function usePushNotifications() {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
           await subscription.unsubscribe();
-          // Remove from database
           await supabase
             .from("push_subscriptions")
             .delete()
