@@ -6,12 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, XCircle, Copy, FileText } from "lucide-react";
+import { ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, XCircle, Copy, FileText, Download } from "lucide-react";
 import { useOrders, useOrderItems, useOrderStatusHistory, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 
 export default function Pedidos() {
   const STATUS_ICONS: Record<string, any> = {
@@ -294,36 +295,27 @@ export default function Pedidos() {
                   variant="outline"
                   size="sm"
                   className="w-full gap-2"
-                  onClick={async () => {
-                    try {
-                      toast.loading("Gerando comprovante...", { id: "receipt" });
-                      const { data: { session } } = await supabase.auth.getSession();
-                      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-                      const resp = await fetch(
-                        `https://${projectId}.supabase.co/functions/v1/generate-receipt`,
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${session?.access_token}`,
-                          },
-                          body: JSON.stringify({ orderId: selectedOrder.id }),
-                        }
-                      );
-                      const data = await resp.json();
-                      if (!resp.ok) throw new Error(data.error);
-                      // Open receipt in new tab
-                      const blob = new Blob([data.html], { type: "text/html" });
-                      const url = URL.createObjectURL(blob);
-                      window.open(url, "_blank");
-                      toast.success("Comprovante gerado! Você pode salvar como PDF pelo navegador (Ctrl+P).", { id: "receipt" });
-                    } catch (err: any) {
-                      toast.error("Erro ao gerar comprovante: " + err.message, { id: "receipt" });
-                    }
+                  onClick={() => {
+                    const subtotal = orderItems?.reduce((acc, i) => acc + i.quantity * i.unit_price, 0) || 0;
+                    generateReceiptPdf({
+                      orderId: selectedOrder.id,
+                      date: format(new Date(selectedOrder.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }),
+                      storeName: "Minha Loja",
+                      customerName: selectedOrder.customer_name,
+                      customerEmail: selectedOrder.customer_email || undefined,
+                      customerPhone: selectedOrder.customer_phone || undefined,
+                      customerAddress: selectedOrder.customer_address || undefined,
+                      items: orderItems?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+                      subtotal,
+                      discount: selectedOrder.discount_amount,
+                      shipping: selectedOrder.shipping_cost,
+                      total: selectedOrder.total,
+                      paymentMethod: selectedOrder.whatsapp_order ? "WhatsApp" : "Pagamento Online",
+                    });
                   }}
                 >
-                  <FileText className="h-4 w-4" />
-                  Gerar Comprovante
+                  <Download className="h-4 w-4" />
+                  Baixar Recibo em PDF
                 </Button>
               </div>
 

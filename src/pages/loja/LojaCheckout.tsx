@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
+import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
+import confetti from "canvas-confetti";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -50,6 +52,20 @@ export default function LojaCheckout() {
   const [reviewRatings, setReviewRatings] = useState<Record<string, number>>({});
   const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
   const [reviewsSubmitted, setReviewsSubmitted] = useState<Set<string>>(new Set());
+
+  // Confetti on success
+  useEffect(() => {
+    if (phase === "success") {
+      const duration = 2000;
+      const end = Date.now() + duration;
+      const frame = () => {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (customer) {
@@ -285,6 +301,24 @@ export default function LojaCheckout() {
       hour: "2-digit", minute: "2-digit",
     }).format(receiptDate);
 
+    const handleDownloadReceipt = () => {
+      generateReceiptPdf({
+        orderId: orderId || "",
+        date: formattedDate,
+        storeName: settings?.store_name || "Loja",
+        customerName: name,
+        customerEmail: email,
+        customerPhone: phone,
+        customerAddress: address,
+        items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
+        subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
+        discount: savedDiscountAmount,
+        shipping: savedShippingCost,
+        total: savedFinalTotal,
+        paymentMethod: getMethodLabel(paymentMethod),
+      });
+    };
+
     return (
       <div className="max-w-lg mx-auto px-4 py-10 space-y-6">
         {/* Thank you header */}
@@ -407,6 +441,9 @@ export default function LojaCheckout() {
         <div className="flex flex-col gap-3">
           <Button className="w-full" onClick={() => navigate("..")}>
             🏠 Voltar à Loja
+          </Button>
+          <Button variant="outline" className="w-full" onClick={handleDownloadReceipt}>
+            <Download className="mr-2 h-4 w-4" /> Baixar Recibo em PDF
           </Button>
           {orderId && (
             <Button variant="outline" className="w-full" onClick={() => navigate(`../rastreio/${orderId}`)}>
