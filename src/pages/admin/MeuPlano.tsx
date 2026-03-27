@@ -241,6 +241,15 @@ export default function MeuPlano() {
             payment_method: selectedMethod,
             document: cpf.replace(/\D/g, ""),
             phone: phone,
+            ...(selectedMethod === "CREDIT_CARD" && {
+              card: {
+                number: cardNumber.replace(/\s/g, ""),
+                holderName: cardName,
+                expirationMonth: cardExpiry.split("/")[0],
+                expirationYear: "20" + (cardExpiry.split("/")[1] || ""),
+                cvv: cardCvv,
+              },
+            }),
           }),
         }
       );
