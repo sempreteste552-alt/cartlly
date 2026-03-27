@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { user_id, plan_id, payment_method, document, phone } = body;
+    const { user_id, plan_id, payment_method, document, phone, card } = body;
 
     if (!user_id || !plan_id || !document) {
       return new Response(JSON.stringify({ error: "Dados incompletos. Informe CPF/CNPJ." }), {
@@ -75,7 +75,6 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id)
       .single();
 
-    // Get user email from auth
     const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
     const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
     const tenantName = profile?.display_name || "Tenant";
@@ -83,60 +82,66 @@ Deno.serve(async (req) => {
     const identifier = `plan_${plan.id}_user_${user_id}_${Date.now()}`;
     const method = payment_method || "PIX";
 
-    // Determine Amplopay endpoint based on method
+    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/amplopay-webhook`;
+
+    const clientData = {
+      name: tenantName,
+      email: tenantEmail,
+      phone: phone || "(00) 0 0000-0000",
+      document: document,
+    };
+
+    const productData = {
+      id: plan.id,
+      name: `Plano ${plan.name}`,
+      price: plan.price,
+    };
+
+    const subscriptionData = {
+      periodicityType: "MONTHS",
+      periodicity: 1,
+      firstChargeIn: 0,
+    };
+
     let endpoint = "";
     let requestBody: any = {};
-
-    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/amplopay-webhook`;
 
     if (method === "PIX") {
       endpoint = "https://app.amplopay.com/api/v1/gateway/pix/subscription";
       requestBody = {
         identifier,
         amount: plan.price,
-        product: {
-          id: plan.id,
-          name: `Plano ${plan.name}`,
-          price: plan.price,
-        },
-        subscription: {
-          periodicityType: "MONTHS",
-          periodicity: 1,
-          firstChargeIn: 0,
-        },
-        client: {
-          name: tenantName,
-          email: tenantEmail,
-          phone: phone || "(00) 0 0000-0000",
-          document: document,
-        },
+        product: productData,
+        subscription: subscriptionData,
+        client: clientData,
         callbackUrl,
       };
-    } else {
-      // For CREDIT_CARD and BOLETO, use the same structure
-      // Amplopay may have different endpoints; using PIX subscription for now
-      endpoint = "https://app.amplopay.com/api/v1/gateway/pix/subscription";
+    } else if (method === "CREDIT_CARD") {
+      endpoint = "https://app.amplopay.com/api/v1/gateway/credit-card/subscription";
       requestBody = {
         identifier,
         amount: plan.price,
-        product: {
-          id: plan.id,
-          name: `Plano ${plan.name}`,
-          price: plan.price,
-        },
-        subscription: {
-          periodicityType: "MONTHS",
-          periodicity: 1,
-          firstChargeIn: 0,
-        },
-        client: {
-          name: tenantName,
-          email: tenantEmail,
-          phone: phone || "(00) 0 0000-0000",
-          document: document,
-        },
+        product: productData,
+        subscription: subscriptionData,
+        client: clientData,
+        callbackUrl,
+        card: card || undefined,
+      };
+    } else if (method === "BOLETO") {
+      endpoint = "https://app.amplopay.com/api/v1/gateway/boleto/subscription";
+      requestBody = {
+        identifier,
+        amount: plan.price,
+        product: productData,
+        subscription: subscriptionData,
+        client: clientData,
         callbackUrl,
       };
+    } else {
+      return new Response(JSON.stringify({ error: "Método de pagamento inválido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Call Amplopay API
@@ -163,10 +168,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // IMPORTANT: do not change the tenant's current subscription yet.
-    // The active plan must only switch after Amplopay confirms payment
-    // through the webhook with TRANSACTION_PAID / COMPLETED.
-
     // Notify tenant
     await supabase.from("admin_notifications").insert({
       sender_user_id: user_id,
@@ -176,14 +177,17 @@ Deno.serve(async (req) => {
       type: "payment_pending",
     });
 
-    // Return payment data (PIX QR code, etc.)
+    // Return payment data
     return new Response(
       JSON.stringify({
         success: true,
         message: "Cobrança criada! Aguardando pagamento.",
         transaction_id: amplopayData.transactionId,
         status: amplopayData.status,
+        method,
         pix: amplopayData.pix || null,
+        boleto: amplopayData.boleto || null,
+        card: amplopayData.card || null,
         plan_name: plan.name,
         identifier,
       }),
