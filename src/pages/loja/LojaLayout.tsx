@@ -397,16 +397,35 @@ export default function LojaLayout() {
               </div>
               <div>
                 <h3 className="font-bold mb-3">Redes Sociais</h3>
-                <div className="flex gap-3 flex-wrap">
-                  {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Instagram</a>}
-                  {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Facebook</a>}
-                  {settings?.tiktok_url && <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">TikTok</a>}
-                  {settings?.youtube_url && <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">YouTube</a>}
-                  {settings?.twitter_url && <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Twitter</a>}
+                <div className="flex gap-4 flex-wrap items-center">
+                  {settings?.instagram_url && (
+                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconInstagram} alt="Instagram" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.facebook_url && (
+                    <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconFacebook} alt="Facebook" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.tiktok_url && (
+                    <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconTiktok} alt="TikTok" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.youtube_url && (
+                    <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconYoutube} alt="YouTube" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.twitter_url && (
+                    <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Twitter</a>
+                  )}
                 </div>
                 {settings?.google_maps_url && (
-                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm mt-3 inline-flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> Ver no Google Maps
+                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 hover:scale-105 transition-transform">
+                    <img src={iconLocation} alt="Localização" className="h-6 w-6" />
+                    <span className="text-sm opacity-70">Ver no Google Maps</span>
                   </a>
                 )}
               </div>
