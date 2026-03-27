@@ -29,6 +29,12 @@ interface PaymentStepProps {
   onSuccess: (method?: string) => void;
 }
 
+interface CpfInputFieldProps {
+  label?: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
@@ -39,6 +45,24 @@ const formatCpf = (v: string) => {
   if (nums.length <= 9) return nums.slice(0, 3) + "." + nums.slice(3, 6) + "." + nums.slice(6);
   return nums.slice(0, 3) + "." + nums.slice(3, 6) + "." + nums.slice(6, 9) + "-" + nums.slice(9);
 };
+
+function CpfInputField({ label = "CPF", value, onChange }: CpfInputFieldProps) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Input
+        placeholder="000.000.000-00"
+        value={value}
+        onChange={(e) => onChange(formatCpf(e.target.value))}
+        maxLength={14}
+        inputMode="numeric"
+        autoComplete="off"
+        className="font-mono"
+      />
+      <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
+    </div>
+  );
+}
 
 export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
