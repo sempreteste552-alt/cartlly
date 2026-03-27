@@ -82,7 +82,8 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta aprovada! Notificação enviada.");
       notifyTenant(userId, "approved");
-      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
@@ -95,7 +96,8 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta rejeitada. Notificação enviada.");
       notifyTenant(userId, "rejected");
-      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
