@@ -43,6 +43,8 @@ export default function SuperAdminTenants() {
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTenant, setDeletingTenant] = useState<any>(null);
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
