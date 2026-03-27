@@ -24,6 +24,8 @@ interface PlatformConfig {
   mercadopago_client_id: string;
   mercadopago_client_secret: string;
   pagbank_global_key: string;
+  amplopay_public_key: string;
+  amplopay_secret_key: string;
   stripe_global_key: string;
   stripe_webhook_secret: string;
   stripe_publishable_key: string;
