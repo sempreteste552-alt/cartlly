@@ -479,10 +479,11 @@ export default function LojaLayout() {
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg hover:bg-green-600 transition-all duration-300 hover:scale-110 animate-fade-in bottom-20 md:bottom-6 right-6"
+            className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 animate-fade-in bottom-20 md:bottom-6 right-6"
             title="Fale conosco pelo WhatsApp"
+            style={{ boxShadow: "0 4px 20px rgba(37, 211, 102, 0.35)" }}
           >
-            <MessageCircle className="h-7 w-7" />
+            <img src={whatsappIcon} alt="WhatsApp" className="h-14 w-14 rounded-full drop-shadow-md" />
           </a>
         )}
 
