@@ -369,13 +369,22 @@ async function checkPlanSubscriptionWebhook(supabase: any, gateway: string, paym
       const { data: plan } = await supabase.from("tenant_plans").select("name").eq("id", planId).single();
       await activatePlanSubscription(supabase, userId, planId);
 
-      // Notify
+      // Notify in-app
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
         target_user_id: userId,
         title: "✅ Plano Ativado!",
         message: `Seu plano ${plan?.name || ""} foi ativado com sucesso via ${gateway === "mercadopago" ? "Mercado Pago" : "PagBank"}.`,
         type: "plan_activated",
+      });
+
+      // 🔔 Push: Plan activated
+      await sendRichPush(userId, {
+        title: "🎉 Plano Ativado!",
+        body: `Seu plano ${plan?.name || ""} está ativo! Aproveite todas as funcionalidades 🚀`,
+        url: "/admin/plano",
+        type: "plan_activated",
+        data: { planId, planName: plan?.name },
       });
 
       console.log(`Plan subscription activated: user=${userId}, plan=${planId}`);
