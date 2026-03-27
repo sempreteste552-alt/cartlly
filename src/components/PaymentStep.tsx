@@ -41,7 +41,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão de Crédito", desc: "Parcelamento disponível", icon: CreditCard, enabled: settings?.payment_credit_card },
-    { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
   const formatCardNumber = (v: string) => {
