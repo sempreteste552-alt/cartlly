@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -68,6 +68,45 @@ export default function MeuPlano() {
   const [phone, setPhone] = useState("");
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Polling: check subscription status every 5s while QR code is shown
+  useEffect(() => {
+    if (!paymentResult || !checkoutDialog || paymentConfirmed) {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollingRef.current = null;
+      return;
+    }
+
+    const checkPayment = async () => {
+      if (!user || !checkoutDialog) return;
+      const { data } = await supabase
+        .from("tenant_subscriptions")
+        .select("status, plan_id")
+        .eq("user_id", user.id)
+        .eq("plan_id", checkoutDialog.planId)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (data) {
+        setPaymentConfirmed(true);
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        pollingRef.current = null;
+        toast.success("🎉 Pagamento confirmado! Plano ativado.");
+        queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["plan_features"] });
+      }
+    };
+
+    pollingRef.current = setInterval(checkPayment, 5000);
+    // Also check immediately
+    checkPayment();
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [paymentResult, checkoutDialog, paymentConfirmed, user, queryClient]);
 
   const { data: currentSub } = useQuery({
     queryKey: ["my_subscription", user?.id],
@@ -224,6 +263,7 @@ export default function MeuPlano() {
         return;
       }
       setPaymentResult(null);
+      setPaymentConfirmed(false);
       setSelectedMethod("PIX");
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
       return;
@@ -236,6 +276,7 @@ export default function MeuPlano() {
         return;
       }
       setPaymentResult(null);
+      setPaymentConfirmed(false);
       setSelectedMethod("PIX");
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
       return;
@@ -483,7 +524,7 @@ export default function MeuPlano() {
       </Dialog>
 
       {/* Checkout dialog (Amplopay) */}
-      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); setPaymentResult(null); } }}>
+      <Dialog open={!!checkoutDialog} onOpenChange={(open) => { if (!open) { setCheckoutDialog(null); setPaymentResult(null); setPaymentConfirmed(false); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -565,6 +606,21 @@ export default function MeuPlano() {
                 </div>
               </div>
             </div>
+          ) : paymentConfirmed ? (
+            <div className="space-y-4 py-6 text-center">
+              <div className="flex items-center justify-center">
+                <div className="h-20 w-20 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-12 w-12 text-green-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-foreground">🎉 Pagamento Confirmado!</h3>
+              <p className="text-muted-foreground">
+                Seu plano <strong className="text-foreground">{checkoutDialog?.planName}</strong> foi ativado com sucesso!
+              </p>
+              <Badge className="bg-green-500/15 text-green-600 border-green-500/30">
+                Plano Ativo
+              </Badge>
+            </div>
           ) : (
             <div className="space-y-4 py-2">
               {/* PIX QR Code display */}
@@ -597,31 +653,35 @@ export default function MeuPlano() {
                       Copiar
                     </Button>
                   </div>
-                  <Badge variant="outline" className="text-amber-600 border-amber-500/50">
-                    <Clock className="h-3 w-3 mr-1" /> Aguardando pagamento...
-                  </Badge>
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                    <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">A tela atualizará automaticamente ao confirmar o pagamento</p>
                 </div>
               )}
 
               {/* Non-PIX result */}
               {!paymentResult.pix?.qrCode && (
                 <div className="text-center space-y-3 py-4">
-                  <Clock className="h-12 w-12 text-amber-500 mx-auto" />
-                  <p className="font-bold text-lg">Cobrança criada!</p>
+                  <Loader2 className="h-12 w-12 text-amber-500 mx-auto animate-spin" />
+                  <p className="font-bold text-lg">Aguardando confirmação...</p>
                   <p className="text-sm text-muted-foreground">
-                    Aguardando confirmação do pagamento. Você receberá uma notificação quando for aprovado.
+                    A tela atualizará automaticamente quando o pagamento for confirmado.
                   </p>
-                  <Badge variant="outline" className="text-amber-600 border-amber-500/30">
-                    <Clock className="h-3 w-3 mr-1" /> Pendente
-                  </Badge>
                 </div>
               )}
             </div>
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setCheckoutDialog(null); setPaymentResult(null); }}>
-              {paymentResult ? "Fechar" : "Cancelar"}
+            <Button
+              variant={paymentConfirmed ? "default" : "outline"}
+              onClick={() => { setCheckoutDialog(null); setPaymentResult(null); setPaymentConfirmed(false); }}
+            >
+              {paymentConfirmed ? (
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Fechar</>
+              ) : paymentResult ? "Fechar" : "Cancelar"}
             </Button>
             {!paymentResult && (
               <Button
