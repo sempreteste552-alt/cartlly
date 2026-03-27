@@ -13,6 +13,10 @@ import { StoreMarquee } from "@/components/StoreMarquee";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import pixLogo from "@/assets/pix-logo.webp";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -389,6 +393,12 @@ export default function LojaLayout() {
               </div>
             </div>
             <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
+            <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
+              <img src={siteSeguro} alt="Site Seguro" className="h-8 brightness-0 invert opacity-70" />
+              <img src={compraSegura} alt="Compra Segura" className="h-8 brightness-0 invert opacity-70" />
+              <img src={paymentCards} alt="Bandeiras aceitas" className="h-5 brightness-0 invert opacity-60" />
+              <img src={pixLogo} alt="PIX" className="h-5 brightness-0 invert opacity-60" />
+            </div>
             <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>
