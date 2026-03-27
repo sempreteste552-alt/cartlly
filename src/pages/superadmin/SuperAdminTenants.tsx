@@ -170,9 +170,7 @@ export default function SuperAdminTenants() {
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
-  // Delete User
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingTenant, setDeletingTenant] = useState<any>(null);
+  // Delete User - states moved to top
 
   const handleDeleteUser = async () => {
     if (!deletingTenant) return;
