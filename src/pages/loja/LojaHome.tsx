@@ -51,8 +51,8 @@ export default function LojaHome() {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
         <div className="text-7xl mb-6">🏗️</div>
-        <h1 className="text-3xl font-bold text-center">Loja em Construção</h1>
-        <p className="text-gray-500 mt-3 text-center max-w-md">
+        <h1 className="text-3xl font-bold text-center text-foreground">Loja em Construção</h1>
+        <p className="text-muted-foreground mt-3 text-center max-w-md">
           Estamos preparando nossos produtos para você. Volte em breve para conferir as novidades!
         </p>
       </div>
