@@ -33,6 +33,8 @@ export default function LojaCheckout() {
   const [phase, setPhase] = useState<CheckoutPhase>("info");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
