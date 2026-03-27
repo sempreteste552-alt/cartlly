@@ -11,6 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard, MessageCircle, QrCode, FileText, CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import pixLogo from "@/assets/pix-logo.webp";
 import {
   Dialog,
   DialogContent,
