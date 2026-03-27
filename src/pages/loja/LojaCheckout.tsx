@@ -442,6 +442,9 @@ export default function LojaCheckout() {
           <Button className="w-full" onClick={() => navigate("..")}>
             🏠 Voltar à Loja
           </Button>
+          <Button variant="outline" className="w-full" onClick={handleDownloadReceipt}>
+            <Download className="mr-2 h-4 w-4" /> Baixar Recibo em PDF
+          </Button>
           {orderId && (
             <Button variant="outline" className="w-full" onClick={() => navigate(`../rastreio/${orderId}`)}>
               <Package className="mr-2 h-4 w-4" /> Rastrear Pedido
