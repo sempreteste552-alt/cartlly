@@ -174,6 +174,11 @@ export default function Configuracoes() {
       setMarqueeSpeed((settings as any).marquee_speed ?? 50);
       setMarqueeBgColor((settings as any).marquee_bg_color ?? "#000000");
       setMarqueeTextColor((settings as any).marquee_text_color ?? "#ffffff");
+      setWelcomeCouponEnabled(settings.welcome_coupon_enabled ?? false);
+      setWelcomeCouponDiscountType(settings.welcome_coupon_discount_type ?? "percentage");
+      setWelcomeCouponDiscountValue(settings.welcome_coupon_discount_value ?? 10);
+      setWelcomeCouponMinOrder(settings.welcome_coupon_min_order ? String(settings.welcome_coupon_min_order) : "");
+      setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
     }
   }, [settings]);
 
