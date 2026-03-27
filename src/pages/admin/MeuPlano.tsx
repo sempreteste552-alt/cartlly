@@ -20,13 +20,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 
-// Trust badge imports (optional)
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
 import pixLogo from "@/assets/pix-logo.webp";
-try { paymentCards = new URL("@/assets/payment-cards.webp", import.meta.url).href; } catch {}
-try { pixLogo = new URL("@/assets/pix-logo.webp", import.meta.url).href; } catch {}
 
 const FEATURE_ICONS: Record<string, any> = {
   gateway: Zap, ai_tools: Sparkles, coupons: Package, shipping_zones: ShoppingCart,
