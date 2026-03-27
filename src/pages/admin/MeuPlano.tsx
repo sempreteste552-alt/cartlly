@@ -243,6 +243,8 @@ export default function MeuPlano() {
       }
       setPaymentResult(data);
       if (data.pix?.qrCode) {
+        // Set expiration 30 minutes from now
+        setPixExpiresAt(Date.now() + 30 * 60 * 1000);
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
       } else {
         // Non-PIX: keep checkout dialog open showing pending status
