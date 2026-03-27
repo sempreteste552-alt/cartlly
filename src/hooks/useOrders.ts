@@ -61,6 +61,24 @@ export function useOrderStatusHistory(orderId: string | null) {
   });
 }
 
+export function useOrderPayment(orderId: string | null) {
+  return useQuery({
+    queryKey: ["order_payment", orderId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("order_id", orderId!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!orderId,
+  });
+}
+
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
