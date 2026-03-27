@@ -88,10 +88,21 @@ export function useThemeScope(scope: string) {
     return false;
   });
 
+  // Listen for storage changes from ThemeToggle (same tab via custom event)
+  useEffect(() => {
+    const handler = () => {
+      const stored = localStorage.getItem(storageKey);
+      setDark(stored === "dark");
+    };
+    window.addEventListener(`theme-change-${storageKey}`, handler);
+    return () => window.removeEventListener(`theme-change-${storageKey}`, handler);
+  }, [storageKey]);
+
   const toggle = useCallback(() => {
     setDark((d) => {
       const next = !d;
       localStorage.setItem(storageKey, next ? "dark" : "light");
+      window.dispatchEvent(new Event(`theme-change-${storageKey}`));
       return next;
     });
   }, [storageKey]);
