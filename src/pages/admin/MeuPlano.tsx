@@ -62,6 +62,8 @@ export default function MeuPlano() {
   const [confirmDialog, setConfirmDialog] = useState<{ planId: string; planName: string; price: number; type: "upgrade" | "downgrade" } | null>(null);
   const [checkoutDialog, setCheckoutDialog] = useState<CheckoutState | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [thankYouDialog, setThankYouDialog] = useState<{ planName: string; method: string } | null>(null);
 
