@@ -17,11 +17,10 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.json();
-    const { user_id, plan_id, payment_method } = body;
-    // payment_method: "PIX" | "CREDIT_CARD" | "BOLETO"
+    const { user_id, plan_id, payment_method, document, phone } = body;
 
-    if (!user_id || !plan_id) {
-      return new Response(JSON.stringify({ error: "Dados incompletos" }), {
+    if (!user_id || !plan_id || !document) {
+      return new Response(JSON.stringify({ error: "Dados incompletos. Informe CPF/CNPJ." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
