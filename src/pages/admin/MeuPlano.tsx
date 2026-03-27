@@ -55,7 +55,10 @@ interface CheckoutState {
 interface PaymentResult {
   success: boolean;
   transaction_id?: string;
+  method?: string;
   pix?: { qrCode?: string; qrCodeBase64?: string };
+  boleto?: { url?: string; barcode?: string; digitableLine?: string; dueDate?: string };
+  card?: { status?: string; brand?: string; lastFour?: string };
   plan_name?: string;
   status?: string;
 }
