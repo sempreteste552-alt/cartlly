@@ -102,11 +102,13 @@ export function ProductImageSlideshow({
       >
         {allImages.map((src, i) => (
           <img
-            key={i}
+            key={src}
             src={src}
             alt={`${alt} ${i + 1}`}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-              i === currentIndex ? "opacity-100" : "opacity-0"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${
+              i === currentIndex 
+                ? "opacity-100 scale-100" 
+                : "opacity-0 scale-105"
             }`}
             loading="lazy"
             draggable={false}
