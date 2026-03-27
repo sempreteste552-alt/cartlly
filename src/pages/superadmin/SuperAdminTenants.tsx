@@ -91,6 +91,7 @@ export default function SuperAdminTenants() {
   };
 
   const handleApprove = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "approved" } as any)
@@ -99,12 +100,14 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta aprovada! Notificação enviada.");
       notifyTenant(userId, "approved");
+      logAudit("approve_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
   const handleReject = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "rejected" } as any)
@@ -113,12 +116,14 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Conta rejeitada. Notificação enviada.");
       notifyTenant(userId, "rejected");
+      logAudit("reject_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
   };
 
   const handleBlock = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "blocked" } as any)
@@ -127,11 +132,13 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant bloqueado. Notificação enviada.");
       notifyTenant(userId, "blocked");
+      logAudit("block_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
 
   const handleUnblock = async (userId: string) => {
+    const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
       .update({ status: "approved" } as any)
@@ -140,6 +147,7 @@ export default function SuperAdminTenants() {
     else {
       toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
       notifyTenant(userId, "approved");
+      logAudit("unblock_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     }
   };
