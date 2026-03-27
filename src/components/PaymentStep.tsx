@@ -285,16 +285,16 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </Select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => { setShowCardForm(false); setSelectedMethod(null); }}>
               Voltar
             </Button>
             <Button
-              className="flex-1"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-base font-bold"
               disabled={createPayment.isPending}
               onClick={() => handlePay("credit_card")}
             >
-              {createPayment.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {createPayment.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
               Pagar {formatPrice(total)}
             </Button>
           </div>
