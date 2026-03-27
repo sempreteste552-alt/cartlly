@@ -20,7 +20,7 @@ interface PaymentStepProps {
   storeUserId: string;
   total: number;
   settings: any;
-  onSuccess: () => void;
+  onSuccess: (method?: string) => void;
 }
 
 const formatPrice = (price: number) =>
@@ -56,7 +56,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         setPaymentStatus("approved");
         toast.success("💰 Pagamento confirmado!");
         if (pollingRef.current) clearInterval(pollingRef.current);
-        setTimeout(() => onSuccess(), 1500);
+        setTimeout(() => onSuccess(selectedMethod || undefined), 1500);
       } else if (data?.status === "rejected" || data?.status === "failed") {
         setPaymentStatus("rejected");
         toast.error("Pagamento recusado");
@@ -120,7 +120,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
       if (result.paymentResult?.status === "approved") {
         toast.success("Pagamento aprovado!");
-        onSuccess();
+        onSuccess(method);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
@@ -187,7 +187,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>⏱️ Este código expira em 30 minutos. O status será atualizado automaticamente.</p>
             </div>
           )}
-          <Button className="w-full" variant="outline" onClick={onSuccess}>
+          <Button className="w-full" variant="outline" onClick={() => onSuccess("pix")}>
             Já realizei o pagamento
           </Button>
         </CardContent>
@@ -242,7 +242,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>O status será atualizado automaticamente após a compensação.</p>
             </div>
           )}
-          <Button className="w-full" onClick={onSuccess}>Concluir</Button>
+          <Button className="w-full" onClick={() => onSuccess("boleto")}>Concluir</Button>
         </CardContent>
       </Card>
     );
@@ -263,7 +263,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <p className="text-sm text-muted-foreground">
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
-          <Button className="w-full" onClick={onSuccess}>Concluir</Button>
+          <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
         </CardContent>
       </Card>
     );

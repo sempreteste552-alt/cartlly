@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2 } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -33,6 +33,8 @@ export default function LojaCheckout() {
   const [phase, setPhase] = useState<CheckoutPhase>("info");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -200,11 +202,15 @@ export default function LojaCheckout() {
         const text = `🛒 *Novo Pedido #${order.id.slice(0, 8)}*\n\n*Cliente:* ${name}\n*Telefone:* ${phone}\n${address ? `*Endereço:* ${address}\n` : ""}${notes ? `*Obs:* ${notes}\n` : ""}\n*Itens:*\n${msg}${couponLine}\n\n*Total: ${formatPrice(finalTotal)}*`;
         window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
         cart.clearCart();
+        setPaymentMethod("whatsapp");
+        setPaymentDate(new Date());
         setPhase("success");
       } else if (hasGateway) {
         setPhase("payment");
       } else {
         cart.clearCart();
+        setPaymentMethod("whatsapp");
+        setPaymentDate(new Date());
         setPhase("success");
       }
     } catch (err: any) {
@@ -244,28 +250,165 @@ export default function LojaCheckout() {
     }
   };
 
+  const getMethodLabel = (m: string | null) => {
+    switch (m) {
+      case "pix": return "PIX";
+      case "credit_card": return "Cartão de Crédito";
+      case "boleto": return "Boleto Bancário";
+      case "whatsapp": return "WhatsApp";
+      default: return "Pagamento Online";
+    }
+  };
+
+  const getMethodIcon = (m: string | null) => {
+    switch (m) {
+      case "pix": return <QrCode className="h-5 w-5" />;
+      case "credit_card": return <CreditCard className="h-5 w-5" />;
+      case "boleto": return <FileText className="h-5 w-5" />;
+      default: return <Receipt className="h-5 w-5" />;
+    }
+  };
+
   if (phase === "success") {
+    const receiptDate = paymentDate || new Date();
+    const formattedDate = new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    }).format(receiptDate);
+
     return (
-      <div className="max-w-lg mx-auto px-4 py-10">
-        <div className="text-center mb-8">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-          <h1 className="text-2xl font-bold mt-4">Pedido Realizado!</h1>
-          <p className="text-gray-500 mt-2">Seu pedido foi enviado com sucesso.</p>
-          {orderId && (
-            <div className="mt-4 space-y-2">
-              <p className="text-sm text-gray-500">Código de rastreio:</p>
-              <code className="block bg-gray-100 rounded-lg p-3 font-mono text-sm">{orderId.slice(0, 8)}</code>
-              <Button variant="outline" className="mt-2" onClick={() => navigate(`/loja/rastreio/${orderId.slice(0, 8)}`)}>
-                📦 Rastrear Pedido
-              </Button>
-            </div>
+      <div className="max-w-lg mx-auto px-4 py-10 space-y-6">
+        {/* Thank you header */}
+        <div className="text-center space-y-3">
+          <div className="mx-auto w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <Heart className="h-10 w-10 text-green-500 fill-green-500" />
+          </div>
+          <h1 className="text-2xl font-bold">Obrigado pela sua compra! 🎉</h1>
+          <p className="text-muted-foreground">
+            {name ? `${name}, s` : "S"}eu pedido foi realizado com sucesso.
+          </p>
+          {settings?.store_name && (
+            <p className="text-sm text-muted-foreground">
+              Loja <span className="font-semibold text-foreground">{settings.store_name}</span> agradece sua preferência! 💜
+            </p>
           )}
-          <Button className="mt-4 bg-black text-white hover:bg-gray-800" onClick={() => navigate("/loja")}>Voltar à Loja</Button>
+        </div>
+
+        {/* Receipt card */}
+        <Card className="border-2 border-green-200 dark:border-green-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-primary" />
+                Recibo do Pedido
+              </CardTitle>
+              <Badge variant="outline" className="text-green-600 border-green-300 dark:border-green-700">
+                <CheckCircle className="h-3 w-3 mr-1" /> Confirmado
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Order ID & Date */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs flex items-center gap-1">
+                  <Package className="h-3 w-3" /> Pedido
+                </p>
+                <code className="font-mono font-bold text-foreground">#{orderId?.slice(0, 8)}</code>
+              </div>
+              <div className="space-y-1 text-right">
+                <p className="text-muted-foreground text-xs flex items-center gap-1 justify-end">
+                  <CalendarDays className="h-3 w-3" /> Data
+                </p>
+                <p className="font-medium text-foreground">{formattedDate}</p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Items */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Itens</p>
+              {orderItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 text-sm">
+                  {item.image_url && (
+                    <img src={item.image_url} alt={item.name} className="h-10 w-10 rounded object-cover border" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{item.quantity}x {formatPrice(item.price)}</p>
+                  </div>
+                  <p className="font-semibold shrink-0">{formatPrice(item.price * item.quantity)}</p>
+                </div>
+              ))}
+            </div>
+
+            <Separator />
+
+            {/* Totals */}
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatPrice(orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1"><Ticket className="h-3 w-3" /> Desconto</span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </div>
+              )}
+              {shippingCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frete</span>
+                  <span>{formatPrice(shippingCost)}</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex justify-between text-lg font-bold pt-1">
+                <span>Total</span>
+                <span className="text-green-600">{formatPrice(finalTotal)}</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Payment method */}
+            <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
+              {getMethodIcon(paymentMethod)}
+              <div>
+                <p className="text-xs text-muted-foreground">Forma de Pagamento</p>
+                <p className="font-semibold text-sm">{getMethodLabel(paymentMethod)}</p>
+              </div>
+            </div>
+
+            {/* Customer info */}
+            {(name || email || phone) && (
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Dados do Cliente</p>
+                {name && <p><span className="text-muted-foreground">Nome:</span> {name}</p>}
+                {email && <p><span className="text-muted-foreground">E-mail:</span> {email}</p>}
+                {phone && <p><span className="text-muted-foreground">Telefone:</span> {phone}</p>}
+                {address && <p><span className="text-muted-foreground">Endereço:</span> {address}</p>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-3">
+          {orderId && (
+            <Button variant="outline" className="w-full" onClick={() => navigate(`rastreio/${orderId.slice(0, 8)}`)}>
+              <Package className="mr-2 h-4 w-4" /> Rastrear Pedido
+            </Button>
+          )}
+          <Button className="w-full" onClick={() => navigate(".")}>
+            Continuar Comprando
+          </Button>
         </div>
 
         {/* Review prompt */}
         {orderItems.length > 0 && (
-          <Card className="mt-6">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-500" />
@@ -342,8 +485,10 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
-          onSuccess={() => {
+          onSuccess={(method) => {
             setOrderItems([...cart.items]);
+            setPaymentMethod(method || "gateway");
+            setPaymentDate(new Date());
             cart.clearCart();
             setPhase("success");
           }}
