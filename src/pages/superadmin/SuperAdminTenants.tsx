@@ -265,10 +265,20 @@ export default function SuperAdminTenants() {
 
   const getStatusBadge = (tenant: any) => {
     const status = tenant.status;
-    if (status === "pending") return <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>;
-    if (status === "rejected") return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>;
-    if (status === "blocked") return <Badge variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>;
-    return <Badge variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Aprovado</Badge>;
+    const storeBlocked = tenant.store?.store_blocked;
+    const adminBlocked = tenant.store?.admin_blocked;
+    
+    const badges = [];
+    
+    if (status === "pending") badges.push(<Badge key="pending" variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>);
+    else if (status === "rejected") badges.push(<Badge key="rejected" variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>);
+    else if (status === "blocked") badges.push(<Badge key="blocked" variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>);
+    else badges.push(<Badge key="approved" variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Ativo</Badge>);
+    
+    if (storeBlocked) badges.push(<Badge key="store" variant="outline" className="border-orange-500/50 text-orange-600 text-xs"><StoreIcon className="mr-1 h-3 w-3" />Loja bloq.</Badge>);
+    if (adminBlocked) badges.push(<Badge key="admin" variant="outline" className="border-red-500/50 text-red-600 text-xs"><ShieldOff className="mr-1 h-3 w-3" />Painel bloq.</Badge>);
+    
+    return <div className="flex items-center gap-1 flex-wrap">{badges}</div>;
   };
 
   if (isLoading) {
