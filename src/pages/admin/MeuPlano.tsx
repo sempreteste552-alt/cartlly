@@ -172,12 +172,17 @@ export default function MeuPlano() {
       return data;
     },
     onSuccess: (data) => {
+      // Normalize Amplopay PIX fields (code/base64 → qrCode/qrCodeBase64)
+      if (data.pix) {
+        data.pix.qrCode = data.pix.qrCode || (data.pix as any).code;
+        data.pix.qrCodeBase64 = data.pix.qrCodeBase64 || (data.pix as any).base64;
+      }
       setPaymentResult(data);
       if (data.pix?.qrCode) {
-        // Show PIX QR code
+        // Show PIX QR code - payment still pending
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
       } else {
-        // For other methods or if PIX was instant
+        // For other methods - payment still pending
         setCheckoutDialog(null);
         setThankYouDialog({ planName: data.plan_name || "", method: selectedMethod });
       }
