@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
+import siteSeguro from "@/assets/site-seguro.webp";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
@@ -369,6 +370,11 @@ export default function Login() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Trust badge */}
+        <div className="flex justify-center mt-4">
+          <img src={siteSeguro} alt="Site 100% Seguro - SSL Certificado" className="h-10 opacity-80" />
+        </div>
       </div>
     </div>
   );

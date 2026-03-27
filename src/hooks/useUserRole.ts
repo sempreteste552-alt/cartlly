@@ -86,13 +86,22 @@ export function useAllTenants() {
         orderData[o.user_id].revenue += Number(o.total);
       });
 
-      return profiles?.map((p: any) => ({
-        ...p,
-        store: stores?.find((s: any) => s.user_id === p.user_id),
-        subscription: subs?.find((s: any) => s.user_id === p.user_id),
-        productCount: productCounts[p.user_id] || 0,
-        orders: orderData[p.user_id] || { count: 0, revenue: 0 },
-      })) ?? [];
+      // Get super admin user_ids to exclude from tenant list
+      const { data: superAdminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "super_admin");
+      const superAdminIds = new Set(superAdminRoles?.map((r: any) => r.user_id) || []);
+
+      return profiles
+        ?.filter((p: any) => !superAdminIds.has(p.user_id))
+        .map((p: any) => ({
+          ...p,
+          store: stores?.find((s: any) => s.user_id === p.user_id),
+          subscription: subs?.find((s: any) => s.user_id === p.user_id),
+          productCount: productCounts[p.user_id] || 0,
+          orders: orderData[p.user_id] || { count: 0, revenue: 0 },
+        })) ?? [];
     },
   });
 }

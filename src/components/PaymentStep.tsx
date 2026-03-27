@@ -9,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { toast } from "sonner";
+import pixLogo from "@/assets/pix-logo.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
 
 interface PaymentStepProps {
   orderId: string;
@@ -331,6 +335,15 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           </Button>
         ))}
         <Separator />
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-3 flex-wrap py-2">
+          <img src={siteSeguro} alt="Site Seguro" className="h-8" />
+          <img src={compraSegura} alt="Compra Segura" className="h-8" />
+        </div>
+        <div className="flex items-center justify-center gap-2 py-1">
+          <img src={paymentCards} alt="Bandeiras aceitas" className="h-6" />
+          <img src={pixLogo} alt="PIX" className="h-6" />
+        </div>
         <p className="text-[10px] text-muted-foreground text-center">
           Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
         </p>
