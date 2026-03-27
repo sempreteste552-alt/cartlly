@@ -12,6 +12,9 @@ interface PaymentRequest {
   card_token?: string;
   installments?: number;
   store_user_id: string;
+  payer_cpf?: string;
+  payer_first_name?: string;
+  payer_last_name?: string;
 }
 
 Deno.serve(async (req) => {
