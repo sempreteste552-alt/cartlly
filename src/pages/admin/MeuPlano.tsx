@@ -606,6 +606,21 @@ export default function MeuPlano() {
                 </div>
               </div>
             </div>
+          ) : paymentConfirmed ? (
+            <div className="space-y-4 py-6 text-center">
+              <div className="flex items-center justify-center">
+                <div className="h-20 w-20 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-12 w-12 text-green-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-foreground">🎉 Pagamento Confirmado!</h3>
+              <p className="text-muted-foreground">
+                Seu plano <strong className="text-foreground">{checkoutDialog?.planName}</strong> foi ativado com sucesso!
+              </p>
+              <Badge className="bg-green-500/15 text-green-600 border-green-500/30">
+                Plano Ativo
+              </Badge>
+            </div>
           ) : (
             <div className="space-y-4 py-2">
               {/* PIX QR Code display */}
@@ -638,23 +653,22 @@ export default function MeuPlano() {
                       Copiar
                     </Button>
                   </div>
-                  <Badge variant="outline" className="text-amber-600 border-amber-500/50">
-                    <Clock className="h-3 w-3 mr-1" /> Aguardando pagamento...
-                  </Badge>
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                    <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">A tela atualizará automaticamente ao confirmar o pagamento</p>
                 </div>
               )}
 
               {/* Non-PIX result */}
               {!paymentResult.pix?.qrCode && (
                 <div className="text-center space-y-3 py-4">
-                  <Clock className="h-12 w-12 text-amber-500 mx-auto" />
-                  <p className="font-bold text-lg">Cobrança criada!</p>
+                  <Loader2 className="h-12 w-12 text-amber-500 mx-auto animate-spin" />
+                  <p className="font-bold text-lg">Aguardando confirmação...</p>
                   <p className="text-sm text-muted-foreground">
-                    Aguardando confirmação do pagamento. Você receberá uma notificação quando for aprovado.
+                    A tela atualizará automaticamente quando o pagamento for confirmado.
                   </p>
-                  <Badge variant="outline" className="text-amber-600 border-amber-500/30">
-                    <Clock className="h-3 w-3 mr-1" /> Pendente
-                  </Badge>
                 </div>
               )}
             </div>
