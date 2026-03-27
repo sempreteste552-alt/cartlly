@@ -34,6 +34,7 @@ const menuItems = [
   { title: "Solicitações", url: "/superadmin/solicitacoes", icon: FileText },
   { title: "Planos", url: "/superadmin/planos", icon: CreditCard },
   { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell },
+  { title: "Logs de Auditoria", url: "/superadmin/audit-logs", icon: ClipboardList },
   { title: "Configurações", url: "/superadmin/config", icon: Settings },
 ];
 

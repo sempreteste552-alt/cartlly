@@ -56,6 +56,7 @@ const App = () => (
               <Route path="solicitacoes" element={<SuperAdminSolicitacoes />} />
               <Route path="planos" element={<SuperAdminPlanos />} />
               <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
+              <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
               <Route path="config" element={<SuperAdminConfig />} />
             </Route>
             {/* Tenant Admin */}
