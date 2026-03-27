@@ -133,6 +133,12 @@ export default function Configuracoes() {
   const [marqueeSpeed, setMarqueeSpeed] = useState(50);
   const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
   const [marqueeTextColor, setMarqueeTextColor] = useState("#ffffff");
+  // Welcome coupon
+  const [welcomeCouponEnabled, setWelcomeCouponEnabled] = useState(false);
+  const [welcomeCouponDiscountType, setWelcomeCouponDiscountType] = useState("percentage");
+  const [welcomeCouponDiscountValue, setWelcomeCouponDiscountValue] = useState(10);
+  const [welcomeCouponMinOrder, setWelcomeCouponMinOrder] = useState<string>("");
+  const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
 
   useEffect(() => {
     if (settings) {
