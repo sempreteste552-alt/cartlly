@@ -677,11 +677,29 @@ export default function MeuPlano() {
                       Copiar
                     </Button>
                   </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                    <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">A tela atualizará automaticamente ao confirmar o pagamento</p>
+                  {/* Timer + status */}
+                  {pixTimeLeft > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                        <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
+                      </div>
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-mono font-bold ${
+                        pixTimeLeft <= 120 ? "bg-red-500/10 text-red-600" : pixTimeLeft <= 300 ? "bg-amber-500/10 text-amber-600" : "bg-muted text-muted-foreground"
+                      }`}>
+                        <Clock className="h-3.5 w-3.5" />
+                        {String(Math.floor(pixTimeLeft / 60)).padStart(2, "0")}:{String(pixTimeLeft % 60).padStart(2, "0")}
+                      </div>
+                      <p className="text-xs text-muted-foreground">A tela atualizará automaticamente ao confirmar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Badge variant="outline" className="text-red-600 border-red-500/50">
+                        <Clock className="h-3 w-3 mr-1" /> QR Code expirado
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">Feche e gere um novo QR Code para pagar</p>
+                    </div>
+                  )}
                 </div>
               )}
 
