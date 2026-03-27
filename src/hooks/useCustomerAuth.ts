@@ -81,6 +81,40 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     });
   }, [loadCustomerProfile, user]);
 
+  const generateWelcomeCoupon = async (storeUserId: string, customerName: string) => {
+    try {
+      const { data: storeSettings } = await supabase
+        .from("store_settings")
+        .select("welcome_coupon_enabled, welcome_coupon_discount_type, welcome_coupon_discount_value, welcome_coupon_min_order, welcome_coupon_expires_days")
+        .eq("user_id", storeUserId)
+        .maybeSingle();
+      if (!storeSettings?.welcome_coupon_enabled) return;
+      const code = "BV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + (storeSettings.welcome_coupon_expires_days || 30));
+      await supabase.from("coupons").insert({
+        user_id: storeUserId,
+        code,
+        discount_type: storeSettings.welcome_coupon_discount_type || "percentage",
+        discount_value: storeSettings.welcome_coupon_discount_value || 10,
+        min_order_value: storeSettings.welcome_coupon_min_order || 0,
+        max_uses: 1,
+        expires_at: expiresAt.toISOString(),
+        active: true,
+      });
+      // Notify the store owner
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: storeUserId,
+        target_user_id: storeUserId,
+        title: "🎁 Cupom de Boas-Vindas Gerado",
+        message: `Cupom ${code} criado para novo cliente ${customerName}`,
+        type: "welcome_coupon",
+      });
+    } catch (err) {
+      console.error("Erro ao gerar cupom de boas-vindas:", err);
+    }
+  };
+
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
     // Check if email already exists as a customer for this store
     const { data: existingCustomer } = await supabase
