@@ -510,6 +510,40 @@ export default function MeuPlano() {
                 ))}
               </div>
 
+              {/* CPF and Phone */}
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">CPF ou CNPJ *</Label>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={cpf}
+                    onChange={(e) => {
+                      const nums = e.target.value.replace(/\D/g, "").slice(0, 14);
+                      if (nums.length <= 11) {
+                        setCpf(nums.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (_, a, b, c, d) => d ? `${a}.${b}.${c}-${d}` : c ? `${a}.${b}.${c}` : b ? `${a}.${b}` : a));
+                      } else {
+                        setCpf(nums.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, (_, a, b, c, d, e2) => e2 ? `${a}.${b}.${c}/${d}-${e2}` : `${a}.${b}.${c}/${d}`));
+                      }
+                    }}
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Telefone</Label>
+                  <Input
+                    placeholder="(11) 99999-9999"
+                    value={phone}
+                    onChange={(e) => {
+                      const nums = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      if (nums.length > 6) setPhone(`(${nums.slice(0,2)}) ${nums.slice(2,7)}-${nums.slice(7)}`);
+                      else if (nums.length > 2) setPhone(`(${nums.slice(0,2)}) ${nums.slice(2)}`);
+                      else setPhone(nums);
+                    }}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
               {/* Order summary */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
                 <div className="flex items-center justify-between">
