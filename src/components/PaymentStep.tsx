@@ -41,7 +41,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão de Crédito", desc: "Parcelamento disponível", icon: CreditCard, enabled: settings?.payment_credit_card },
-    { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
   const formatCardNumber = (v: string) => {
@@ -286,16 +285,16 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </Select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => { setShowCardForm(false); setSelectedMethod(null); }}>
               Voltar
             </Button>
             <Button
-              className="flex-1"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-base font-bold"
               disabled={createPayment.isPending}
               onClick={() => handlePay("credit_card")}
             >
-              {createPayment.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {createPayment.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
               Pagar {formatPrice(total)}
             </Button>
           </div>
@@ -336,13 +335,13 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         ))}
         <Separator />
         {/* Trust badges */}
-        <div className="flex items-center justify-center gap-3 flex-wrap py-2">
-          <img src={siteSeguro} alt="Site Seguro" className="h-8" />
-          <img src={compraSegura} alt="Compra Segura" className="h-8" />
+        <div className="flex items-center justify-center gap-4 flex-wrap py-3">
+          <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
+          <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
         </div>
-        <div className="flex items-center justify-center gap-2 py-1">
-          <img src={paymentCards} alt="Bandeiras aceitas" className="h-6" />
-          <img src={pixLogo} alt="PIX" className="h-6" />
+        <div className="flex items-center justify-center gap-4 py-2">
+          <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
+          <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
         </div>
         <p className="text-[10px] text-muted-foreground text-center">
           Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
