@@ -240,7 +240,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>O status será atualizado automaticamente após a compensação.</p>
             </div>
           )}
-          <Button className="w-full" onClick={() => onSuccess("boleto")}>Concluir</Button>
+          {/* No manual completion - payment must be confirmed by gateway */}
         </CardContent>
       </Card>
     );
