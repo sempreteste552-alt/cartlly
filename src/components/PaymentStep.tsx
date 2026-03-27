@@ -220,20 +220,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   };
 
-  // CPF input for PIX/Boleto
-  const CpfField = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
-    <div className="space-y-2">
-      <Label>CPF</Label>
-      <Input
-        placeholder="000.000.000-00"
-        value={value}
-        onChange={(e) => onChange(formatCpf(e.target.value))}
-        maxLength={14}
-        className="font-mono"
-      />
-      <p className="text-[10px] text-muted-foreground">Obrigatório para processamento do pagamento</p>
-    </div>
-  );
+  // CPF field rendered inline to avoid remount/focus loss
 
   // Show PIX result
   if (paymentData && selectedMethod === "pix") {
