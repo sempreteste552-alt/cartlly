@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,8 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import pixLogo from "@/assets/pix-logo.webp";
 import paymentCards from "@/assets/payment-cards.webp";
