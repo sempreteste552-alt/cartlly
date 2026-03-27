@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2 } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
