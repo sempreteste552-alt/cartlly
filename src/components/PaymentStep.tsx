@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,8 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import pixLogo from "@/assets/pix-logo.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -29,7 +30,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [showCardForm, setShowCardForm] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const createPayment = useCreatePayment();
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
@@ -38,9 +41,37 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardCvv, setCardCvv] = useState("");
   const [cardInstallments, setCardInstallments] = useState("1");
 
+  // Poll payment status for PIX/Boleto
+  useEffect(() => {
+    if (!paymentData?.payment?.id || selectedMethod === "credit_card") return;
+    const paymentId = paymentData.payment.id;
+
+    const poll = async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("status")
+        .eq("id", paymentId)
+        .single();
+      if (data?.status === "approved" || data?.status === "paid") {
+        setPaymentStatus("approved");
+        toast.success("💰 Pagamento confirmado!");
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setTimeout(() => onSuccess(), 1500);
+      } else if (data?.status === "rejected" || data?.status === "failed") {
+        setPaymentStatus("rejected");
+        toast.error("Pagamento recusado");
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      }
+    };
+
+    pollingRef.current = setInterval(poll, 5000);
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [paymentData?.payment?.id, selectedMethod]);
+
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão de Crédito", desc: "Parcelamento disponível", icon: CreditCard, enabled: settings?.payment_credit_card },
+    { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
   const formatCardNumber = (v: string) => {
@@ -139,10 +170,23 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               </div>
             </div>
           )}
-          <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-xs text-yellow-800 dark:text-yellow-300">
-            <p className="font-medium">⏱️ Este código expira em 30 minutos</p>
-            <p>Após o pagamento, seu pedido será confirmado automaticamente.</p>
-          </div>
+          {paymentStatus === "approved" ? (
+            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg text-center space-y-2">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="font-bold text-green-700 dark:text-green-300">Pagamento confirmado!</p>
+              <p className="text-xs text-muted-foreground">Redirecionando...</p>
+            </div>
+          ) : paymentStatus === "rejected" ? (
+            <div className="bg-red-50 dark:bg-red-950 p-4 rounded-lg text-center space-y-2">
+              <XCircle className="h-12 w-12 text-red-500 mx-auto" />
+              <p className="font-bold text-red-700 dark:text-red-300">Pagamento não confirmado</p>
+            </div>
+          ) : (
+            <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-xs text-yellow-800 dark:text-yellow-300">
+              <p className="font-medium flex items-center gap-1"><Clock className="h-3.5 w-3.5 animate-pulse" /> Aguardando pagamento...</p>
+              <p>⏱️ Este código expira em 30 minutos. O status será atualizado automaticamente.</p>
+            </div>
+          )}
           <Button className="w-full" variant="outline" onClick={onSuccess}>
             Já realizei o pagamento
           </Button>
@@ -184,8 +228,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
           {boletoUrl && (
             <Button className="w-full" variant="outline" onClick={() => window.open(boletoUrl, "_blank")}>
-              <ExternalLink className="mr-2 h-4 w-4" /> Abrir Boleto
+              <ExternalLink className="mr-2 h-4 w-4" /> Abrir Boleto PDF
             </Button>
+          )}
+          {paymentStatus === "approved" ? (
+            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg text-center space-y-2">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="font-bold text-green-700 dark:text-green-300">Pagamento confirmado!</p>
+            </div>
+          ) : (
+            <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-lg text-xs text-yellow-800 dark:text-yellow-300">
+              <p className="font-medium flex items-center gap-1"><Clock className="h-3.5 w-3.5 animate-pulse" /> Aguardando pagamento...</p>
+              <p>O status será atualizado automaticamente após a compensação.</p>
+            </div>
           )}
           <Button className="w-full" onClick={onSuccess}>Concluir</Button>
         </CardContent>
