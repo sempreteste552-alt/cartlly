@@ -15,18 +15,18 @@ export interface PlanFeatures {
   max_orders_month: number;
 }
 
-// Free plan defaults — most features locked
+// Free plan defaults — only add up to 10 products, no other features
 const FREE_DEFAULTS: PlanFeatures = {
   gateway: false,
   ai_tools: false,
   coupons: false,
-  shipping_zones: true,
+  shipping_zones: false,
   banners: false,
   custom_domain: false,
-  whatsapp_sales: true,
-  reviews: true,
-  max_products: 5,
-  max_orders_month: 20,
+  whatsapp_sales: false,
+  reviews: false,
+  max_products: 10,
+  max_orders_month: 0,
 };
 
 export function usePlanFeatures() {

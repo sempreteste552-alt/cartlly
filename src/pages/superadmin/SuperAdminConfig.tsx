@@ -273,6 +273,26 @@ export default function SuperAdminConfig() {
 
           <Separator />
 
+          {/* Amplopay */}
+          <div className="space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <span className="h-6 w-6 rounded bg-orange-500 text-white text-xs flex items-center justify-center font-bold">AP</span>
+              Amplopay
+            </h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Public Key</Label>
+                <Input type="password" value={config.amplopay_public_key} onChange={e => updateField("amplopay_public_key", e.target.value)} placeholder="Chave pública Amplopay..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Secret Key</Label>
+                <Input type="password" value={config.amplopay_secret_key} onChange={e => updateField("amplopay_secret_key", e.target.value)} placeholder="Chave secreta Amplopay..." />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* PagBank */}
           <div className="space-y-3">
             <h4 className="font-semibold flex items-center gap-2">
