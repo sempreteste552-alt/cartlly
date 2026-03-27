@@ -157,6 +157,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
             email: email.toLowerCase().trim(),
           } as any);
           if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
+          await generateWelcomeCoupon(storeUserId, name);
         }
         return signInData;
       }
