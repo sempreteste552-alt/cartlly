@@ -478,15 +478,37 @@ export default function SuperAdminTenants() {
                             <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {/* Block/Unblock User */}
                           {tenant.status === "blocked" || tenant.status === "rejected" ? (
                             <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
-                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear / Aprovar
+                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
-                              <Ban className="mr-2 h-4 w-4" /> Bloquear
+                              <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
                             </DropdownMenuItem>
                           )}
+                          {/* Block/Unblock Store */}
+                          <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
+                            {tenant.store?.store_blocked ? (
+                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
+                            ) : (
+                              <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
+                            )}
+                          </DropdownMenuItem>
+                          {/* Block/Unblock Admin Panel */}
+                          <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
+                            {tenant.store?.admin_blocked ? (
+                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
+                            ) : (
+                              <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {/* Delete User */}
+                          <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
