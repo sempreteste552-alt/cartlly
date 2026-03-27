@@ -347,7 +347,6 @@ export default function MeuPlano() {
   const METHOD_OPTIONS: { value: PaymentMethod; label: string; icon: any; emoji: string }[] = [
     { value: "PIX", label: "PIX", icon: QrCode, emoji: "💰" },
     { value: "CREDIT_CARD", label: "Cartão de Crédito", icon: CreditCard, emoji: "💳" },
-    { value: "BOLETO", label: "Boleto", icon: FileText, emoji: "🧾" },
   ];
 
   return (
