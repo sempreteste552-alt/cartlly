@@ -739,36 +739,6 @@ export default function MeuPlano() {
                 </div>
               )}
 
-              {/* Boleto */}
-              {paymentResult.boleto && (
-                <div className="text-center space-y-3">
-                  <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto">
-                    <FileText className="h-8 w-8 text-blue-500" />
-                  </div>
-                  <h3 className="font-bold text-lg">🧾 Boleto Gerado!</h3>
-                  {paymentResult.boleto.dueDate && <Badge variant="secondary">Vencimento: {paymentResult.boleto.dueDate}</Badge>}
-                  {(paymentResult.boleto.barcode || paymentResult.boleto.digitableLine) && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">Código de barras:</p>
-                      <div className="flex gap-2">
-                        <code className="flex-1 text-xs bg-muted p-2 rounded break-all max-h-16 overflow-auto">{paymentResult.boleto.digitableLine || paymentResult.boleto.barcode}</code>
-                        <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(paymentResult.boleto!.digitableLine || paymentResult.boleto!.barcode || ""); toast.success("Código copiado!"); }}>Copiar</Button>
-                      </div>
-                    </div>
-                  )}
-                  {paymentResult.boleto.url && (
-                    <Button variant="outline" className="w-full" onClick={() => window.open(paymentResult.boleto!.url!, "_blank")}>
-                      <FileText className="mr-2 h-4 w-4" /> Abrir Boleto
-                    </Button>
-                  )}
-                  <div className="flex items-center justify-center gap-2 pt-1">
-                    <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                    <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Atualizará automaticamente ao confirmar</p>
-                </div>
-              )}
-
               {/* Card processing */}
               {paymentResult.card && !paymentConfirmed && (
                 <div className="text-center space-y-3 py-4">
@@ -779,7 +749,7 @@ export default function MeuPlano() {
               )}
 
               {/* Fallback */}
-              {!paymentResult.pix?.qrCode && !paymentResult.boleto && !paymentResult.card && (
+              {!paymentResult.pix?.qrCode && !paymentResult.card && (
                 <div className="text-center space-y-3 py-4">
                   <Loader2 className="h-12 w-12 text-amber-500 mx-auto animate-spin" />
                   <p className="font-bold text-lg">Aguardando confirmação...</p>
