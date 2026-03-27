@@ -248,7 +248,7 @@ export default function LojaLayout() {
                     <p className="text-center text-muted-foreground py-8">Carrinho vazio</p>
                   ) : (
                     cart.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
+                      <div key={item.id} className="flex items-center gap-3 border-b border-border pb-3">
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
                         ) : (
