@@ -11,6 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, Crown, ArrowUp, ArrowDown, Zap, Package, ShoppingCart, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket, CreditCard, MessageCircle, QrCode, FileText, CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
+import siteSeguro from "@/assets/site-seguro.webp";
+import compraSegura from "@/assets/compra-segura.webp";
+import paymentCards from "@/assets/payment-cards.webp";
+import pixLogo from "@/assets/pix-logo.webp";
 import {
   Dialog,
   DialogContent,
@@ -51,7 +55,10 @@ interface CheckoutState {
 interface PaymentResult {
   success: boolean;
   transaction_id?: string;
+  method?: string;
   pix?: { qrCode?: string; qrCodeBase64?: string };
+  boleto?: { url?: string; barcode?: string; digitableLine?: string; dueDate?: string };
+  card?: { status?: string; brand?: string; lastFour?: string };
   plan_name?: string;
   status?: string;
 }
@@ -72,6 +79,12 @@ export default function MeuPlano() {
   const [pixExpiresAt, setPixExpiresAt] = useState<number | null>(null);
   const [pixTimeLeft, setPixTimeLeft] = useState<number>(0);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
 
   // Polling: check subscription status every 5s while QR code is shown
   useEffect(() => {
@@ -228,6 +241,15 @@ export default function MeuPlano() {
             payment_method: selectedMethod,
             document: cpf.replace(/\D/g, ""),
             phone: phone,
+            ...(selectedMethod === "CREDIT_CARD" && {
+              card: {
+                number: cardNumber.replace(/\s/g, ""),
+                holderName: cardName,
+                expirationMonth: cardExpiry.split("/")[0],
+                expirationYear: "20" + (cardExpiry.split("/")[1] || ""),
+                cvv: cardCvv,
+              },
+            }),
           }),
         }
       );
@@ -242,12 +264,19 @@ export default function MeuPlano() {
         data.pix.qrCodeBase64 = data.pix.qrCodeBase64 || (data.pix as any).base64;
       }
       setPaymentResult(data);
-      if (data.pix?.qrCode) {
-        // Set expiration 30 minutes from now
+      if (data.method === "PIX" && data.pix?.qrCode) {
         setPixExpiresAt(Date.now() + 30 * 60 * 1000);
         toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+      } else if (data.method === "CREDIT_CARD") {
+        if (data.card?.status === "approved" || data.status === "approved") {
+          setPaymentConfirmed(true);
+          toast.success("🎉 Pagamento com cartão aprovado!");
+        } else {
+          toast.info("Cobrança no cartão criada! Aguardando confirmação.");
+        }
+      } else if (data.method === "BOLETO") {
+        toast.success("Boleto gerado! Pague antes do vencimento.");
       } else {
-        // Non-PIX: keep checkout dialog open showing pending status
         toast.info("Cobrança criada! Aguardando confirmação do pagamento.");
       }
       queryClient.invalidateQueries({ queryKey: ["my_subscription"] });
@@ -614,6 +643,60 @@ export default function MeuPlano() {
                 </div>
               </div>
 
+              {/* Card form (only for credit card) */}
+              {selectedMethod === "CREDIT_CARD" && (
+                <div className="space-y-3 border border-border rounded-lg p-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Número do Cartão</Label>
+                    <Input
+                      placeholder="0000 0000 0000 0000"
+                      value={cardNumber}
+                      onChange={(e) => {
+                        const nums = e.target.value.replace(/\D/g, "").slice(0, 16);
+                        setCardNumber(nums.replace(/(\d{4})(?=\d)/g, "$1 "));
+                      }}
+                      maxLength={19}
+                      className="font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Nome no Cartão</Label>
+                    <Input
+                      placeholder="NOME COMO NO CARTÃO"
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                      maxLength={50}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">Validade</Label>
+                      <Input
+                        placeholder="MM/AA"
+                        value={cardExpiry}
+                        onChange={(e) => {
+                          const nums = e.target.value.replace(/\D/g, "").slice(0, 4);
+                          setCardExpiry(nums.length > 2 ? nums.slice(0, 2) + "/" + nums.slice(2) : nums);
+                        }}
+                        maxLength={5}
+                        className="font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">CVV</Label>
+                      <Input
+                        placeholder="000"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        maxLength={4}
+                        type="password"
+                        className="font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Order summary */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -628,6 +711,16 @@ export default function MeuPlano() {
                   <span className="text-sm text-muted-foreground">Total Mensal</span>
                   <span className="font-bold text-primary text-lg">{formatPrice(checkoutDialog?.price ?? 0)}</span>
                 </div>
+              </div>
+
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
+                <img src={siteSeguro} alt="Site Seguro" className="h-7" />
+                <img src={compraSegura} alt="Compra Segura" className="h-7" />
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <img src={paymentCards} alt="Bandeiras" className="h-5" />
+                <img src={pixLogo} alt="PIX" className="h-5" />
               </div>
             </div>
           ) : paymentConfirmed ? (
@@ -677,7 +770,6 @@ export default function MeuPlano() {
                       Copiar
                     </Button>
                   </div>
-                  {/* Timer + status */}
                   {pixTimeLeft > 0 ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-center gap-2">
@@ -703,8 +795,60 @@ export default function MeuPlano() {
                 </div>
               )}
 
-              {/* Non-PIX result */}
-              {!paymentResult.pix?.qrCode && (
+              {/* Boleto result */}
+              {paymentResult.boleto && (
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-blue-500" />
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-lg">Boleto Gerado!</h3>
+                  {paymentResult.boleto.dueDate && (
+                    <Badge variant="secondary">Vencimento: {paymentResult.boleto.dueDate}</Badge>
+                  )}
+                  {(paymentResult.boleto.barcode || paymentResult.boleto.digitableLine) && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Código de barras:</p>
+                      <div className="flex gap-2">
+                        <code className="flex-1 text-xs bg-muted p-2 rounded break-all max-h-16 overflow-auto">
+                          {paymentResult.boleto.digitableLine || paymentResult.boleto.barcode}
+                        </code>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          navigator.clipboard.writeText(paymentResult.boleto!.digitableLine || paymentResult.boleto!.barcode || "");
+                          toast.success("Código copiado!");
+                        }}>
+                          Copiar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {paymentResult.boleto.url && (
+                    <Button variant="outline" className="w-full" onClick={() => window.open(paymentResult.boleto!.url!, "_blank")}>
+                      <FileText className="mr-2 h-4 w-4" /> Abrir Boleto
+                    </Button>
+                  )}
+                  <div className="flex items-center justify-center gap-2 pt-1">
+                    <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                    <span className="text-sm text-amber-600 font-medium">Aguardando pagamento...</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">A tela atualizará automaticamente ao confirmar</p>
+                </div>
+              )}
+
+              {/* Credit card processing result */}
+              {paymentResult.card && !paymentConfirmed && (
+                <div className="text-center space-y-3 py-4">
+                  <Loader2 className="h-12 w-12 text-amber-500 mx-auto animate-spin" />
+                  <p className="font-bold text-lg">Processando cartão...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aguardando confirmação da operadora.
+                  </p>
+                </div>
+              )}
+
+              {/* Fallback for unknown result */}
+              {!paymentResult.pix?.qrCode && !paymentResult.boleto && !paymentResult.card && (
                 <div className="text-center space-y-3 py-4">
                   <Loader2 className="h-12 w-12 text-amber-500 mx-auto animate-spin" />
                   <p className="font-bold text-lg">Aguardando confirmação...</p>
@@ -728,7 +872,7 @@ export default function MeuPlano() {
             {!paymentResult && (
               <Button
                 onClick={() => processPayment.mutate()}
-                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11}
+                disabled={processPayment.isPending || cpf.replace(/\D/g, "").length < 11 || (selectedMethod === "CREDIT_CARD" && (!cardNumber || !cardName || !cardExpiry || !cardCvv))}
                 className="min-w-[140px]"
               >
                 {processPayment.isPending ? (
