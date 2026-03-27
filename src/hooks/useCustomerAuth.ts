@@ -10,7 +10,7 @@ interface CustomerAuthContextValue {
   customerLoading: boolean;
   authReady: boolean;
   signUp: (email: string, password: string, name: string, storeUserId: string) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
+  signIn: (email: string, password: string, storeUserId: string) => Promise<any>;
   signOut: () => Promise<void>;
   updateProfile: (updates: {
     name?: string;
@@ -86,44 +86,110 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     const { data: existingCustomer } = await supabase
       .from("customers")
       .select("id")
-      .eq("email", email)
+      .eq("email", email.toLowerCase().trim())
       .eq("store_user_id", storeUserId)
       .maybeSingle();
     if (existingCustomer) {
       throw new Error("Este e-mail já está cadastrado nesta loja. Faça login.");
     }
 
+    // Try to sign up - if user already exists in auth, this will fail
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.toLowerCase().trim(),
       password,
       options: {
         data: { display_name: name, is_customer: true },
         emailRedirectTo: window.location.origin,
       },
     });
-    if (error) throw error;
+
+    if (error) {
+      // If user already exists in auth system (from another store), try to sign in instead
+      if (error.message.includes("already registered") || error.message.includes("User already registered")) {
+        // Sign in with their credentials to get their user ID
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password,
+        });
+        if (signInErr) {
+          throw new Error("Este e-mail já possui conta. Use a senha correta para vincular a esta loja.");
+        }
+        // Create customer record for this store
+        if (signInData.user) {
+          const { error: customerErr } = await supabase.from("customers").insert({
+            auth_user_id: signInData.user.id,
+            store_user_id: storeUserId,
+            name,
+            email: email.toLowerCase().trim(),
+          } as any);
+          if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
+        }
+        return signInData;
+      }
+      throw error;
+    }
+
+    // If signup returned a user with fake_signup (user exists but no error), handle it
+    if (data.user && !data.session) {
+      // Email confirmation required - create customer record via edge function later
+      // For now, just inform the user
+      throw new Error("Verifique seu e-mail para confirmar o cadastro antes de fazer login.");
+    }
 
     if (data.user) {
       const { error: customerErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
         name,
-        email,
+        email: email.toLowerCase().trim(),
       } as any);
-      if (customerErr) throw customerErr;
+      if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
     }
 
     return data;
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (email: string, password: string, storeUserId: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
+    });
     if (error) {
-      if (error.message.includes("Invalid login")) {
-        throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
+      if (error.message.includes("Invalid login") || error.message.includes("invalid_credentials")) {
+        throw new Error("E-mail ou senha inválidos. Verifique seus dados ou crie uma conta.");
+      }
+      if (error.message.includes("Email not confirmed")) {
+        throw new Error("Confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.");
       }
       throw error;
     }
+
+    // Verify this user is a customer of THIS specific store
+    const { data: customerRecord } = await supabase
+      .from("customers")
+      .select("id, name, email")
+      .eq("auth_user_id", data.user.id)
+      .eq("store_user_id", storeUserId)
+      .maybeSingle();
+
+    if (!customerRecord) {
+      // User exists in auth but not as customer of this store
+      // Auto-create customer record for this store (they proved their identity via password)
+      const userName = data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente";
+      const { error: insertErr } = await supabase.from("customers").insert({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name: userName,
+        email: data.user.email || email.toLowerCase().trim(),
+      } as any);
+
+      if (insertErr) {
+        // If insert fails, sign out and throw
+        await supabase.auth.signOut();
+        throw new Error("Erro ao vincular conta a esta loja. Tente novamente.");
+      }
+    }
+
     return data;
   };
 
