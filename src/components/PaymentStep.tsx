@@ -187,7 +187,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <p>⏱️ Este código expira em 30 minutos. O status será atualizado automaticamente.</p>
             </div>
           )}
-          <Button className="w-full" variant="outline" onClick={onSuccess}>
+          <Button className="w-full" variant="outline" onClick={() => onSuccess("pix")}>
             Já realizei o pagamento
           </Button>
         </CardContent>
