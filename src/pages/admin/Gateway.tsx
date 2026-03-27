@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
   { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
-  { id: "pagarme", name: "Pagar.me", description: "Infraestrutura de pagamentos da Stone Co.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://docs.pagar.me", color: "#65a300", testEndpoint: "" },
+  { id: "amplopay", name: "Amplopay", description: "Gateway com PIX e Boleto simplificado.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://app.amplopay.com/docs", color: "#6366f1", testEndpoint: "" },
 ];
 
 type TestStatus = "idle" | "testing" | "success" | "error";

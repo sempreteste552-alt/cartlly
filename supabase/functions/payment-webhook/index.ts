@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -23,6 +24,8 @@ Deno.serve(async (req) => {
       return await handleMercadoPago(req, supabase);
     } else if (gateway === "pagbank") {
       return await handlePagBank(req, supabase);
+    } else if (gateway === "amplopay") {
+      return await handleAmplopay(req, supabase);
     }
 
     return new Response(JSON.stringify({ error: "Gateway não especificado" }), {
@@ -190,6 +193,71 @@ function mapPagBankStatus(status: string): string {
     IN_ANALYSIS: "pending",
     DECLINED: "rejected",
     CANCELED: "cancelled",
+  };
+  return map[status] || "pending";
+}
+
+// ===================== AMPLOPAY =====================
+
+async function handleAmplopay(req: Request, supabase: any) {
+  const body = await req.json();
+  console.log("Amplopay Webhook:", JSON.stringify(body));
+
+  const transactionId = body.transactionId || body.id;
+  const status = body.status;
+
+  if (!transactionId) {
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("gateway", "amplopay")
+    .eq("gateway_payment_id", String(transactionId))
+    .maybeSingle();
+
+  if (!payment) {
+    console.log("Payment not found for Amplopay ID:", transactionId);
+    return new Response(JSON.stringify({ received: true, note: "payment_not_found" }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const newStatus = mapAmplopayStatus(status);
+
+  await supabase
+    .from("payments")
+    .update({ status: newStatus, raw_response: body })
+    .eq("id", payment.id);
+
+  if (newStatus === "approved") {
+    await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+    await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
+  } else if (newStatus === "rejected" || newStatus === "cancelled") {
+    await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
+    await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function mapAmplopayStatus(status: string): string {
+  const map: Record<string, string> = {
+    PAID: "approved",
+    CONFIRMED: "approved",
+    RECEIVED: "approved",
+    PENDING: "pending",
+    OVERDUE: "pending",
+    REFUNDED: "refunded",
+    DELETED: "cancelled",
   };
   return map[status] || "pending";
 }
