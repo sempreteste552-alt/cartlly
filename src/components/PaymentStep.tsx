@@ -263,7 +263,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <p className="text-sm text-muted-foreground">
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
-          <Button className="w-full" onClick={onSuccess}>Concluir</Button>
+          <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
         </CardContent>
       </Card>
     );
