@@ -245,7 +245,7 @@ export default function LojaLayout() {
                 </SheetHeader>
                 <div className="mt-4 space-y-3 flex-1 overflow-auto">
                   {cart.items.length === 0 ? (
-                    <p className="text-center text-gray-500 py-8">Carrinho vazio</p>
+                    <p className="text-center text-muted-foreground py-8">Carrinho vazio</p>
                   ) : (
                     cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
