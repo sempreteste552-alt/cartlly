@@ -313,7 +313,7 @@ export default function LojaLayout() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-white border-b border-gray-100 ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-card border-b border-border ${
             mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
