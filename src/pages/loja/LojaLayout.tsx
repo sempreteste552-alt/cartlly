@@ -256,7 +256,7 @@ export default function LojaLayout() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
+                          <p className="text-sm text-muted-foreground">{formatPrice(item.price)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
                             <span className="text-sm w-6 text-center">{item.quantity}</span>
