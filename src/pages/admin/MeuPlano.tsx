@@ -35,7 +35,7 @@ const FEATURE_LABELS: Record<string, string> = {
   shipping_zones: "Zonas de Frete", banners: "Banners da Loja", custom_domain: "Domínio Personalizado",
 };
 
-type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
+type PaymentMethod = "PIX" | "CREDIT_CARD";
 
 interface CheckoutState {
   planId: string;
@@ -52,14 +52,12 @@ interface PaymentResult {
   plan_price: number;
   transaction_id?: string;
   pix?: { qrCode?: string; qrCodeBase64?: string; expiration?: string };
-  boleto?: { url?: string; barcode?: string; dueDate?: string; digitableLine?: string };
   card?: { status?: string; brand?: string; lastFour?: string };
 }
 
 const ALL_METHODS: { value: PaymentMethod; label: string; emoji: string }[] = [
   { value: "PIX", label: "PIX", emoji: "💰" },
   { value: "CREDIT_CARD", label: "Cartão", emoji: "💳" },
-  { value: "BOLETO", label: "Boleto", emoji: "🧾" },
 ];
 
 export default function MeuPlano() {
