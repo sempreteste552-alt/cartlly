@@ -29,8 +29,9 @@ Deno.serve(async (req) => {
     }
 
     // Extract user_id and plan_id from the identifier
+    // The identifier can come from transaction.identifier or subscription.identifier
     // Format: plan_{planId}_user_{userId}_{timestamp}
-    const identifier = transaction.identifier || "";
+    const identifier = body.subscription?.identifier || transaction.identifier || "";
     const identifierParts = identifier.match(/plan_(.+?)_user_(.+?)_\d+$/);
 
     if (!identifierParts) {
