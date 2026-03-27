@@ -65,9 +65,15 @@ async function handleMercadoPago(req: Request, supabase: any) {
     .maybeSingle();
 
   if (findErr || !payment) {
-    // Need to fetch from MP API to get external_reference
-    // For now, try to find by querying MP API using the store's access token
-    console.log("Payment not found for MP ID:", paymentId);
+    // Not a store payment — might be a plan subscription payment
+    // Try to fetch from MP API using platform settings
+    console.log("Store payment not found for MP ID:", paymentId, "— checking plan subscription...");
+    const handled = await checkPlanSubscriptionWebhook(supabase, "mercadopago", paymentId);
+    if (handled) {
+      return new Response(JSON.stringify({ received: true, plan_activated: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ received: true, note: "payment_not_found" }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
