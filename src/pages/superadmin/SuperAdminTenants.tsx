@@ -58,12 +58,51 @@ export default function SuperAdminTenants() {
     const matchFilter = filter === "all" ||
       (filter === "pending" && t.status === "pending") ||
       (filter === "approved" && t.status === "approved") ||
-      (filter === "active" && t.subscription?.status === "active") ||
+      (filter === "active" && (t.status === "active" || t.subscription?.status === "active")) ||
       (filter === "trial" && t.subscription?.status === "trial") ||
       (filter === "blocked" && (t.status === "blocked" || t.store?.store_blocked || t.store?.admin_blocked)) ||
-      (filter === "no_plan" && !t.subscription && t.status === "approved");
+      (filter === "no_plan" && !t.subscription && (t.status === "approved" || t.status === "active"));
     return matchSearch && matchFilter;
   }) ?? [];
+
+  // Admin tenant actions via edge function
+  const handleAdminAction = async (action: string, targetUserId: string, targetEmail?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action, targetUserId, targetEmail },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    } catch (err: any) {
+      toast.error(err.message || "Erro na ação");
+      return null;
+    }
+  };
+
+  const handleResendVerification = async (tenant: any) => {
+    // Get tenant email
+    const result = await handleAdminAction("get_user_info", tenant.user_id);
+    if (!result) return;
+    const res = await handleAdminAction("resend_verification", tenant.user_id, result.email);
+    if (res) toast.success("E-mail de verificação reenviado!");
+  };
+
+  const handleSendPasswordReset = async (tenant: any) => {
+    const result = await handleAdminAction("get_user_info", tenant.user_id);
+    if (!result) return;
+    const res = await handleAdminAction("send_password_reset", tenant.user_id, result.email);
+    if (res) toast.success("E-mail de redefinição de senha enviado!");
+  };
+
+  const handleManualActivate = async (tenant: any) => {
+    const res = await handleAdminAction("manual_activate", tenant.user_id);
+    if (res) {
+      toast.success("Conta ativada manualmente!");
+      logAudit("manual_activate", "tenant", tenant.user_id, tenant.display_name || "—");
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+    }
+  };
 
   const logAudit = async (action: string, targetType: string, targetId: string, targetName: string, details?: any) => {
     try {
