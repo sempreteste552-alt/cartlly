@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, LogOut, Ban, ShieldOff } from "lucide-react";
+import { LogOut, Ban, ShieldOff } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ContaEmAnalise() {
@@ -37,7 +37,6 @@ export default function ContaEmAnalise() {
 
   const isBlocked = profile?.status === "blocked";
   const isAdminBlocked = (storeSettings as any)?.admin_blocked === true;
-  const isPending = profile?.status === "pending";
   const isRejected = profile?.status === "rejected";
 
   const getContent = () => {
@@ -69,23 +68,23 @@ export default function ContaEmAnalise() {
       return {
         icon: <Ban className="h-10 w-10 text-destructive" />,
         iconBg: "bg-destructive/10",
-        title: "Conta Rejeitada",
-        description: "Sua solicitação de conta foi rejeitada pelo administrador da plataforma.",
+        title: "Conta Desativada",
+        description: "Sua conta foi desativada pelo administrador da plataforma.",
         detail: "Entre em contato com o suporte se acredita que houve um erro.",
-        badge: "❌ Status: Conta rejeitada",
+        badge: "❌ Status: Conta desativada",
         badgeBorder: "border-destructive/30 bg-destructive/5",
         badgeText: "text-destructive",
       };
     }
     return {
-      icon: <Clock className="h-10 w-10 text-amber-500" />,
-      iconBg: "bg-amber-500/10",
-      title: "Conta em Análise",
-      description: "Sua conta foi criada com sucesso e está aguardando aprovação do administrador da plataforma.",
-      detail: "Você receberá um e-mail assim que sua conta for aprovada. Isso pode levar até 24 horas.",
-      badge: "⏳ Status: Aguardando aprovação",
-      badgeBorder: "border-amber-500/30 bg-amber-500/5",
-      badgeText: "text-amber-600 dark:text-amber-400",
+      icon: <Ban className="h-10 w-10 text-destructive" />,
+      iconBg: "bg-destructive/10",
+      title: "Acesso Negado",
+      description: "Você não tem permissão para acessar esta área.",
+      detail: "Entre em contato com o suporte.",
+      badge: "🚫 Acesso negado",
+      badgeBorder: "border-destructive/30 bg-destructive/5",
+      badgeText: "text-destructive",
     };
   };
 
