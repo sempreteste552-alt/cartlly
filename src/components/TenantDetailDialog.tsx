@@ -12,10 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Store, Package, ShoppingCart, CreditCard, Users, Eye, Ban, Unlock,
   CheckCircle, Clock, XCircle, Sparkles, Truck, Image, Globe, Tag,
-  MessageCircle, Settings, BarChart3,
+  MessageCircle, Settings, BarChart3, Mail, KeyRound, UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TenantDetailDialogProps {
   open: boolean;
