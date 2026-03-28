@@ -26,6 +26,7 @@ interface TenantDetailDialogProps {
 
 export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailDialogProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [storeSettings, setStoreSettings] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
