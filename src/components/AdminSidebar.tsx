@@ -64,6 +64,11 @@ export function AdminSidebar() {
   const { data: settings } = useStoreSettings();
   const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
+  const customDomain = (settings as any)?.custom_domain;
+  const domainStatus = (settings as any)?.domain_status;
+  const storeUrl = (domainStatus === "verified" && customDomain)
+    ? `https://${customDomain}`
+    : (storeSlug ? `/loja/${storeSlug}` : "/loja");
 
   // Auto-close mobile sidebar on route change
   useEffect(() => {
@@ -150,7 +155,7 @@ export function AdminSidebar() {
               )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={storeSlug ? `/loja/${storeSlug}` : "/loja"} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
+                  <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="hover:bg-sidebar-accent/50">
                     <ExternalLink className="h-4 w-4" />
                     {!collapsed && <span>Ver Loja</span>}
                   </a>
