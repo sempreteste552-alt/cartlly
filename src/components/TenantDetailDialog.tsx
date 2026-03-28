@@ -372,13 +372,13 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                 </p>
                 <Separator />
                 <div className="grid grid-cols-2 gap-3">
-                  {tenant.status !== "approved" && (
+                  {(tenant.status === "blocked" || tenant.status === "rejected" || tenant.status === "pending") && (
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => handleStatusChange("approved")}
+                      onClick={() => handleStatusChange("active")}
                       disabled={loading}
                     >
-                      <CheckCircle className="mr-2 h-4 w-4" /> Aprovar
+                      <CheckCircle className="mr-2 h-4 w-4" /> Ativar
                     </Button>
                   )}
                   {tenant.status !== "blocked" && (
@@ -393,28 +393,77 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                   {(tenant.status === "blocked" || tenant.status === "rejected") && (
                     <Button
                       variant="outline"
-                      onClick={() => handleStatusChange("approved")}
+                      onClick={() => handleStatusChange("active")}
                       disabled={loading}
                     >
                       <Unlock className="mr-2 h-4 w-4" /> Desbloquear
-                    </Button>
-                  )}
-                  {tenant.status === "pending" && (
-                    <Button
-                      variant="outline"
-                      className="border-red-300 text-red-600"
-                      onClick={() => handleStatusChange("rejected")}
-                      disabled={loading}
-                    >
-                      <XCircle className="mr-2 h-4 w-4" /> Rejeitar
                     </Button>
                   )}
                 </div>
 
                 <Separator />
 
-                <h4 className="font-semibold">Ações Rápidas</h4>
+                <h4 className="font-semibold">Suporte ao Tenant</h4>
                 <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const { data: info } = await supabase.functions.invoke("admin-tenant-actions", {
+                          body: { action: "get_user_info", targetUserId: tenant.user_id },
+                        });
+                        if (info?.email) {
+                          await supabase.functions.invoke("admin-tenant-actions", {
+                            body: { action: "resend_verification", targetUserId: tenant.user_id, targetEmail: info.email },
+                          });
+                          toast.success("E-mail de verificação reenviado!");
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro");
+                      }
+                    }}
+                  >
+                    <Mail className="mr-2 h-3 w-3" /> Reenviar Verificação
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const { data: info } = await supabase.functions.invoke("admin-tenant-actions", {
+                          body: { action: "get_user_info", targetUserId: tenant.user_id },
+                        });
+                        if (info?.email) {
+                          await supabase.functions.invoke("admin-tenant-actions", {
+                            body: { action: "send_password_reset", targetUserId: tenant.user_id, targetEmail: info.email },
+                          });
+                          toast.success("E-mail de redefinição enviado!");
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro");
+                      }
+                    }}
+                  >
+                    <KeyRound className="mr-2 h-3 w-3" /> Redefinir Senha
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await supabase.functions.invoke("admin-tenant-actions", {
+                          body: { action: "manual_activate", targetUserId: tenant.user_id },
+                        });
+                        toast.success("Conta ativada manualmente!");
+                        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro");
+                      }
+                    }}
+                  >
+                    <UserCheck className="mr-2 h-3 w-3" /> Ativar Manualmente
+                  </Button>
                   {storeSettings?.store_slug && (
                     <Button variant="outline" size="sm" onClick={() => window.open(`/loja/${storeSettings.store_slug}`, "_blank")}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja
@@ -425,7 +474,6 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                     size="sm"
                     onClick={() => {
                       onOpenChange(false);
-                      // The parent will handle opening the plan dialog
                     }}
                   >
                     <CreditCard className="mr-2 h-3 w-3" /> Gerenciar Plano
