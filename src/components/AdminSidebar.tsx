@@ -64,6 +64,11 @@ export function AdminSidebar() {
   const { data: settings } = useStoreSettings();
   const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
+  const customDomain = (settings as any)?.custom_domain;
+  const domainStatus = (settings as any)?.domain_status;
+  const storeUrl = (domainStatus === "verified" && customDomain)
+    ? `https://${customDomain}`
+    : (storeSlug ? `/loja/${storeSlug}` : "/loja");
 
   // Auto-close mobile sidebar on route change
   useEffect(() => {
