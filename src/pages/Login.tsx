@@ -136,6 +136,10 @@ export default function Login() {
           }
           throw signUpError;
         }
+        // Supabase returns a fake user with empty identities for existing emails
+        if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
+          throw new Error("Este e-mail já está cadastrado. Faça login.");
+        }
         // Create store_settings with slug and store name
         if (signUpData.user) {
           await supabase.from("store_settings").insert({
