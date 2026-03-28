@@ -526,67 +526,69 @@ export default function SuperAdminTenants() {
 
                     {getStatusBadge(tenant)}
 
-                    {tenant.status === "pending" ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(tenant.user_id)}>
-                          <CheckCircle className="mr-1 h-3.5 w-3.5" /> Aprovar
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleReject(tenant.user_id)}>
-                          <XCircle className="mr-1 h-3.5 w-3.5" /> Rejeitar
-                        </Button>
-                      </div>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
-                            <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
+                          <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
+                          <Eye className="mr-2 h-4 w-4" /> Ver Loja
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
+                          <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {/* Support actions */}
+                        <DropdownMenuItem onClick={() => handleResendVerification(tenant)}>
+                          <Mail className="mr-2 h-4 w-4" /> Reenviar Verificação
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSendPasswordReset(tenant)}>
+                          <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
+                        </DropdownMenuItem>
+                        {(tenant.status === "pending" || tenant.status === "blocked" || tenant.status === "rejected") && (
+                          <DropdownMenuItem onClick={() => handleManualActivate(tenant)}>
+                            <UserCheck className="mr-2 h-4 w-4 text-green-600" /> Ativar Manualmente
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
-                            <Eye className="mr-2 h-4 w-4" /> Ver Loja
+                        )}
+                        <DropdownMenuSeparator />
+                        {/* Block/Unblock User */}
+                        {tenant.status === "blocked" || tenant.status === "rejected" ? (
+                          <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
+                            <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
-                            <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
+                        ) : (
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
+                            <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {/* Block/Unblock User */}
-                          {tenant.status === "blocked" || tenant.status === "rejected" ? (
-                            <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
-                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
-                            </DropdownMenuItem>
+                        )}
+                        {/* Block/Unblock Store */}
+                        <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
+                          {tenant.store?.store_blocked ? (
+                            <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
                           ) : (
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
-                              <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
-                            </DropdownMenuItem>
+                            <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
                           )}
-                          {/* Block/Unblock Store */}
-                          <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
-                            {tenant.store?.store_blocked ? (
-                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
-                            ) : (
-                              <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
-                            )}
-                          </DropdownMenuItem>
-                          {/* Block/Unblock Admin Panel */}
-                          <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
-                            {tenant.store?.admin_blocked ? (
-                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
-                            ) : (
-                              <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {/* Delete User */}
-                          <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                        </DropdownMenuItem>
+                        {/* Block/Unblock Admin Panel */}
+                        <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
+                          {tenant.store?.admin_blocked ? (
+                            <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
+                          ) : (
+                            <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {/* Delete User */}
+                        <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardContent>
