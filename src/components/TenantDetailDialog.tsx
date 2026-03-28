@@ -138,10 +138,10 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending": return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>;
-      case "rejected": return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>;
+      case "pending": return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Aguardando Verificação</Badge>;
+      case "rejected": return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Desativado</Badge>;
       case "blocked": return <Badge variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>;
-      default: return <Badge className="bg-green-600 text-white"><CheckCircle className="mr-1 h-3 w-3" />Aprovado</Badge>;
+      default: return <Badge className="bg-green-600 text-white"><CheckCircle className="mr-1 h-3 w-3" />Ativo</Badge>;
     }
   };
 
