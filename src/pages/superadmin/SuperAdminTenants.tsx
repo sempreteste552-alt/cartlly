@@ -180,11 +180,11 @@ export default function SuperAdminTenants() {
     const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
-      .update({ status: "approved" } as any)
+      .update({ status: "active" } as any)
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
+      toast.success("Tenant desbloqueado e ativado. Notificação enviada.");
       notifyTenant(userId, "approved");
       logAudit("unblock_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
