@@ -367,14 +367,14 @@ export default function SuperAdminTenants() {
         <p className="text-muted-foreground">Gerenciar todas as lojas da plataforma ({tenants?.length || 0} tenants)</p>
       </div>
 
-      {/* Pending alert */}
+      {/* Pending alert - informational only */}
       {pendingCount > 0 && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-blue-500/30 bg-blue-500/5">
           <CardContent className="flex items-center gap-3 p-4">
-            <Clock className="h-5 w-5 text-amber-500" />
+            <Mail className="h-5 w-5 text-blue-500" />
             <div className="flex-1">
-              <p className="font-medium text-amber-600">{pendingCount} conta(s) aguardando aprovação</p>
-              <p className="text-xs text-muted-foreground">Revise e aprove para liberar o acesso</p>
+              <p className="font-medium text-blue-600">{pendingCount} novo(s) tenant(s) aguardando verificação de e-mail</p>
+              <p className="text-xs text-muted-foreground">Os tenants são ativados automaticamente após verificar o e-mail</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setFilter("pending")}>Ver pendentes</Button>
           </CardContent>
