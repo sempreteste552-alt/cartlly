@@ -480,8 +480,8 @@ export default function SuperAdminTenants() {
         <div className="flex gap-2 flex-wrap">
           {[
             { key: "all", label: "Todos" },
+            { key: "active", label: "Ativos" },
             { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
-            { key: "approved", label: "Aprovados" },
             { key: "blocked", label: "Bloqueados" },
             { key: "no_plan", label: "Sem plano" },
           ].map((f) => (
