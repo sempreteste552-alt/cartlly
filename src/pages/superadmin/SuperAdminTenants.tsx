@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
@@ -58,12 +58,51 @@ export default function SuperAdminTenants() {
     const matchFilter = filter === "all" ||
       (filter === "pending" && t.status === "pending") ||
       (filter === "approved" && t.status === "approved") ||
-      (filter === "active" && t.subscription?.status === "active") ||
+      (filter === "active" && (t.status === "active" || t.subscription?.status === "active")) ||
       (filter === "trial" && t.subscription?.status === "trial") ||
       (filter === "blocked" && (t.status === "blocked" || t.store?.store_blocked || t.store?.admin_blocked)) ||
-      (filter === "no_plan" && !t.subscription && t.status === "approved");
+      (filter === "no_plan" && !t.subscription && (t.status === "approved" || t.status === "active"));
     return matchSearch && matchFilter;
   }) ?? [];
+
+  // Admin tenant actions via edge function
+  const handleAdminAction = async (action: string, targetUserId: string, targetEmail?: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action, targetUserId, targetEmail },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    } catch (err: any) {
+      toast.error(err.message || "Erro na ação");
+      return null;
+    }
+  };
+
+  const handleResendVerification = async (tenant: any) => {
+    // Get tenant email
+    const result = await handleAdminAction("get_user_info", tenant.user_id);
+    if (!result) return;
+    const res = await handleAdminAction("resend_verification", tenant.user_id, result.email);
+    if (res) toast.success("E-mail de verificação reenviado!");
+  };
+
+  const handleSendPasswordReset = async (tenant: any) => {
+    const result = await handleAdminAction("get_user_info", tenant.user_id);
+    if (!result) return;
+    const res = await handleAdminAction("send_password_reset", tenant.user_id, result.email);
+    if (res) toast.success("E-mail de redefinição de senha enviado!");
+  };
+
+  const handleManualActivate = async (tenant: any) => {
+    const res = await handleAdminAction("manual_activate", tenant.user_id);
+    if (res) {
+      toast.success("Conta ativada manualmente!");
+      logAudit("manual_activate", "tenant", tenant.user_id, tenant.display_name || "—");
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+    }
+  };
 
   const logAudit = async (action: string, targetType: string, targetId: string, targetName: string, details?: any) => {
     try {
@@ -94,13 +133,13 @@ export default function SuperAdminTenants() {
     const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
-      .update({ status: "approved" } as any)
+      .update({ status: "active" } as any)
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Conta aprovada! Notificação enviada.");
+      toast.success("Conta ativada! Notificação enviada.");
       notifyTenant(userId, "approved");
-      logAudit("approve_tenant", "tenant", userId, tenant?.display_name || "—");
+      logAudit("activate_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       await queryClient.invalidateQueries({ queryKey: ["all_plan_change_requests"] });
     }
@@ -141,11 +180,11 @@ export default function SuperAdminTenants() {
     const tenant = tenants?.find(t => t.user_id === userId);
     const { error } = await supabase
       .from("profiles")
-      .update({ status: "approved" } as any)
+      .update({ status: "active" } as any)
       .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
-      toast.success("Tenant desbloqueado e aprovado. Notificação enviada.");
+      toast.success("Tenant desbloqueado e ativado. Notificação enviada.");
       notifyTenant(userId, "approved");
       logAudit("unblock_tenant", "tenant", userId, tenant?.display_name || "—");
       await queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
@@ -303,9 +342,13 @@ export default function SuperAdminTenants() {
     const badges = [];
     
     if (status === "pending") badges.push(<Badge key="pending" variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>);
-    else if (status === "rejected") badges.push(<Badge key="rejected" variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejeitado</Badge>);
+    else if (status === "rejected") badges.push(<Badge key="rejected" variant="destructive"><XCircle className="mr-1 h-3 w-3" />Desativado</Badge>);
     else if (status === "blocked") badges.push(<Badge key="blocked" variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>);
     else badges.push(<Badge key="approved" variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Ativo</Badge>);
+    
+    if (tenant.subscription) {
+      badges.push(<Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs"><CreditCard className="mr-1 h-3 w-3" />Assinante</Badge>);
+    }
     
     if (storeBlocked) badges.push(<Badge key="store" variant="outline" className="border-orange-500/50 text-orange-600 text-xs"><StoreIcon className="mr-1 h-3 w-3" />Loja bloq.</Badge>);
     if (adminBlocked) badges.push(<Badge key="admin" variant="outline" className="border-red-500/50 text-red-600 text-xs"><ShieldOff className="mr-1 h-3 w-3" />Painel bloq.</Badge>);
@@ -324,14 +367,14 @@ export default function SuperAdminTenants() {
         <p className="text-muted-foreground">Gerenciar todas as lojas da plataforma ({tenants?.length || 0} tenants)</p>
       </div>
 
-      {/* Pending alert */}
+      {/* Pending alert - informational only */}
       {pendingCount > 0 && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
+        <Card className="border-blue-500/30 bg-blue-500/5">
           <CardContent className="flex items-center gap-3 p-4">
-            <Clock className="h-5 w-5 text-amber-500" />
+            <Mail className="h-5 w-5 text-blue-500" />
             <div className="flex-1">
-              <p className="font-medium text-amber-600">{pendingCount} conta(s) aguardando aprovação</p>
-              <p className="text-xs text-muted-foreground">Revise e aprove para liberar o acesso</p>
+              <p className="font-medium text-blue-600">{pendingCount} novo(s) tenant(s) aguardando verificação de e-mail</p>
+              <p className="text-xs text-muted-foreground">Os tenants são ativados automaticamente após verificar o e-mail</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setFilter("pending")}>Ver pendentes</Button>
           </CardContent>
@@ -437,8 +480,8 @@ export default function SuperAdminTenants() {
         <div className="flex gap-2 flex-wrap">
           {[
             { key: "all", label: "Todos" },
+            { key: "active", label: "Ativos" },
             { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
-            { key: "approved", label: "Aprovados" },
             { key: "blocked", label: "Bloqueados" },
             { key: "no_plan", label: "Sem plano" },
           ].map((f) => (
@@ -483,67 +526,69 @@ export default function SuperAdminTenants() {
 
                     {getStatusBadge(tenant)}
 
-                    {tenant.status === "pending" ? (
-                      <div className="flex gap-1">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(tenant.user_id)}>
-                          <CheckCircle className="mr-1 h-3.5 w-3.5" /> Aprovar
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleReject(tenant.user_id)}>
-                          <XCircle className="mr-1 h-3.5 w-3.5" /> Rejeitar
-                        </Button>
-                      </div>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
-                            <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
+                          <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
+                          <Eye className="mr-2 h-4 w-4" /> Ver Loja
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
+                          <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {/* Support actions */}
+                        <DropdownMenuItem onClick={() => handleResendVerification(tenant)}>
+                          <Mail className="mr-2 h-4 w-4" /> Reenviar Verificação
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSendPasswordReset(tenant)}>
+                          <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
+                        </DropdownMenuItem>
+                        {(tenant.status === "pending" || tenant.status === "blocked" || tenant.status === "rejected") && (
+                          <DropdownMenuItem onClick={() => handleManualActivate(tenant)}>
+                            <UserCheck className="mr-2 h-4 w-4 text-green-600" /> Ativar Manualmente
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
-                            <Eye className="mr-2 h-4 w-4" /> Ver Loja
+                        )}
+                        <DropdownMenuSeparator />
+                        {/* Block/Unblock User */}
+                        {tenant.status === "blocked" || tenant.status === "rejected" ? (
+                          <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
+                            <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
-                            <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
+                        ) : (
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
+                            <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {/* Block/Unblock User */}
-                          {tenant.status === "blocked" || tenant.status === "rejected" ? (
-                            <DropdownMenuItem onClick={() => handleUnblock(tenant.user_id)}>
-                              <Unlock className="mr-2 h-4 w-4" /> Desbloquear Usuário
-                            </DropdownMenuItem>
+                        )}
+                        {/* Block/Unblock Store */}
+                        <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
+                          {tenant.store?.store_blocked ? (
+                            <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
                           ) : (
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleBlock(tenant.user_id)}>
-                              <Ban className="mr-2 h-4 w-4" /> Bloquear Usuário
-                            </DropdownMenuItem>
+                            <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
                           )}
-                          {/* Block/Unblock Store */}
-                          <DropdownMenuItem onClick={() => handleToggleStoreBlock(tenant.user_id, tenant.store?.store_blocked || false)}>
-                            {tenant.store?.store_blocked ? (
-                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Loja</>
-                            ) : (
-                              <><StoreIcon className="mr-2 h-4 w-4 text-orange-500" /> Bloquear Loja</>
-                            )}
-                          </DropdownMenuItem>
-                          {/* Block/Unblock Admin Panel */}
-                          <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
-                            {tenant.store?.admin_blocked ? (
-                              <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
-                            ) : (
-                              <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {/* Delete User */}
-                          <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                        </DropdownMenuItem>
+                        {/* Block/Unblock Admin Panel */}
+                        <DropdownMenuItem onClick={() => handleToggleAdminBlock(tenant.user_id, tenant.store?.admin_blocked || false)}>
+                          {tenant.store?.admin_blocked ? (
+                            <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
+                          ) : (
+                            <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {/* Delete User */}
+                        <DropdownMenuItem className="text-destructive" onClick={() => { setDeletingTenant(tenant); setDeleteDialogOpen(true); }}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir Tenant
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardContent>

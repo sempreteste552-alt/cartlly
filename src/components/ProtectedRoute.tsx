@@ -56,8 +56,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Check profile status
-  if (profile?.status === "pending" || profile?.status === "rejected" || profile?.status === "blocked") {
+  // Check if account is blocked or deactivated
+  if (profile?.status === "blocked" || profile?.status === "rejected") {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
