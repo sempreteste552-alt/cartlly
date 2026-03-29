@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import siteSeguro from "@/assets/site-seguro.webp";
+import OTPVerificationModal from "@/components/OTPVerificationModal";
+import { useDeviceCheck } from "@/hooks/useDeviceCheck";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
