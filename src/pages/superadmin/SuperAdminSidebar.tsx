@@ -10,6 +10,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
