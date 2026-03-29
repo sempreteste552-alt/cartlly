@@ -32,6 +32,7 @@ import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
 import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
+import SuperAdminSeguranca from "./pages/superadmin/SuperAdminSeguranca";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
