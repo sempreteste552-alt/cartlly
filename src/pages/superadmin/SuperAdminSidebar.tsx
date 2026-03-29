@@ -10,7 +10,6 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -36,7 +35,6 @@ const menuItems = [
   { title: "Planos", url: "/superadmin/planos", icon: CreditCard },
   { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell },
   { title: "Logs de Auditoria", url: "/superadmin/audit-logs", icon: ClipboardList },
-  { title: "Segurança", url: "/superadmin/seguranca", icon: ShieldCheck },
   { title: "Configurações", url: "/superadmin/config", icon: Settings },
 ];
 
@@ -96,10 +94,9 @@ export function SuperAdminSidebar() {
 
       <SidebarSeparator />
 
-      <SidebarFooter className="p-3 space-y-2">
-        {!collapsed && <LanguageSwitcher compact className="w-full" />}
+      <SidebarFooter className="p-3">
         {!collapsed && (
-          <p className="truncate px-2 text-xs text-sidebar-foreground/60">
+          <p className="mb-2 truncate px-2 text-xs text-sidebar-foreground/60">
             {user?.email}
           </p>
         )}

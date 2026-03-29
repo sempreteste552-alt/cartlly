@@ -150,14 +150,12 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw new Error("Este e-mail já está cadastrado nesta loja. Faça login.");
     }
 
-    // Redirect back to the store page after email confirmation
-    const currentStoreUrl = window.location.href.split('?')[0];
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
       options: {
         data: { display_name: name, is_customer: true },
-        emailRedirectTo: currentStoreUrl,
+        emailRedirectTo: window.location.origin,
       },
     });
 

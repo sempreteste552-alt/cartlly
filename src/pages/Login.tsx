@@ -12,8 +12,6 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import siteSeguro from "@/assets/site-seguro.webp";
-import OTPVerificationModal from "@/components/OTPVerificationModal";
-import { useDeviceCheck } from "@/hooks/useDeviceCheck";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
@@ -76,24 +74,12 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showOTP, setShowOTP] = useState(false);
-  const [otpPurpose, setOtpPurpose] = useState("login");
-  const [pendingLoginEmail, setPendingLoginEmail] = useState("");
-  const [isForgotPasswordOTP, setIsForgotPasswordOTP] = useState(false);
-  const { checkDevice } = useDeviceCheck();
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
 
   useEffect(() => {
     if (user) {
-      // Customers should never be redirected to admin
-      const isCustomer = user.user_metadata?.is_customer === true;
-      if (isCustomer) {
-        // Sign out from admin context — they belong to a store
-        supabase.auth.signOut();
-        return;
-      }
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {
@@ -108,13 +94,12 @@ export default function Login() {
 
     try {
       if (isForgotPassword) {
-        // Send OTP for password recovery instead of Supabase email
-        setPendingLoginEmail(email);
-        setOtpPurpose("password_recovery");
-        setIsForgotPasswordOTP(true);
-        setShowOTP(true);
-        setLoading(false);
-        return;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
+        setIsForgotPassword(false);
       } else if (isRegister) {
         if (!acceptedTerms) {
           toast.error("Você precisa aceitar os Termos de Uso para criar sua conta.");
@@ -169,7 +154,7 @@ export default function Login() {
         // Show email verification screen
         setShowEmailSent(true);
       } else {
-        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
             throw new Error("Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.");
@@ -178,23 +163,6 @@ export default function Login() {
             throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
           }
           throw loginError;
-        }
-        // Check device after successful login
-        if (loginData.user) {
-          const deviceResult = await checkDevice(loginData.user.id);
-          if (deviceResult.locked) {
-            await supabase.auth.signOut();
-            throw new Error("Conta temporariamente bloqueada. Tente novamente mais tarde.");
-          }
-          if (deviceResult.requires_otp) {
-            // Sign out temporarily, require OTP
-            await supabase.auth.signOut();
-            setPendingLoginEmail(email);
-            setOtpPurpose("new_device");
-            setShowOTP(true);
-            setLoading(false);
-            return;
-          }
         }
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
@@ -469,51 +437,6 @@ export default function Login() {
           </CardContent>
         </Card>
       </div>
-
-      {/* OTP Verification Modal */}
-      <OTPVerificationModal
-        open={showOTP}
-        onOpenChange={(open) => {
-          setShowOTP(open);
-          if (!open) {
-            setIsForgotPasswordOTP(false);
-          }
-        }}
-        email={pendingLoginEmail}
-        purpose={otpPurpose}
-        title={
-          otpPurpose === "password_recovery"
-            ? "Recuperação de Senha"
-            : otpPurpose === "new_device"
-            ? "Novo Dispositivo Detectado"
-            : "Verificação de Segurança"
-        }
-        description={
-          otpPurpose === "password_recovery"
-            ? "Digite o código enviado para redefinir sua senha"
-            : otpPurpose === "new_device"
-            ? "Detectamos um novo dispositivo. Confirme sua identidade."
-            : "Digite o código de verificação"
-        }
-        onVerified={async (result) => {
-          if (otpPurpose === "password_recovery") {
-            // Navigate to reset password with verified state
-            navigate("/reset-password", { state: { email: pendingLoginEmail, verified: true } });
-          } else {
-            // Re-login after OTP verification for new device
-            try {
-              const { error } = await supabase.auth.signInWithPassword({
-                email: pendingLoginEmail,
-                password,
-              });
-              if (error) throw error;
-              navigate(pendingLoginEmail === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
-            } catch (err: any) {
-              toast.error(err.message || "Erro ao fazer login após verificação");
-            }
-          }
-        }}
-      />
     </div>
   );
 }

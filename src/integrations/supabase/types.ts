@@ -215,48 +215,6 @@ export type Database = {
         }
         Relationships: []
       }
-      device_sessions: {
-        Row: {
-          browser: string | null
-          created_at: string
-          device_fingerprint: string
-          id: string
-          ip_address: string | null
-          last_seen_at: string
-          os: string | null
-          trusted: boolean
-          user_agent: string | null
-          user_id: string
-          verified_at: string | null
-        }
-        Insert: {
-          browser?: string | null
-          created_at?: string
-          device_fingerprint: string
-          id?: string
-          ip_address?: string | null
-          last_seen_at?: string
-          os?: string | null
-          trusted?: boolean
-          user_agent?: string | null
-          user_id: string
-          verified_at?: string | null
-        }
-        Update: {
-          browser?: string | null
-          created_at?: string
-          device_fingerprint?: string
-          id?: string
-          ip_address?: string | null
-          last_seen_at?: string
-          os?: string | null
-          trusted?: boolean
-          user_agent?: string | null
-          user_id?: string
-          verified_at?: string | null
-        }
-        Relationships: []
-      }
       email_send_log: {
         Row: {
           created_at: string
@@ -341,33 +299,6 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
-        }
-        Relationships: []
-      }
-      login_attempts: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          ip_address: string | null
-          locked_until: string | null
-          success: boolean
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          ip_address?: string | null
-          locked_until?: string | null
-          success?: boolean
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          ip_address?: string | null
-          locked_until?: string | null
-          success?: boolean
         }
         Relationships: []
       }
@@ -505,48 +436,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp_order?: boolean
-        }
-        Relationships: []
-      }
-      otp_codes: {
-        Row: {
-          attempts: number
-          code: string
-          created_at: string
-          destination: string
-          expires_at: string
-          id: string
-          max_attempts: number
-          method: string
-          purpose: string
-          used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          attempts?: number
-          code: string
-          created_at?: string
-          destination: string
-          expires_at: string
-          id?: string
-          max_attempts?: number
-          method?: string
-          purpose?: string
-          used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          attempts?: number
-          code?: string
-          created_at?: string
-          destination?: string
-          expires_at?: string
-          id?: string
-          max_attempts?: number
-          method?: string
-          purpose?: string
-          used_at?: string | null
-          user_id?: string
         }
         Relationships: []
       }
@@ -967,54 +856,6 @@ export type Database = {
           p256dh?: string
           platform?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      security_settings: {
-        Row: {
-          id: string
-          lockout_duration_minutes: number
-          max_failed_logins: number
-          otp_code_length: number
-          otp_default_method: string
-          otp_email_enabled: boolean
-          otp_expiration_minutes: number
-          otp_max_attempts: number
-          otp_sms_enabled: boolean
-          otp_whatsapp_enabled: boolean
-          require_otp_new_device: boolean
-          require_otp_new_ip: boolean
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          lockout_duration_minutes?: number
-          max_failed_logins?: number
-          otp_code_length?: number
-          otp_default_method?: string
-          otp_email_enabled?: boolean
-          otp_expiration_minutes?: number
-          otp_max_attempts?: number
-          otp_sms_enabled?: boolean
-          otp_whatsapp_enabled?: boolean
-          require_otp_new_device?: boolean
-          require_otp_new_ip?: boolean
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          lockout_duration_minutes?: number
-          max_failed_logins?: number
-          otp_code_length?: number
-          otp_default_method?: string
-          otp_email_enabled?: boolean
-          otp_expiration_minutes?: number
-          otp_max_attempts?: number
-          otp_sms_enabled?: boolean
-          otp_whatsapp_enabled?: boolean
-          require_otp_new_device?: boolean
-          require_otp_new_ip?: boolean
-          updated_at?: string
         }
         Relationships: []
       }

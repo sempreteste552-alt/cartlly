@@ -558,33 +558,16 @@ export default function Configuracoes() {
               maxLength={255}
             />
             {customDomain && (
-              <DomainStatusDisplay
-                domain={customDomain}
-                status={(settings as any)?.domain_status || "none"}
-                lastCheck={(settings as any)?.domain_last_check}
-                settingsId={settings?.id}
-                storeSlug={storeSlug}
-              />
-            )}
-            {!customDomain && (
-              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center space-y-2">
-                <p className="text-sm text-muted-foreground">Não tem um domínio? Compre um agora!</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {[
-                    { name: "Namecheap", url: "https://www.namecheap.com/" },
-                    { name: "GoDaddy", url: "https://www.godaddy.com/" },
-                    { name: "Registro.br", url: "https://registro.br/" },
-                    { name: "Hostinger", url: "https://www.hostinger.com.br/registro-de-dominio" },
-                  ].map((provider) => (
-                    <Button key={provider.name} variant="outline" size="sm" asChild>
-                      <a href={provider.url} target="_blank" rel="noopener noreferrer">
-                        <Globe className="mr-1 h-3 w-3" />
-                        {provider.name}
-                      </a>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <>
+                {/* Domain Status */}
+                <DomainStatusDisplay
+                  domain={customDomain}
+                  status={(settings as any)?.domain_status || "none"}
+                  lastCheck={(settings as any)?.domain_last_check}
+                  settingsId={settings?.id}
+                  storeSlug={storeSlug}
+                />
+              </>
             )}
           </div>
         </CardContent>

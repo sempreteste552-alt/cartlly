@@ -3,8 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, XCircle, Loader2, RefreshCw, ExternalLink, ShoppingCart } from "lucide-react";
-import { useI18n } from "@/i18n";
+import { CheckCircle2, Clock, XCircle, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 
 interface DomainStatusDisplayProps {
   domain: string;
@@ -16,23 +15,24 @@ interface DomainStatusDisplayProps {
 
 export default function DomainStatusDisplay({ domain, status, lastCheck, settingsId, storeSlug }: DomainStatusDisplayProps) {
   const [checking, setChecking] = useState(false);
-  const { t } = useI18n();
 
   const handleVerify = async () => {
     if (!settingsId) return;
     setChecking(true);
     try {
+      // Call edge function to verify domain DNS
       const { data, error } = await supabase.functions.invoke("verify-domain", {
         body: { settingsId, domain },
       });
       if (error) throw error;
       if (data?.status === "verified") {
-        toast.success(t("domainVerifiedSuccess"));
+        toast.success("Domínio verificado com sucesso! ✅");
       } else if (data?.status === "pending") {
-        toast.info(t("domainStillPending"));
+        toast.info("DNS ainda não propagado. Tente novamente em algumas horas.");
       } else {
-        toast.error(t("domainVerifyFailed"));
+        toast.error("Falha na verificação. Verifique os registros DNS.");
       }
+      // Reload page to reflect updated status
       window.location.reload();
     } catch (err: any) {
       toast.error(err.message || "Erro ao verificar domínio");
@@ -42,10 +42,10 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
   };
 
   const statusConfig = {
-    none: { label: t("domainNotConfigured"), color: "secondary" as const, icon: Clock, description: t("domainNotConfiguredDesc") },
-    pending: { label: t("domainPending"), color: "secondary" as const, icon: Clock, description: t("domainPendingDesc") },
-    verified: { label: t("domainVerified"), color: "default" as const, icon: CheckCircle2, description: t("domainVerifiedDesc") },
-    failed: { label: t("domainFailed"), color: "destructive" as const, icon: XCircle, description: t("domainFailedDesc") },
+    none: { label: "Não configurado", color: "secondary" as const, icon: Clock, description: "Configure os registros DNS abaixo para ativar." },
+    pending: { label: "Pendente", color: "secondary" as const, icon: Clock, description: "Aguardando verificação DNS. Pode levar até 72h." },
+    verified: { label: "Aprovado", color: "default" as const, icon: CheckCircle2, description: "Domínio verificado e ativo!" },
+    failed: { label: "Falhou", color: "destructive" as const, icon: XCircle, description: "Falha na verificação. Verifique seus registros DNS." },
   };
 
   const current = statusConfig[status as keyof typeof statusConfig] || statusConfig.none;
@@ -59,7 +59,7 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
           <StatusIcon className={`h-5 w-5 ${status === "verified" ? "text-green-500" : status === "failed" ? "text-destructive" : "text-muted-foreground"}`} />
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-foreground">{t("domainStatus")}</p>
+              <p className="text-sm font-medium text-foreground">Status do Domínio</p>
               <Badge variant={current.color}>{current.label}</Badge>
             </div>
             <p className="text-xs text-muted-foreground">{current.description}</p>
@@ -69,15 +69,17 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
 
       {lastCheck && (
         <p className="text-xs text-muted-foreground">
-          {t("lastCheck")}: {new Date(lastCheck).toLocaleString("pt-BR")}
+          Última verificação: {new Date(lastCheck).toLocaleString("pt-BR")}
         </p>
       )}
 
       {/* DNS Instructions - show when not verified */}
       {status !== "verified" && (
         <div className="space-y-2 pt-2 border-t border-border">
-          <p className="text-sm font-medium text-foreground">📋 {t("dnsRecords")}</p>
-          <p className="text-xs text-muted-foreground">{t("dnsRecordsDesc")}</p>
+          <p className="text-sm font-medium text-foreground">📋 Registros DNS necessários</p>
+          <p className="text-xs text-muted-foreground">
+            Configure no painel do seu provedor de domínio:
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
@@ -107,8 +109,8 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
             </table>
           </div>
           <div className="space-y-1 pt-1">
-            <p className="text-xs text-muted-foreground">⏳ {t("dnsPropagation")}</p>
-            <p className="text-xs text-muted-foreground">🔒 {t("sslAuto")}</p>
+            <p className="text-xs text-muted-foreground">⏳ A propagação DNS pode levar até <strong>72 horas</strong>.</p>
+            <p className="text-xs text-muted-foreground">🔒 O certificado SSL será provisionado automaticamente.</p>
           </div>
         </div>
       )}
@@ -117,13 +119,13 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
       <div className="flex items-center gap-2 pt-2">
         <Button variant="outline" size="sm" onClick={handleVerify} disabled={checking}>
           {checking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-          {t("verifyDomain")}
+          Verificar Domínio
         </Button>
         {status === "verified" && (
           <Button variant="default" size="sm" asChild>
             <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
-              {t("openStore")}
+              Abrir Loja
             </a>
           </Button>
         )}

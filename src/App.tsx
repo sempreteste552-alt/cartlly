@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { I18nProvider } from "@/i18n";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -33,7 +32,6 @@ import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
 import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
 import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
-import SuperAdminSeguranca from "./pages/superadmin/SuperAdminSeguranca";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -41,7 +39,6 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <I18nProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -61,7 +58,6 @@ const App = () => (
               <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
               <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
               <Route path="config" element={<SuperAdminConfig />} />
-              <Route path="seguranca" element={<SuperAdminSeguranca />} />
             </Route>
             {/* Tenant Admin */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -90,7 +86,6 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-    </I18nProvider>
   </QueryClientProvider>
 );
 
