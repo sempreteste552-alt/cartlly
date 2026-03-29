@@ -68,9 +68,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load customer profile when user changes
+  // Load customer profile when user changes — skip if user has is_customer metadata
   useEffect(() => {
     if (!user) {
+      setCustomer(null);
+      setCustomerLoading(false);
+      return;
+    }
+    // Skip customer profile loading for admin users (non-customers)
+    const isCustomer = user.user_metadata?.is_customer === true;
+    if (!isCustomer) {
       setCustomer(null);
       setCustomerLoading(false);
       return;

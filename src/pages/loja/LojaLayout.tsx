@@ -43,6 +43,9 @@ export default function LojaLayout() {
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
+
+  // Detect if current user is the store owner (admin previewing)
+  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -186,7 +189,11 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {user ? (
+              {isAdminPreview ? (
+                <span className="flex items-center gap-1 text-yellow-200 font-medium">
+                  👁️ Modo Preview
+                </span>
+              ) : user ? (
                 <div className="flex items-center gap-2">
                   <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                     <User className="h-3 w-3" /> {customer?.name?.split(" ")[0] || "Conta"}
@@ -247,9 +254,11 @@ export default function LojaLayout() {
 
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-              {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
-            </Button>
+            {!isAdminPreview && (
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+                {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
+              </Button>
+            )}
 
             <Sheet>
               <SheetTrigger asChild>
@@ -486,14 +495,16 @@ export default function LojaLayout() {
               <Truck className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
             </Link>
-            <button
-              onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
-              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: user ? primaryColor : undefined }}
-            >
-              <User className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
-            </button>
+            {!isAdminPreview && (
+              <button
+                onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+                className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+                style={{ color: user ? primaryColor : undefined }}
+              >
+                <User className="h-5 w-5" />
+                <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
+              </button>
+            )}
           </div>
         </nav>
 
