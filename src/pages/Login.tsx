@@ -76,6 +76,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otpPurpose, setOtpPurpose] = useState("login");
+  const [pendingLoginEmail, setPendingLoginEmail] = useState("");
+  const [isForgotPasswordOTP, setIsForgotPasswordOTP] = useState(false);
+  const { checkDevice } = useDeviceCheck();
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
