@@ -59,6 +59,7 @@ const App = () => (
               <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
               <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
               <Route path="config" element={<SuperAdminConfig />} />
+              <Route path="seguranca" element={<SuperAdminSeguranca />} />
             </Route>
             {/* Tenant Admin */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
