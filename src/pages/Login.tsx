@@ -101,12 +101,13 @@ export default function Login() {
 
     try {
       if (isForgotPassword) {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (error) throw error;
-        toast.success("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
-        setIsForgotPassword(false);
+        // Send OTP for password recovery instead of Supabase email
+        setPendingLoginEmail(email);
+        setOtpPurpose("password_recovery");
+        setIsForgotPasswordOTP(true);
+        setShowOTP(true);
+        setLoading(false);
+        return;
       } else if (isRegister) {
         if (!acceptedTerms) {
           toast.error("Você precisa aceitar os Termos de Uso para criar sua conta.");
