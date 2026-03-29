@@ -254,9 +254,11 @@ export default function LojaLayout() {
 
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-              {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
-            </Button>
+            {!isAdminPreview && (
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+                {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
+              </Button>
+            )}
 
             <Sheet>
               <SheetTrigger asChild>
