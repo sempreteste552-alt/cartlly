@@ -462,6 +462,51 @@ export default function Login() {
           </CardContent>
         </Card>
       </div>
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        open={showOTP}
+        onOpenChange={(open) => {
+          setShowOTP(open);
+          if (!open) {
+            setIsForgotPasswordOTP(false);
+          }
+        }}
+        email={pendingLoginEmail}
+        purpose={otpPurpose}
+        title={
+          otpPurpose === "password_recovery"
+            ? "Recuperação de Senha"
+            : otpPurpose === "new_device"
+            ? "Novo Dispositivo Detectado"
+            : "Verificação de Segurança"
+        }
+        description={
+          otpPurpose === "password_recovery"
+            ? "Digite o código enviado para redefinir sua senha"
+            : otpPurpose === "new_device"
+            ? "Detectamos um novo dispositivo. Confirme sua identidade."
+            : "Digite o código de verificação"
+        }
+        onVerified={async (result) => {
+          if (otpPurpose === "password_recovery") {
+            // Navigate to reset password with verified state
+            navigate("/reset-password", { state: { email: pendingLoginEmail, verified: true } });
+          } else {
+            // Re-login after OTP verification for new device
+            try {
+              const { error } = await supabase.auth.signInWithPassword({
+                email: pendingLoginEmail,
+                password,
+              });
+              if (error) throw error;
+              navigate(pendingLoginEmail === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
+            } catch (err: any) {
+              toast.error(err.message || "Erro ao fazer login após verificação");
+            }
+          }
+        }}
+      />
     </div>
   );
 }

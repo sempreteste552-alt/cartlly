@@ -4,25 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
+  // Check if came from OTP verification or from email link
+  const otpVerified = location.state?.verified === true;
+  const otpEmail = location.state?.email;
+
   useEffect(() => {
+    if (otpVerified && otpEmail) {
+      setReady(true);
+      return;
+    }
+
     const hash = window.location.hash;
     if (hash && hash.includes("type=recovery")) {
       setReady(true);
     } else {
-      // Listen for PASSWORD_RECOVERY event
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") {
           setReady(true);
@@ -30,7 +39,7 @@ export default function ResetPassword() {
       });
       return () => subscription.unsubscribe();
     }
-  }, []);
+  }, [otpVerified, otpEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +47,33 @@ export default function ResetPassword() {
       toast.error("As senhas não coincidem.");
       return;
     }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      toast.success("Senha redefinida com sucesso!");
-      navigate("/login", { replace: true });
+      if (otpVerified && otpEmail) {
+        // Use admin API via edge function to reset password
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/reset-password`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: otpEmail, new_password: password }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        toast.success("Senha redefinida com sucesso!");
+        navigate("/login", { replace: true });
+      } else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Senha redefinida com sucesso!");
+        navigate("/login", { replace: true });
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao redefinir senha");
     } finally {
@@ -76,7 +106,9 @@ export default function ResetPassword() {
         <CardHeader className="text-center space-y-3">
           <img src={cartlyLogo} alt="Cartly" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-bold tracking-tight">Nova Senha</CardTitle>
-          <CardDescription>Digite sua nova senha abaixo</CardDescription>
+          <CardDescription>
+            {otpVerified ? `Defina a nova senha para ${otpEmail}` : "Digite sua nova senha abaixo"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
