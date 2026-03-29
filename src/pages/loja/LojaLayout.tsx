@@ -253,6 +253,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
+            <LanguageSwitcher compact className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             {!isAdminPreview && (
