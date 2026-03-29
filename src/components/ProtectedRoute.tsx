@@ -8,6 +8,9 @@ const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading } = useAuth();
 
+  // Block customers from accessing admin panel
+  const isCustomer = user?.user_metadata?.is_customer === true;
+
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile_status", user?.id],
     enabled: !!user && user.email !== SUPER_ADMIN_EMAIL,
@@ -48,6 +51,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Customers must never access admin panel
+  if (isCustomer) {
     return <Navigate to="/login" replace />;
   }
 

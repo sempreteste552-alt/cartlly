@@ -87,6 +87,13 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
+      // Customers should never be redirected to admin
+      const isCustomer = user.user_metadata?.is_customer === true;
+      if (isCustomer) {
+        // Sign out from admin context — they belong to a store
+        supabase.auth.signOut();
+        return;
+      }
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {
