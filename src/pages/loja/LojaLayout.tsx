@@ -495,14 +495,16 @@ export default function LojaLayout() {
               <Truck className="h-5 w-5" />
               <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
             </Link>
-            <button
-              onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
-              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: user ? primaryColor : undefined }}
-            >
-              <User className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
-            </button>
+            {!isAdminPreview && (
+              <button
+                onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+                className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+                style={{ color: user ? primaryColor : undefined }}
+              >
+                <User className="h-5 w-5" />
+                <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
+              </button>
+            )}
           </div>
         </nav>
 
