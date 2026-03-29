@@ -43,6 +43,9 @@ export default function LojaLayout() {
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
+
+  // Detect if current user is the store owner (admin previewing)
+  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [authModalOpen, setAuthModalOpen] = useState(false);
