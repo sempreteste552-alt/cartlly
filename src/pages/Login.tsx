@@ -162,7 +162,7 @@ export default function Login() {
         // Show email verification screen
         setShowEmailSent(true);
       } else {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
             throw new Error("Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.");
@@ -171,6 +171,23 @@ export default function Login() {
             throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
           }
           throw loginError;
+        }
+        // Check device after successful login
+        if (loginData.user) {
+          const deviceResult = await checkDevice(loginData.user.id);
+          if (deviceResult.locked) {
+            await supabase.auth.signOut();
+            throw new Error("Conta temporariamente bloqueada. Tente novamente mais tarde.");
+          }
+          if (deviceResult.requires_otp) {
+            // Sign out temporarily, require OTP
+            await supabase.auth.signOut();
+            setPendingLoginEmail(email);
+            setOtpPurpose("new_device");
+            setShowOTP(true);
+            setLoading(false);
+            return;
+          }
         }
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
