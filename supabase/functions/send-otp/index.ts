@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.0";
+import { sendLovableEmail } from "npm:@lovable.dev/email-js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const apiKey = Deno.env.get("LOVABLE_API_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
@@ -47,13 +49,13 @@ Deno.serve(async (req) => {
     const maxAttempts = settings?.otp_max_attempts || 5;
 
     // Check if method is enabled
-    if (method === "email" && !settings?.otp_email_enabled) {
+    if (method === "email" && settings && !settings.otp_email_enabled) {
       return new Response(
         JSON.stringify({ error: "Verificação por email está desativada" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    if (method === "sms" && !settings?.otp_sms_enabled) {
+    if (method === "sms" && settings && !settings.otp_sms_enabled) {
       return new Response(
         JSON.stringify({ error: "Verificação por SMS está desativada" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -102,7 +104,7 @@ Deno.serve(async (req) => {
       expires_at: expiresAt,
     });
 
-    // Send OTP via email using the email queue
+    // Send OTP via email using Lovable Email API directly
     if (method === "email") {
       const purposeLabels: Record<string, string> = {
         login: "Login",
@@ -114,37 +116,62 @@ Deno.serve(async (req) => {
       };
 
       const purposeLabel = purposeLabels[purpose] || purpose;
+      const messageId = crypto.randomUUID();
 
-      // Try to enqueue to email queue, fallback to direct
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #1a1a1a; font-size: 24px; margin: 0;">Código de Verificação</h1>
+            <p style="color: #666; font-size: 14px; margin-top: 8px;">${purposeLabel}</p>
+          </div>
+          <div style="background: #f5f5f5; border-radius: 12px; padding: 32px; text-align: center; margin: 24px 0;">
+            <p style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a1a1a; margin: 0;">${code}</p>
+          </div>
+          <p style="color: #666; font-size: 13px; text-align: center;">
+            Este código expira em <strong>${expirationMinutes} minutos</strong>.
+          </p>
+          <p style="color: #999; font-size: 12px; text-align: center; margin-top: 24px;">
+            Se você não solicitou este código, ignore este e-mail.
+          </p>
+        </div>
+      `;
+
       try {
-        await supabase.rpc("enqueue_email", {
-          queue_name: "transactional_emails",
-          payload: {
+        // Try sending via Lovable Email API directly
+        await sendLovableEmail(
+          {
             to: email,
             subject: `Código de Verificação - ${purposeLabel}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-                <div style="text-align: center; margin-bottom: 24px;">
-                  <h1 style="color: #1a1a1a; font-size: 24px; margin: 0;">Código de Verificação</h1>
-                  <p style="color: #666; font-size: 14px; margin-top: 8px;">${purposeLabel}</p>
-                </div>
-                <div style="background: #f5f5f5; border-radius: 12px; padding: 32px; text-align: center; margin: 24px 0;">
-                  <p style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a1a1a; margin: 0;">${code}</p>
-                </div>
-                <p style="color: #666; font-size: 13px; text-align: center;">
-                  Este código expira em <strong>${expirationMinutes} minutos</strong>.
-                </p>
-                <p style="color: #999; font-size: 12px; text-align: center; margin-top: 24px;">
-                  Se você não solicitou este código, ignore este e-mail.
-                </p>
-              </div>
-            `,
-            template_name: "otp_verification",
+            html: htmlContent,
+            purpose: "transactional",
+            label: "otp_verification",
+            message_id: messageId,
           },
-        });
-      } catch {
-        // If queue is not available, log but still return success
-        console.log("Email queue not available, OTP saved to database");
+          { apiKey, sendUrl: Deno.env.get("LOVABLE_SEND_URL") }
+        );
+
+        console.log(`OTP email sent directly to ${email}`);
+      } catch (directError) {
+        console.warn("Direct email send failed, trying queue:", directError);
+        
+        // Fallback: try to enqueue
+        try {
+          await supabase.rpc("enqueue_email", {
+            queue_name: "transactional_emails",
+            payload: {
+              to: email,
+              subject: `Código de Verificação - ${purposeLabel}`,
+              html: htmlContent,
+              purpose: "transactional",
+              label: "otp_verification",
+              message_id: messageId,
+              queued_at: new Date().toISOString(),
+            },
+          });
+          console.log(`OTP email enqueued for ${email}`);
+        } catch (queueError) {
+          console.error("Both direct send and queue failed:", queueError);
+        }
       }
     }
 

@@ -54,6 +54,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Customers must never access admin panel
+  if (isCustomer) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Super admin always has access
   if (user?.email === SUPER_ADMIN_EMAIL) {
     return <>{children}</>;
