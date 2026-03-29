@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard,
   Package,
