@@ -96,9 +96,10 @@ export function SuperAdminSidebar() {
 
       <SidebarSeparator />
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 space-y-2">
+        {!collapsed && <LanguageSwitcher compact className="w-full" />}
         {!collapsed && (
-          <p className="mb-2 truncate px-2 text-xs text-sidebar-foreground/60">
+          <p className="truncate px-2 text-xs text-sidebar-foreground/60">
             {user?.email}
           </p>
         )}
