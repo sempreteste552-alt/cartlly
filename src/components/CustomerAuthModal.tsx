@@ -8,6 +8,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { lovable } from "@/integrations/lovable/index";
+import { useI18n } from "@/i18n";
 
 interface CustomerAuthModalProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface CustomerAuthModalProps {
 
 export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerAuthModalProps) {
   const { signIn, signUp, resetPassword } = useCustomerAuth();
+  const { t } = useI18n();
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,11 +32,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     setLoading(true);
     try {
       await signIn(email, password, storeUserId);
-      toast.success("Login efetuado com sucesso!", { duration: 3000 });
+      toast.success(t("loginSuccess"), { duration: 3000 });
       onOpenChange(false);
     } catch (err: any) {
       const msg = err.message || "Erro ao fazer login";
-      toast.error(msg.includes("Invalid login") || msg.includes("inválidos") ? "E-mail ou senha incorretos. Tente novamente." : msg, { duration: 4000 });
+      toast.error(msg.includes("Invalid login") || msg.includes("inválidos") ? t("emailOrPasswordInvalid") : msg, { duration: 4000 });
     } finally {
       setLoading(false);
     }
@@ -42,19 +44,19 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return toast.error("Informe seu nome");
+    if (!name.trim()) return toast.error(t("fullName"));
     setLoading(true);
     try {
       await signUp(email, password, name, storeUserId);
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.", { duration: 4000 });
+      toast.success(t("accountCreated"), { duration: 4000 });
       setTab("login");
     } catch (err: any) {
       const msg = err.message || "Erro ao criar conta";
       if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
-        toast.error("Este e-mail já existe em outra conta e não pode ser reaproveitado nesta loja.", { duration: 5000 });
+        toast.error(t("emailAlreadyExists"), { duration: 5000 });
         setTab("login");
       } else if (msg.includes("já está cadastrado nesta loja")) {
-        toast.error("Este e-mail já está registrado nesta loja. Faça login.", { duration: 4000 });
+        toast.error(t("emailAlreadyExists"), { duration: 4000 });
         setTab("login");
       } else {
         toast.error(msg, { duration: 4000 });
@@ -66,11 +68,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return toast.error("Informe seu e-mail");
+    if (!email.trim()) return toast.error(t("email"));
     setLoading(true);
     try {
       await resetPassword(email);
-      toast.success("E-mail de redefinição enviado!");
+      toast.success(t("emailConfirmSent"));
       setShowForgot(false);
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar e-mail");
@@ -84,19 +86,19 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogTitle>{t("resetPassword")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="space-y-2">
-              <Label>E-mail</Label>
+              <Label>{t("email")}</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
             </div>
             <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800" disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Enviar Link
+              {t("sendLink")}
             </Button>
             <button type="button" onClick={() => setShowForgot(false)} className="text-sm text-gray-500 hover:underline w-full text-center">
-              Voltar ao login
+              {t("backToLogin")}
             </button>
           </form>
         </DialogContent>
@@ -108,28 +110,28 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Minha Conta</DialogTitle>
+          <DialogTitle>{t("myAccount")}</DialogTitle>
         </DialogHeader>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Entrar</TabsTrigger>
-            <TabsTrigger value="register">Criar Conta</TabsTrigger>
+            <TabsTrigger value="login">{t("login")}</TabsTrigger>
+            <TabsTrigger value="register">{t("signUp")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label>E-mail</Label>
+                <Label>{t("email")}</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
               <div className="space-y-2">
-                <Label>Senha</Label>
+                <Label>{t("password")}</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t("passwordPlaceholder")}
                     required
                     minLength={6}
                   />
@@ -138,12 +140,12 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                   </button>
                 </div>
                 <button type="button" onClick={() => setShowForgot(true)} className="text-xs text-gray-500 hover:underline">
-                  Esqueceu sua senha?
+                  {t("forgotPassword")}
                 </button>
               </div>
               <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Entrar
+                {t("login")}
               </Button>
             </form>
           </TabsContent>
@@ -151,21 +153,21 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4 pt-2">
               <div className="space-y-2">
-                <Label>Nome completo</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" required />
+                <Label>{t("fullName")}</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("fullName")} required />
               </div>
               <div className="space-y-2">
-                <Label>E-mail</Label>
+                <Label>{t("email")}</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
               <div className="space-y-2">
-                <Label>Senha</Label>
+                <Label>{t("password")}</Label>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder={t("minChars", { n: 6 })}
                     required
                     minLength={6}
                   />
@@ -176,17 +178,17 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
               </div>
               <Button type="submit" className="w-full bg-black text-white hover:bg-gray-800" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Criar Conta
+                {t("signUp")}
               </Button>
             </form>
           </TabsContent>
-          {/* Google Sign-In for customers */}
+          {/* Google Sign-In */}
           <div className="relative my-3">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">ou</span>
+              <span className="bg-background px-2 text-muted-foreground">{t("or")}</span>
             </div>
           </div>
           <Button
@@ -214,7 +216,7 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Entrar com Google
+            {t("enterWithGoogle")}
           </Button>
         </Tabs>
       </DialogContent>

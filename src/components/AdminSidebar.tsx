@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard,
   Package,
@@ -168,9 +169,10 @@ export function AdminSidebar() {
 
       <SidebarSeparator />
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 space-y-2">
+        {!collapsed && <LanguageSwitcher compact className="w-full" />}
         {!collapsed && (
-          <p className="mb-2 truncate px-2 text-xs text-sidebar-foreground/60">{user?.email}</p>
+          <p className="truncate px-2 text-xs text-sidebar-foreground/60">{user?.email}</p>
         )}
         <Button variant="ghost" size={collapsed ? "icon" : "sm"} onClick={signOut} className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <LogOut className="h-4 w-4" />
