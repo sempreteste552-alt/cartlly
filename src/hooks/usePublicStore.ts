@@ -23,7 +23,7 @@ export function usePublicStoreSettings() {
     queryKey: ["public_store_settings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("store_settings")
+        .from("store_settings_public" as any)
         .select("*")
         .limit(1)
         .maybeSingle();
@@ -39,7 +39,7 @@ export function usePublicStoreBySlug(slug: string | undefined) {
     enabled: !!slug,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("store_settings")
+        .from("store_settings_public" as any)
         .select("*")
         .eq("store_slug", slug!)
         .maybeSingle();
