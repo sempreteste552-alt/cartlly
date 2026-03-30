@@ -80,6 +80,12 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
+      // Never redirect customer accounts to admin
+      const isCustomer = user.user_metadata?.is_customer === true;
+      if (isCustomer) {
+        // Customer accidentally on admin login page — sign them out of admin context
+        return;
+      }
       if (user.email === SUPER_ADMIN_EMAIL) {
         navigate("/superadmin", { replace: true });
       } else {

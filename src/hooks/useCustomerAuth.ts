@@ -130,15 +130,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
     const normalizedEmail = normalizeEmail(email);
 
-    const { data: emailExists, error: emailExistsError } = await (supabase as any).rpc("customer_email_exists_globally", {
-      _email: normalizedEmail,
-    });
-
-    if (emailExistsError) throw emailExistsError;
-    if (emailExists) {
-      throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
-    }
-
+    // Only check if email exists in THIS store (not globally)
     const { data: existingCustomer } = await supabase
       .from("customers")
       .select("id")
@@ -155,15 +147,22 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       password,
       options: {
         data: { display_name: name, is_customer: true },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: window.location.href,
       },
     });
 
     if (error) {
       if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-        throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
+        // User exists in auth but not in this store — tell them to login instead
+        // (signIn will auto-create the customer record for this store)
+        throw new Error("Este e-mail já possui conta. Faça login para acessar esta loja.");
       }
       throw error;
+    }
+
+    // Supabase returns user with empty identities for existing emails
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      throw new Error("Este e-mail já possui conta. Faça login para acessar esta loja.");
     }
 
     if (data.user && !data.session) {
@@ -202,7 +201,8 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    const { data: customerRecord } = await supabase
+    // Check if customer record exists for this store; create if missing (e.g. OAuth or cross-store)
+    let { data: customerRecord } = await supabase
       .from("customers")
       .select("id, name, email")
       .eq("auth_user_id", data.user.id)
@@ -210,8 +210,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       .maybeSingle();
 
     if (!customerRecord) {
-      await supabase.auth.signOut();
-      throw new Error("Esta conta não pertence a esta loja. Use o cadastro correto deste tenant.");
+      // Auto-create customer record for this store
+      const { error: insertErr } = await supabase.from("customers").insert({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name: data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente",
+        email: data.user.email || "",
+      } as any);
+      if (insertErr && !insertErr.message.includes("duplicate")) {
+        console.error("Failed to auto-create customer record:", insertErr);
+      }
     }
 
     return data;
