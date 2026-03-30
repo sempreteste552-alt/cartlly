@@ -147,15 +147,22 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       password,
       options: {
         data: { display_name: name, is_customer: true },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/loja/${slug || ""}`,
       },
     });
 
     if (error) {
       if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-        throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
+        // User exists in auth but not in this store — tell them to login instead
+        // (signIn will auto-create the customer record for this store)
+        throw new Error("Este e-mail já possui conta. Faça login para acessar esta loja.");
       }
       throw error;
+    }
+
+    // Supabase returns user with empty identities for existing emails
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      throw new Error("Este e-mail já possui conta. Faça login para acessar esta loja.");
     }
 
     if (data.user && !data.session) {
