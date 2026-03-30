@@ -130,15 +130,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
     const normalizedEmail = normalizeEmail(email);
 
-    const { data: emailExists, error: emailExistsError } = await (supabase as any).rpc("customer_email_exists_globally", {
-      _email: normalizedEmail,
-    });
-
-    if (emailExistsError) throw emailExistsError;
-    if (emailExists) {
-      throw new Error("Este e-mail já está cadastrado em outra conta. Use outro e-mail ou entre na conta original.");
-    }
-
+    // Only check if email exists in THIS store (not globally)
     const { data: existingCustomer } = await supabase
       .from("customers")
       .select("id")
