@@ -94,7 +94,7 @@ export default function LojaCheckout() {
   const shippingCost = selectedShipping?.price || 0;
   const finalTotal = Math.max(0, cart.total - discountAmount + shippingCost);
 
-  const hasGateway = settings?.payment_gateway && (settings as any)?.gateway_secret_key;
+  const hasGateway = settings?.payment_gateway && settings?.gateway_public_key;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -159,11 +159,11 @@ export default function LojaCheckout() {
 
     await supabase.from("order_status_history").insert({ order_id: order.id, status: "pendente" });
 
-    if (appliedCoupon) {
-      await supabase
-        .from("coupons")
-        .update({ used_count: appliedCoupon.used_count + 1 } as any)
-        .eq("id", appliedCoupon.id);
+    if (appliedCoupon && settings?.user_id) {
+      await (supabase as any).rpc("increment_coupon_usage", {
+        _coupon_code: appliedCoupon.code,
+        _store_user_id: settings.user_id,
+      });
     }
 
     return order;
