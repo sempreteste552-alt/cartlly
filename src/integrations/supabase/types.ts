@@ -464,6 +464,7 @@ export type Database = {
           shipping_method: string | null
           status: string
           total: number
+          tracking_token: string | null
           updated_at: string
           user_id: string
           whatsapp_order: boolean
@@ -483,6 +484,7 @@ export type Database = {
           shipping_method?: string | null
           status?: string
           total?: number
+          tracking_token?: string | null
           updated_at?: string
           user_id: string
           whatsapp_order?: boolean
@@ -502,6 +504,7 @@ export type Database = {
           shipping_method?: string | null
           status?: string
           total?: number
+          tracking_token?: string | null
           updated_at?: string
           user_id?: string
           whatsapp_order?: boolean
@@ -1409,7 +1412,195 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      store_settings_public: {
+        Row: {
+          accent_color: string | null
+          admin_accent_color: string | null
+          admin_primary_color: string | null
+          button_color: string | null
+          button_text_color: string | null
+          created_at: string | null
+          custom_domain: string | null
+          domain_last_check: string | null
+          domain_status: string | null
+          facebook_url: string | null
+          footer_bg_color: string | null
+          footer_text_color: string | null
+          gateway_environment: string | null
+          gateway_public_key: string | null
+          google_maps_url: string | null
+          header_bg_color: string | null
+          id: string | null
+          instagram_url: string | null
+          logo_size: number | null
+          logo_url: string | null
+          low_stock_threshold: number | null
+          marquee_bg_color: string | null
+          marquee_enabled: boolean | null
+          marquee_speed: number | null
+          marquee_text: string | null
+          marquee_text_color: string | null
+          max_installments: number | null
+          payment_boleto: boolean | null
+          payment_credit_card: boolean | null
+          payment_debit_card: boolean | null
+          payment_gateway: string | null
+          payment_pix: boolean | null
+          primary_color: string | null
+          secondary_color: string | null
+          sell_via_whatsapp: boolean | null
+          shipping_base_cost: number | null
+          shipping_enabled: boolean | null
+          shipping_flat_rate: number | null
+          shipping_free_above: number | null
+          shipping_per_km: number | null
+          store_address: string | null
+          store_blocked: boolean | null
+          store_cep: string | null
+          store_description: string | null
+          store_location: string | null
+          store_name: string | null
+          store_open: boolean | null
+          store_phone: string | null
+          store_slug: string | null
+          store_whatsapp: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
+          updated_at: string | null
+          user_id: string | null
+          welcome_coupon_discount_type: string | null
+          welcome_coupon_discount_value: number | null
+          welcome_coupon_enabled: boolean | null
+          welcome_coupon_expires_days: number | null
+          welcome_coupon_min_order: number | null
+          youtube_url: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          admin_accent_color?: string | null
+          admin_primary_color?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          custom_domain?: string | null
+          domain_last_check?: string | null
+          domain_status?: string | null
+          facebook_url?: string | null
+          footer_bg_color?: string | null
+          footer_text_color?: string | null
+          gateway_environment?: string | null
+          gateway_public_key?: string | null
+          google_maps_url?: string | null
+          header_bg_color?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          logo_size?: number | null
+          logo_url?: string | null
+          low_stock_threshold?: number | null
+          marquee_bg_color?: string | null
+          marquee_enabled?: boolean | null
+          marquee_speed?: number | null
+          marquee_text?: string | null
+          marquee_text_color?: string | null
+          max_installments?: number | null
+          payment_boleto?: boolean | null
+          payment_credit_card?: boolean | null
+          payment_debit_card?: boolean | null
+          payment_gateway?: string | null
+          payment_pix?: boolean | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          sell_via_whatsapp?: boolean | null
+          shipping_base_cost?: number | null
+          shipping_enabled?: boolean | null
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number | null
+          store_address?: string | null
+          store_blocked?: boolean | null
+          store_cep?: string | null
+          store_description?: string | null
+          store_location?: string | null
+          store_name?: string | null
+          store_open?: boolean | null
+          store_phone?: string | null
+          store_slug?: string | null
+          store_whatsapp?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_coupon_discount_type?: string | null
+          welcome_coupon_discount_value?: number | null
+          welcome_coupon_enabled?: boolean | null
+          welcome_coupon_expires_days?: number | null
+          welcome_coupon_min_order?: number | null
+          youtube_url?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          admin_accent_color?: string | null
+          admin_primary_color?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          custom_domain?: string | null
+          domain_last_check?: string | null
+          domain_status?: string | null
+          facebook_url?: string | null
+          footer_bg_color?: string | null
+          footer_text_color?: string | null
+          gateway_environment?: string | null
+          gateway_public_key?: string | null
+          google_maps_url?: string | null
+          header_bg_color?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          logo_size?: number | null
+          logo_url?: string | null
+          low_stock_threshold?: number | null
+          marquee_bg_color?: string | null
+          marquee_enabled?: boolean | null
+          marquee_speed?: number | null
+          marquee_text?: string | null
+          marquee_text_color?: string | null
+          max_installments?: number | null
+          payment_boleto?: boolean | null
+          payment_credit_card?: boolean | null
+          payment_debit_card?: boolean | null
+          payment_gateway?: string | null
+          payment_pix?: boolean | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          sell_via_whatsapp?: boolean | null
+          shipping_base_cost?: number | null
+          shipping_enabled?: boolean | null
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number | null
+          store_address?: string | null
+          store_blocked?: boolean | null
+          store_cep?: string | null
+          store_description?: string | null
+          store_location?: string | null
+          store_name?: string | null
+          store_open?: boolean | null
+          store_phone?: string | null
+          store_slug?: string | null
+          store_whatsapp?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_coupon_discount_type?: string | null
+          welcome_coupon_discount_value?: number | null
+          welcome_coupon_enabled?: boolean | null
+          welcome_coupon_expires_days?: number | null
+          welcome_coupon_min_order?: number | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       customer_email_exists_globally: {
@@ -1429,6 +1620,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      increment_coupon_usage: {
+        Args: { _coupon_code: string; _store_user_id: string }
         Returns: boolean
       }
       move_to_dlq: {
