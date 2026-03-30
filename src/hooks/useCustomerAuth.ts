@@ -194,7 +194,8 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    const { data: customerRecord } = await supabase
+    // Check if customer record exists for this store; create if missing (e.g. OAuth or cross-store)
+    let { data: customerRecord } = await supabase
       .from("customers")
       .select("id, name, email")
       .eq("auth_user_id", data.user.id)
@@ -202,8 +203,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       .maybeSingle();
 
     if (!customerRecord) {
-      await supabase.auth.signOut();
-      throw new Error("Esta conta não pertence a esta loja. Use o cadastro correto deste tenant.");
+      // Auto-create customer record for this store
+      const { error: insertErr } = await supabase.from("customers").insert({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name: data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente",
+        email: data.user.email || "",
+      } as any);
+      if (insertErr && !insertErr.message.includes("duplicate")) {
+        console.error("Failed to auto-create customer record:", insertErr);
+      }
     }
 
     return data;

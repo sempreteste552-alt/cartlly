@@ -56,6 +56,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  // Block customer accounts from accessing admin panel
+  if (user?.user_metadata?.is_customer === true) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Check if account is blocked or deactivated
   if (profile?.status === "blocked" || profile?.status === "rejected") {
     return <Navigate to="/conta-em-analise" replace />;
