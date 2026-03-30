@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift } from "lucide-react";
-import DomainStatusDisplay from "@/components/DomainStatusDisplay";
+import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
@@ -548,30 +548,19 @@ export default function Configuracoes() {
             )}
           </div>
 
-          {/* Custom Domain */}
-          <div className="space-y-3">
-            <Label>Domínio Personalizado</Label>
-            <Input
-              value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
-              placeholder="www.minhaloja.com.br"
-              maxLength={255}
-            />
-            {customDomain && (
-              <>
-                {/* Domain Status */}
-                <DomainStatusDisplay
-                  domain={customDomain}
-                  status={(settings as any)?.domain_status || "none"}
-                  lastCheck={(settings as any)?.domain_last_check}
-                  settingsId={settings?.id}
-                  storeSlug={storeSlug}
-                />
-              </>
-            )}
-          </div>
         </CardContent>
       </Card>
+
+      {/* Domain Connector Wizard */}
+      <DomainConnector
+        settingsId={settings?.id}
+        currentDomain={customDomain}
+        domainStatus={(settings as any)?.domain_status || "none"}
+        lastCheck={(settings as any)?.domain_last_check}
+        storeSlug={storeSlug}
+        onDomainChange={setCustomDomain}
+        onSave={handleSave}
+      />
 
       {/* Welcome Coupon for New Customers */}
       <Card className="border-border">

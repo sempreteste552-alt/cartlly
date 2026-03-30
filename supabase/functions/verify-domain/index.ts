@@ -19,11 +19,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Validate domain format
+    const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(cleanDomain)) {
+      return new Response(JSON.stringify({ error: "Invalid domain format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get the store settings to get the verification token
+    // Get the store settings
     const { data: settings, error: settingsError } = await supabase
       .from("store_settings")
       .select("id, custom_domain, user_id")
@@ -37,12 +46,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
     const expectedTxt = `lovable_verify=${settingsId.slice(0, 12)}`;
 
-    let dnsVerified = false;
     let aRecordFound = false;
     let txtRecordFound = false;
+    let nameservers: string[] = [];
+    let detectedProvider = "other";
+
+    // Provider detection map
+    const providerMap: Record<string, string[]> = {
+      hostinger: ["hostinger", "dns-parking"],
+      godaddy: ["godaddy", "domaincontrol"],
+      cloudflare: ["cloudflare"],
+      registrobr: ["registro.br", "dns.br"],
+      namecheap: ["namecheap", "registrar-servers"],
+    };
+
+    // NS lookup for provider detection
+    try {
+      const nsRes = await fetch(`https://dns.google/resolve?name=${cleanDomain}&type=NS`);
+      const nsData = await nsRes.json();
+      if (nsData.Answer) {
+        nameservers = nsData.Answer.map((r: any) => (r.data || "").toLowerCase());
+        for (const [provider, patterns] of Object.entries(providerMap)) {
+          if (nameservers.some((ns: string) => patterns.some((p) => ns.includes(p)))) {
+            detectedProvider = provider;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("NS lookup error:", e);
+    }
 
     // Verify A record
     try {
@@ -69,8 +104,7 @@ Deno.serve(async (req) => {
       console.error("TXT record check error:", e);
     }
 
-    dnsVerified = aRecordFound && txtRecordFound;
-
+    const dnsVerified = aRecordFound && txtRecordFound;
     const newStatus = dnsVerified ? "verified" : (aRecordFound || txtRecordFound ? "pending" : "failed");
 
     // Update domain status
@@ -93,12 +127,14 @@ Deno.serve(async (req) => {
         aRecord: aRecordFound,
         txtRecord: txtRecordFound,
         domain: cleanDomain,
+        provider: detectedProvider,
+        nameservers,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
