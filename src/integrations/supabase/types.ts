@@ -1412,6 +1412,41 @@ export type Database = {
       }
     }
     Views: {
+      product_reviews_public: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          customer_name: string | null
+          id: string | null
+          product_id: string | null
+          rating: number | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string | null
+          product_id?: string | null
+          rating?: number | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          id?: string | null
+          product_id?: string | null
+          rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_settings_public: {
         Row: {
           accent_color: string | null
