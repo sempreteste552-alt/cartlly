@@ -147,7 +147,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       password,
       options: {
         data: { display_name: name, is_customer: true },
-        emailRedirectTo: `${window.location.origin}/loja/${slug || ""}`,
+        emailRedirectTo: window.location.href,
       },
     });
 
