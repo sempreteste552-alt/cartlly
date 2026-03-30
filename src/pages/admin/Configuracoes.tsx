@@ -548,30 +548,19 @@ export default function Configuracoes() {
             )}
           </div>
 
-          {/* Custom Domain */}
-          <div className="space-y-3">
-            <Label>Domínio Personalizado</Label>
-            <Input
-              value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
-              placeholder="www.minhaloja.com.br"
-              maxLength={255}
-            />
-            {customDomain && (
-              <>
-                {/* Domain Status */}
-                <DomainStatusDisplay
-                  domain={customDomain}
-                  status={(settings as any)?.domain_status || "none"}
-                  lastCheck={(settings as any)?.domain_last_check}
-                  settingsId={settings?.id}
-                  storeSlug={storeSlug}
-                />
-              </>
-            )}
-          </div>
         </CardContent>
       </Card>
+
+      {/* Domain Connector Wizard */}
+      <DomainConnector
+        settingsId={settings?.id}
+        currentDomain={customDomain}
+        domainStatus={(settings as any)?.domain_status || "none"}
+        lastCheck={(settings as any)?.domain_last_check}
+        storeSlug={storeSlug}
+        onDomainChange={setCustomDomain}
+        onSave={handleSave}
+      />
 
       {/* Welcome Coupon for New Customers */}
       <Card className="border-border">
