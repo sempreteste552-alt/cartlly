@@ -106,6 +106,10 @@ export default function LojaHome() {
                 style={{ borderColor: primaryColor, color: primaryColor }}
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = primaryColor; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = primaryColor; }}
+                onClick={() => {
+                  const el = document.getElementById(`category-${cat.name}`);
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
               >
                 {cat.name}
               </Badge>
