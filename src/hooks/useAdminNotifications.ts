@@ -24,7 +24,7 @@ export function useAdminNotifications() {
     const { data } = await supabase
       .from("admin_notifications")
       .select("*")
-      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
+      .eq("target_user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
     if (data) setNotifications(data as AdminNotification[]);
