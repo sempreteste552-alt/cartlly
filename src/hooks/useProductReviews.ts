@@ -17,7 +17,7 @@ export function useProductReviews(productId: string | undefined) {
     enabled: !!productId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("product_reviews")
+        .from("product_reviews_public")
         .select("*")
         .eq("product_id", productId!)
         .order("created_at", { ascending: false });

@@ -66,7 +66,7 @@ export function useAdminNotifications() {
     await supabase
       .from("admin_notifications")
       .update({ read: true })
-      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
+      .eq("target_user_id", user.id)
       .eq("read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
