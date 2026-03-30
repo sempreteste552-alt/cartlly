@@ -94,7 +94,7 @@ export default function LojaCheckout() {
   const shippingCost = selectedShipping?.price || 0;
   const finalTotal = Math.max(0, cart.total - discountAmount + shippingCost);
 
-  const hasGateway = settings?.payment_gateway && (settings as any)?.gateway_secret_key;
+  const hasGateway = settings?.payment_gateway && settings?.gateway_public_key;
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
