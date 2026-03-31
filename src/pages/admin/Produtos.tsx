@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
@@ -20,8 +20,11 @@ import { ProductVariantsManager } from "@/components/ProductVariantsManager";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AICatalogImport } from "@/components/AICatalogImport";
-import { LockedFeature } from "@/components/LockedFeature";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { PlanGate } from "@/components/PlanGate";
+import { Progress } from "@/components/ui/progress";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function Produtos() {
@@ -32,7 +35,8 @@ export default function Produtos() {
   const deleteProduct = useDeleteProduct();
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
-  const { features, isLocked } = usePlanFeatures();
+  const { ctx } = useTenantContext();
+  const navigate = useNavigate();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -43,10 +47,10 @@ export default function Produtos() {
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
 
-  const productCount = products?.length ?? 0;
-  const maxProducts = features.max_products;
-  const atProductLimit = productCount >= maxProducts;
-  const aiLocked = isLocked("ai_tools");
+  const limits = getPlanLimits(ctx);
+  const canCreate = canCreateProduct(ctx);
+  const productLimitMsg = getProductLimitReason(ctx);
+  const aiAvailable = canAccess("ai_content", ctx);
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
@@ -125,11 +129,11 @@ export default function Produtos() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
           <p className="text-muted-foreground">
-            Gerencie o catálogo da sua loja ({productCount}/{maxProducts} produtos)
+            Gerencie o catálogo da sua loja
           </p>
         </div>
         <div className="flex gap-2">
-          {aiLocked ? (
+          {!aiAvailable ? (
             <Button variant="outline" disabled title="Faça upgrade para usar IA">
               <Lock className="mr-2 h-4 w-4" /> Importar com IA
             </Button>
@@ -145,8 +149,8 @@ export default function Produtos() {
           </Button>
           <Button
             onClick={() => {
-              if (atProductLimit) {
-                toast.error(`Limite de ${maxProducts} produtos atingido. Faça upgrade do plano.`);
+              if (!canCreate) {
+                toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
                 return;
               }
               setFormOpen(true);
@@ -157,6 +161,36 @@ export default function Produtos() {
           </Button>
         </div>
       </div>
+
+      {/* Product usage bar */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" />
+              Produtos cadastrados
+            </span>
+            <span className="text-sm font-bold text-foreground">
+              {limits.currentProducts}/{limits.maxProducts === 99999 ? "∞" : limits.maxProducts}
+            </span>
+          </div>
+          <Progress
+            value={limits.maxProducts === 99999 ? 5 : limits.productsUsagePercent}
+            className={`h-2 ${limits.productsUsagePercent >= 90 ? "[&>div]:bg-red-500" : limits.productsUsagePercent >= 70 ? "[&>div]:bg-amber-500" : ""}`}
+          />
+          {!canCreate && (
+            <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-amber-600" />
+                <p className="text-sm text-amber-700 font-medium">{productLimitMsg}</p>
+              </div>
+              <Button size="sm" variant="outline" className="border-primary/30 text-primary gap-1 text-xs" onClick={() => navigate("/admin/plano")}>
+                <Crown className="h-3 w-3" /> Upgrade
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filter */}
       {categories && categories.length > 0 && (
