@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
@@ -20,8 +20,11 @@ import { ProductVariantsManager } from "@/components/ProductVariantsManager";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AICatalogImport } from "@/components/AICatalogImport";
-import { LockedFeature } from "@/components/LockedFeature";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { PlanGate } from "@/components/PlanGate";
+import { Progress } from "@/components/ui/progress";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function Produtos() {
