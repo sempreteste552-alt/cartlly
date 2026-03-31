@@ -19,6 +19,7 @@ import Frete from "./pages/admin/Frete";
 import Clientes from "./pages/admin/Clientes";
 import Pagamentos from "./pages/admin/Pagamentos";
 import MeuPlano from "./pages/admin/MeuPlano";
+import Paginas from "./pages/admin/Paginas";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
