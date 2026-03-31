@@ -35,7 +35,8 @@ export default function Produtos() {
   const deleteProduct = useDeleteProduct();
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
-  const { features, isLocked } = usePlanFeatures();
+  const { ctx } = useTenantContext();
+  const navigate = useNavigate();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -46,10 +47,10 @@ export default function Produtos() {
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
 
-  const productCount = products?.length ?? 0;
-  const maxProducts = features.max_products;
-  const atProductLimit = productCount >= maxProducts;
-  const aiLocked = isLocked("ai_tools");
+  const limits = getPlanLimits(ctx);
+  const canCreate = canCreateProduct(ctx);
+  const productLimitMsg = getProductLimitReason(ctx);
+  const aiAvailable = canAccess("ai_content", ctx);
 
   const filteredProducts = products?.filter((p) => {
     if (filterCategory === "all") return true;
