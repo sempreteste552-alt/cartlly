@@ -129,11 +129,11 @@ export default function Produtos() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
           <p className="text-muted-foreground">
-            Gerencie o catálogo da sua loja ({productCount}/{maxProducts} produtos)
+            Gerencie o catálogo da sua loja
           </p>
         </div>
         <div className="flex gap-2">
-          {aiLocked ? (
+          {!aiAvailable ? (
             <Button variant="outline" disabled title="Faça upgrade para usar IA">
               <Lock className="mr-2 h-4 w-4" /> Importar com IA
             </Button>
@@ -149,8 +149,8 @@ export default function Produtos() {
           </Button>
           <Button
             onClick={() => {
-              if (atProductLimit) {
-                toast.error(`Limite de ${maxProducts} produtos atingido. Faça upgrade do plano.`);
+              if (!canCreate) {
+                toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
                 return;
               }
               setFormOpen(true);
@@ -161,6 +161,36 @@ export default function Produtos() {
           </Button>
         </div>
       </div>
+
+      {/* Product usage bar */}
+      <Card className="border-border">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Package className="h-4 w-4 text-primary" />
+              Produtos cadastrados
+            </span>
+            <span className="text-sm font-bold text-foreground">
+              {limits.currentProducts}/{limits.maxProducts === 99999 ? "∞" : limits.maxProducts}
+            </span>
+          </div>
+          <Progress
+            value={limits.maxProducts === 99999 ? 5 : limits.productsUsagePercent}
+            className={`h-2 ${limits.productsUsagePercent >= 90 ? "[&>div]:bg-red-500" : limits.productsUsagePercent >= 70 ? "[&>div]:bg-amber-500" : ""}`}
+          />
+          {!canCreate && (
+            <div className="flex items-center justify-between mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-amber-600" />
+                <p className="text-sm text-amber-700 font-medium">{productLimitMsg}</p>
+              </div>
+              <Button size="sm" variant="outline" className="border-primary/30 text-primary gap-1 text-xs" onClick={() => navigate("/admin/plano")}>
+                <Crown className="h-3 w-3" /> Upgrade
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filter */}
       {categories && categories.length > 0 && (
