@@ -8,14 +8,40 @@ import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Badge } from "@/components/ui/badge";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Crown, Clock } from "lucide-react";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
   const { user } = useAuth();
+  const { features } = usePlanFeatures();
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
-  // Show welcome message once per session
+  // Get current subscription for trial info
+  const { data: currentSub } = useQuery({
+    queryKey: ["admin_layout_sub", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tenant_subscriptions")
+        .select("*, tenant_plans(*)")
+        .eq("user_id", user!.id)
+        .in("status", ["active", "trial"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const isTrial = currentSub?.status === "trial";
+  const trialEndsAt = currentSub?.trial_ends_at ? new Date(currentSub.trial_ends_at) : null;
+  const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+
   useEffect(() => {
     const sessionKey = `welcome_shown_${user?.id}`;
     if (user && !sessionStorage.getItem(sessionKey)) {
@@ -27,14 +53,11 @@ export function AdminLayout() {
     }
   }, [user]);
 
-  // Apply admin colors dynamically
   useEffect(() => {
     if (settings) {
       const root = document.documentElement;
       const adminPrimary = (settings as any).admin_primary_color || "#6d28d9";
-      const adminAccent = (settings as any).admin_accent_color || "#8b5cf6";
-      
-      // Convert hex to HSL and set CSS vars
+
       const toHSL = (hex: string) => {
         const r = parseInt(hex.slice(1, 3), 16) / 255;
         const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -74,20 +97,28 @@ export function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center justify-between border-b border-border bg-card px-4">
-            <div className="flex items-center">
-              <SidebarTrigger className="mr-4" />
-              <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">Painel Administrativo</h2>
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="mr-1" />
+              <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
+                {(settings as any)?.store_name || "Painel Administrativo"}
+              </h2>
             </div>
             <div className="flex items-center gap-2">
+              {isTrial && trialDaysLeft > 0 && (
+                <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
+                  <Clock className="h-3 w-3" />
+                  {trialDaysLeft}d restantes
+                </Badge>
+              )}
               <ThemeToggle scope="admin" />
               <AdminNotificationsBell />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-4 sm:p-6">
             <Outlet />
           </main>
         </div>
