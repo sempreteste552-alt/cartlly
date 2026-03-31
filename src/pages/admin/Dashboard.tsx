@@ -148,11 +148,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <TrialBanner />
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-primary" /> Dashboard
         </h1>
-        <p className="text-muted-foreground">Visão geral da sua loja</p>
+        <p className="text-sm text-muted-foreground">Visão geral da sua loja</p>
       </div>
 
       {/* KPI Cards - Premium gradient style */}
