@@ -405,9 +405,9 @@ export default function PlanCheckoutModal({
                 Pagar com PIX — {formatPrice(planPrice)}
               </Button>
 
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-                <Shield className="h-3 w-3" />
-                <span>Ambiente seguro • Seus dados estão protegidos</span>
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-12 w-auto object-contain" />
+                <img src={pixLogoImg} alt="PIX - Banco Central" className="h-8 w-auto object-contain" />
               </div>
             </div>
           )}
