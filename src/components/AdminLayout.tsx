@@ -123,6 +123,7 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
+        <WhatsAppSupportBubble />
         <AIChatWidget />
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
