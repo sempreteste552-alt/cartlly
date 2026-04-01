@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import seloSeguroImg from "@/assets/selo-seguro.png";
+import pixLogoImg from "@/assets/pix-logo.png";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
