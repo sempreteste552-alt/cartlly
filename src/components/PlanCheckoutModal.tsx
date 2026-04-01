@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import seloSeguroImg from "@/assets/selo-seguro.png";
+import pixLogoImg from "@/assets/pix-logo.png";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -274,20 +276,10 @@ export default function PlanCheckoutModal({
             </div>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/15">
-            <div className="flex items-center gap-1.5 text-[11px] text-white/80">
-              <Shield className="h-3.5 w-3.5" />
-              <span>Pagamento seguro</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/80">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              <span>Ativação instantânea</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/80">
-              <Lock className="h-3.5 w-3.5" />
-              <span>Dados protegidos</span>
-            </div>
+          {/* Trust badges with real images */}
+          <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-white/15">
+            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-14 w-auto object-contain drop-shadow-lg" />
+            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
           </div>
         </div>
 
@@ -413,9 +405,9 @@ export default function PlanCheckoutModal({
                 Pagar com PIX — {formatPrice(planPrice)}
               </Button>
 
-              <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
-                <Shield className="h-3 w-3" />
-                <span>Ambiente seguro • Seus dados estão protegidos</span>
+              <div className="flex items-center justify-center gap-4 mt-2">
+                <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-12 w-auto object-contain" />
+                <img src={pixLogoImg} alt="PIX - Banco Central" className="h-8 w-auto object-contain" />
               </div>
             </div>
           )}
