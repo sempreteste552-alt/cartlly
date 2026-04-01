@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2 } from "lucide-react";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
