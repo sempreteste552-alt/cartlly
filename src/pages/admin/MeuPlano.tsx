@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -7,19 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  Check, Crown, Zap, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket,
-  CreditCard, Lock, ArrowUpCircle, Package, CheckCircle2,
-  Download, PartyPopper, BarChart3, Palette, ShoppingCart, Bot, Code, Layers,
-  Gem, Timer, QrCode, Copy,
+  Check, Crown, Zap, Clock, Loader2, Rocket,
+  Lock, ArrowUpCircle, Package, CheckCircle2,
+  BarChart3, Palette, ShoppingCart, Bot, Code, Shield,
 } from "lucide-react";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+import PlanCheckoutModal from "@/components/PlanCheckoutModal";
 import {
   canAccess, getPlanLimits, getFeaturesByCategory, CATEGORY_LABELS,
   FEATURE_CATALOG, PLAN_INFO, type FeatureKey, type PlanSlug,
