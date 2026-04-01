@@ -403,11 +403,14 @@ export default function Login() {
                   onClick={async () => {
                     setLoading(true);
                     try {
+                      // Mark this as an admin/tenant OAuth flow
+                      localStorage.setItem("auth_context", JSON.stringify({ type: "admin" }));
                       const { error } = await lovable.auth.signInWithOAuth("google", {
                         redirect_uri: window.location.origin,
                       });
                       if (error) throw error;
                     } catch (err: any) {
+                      localStorage.removeItem("auth_context");
                       toast.error(err.message || "Erro ao entrar com Google");
                     } finally {
                       setLoading(false);
