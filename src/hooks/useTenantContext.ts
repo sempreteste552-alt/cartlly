@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { TenantContext, PlanSlug, SubscriptionStatus } from "@/lib/planPermissions";
 
+const VALID_SLUGS: PlanSlug[] = ["FREE", "STARTER", "PRO", "PREMIUM"];
+
 /**
  * Hook that builds the full TenantContext for the current user.
  * This is the single source of truth for plan/permissions state.
@@ -14,7 +16,6 @@ export function useTenantContext() {
     queryKey: ["tenant_context", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      // Fetch subscription + plan
       const { data: sub } = await supabase
         .from("tenant_subscriptions")
         .select("*, tenant_plans(*)")
@@ -24,7 +25,6 @@ export function useTenantContext() {
         .limit(1)
         .maybeSingle();
 
-      // Fetch product count
       const { count: productCount } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
@@ -35,8 +35,6 @@ export function useTenantContext() {
         ? (plan.features as Record<string, any>)
         : {};
       const overrides = ((sub as any)?.feature_overrides as Record<string, any>) || {};
-
-      // Merge overrides into features
       const mergedFeatures = { ...planFeatures, ...overrides };
 
       const isTrial = sub?.status === "trial";
@@ -46,10 +44,10 @@ export function useTenantContext() {
         : 0;
       const isTrialExpired = isTrial && trialDaysLeft <= 0;
 
-      const planName = (plan?.name as string) || "FREE";
-      const planSlug = (["FREE", "PRO", "ELITE"].includes(planName.toUpperCase()) 
-        ? planName.toUpperCase() 
-        : "FREE") as PlanSlug;
+      const planName = (plan?.name as string)?.toUpperCase() || "FREE";
+      // Map old ELITE name to PREMIUM for backward compat
+      const mapped = planName === "ELITE" ? "PREMIUM" : planName;
+      const planSlug = (VALID_SLUGS.includes(mapped as PlanSlug) ? mapped : "FREE") as PlanSlug;
 
       const ctx: TenantContext = {
         planSlug,
@@ -63,11 +61,7 @@ export function useTenantContext() {
         isTrialExpired,
       };
 
-      return {
-        ctx,
-        subscription: sub,
-        plan,
-      };
+      return { ctx, subscription: sub, plan };
     },
   });
 
