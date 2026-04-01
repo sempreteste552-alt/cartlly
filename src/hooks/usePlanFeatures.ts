@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { PlanSlug } from "@/lib/planPermissions";
 
 export interface PlanFeatures {
   gateway: boolean;
@@ -39,6 +40,8 @@ const FREE_DEFAULTS: PlanFeatures = {
   max_orders_month: 0,
 };
 
+const VALID_SLUGS: PlanSlug[] = ["FREE", "STARTER", "PRO", "PREMIUM"];
+
 export function usePlanFeatures() {
   const { user } = useAuth();
 
@@ -59,35 +62,30 @@ export function usePlanFeatures() {
         return {
           features: FREE_DEFAULTS,
           subscription: {
-            status: null,
-            planName: null,
-            planPrice: 0,
-            isTrial: false,
-            trialDaysLeft: 0,
-            isTrialExpired: false,
-            isActive: false,
-            isBlocked: false,
+            status: null, planName: null, planPrice: 0,
+            isTrial: false, trialDaysLeft: 0, isTrialExpired: false,
+            isActive: false, isBlocked: false,
           } as SubscriptionInfo,
         };
       }
 
       const plan = sub.tenant_plans as any;
       const features_obj = (typeof plan.features === "object" && !Array.isArray(plan.features))
-        ? (plan.features as Record<string, any>)
-        : {};
+        ? (plan.features as Record<string, any>) : {};
       const overrides = ((sub as any).feature_overrides as Record<string, any>) || {};
 
       const isTrial = sub.status === "trial";
       const trialEndsAt = sub.trial_ends_at ? new Date(sub.trial_ends_at) : null;
       const trialDaysLeft = trialEndsAt
-        ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-        : 0;
+        ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
       const isTrialExpired = isTrial && trialDaysLeft <= 0;
       const isActive = sub.status === "active" || (isTrial && !isTrialExpired);
       const isBlocked = ["trial_expired", "past_due", "canceled", "suspended"].includes(sub.status) || isTrialExpired;
-
-      // If trial expired or blocked, restrict features
       const shouldBlock = isBlocked;
+
+      // Normalize plan name (ELITE -> PREMIUM)
+      const planNameRaw = (plan.name as string)?.toUpperCase() || "FREE";
+      const planName = planNameRaw === "ELITE" ? "PREMIUM" : planNameRaw;
 
       const resolvedFeatures: PlanFeatures = {
         gateway: shouldBlock ? false : (overrides.gateway ?? features_obj.gateway ?? false),
@@ -105,14 +103,8 @@ export function usePlanFeatures() {
       return {
         features: resolvedFeatures,
         subscription: {
-          status: sub.status,
-          planName: plan.name,
-          planPrice: plan.price ?? 0,
-          isTrial,
-          trialDaysLeft,
-          isTrialExpired,
-          isActive,
-          isBlocked,
+          status: sub.status, planName, planPrice: plan.price ?? 0,
+          isTrial, trialDaysLeft, isTrialExpired, isActive, isBlocked,
         } as SubscriptionInfo,
       };
     },
@@ -128,8 +120,6 @@ export function usePlanFeatures() {
     features,
     subscription,
     isLoading,
-    isLocked: (feature: keyof Omit<PlanFeatures, "max_products" | "max_orders_month">) => {
-      return !features[feature];
-    },
+    isLocked: (feature: keyof Omit<PlanFeatures, "max_products" | "max_orders_month">) => !features[feature],
   };
 }
