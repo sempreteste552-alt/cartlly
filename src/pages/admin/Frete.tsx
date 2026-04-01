@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Truck } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
+import { PlanGate } from "@/components/PlanGate";
 
 export default function Frete() {
   const { data: settings, isLoading } = useStoreSettings();
@@ -42,6 +43,7 @@ export default function Frete() {
   }
 
   return (
+    <PlanGate feature="shipping_zones">
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Frete e Entregas</h1>
@@ -104,5 +106,6 @@ export default function Frete() {
         </Button>
       </div>
     </div>
+    </PlanGate>
   );
 }
