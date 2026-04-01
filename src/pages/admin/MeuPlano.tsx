@@ -79,49 +79,6 @@ export default function MeuPlano() {
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
-  const processPayment = useMutation({
-    mutationFn: async () => {
-      if (!checkoutDialog || !user) throw new Error("Dados insuficientes");
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` },
-          body: JSON.stringify({
-            user_id: user.id,
-            plan_id: checkoutDialog.planId,
-            payment_method: selectedMethod,
-            document: cpf.replace(/\D/g, ""),
-          }),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erro ao processar");
-      return data;
-    },
-    onSuccess: (data) => {
-      setPaymentResult(data);
-      if (data.status === "approved") {
-        setPaymentConfirmed(true);
-        toast.success("🎉 Pagamento aprovado! Plano ativado.");
-        queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
-      } else if (data.pix?.qrCode) {
-        // Start 20 min countdown
-        setCountdown(20 * 60);
-        countdownRef.current = setInterval(() => setCountdown(prev => {
-          if (prev <= 1) { clearInterval(countdownRef.current!); return 0; }
-          return prev - 1;
-        }), 1000);
-        toast.success("PIX gerado! Escaneie o QR Code para pagar.");
-      } else {
-        toast.info("Aguardando confirmação do pagamento.");
-      }
-    },
-    onError: (e: any) => toast.error("❌ " + e.message),
-  });
-
   const limits = getPlanLimits(ctx);
   const featuresByCategory = getFeaturesByCategory(ctx);
   const sortedPlans = allPlans?.sort((a, b) => a.price - b.price) ?? [];
@@ -132,8 +89,6 @@ export default function MeuPlano() {
   const currentPlanName = ctx.planSlug;
   const statusLabel = ctx.subscriptionStatus === "active" ? "Ativo" : ctx.subscriptionStatus === "trial" ? "Trial" : ctx.subscriptionStatus === "trial_expired" ? "Expirado" : ctx.subscriptionStatus ?? "—";
   const statusColor = ctx.subscriptionStatus === "active" ? "bg-green-500" : ctx.subscriptionStatus === "trial" ? "bg-amber-500" : "bg-red-500";
-
-  const formatCountdown = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   const normalizePlanSlug = (name: string): PlanSlug => {
     const upper = name.toUpperCase();
@@ -150,18 +105,10 @@ export default function MeuPlano() {
       return;
     }
     if (plan.price > 0) {
-      setPaymentConfirmed(false);
-      setPaymentResult(null);
-      setCountdown(0);
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
     } else {
       requestChange.mutate({ planId: plan.id, type: "downgrade" });
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Código copiado!");
   };
 
   return (
