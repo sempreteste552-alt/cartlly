@@ -197,11 +197,18 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
             onClick={async () => {
               setLoading(true);
               try {
+                // Store context so we know this is a customer login after OAuth redirect
+                localStorage.setItem("auth_context", JSON.stringify({
+                  type: "store_customer",
+                  store_user_id: storeUserId,
+                  redirect_back: window.location.href,
+                }));
                 const { error } = await lovable.auth.signInWithOAuth("google", {
                   redirect_uri: window.location.href,
                 });
                 if (error) throw error;
               } catch (err: any) {
+                localStorage.removeItem("auth_context");
                 toast.error(err.message || "Erro ao entrar com Google");
               } finally {
                 setLoading(false);

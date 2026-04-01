@@ -52,10 +52,53 @@ function useCustomerAuthState(): CustomerAuthContextValue {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle OAuth callback for store customers
+        if (event === "SIGNED_IN" && session?.user) {
+          const authContextStr = localStorage.getItem("auth_context");
+          if (authContextStr) {
+            try {
+              const authContext = JSON.parse(authContextStr);
+              if (authContext.type === "store_customer" && authContext.store_user_id) {
+                localStorage.removeItem("auth_context");
+                const storeUserId = authContext.store_user_id;
+                const u = session.user;
+
+                // Set is_customer metadata if not already set
+                if (!u.user_metadata?.is_customer) {
+                  await supabase.auth.updateUser({
+                    data: { is_customer: true, store_customer_signup: true },
+                  });
+                }
+
+                // Check if customer record exists for this store
+                const { data: existing } = await supabase
+                  .from("customers")
+                  .select("id")
+                  .eq("auth_user_id", u.id)
+                  .eq("store_user_id", storeUserId)
+                  .maybeSingle();
+
+                if (!existing) {
+                  await supabase.from("customers").insert({
+                    auth_user_id: u.id,
+                    store_user_id: storeUserId,
+                    name: u.user_metadata?.display_name || u.user_metadata?.full_name || u.email?.split("@")[0] || "Cliente",
+                    email: u.email || "",
+                  } as any);
+                  await generateWelcomeCoupon(storeUserId, u.user_metadata?.display_name || u.user_metadata?.full_name || "Cliente");
+                }
+
+                // Delete any accidentally created tenant profile
+                await supabase.from("profiles").delete().eq("user_id", u.id);
+              }
+            } catch { /* ignore parse errors */ }
+          }
+        }
       }
     );
 
@@ -68,14 +111,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load customer profile when user changes — skip if user has is_customer metadata
+  // Load customer profile when user changes
   useEffect(() => {
     if (!user) {
       setCustomer(null);
       setCustomerLoading(false);
       return;
     }
-    // Skip customer profile loading for admin users (non-customers)
     const isCustomer = user.user_metadata?.is_customer === true;
     if (!isCustomer) {
       setCustomer(null);
