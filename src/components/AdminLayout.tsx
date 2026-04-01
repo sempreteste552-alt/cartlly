@@ -4,6 +4,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { AIChatWidget } from "@/components/AIChatWidget";
+import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
 import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
@@ -122,6 +123,7 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
+        <WhatsAppSupportBubble />
         <AIChatWidget />
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>

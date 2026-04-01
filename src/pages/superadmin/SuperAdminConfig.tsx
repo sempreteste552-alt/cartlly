@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2 } from "lucide-react";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
@@ -19,6 +19,7 @@ interface PlatformConfig {
   maintenance_mode: boolean;
   allow_new_registrations: boolean;
   default_plan_id: string;
+  support_whatsapp_number: string;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -41,6 +42,7 @@ const defaultConfig: PlatformConfig = {
   maintenance_mode: false,
   allow_new_registrations: true,
   default_plan_id: "",
+  support_whatsapp_number: "",
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
@@ -147,8 +149,31 @@ export default function SuperAdminConfig() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Dias de Teste Padrão</Label>
-            <Input type="number" value={config.default_trial_days} onChange={e => updateField("default_trial_days", parseInt(e.target.value) || 7)} className="max-w-32" />
+              <Label>Dias de Teste Padrão</Label>
+              <Input type="number" value={config.default_trial_days} onChange={e => updateField("default_trial_days", parseInt(e.target.value) || 7)} className="max-w-32" />
+            </div>
+        </CardContent>
+      </Card>
+
+      {/* Support WhatsApp */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Phone className="h-5 w-5 text-green-500" /> Suporte WhatsApp
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configure um número de WhatsApp de suporte. Um botão flutuante aparecerá no painel de todos os tenants, acima do chat de IA.
+          </p>
+          <div className="space-y-2">
+            <Label>Número do WhatsApp (com DDD)</Label>
+            <Input
+              value={config.support_whatsapp_number}
+              onChange={e => updateField("support_whatsapp_number", e.target.value)}
+              placeholder="5511999999999"
+            />
+            <p className="text-xs text-muted-foreground">Formato: 55 + DDD + número. Ex: 5511999999999. Deixe vazio para desativar.</p>
           </div>
         </CardContent>
       </Card>
