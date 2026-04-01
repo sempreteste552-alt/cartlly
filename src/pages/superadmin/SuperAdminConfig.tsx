@@ -19,6 +19,7 @@ interface PlatformConfig {
   maintenance_mode: boolean;
   allow_new_registrations: boolean;
   default_plan_id: string;
+  support_whatsapp_number: string;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -41,6 +42,7 @@ const defaultConfig: PlatformConfig = {
   maintenance_mode: false,
   allow_new_registrations: true,
   default_plan_id: "",
+  support_whatsapp_number: "",
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
