@@ -11,6 +11,7 @@ import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Aw
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
+import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
