@@ -106,5 +106,6 @@ export default function Frete() {
         </Button>
       </div>
     </div>
+    </PlanGate>
   );
 }
