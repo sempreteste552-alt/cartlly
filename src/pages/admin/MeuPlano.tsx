@@ -311,101 +311,18 @@ export default function MeuPlano() {
         </div>
       </div>
 
-      {/* Checkout Dialog */}
-      <Dialog open={!!checkoutDialog} onOpenChange={(o) => { if (!o) { setCheckoutDialog(null); setPaymentResult(null); setCountdown(0); }}}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" /> Ativar {checkoutDialog?.planName}
-            </DialogTitle>
-            <DialogDescription>{checkoutDialog && formatPrice(checkoutDialog.price)}/mês</DialogDescription>
-          </DialogHeader>
-
-          {paymentConfirmed ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 mx-auto">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">Plano Ativado! 🎉</h3>
-              <p className="text-sm text-muted-foreground">Todos os recursos foram desbloqueados com sucesso.</p>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => { setCheckoutDialog(null); setPaymentResult(null); }}>
-                <Download className="h-4 w-4" /> Fechar
-              </Button>
-            </div>
-          ) : paymentResult?.pix?.qrCode ? (
-            <div className="space-y-4">
-              {/* PIX QR Code display */}
-              <div className="text-center space-y-3">
-                <div className="flex items-center justify-center gap-2 text-amber-600">
-                  <Timer className="h-4 w-4" />
-                  <span className="text-sm font-semibold">
-                    {countdown > 0 ? `Expira em ${formatCountdown(countdown)}` : "QR Code expirado"}
-                  </span>
-                </div>
-                {paymentResult.pix.qrCodeBase64 && (
-                  <div className="flex justify-center">
-                    <img
-                      src={paymentResult.pix.qrCodeBase64.startsWith("data:") ? paymentResult.pix.qrCodeBase64 : `data:image/png;base64,${paymentResult.pix.qrCodeBase64}`}
-                      alt="QR Code PIX"
-                      className="w-48 h-48 rounded-lg border border-border shadow-sm"
-                    />
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Input value={paymentResult.pix.qrCode} readOnly className="text-xs font-mono" />
-                  <Button size="icon" variant="outline" onClick={() => copyToClipboard(paymentResult.pix.qrCode)}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">Copie o código ou escaneie o QR Code para pagar</p>
-              </div>
-              {countdown <= 0 && (
-                <Button className="w-full" variant="outline" onClick={() => { setPaymentResult(null); processPayment.mutate(); }}>
-                  <QrCode className="h-4 w-4 mr-2" /> Gerar novo QR Code
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Payment method selection */}
-              <div className="flex gap-2">
-                {(gatewayInfo?.methods || ["PIX"]).map((m) => (
-                  <Button
-                    key={m}
-                    variant={selectedMethod === m ? "default" : "outline"}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setSelectedMethod(m as PaymentMethod)}
-                  >
-                    {m === "PIX" ? "💰 PIX" : m === "CREDIT_CARD" ? "💳 Cartão" : "📄 Boleto"}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-foreground">CPF</label>
-                  <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-muted/50 border border-border/60 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Plano</span><span className="font-medium">{checkoutDialog?.planName}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-bold text-foreground">{checkoutDialog && formatPrice(checkoutDialog.price)}/mês</span></div>
-              </div>
-
-              <Button className="w-full h-11" disabled={!cpf.trim() || processPayment.isPending} onClick={() => processPayment.mutate()}>
-                {processPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
-                {selectedMethod === "PIX" ? "Gerar QR Code PIX" : "Pagar"} — {checkoutDialog && formatPrice(checkoutDialog.price)}
-              </Button>
-
-              <p className="text-[10px] text-center text-muted-foreground">
-                🔒 Pagamento seguro e processado pelo gateway da plataforma
-              </p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Checkout Modal */}
+      {checkoutDialog && user && (
+        <PlanCheckoutModal
+          open={!!checkoutDialog}
+          onOpenChange={(o) => { if (!o) setCheckoutDialog(null); }}
+          planId={checkoutDialog.planId}
+          planName={checkoutDialog.planName}
+          planPrice={checkoutDialog.price}
+          userId={user.id}
+          availableMethods={gatewayInfo?.methods || ["PIX"]}
+        />
+      )}
     </div>
   );
 }
