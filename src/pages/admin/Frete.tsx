@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Truck } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
+import { PlanGate } from "@/components/PlanGate";
 
 export default function Frete() {
   const { data: settings, isLoading } = useStoreSettings();
