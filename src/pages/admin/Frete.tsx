@@ -43,6 +43,7 @@ export default function Frete() {
   }
 
   return (
+    <PlanGate feature="shipping_zones">
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Frete e Entregas</h1>
