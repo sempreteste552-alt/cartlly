@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -7,19 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  Check, Crown, Zap, Sparkles, Shield, Globe, Clock, Loader2, Star, Rocket,
-  CreditCard, Lock, ArrowUpCircle, Package, CheckCircle2,
-  Download, PartyPopper, BarChart3, Palette, ShoppingCart, Bot, Code, Layers,
-  Gem, Timer, QrCode, Copy,
+  Check, Crown, Zap, Clock, Loader2, Rocket,
+  Lock, ArrowUpCircle, Package, CheckCircle2,
+  BarChart3, Palette, ShoppingCart, Bot, Code, Shield,
 } from "lucide-react";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+import PlanCheckoutModal from "@/components/PlanCheckoutModal";
 import {
   canAccess, getPlanLimits, getFeaturesByCategory, CATEGORY_LABELS,
   FEATURE_CATALOG, PLAN_INFO, type FeatureKey, type PlanSlug,
@@ -30,8 +25,6 @@ const CATEGORY_ICONS: Record<string, any> = {
   basic: Package, design: Palette, marketing: ShoppingCart, advanced: Code, ai: Bot, enterprise: Shield,
 };
 
-type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
-
 export default function MeuPlano() {
   const { user } = useAuth();
   const { ctx, subscription, plan: currentPlan } = useTenantContext();
@@ -39,15 +32,6 @@ export default function MeuPlano() {
   const queryClient = useQueryClient();
 
   const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
-  const [cpf, setCpf] = useState("");
-  const [payerName, setPayerName] = useState("");
-  const [payerEmail, setPayerEmail] = useState("");
-  const [paymentResult, setPaymentResult] = useState<any>(null);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: gatewayInfo } = useQuery({
     queryKey: ["plan_gateway_info"],
@@ -78,36 +62,6 @@ export default function MeuPlano() {
 
   const gatewayActive = !!gatewayInfo?.gateway;
 
-  // Confetti on payment success
-  useEffect(() => {
-    if (paymentConfirmed) {
-      const end = Date.now() + 3000;
-      const frame = () => {
-        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
-    }
-  }, [paymentConfirmed]);
-
-  // Countdown timer for PIX
-  useEffect(() => {
-    if (countdown <= 0 && countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
-  }, [countdown]);
-
-  // Cleanup polling
-  useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, []);
-
   const requestChange = useMutation({
     mutationFn: async ({ planId, type }: { planId: string; type: "upgrade" | "downgrade" }) => {
       const { error } = await supabase.from("plan_change_requests").insert({
@@ -125,49 +79,6 @@ export default function MeuPlano() {
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
-  const processPayment = useMutation({
-    mutationFn: async () => {
-      if (!checkoutDialog || !user) throw new Error("Dados insuficientes");
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` },
-          body: JSON.stringify({
-            user_id: user.id,
-            plan_id: checkoutDialog.planId,
-            payment_method: selectedMethod,
-            document: cpf.replace(/\D/g, ""),
-          }),
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erro ao processar");
-      return data;
-    },
-    onSuccess: (data) => {
-      setPaymentResult(data);
-      if (data.status === "approved") {
-        setPaymentConfirmed(true);
-        toast.success("🎉 Pagamento aprovado! Plano ativado.");
-        queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
-      } else if (data.pix?.qrCode) {
-        // Start 20 min countdown
-        setCountdown(20 * 60);
-        countdownRef.current = setInterval(() => setCountdown(prev => {
-          if (prev <= 1) { clearInterval(countdownRef.current!); return 0; }
-          return prev - 1;
-        }), 1000);
-        toast.success("PIX gerado! Escaneie o QR Code para pagar.");
-      } else {
-        toast.info("Aguardando confirmação do pagamento.");
-      }
-    },
-    onError: (e: any) => toast.error("❌ " + e.message),
-  });
-
   const limits = getPlanLimits(ctx);
   const featuresByCategory = getFeaturesByCategory(ctx);
   const sortedPlans = allPlans?.sort((a, b) => a.price - b.price) ?? [];
@@ -178,8 +89,6 @@ export default function MeuPlano() {
   const currentPlanName = ctx.planSlug;
   const statusLabel = ctx.subscriptionStatus === "active" ? "Ativo" : ctx.subscriptionStatus === "trial" ? "Trial" : ctx.subscriptionStatus === "trial_expired" ? "Expirado" : ctx.subscriptionStatus ?? "—";
   const statusColor = ctx.subscriptionStatus === "active" ? "bg-green-500" : ctx.subscriptionStatus === "trial" ? "bg-amber-500" : "bg-red-500";
-
-  const formatCountdown = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
   const normalizePlanSlug = (name: string): PlanSlug => {
     const upper = name.toUpperCase();
@@ -196,18 +105,10 @@ export default function MeuPlano() {
       return;
     }
     if (plan.price > 0) {
-      setPaymentConfirmed(false);
-      setPaymentResult(null);
-      setCountdown(0);
       setCheckoutDialog({ planId: plan.id, planName: plan.name, price: plan.price });
     } else {
       requestChange.mutate({ planId: plan.id, type: "downgrade" });
     }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Código copiado!");
   };
 
   return (
@@ -410,101 +311,18 @@ export default function MeuPlano() {
         </div>
       </div>
 
-      {/* Checkout Dialog */}
-      <Dialog open={!!checkoutDialog} onOpenChange={(o) => { if (!o) { setCheckoutDialog(null); setPaymentResult(null); setCountdown(0); }}}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" /> Ativar {checkoutDialog?.planName}
-            </DialogTitle>
-            <DialogDescription>{checkoutDialog && formatPrice(checkoutDialog.price)}/mês</DialogDescription>
-          </DialogHeader>
-
-          {paymentConfirmed ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 mx-auto">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">Plano Ativado! 🎉</h3>
-              <p className="text-sm text-muted-foreground">Todos os recursos foram desbloqueados com sucesso.</p>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => { setCheckoutDialog(null); setPaymentResult(null); }}>
-                <Download className="h-4 w-4" /> Fechar
-              </Button>
-            </div>
-          ) : paymentResult?.pix?.qrCode ? (
-            <div className="space-y-4">
-              {/* PIX QR Code display */}
-              <div className="text-center space-y-3">
-                <div className="flex items-center justify-center gap-2 text-amber-600">
-                  <Timer className="h-4 w-4" />
-                  <span className="text-sm font-semibold">
-                    {countdown > 0 ? `Expira em ${formatCountdown(countdown)}` : "QR Code expirado"}
-                  </span>
-                </div>
-                {paymentResult.pix.qrCodeBase64 && (
-                  <div className="flex justify-center">
-                    <img
-                      src={paymentResult.pix.qrCodeBase64.startsWith("data:") ? paymentResult.pix.qrCodeBase64 : `data:image/png;base64,${paymentResult.pix.qrCodeBase64}`}
-                      alt="QR Code PIX"
-                      className="w-48 h-48 rounded-lg border border-border shadow-sm"
-                    />
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Input value={paymentResult.pix.qrCode} readOnly className="text-xs font-mono" />
-                  <Button size="icon" variant="outline" onClick={() => copyToClipboard(paymentResult.pix.qrCode)}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">Copie o código ou escaneie o QR Code para pagar</p>
-              </div>
-              {countdown <= 0 && (
-                <Button className="w-full" variant="outline" onClick={() => { setPaymentResult(null); processPayment.mutate(); }}>
-                  <QrCode className="h-4 w-4 mr-2" /> Gerar novo QR Code
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Payment method selection */}
-              <div className="flex gap-2">
-                {(gatewayInfo?.methods || ["PIX"]).map((m) => (
-                  <Button
-                    key={m}
-                    variant={selectedMethod === m ? "default" : "outline"}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setSelectedMethod(m as PaymentMethod)}
-                  >
-                    {m === "PIX" ? "💰 PIX" : m === "CREDIT_CARD" ? "💳 Cartão" : "📄 Boleto"}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-foreground">CPF</label>
-                  <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg bg-muted/50 border border-border/60 text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-muted-foreground">Plano</span><span className="font-medium">{checkoutDialog?.planName}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Valor</span><span className="font-bold text-foreground">{checkoutDialog && formatPrice(checkoutDialog.price)}/mês</span></div>
-              </div>
-
-              <Button className="w-full h-11" disabled={!cpf.trim() || processPayment.isPending} onClick={() => processPayment.mutate()}>
-                {processPayment.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
-                {selectedMethod === "PIX" ? "Gerar QR Code PIX" : "Pagar"} — {checkoutDialog && formatPrice(checkoutDialog.price)}
-              </Button>
-
-              <p className="text-[10px] text-center text-muted-foreground">
-                🔒 Pagamento seguro e processado pelo gateway da plataforma
-              </p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Checkout Modal */}
+      {checkoutDialog && user && (
+        <PlanCheckoutModal
+          open={!!checkoutDialog}
+          onOpenChange={(o) => { if (!o) setCheckoutDialog(null); }}
+          planId={checkoutDialog.planId}
+          planName={checkoutDialog.planName}
+          planPrice={checkoutDialog.price}
+          userId={user.id}
+          availableMethods={gatewayInfo?.methods || ["PIX"]}
+        />
+      )}
     </div>
   );
 }
