@@ -25,8 +25,6 @@ const CATEGORY_ICONS: Record<string, any> = {
   basic: Package, design: Palette, marketing: ShoppingCart, advanced: Code, ai: Bot, enterprise: Shield,
 };
 
-type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
-
 export default function MeuPlano() {
   const { user } = useAuth();
   const { ctx, subscription, plan: currentPlan } = useTenantContext();
@@ -34,15 +32,6 @@ export default function MeuPlano() {
   const queryClient = useQueryClient();
 
   const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
-  const [cpf, setCpf] = useState("");
-  const [payerName, setPayerName] = useState("");
-  const [payerEmail, setPayerEmail] = useState("");
-  const [paymentResult, setPaymentResult] = useState<any>(null);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: gatewayInfo } = useQuery({
     queryKey: ["plan_gateway_info"],
@@ -72,36 +61,6 @@ export default function MeuPlano() {
   });
 
   const gatewayActive = !!gatewayInfo?.gateway;
-
-  // Confetti on payment success
-  useEffect(() => {
-    if (paymentConfirmed) {
-      const end = Date.now() + 3000;
-      const frame = () => {
-        confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-        confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
-    }
-  }, [paymentConfirmed]);
-
-  // Countdown timer for PIX
-  useEffect(() => {
-    if (countdown <= 0 && countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
-  }, [countdown]);
-
-  // Cleanup polling
-  useEffect(() => {
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
-  }, []);
 
   const requestChange = useMutation({
     mutationFn: async ({ planId, type }: { planId: string; type: "upgrade" | "downgrade" }) => {
