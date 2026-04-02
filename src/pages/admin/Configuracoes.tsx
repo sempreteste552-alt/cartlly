@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +17,10 @@ import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useSt
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import StoreAppearanceSettings from "@/components/admin/StoreAppearanceSettings";
+import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
+import MarketingConversionSettings from "@/components/admin/MarketingConversionSettings";
+import ProductPageSettings from "@/components/admin/ProductPageSettings";
 
 
 function AccountEmailChanger() {
@@ -89,9 +94,7 @@ function AccountPasswordChanger() {
   );
 }
 
-
-
-export default function Configuracoes() {
+function GeneralSettingsTab() {
   const { user } = useAuth();
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
@@ -129,13 +132,11 @@ export default function Configuracoes() {
   const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#ffffff");
-  // Marquee
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
   const [marqueeText, setMarqueeText] = useState("");
   const [marqueeSpeed, setMarqueeSpeed] = useState(50);
   const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
   const [marqueeTextColor, setMarqueeTextColor] = useState("#ffffff");
-  // Welcome coupon
   const [welcomeCouponEnabled, setWelcomeCouponEnabled] = useState(false);
   const [welcomeCouponDiscountType, setWelcomeCouponDiscountType] = useState("percentage");
   const [welcomeCouponDiscountValue, setWelcomeCouponDiscountValue] = useState(10);
@@ -254,12 +255,7 @@ export default function Configuracoes() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Configurações da Loja</h1>
-        <p className="text-muted-foreground">Personalize a aparência e dados da sua loja</p>
-      </div>
-
+    <div className="space-y-6">
       {/* Store Open/Closed */}
       <Card className="border-border">
         <CardContent className="flex items-center justify-between p-4">
@@ -277,7 +273,7 @@ export default function Configuracoes() {
         </CardContent>
       </Card>
 
-      {/* Marquee / Letreiro */}
+      {/* Marquee */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
@@ -314,7 +310,6 @@ export default function Configuracoes() {
                   </div>
                 </div>
               </div>
-              {/* Preview */}
               <div className="rounded-lg overflow-hidden border border-border">
                 <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
                   <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
@@ -360,7 +355,6 @@ export default function Configuracoes() {
           <div className="space-y-2">
             <Label>Tamanho da Logo ({logoSize}px)</Label>
             <Slider value={[logoSize]} onValueChange={([v]) => setLogoSize(v)} min={24} max={120} step={4} />
-            <p className="text-xs text-muted-foreground">Altura da logo no cabeçalho da loja</p>
           </div>
         </CardContent>
       </Card>
@@ -405,12 +399,12 @@ export default function Configuracoes() {
             <div className="space-y-2"><Label>WhatsApp</Label><Input value={storeWhatsapp} onChange={(e) => setStoreWhatsapp(e.target.value)} placeholder="5511999999999" maxLength={20} /></div>
           </div>
           <div className="space-y-2"><Label>Endereço</Label><Input value={storeAddress} onChange={(e) => setStoreAddress(e.target.value)} placeholder="Rua, número, cidade - UF" maxLength={300} /></div>
-          <div className="space-y-2"><Label>Localização (exibida no topo)</Label><Input value={storeLocation} onChange={(e) => setStoreLocation(e.target.value)} placeholder="São Paulo, SP" maxLength={100} /></div>
+          <div className="space-y-2"><Label>Localização</Label><Input value={storeLocation} onChange={(e) => setStoreLocation(e.target.value)} placeholder="São Paulo, SP" maxLength={100} /></div>
           <div className="space-y-2"><Label>Link Google Maps</Label><Input value={googleMapsUrl} onChange={(e) => setGoogleMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." maxLength={500} /></div>
         </CardContent>
       </Card>
 
-      {/* Social URLs */}
+      {/* Social */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Share2 className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Redes Sociais</CardTitle></div>
@@ -435,7 +429,6 @@ export default function Configuracoes() {
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
-          <CardDescription>Personalize as cores de toda a vitrine</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
@@ -453,7 +446,6 @@ export default function Configuracoes() {
               </div>
             ))}
           </div>
-
           <Separator />
           <p className="text-sm font-medium text-foreground">Botões</p>
           <div className="grid grid-cols-2 gap-4">
@@ -470,14 +462,10 @@ export default function Configuracoes() {
               </div>
             ))}
           </div>
-          {/* Button Preview */}
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground">Preview:</span>
-            <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>
-              Comprar Agora
-            </button>
+            <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>Comprar Agora</button>
           </div>
-
           <Separator />
           <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
           <div className="grid grid-cols-3 gap-4">
@@ -525,48 +513,28 @@ export default function Configuracoes() {
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /><CardTitle className="text-lg">URL e Domínio</CardTitle></div>
-          <CardDescription>Configure o endereço da sua loja</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Slug */}
           <div className="space-y-2">
             <Label>Slug da Loja</Label>
             <div className="flex items-center gap-0">
               <span className="inline-flex h-10 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
-              <Input
-                value={storeSlug}
-                onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                placeholder="minha-loja"
-                maxLength={50}
-                className="rounded-l-none"
-              />
+              <Input value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="minha-loja" maxLength={50} className="rounded-l-none" />
             </div>
             {storeSlug && (
-              <p className="text-xs text-muted-foreground">
-                Acessível em: <span className="font-mono font-medium text-primary">{window.location.origin}/loja/{storeSlug}</span>
-              </p>
+              <p className="text-xs text-muted-foreground">Acessível em: <span className="font-mono font-medium text-primary">{window.location.origin}/loja/{storeSlug}</span></p>
             )}
           </div>
-
         </CardContent>
       </Card>
 
-      {/* Domain Connector Wizard */}
-      <DomainConnector
-        settingsId={settings?.id}
-        currentDomain={customDomain}
-        domainStatus={(settings as any)?.domain_status || "none"}
-        lastCheck={(settings as any)?.domain_last_check}
-        storeSlug={storeSlug}
-        onDomainChange={setCustomDomain}
-        onSave={handleSave}
-      />
+      <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
 
-      {/* Welcome Coupon for New Customers */}
+      {/* Welcome Coupon */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
-          <CardDescription>Gere automaticamente um cupom de desconto para novos clientes que se cadastrarem</CardDescription>
+          <CardDescription>Gere automaticamente um cupom de desconto para novos clientes</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -604,19 +572,16 @@ export default function Configuracoes() {
                   <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} min={1} />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                O cliente receberá um cupom único (ex: BV-ABC123) ao se cadastrar, válido por {welcomeCouponExpiresDays} dia(s).
-              </p>
+              <p className="text-xs text-muted-foreground">O cliente receberá um cupom único ao se cadastrar, válido por {welcomeCouponExpiresDays} dia(s).</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Account Settings - Change Email & Password */}
+      {/* Account */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Conta e Segurança</CardTitle></div>
-          <CardDescription>Altere seu e-mail ou senha de acesso</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-lg border border-border p-3">
@@ -626,7 +591,6 @@ export default function Configuracoes() {
             </div>
             <p className="text-sm text-muted-foreground ml-6">{user?.email || "—"}</p>
           </div>
-
           <AccountEmailChanger />
           <Separator />
           <AccountPasswordChanger />
@@ -639,6 +603,63 @@ export default function Configuracoes() {
           Salvar Configurações
         </Button>
       </div>
+    </div>
+  );
+}
+
+
+export default function Configuracoes() {
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Configurações da Loja</h1>
+        <p className="text-muted-foreground">Personalize a aparência, funcionalidades e marketing da sua loja</p>
+      </div>
+
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsTrigger value="general" className="flex items-center gap-1.5 text-xs py-2">
+            <Store className="h-4 w-4" />
+            <span className="hidden sm:inline">Geral</span>
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="flex items-center gap-1.5 text-xs py-2">
+            <Type className="h-4 w-4" />
+            <span className="hidden sm:inline">Aparência</span>
+          </TabsTrigger>
+          <TabsTrigger value="home" className="flex items-center gap-1.5 text-xs py-2">
+            <LayoutDashboard className="h-4 w-4" />
+            <span className="hidden sm:inline">Home</span>
+          </TabsTrigger>
+          <TabsTrigger value="product" className="flex items-center gap-1.5 text-xs py-2">
+            <ShoppingBag className="h-4 w-4" />
+            <span className="hidden sm:inline">Produto</span>
+          </TabsTrigger>
+          <TabsTrigger value="marketing" className="flex items-center gap-1.5 text-xs py-2">
+            <TrendingUp className="h-4 w-4" />
+            <span className="hidden sm:inline">Marketing</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="mt-6">
+          <GeneralSettingsTab />
+        </TabsContent>
+
+        <TabsContent value="appearance" className="mt-6">
+          <StoreAppearanceSettings />
+        </TabsContent>
+
+        <TabsContent value="home" className="mt-6">
+          <HomeBuilderManager />
+        </TabsContent>
+
+        <TabsContent value="product" className="mt-6">
+          <ProductPageSettings />
+        </TabsContent>
+
+        <TabsContent value="marketing" className="mt-6">
+          <MarketingConversionSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
