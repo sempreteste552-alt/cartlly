@@ -1090,6 +1090,150 @@ export type Database = {
         }
         Relationships: []
       }
+      store_home_sections: {
+        Row: {
+          button_link: string | null
+          button_text: string | null
+          config: Json
+          created_at: string
+          description: string | null
+          desktop_visible: boolean
+          enabled: boolean
+          id: string
+          image_url: string | null
+          mobile_visible: boolean
+          section_type: string
+          sort_order: number
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          button_link?: string | null
+          button_text?: string | null
+          config?: Json
+          created_at?: string
+          description?: string | null
+          desktop_visible?: boolean
+          enabled?: boolean
+          id?: string
+          image_url?: string | null
+          mobile_visible?: boolean
+          section_type: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          button_link?: string | null
+          button_text?: string | null
+          config?: Json
+          created_at?: string
+          description?: string | null
+          desktop_visible?: boolean
+          enabled?: boolean
+          id?: string
+          image_url?: string | null
+          mobile_visible?: boolean
+          section_type?: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      store_marketing_config: {
+        Row: {
+          announcement_bar_bg_color: string
+          announcement_bar_enabled: boolean
+          announcement_bar_link: string | null
+          announcement_bar_text: string | null
+          announcement_bar_text_color: string
+          countdown_bg_color: string
+          countdown_enabled: boolean
+          countdown_end_date: string | null
+          countdown_text: string | null
+          countdown_text_color: string
+          created_at: string
+          free_shipping_bar_color: string
+          free_shipping_bar_enabled: boolean
+          free_shipping_threshold: number
+          id: string
+          popup_coupon_code: string | null
+          popup_coupon_delay_seconds: number
+          popup_coupon_description: string | null
+          popup_coupon_enabled: boolean
+          popup_coupon_image_url: string | null
+          popup_coupon_title: string | null
+          trust_badges: Json
+          trust_badges_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_bar_bg_color?: string
+          announcement_bar_enabled?: boolean
+          announcement_bar_link?: string | null
+          announcement_bar_text?: string | null
+          announcement_bar_text_color?: string
+          countdown_bg_color?: string
+          countdown_enabled?: boolean
+          countdown_end_date?: string | null
+          countdown_text?: string | null
+          countdown_text_color?: string
+          created_at?: string
+          free_shipping_bar_color?: string
+          free_shipping_bar_enabled?: boolean
+          free_shipping_threshold?: number
+          id?: string
+          popup_coupon_code?: string | null
+          popup_coupon_delay_seconds?: number
+          popup_coupon_description?: string | null
+          popup_coupon_enabled?: boolean
+          popup_coupon_image_url?: string | null
+          popup_coupon_title?: string | null
+          trust_badges?: Json
+          trust_badges_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_bar_bg_color?: string
+          announcement_bar_enabled?: boolean
+          announcement_bar_link?: string | null
+          announcement_bar_text?: string | null
+          announcement_bar_text_color?: string
+          countdown_bg_color?: string
+          countdown_enabled?: boolean
+          countdown_end_date?: string | null
+          countdown_text?: string | null
+          countdown_text_color?: string
+          created_at?: string
+          free_shipping_bar_color?: string
+          free_shipping_bar_enabled?: boolean
+          free_shipping_threshold?: number
+          id?: string
+          popup_coupon_code?: string | null
+          popup_coupon_delay_seconds?: number
+          popup_coupon_description?: string | null
+          popup_coupon_enabled?: boolean
+          popup_coupon_image_url?: string | null
+          popup_coupon_title?: string | null
+          trust_badges?: Json
+          trust_badges_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_pages: {
         Row: {
           content: string
@@ -1121,6 +1265,75 @@ export type Database = {
           slug?: string
           sort_order?: number
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      store_product_page_config: {
+        Row: {
+          created_at: string
+          delivery_estimation_text: string
+          enable_buy_together: boolean
+          enable_category_best_sellers: boolean
+          enable_delivery_estimation: boolean
+          enable_faq: boolean
+          enable_image_zoom: boolean
+          enable_recently_viewed: boolean
+          enable_related_products: boolean
+          enable_reviews: boolean
+          enable_size_guide: boolean
+          enable_sticky_add_to_cart: boolean
+          enable_stock_urgency: boolean
+          enable_trust_badges: boolean
+          enable_video_gallery: boolean
+          id: string
+          size_guide_content: string | null
+          stock_urgency_threshold: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_estimation_text?: string
+          enable_buy_together?: boolean
+          enable_category_best_sellers?: boolean
+          enable_delivery_estimation?: boolean
+          enable_faq?: boolean
+          enable_image_zoom?: boolean
+          enable_recently_viewed?: boolean
+          enable_related_products?: boolean
+          enable_reviews?: boolean
+          enable_size_guide?: boolean
+          enable_sticky_add_to_cart?: boolean
+          enable_stock_urgency?: boolean
+          enable_trust_badges?: boolean
+          enable_video_gallery?: boolean
+          id?: string
+          size_guide_content?: string | null
+          stock_urgency_threshold?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_estimation_text?: string
+          enable_buy_together?: boolean
+          enable_category_best_sellers?: boolean
+          enable_delivery_estimation?: boolean
+          enable_faq?: boolean
+          enable_image_zoom?: boolean
+          enable_recently_viewed?: boolean
+          enable_related_products?: boolean
+          enable_reviews?: boolean
+          enable_size_guide?: boolean
+          enable_sticky_add_to_cart?: boolean
+          enable_stock_urgency?: boolean
+          enable_trust_badges?: boolean
+          enable_video_gallery?: boolean
+          id?: string
+          size_guide_content?: string | null
+          stock_urgency_threshold?: number
           updated_at?: string
           user_id?: string
         }
@@ -1318,6 +1531,63 @@ export type Database = {
           welcome_coupon_expires_days?: number
           welcome_coupon_min_order?: number | null
           youtube_url?: string | null
+        }
+        Relationships: []
+      }
+      store_theme_config: {
+        Row: {
+          card_border_radius: number
+          card_shadow: string
+          created_at: string
+          custom_css: string | null
+          favicon_url: string | null
+          font_body: string
+          font_heading: string
+          footer_style: string
+          header_style: string
+          id: string
+          layout_width: string
+          product_grid_columns: number
+          product_grid_columns_mobile: number
+          product_grid_gap: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_border_radius?: number
+          card_shadow?: string
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          font_body?: string
+          font_heading?: string
+          footer_style?: string
+          header_style?: string
+          id?: string
+          layout_width?: string
+          product_grid_columns?: number
+          product_grid_columns_mobile?: number
+          product_grid_gap?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_border_radius?: number
+          card_shadow?: string
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          font_body?: string
+          font_heading?: string
+          footer_style?: string
+          header_style?: string
+          id?: string
+          layout_width?: string
+          product_grid_columns?: number
+          product_grid_columns_mobile?: number
+          product_grid_gap?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
