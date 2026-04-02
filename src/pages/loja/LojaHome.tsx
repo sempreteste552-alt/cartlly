@@ -12,6 +12,7 @@ import { ShoppingCart, Star, Share2, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
+import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { toast } from "sonner";
 
 export default function LojaHome() {
@@ -66,7 +67,15 @@ export default function LojaHome() {
   const basePath = slug ? `/loja/${slug}` : "/loja";
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Dynamic Premium Sections */}
+      <DynamicHomeSections
+        storeUserId={storeUserId}
+        products={products || []}
+        settings={settings}
+        cart={cart}
+        basePath={basePath}
+      />
       {banners && banners.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 pt-4">
           <Carousel opts={{ loop: true }} className="w-full">

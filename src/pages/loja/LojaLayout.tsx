@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
+import { AnnouncementBar, FreeShippingBar, PopupCoupon } from "@/components/storefront/MarketingWidgets";
 import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -164,9 +166,14 @@ export default function LojaLayout() {
   const isCheckout = location.pathname.includes("/checkout");
   const isRastreio = location.pathname.includes("/rastreio");
 
+  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
       <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
+        {/* Marketing: Announcement Bar */}
+        {marketingConfig && <AnnouncementBar config={marketingConfig} />}
+
         {/* Marquee ticker */}
         {settings?.marquee_enabled && settings?.marquee_text && (
           <StoreMarquee
@@ -176,6 +183,12 @@ export default function LojaLayout() {
             textColor={settings.marquee_text_color}
           />
         )}
+
+        {/* Marketing: Free Shipping Bar */}
+        {marketingConfig && <FreeShippingBar config={marketingConfig} cartTotal={cart.total} />}
+
+        {/* Marketing: Popup Coupon */}
+        {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
         {/* Top bar */}
         <div className="text-white text-xs py-1" style={{ backgroundColor: primaryColor }}>
