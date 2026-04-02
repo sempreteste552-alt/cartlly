@@ -12,6 +12,7 @@ import { ShoppingCart, Star, Share2, Heart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
+import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { toast } from "sonner";
 
 export default function LojaHome() {
