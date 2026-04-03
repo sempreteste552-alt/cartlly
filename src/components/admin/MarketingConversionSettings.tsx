@@ -9,12 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Megaphone, Gift, Timer, Truck, ShieldCheck } from "lucide-react";
 import { useStoreMarketingConfig, useUpdateStoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { PlanLockedSection } from "@/components/admin/PlanLockedSection";
 
 export default function MarketingConversionSettings() {
   const { data: config, isLoading } = useStoreMarketingConfig();
   const updateConfig = useUpdateStoreMarketingConfig();
-  const { isLocked } = usePlanFeatures();
 
   const [announcementEnabled, setAnnouncementEnabled] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
@@ -97,6 +96,7 @@ export default function MarketingConversionSettings() {
   return (
     <div className="space-y-6">
       {/* Announcement Bar */}
+      <PlanLockedSection minPlan="STARTER" featureName="Barra de anúncio">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -147,8 +147,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       {/* Popup Coupon */}
+      <PlanLockedSection minPlan="PREMIUM" featureName="Popup de cupom">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -187,8 +189,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       {/* Countdown Banner */}
+      <PlanLockedSection minPlan="PRO" featureName="Contagem regressiva">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -233,8 +237,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       {/* Free Shipping Bar */}
+      <PlanLockedSection minPlan="PRO" featureName="Barra de frete grátis">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -273,8 +279,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       {/* Trust Badges */}
+      <PlanLockedSection minPlan="STARTER" featureName="Selos de confiança">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -291,6 +299,7 @@ export default function MarketingConversionSettings() {
           </div>
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateConfig.isPending} size="lg">
