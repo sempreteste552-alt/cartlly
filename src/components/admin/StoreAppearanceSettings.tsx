@@ -260,27 +260,12 @@ export default function StoreAppearanceSettings() {
           <CardDescription>Adicione CSS customizado à sua loja (avançado)</CardDescription>
         </CardHeader>
         <CardContent>
-          {false ? (
-            <div className="relative">
-              <Textarea
-                value={customCss}
-                onChange={(e) => setCustomCss(e.target.value)}
-                placeholder={`.my-class {\n  color: red;\n}`}
-                className="font-mono text-xs min-h-[120px]"
-                disabled
-              />
-              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center rounded-md">
-                <p className="text-sm text-muted-foreground">Disponível no plano Premium</p>
-              </div>
-            </div>
-          ) : (
-            <Textarea
-              value={customCss}
-              onChange={(e) => setCustomCss(e.target.value)}
-              placeholder={`.my-class {\n  color: red;\n}`}
-              className="font-mono text-xs min-h-[120px]"
-            />
-          )}
+          <Textarea
+            value={customCss}
+            onChange={(e) => setCustomCss(e.target.value)}
+            placeholder={`.my-class {\n  color: red;\n}`}
+            className="font-mono text-xs min-h-[120px]"
+          />
         </CardContent>
       </Card>
       </PlanLockedSection>
