@@ -10,8 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Type, Layers, LayoutGrid, Monitor } from "lucide-react";
 import { useStoreThemeConfig, useUpdateStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
-import { LockedFeature } from "@/components/LockedFeature";
+import { PlanLockedSection } from "@/components/admin/PlanLockedSection";
 
 const FONT_OPTIONS = [
   "Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Playfair Display",
@@ -42,7 +41,6 @@ const FOOTER_STYLES = [
 export default function StoreAppearanceSettings() {
   const { data: config, isLoading } = useStoreThemeConfig();
   const updateConfig = useUpdateStoreThemeConfig();
-  const { isLocked } = usePlanFeatures();
 
   const [fontHeading, setFontHeading] = useState("Inter");
   const [fontBody, setFontBody] = useState("Inter");
@@ -93,8 +91,6 @@ export default function StoreAppearanceSettings() {
   if (isLoading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
-  const isPremiumDesign = isLocked("custom_domain"); // PRO+ proxy
 
   return (
     <div className="space-y-6">
@@ -254,6 +250,7 @@ export default function StoreAppearanceSettings() {
       </Card>
 
       {/* Custom CSS - PREMIUM only */}
+      <PlanLockedSection minPlan="PREMIUM" featureName="CSS personalizado">
       <Card className="border-border relative">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -263,7 +260,7 @@ export default function StoreAppearanceSettings() {
           <CardDescription>Adicione CSS customizado à sua loja (avançado)</CardDescription>
         </CardHeader>
         <CardContent>
-          {isPremiumDesign ? (
+          {false ? (
             <div className="relative">
               <Textarea
                 value={customCss}
@@ -286,6 +283,7 @@ export default function StoreAppearanceSettings() {
           )}
         </CardContent>
       </Card>
+      </PlanLockedSection>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateConfig.isPending} size="lg">
