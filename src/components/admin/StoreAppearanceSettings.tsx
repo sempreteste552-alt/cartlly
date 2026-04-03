@@ -10,7 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Type, Layers, LayoutGrid, Monitor } from "lucide-react";
 import { useStoreThemeConfig, useUpdateStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
-import { PlanLockedSection } from "@/components/admin/PlanLockedSection";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { LockedFeature } from "@/components/LockedFeature";
 
 const FONT_OPTIONS = [
   "Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Playfair Display",
@@ -41,6 +42,7 @@ const FOOTER_STYLES = [
 export default function StoreAppearanceSettings() {
   const { data: config, isLoading } = useStoreThemeConfig();
   const updateConfig = useUpdateStoreThemeConfig();
+  const { isLocked } = usePlanFeatures();
 
   const [fontHeading, setFontHeading] = useState("Inter");
   const [fontBody, setFontBody] = useState("Inter");
@@ -91,6 +93,8 @@ export default function StoreAppearanceSettings() {
   if (isLoading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+
+  const isPremiumDesign = isLocked("custom_domain"); // PRO+ proxy
 
   return (
     <div className="space-y-6">
@@ -250,7 +254,6 @@ export default function StoreAppearanceSettings() {
       </Card>
 
       {/* Custom CSS - PREMIUM only */}
-      <PlanLockedSection minPlan="PREMIUM" featureName="CSS personalizado">
       <Card className="border-border relative">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -260,15 +263,29 @@ export default function StoreAppearanceSettings() {
           <CardDescription>Adicione CSS customizado à sua loja (avançado)</CardDescription>
         </CardHeader>
         <CardContent>
-          <Textarea
-            value={customCss}
-            onChange={(e) => setCustomCss(e.target.value)}
-            placeholder={`.my-class {\n  color: red;\n}`}
-            className="font-mono text-xs min-h-[120px]"
-          />
+          {isPremiumDesign ? (
+            <div className="relative">
+              <Textarea
+                value={customCss}
+                onChange={(e) => setCustomCss(e.target.value)}
+                placeholder={`.my-class {\n  color: red;\n}`}
+                className="font-mono text-xs min-h-[120px]"
+                disabled
+              />
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center rounded-md">
+                <p className="text-sm text-muted-foreground">Disponível no plano Premium</p>
+              </div>
+            </div>
+          ) : (
+            <Textarea
+              value={customCss}
+              onChange={(e) => setCustomCss(e.target.value)}
+              placeholder={`.my-class {\n  color: red;\n}`}
+              className="font-mono text-xs min-h-[120px]"
+            />
+          )}
         </CardContent>
       </Card>
-      </PlanLockedSection>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateConfig.isPending} size="lg">

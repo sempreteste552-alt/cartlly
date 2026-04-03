@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Video, ZoomIn, ShoppingCart, Star, HelpCircle, Ruler, Package, ShoppingBag, Eye, TrendingUp, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 import { useStoreProductPageConfig, useUpdateStoreProductPageConfig } from "@/hooks/useStoreProductPageConfig";
-import { PlanLockedSection } from "@/components/admin/PlanLockedSection";
 
 interface FeatureToggleProps {
   icon: React.ReactNode;
@@ -126,9 +125,7 @@ export default function ProductPageSettings() {
           <CardDescription>Configure como as imagens e vídeos aparecem na página do produto</CardDescription>
         </CardHeader>
         <CardContent className="divide-y divide-border">
-          <PlanLockedSection minPlan="PRO" featureName="Galeria de vídeo" compact>
           <FeatureToggle icon={<Video className="h-4 w-4" />} label="Galeria de Vídeo" description="Permite adicionar vídeos na galeria do produto" checked={videoGallery} onCheckedChange={setVideoGallery} badge="PRO+" />
-          </PlanLockedSection>
           <FeatureToggle icon={<ZoomIn className="h-4 w-4" />} label="Zoom na Imagem" description="Zoom ao passar o mouse sobre a imagem" checked={imageZoom} onCheckedChange={setImageZoom} />
         </CardContent>
       </Card>
@@ -140,12 +137,8 @@ export default function ProductPageSettings() {
           <CardDescription>Ferramentas para aumentar a conversão</CardDescription>
         </CardHeader>
         <CardContent className="divide-y divide-border">
-          <PlanLockedSection minPlan="PRO" featureName="Botão fixo de compra" compact>
           <FeatureToggle icon={<ShoppingCart className="h-4 w-4" />} label="Botão Fixo de Compra" description="Botão 'Adicionar ao Carrinho' fixo na tela ao rolar" checked={stickyCart} onCheckedChange={setStickyCart} badge="PRO+" />
-          </PlanLockedSection>
-          <PlanLockedSection minPlan="PREMIUM" featureName="Compre junto" compact>
           <FeatureToggle icon={<ShoppingBag className="h-4 w-4" />} label="Compre Junto" description="Sugere produtos para comprar junto com desconto" checked={buyTogether} onCheckedChange={setBuyTogether} badge="PREMIUM" badgeColor="bg-gradient-to-r from-amber-500 to-orange-500 text-white" />
-          </PlanLockedSection>
         </CardContent>
       </Card>
 
@@ -156,15 +149,9 @@ export default function ProductPageSettings() {
           <CardDescription>Avaliações e informações que geram confiança</CardDescription>
         </CardHeader>
         <CardContent className="divide-y divide-border">
-          <PlanLockedSection minPlan="STARTER" featureName="Avaliações" compact>
           <FeatureToggle icon={<Star className="h-4 w-4" />} label="Avaliações" description="Exibir avaliações de clientes" checked={reviews} onCheckedChange={setReviews} badge="STARTER+" />
-          </PlanLockedSection>
-          <PlanLockedSection minPlan="STARTER" featureName="Selos de confiança" compact>
           <FeatureToggle icon={<ShieldCheck className="h-4 w-4" />} label="Selos de Confiança" description="Selos de segurança e garantia" checked={trustBadges} onCheckedChange={setTrustBadges} badge="STARTER+" />
-          </PlanLockedSection>
-          <PlanLockedSection minPlan="PRO" featureName="Urgência de estoque" compact>
           <FeatureToggle icon={<AlertTriangle className="h-4 w-4" />} label="Urgência de Estoque" description="Exibe 'Últimas X unidades!' quando estoque baixo" checked={stockUrgency} onCheckedChange={setStockUrgency} badge="PRO+" />
-          </PlanLockedSection>
           {stockUrgency && (
             <div className="py-3 pl-12">
               <Label className="text-xs">Exibir alerta quando estoque ≤</Label>
@@ -181,12 +168,8 @@ export default function ProductPageSettings() {
           <CardDescription>FAQ, guia de tamanhos e estimativa de entrega</CardDescription>
         </CardHeader>
         <CardContent className="divide-y divide-border">
-          <PlanLockedSection minPlan="PRO" featureName="FAQ do produto" compact>
           <FeatureToggle icon={<HelpCircle className="h-4 w-4" />} label="FAQ do Produto" description="Perguntas frequentes no produto" checked={faq} onCheckedChange={setFaq} badge="PRO+" />
-          </PlanLockedSection>
-          <PlanLockedSection minPlan="PRO" featureName="Guia de tamanhos" compact>
           <FeatureToggle icon={<Ruler className="h-4 w-4" />} label="Guia de Tamanhos" description="Tabela de medidas para roupas/sapatos" checked={sizeGuide} onCheckedChange={setSizeGuide} badge="PRO+" />
-          </PlanLockedSection>
           {sizeGuide && (
             <div className="py-3 pl-12">
               <Label className="text-xs">Conteúdo do Guia</Label>
@@ -211,12 +194,8 @@ export default function ProductPageSettings() {
         </CardHeader>
         <CardContent className="divide-y divide-border">
           <FeatureToggle icon={<Package className="h-4 w-4" />} label="Produtos Relacionados" description="Mostra produtos da mesma categoria" checked={relatedProducts} onCheckedChange={setRelatedProducts} />
-          <PlanLockedSection minPlan="PRO" featureName="Vistos recentemente" compact>
           <FeatureToggle icon={<Eye className="h-4 w-4" />} label="Vistos Recentemente" description="Produtos que o cliente visualizou" checked={recentlyViewed} onCheckedChange={setRecentlyViewed} badge="PRO+" />
-          </PlanLockedSection>
-          <PlanLockedSection minPlan="PREMIUM" featureName="Mais vendidos da categoria" compact>
           <FeatureToggle icon={<TrendingUp className="h-4 w-4" />} label="Mais Vendidos da Categoria" description="Top vendas da categoria atual" checked={categoryBestSellers} onCheckedChange={setCategoryBestSellers} badge="PREMIUM" badgeColor="bg-gradient-to-r from-amber-500 to-orange-500 text-white" />
-          </PlanLockedSection>
         </CardContent>
       </Card>
 

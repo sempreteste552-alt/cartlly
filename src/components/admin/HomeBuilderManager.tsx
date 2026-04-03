@@ -18,7 +18,6 @@ import {
   SECTION_TYPES,
   type StoreHomeSection,
 } from "@/hooks/useStoreHomeSections";
-import { PlanLockedSection } from "@/components/admin/PlanLockedSection";
 
 function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClose: () => void }) {
   const updateSection = useUpdateHomeSection();
@@ -155,7 +154,6 @@ export default function HomeBuilderManager() {
   }
 
   return (
-    <PlanLockedSection minPlan="PRO" featureName="Editor visual da home">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -255,6 +253,5 @@ export default function HomeBuilderManager() {
         </DialogContent>
       </Dialog>
     </div>
-    </PlanLockedSection>
   );
 }
