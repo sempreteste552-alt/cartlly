@@ -176,7 +176,15 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
-      <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
+      <div 
+        className="min-h-screen text-foreground pb-16 md:pb-0 transition-colors"
+        style={{ 
+          backgroundColor: (settings as any).page_bg_color || "#ffffff",
+          // The linear-gradient is used to create a "tint" effect if the color is anything other than white
+          // We mix the chosen background color with a bit of white to ensure readability
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9))`
+        }}
+      >
         {/* Marketing: Announcement Bar */}
         {marketingConfig && <AnnouncementBar config={marketingConfig} />}
 
