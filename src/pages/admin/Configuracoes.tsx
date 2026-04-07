@@ -155,6 +155,7 @@ function GeneralSettingsTab() {
       setLogoUrl(settings.logo_url ?? "");
       setLogoSize((settings as any).logo_size ?? 32);
       setPrimaryColor(settings.primary_color);
+      setPageBgColor((settings as any).page_bg_color ?? "#ffffff");
       setSecondaryColor(settings.secondary_color);
       setAccentColor(settings.accent_color);
       setCustomDomain(settings.custom_domain ?? "");
