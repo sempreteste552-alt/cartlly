@@ -59,9 +59,10 @@ export default function LojaLayout() {
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
-  // Apply dark class on <html> for store scope and remove on unmount
+  // Apply dark class based on user preference or store setting
   useEffect(() => {
-    if (storeDark) {
+    const isDark = settings?.theme_mode === 'dark' || storeDark;
+    if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
@@ -69,7 +70,7 @@ export default function LojaLayout() {
     return () => {
       document.documentElement.classList.remove("dark");
     };
-  }, [storeDark]);
+  }, [storeDark, settings?.theme_mode]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
