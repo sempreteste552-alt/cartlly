@@ -1539,6 +1539,7 @@ export type Database = {
       }
       store_theme_config: {
         Row: {
+          background_color: string | null
           card_border_radius: number
           card_shadow: string
           created_at: string
@@ -1550,13 +1551,18 @@ export type Database = {
           header_style: string
           id: string
           layout_width: string
+          primary_color: string | null
           product_grid_columns: number
           product_grid_columns_mobile: number
           product_grid_gap: number
+          secondary_color: string | null
+          text_color: string | null
+          theme_mode: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          background_color?: string | null
           card_border_radius?: number
           card_shadow?: string
           created_at?: string
@@ -1568,13 +1574,18 @@ export type Database = {
           header_style?: string
           id?: string
           layout_width?: string
+          primary_color?: string | null
           product_grid_columns?: number
           product_grid_columns_mobile?: number
           product_grid_gap?: number
+          secondary_color?: string | null
+          text_color?: string | null
+          theme_mode?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          background_color?: string | null
           card_border_radius?: number
           card_shadow?: string
           created_at?: string
@@ -1586,9 +1597,13 @@ export type Database = {
           header_style?: string
           id?: string
           layout_width?: string
+          primary_color?: string | null
           product_grid_columns?: number
           product_grid_columns_mobile?: number
           product_grid_gap?: number
+          secondary_color?: string | null
+          text_color?: string | null
+          theme_mode?: string | null
           updated_at?: string
           user_id?: string
         }

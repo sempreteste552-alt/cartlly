@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon } from "@/components/storefront/MarketingWidgets";
-import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
@@ -55,13 +55,15 @@ export default function LojaLayout() {
   const settings = settingsBySlug;
   const isLoading = slugLoading;
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+  const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
-  // Apply dark class on <html> for store scope and remove on unmount
+  // Apply dark class based on user preference or store setting
   useEffect(() => {
-    if (storeDark) {
+    const isDark = themeConfig?.theme_mode === 'dark' || storeDark;
+    if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
@@ -69,7 +71,7 @@ export default function LojaLayout() {
     return () => {
       document.documentElement.classList.remove("dark");
     };
-  }, [storeDark]);
+  }, [storeDark, themeConfig?.theme_mode]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -79,17 +81,22 @@ export default function LojaLayout() {
 
   // Apply store colors as CSS custom properties for the entire store
   useEffect(() => {
-    if (settings) {
+    if (settings || themeConfig) {
       const root = document.documentElement;
-      root.style.setProperty("--store-primary", settings.primary_color || "#6d28d9");
-      root.style.setProperty("--store-secondary", settings.secondary_color || "#f5f3ff");
-      root.style.setProperty("--store-accent", settings.accent_color || "#8b5cf6");
-      root.style.setProperty("--store-button-bg", settings.button_color || "#000000");
-      root.style.setProperty("--store-button-text", settings.button_text_color || "#ffffff");
       
-      // Calculate a very light version of the background color for tinting
-      const bgColor = (settings as any).page_bg_color || "#ffffff";
-      root.style.setProperty("--store-bg-base", bgColor);
+      // Use theme config if available, fallback to settings
+      const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
+      const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
+      const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
+      const text = themeConfig?.text_color || "#000000";
+
+      root.style.setProperty("--store-primary", primary);
+      root.style.setProperty("--store-secondary", secondary);
+      root.style.setProperty("--store-accent", settings?.accent_color || "#8b5cf6");
+      root.style.setProperty("--store-button-bg", settings?.button_color || "#000000");
+      root.style.setProperty("--store-button-text", settings?.button_text_color || "#ffffff");
+      root.style.setProperty("--store-bg-base", bg);
+      root.style.setProperty("--store-text-base", text);
       
       return () => {
         root.style.removeProperty("--store-primary");
@@ -98,9 +105,10 @@ export default function LojaLayout() {
         root.style.removeProperty("--store-button-bg");
         root.style.removeProperty("--store-button-text");
         root.style.removeProperty("--store-bg-base");
+        root.style.removeProperty("--store-text-base");
       };
     }
-  }, [settings]);
+  }, [settings, themeConfig]);
 
   // Slug is required — no default store
   if (!slug) {
@@ -177,11 +185,10 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
       <div 
-        className="min-h-screen text-foreground pb-16 md:pb-0 transition-colors"
+        className="min-h-screen pb-16 md:pb-0 transition-colors"
         style={{ 
-          // Use color-mix to create a very light tint (10% color, 90% white) 
-          // so it doesn't affect readability
-          backgroundColor: `color-mix(in srgb, ${(settings as any).page_bg_color || "#ffffff"} 10%, white)`
+          backgroundColor: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--background))' : (themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff"),
+          color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
         }}
       >
         {/* Marketing: Announcement Bar */}

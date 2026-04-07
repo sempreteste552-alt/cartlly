@@ -18,6 +18,11 @@ export interface StoreThemeConfig {
   header_style: string;
   footer_style: string;
   custom_css: string | null;
+  primary_color: string;
+  secondary_color: string;
+  background_color: string;
+  text_color: string;
+  theme_mode: 'light' | 'dark' | 'system';
   created_at: string;
   updated_at: string;
 }

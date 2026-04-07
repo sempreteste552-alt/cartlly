@@ -32,6 +32,21 @@ export function usePublicStoreSettings() {
     },
   });
 }
+export function usePublicThemeConfig(storeUserId?: string) {
+  return useQuery({
+    queryKey: ["public_theme_config", storeUserId],
+    enabled: !!storeUserId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_theme_config" as any)
+        .select("*")
+        .eq("user_id", storeUserId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+}
 
 export function usePublicStoreBySlug(slug: string | undefined) {
   return useQuery({
