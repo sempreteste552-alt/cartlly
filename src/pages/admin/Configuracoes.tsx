@@ -105,6 +105,7 @@ function GeneralSettingsTab() {
   const { data: banners } = useStoreBanners();
   const createBanner = useCreateBanner();
   const deleteBanner = useDeleteBanner();
+  const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
 
@@ -113,6 +114,7 @@ function GeneralSettingsTab() {
   const [logoUrl, setLogoUrl] = useState("");
   const [logoSize, setLogoSize] = useState(32);
   const [primaryColor, setPrimaryColor] = useState("#6d28d9");
+  const [pageBgColor, setPageBgColor] = useState("#ffffff");
   const [secondaryColor, setSecondaryColor] = useState("#f5f3ff");
   const [accentColor, setAccentColor] = useState("#8b5cf6");
   const [customDomain, setCustomDomain] = useState("");
