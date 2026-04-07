@@ -140,7 +140,8 @@ export default function MarketingConversionSettings() {
               </div>
               {/* Preview */}
               <div className="rounded-lg overflow-hidden border border-border">
-                <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}>
+                <div className="text-center py-2 text-sm font-medium flex items-center justify-center gap-2" style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}>
+                  <Timer className="h-4 w-4 animate-pulse" />
                   {announcementText || "Preview da barra de anúncio"}
                 </div>
               </div>
