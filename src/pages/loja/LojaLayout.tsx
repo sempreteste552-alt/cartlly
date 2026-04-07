@@ -40,6 +40,8 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
+  console.log("[LojaLayout] Rendering for slug:", slug);
+
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
@@ -167,6 +169,8 @@ export default function LojaLayout() {
   const isRastreio = location.pathname.includes("/rastreio");
 
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+
+  console.log("[LojaLayout] Final render state:", { isLoading, hasSettings: !!settings, storeUserId: settings?.user_id });
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
