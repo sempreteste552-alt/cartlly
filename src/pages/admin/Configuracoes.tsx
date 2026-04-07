@@ -219,6 +219,7 @@ function GeneralSettingsTab() {
       store_name: storeName.trim() || "Minha Loja",
       logo_url: logoUrl || null,
       primary_color: primaryColor,
+      page_bg_color: pageBgColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
       custom_domain: customDomain.trim() || null,
