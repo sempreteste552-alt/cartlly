@@ -16,6 +16,9 @@ import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
+import { LockedFeature } from "@/components/LockedFeature";
 import { toast } from "sonner";
 import StoreAppearanceSettings from "@/components/admin/StoreAppearanceSettings";
 import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
