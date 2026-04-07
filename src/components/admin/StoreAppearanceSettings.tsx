@@ -55,6 +55,11 @@ export default function StoreAppearanceSettings() {
   const [headerStyle, setHeaderStyle] = useState("standard");
   const [footerStyle, setFooterStyle] = useState("standard");
   const [customCss, setCustomCss] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#000000");
+  const [secondaryColor, setSecondaryColor] = useState("#666666");
+  const [backgroundColor, setBackgroundColor] = useState("#ffffff");
+  const [textColor, setTextColor] = useState("#000000");
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>('light');
 
   useEffect(() => {
     if (config) {
