@@ -177,6 +177,7 @@ function GeneralSettingsTab() {
       setButtonColor((settings as any).button_color ?? "#000000");
       setButtonTextColor((settings as any).button_text_color ?? "#ffffff");
       setHeaderBgColor((settings as any).header_bg_color ?? "#ffffff");
+      setHeaderTextColor((settings as any).header_text_color ?? "#000000");
       setFooterBgColor((settings as any).footer_bg_color ?? "#000000");
       setFooterTextColor((settings as any).footer_text_color ?? "#ffffff");
       setMarqueeEnabled((settings as any).marquee_enabled ?? false);
