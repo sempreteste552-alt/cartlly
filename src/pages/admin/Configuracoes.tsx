@@ -543,52 +543,53 @@ function GeneralSettingsTab() {
       <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
 
       {/* Welcome Coupon */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
-          <CardDescription>Gere automaticamente um cupom de desconto para novos clientes</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-sm">Ativar cupom automático</p>
-              <p className="text-xs text-muted-foreground">Novos clientes recebem cupom ao se cadastrar</p>
+      <LockedFeature isLocked={!canAccess("coupons", ctx)} featureName="Cupom de Boas-Vindas">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
+            <CardDescription>Gere automaticamente um cupom de desconto para novos clientes</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Ativar cupom automático</p>
+                <p className="text-xs text-muted-foreground">Envia um cupom exclusivo via e-mail ou exibe no site</p>
+              </div>
+              <Switch checked={welcomeCouponEnabled} onCheckedChange={setWelcomeCouponEnabled} />
             </div>
-            <Switch checked={welcomeCouponEnabled} onCheckedChange={setWelcomeCouponEnabled} />
-          </div>
-          {welcomeCouponEnabled && (
-            <div className="space-y-4 pt-2 border-t border-border">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Tipo de Desconto</Label>
-                  <Select value={welcomeCouponDiscountType} onValueChange={setWelcomeCouponDiscountType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">Porcentagem (%)</SelectItem>
-                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {welcomeCouponEnabled && (
+              <div className="grid gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Desconto</Label>
+                    <Select value={welcomeCouponDiscountType} onValueChange={setWelcomeCouponDiscountType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                        <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor do Desconto</Label>
+                    <Input type="number" value={welcomeCouponDiscountValue} onChange={(e) => setWelcomeCouponDiscountValue(Number(e.target.value))} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Valor do Desconto</Label>
-                  <Input type="number" value={welcomeCouponDiscountValue} onChange={(e) => setWelcomeCouponDiscountValue(Number(e.target.value))} min={1} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Valor Mínimo (Opcional)</Label>
+                    <Input type="number" value={welcomeCouponMinOrder} onChange={(e) => setWelcomeCouponMinOrder(e.target.value)} placeholder="0,00" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Expira em (dias)</Label>
+                    <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Pedido Mínimo (R$)</Label>
-                  <Input type="number" value={welcomeCouponMinOrder} onChange={(e) => setWelcomeCouponMinOrder(e.target.value)} placeholder="Sem mínimo" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Validade (dias)</Label>
-                  <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} min={1} />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">O cliente receberá um cupom único ao se cadastrar, válido por {welcomeCouponExpiresDays} dia(s).</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Account */}
       <Card className="border-border">
