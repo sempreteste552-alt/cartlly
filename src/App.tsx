@@ -36,59 +36,98 @@ import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Simple error boundary to catch and show something if it crashes
+import React from "react";
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: any, errorInfo: any) { console.error("React Error Boundary caught:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-white p-8 text-center">
+          <div className="max-w-md space-y-4">
+            <div className="text-6xl">⚠️</div>
+            <h1 className="text-2xl font-bold">Ocorreu um erro inesperado</h1>
+            <p className="text-gray-500">Tente recarregar a página ou entre em contato com o suporte.</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-black text-white rounded-md">
+              Recarregar Página
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
-            {/* Super Admin */}
-            <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
-              <Route index element={<SuperAdminDashboard />} />
-              <Route path="tenants" element={<SuperAdminTenants />} />
-              <Route path="solicitacoes" element={<SuperAdminSolicitacoes />} />
-              <Route path="planos" element={<SuperAdminPlanos />} />
-              <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
-              <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
-              <Route path="config" element={<SuperAdminConfig />} />
-            </Route>
-            {/* Tenant Admin */}
-            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="produtos" element={<Produtos />} />
-              <Route path="pedidos" element={<Pedidos />} />
-              <Route path="cupons" element={<Cupons />} />
-              <Route path="config" element={<Configuracoes />} />
-              <Route path="gateway" element={<Gateway />} />
-              <Route path="frete" element={<Frete />} />
-              <Route path="pagamentos" element={<Pagamentos />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="plano" element={<MeuPlano />} />
-              <Route path="paginas" element={<Paginas />} />
-            </Route>
-            {/* Multi-tenant: store by slug only — no default /loja */}
-            <Route path="/loja" element={<Navigate to="/login" replace />} />
-            <Route path="/loja/:slug" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
-              <Route index element={<LojaHome />} />
-              <Route path="produto/:id" element={<LojaProduto />} />
-              <Route path="checkout" element={<LojaCheckout />} />
-              <Route path="rastreio" element={<LojaRastreio />} />
-              <Route path="rastreio/:orderId" element={<LojaRastreio />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
+              {/* Super Admin */}
+              <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
+                <Route index element={<SuperAdminDashboard />} />
+                <Route path="tenants" element={<SuperAdminTenants />} />
+                <Route path="solicitacoes" element={<SuperAdminSolicitacoes />} />
+                <Route path="planos" element={<SuperAdminPlanos />} />
+                <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
+                <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
+                <Route path="config" element={<SuperAdminConfig />} />
+              </Route>
+              {/* Tenant Admin */}
+              <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<Dashboard />} />
+                <Route path="produtos" element={<Produtos />} />
+                <Route path="pedidos" element={<Pedidos />} />
+                <Route path="cupons" element={<Cupons />} />
+                <Route path="config" element={<Configuracoes />} />
+                <Route path="gateway" element={<Gateway />} />
+                <Route path="frete" element={<Frete />} />
+                <Route path="pagamentos" element={<Pagamentos />} />
+                <Route path="clientes" element={<Clientes />} />
+                <Route path="plano" element={<MeuPlano />} />
+                <Route path="paginas" element={<Paginas />} />
+              </Route>
+              {/* Multi-tenant: store by slug only — no default /loja */}
+              <Route path="/loja" element={<Navigate to="/login" replace />} />
+              <Route path="/loja/:slug" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
+                <Route index element={<LojaHome />} />
+                <Route path="produto/:id" element={<LojaProduto />} />
+                <Route path="checkout" element={<LojaCheckout />} />
+                <Route path="rastreio" element={<LojaRastreio />} />
+                <Route path="rastreio/:orderId" element={<LojaRastreio />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
