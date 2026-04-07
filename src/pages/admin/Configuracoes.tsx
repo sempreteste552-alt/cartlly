@@ -281,51 +281,53 @@ function GeneralSettingsTab() {
       </Card>
 
       {/* Marquee */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
-          <CardDescription>Texto animado exibido no topo da loja</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label>Ativar Letreiro</Label>
-            <Switch checked={marqueeEnabled} onCheckedChange={setMarqueeEnabled} />
-          </div>
-          {marqueeEnabled && (
-            <>
-              <div className="space-y-2">
-                <Label>Texto do Letreiro</Label>
-                <Input value={marqueeText} onChange={(e) => setMarqueeText(e.target.value)} placeholder="🔥 Promoção de verão! Até 50% OFF em todos os produtos!" maxLength={300} />
-              </div>
-              <div className="space-y-2">
-                <Label>Velocidade ({marqueeSpeed}%)</Label>
-                <Slider value={[marqueeSpeed]} onValueChange={([v]) => setMarqueeSpeed(v)} min={10} max={100} step={5} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+      <LockedFeature isLocked={!canAccess("banners", ctx)} featureName="Letreiro (Marquee)">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
+            <CardDescription>Texto animado exibido no topo da loja</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Ativar Letreiro</Label>
+              <Switch checked={marqueeEnabled} onCheckedChange={setMarqueeEnabled} />
+            </div>
+            {marqueeEnabled && (
+              <>
                 <div className="space-y-2">
-                  <Label>Cor de Fundo</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                    <Input value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
-                  </div>
+                  <Label>Texto do Letreiro</Label>
+                  <Input value={marqueeText} onChange={(e) => setMarqueeText(e.target.value)} placeholder="🔥 Promoção de verão! Até 50% OFF em todos os produtos!" maxLength={300} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cor do Texto</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                    <Input value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  <Label>Velocidade ({marqueeSpeed}%)</Label>
+                  <Slider value={[marqueeSpeed]} onValueChange={([v]) => setMarqueeSpeed(v)} min={10} max={100} step={5} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Cor de Fundo</Label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                      <Input value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cor do Texto</Label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                      <Input value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="rounded-lg overflow-hidden border border-border">
-                <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
-                  <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
+                <div className="rounded-lg overflow-hidden border border-border">
+                  <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
+                    <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Store Info */}
       <Card className="border-border">
