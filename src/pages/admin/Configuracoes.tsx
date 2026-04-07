@@ -438,11 +438,12 @@ function GeneralSettingsTab() {
           <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "Primária", value: primaryColor, set: setPrimaryColor },
               { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
               { label: "Destaque", value: accentColor, set: setAccentColor },
+              { label: "Fundo Site", value: pageBgColor, set: setPageBgColor },
             ].map((c) => (
               <div key={c.label} className="space-y-2">
                 <Label>{c.label}</Label>
