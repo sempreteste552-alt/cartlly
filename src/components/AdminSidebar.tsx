@@ -143,7 +143,7 @@ export function AdminSidebar() {
                       {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
                     </div>
                     {!collapsed && !pushNotifs.isSubscribed && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches && (
-                      <span className="text-[9px] text-orange-600 font-medium leading-tight">
+                      <span className="text-[9px] text-primary font-medium leading-tight">
                         No iOS, use "Adicionar à Tela de Início" primeiro.
                       </span>
                     )}
