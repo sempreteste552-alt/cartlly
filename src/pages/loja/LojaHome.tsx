@@ -131,7 +131,7 @@ export default function LojaHome() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 mt-8 space-y-10 pb-8">
+      <div className={`max-w-7xl mx-auto px-4 ${searchTerm.trim() ? "mt-4" : "mt-8"} space-y-10 pb-8`}>
         {prodLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[...Array(10)].map((_, i) => (
