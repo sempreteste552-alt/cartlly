@@ -185,11 +185,10 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
       <div 
-        className="min-h-screen text-foreground pb-16 md:pb-0 transition-colors"
+        className="min-h-screen pb-16 md:pb-0 transition-colors"
         style={{ 
-          // Use color-mix to create a very light tint (10% color, 90% white) 
-          // so it doesn't affect readability
-          backgroundColor: `color-mix(in srgb, ${(settings as any).page_bg_color || "#ffffff"} 10%, white)`
+          backgroundColor: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--background))' : (themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff"),
+          color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
         }}
       >
         {/* Marketing: Announcement Bar */}
