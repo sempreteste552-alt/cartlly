@@ -46,10 +46,13 @@ export function usePushNotifications() {
   }, [user]);
 
   const checkSubscription = useCallback(async () => {
-    if (!user) return;
+    if (!user || !("serviceWorker" in navigator)) return;
 
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/sw-push.js");
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js')) || 
+                           await navigator.serviceWorker.getRegistration('/sw-push.js');
+      
       if (!registration) {
         setIsSubscribed(false);
         return;
@@ -84,16 +87,18 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
+      // iOS 16.4+ specific: Notification.requestPermission() must be called after a user gesture
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
       if (perm !== "granted") {
-        toast.error("Permissão de notificação negada. Ative nas configurações do navegador.");
+        toast.error("Permissão de notificação negada. Ative nas configurações do dispositivo.");
         setLoading(false);
         return;
       }
 
-      const registration = await navigator.serviceWorker.register("/sw-push.js");
+      // Register with a specific scope to avoid conflicts with VitePWA's sw.js
+      const registration = await navigator.serviceWorker.register("/sw-push.js", { scope: '/' });
       await navigator.serviceWorker.ready;
 
       let subscription = await registration.pushManager.getSubscription();
@@ -122,7 +127,9 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/sw-push.js");
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js'));
+      
       if (registration) {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {

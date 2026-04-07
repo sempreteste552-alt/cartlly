@@ -136,10 +136,17 @@ export function AdminSidebar() {
                   <SidebarMenuButton
                     onClick={() => pushNotifs.isSubscribed ? pushNotifs.unsubscribe() : pushNotifs.subscribe()}
                     disabled={pushNotifs.loading}
-                    className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                    className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
                   >
-                    {pushNotifs.isSubscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                    {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
+                    <div className="flex items-center gap-2">
+                      {pushNotifs.isSubscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                      {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
+                    </div>
+                    {!collapsed && !pushNotifs.isSubscribed && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches && (
+                      <span className="text-[9px] text-primary font-medium leading-tight">
+                        No iOS, use "Adicionar à Tela de Início" primeiro.
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}

@@ -89,18 +89,30 @@ export function AdminNotificationsBell() {
 
         {/* Push notifications controls */}
         <div className="p-2 border-b bg-muted/30">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             {!isSubscribed ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs h-8"
-                onClick={subscribe}
-                disabled={pushLoading || !isSupported}
-              >
-                {pushLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
-                {!isSupported ? "Push não suportado" : "Ativar Push"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs h-8"
+                  onClick={subscribe}
+                  disabled={pushLoading || !isSupported}
+                >
+                  {pushLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Bell className="h-3 w-3 mr-1" />}
+                  {!isSupported ? "Push não suportado" : "Ativar Notificações Push"}
+                </Button>
+                {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches && (
+                  <p className="text-[10px] text-orange-600 font-medium px-1 text-center">
+                    No iOS, adicione à tela de início para receber notificações fora do navegador.
+                  </p>
+                )}
+                {/iPad|iPhone|iPod/.test(navigator.userAgent) && window.matchMedia('(display-mode: standalone)').matches && !isSubscribed && (
+                  <p className="text-[10px] text-primary font-medium px-1 text-center">
+                    Clique acima para autorizar notificações neste dispositivo.
+                  </p>
+                )}
+              </>
             ) : (
               <Button
                 variant="outline"
@@ -110,7 +122,7 @@ export function AdminNotificationsBell() {
                 disabled={testingPush}
               >
                 {testingPush ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                Testar Push
+                Testar Notificações
               </Button>
             )}
           </div>
