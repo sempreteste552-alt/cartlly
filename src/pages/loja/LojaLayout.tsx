@@ -398,8 +398,9 @@ export default function LojaLayout() {
                     href={item.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
+                    style={{ color: headerTextColor }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>
@@ -407,8 +408,9 @@ export default function LojaLayout() {
                 ) : (
                   <Link
                     to={item.to}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
+                    style={{ color: headerTextColor }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>
