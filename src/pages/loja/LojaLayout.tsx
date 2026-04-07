@@ -171,6 +171,7 @@ export default function LojaLayout() {
   const storeName = settings?.store_name || "Loja";
   const primaryColor = settings?.primary_color || "#6d28d9";
   const headerBgColor = settings?.header_bg_color || "#ffffff";
+  const headerTextColor = settings?.header_text_color || "#000000";
   const footerBgColor = settings?.footer_bg_color || "#000000";
   const footerTextColor = settings?.footer_text_color || "#ffffff";
   const buttonColor = settings?.button_color || "#000000";
@@ -211,7 +212,7 @@ export default function LojaLayout() {
         {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
         {/* Top bar */}
-        <div className="text-white text-xs py-1" style={{ backgroundColor: primaryColor }}>
+        <div className="text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {settings?.store_phone && (
@@ -252,9 +253,9 @@ export default function LojaLayout() {
         </div>
 
         {/* Header */}
-        <header className="sticky top-0 z-50 border-b border-border shadow-sm bg-card">
+        <header className="sticky top-0 z-50 border-b border-border shadow-sm transition-colors" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)}>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
@@ -267,13 +268,13 @@ export default function LojaLayout() {
                   className="object-contain"
                 />
               ) : (
-                <span className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</span>
+                <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
               )}
             </Link>
 
             <div className="flex-1 max-w-xl mx-auto hidden sm:block">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
                 <Input
                   placeholder="Buscar produtos..."
                   className="pl-9 bg-secondary border-border rounded-full"
@@ -295,7 +296,7 @@ export default function LojaLayout() {
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" style={{ color: headerTextColor }}>
                   <ShoppingCart className="h-5 w-5" />
                   {cart.count > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
@@ -378,9 +379,10 @@ export default function LojaLayout() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-card border-b border-border ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out border-b border-border ${
             mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
+          style={{ backgroundColor: headerBgColor, color: headerTextColor }}
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {[
@@ -396,8 +398,9 @@ export default function LojaLayout() {
                     href={item.to}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
+                    style={{ color: headerTextColor }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>
@@ -405,8 +408,9 @@ export default function LojaLayout() {
                 ) : (
                   <Link
                     to={item.to}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
                     onClick={() => setMobileMenu(false)}
+                    style={{ color: headerTextColor }}
                   >
                     <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
                     <span>{item.label}</span>

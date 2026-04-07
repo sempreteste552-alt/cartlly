@@ -135,6 +135,7 @@ function GeneralSettingsTab() {
   const [buttonColor, setButtonColor] = useState("#000000");
   const [buttonTextColor, setButtonTextColor] = useState("#ffffff");
   const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
+  const [headerTextColor, setHeaderTextColor] = useState("#000000");
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
@@ -176,6 +177,7 @@ function GeneralSettingsTab() {
       setButtonColor((settings as any).button_color ?? "#000000");
       setButtonTextColor((settings as any).button_text_color ?? "#ffffff");
       setHeaderBgColor((settings as any).header_bg_color ?? "#ffffff");
+      setHeaderTextColor((settings as any).header_text_color ?? "#000000");
       setFooterBgColor((settings as any).footer_bg_color ?? "#000000");
       setFooterTextColor((settings as any).footer_text_color ?? "#ffffff");
       setMarqueeEnabled((settings as any).marquee_enabled ?? false);
@@ -247,6 +249,7 @@ function GeneralSettingsTab() {
       button_color: buttonColor,
       button_text_color: buttonTextColor,
       header_bg_color: headerBgColor,
+      header_text_color: headerTextColor,
       footer_bg_color: footerBgColor,
       footer_text_color: footerTextColor,
       welcome_coupon_enabled: welcomeCouponEnabled,
@@ -479,9 +482,10 @@ function GeneralSettingsTab() {
             </div>
             <Separator />
             <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
+                { label: "Texto Cabeçalho", value: headerTextColor, set: setHeaderTextColor },
                 { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
                 { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
               ].map((c) => (
