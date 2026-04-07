@@ -379,9 +379,10 @@ export default function LojaLayout() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out bg-card border-b border-border ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out border-b border-border ${
             mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
           }`}
+          style={{ backgroundColor: headerBgColor, color: headerTextColor }}
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {[
