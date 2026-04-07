@@ -97,10 +97,11 @@ export default function MarketingConversionSettings() {
   return (
     <div className="space-y-6">
       {/* Announcement Bar */}
-      <Card className="border-border">
+      <Card className="border-primary/30 animate-pulse shadow-lg shadow-primary/10">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
+            <Timer className="h-4 w-4 text-primary animate-bounce" />
             <CardTitle className="text-lg">Barra de Anúncio</CardTitle>
             <Badge variant="secondary" className="text-[10px]">STARTER+</Badge>
           </div>
