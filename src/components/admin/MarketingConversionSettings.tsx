@@ -97,10 +97,11 @@ export default function MarketingConversionSettings() {
   return (
     <div className="space-y-6">
       {/* Announcement Bar */}
-      <Card className="border-border">
+      <Card className="border-primary/30 animate-pulse shadow-lg shadow-primary/10">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
+            <Timer className="h-4 w-4 text-primary animate-pulse" />
             <CardTitle className="text-lg">Barra de Anúncio</CardTitle>
             <Badge variant="secondary" className="text-[10px]">STARTER+</Badge>
           </div>
@@ -139,7 +140,8 @@ export default function MarketingConversionSettings() {
               </div>
               {/* Preview */}
               <div className="rounded-lg overflow-hidden border border-border">
-                <div className="text-center py-2 text-sm font-medium" style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}>
+                <div className="text-center py-2 text-sm font-medium flex items-center justify-center gap-2" style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}>
+                  <Timer className="h-4 w-4 animate-pulse" />
                   {announcementText || "Preview da barra de anúncio"}
                 </div>
               </div>
