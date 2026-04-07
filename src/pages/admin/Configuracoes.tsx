@@ -135,6 +135,7 @@ function GeneralSettingsTab() {
   const [buttonColor, setButtonColor] = useState("#000000");
   const [buttonTextColor, setButtonTextColor] = useState("#ffffff");
   const [headerBgColor, setHeaderBgColor] = useState("#ffffff");
+  const [headerTextColor, setHeaderTextColor] = useState("#000000");
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
