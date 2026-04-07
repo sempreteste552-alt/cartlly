@@ -101,7 +101,7 @@ export default function MarketingConversionSettings() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
-            <Timer className="h-4 w-4 text-primary animate-bounce" />
+            <Timer className="h-4 w-4 text-primary animate-pulse" />
             <CardTitle className="text-lg">Barra de Anúncio</CardTitle>
             <Badge variant="secondary" className="text-[10px]">STARTER+</Badge>
           </div>
