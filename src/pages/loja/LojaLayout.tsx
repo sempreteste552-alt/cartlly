@@ -212,7 +212,7 @@ export default function LojaLayout() {
         {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
         {/* Top bar */}
-        <div className="text-white text-xs py-1" style={{ backgroundColor: primaryColor }}>
+        <div className="text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {settings?.store_phone && (
