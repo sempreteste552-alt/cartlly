@@ -268,7 +268,7 @@ export default function LojaLayout() {
                   className="object-contain"
                 />
               ) : (
-                <span className="text-xl font-bold" style={{ color: primaryColor }}>{storeName}</span>
+                <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
               )}
             </Link>
 
