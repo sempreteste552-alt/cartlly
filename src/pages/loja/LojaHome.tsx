@@ -68,43 +68,47 @@ export default function LojaHome() {
 
   return (
     <div className="space-y-6">
-      {/* Dynamic Premium Sections */}
-      <DynamicHomeSections
-        storeUserId={storeUserId}
-        products={products || []}
-        settings={settings}
-        cart={cart}
-        basePath={basePath}
-      />
-      {banners && banners.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 pt-4">
-          <Carousel opts={{ loop: true }} className="w-full">
-            <CarouselContent>
-              {banners.map((banner) => (
-                <CarouselItem key={banner.id}>
-                  {(banner as any).media_type === "video" ? (
-                    <video
-                      src={banner.image_url}
-                      className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
-                      autoPlay muted loop playsInline
-                    />
-                  ) : banner.link_url ? (
-                    <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
-                      <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
-                    </a>
-                  ) : (
-                    <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
-                  )}
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-2" />
-            <CarouselNext className="right-2" />
-          </Carousel>
-        </div>
+      {/* Dynamic Premium Sections - Hidden during search */}
+      {!searchTerm.trim() && (
+        <>
+          <DynamicHomeSections
+            storeUserId={storeUserId}
+            products={products || []}
+            settings={settings}
+            cart={cart}
+            basePath={basePath}
+          />
+          {banners && banners.length > 0 && (
+            <div className="max-w-7xl mx-auto px-4 pt-4">
+              <Carousel opts={{ loop: true }} className="w-full">
+                <CarouselContent>
+                  {banners.map((banner) => (
+                    <CarouselItem key={banner.id}>
+                      {(banner as any).media_type === "video" ? (
+                        <video
+                          src={banner.image_url}
+                          className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
+                          autoPlay muted loop playsInline
+                        />
+                      ) : banner.link_url ? (
+                        <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+                          <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                        </a>
+                      ) : (
+                        <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                      )}
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
+            </div>
+          )}
+        </>
       )}
 
-      {categories && categories.length > 0 && (
+      {!searchTerm.trim() && categories && categories.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 mt-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (
@@ -127,7 +131,7 @@ export default function LojaHome() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 mt-8 space-y-10 pb-8">
+      <div className={`max-w-7xl mx-auto px-4 ${searchTerm.trim() ? "mt-4" : "mt-8"} space-y-10 pb-8`}>
         {prodLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[...Array(10)].map((_, i) => (
