@@ -179,10 +179,9 @@ export default function LojaLayout() {
       <div 
         className="min-h-screen text-foreground pb-16 md:pb-0 transition-colors"
         style={{ 
-          backgroundColor: (settings as any).page_bg_color || "#ffffff",
-          // The linear-gradient is used to create a "tint" effect if the color is anything other than white
-          // We mix the chosen background color with a bit of white to ensure readability
-          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9))`
+          // Use color-mix to create a very light tint (10% color, 90% white) 
+          // so it doesn't affect readability
+          backgroundColor: `color-mix(in srgb, ${(settings as any).page_bg_color || "#ffffff"} 10%, white)`
         }}
       >
         {/* Marketing: Announcement Bar */}
