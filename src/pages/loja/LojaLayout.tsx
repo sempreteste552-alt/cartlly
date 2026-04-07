@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon } from "@/components/storefront/MarketingWidgets";
-import { usePublicStoreBySlug } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
@@ -55,13 +55,14 @@ export default function LojaLayout() {
   const settings = settingsBySlug;
   const isLoading = slugLoading;
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+  const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
   // Apply dark class based on user preference or store setting
   useEffect(() => {
-    const isDark = settings?.theme_mode === 'dark' || storeDark;
+    const isDark = themeConfig?.theme_mode === 'dark' || storeDark;
     if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
@@ -70,7 +71,7 @@ export default function LojaLayout() {
     return () => {
       document.documentElement.classList.remove("dark");
     };
-  }, [storeDark, settings?.theme_mode]);
+  }, [storeDark, themeConfig?.theme_mode]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
