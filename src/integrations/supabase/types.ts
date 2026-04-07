@@ -1359,6 +1359,7 @@ export type Database = {
           gateway_secret_key: string | null
           google_maps_url: string | null
           header_bg_color: string
+          header_text_color: string | null
           id: string
           instagram_url: string | null
           logo_size: number
@@ -1424,6 +1425,7 @@ export type Database = {
           gateway_secret_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string
+          header_text_color?: string | null
           id?: string
           instagram_url?: string | null
           logo_size?: number
@@ -1489,6 +1491,7 @@ export type Database = {
           gateway_secret_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string
+          header_text_color?: string | null
           id?: string
           instagram_url?: string | null
           logo_size?: number
