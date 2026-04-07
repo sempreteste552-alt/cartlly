@@ -171,6 +171,7 @@ export default function LojaLayout() {
   const storeName = settings?.store_name || "Loja";
   const primaryColor = settings?.primary_color || "#6d28d9";
   const headerBgColor = settings?.header_bg_color || "#ffffff";
+  const headerTextColor = settings?.header_text_color || "#000000";
   const footerBgColor = settings?.footer_bg_color || "#000000";
   const footerTextColor = settings?.footer_text_color || "#ffffff";
   const buttonColor = settings?.button_color || "#000000";
