@@ -43,7 +43,7 @@ export function usePublicThemeConfig(storeUserId?: string) {
         .eq("user_id", storeUserId!)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 }
