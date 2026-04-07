@@ -86,12 +86,18 @@ export default function LojaLayout() {
       root.style.setProperty("--store-accent", settings.accent_color || "#8b5cf6");
       root.style.setProperty("--store-button-bg", settings.button_color || "#000000");
       root.style.setProperty("--store-button-text", settings.button_text_color || "#ffffff");
+      
+      // Calculate a very light version of the background color for tinting
+      const bgColor = (settings as any).page_bg_color || "#ffffff";
+      root.style.setProperty("--store-bg-base", bgColor);
+      
       return () => {
         root.style.removeProperty("--store-primary");
         root.style.removeProperty("--store-secondary");
         root.style.removeProperty("--store-accent");
         root.style.removeProperty("--store-button-bg");
         root.style.removeProperty("--store-button-text");
+        root.style.removeProperty("--store-bg-base");
       };
     }
   }, [settings]);
@@ -170,7 +176,14 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
-      <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
+      <div 
+        className="min-h-screen text-foreground pb-16 md:pb-0 transition-colors"
+        style={{ 
+          // Use color-mix to create a very light tint (10% color, 90% white) 
+          // so it doesn't affect readability
+          backgroundColor: `color-mix(in srgb, ${(settings as any).page_bg_color || "#ffffff"} 10%, white)`
+        }}
+      >
         {/* Marketing: Announcement Bar */}
         {marketingConfig && <AnnouncementBar config={marketingConfig} />}
 

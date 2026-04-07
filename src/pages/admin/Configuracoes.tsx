@@ -16,6 +16,9 @@ import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/
 import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
+import { LockedFeature } from "@/components/LockedFeature";
 import { toast } from "sonner";
 import StoreAppearanceSettings from "@/components/admin/StoreAppearanceSettings";
 import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
@@ -102,6 +105,7 @@ function GeneralSettingsTab() {
   const { data: banners } = useStoreBanners();
   const createBanner = useCreateBanner();
   const deleteBanner = useDeleteBanner();
+  const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
 
@@ -110,6 +114,7 @@ function GeneralSettingsTab() {
   const [logoUrl, setLogoUrl] = useState("");
   const [logoSize, setLogoSize] = useState(32);
   const [primaryColor, setPrimaryColor] = useState("#6d28d9");
+  const [pageBgColor, setPageBgColor] = useState("#ffffff");
   const [secondaryColor, setSecondaryColor] = useState("#f5f3ff");
   const [accentColor, setAccentColor] = useState("#8b5cf6");
   const [customDomain, setCustomDomain] = useState("");
@@ -150,6 +155,7 @@ function GeneralSettingsTab() {
       setLogoUrl(settings.logo_url ?? "");
       setLogoSize((settings as any).logo_size ?? 32);
       setPrimaryColor(settings.primary_color);
+      setPageBgColor((settings as any).page_bg_color ?? "#ffffff");
       setSecondaryColor(settings.secondary_color);
       setAccentColor(settings.accent_color);
       setCustomDomain(settings.custom_domain ?? "");
@@ -213,6 +219,7 @@ function GeneralSettingsTab() {
       store_name: storeName.trim() || "Minha Loja",
       logo_url: logoUrl || null,
       primary_color: primaryColor,
+      page_bg_color: pageBgColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
       custom_domain: customDomain.trim() || null,
@@ -274,51 +281,53 @@ function GeneralSettingsTab() {
       </Card>
 
       {/* Marquee */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
-          <CardDescription>Texto animado exibido no topo da loja</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label>Ativar Letreiro</Label>
-            <Switch checked={marqueeEnabled} onCheckedChange={setMarqueeEnabled} />
-          </div>
-          {marqueeEnabled && (
-            <>
-              <div className="space-y-2">
-                <Label>Texto do Letreiro</Label>
-                <Input value={marqueeText} onChange={(e) => setMarqueeText(e.target.value)} placeholder="🔥 Promoção de verão! Até 50% OFF em todos os produtos!" maxLength={300} />
-              </div>
-              <div className="space-y-2">
-                <Label>Velocidade ({marqueeSpeed}%)</Label>
-                <Slider value={[marqueeSpeed]} onValueChange={([v]) => setMarqueeSpeed(v)} min={10} max={100} step={5} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+      <LockedFeature isLocked={!canAccess("banners", ctx)} featureName="Letreiro (Marquee)">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Letreiro (Marquee)</CardTitle></div>
+            <CardDescription>Texto animado exibido no topo da loja</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Ativar Letreiro</Label>
+              <Switch checked={marqueeEnabled} onCheckedChange={setMarqueeEnabled} />
+            </div>
+            {marqueeEnabled && (
+              <>
                 <div className="space-y-2">
-                  <Label>Cor de Fundo</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                    <Input value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
-                  </div>
+                  <Label>Texto do Letreiro</Label>
+                  <Input value={marqueeText} onChange={(e) => setMarqueeText(e.target.value)} placeholder="🔥 Promoção de verão! Até 50% OFF em todos os produtos!" maxLength={300} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cor do Texto</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                    <Input value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  <Label>Velocidade ({marqueeSpeed}%)</Label>
+                  <Slider value={[marqueeSpeed]} onValueChange={([v]) => setMarqueeSpeed(v)} min={10} max={100} step={5} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Cor de Fundo</Label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                      <Input value={marqueeBgColor} onChange={(e) => setMarqueeBgColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Cor do Texto</Label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                      <Input value={marqueeTextColor} onChange={(e) => setMarqueeTextColor(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="rounded-lg overflow-hidden border border-border">
-                <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
-                  <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
+                <div className="rounded-lg overflow-hidden border border-border">
+                  <div className="overflow-hidden whitespace-nowrap py-2 text-sm font-medium" style={{ backgroundColor: marqueeBgColor, color: marqueeTextColor }}>
+                    <span className="inline-block animate-pulse">{marqueeText || "Preview do letreiro..."}</span>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Store Info */}
       <Card className="border-border">
@@ -426,65 +435,68 @@ function GeneralSettingsTab() {
       </Card>
 
       {/* Colors */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Primária", value: primaryColor, set: setPrimaryColor },
-              { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
-              { label: "Destaque", value: accentColor, set: setAccentColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+      <LockedFeature isLocked={!canAccess("design_customization", ctx)} featureName="Personalização de Cores">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Primária", value: primaryColor, set: setPrimaryColor },
+                { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
+                { label: "Destaque", value: accentColor, set: setAccentColor },
+                { label: "Fundo Site", value: pageBgColor, set: setPageBgColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <Separator />
-          <p className="text-sm font-medium text-foreground">Botões</p>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Cor do Botão", value: buttonColor, set: setButtonColor },
-              { label: "Texto do Botão", value: buttonTextColor, set: setButtonTextColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+              ))}
+            </div>
+            <Separator />
+            <p className="text-sm font-medium text-foreground">Botões</p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Cor do Botão", value: buttonColor, set: setButtonColor },
+                { label: "Texto do Botão", value: buttonTextColor, set: setButtonTextColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">Preview:</span>
-            <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>Comprar Agora</button>
-          </div>
-          <Separator />
-          <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
-              { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
-              { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">Preview:</span>
+              <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>Comprar Agora</button>
+            </div>
+            <Separator />
+            <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
+                { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
+                { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Admin Colors */}
       <Card className="border-border">
@@ -528,55 +540,58 @@ function GeneralSettingsTab() {
         </CardContent>
       </Card>
 
-      <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
+      <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Personalizado">
+        <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
+      </LockedFeature>
 
       {/* Welcome Coupon */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
-          <CardDescription>Gere automaticamente um cupom de desconto para novos clientes</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-sm">Ativar cupom automático</p>
-              <p className="text-xs text-muted-foreground">Novos clientes recebem cupom ao se cadastrar</p>
+      <LockedFeature isLocked={!canAccess("coupons", ctx)} featureName="Cupom de Boas-Vindas">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Gift className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cupom de Boas-Vindas</CardTitle></div>
+            <CardDescription>Gere automaticamente um cupom de desconto para novos clientes</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Ativar cupom automático</p>
+                <p className="text-xs text-muted-foreground">Envia um cupom exclusivo via e-mail ou exibe no site</p>
+              </div>
+              <Switch checked={welcomeCouponEnabled} onCheckedChange={setWelcomeCouponEnabled} />
             </div>
-            <Switch checked={welcomeCouponEnabled} onCheckedChange={setWelcomeCouponEnabled} />
-          </div>
-          {welcomeCouponEnabled && (
-            <div className="space-y-4 pt-2 border-t border-border">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Tipo de Desconto</Label>
-                  <Select value={welcomeCouponDiscountType} onValueChange={setWelcomeCouponDiscountType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">Porcentagem (%)</SelectItem>
-                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {welcomeCouponEnabled && (
+              <div className="grid gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Tipo de Desconto</Label>
+                    <Select value={welcomeCouponDiscountType} onValueChange={setWelcomeCouponDiscountType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                        <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor do Desconto</Label>
+                    <Input type="number" value={welcomeCouponDiscountValue} onChange={(e) => setWelcomeCouponDiscountValue(Number(e.target.value))} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Valor do Desconto</Label>
-                  <Input type="number" value={welcomeCouponDiscountValue} onChange={(e) => setWelcomeCouponDiscountValue(Number(e.target.value))} min={1} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Valor Mínimo (Opcional)</Label>
+                    <Input type="number" value={welcomeCouponMinOrder} onChange={(e) => setWelcomeCouponMinOrder(e.target.value)} placeholder="0,00" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Expira em (dias)</Label>
+                    <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Pedido Mínimo (R$)</Label>
-                  <Input type="number" value={welcomeCouponMinOrder} onChange={(e) => setWelcomeCouponMinOrder(e.target.value)} placeholder="Sem mínimo" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Validade (dias)</Label>
-                  <Input type="number" value={welcomeCouponExpiresDays} onChange={(e) => setWelcomeCouponExpiresDays(Number(e.target.value))} min={1} />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">O cliente receberá um cupom único ao se cadastrar, válido por {welcomeCouponExpiresDays} dia(s).</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Account */}
       <Card className="border-border">

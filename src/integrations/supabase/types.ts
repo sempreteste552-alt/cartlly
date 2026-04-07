@@ -1370,6 +1370,7 @@ export type Database = {
           marquee_text: string | null
           marquee_text_color: string
           max_installments: number
+          page_bg_color: string | null
           payment_boleto: boolean
           payment_credit_card: boolean
           payment_debit_card: boolean
@@ -1434,6 +1435,7 @@ export type Database = {
           marquee_text?: string | null
           marquee_text_color?: string
           max_installments?: number
+          page_bg_color?: string | null
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -1498,6 +1500,7 @@ export type Database = {
           marquee_text?: string | null
           marquee_text_color?: string
           max_installments?: number
+          page_bg_color?: string | null
           payment_boleto?: boolean
           payment_credit_card?: boolean
           payment_debit_card?: boolean
@@ -1782,6 +1785,7 @@ export type Database = {
           marquee_text: string | null
           marquee_text_color: string | null
           max_installments: number | null
+          page_bg_color: string | null
           payment_boleto: boolean | null
           payment_credit_card: boolean | null
           payment_debit_card: boolean | null
@@ -1844,6 +1848,7 @@ export type Database = {
           marquee_text?: string | null
           marquee_text_color?: string | null
           max_installments?: number | null
+          page_bg_color?: string | null
           payment_boleto?: boolean | null
           payment_credit_card?: boolean | null
           payment_debit_card?: boolean | null
@@ -1906,6 +1911,7 @@ export type Database = {
           marquee_text?: string | null
           marquee_text_color?: string | null
           max_installments?: number | null
+          page_bg_color?: string | null
           payment_boleto?: boolean | null
           payment_credit_card?: boolean | null
           payment_debit_card?: boolean | null
