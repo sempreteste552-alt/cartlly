@@ -249,6 +249,7 @@ function GeneralSettingsTab() {
       button_color: buttonColor,
       button_text_color: buttonTextColor,
       header_bg_color: headerBgColor,
+      header_text_color: headerTextColor,
       footer_bg_color: footerBgColor,
       footer_text_color: footerTextColor,
       welcome_coupon_enabled: welcomeCouponEnabled,
