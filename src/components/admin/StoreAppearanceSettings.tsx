@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Type, Layers, LayoutGrid, Monitor } from "lucide-react";
+import { Loader2, Type, Layers, LayoutGrid, Monitor, Palette, Eye } from "lucide-react";
 import { useStoreThemeConfig, useUpdateStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LockedFeature } from "@/components/LockedFeature";
