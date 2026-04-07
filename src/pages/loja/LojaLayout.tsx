@@ -81,17 +81,22 @@ export default function LojaLayout() {
 
   // Apply store colors as CSS custom properties for the entire store
   useEffect(() => {
-    if (settings) {
+    if (settings || themeConfig) {
       const root = document.documentElement;
-      root.style.setProperty("--store-primary", settings.primary_color || "#6d28d9");
-      root.style.setProperty("--store-secondary", settings.secondary_color || "#f5f3ff");
-      root.style.setProperty("--store-accent", settings.accent_color || "#8b5cf6");
-      root.style.setProperty("--store-button-bg", settings.button_color || "#000000");
-      root.style.setProperty("--store-button-text", settings.button_text_color || "#ffffff");
       
-      // Calculate a very light version of the background color for tinting
-      const bgColor = (settings as any).page_bg_color || "#ffffff";
-      root.style.setProperty("--store-bg-base", bgColor);
+      // Use theme config if available, fallback to settings
+      const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
+      const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
+      const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
+      const text = themeConfig?.text_color || "#000000";
+
+      root.style.setProperty("--store-primary", primary);
+      root.style.setProperty("--store-secondary", secondary);
+      root.style.setProperty("--store-accent", settings?.accent_color || "#8b5cf6");
+      root.style.setProperty("--store-button-bg", settings?.button_color || "#000000");
+      root.style.setProperty("--store-button-text", settings?.button_text_color || "#ffffff");
+      root.style.setProperty("--store-bg-base", bg);
+      root.style.setProperty("--store-text-base", text);
       
       return () => {
         root.style.removeProperty("--store-primary");
@@ -100,9 +105,10 @@ export default function LojaLayout() {
         root.style.removeProperty("--store-button-bg");
         root.style.removeProperty("--store-button-text");
         root.style.removeProperty("--store-bg-base");
+        root.style.removeProperty("--store-text-base");
       };
     }
-  }, [settings]);
+  }, [settings, themeConfig]);
 
   // Slug is required — no default store
   if (!slug) {
