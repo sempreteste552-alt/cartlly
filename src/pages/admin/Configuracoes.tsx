@@ -435,66 +435,68 @@ function GeneralSettingsTab() {
       </Card>
 
       {/* Colors */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: "Primária", value: primaryColor, set: setPrimaryColor },
-              { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
-              { label: "Destaque", value: accentColor, set: setAccentColor },
-              { label: "Fundo Site", value: pageBgColor, set: setPageBgColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+      <LockedFeature isLocked={!canAccess("design_customization", ctx)} featureName="Personalização de Cores">
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Palette className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Cores da Loja</CardTitle></div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Primária", value: primaryColor, set: setPrimaryColor },
+                { label: "Secundária", value: secondaryColor, set: setSecondaryColor },
+                { label: "Destaque", value: accentColor, set: setAccentColor },
+                { label: "Fundo Site", value: pageBgColor, set: setPageBgColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <Separator />
-          <p className="text-sm font-medium text-foreground">Botões</p>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Cor do Botão", value: buttonColor, set: setButtonColor },
-              { label: "Texto do Botão", value: buttonTextColor, set: setButtonTextColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+              ))}
+            </div>
+            <Separator />
+            <p className="text-sm font-medium text-foreground">Botões</p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Cor do Botão", value: buttonColor, set: setButtonColor },
+                { label: "Texto do Botão", value: buttonTextColor, set: setButtonTextColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">Preview:</span>
-            <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>Comprar Agora</button>
-          </div>
-          <Separator />
-          <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
-              { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
-              { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
-            ].map((c) => (
-              <div key={c.label} className="space-y-2">
-                <Label>{c.label}</Label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
-                  <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">Preview:</span>
+              <button className="px-4 py-2 rounded-md text-sm font-medium" style={{ backgroundColor: buttonColor, color: buttonTextColor }}>Comprar Agora</button>
+            </div>
+            <Separator />
+            <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
+                { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
+                { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
+              ].map((c) => (
+                <div key={c.label} className="space-y-2">
+                  <Label>{c.label}</Label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={c.value} onChange={(e) => c.set(e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border" />
+                    <Input value={c.value} onChange={(e) => c.set(e.target.value)} className="font-mono text-xs" maxLength={7} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Admin Colors */}
       <Card className="border-border">
