@@ -540,7 +540,9 @@ function GeneralSettingsTab() {
         </CardContent>
       </Card>
 
-      <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
+      <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Personalizado">
+        <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
+      </LockedFeature>
 
       {/* Welcome Coupon */}
       <LockedFeature isLocked={!canAccess("coupons", ctx)} featureName="Cupom de Boas-Vindas">
