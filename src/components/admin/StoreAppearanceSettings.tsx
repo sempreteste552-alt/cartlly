@@ -74,6 +74,11 @@ export default function StoreAppearanceSettings() {
       setHeaderStyle(config.header_style);
       setFooterStyle(config.footer_style);
       setCustomCss(config.custom_css || "");
+      setPrimaryColor(config.primary_color || "#000000");
+      setSecondaryColor(config.secondary_color || "#666666");
+      setBackgroundColor(config.background_color || "#ffffff");
+      setTextColor(config.text_color || "#000000");
+      setThemeMode(config.theme_mode || 'light');
     }
   }, [config]);
 
@@ -92,6 +97,11 @@ export default function StoreAppearanceSettings() {
       header_style: headerStyle,
       footer_style: footerStyle,
       custom_css: customCss.trim() || null,
+      primary_color: primaryColor,
+      secondary_color: secondaryColor,
+      background_color: backgroundColor,
+      text_color: textColor,
+      theme_mode: themeMode,
     });
   };
 
