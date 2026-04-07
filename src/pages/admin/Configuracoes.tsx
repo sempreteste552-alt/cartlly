@@ -482,9 +482,10 @@ function GeneralSettingsTab() {
             </div>
             <Separator />
             <p className="text-sm font-medium text-foreground">Cabeçalho e Rodapé</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Fundo Cabeçalho", value: headerBgColor, set: setHeaderBgColor },
+                { label: "Texto Cabeçalho", value: headerTextColor, set: setHeaderTextColor },
                 { label: "Fundo Rodapé", value: footerBgColor, set: setFooterBgColor },
                 { label: "Texto Rodapé", value: footerTextColor, set: setFooterTextColor },
               ].map((c) => (
