@@ -88,7 +88,7 @@ export default function LojaLayout() {
       root.style.setProperty("--store-button-text", settings.button_text_color || "#ffffff");
       
       // Calculate a very light version of the background color for tinting
-      const bgColor = settings.page_bg_color || "#ffffff";
+      const bgColor = (settings as any).page_bg_color || "#ffffff";
       root.style.setProperty("--store-bg-base", bgColor);
       
       return () => {
