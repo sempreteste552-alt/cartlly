@@ -74,6 +74,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 }
 
 
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>

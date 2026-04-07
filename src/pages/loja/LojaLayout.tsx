@@ -40,22 +40,24 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
-  console.log("[LojaLayout] Rendering for slug:", slug);
-
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart();
-
-  // Detect if current user is the store owner (admin previewing)
-  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const settings = settingsBySlug;
+  const isLoading = slugLoading;
+  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+
+  // Detect if current user is the store owner (admin previewing)
+  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
   // Apply dark class on <html> for store scope and remove on unmount
   useEffect(() => {
@@ -68,9 +70,6 @@ export default function LojaLayout() {
       document.documentElement.classList.remove("dark");
     };
   }, [storeDark]);
-
-  const settings = settingsBySlug;
-  const isLoading = slugLoading;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -110,7 +109,15 @@ export default function LojaLayout() {
     );
   }
 
-  if (!isLoading && slug && !settings) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (slug && !settings) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
         <div className="text-center space-y-4 p-8">
@@ -123,7 +130,7 @@ export default function LojaLayout() {
   }
 
   // Store blocked by super admin
-  if (!isLoading && settings && (settings as any).store_blocked) {
+  if (settings && (settings as any).store_blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
         <div className="text-center space-y-4 p-8 max-w-md">
@@ -135,7 +142,7 @@ export default function LojaLayout() {
     );
   }
 
-  if (!isLoading && settings && !settings.store_open) {
+  if (settings && !settings.store_open) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
         <div className="text-center space-y-4 p-8">
@@ -143,14 +150,6 @@ export default function LojaLayout() {
           <h1 className="text-3xl font-bold">Loja Fechada</h1>
           <p className="text-gray-400">Estamos temporariamente fechados. Volte em breve!</p>
         </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
       </div>
     );
   }
@@ -168,9 +167,6 @@ export default function LojaLayout() {
   const isCheckout = location.pathname.includes("/checkout");
   const isRastreio = location.pathname.includes("/rastreio");
 
-  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
-
-  console.log("[LojaLayout] Final render state:", { isLoading, hasSettings: !!settings, storeUserId: settings?.user_id });
 
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
