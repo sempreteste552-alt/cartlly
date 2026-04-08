@@ -48,6 +48,7 @@ export default function LojaLayout() {
   const cart = useCart();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -298,7 +299,7 @@ export default function LojaLayout() {
               </Button>
             )}
 
-            <Sheet>
+            <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative" style={{ color: headerTextColor }}>
                   <ShoppingCart className="h-5 w-5" />
@@ -346,7 +347,7 @@ export default function LojaLayout() {
                       <span>Total</span>
                       <span>{formatPrice(cart.total)}</span>
                     </div>
-                    <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => navigate(`${basePath}/checkout`)}>
+                    <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
                       Finalizar Compra
                     </Button>
                     {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
