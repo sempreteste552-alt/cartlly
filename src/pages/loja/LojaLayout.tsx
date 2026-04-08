@@ -169,6 +169,14 @@ export default function LojaLayout() {
     }
   }, [themeConfig?.favicon_url]);
 
+  // Redirect slug access to custom domain when domain is verified
+  useEffect(() => {
+    if (slug && settings?.custom_domain && settings?.domain_status === "verified" && isPlatformHost(hostname)) {
+      const targetUrl = `https://${settings.custom_domain}${location.pathname.replace(`/loja/${slug}`, "") || "/"}`;
+      window.location.replace(targetUrl);
+    }
+  }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
+
   // No slug AND not a custom domain → no store to show
   if (!slug && !isCustomDomain) {
     return (
@@ -205,15 +213,6 @@ export default function LojaLayout() {
       </div>
     );
   }
-
-  // Redirect slug access to custom domain when domain is verified
-  useEffect(() => {
-    if (slug && settings?.custom_domain && settings?.domain_status === "verified" && isPlatformHost(hostname)) {
-      const targetUrl = `https://${settings.custom_domain}${location.pathname.replace(`/loja/${slug}`, "") || "/"}`;
-      window.location.replace(targetUrl);
-    }
-  }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
-
 
   if (settings && (settings as any).store_blocked) {
     return (
