@@ -3,9 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "./useCustomerAuth";
 import { toast } from "sonner";
 
+function getWishlistKey(customerId?: string) {
+  return `wishlist_${customerId || "anon"}`;
+}
+
+function loadWishlistCache(customerId?: string): string[] {
+  try {
+    const raw = localStorage.getItem(getWishlistKey(customerId));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveWishlistCache(ids: string[], customerId?: string) {
+  try {
+    localStorage.setItem(getWishlistKey(customerId), JSON.stringify(ids));
+  } catch { /* quota */ }
+}
+
 export function useWishlist(storeUserId?: string) {
   const { customer } = useCustomerAuth();
-  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(() => new Set(loadWishlistCache(customer?.id)));
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +41,7 @@ export function useWishlist(storeUserId?: string) {
     if (data) {
       const ids = (data as any[]).map((d) => d.product_id);
       setWishlistIds(new Set(ids));
+      saveWishlistCache(ids, customer.id);
       if (ids.length > 0) {
         const { data: products } = await supabase
           .from("products")
@@ -37,6 +57,13 @@ export function useWishlist(storeUserId?: string) {
   useEffect(() => {
     loadWishlist();
   }, [loadWishlist]);
+
+  // Sync cache whenever IDs change
+  useEffect(() => {
+    if (customer?.id) {
+      saveWishlistCache(Array.from(wishlistIds), customer.id);
+    }
+  }, [wishlistIds, customer?.id]);
 
   const toggleWishlist = async (productId: string) => {
     if (!customer?.id || !storeUserId) {
