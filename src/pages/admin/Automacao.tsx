@@ -294,15 +294,18 @@ export default function Automacao() {
           </CardContent>
         </Card>
         <Card className="col-span-2 lg:col-span-1">
-          <CardContent className="pt-4 pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">Disparar IA agora</p>
-                <p className="text-[11px] text-muted-foreground">Recuperar carrinhos abandonados</p>
-              </div>
-              <Button size="sm" onClick={() => triggerRecovery.mutate()} disabled={triggerRecovery.isPending}>
-                {triggerRecovery.isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                Executar
+          <CardContent className="pt-4 pb-3 space-y-2">
+            <p className="font-medium text-sm">Disparar IA agora</p>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => triggerRecovery.mutate("abandoned_cart")} disabled={triggerRecovery.isPending}>
+                {triggerRecovery.isPending ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <ShoppingCart className="h-3 w-3 mr-1" />}
+                Carrinhos
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => triggerRecovery.mutate("new_customer")} disabled={triggerRecovery.isPending}>
+                <Users className="h-3 w-3 mr-1" /> Boas-vindas
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => triggerRecovery.mutate("daily_promo")} disabled={triggerRecovery.isPending}>
+                <Send className="h-3 w-3 mr-1" /> Promo diária
               </Button>
             </div>
           </CardContent>
