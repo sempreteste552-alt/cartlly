@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
@@ -10,6 +9,10 @@ import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -20,6 +23,8 @@ const QUICK_ACTIONS = [
   { label: "🎯 Criar campanha", prompt: "Sugira uma campanha promocional para minha loja baseada nos produtos e histórico" },
   { label: "💡 Ideias de produtos", prompt: "Sugira novos produtos que eu poderia adicionar à minha loja" },
   { label: "🏷️ Estratégia de cupons", prompt: "Crie uma estratégia de cupons para aumentar conversão e ticket médio" },
+  { label: "📢 Enviar promoção push", prompt: "Gere um texto de promoção e envie como notificação push para meus clientes" },
+  { label: "🎟️ Criar cupom", prompt: "Crie um cupom de desconto de 10% com código PROMO10 para minha loja" },
 ];
 
 export function AIChatWidget() {
@@ -30,6 +35,8 @@ export function AIChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isLocked } = usePlanFeatures();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const aiLocked = isLocked("ai_tools");
 
   const { data: products } = useProducts();
@@ -50,16 +57,103 @@ export function AIChatWidget() {
     }
   }, [open]);
 
-  const getStoreContext = useCallback(() => ({
-    storeName: (settings as any)?.store_name || "",
-    totalProducts: products?.length || 0,
-    totalOrders: orders?.length || 0,
-    totalRevenue: orders?.reduce((sum, o: any) => sum + (o.total || 0), 0) || 0,
-    categories: categories?.map((c) => c.name) || [],
-    activeCoupons: coupons?.filter((c: any) => c.active)?.length || 0,
-  }), [products, categories, coupons, orders, settings]);
+  const getStoreContext = useCallback(() => {
+    const recentOrders = (orders || []).slice(0, 50).map((o: any) => ({
+      id: o.id?.slice(0, 8),
+      customer: o.customer_name,
+      total: o.total,
+      status: o.status,
+      date: o.created_at?.slice(0, 10),
+    }));
 
-  // If AI is locked, show locked button
+    const productList = (products || []).slice(0, 100).map((p: any) => ({
+      id: p.id?.slice(0, 8),
+      name: p.name,
+      price: p.price,
+      stock: p.stock,
+      published: p.published,
+      category: (p as any).categories?.name || null,
+    }));
+
+    const couponList = (coupons || []).map((c: any) => ({
+      code: c.code,
+      discount_type: c.discount_type,
+      discount_value: c.discount_value,
+      active: c.active,
+      used_count: c.used_count,
+      max_uses: c.max_uses,
+      expires_at: c.expires_at?.slice(0, 10) || null,
+    }));
+
+    return {
+      storeName: (settings as any)?.store_name || "",
+      storeSlug: (settings as any)?.store_slug || "",
+      storeWhatsapp: (settings as any)?.store_whatsapp || "",
+      totalProducts: products?.length || 0,
+      totalOrders: orders?.length || 0,
+      totalRevenue: orders?.reduce((sum, o: any) => sum + (o.total || 0), 0) || 0,
+      categories: categories?.map((c) => c.name) || [],
+      activeCoupons: coupons?.filter((c: any) => c.active)?.length || 0,
+      products: productList,
+      recentOrders,
+      coupons: couponList,
+      sellViaWhatsapp: (settings as any)?.sell_via_whatsapp || false,
+      paymentPix: (settings as any)?.payment_pix || false,
+      paymentCreditCard: (settings as any)?.payment_credit_card || false,
+      shippingEnabled: (settings as any)?.shipping_enabled || false,
+    };
+  }, [products, categories, coupons, orders, settings]);
+
+  // Process AI action commands embedded in responses
+  const processAIActions = useCallback(async (content: string) => {
+    // Check for action blocks: ```action:send_push {...}``` or ```action:create_coupon {...}```
+    const actionRegex = /```action:(\w+)\s*\n([\s\S]*?)```/g;
+    let match;
+    while ((match = actionRegex.exec(content)) !== null) {
+      const actionType = match[1];
+      try {
+        const payload = JSON.parse(match[2].trim());
+        
+        if (actionType === "send_push" && user) {
+          // Send push to all store customers
+          const resp = await supabase.functions.invoke("send-push-customers", {
+            body: {
+              title: payload.title,
+              body: payload.body,
+              store_user_id: user.id,
+            },
+          });
+          if (resp.error) {
+            toast.error("Erro ao enviar push: " + resp.error.message);
+          } else {
+            toast.success(`Push enviado para ${resp.data?.sent || 0} clientes!`);
+          }
+        }
+        
+        if (actionType === "create_coupon" && user) {
+          const { error } = await supabase.from("coupons").insert({
+            user_id: user.id,
+            code: payload.code?.toUpperCase() || "AI" + Date.now().toString(36).toUpperCase(),
+            discount_type: payload.discount_type || "percentage",
+            discount_value: payload.discount_value || 10,
+            active: true,
+            max_uses: payload.max_uses || null,
+            min_order_value: payload.min_order_value || 0,
+            expires_at: payload.expires_at || null,
+          });
+          if (error) {
+            toast.error("Erro ao criar cupom: " + error.message);
+          } else {
+            toast.success(`Cupom ${payload.code || ""} criado com sucesso!`);
+            queryClient.invalidateQueries({ queryKey: ["coupons"] });
+          }
+        }
+      } catch (e) {
+        console.error("Action parse error:", e);
+      }
+    }
+  }, [user, queryClient]);
+
   if (aiLocked) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
@@ -169,6 +263,11 @@ export function AIChatWidget() {
           } catch {}
         }
       }
+
+      // Process any action blocks in the final response
+      if (assistantSoFar) {
+        await processAIActions(assistantSoFar);
+      }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Erro desconhecido";
       setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
@@ -197,7 +296,7 @@ export function AIChatWidget() {
           <Bot className="h-5 w-5" />
           <div>
             <p className="text-sm font-semibold">Assistente IA</p>
-            <p className="text-xs opacity-80">Seu consultor de e-commerce</p>
+            <p className="text-xs opacity-80">Gerencia sua loja com IA</p>
           </div>
         </div>
         <div className="flex gap-1">
@@ -217,7 +316,7 @@ export function AIChatWidget() {
             <div className="text-center py-4">
               <Sparkles className="h-10 w-10 mx-auto text-primary/40 mb-2" />
               <p className="text-sm font-medium text-foreground">Olá! Como posso ajudar?</p>
-              <p className="text-xs text-muted-foreground mt-1">Pergunte sobre vendas, campanhas, produtos ou promoções</p>
+              <p className="text-xs text-muted-foreground mt-1">Posso enviar promoções, criar cupons, analisar vendas e muito mais</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {QUICK_ACTIONS.map((action) => (
@@ -249,7 +348,7 @@ export function AIChatWidget() {
             }`}>
               {msg.role === "assistant" ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown>{msg.content.replace(/```action:\w+\s*\n[\s\S]*?```/g, "").trim()}</ReactMarkdown>
                 </div>
               ) : (
                 <p>{msg.content}</p>
@@ -287,7 +386,7 @@ export function AIChatWidget() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Pergunte algo..."
+            placeholder="Pergunte algo ou peça uma ação..."
             disabled={isLoading}
             className="flex-1 text-sm"
           />

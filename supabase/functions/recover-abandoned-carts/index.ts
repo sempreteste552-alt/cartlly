@@ -34,6 +34,9 @@ Deno.serve(async (req) => {
     if (triggerType === "new_product") {
       return await handleNewProduct(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
+    if (triggerType === "new_coupon") {
+      return await handleNewCoupon(supabase, supabaseUrl, lovableApiKey, requestBody);
+    }
 
     // === ABANDONED CART RECOVERY ===
     // Fetch the store's abandoned_cart rule to get timing settings
@@ -613,6 +616,100 @@ async function handleNewProduct(supabase: any, supabaseUrl: string, lovableApiKe
   return json({ processed: pushUserIds.length, sent });
 }
 
+// === NEW COUPON PUSH ===
+async function handleNewCoupon(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, body: any) {
+  const { store_user_id, coupon_code, discount_type, discount_value } = body;
+  if (!store_user_id || !coupon_code) {
+    return json({ error: "Missing store_user_id or coupon_code" }, 400);
+  }
+
+  // Dedup
+  const { data: existingExec } = await supabase
+    .from("automation_executions")
+    .select("id")
+    .eq("user_id", store_user_id)
+    .eq("trigger_type", "new_coupon")
+    .ilike("message_text", `%${coupon_code}%`)
+    .limit(1);
+
+  if (existingExec && existingExec.length > 0) {
+    return json({ processed: 0, message: "Already sent for this coupon" });
+  }
+
+  const storeMap = await getStoreMap(supabase, [store_user_id]);
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+
+  const { data: customers } = await supabase
+    .from("customers")
+    .select("id, name, auth_user_id")
+    .eq("store_user_id", store_user_id);
+
+  if (!customers || customers.length === 0) {
+    return json({ processed: 0, message: "No customers" });
+  }
+
+  const customerUserIds = customers.map((c: any) => c.auth_user_id).filter(Boolean);
+  if (customerUserIds.length === 0) return json({ processed: 0, message: "No customer auth ids" });
+
+  const { data: subs } = await supabase
+    .from("push_subscriptions")
+    .select("user_id")
+    .in("user_id", customerUserIds);
+
+  const pushUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
+  if (pushUserIds.length === 0) return json({ processed: 0, message: "No push subscriptions" });
+
+  const discountText = discount_type === "percentage" 
+    ? `${discount_value}% de desconto` 
+    : `R$ ${Number(discount_value).toFixed(2)} de desconto`;
+
+  let title = `🎟️ Cupom novo na ${storeName}!`;
+  let msgBody = `Use o cupom ${coupon_code} e ganhe ${discountText}! Aproveite! 🛍️`;
+
+  if (lovableApiKey) {
+    try {
+      const dayOfWeek = new Date().getDay();
+      const hour = new Date().getHours();
+      const aiMsg = await generateAIMessage(lovableApiKey, {
+        type: "new_coupon",
+        storeName,
+        couponCode: coupon_code,
+        discountText,
+        dayOfWeek,
+        hour,
+      });
+      if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+    } catch (e) { console.error("AI new coupon error:", e); }
+  }
+
+  let sent = 0;
+  for (const uid of pushUserIds) {
+    try {
+      const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_user_id: uid, title, body: msgBody, url: "/", type: "new_coupon",
+        }),
+      });
+      const data = await resp.json();
+      if (data.sent > 0) sent++;
+    } catch (e) { console.error("New coupon push error:", e); }
+  }
+
+  await supabase.from("automation_executions").insert({
+    user_id: store_user_id,
+    trigger_type: "new_coupon",
+    channel: "push",
+    message_text: `${title} — ${msgBody}`,
+    ai_generated: !!lovableApiKey,
+    status: sent > 0 ? "sent" : "failed",
+  });
+
+  return json({ processed: pushUserIds.length, sent });
+}
+
 // === HELPERS ===
 
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
@@ -802,6 +899,26 @@ Saudação: ${greetings}`;
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
     userPrompt = ctx._customUserPrompt || "";
+
+  } else if (ctx.type === "new_coupon") {
+    systemPrompt = `Você é uma assistente de marketing ANIMADA da loja "${ctx.storeName}".
+Um NOVO CUPOM de desconto foi criado!
+
+REGRAS OBRIGATÓRIAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com 1 emoji de desconto (🎟️ 🏷️ 💰 🔥 ✨ 🎁 💸 etc)
+- body: máximo 130 caracteres, MENCIONE o código do cupom "${ctx.couponCode}" e o desconto "${ctx.discountText}" e a loja "${ctx.storeName}"
+- Use saudação: "${greetings}" (é ${dayName})
+- Tom: empolgado, urgente, convidativo, crie senso de oportunidade
+- NUNCA repita a mesma mensagem
+- Seed: ${seed}
+${dateInstructions}`;
+
+    userPrompt = `Loja: ${ctx.storeName}
+Cupom: ${ctx.couponCode}
+Desconto: ${ctx.discountText}
+Dia: ${dayName}
+Saudação: ${greetings}`;
   }
 
   if (!systemPrompt) return null;
