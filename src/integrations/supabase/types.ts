@@ -2936,6 +2936,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      store_accepts_orders: {
+        Args: { _store_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "super_admin" | "tenant"
