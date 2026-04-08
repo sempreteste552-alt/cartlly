@@ -282,13 +282,27 @@ export default function Dashboard() {
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
           <CardContent>
             {ordersByStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={ordersByStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  <Pie
+                    data={ordersByStatus}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    dataKey="value"
+                    label={false}
+                  >
                     {ordersByStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Tooltip />
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                    formatter={(value: string, entry: any) => `${value}: ${entry.payload?.value ?? ''}`}
+                  />
+                  <Tooltip formatter={(v: number, name: string) => [v, name]} />
                 </PieChart>
               </ResponsiveContainer>
             ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
