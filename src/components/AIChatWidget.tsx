@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -17,7 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type MsgContent = string | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+type Msg = { role: "user" | "assistant"; content: MsgContent };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
