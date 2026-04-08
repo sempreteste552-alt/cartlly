@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { randomUUID } from "crypto";
 import { useNavigate } from "react-router-dom";
 import { useLojaContext } from "./LojaLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,7 +124,7 @@ export default function LojaCheckout() {
     const userId = settings?.user_id;
     if (!userId) throw new Error("Loja não configurada");
 
-    const orderId = randomUUID();
+    const orderId = globalThis.crypto?.randomUUID?.() ?? "00000000-0000-4000-8000-000000000000";
 
     const { error: orderErr } = await supabase
       .from("orders")
