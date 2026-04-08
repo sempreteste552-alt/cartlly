@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 
@@ -9,9 +10,7 @@ export function useCustomerNotifications(storeUserId?: string) {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["customer_notifications", storeUserId, user?.id],
     enabled: !!storeUserId && !!user,
-    refetchInterval: 30000,
     queryFn: async () => {
-      // Fetch messages targeted to this customer or broadcast to all customers of this store
       const { data, error } = await supabase
         .from("tenant_messages")
         .select("*")
@@ -27,12 +26,10 @@ export function useCustomerNotifications(storeUserId?: string) {
 
       if (error) throw error;
 
-      // Filter: show broadcast OR specifically targeted to this user
       const filtered = (data || []).filter(
         (m: any) => !m.target_user_id || m.target_user_id === user!.id
       );
 
-      // Fetch read status
       const ids = filtered.map((m: any) => m.id);
       if (ids.length === 0) return [];
 
@@ -50,6 +47,31 @@ export function useCustomerNotifications(storeUserId?: string) {
       }));
     },
   });
+
+  // Realtime: listen for new messages and refresh immediately
+  useEffect(() => {
+    if (!storeUserId || !user) return;
+
+    const channel = supabase
+      .channel(`customer-notifs-${storeUserId}-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "tenant_messages",
+          filter: `source_tenant_id=eq.${storeUserId}`,
+        },
+        () => {
+          qc.invalidateQueries({ queryKey: ["customer_notifications", storeUserId, user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [storeUserId, user, qc]);
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
