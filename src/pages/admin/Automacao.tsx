@@ -570,6 +570,10 @@ export default function Automacao() {
             const currentTemplate = edits.message_template ?? rule.message_template ?? "";
             const currentHoursStart = edits.allowed_hours_start ?? rule.allowed_hours_start;
             const currentHoursEnd = edits.allowed_hours_end ?? rule.allowed_hours_end;
+            const currentOfferDiscount = edits.offer_discount ?? (rule as any).offer_discount ?? false;
+            const currentDiscountCode = edits.discount_code ?? (rule as any).discount_code ?? "";
+            const currentDiscountPercentage = edits.discount_percentage ?? (rule as any).discount_percentage ?? 0;
+            const isAbandonedCart = rule.trigger_type === "abandoned_cart";
 
             return (
               <Card key={rule.id} className={`transition-all ${rule.enabled ? "border-primary/20" : "opacity-60"}`}>
