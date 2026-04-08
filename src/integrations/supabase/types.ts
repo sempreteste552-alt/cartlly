@@ -1545,6 +1545,7 @@ export type Database = {
           id: string
           last_push_at: string | null
           max_steps: number
+          metadata: Json
           next_push_at: string | null
           product_id: string | null
           pushes_sent: number
@@ -1560,6 +1561,7 @@ export type Database = {
           id?: string
           last_push_at?: string | null
           max_steps?: number
+          metadata?: Json
           next_push_at?: string | null
           product_id?: string | null
           pushes_sent?: number
@@ -1575,6 +1577,7 @@ export type Database = {
           id?: string
           last_push_at?: string | null
           max_steps?: number
+          metadata?: Json
           next_push_at?: string | null
           product_id?: string | null
           pushes_sent?: number
