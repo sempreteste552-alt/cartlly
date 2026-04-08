@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { Link, useParams, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
@@ -20,9 +20,8 @@ import { CartNotification, useCartNotification } from "@/components/storefront/C
 import { toast } from "sonner";
 
 export default function LojaHome() {
-  const { slug } = useParams();
   const location = useLocation();
-  const { cart, searchTerm, settings, storeUserId, openCart } = useLojaContext();
+  const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
 
   // Smooth scroll to top on page load
   useEffect(() => {
@@ -76,7 +75,6 @@ export default function LojaHome() {
   const buttonColor = settings?.button_color || "#000000";
   const buttonTextColor = settings?.button_text_color || "#ffffff";
   const accentColor = settings?.accent_color || "#8b5cf6";
-  const basePath = slug ? `/loja/${slug}` : "/loja";
 
   return (
     <div className="space-y-6">
