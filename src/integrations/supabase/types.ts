@@ -1859,6 +1859,7 @@ export type Database = {
           free_shipping_bar_enabled: boolean | null
           free_shipping_threshold: number | null
           id: string | null
+          popup_coupon_code: string | null
           popup_coupon_delay_seconds: number | null
           popup_coupon_description: string | null
           popup_coupon_enabled: boolean | null
@@ -1885,6 +1886,7 @@ export type Database = {
           free_shipping_bar_enabled?: boolean | null
           free_shipping_threshold?: number | null
           id?: string | null
+          popup_coupon_code?: string | null
           popup_coupon_delay_seconds?: number | null
           popup_coupon_description?: string | null
           popup_coupon_enabled?: boolean | null
@@ -1911,6 +1913,7 @@ export type Database = {
           free_shipping_bar_enabled?: boolean | null
           free_shipping_threshold?: number | null
           id?: string | null
+          popup_coupon_code?: string | null
           popup_coupon_delay_seconds?: number | null
           popup_coupon_description?: string | null
           popup_coupon_enabled?: boolean | null
