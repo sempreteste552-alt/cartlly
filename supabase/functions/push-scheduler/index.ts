@@ -12,6 +12,93 @@ function json(data: any, status = 200) {
   });
 }
 
+// ========== PRIORITY SYSTEM ==========
+type Priority = "high" | "medium" | "low";
+
+const PRIORITY_CONFIG = {
+  high: { bypassSoftLimit: true, minCooldownMinutes: 30 },   // cart, product_view
+  medium: { bypassSoftLimit: false, minCooldownMinutes: 60 }, // inactivity
+  low: { bypassSoftLimit: false, minCooldownMinutes: 60 },    // promotions
+};
+
+// Frequency presets (admin-configurable via automation_rules.max_sends_per_day)
+const FREQUENCY_PRESETS: Record<string, { softDailyLimit: number; cooldownMinutes: number }> = {
+  low: { softDailyLimit: 4, cooldownMinutes: 90 },
+  medium: { softDailyLimit: 6, cooldownMinutes: 60 },
+  aggressive: { softDailyLimit: 10, cooldownMinutes: 30 },
+};
+
+function getFrequencyConfig(maxSendsPerDay: number | null) {
+  if (!maxSendsPerDay || maxSendsPerDay <= 4) return FREQUENCY_PRESETS.low;
+  if (maxSendsPerDay <= 7) return FREQUENCY_PRESETS.medium;
+  return FREQUENCY_PRESETS.aggressive;
+}
+
+// ========== ANTI-SPAM LOGIC ==========
+async function shouldSkipAntiSpam(
+  supabase: any,
+  customerId: string,
+  productId: string | null,
+  dailyCount: number,
+  priority: Priority,
+  freqConfig: { softDailyLimit: number; cooldownMinutes: number }
+): Promise<{ skip: boolean; reason?: string }> {
+  // Check soft daily limit (high priority can bypass)
+  if (dailyCount >= freqConfig.softDailyLimit && !PRIORITY_CONFIG[priority].bypassSoftLimit) {
+    return { skip: true, reason: "soft_daily_limit" };
+  }
+  // Hard ceiling even for high priority
+  if (dailyCount >= 12) {
+    return { skip: true, reason: "hard_daily_ceiling" };
+  }
+
+  // Check cooldown: last push must be > cooldownMinutes ago
+  const cooldown = Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
+  const cooldownCutoff = new Date(Date.now() - cooldown * 60 * 1000).toISOString();
+  const { data: recentPush } = await supabase
+    .from("automation_executions")
+    .select("id")
+    .eq("customer_id", customerId)
+    .eq("status", "sent")
+    .gte("sent_at", cooldownCutoff)
+    .limit(1);
+  if (recentPush && recentPush.length > 0) {
+    return { skip: true, reason: "cooldown" };
+  }
+
+  // Anti-spam: skip if user ignored last 3 pushes (sent but never clicked)
+  const { data: lastPushes } = await supabase
+    .from("automation_executions")
+    .select("clicked_at")
+    .eq("customer_id", customerId)
+    .eq("status", "sent")
+    .order("sent_at", { ascending: false })
+    .limit(3);
+  if (lastPushes && lastPushes.length >= 3) {
+    const allIgnored = lastPushes.every((p: any) => !p.clicked_at);
+    if (allIgnored) {
+      return { skip: true, reason: "ignored_3_consecutive" };
+    }
+  }
+
+  // Anti-spam: don't repeat same product within 4 hours
+  if (productId) {
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+    const { data: recentProduct } = await supabase
+      .from("automation_executions")
+      .select("id")
+      .eq("customer_id", customerId)
+      .eq("related_product_id", productId)
+      .gte("sent_at", fourHoursAgo)
+      .limit(1);
+    if (recentProduct && recentProduct.length > 0) {
+      return { skip: true, reason: "same_product_recently" };
+    }
+  }
+
+  return { skip: false };
+}
+
 // ========== SEQUENCE DEFINITIONS ==========
 
 interface SequenceStep {
@@ -124,7 +211,7 @@ const CART_ABANDONMENT_SEQUENCE: SequenceStep[] = [
 
 const INACTIVITY_SEQUENCE: SequenceStep[] = [
   {
-    delayMinutes: 120, // 2 hours
+    delayMinutes: 120,
     intensity: "soft",
     templates: [
       { title: "👋 Voltou, {name}?", body: "Sentimos sua falta na {store}! Tem novidades te esperando ✨" },
@@ -138,7 +225,7 @@ const INACTIVITY_SEQUENCE: SequenceStep[] = [
     ],
   },
   {
-    delayMinutes: 360, // 6 hours
+    delayMinutes: 360,
     intensity: "medium",
     templates: [
       { title: "🔥 {name}, você está perdendo!", body: "Ofertas imperdíveis na {store} agora! Não fique de fora ⚡" },
@@ -152,7 +239,7 @@ const INACTIVITY_SEQUENCE: SequenceStep[] = [
     ],
   },
   {
-    delayMinutes: 1440, // 24 hours
+    delayMinutes: 1440,
     intensity: "aggressive",
     templates: [
       { title: "🚨 ÚLTIMA CHANCE, {name}!", body: "Suas ofertas exclusivas na {store} EXPIRAM HOJE! NÃO PERCA! ACESSE AGORA 🔥" },
@@ -165,6 +252,20 @@ const INACTIVITY_SEQUENCE: SequenceStep[] = [
       { title: "🎯 AGORA OU NUNCA!", body: "{name}, as melhores ofertas da {store} expiram em breve! GARANTA JÁ! 🚨" },
     ],
   },
+];
+
+// Promotional campaign templates for trending/random products
+const PROMO_CAMPAIGN_TEMPLATES = [
+  { title: "🔥 Em alta na {store}!", body: "{name}, o {product} é tendência! Confira na {store} ⚡" },
+  { title: "👀 Você vai adorar isso!", body: "{name}, dê uma olhada no {product} na {store}! 🛍️" },
+  { title: "⚡ Novidades chegaram!", body: "{name}, o {product} acabou de chegar na {store}! Veja 🌟" },
+  { title: "🌟 Recomendado pra você!", body: "{name}, selecionamos o {product} especialmente pra você na {store} ✨" },
+  { title: "💎 Destaque da {store}!", body: "{name}, o {product} é um dos favoritos! Confira 🔥" },
+  { title: "🛍️ Imperdível na {store}!", body: "{name}, o {product} está fazendo sucesso! Garanta o seu ⚡" },
+  { title: "✨ Top vendas: {product}!", body: "{name}, esse produto é queridinho na {store}! Veja 💫" },
+  { title: "🎯 Feito pra você!", body: "{name}, achamos que o {product} combina com você. Confira na {store}! 😊" },
+  { title: "💫 Não perca: {product}!", body: "{name}, o {product} da {store} está com ótima demanda! 🔥" },
+  { title: "🏷️ Oportunidade: {product}!", body: "{name}, o {product} na {store} pode ser a escolha certa! 🛒" },
 ];
 
 // ========== MAIN HANDLER ==========
@@ -181,9 +282,42 @@ Deno.serve(async (req) => {
       product_view: { processed: 0, sent: 0, skipped: 0 },
       cart_abandonment: { processed: 0, sent: 0, skipped: 0 },
       inactivity: { processed: 0, sent: 0, skipped: 0 },
+      promo_campaign: { processed: 0, sent: 0, skipped: 0 },
       sequences_created: 0,
       sequences_advanced: 0,
+      anti_spam_blocked: 0,
     };
+
+    // ========== LOAD STORE FREQUENCY CONFIGS ==========
+    const { data: allRules } = await supabase
+      .from("automation_rules")
+      .select("user_id, max_sends_per_day, enabled, trigger_type")
+      .eq("enabled", true);
+    
+    const storeFreqMap = new Map<string, { softDailyLimit: number; cooldownMinutes: number }>();
+    for (const r of allRules || []) {
+      if (!storeFreqMap.has(r.user_id)) {
+        storeFreqMap.set(r.user_id, getFrequencyConfig(r.max_sends_per_day));
+      }
+    }
+    const defaultFreq = FREQUENCY_PRESETS.medium;
+
+    // ========== LOAD DAILY COUNTS FOR ALL CUSTOMERS ==========
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const { data: todayExecsAll } = await supabase
+      .from("automation_executions")
+      .select("customer_id")
+      .eq("status", "sent")
+      .gte("sent_at", today.toISOString())
+      .limit(1000);
+    
+    const globalDailyCounts = new Map<string, number>();
+    (todayExecsAll || []).forEach((e: any) => {
+      if (e.customer_id) {
+        globalDailyCounts.set(e.customer_id, (globalDailyCounts.get(e.customer_id) || 0) + 1);
+      }
+    });
 
     // ========== 1) PROCESS EXISTING SEQUENCES ==========
     const now = new Date();
@@ -216,19 +350,6 @@ Deno.serve(async (req) => {
         .in("user_id", storeIds);
       const storeMap = new Map((stores || []).map((s: any) => [s.user_id, s]));
 
-      // Check daily limits
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { data: todayExecs } = await supabase
-        .from("automation_executions")
-        .select("customer_id")
-        .gte("sent_at", today.toISOString())
-        .in("customer_id", customerIds);
-      const dailyCounts = new Map<string, number>();
-      (todayExecs || []).forEach((e: any) => {
-        dailyCounts.set(e.customer_id, (dailyCounts.get(e.customer_id) || 0) + 1);
-      });
-
       // Check if customers purchased the product (stop sequence)
       const { data: recentOrders } = await supabase
         .from("order_items")
@@ -243,13 +364,39 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Daily limit: 3 pushes max
-        if ((dailyCounts.get(seq.customer_id) || 0) >= 3) {
-          // Reschedule for tomorrow
-          const tomorrow = new Date();
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          tomorrow.setHours(9, 0, 0, 0);
-          await supabase.from("retargeting_sequences").update({ next_push_at: tomorrow.toISOString() }).eq("id", seq.id);
+        // Determine sequence type and priority
+        const seqMeta = seq.metadata as any || {};
+        const seqType = seqMeta?.sequence_type || "product_view";
+        
+        let priority: Priority;
+        let sequenceDef: SequenceStep[];
+        let triggerType: string;
+
+        if (seqType === "cart_abandonment") {
+          sequenceDef = CART_ABANDONMENT_SEQUENCE;
+          triggerType = "abandoned_cart";
+          priority = "high";
+        } else if (seqType === "inactivity") {
+          sequenceDef = INACTIVITY_SEQUENCE;
+          triggerType = "inactivity";
+          priority = "medium";
+        } else {
+          sequenceDef = PRODUCT_VIEW_SEQUENCE;
+          triggerType = "product_view";
+          priority = "high";
+        }
+
+        // Smart rate limiting via anti-spam
+        const dailyCount = globalDailyCounts.get(seq.customer_id) || 0;
+        const freqConfig = storeFreqMap.get(seq.store_user_id) || defaultFreq;
+        const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, dailyCount, priority, freqConfig);
+        
+        if (spamCheck.skip) {
+          // Reschedule instead of dropping
+          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 45 : 120;
+          const nextTime = new Date(Date.now() + rescheduleMinutes * 60 * 1000).toISOString();
+          await supabase.from("retargeting_sequences").update({ next_push_at: nextTime }).eq("id", seq.id);
+          results.anti_spam_blocked++;
           continue;
         }
 
@@ -257,23 +404,6 @@ Deno.serve(async (req) => {
         if (seq.product_id && purchasedProducts.has(seq.product_id)) {
           await supabase.from("retargeting_sequences").update({ status: "converted", stopped_reason: "purchased" }).eq("id", seq.id);
           continue;
-        }
-
-        // Determine sequence type and get step
-        let sequenceDef: SequenceStep[];
-        let triggerType: string;
-        const seqMeta = seq.metadata as any || {};
-        const seqType = seqMeta?.sequence_type || "product_view";
-
-        if (seqType === "cart_abandonment") {
-          sequenceDef = CART_ABANDONMENT_SEQUENCE;
-          triggerType = "abandoned_cart";
-        } else if (seqType === "inactivity") {
-          sequenceDef = INACTIVITY_SEQUENCE;
-          triggerType = "inactivity";
-        } else {
-          sequenceDef = PRODUCT_VIEW_SEQUENCE;
-          triggerType = "product_view";
         }
 
         const stepIndex = seq.current_step;
@@ -328,7 +458,6 @@ Deno.serve(async (req) => {
 
           const wasSent = pushData.sent > 0;
 
-          // Log execution
           await supabase.from("automation_executions").insert({
             user_id: seq.store_user_id,
             customer_id: seq.customer_id,
@@ -340,6 +469,11 @@ Deno.serve(async (req) => {
             error_message: wasSent ? null : JSON.stringify(pushData).slice(0, 200),
             related_product_id: seq.product_id,
           });
+
+          // Update daily count in memory
+          if (wasSent) {
+            globalDailyCounts.set(seq.customer_id, (globalDailyCounts.get(seq.customer_id) || 0) + 1);
+          }
 
           // Advance sequence
           const nextStep = stepIndex + 1;
@@ -399,7 +533,6 @@ Deno.serve(async (req) => {
         if (!uniqueViews.has(key)) uniqueViews.set(key, ev);
       }
 
-      // Check existing sequences for these customer+product combos
       const custIds = [...new Set([...uniqueViews.values()].map(v => v.customer_id))];
       const { data: existingSeqs } = await supabase
         .from("retargeting_sequences")
@@ -408,7 +541,6 @@ Deno.serve(async (req) => {
         .in("status", ["active", "completed"]);
       const existingKeys = new Set((existingSeqs || []).map((s: any) => `${s.customer_id}:${s.product_id}`));
 
-      // Check purchased products
       const prodIds = [...new Set([...uniqueViews.values()].map(v => v.product_id))];
       const { data: purchasedItems } = await supabase
         .from("order_items")
@@ -449,22 +581,11 @@ Deno.serve(async (req) => {
 
     if (abandonedCarts && abandonedCarts.length > 0) {
       const cartCustIds = abandonedCarts.map((c: any) => c.customer_id);
-      const { data: existingCartSeqs } = await supabase
-        .from("retargeting_sequences")
-        .select("customer_id, status")
-        .in("customer_id", cartCustIds)
-        .in("status", ["active"])
-        .not("product_id", "is", null); // product sequences — we check separately
-
-      // Check for active cart sequences specifically
       const { data: activeCartSeqs } = await supabase
         .from("retargeting_sequences")
         .select("customer_id")
         .in("customer_id", cartCustIds)
         .eq("status", "active");
-
-      // Use metadata to check for cart_abandonment type but since we store in metadata JSON,
-      // we just check if customer already has ANY active sequence
       const hasActiveSeq = new Set((activeCartSeqs || []).map((s: any) => s.customer_id));
 
       for (const cart of abandonedCarts) {
@@ -488,7 +609,6 @@ Deno.serve(async (req) => {
     }
 
     // ========== 4) CREATE INACTIVITY SEQUENCES ==========
-    // Smart tiers: 2h, 6h, 24h
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -508,7 +628,6 @@ Deno.serve(async (req) => {
         .eq("status", "active");
       const hasInactSeq = new Set((existingInactSeqs || []).map((s: any) => s.customer_id));
 
-      // Also check recent completed inactivity sequences (cooldown: 48h)
       const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
       const { data: recentCompleted } = await supabase
         .from("retargeting_sequences")
@@ -536,6 +655,149 @@ Deno.serve(async (req) => {
           metadata: { sequence_type: "inactivity" },
         });
         results.sequences_created++;
+      }
+    }
+
+    // ========== 5) PROMOTIONAL CAMPAIGNS (Flow 2: Store Campaigns) ==========
+    // Send trending/random product pushes to customers who haven't been active
+    const { data: promoRules } = await supabase
+      .from("automation_rules")
+      .select("user_id, max_sends_per_day")
+      .eq("trigger_type", "daily_promo")
+      .eq("enabled", true);
+
+    if (promoRules && promoRules.length > 0) {
+      // Only run campaigns every ~3 hours (check last campaign execution)
+      const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+
+      for (const rule of promoRules) {
+        const { data: recentCampaign } = await supabase
+          .from("automation_executions")
+          .select("id")
+          .eq("user_id", rule.user_id)
+          .eq("trigger_type", "promo_campaign")
+          .gte("sent_at", threeHoursAgo)
+          .limit(1);
+
+        if (recentCampaign && recentCampaign.length > 0) continue;
+
+        // Get store info
+        const { data: storeData } = await supabase
+          .from("store_settings")
+          .select("store_name, store_slug")
+          .eq("user_id", rule.user_id)
+          .single();
+        const storeName = storeData?.store_name || storeData?.store_slug || "nossa loja";
+
+        // Get trending/random products
+        const { data: trendingProducts } = await supabase
+          .from("products")
+          .select("id, name, price, image_url")
+          .eq("user_id", rule.user_id)
+          .eq("published", true)
+          .gt("stock", 0)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (!trendingProducts || trendingProducts.length === 0) continue;
+
+        // Pick a random product
+        const product = trendingProducts[Math.floor(Math.random() * trendingProducts.length)];
+
+        // Get customers with push subscriptions
+        const { data: storeCustomers } = await supabase
+          .from("customers")
+          .select("id, name, auth_user_id")
+          .eq("store_user_id", rule.user_id);
+
+        if (!storeCustomers || storeCustomers.length === 0) continue;
+
+        const custAuthIds = storeCustomers.map((c: any) => c.auth_user_id).filter(Boolean);
+        const { data: pushSubs } = await supabase
+          .from("push_subscriptions")
+          .select("user_id")
+          .in("user_id", custAuthIds);
+
+        const pushUserSet = new Set((pushSubs || []).map((s: any) => s.user_id));
+        const eligibleCustomers = storeCustomers.filter((c: any) => pushUserSet.has(c.auth_user_id));
+
+        if (eligibleCustomers.length === 0) continue;
+
+        // Get customer_id mapping for anti-spam
+        const custByAuth = new Map(storeCustomers.map((c: any) => [c.auth_user_id, c]));
+
+        let campaignSent = 0;
+        const freqConfig = storeFreqMap.get(rule.user_id) || defaultFreq;
+
+        for (const customer of eligibleCustomers) {
+          const dailyCount = globalDailyCounts.get(customer.id) || 0;
+          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, product.id, dailyCount, "low", freqConfig);
+          
+          if (spamCheck.skip) {
+            results.promo_campaign.skipped++;
+            results.anti_spam_blocked++;
+            continue;
+          }
+
+          // Personalize: check if customer viewed any product recently
+          const { data: recentViews } = await supabase
+            .from("customer_behavior_events")
+            .select("product_id")
+            .eq("customer_id", customer.id)
+            .eq("event_type", "product_view")
+            .order("created_at", { ascending: false })
+            .limit(5);
+
+          let selectedProduct = product;
+          if (recentViews && recentViews.length > 0) {
+            // Prioritize products the user has viewed before (but not the last one to avoid repetition)
+            const viewedIds = new Set(recentViews.map((v: any) => v.product_id));
+            const personalizedProduct = trendingProducts.find((p: any) => viewedIds.has(p.id) && p.id !== recentViews[0]?.product_id);
+            if (personalizedProduct) selectedProduct = personalizedProduct;
+          }
+
+          const msg = pickRandomMessage(PROMO_CAMPAIGN_TEMPLATES, customer.name, selectedProduct.name, storeName);
+
+          try {
+            const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                target_user_id: customer.auth_user_id,
+                title: msg.title,
+                body: msg.body,
+                url: "/",
+                type: "promo_campaign",
+                store_user_id: rule.user_id,
+              }),
+            });
+            const pushData = await pushResp.json();
+
+            if (pushData.sent > 0) {
+              campaignSent++;
+              globalDailyCounts.set(customer.id, dailyCount + 1);
+            }
+
+            results.promo_campaign.processed++;
+            pushData.sent > 0 ? results.promo_campaign.sent++ : results.promo_campaign.skipped++;
+          } catch (err: any) {
+            console.error("Promo campaign push error:", err);
+            results.promo_campaign.skipped++;
+          }
+        }
+
+        // Log campaign execution
+        if (campaignSent > 0 || eligibleCustomers.length > 0) {
+          await supabase.from("automation_executions").insert({
+            user_id: rule.user_id,
+            trigger_type: "promo_campaign",
+            channel: "push",
+            message_text: `[Campaign] ${product.name} → ${campaignSent} sent / ${eligibleCustomers.length} eligible`,
+            ai_generated: false,
+            status: campaignSent > 0 ? "sent" : "skipped",
+            related_product_id: product.id,
+          });
+        }
       }
     }
 
