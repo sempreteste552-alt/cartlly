@@ -621,6 +621,9 @@ Dia: ${dayName}
 Saudação: ${greetings}
 Clientes com push: ${ctx.customerCount || "vários"}
 Datas especiais: ${specialDate}`;
+  } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
+    systemPrompt = ctx._customSystemPrompt;
+    userPrompt = ctx._customUserPrompt || "";
   }
 
   if (!systemPrompt) return null;
