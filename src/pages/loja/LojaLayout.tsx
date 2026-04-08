@@ -184,15 +184,7 @@ export default function LojaLayout() {
 
   // No slug AND not a custom domain → no store to show
   if (!slug && !isCustomDomain) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <div className="text-center space-y-4 p-8">
-          <div className="text-6xl">🔍</div>
-          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/admin" replace />;
   }
 
   if (isLoading) {
