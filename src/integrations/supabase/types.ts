@@ -2369,9 +2369,11 @@ export type Database = {
           created_at: string
           current_period_end: string
           current_period_start: string
+          downgrade_applied_at: string | null
           feature_overrides: Json
           id: string
           plan_id: string
+          plan_reminders_sent: number[]
           status: string
           trial_ends_at: string | null
           updated_at: string
@@ -2381,9 +2383,11 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
           plan_id: string
+          plan_reminders_sent?: number[]
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -2393,9 +2397,11 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
           plan_id?: string
+          plan_reminders_sent?: number[]
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
