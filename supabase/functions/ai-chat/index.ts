@@ -76,7 +76,14 @@ REGRAS CRÍTICAS:
 - Para cupons, discount_type pode ser "percentage" ou "fixed".
 - O cupom criado ficará visível automaticamente na loja.
 - NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_PUSH] e [ACTION_COUPON].
-- Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente.`;
+- Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente.
+
+ANÁLISE DE IMAGENS:
+- O lojista pode enviar imagens (prints de tela, fotos de produtos, configurações de DNS, etc.).
+- Se receber um print de configuração de domínio (Hostinger, GoDaddy, Cloudflare, etc.), analise se os registros DNS estão corretos: A record apontando para 185.158.133.1 e TXT record _lovable com o valor de verificação.
+- Se receber uma foto de produto, avalie qualidade, iluminação, composição e sugira melhorias.
+- Se receber um print da loja, analise layout, UX e sugira ajustes.
+- Sempre descreva o que vê na imagem e dê orientações práticas.`;`;
 
     // Check if any message contains images (multimodal)
     const hasImages = messages.some((m: any) => Array.isArray(m.content) && m.content.some((p: any) => p.type === "image_url"));
