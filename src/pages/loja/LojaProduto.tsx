@@ -342,10 +342,10 @@ export default function LojaProduto() {
         <CartNotification
           productName={cartNotif.notification.productName}
           productImage={cartNotif.notification.productImage}
-          basePath={basePath}
           buttonColor={buttonColor}
           buttonTextColor={buttonTextColor}
           onClose={cartNotif.hide}
+          onOpenCart={openCart}
         />
       )}
     </div>
