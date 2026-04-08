@@ -359,7 +359,7 @@ export default function Login() {
                   </button>
                 )}
               </div>
-            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
