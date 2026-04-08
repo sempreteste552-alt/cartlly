@@ -13,6 +13,7 @@ import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
 import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
+import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner";
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
@@ -88,6 +89,9 @@ export default function LojaHome() {
 
           {/* 2. Destaques (Stories) - abaixo do banner */}
           <HighlightsSection storeUserId={storeUserId} primaryColor={primaryColor} />
+
+          {/* 2.5. Cupons ativos */}
+          <ActiveCouponsBanner storeUserId={storeUserId} primaryColor={primaryColor} />
 
           {/* 3. Seções dinâmicas (produtos em destaque, etc.) */}
           <DynamicHomeSections
