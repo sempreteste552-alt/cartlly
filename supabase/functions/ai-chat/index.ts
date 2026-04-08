@@ -78,6 +78,10 @@ REGRAS CRÍTICAS:
 - NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_PUSH] e [ACTION_COUPON].
 - Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente.`;
 
+    // Check if any message contains images (multimodal)
+    const hasImages = messages.some((m: any) => Array.isArray(m.content) && m.content.some((p: any) => p.type === "image_url"));
+    const model = hasImages ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -85,7 +89,7 @@ REGRAS CRÍTICAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
