@@ -9,7 +9,7 @@ import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicSto
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +19,8 @@ import { StoreMarquee } from "@/components/StoreMarquee";
 import { StorePushOptIn } from "@/components/storefront/StorePushOptIn";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
+import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
+import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
