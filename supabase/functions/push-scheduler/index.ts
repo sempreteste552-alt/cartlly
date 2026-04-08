@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
       const productName = lastProductId ? productNameMap.get(lastProductId) : undefined;
 
       // Pick random template and fill
-      const tpl = pickTemplate(state.state);
+      const tpl = pickTemplate(state.state, !!productName);
       const vars: Record<string, string> = {
         greetings, name: customer.name || "cliente",
         store: storeName, product: productName || "",
