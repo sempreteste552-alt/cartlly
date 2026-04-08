@@ -19,7 +19,13 @@ import { toast } from "sonner";
 
 export default function LojaHome() {
   const { slug } = useParams();
+  const location = useLocation();
   const { cart, searchTerm, settings, storeUserId } = useLojaContext();
+
+  // Smooth scroll to top on page load
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [location.pathname]);
   const { data: products, isLoading: prodLoading } = usePublicProducts(storeUserId);
   const { data: banners } = usePublicBanners(storeUserId);
   const { data: categories } = usePublicCategories(storeUserId);
