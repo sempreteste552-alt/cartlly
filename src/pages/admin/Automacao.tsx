@@ -673,6 +673,33 @@ export default function Automacao() {
                         <p className="text-[10px] text-muted-foreground">Variáveis: {"{customer_name}"}, {"{store_name}"}, {"{item_count}"}, {"{total_value}"}</p>
                       </div>
 
+                      {isAbandonedCart && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium flex items-center gap-1.5"><Gift className="h-4 w-4 text-primary" /> Oferecer desconto na recuperação</p>
+                              <p className="text-[10px] text-muted-foreground">A IA incluirá o cupom na mensagem de recuperação</p>
+                            </div>
+                            <Switch
+                              checked={currentOfferDiscount}
+                              onCheckedChange={(v) => setRuleEdit(rule.id, "offer_discount", v)}
+                            />
+                          </div>
+                          {currentOfferDiscount && (
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Código do cupom</Label>
+                                <Input value={currentDiscountCode} onChange={e => setRuleEdit(rule.id, "discount_code", e.target.value.toUpperCase())} className="h-8 text-sm" placeholder="Ex: VOLTA10" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">% de desconto</Label>
+                                <Input type="number" min={1} max={100} value={currentDiscountPercentage} onChange={e => setRuleEdit(rule.id, "discount_percentage", parseInt(e.target.value) || 0)} className="h-8 text-sm" placeholder="10" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => { setEditingRule(null); setRuleEdits(prev => { const n = { ...prev }; delete n[rule.id]; return n; }); }}>
                           Cancelar
