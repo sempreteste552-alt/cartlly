@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS idx_abandoned_carts_session_id ON public.abandoned_carts (session_id) WHERE session_id IS NOT NULL;
