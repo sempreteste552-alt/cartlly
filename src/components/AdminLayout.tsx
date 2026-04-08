@@ -24,7 +24,19 @@ export function AdminLayout() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
-  // Get current subscription for trial info
+  // Dynamic PWA manifest for admin context
+  const adminName = (settings as any)?.store_name
+    ? `Admin ${(settings as any).store_name}`
+    : "Painel Admin";
+  usePwaManifest({
+    name: adminName,
+    shortName: adminName.slice(0, 12),
+    themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
+    iconUrl: (settings as any)?.logo_url || undefined,
+    startUrl: `${window.location.origin}/admin/`,
+    scope: `${window.location.origin}/admin/`,
+  });
+
   const { data: currentSub } = useQuery({
     queryKey: ["admin_layout_sub", user?.id],
     enabled: !!user,
