@@ -26,7 +26,6 @@ export default function PushNotificationSettings() {
   const [testUrl, setTestUrl] = useState("/admin");
   const [sending, setSending] = useState(false);
 
-  // Customer push state
   const [custTitle, setCustTitle] = useState("🔥 Novidades na loja!");
   const [custBody, setCustBody] = useState("Confira nossas promoções exclusivas!");
   const [custUrl, setCustUrl] = useState("");
@@ -90,8 +89,10 @@ export default function PushNotificationSettings() {
       if (error) throw error;
       if (data?.sent > 0) {
         toast.success(`✅ Notificação enviada para ${data.sent} dispositivo(s)!`);
+      } else if (data?.removed > 0) {
+        toast.warning("Os dispositivos antigos/inválidos foram limpos. Ative o push novamente neste aparelho.");
       } else {
-        toast.warning("Nenhum dispositivo registrado para receber a notificação.");
+        toast.warning("Nenhum dispositivo válido registrado para receber a notificação.");
       }
     } catch (err: any) {
       toast.error("Erro ao enviar: " + (err.message || "Erro desconhecido"));
@@ -113,7 +114,14 @@ export default function PushNotificationSettings() {
         },
       });
       if (error) throw error;
-      toast.success(`📢 Push enviado! ${data?.sent || 0} notificação(ões) entregue(s) para ${data?.customers_with_push || 0} cliente(s).`);
+
+      if ((data?.sent || 0) > 0) {
+        toast.success(`📢 Push enviado! ${data?.sent || 0} notificação(ões) entregue(s) para ${data?.customers_with_push || 0} cliente(s).`);
+      } else if ((data?.removed || 0) > 0) {
+        toast.warning("Foram removidos dispositivos antigos/inválidos dos clientes. Eles precisam ativar o push novamente na loja.");
+      } else {
+        toast.warning("Nenhum cliente com dispositivo push válido encontrado.");
+      }
     } catch (err: any) {
       toast.error("Erro ao enviar: " + (err.message || "Erro desconhecido"));
     } finally {
@@ -130,7 +138,6 @@ export default function PushNotificationSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Status Card */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -190,7 +197,6 @@ export default function PushNotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Test Push - for admin */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -230,7 +236,6 @@ export default function PushNotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Send Push to Customers - PRO+ only */}
       <LockedFeature isLocked={!canAccess("push_customers", ctx)} featureName="Push para Clientes">
         <Card className="border-border border-primary/30">
           <CardHeader>
@@ -281,7 +286,6 @@ export default function PushNotificationSettings() {
         </Card>
       </LockedFeature>
 
-      {/* Push Logs */}
       {pushLogs && pushLogs.length > 0 && (
         <Card className="border-border">
           <CardHeader>

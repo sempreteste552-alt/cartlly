@@ -25,7 +25,6 @@ Deno.serve(async (req) => {
     const { title, body, url } = await req.json();
     if (!title) return json({ error: "Title is required" }, 400);
 
-    // Get all customers of this store
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: customers } = await serviceClient
@@ -34,16 +33,15 @@ Deno.serve(async (req) => {
       .eq("store_user_id", user.id);
 
     if (!customers || customers.length === 0) {
-      return json({ sent: 0, total: 0, message: "Nenhum cliente encontrado" });
+      return json({ sent: 0, total_customers: 0, customers_with_push: 0, removed: 0, message: "Nenhum cliente encontrado" });
     }
 
     const customerUserIds = customers.map((c: any) => c.auth_user_id).filter(Boolean);
-    
+
     if (customerUserIds.length === 0) {
-      return json({ sent: 0, total: 0, message: "Nenhum cliente com conta encontrado" });
+      return json({ sent: 0, total_customers: customers.length, customers_with_push: 0, removed: 0, message: "Nenhum cliente com conta encontrado" });
     }
 
-    // Get all push subscriptions for these customer user IDs
     const { data: subs } = await serviceClient
       .from("push_subscriptions")
       .select("user_id")
@@ -52,9 +50,9 @@ Deno.serve(async (req) => {
     const uniqueUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
 
     let sent = 0;
+    let removed = 0;
     const failures: string[] = [];
 
-    // Send push to each customer via send-push-internal
     for (const targetUserId of uniqueUserIds) {
       try {
         const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
@@ -69,13 +67,18 @@ Deno.serve(async (req) => {
           }),
         });
 
+        const data = await resp.json();
+
         if (resp.ok) {
-          const data = await resp.json();
           sent += data.sent || 0;
+          removed += data.removed || 0;
+          if (!data.sent && !data.removed) {
+            failures.push(targetUserId);
+          }
         } else {
           failures.push(targetUserId);
         }
-      } catch (e: any) {
+      } catch (_e: any) {
         failures.push(targetUserId);
       }
     }
@@ -84,6 +87,7 @@ Deno.serve(async (req) => {
       sent,
       total_customers: customers.length,
       customers_with_push: uniqueUserIds.length,
+      removed,
       failures: failures.length,
     });
   } catch (error: any) {
