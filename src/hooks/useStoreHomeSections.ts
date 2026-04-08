@@ -39,6 +39,7 @@ export const SECTION_TYPES = [
   { value: "video_text", label: "Vídeo + Texto", icon: "📝" },
   { value: "newsletter", label: "Newsletter", icon: "✉️" },
   { value: "custom_html", label: "HTML / Texto Livre", icon: "🔧" },
+  { value: "highlights", label: "Destaques (Stories)", icon: "💫" },
 ] as const;
 
 export function useStoreHomeSections() {
