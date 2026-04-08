@@ -69,6 +69,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   custom_fonts:         { label: "Fontes Personalizadas", description: "Tipografia customizada", minPlan: "PRO", category: "design" },
   mega_menu:            { label: "Mega Menu", description: "Menu de navegação avançado", minPlan: "PRO", category: "design" },
   conversion_widgets:   { label: "Widgets de Conversão", description: "Selos, contagem regressiva, urgência", minPlan: "PRO", category: "marketing" },
+  push_customers:       { label: "Push para Clientes", description: "Enviar notificações push para clientes da loja", minPlan: "PRO", category: "marketing" },
 
   // PREMIUM
   seo_advanced:         { label: "SEO Avançado", description: "Schema, sitemap e otimizações", minPlan: "PREMIUM", category: "advanced" },
