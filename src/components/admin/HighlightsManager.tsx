@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, Plus, Trash2, Pencil, Image, Video, Star, X, Upload } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -172,6 +173,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
           accept="image/*,video/*"
           loading={uploadingMedia}
           setLoading={setUploadingMedia}
+          userId={userId}
           onUploaded={(url, type) => {
             addItem.mutate({
               highlight_id: highlight.id,
@@ -195,6 +197,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
 }
 
 export default function HighlightsManager() {
+  const { user } = useAuth();
   const { data: highlights, isLoading } = useStoreHighlights();
   const createHighlight = useCreateHighlight();
   const deleteHighlight = useDeleteHighlight();
@@ -213,7 +216,7 @@ export default function HighlightsManager() {
     if (!file) return;
     setUploadingCover(true);
     try {
-      const url = await uploadFile(file, "highlights/covers");
+      const url = await uploadFile(file, "highlights/covers", user!.id);
       setCoverPreview(url);
     } catch (err: any) {
       toast.error("Erro: " + err.message);
@@ -308,6 +311,7 @@ export default function HighlightsManager() {
                 accept="image/*,video/*"
                 loading={uploadingMedia}
                 setLoading={setUploadingMedia}
+                userId={user!.id}
                 onUploaded={(url, type) => {
                   if (!createdHighlight) return;
                   addItem.mutate({
@@ -375,7 +379,7 @@ export default function HighlightsManager() {
           <DialogHeader>
             <DialogTitle>Editar Destaque</DialogTitle>
           </DialogHeader>
-          {editing && <HighlightEditor highlight={editing} onClose={() => setEditing(null)} />}
+          {editing && <HighlightEditor highlight={editing} onClose={() => setEditing(null)} userId={user!.id} />}
         </DialogContent>
       </Dialog>
     </div>
