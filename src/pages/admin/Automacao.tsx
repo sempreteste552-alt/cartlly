@@ -321,6 +321,7 @@ export default function Automacao() {
     daily_promo: "📢 Promoção Diária",
     wishlist_reminder: "💜 Lembrete Wishlist",
     new_customer: "🎉 Novo Cliente",
+    review_thankyou: "⭐ Avaliação",
     restock: "📦 Reposição",
   }[t] || t);
 
