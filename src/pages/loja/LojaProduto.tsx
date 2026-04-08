@@ -22,12 +22,17 @@ import { toast } from "sonner";
 export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, settings, storeUserId, openCart, basePath, track } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
   const cartNotif = useCartNotification();
+
+  // Track product view
+  useEffect(() => {
+    if (id) track("product_view", { product_id: id });
+  }, [id, track]);
 
   const product = products?.find((p) => p.id === id);
 
