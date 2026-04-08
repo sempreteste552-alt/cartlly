@@ -339,6 +339,126 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
   return json({ processed: storeIds.length, sent: totalSent });
 }
 
+// === REVIEW THANKYOU ===
+async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, body: any) {
+  const { store_user_id, customer_name, rating, comment, product_id } = body;
+  if (!store_user_id || !customer_name || !rating) {
+    return json({ error: "Missing required fields" }, 400);
+  }
+
+  // Find the customer's auth_user_id by name from this store
+  const { data: customers } = await supabase
+    .from("customers")
+    .select("id, auth_user_id, name")
+    .eq("store_user_id", store_user_id)
+    .ilike("name", customer_name);
+
+  const customer = customers?.[0];
+  if (!customer?.auth_user_id) {
+    return json({ processed: 0, message: "Customer not found or no auth_user_id" });
+  }
+
+  // Get store info
+  const storeMap = await getStoreMap(supabase, [store_user_id]);
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+
+  // Get product name
+  const { data: product } = await supabase
+    .from("products").select("name").eq("id", product_id).single();
+  const productName = product?.name || "produto";
+
+  const isGoodReview = rating >= 4;
+  const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+  const hour = new Date().getHours();
+  const greetings = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const dayName = dayNames[new Date().getDay()];
+
+  let title = "";
+  let msgBody = "";
+
+  if (isGoodReview) {
+    title = `💛 Obrigado pela avaliação, ${customer_name}!`;
+    msgBody = `${greetings}! Ficamos felizes com sua avaliação de "${productName}" na ${storeName}. Volte sempre! 🛍️`;
+  } else {
+    title = `🙏 Agradecemos seu feedback, ${customer_name}`;
+    msgBody = `${greetings}! Recebemos sua avaliação de "${productName}" na ${storeName}. Vamos melhorar! Obrigado pela sinceridade. 💜`;
+  }
+
+  if (lovableApiKey) {
+    try {
+      const specialDate = getSpecialDateContext();
+      const seed = `${new Date().toISOString().slice(0, 10)}-review-${storeName}-${customer_name}`;
+
+      const systemPrompt = isGoodReview
+        ? `Você é uma assistente MUITO educada e grata da loja "${storeName}".
+O cliente "${customer_name}" deixou uma avaliação POSITIVA (${rating}/5 estrelas) sobre o produto "${productName}".
+${comment ? `Comentário: "${comment}"` : ""}
+
+REGRAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com emoji de gratidão (💛 🙏 ⭐ 🌟 ✨ 💜 🫶 etc)
+- body: máximo 130 caracteres, AGRADEÇA pelo nome, mencione o produto e a loja "${storeName}"
+- Tom: MUITO grato, carinhoso, incentive o cliente a comprar mais
+- Mencione a saudação: "${greetings}" (é ${dayName})
+- ${specialDate}
+- Seed: ${seed}-${Math.random().toString(36).slice(2, 6)}`
+        : `Você é uma assistente MUITO educada e empática da loja "${storeName}".
+O cliente "${customer_name}" deixou uma avaliação NEGATIVA (${rating}/5 estrelas) sobre o produto "${productName}".
+${comment ? `Comentário: "${comment}"` : ""}
+
+REGRAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com emoji empático (🙏 💜 🫶 💙 etc)
+- body: máximo 130 caracteres, PEÇA DESCULPAS pelo nome, diga que vai melhorar, mencione a loja "${storeName}"
+- Tom: empático, humilde, sincero, mostre que se importa
+- NUNCA seja defensivo ou culpe o cliente
+- Mencione a saudação: "${greetings}" (é ${dayName})
+- ${specialDate}
+- Seed: ${seed}-${Math.random().toString(36).slice(2, 6)}`;
+
+      const aiMsg = await generateAIMessage(lovableApiKey, {
+        type: "review_thankyou",
+        _customSystemPrompt: systemPrompt,
+        _customUserPrompt: `Cliente: ${customer_name}\nProduto: ${productName}\nEstrelas: ${rating}/5\nComentário: ${comment || "nenhum"}\nLoja: ${storeName}\nDia: ${dayName}\nSaudação: ${greetings}`,
+      });
+      if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+    } catch (e) { console.error("AI review error:", e); }
+  }
+
+  // Send push
+  try {
+    const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: customer.auth_user_id,
+        title,
+        body: msgBody,
+        url: "/",
+        type: "review_thankyou",
+      }),
+    });
+    const pushData = await pushResp.json();
+
+    await supabase.from("automation_executions").insert({
+      user_id: store_user_id,
+      customer_id: customer.id,
+      trigger_type: "review_thankyou",
+      channel: "push",
+      message_text: `${title} — ${msgBody}`,
+      ai_generated: !!lovableApiKey,
+      status: pushData.sent > 0 ? "sent" : "failed",
+      error_message: pushData.sent > 0 ? null : JSON.stringify(pushData).slice(0, 200),
+    });
+
+    return json({ processed: 1, sent: pushData.sent > 0 ? 1 : 0 });
+  } catch (e: any) {
+    console.error("Review push error:", e);
+    return json({ processed: 1, sent: 0, error: e.message });
+  }
+}
+
 // === HELPERS ===
 
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
