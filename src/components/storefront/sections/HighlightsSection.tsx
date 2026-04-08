@@ -1,23 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePublicHighlights, type StoreHighlight, type StoreHighlightItem } from "@/hooks/useStoreHighlights";
 import { X, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import { SectionWrapper } from "../DynamicHomeSections";
-import type { StoreHomeSection } from "@/hooks/useStoreHomeSections";
 
 interface Props {
   storeUserId?: string;
-  section: StoreHomeSection;
   primaryColor: string;
 }
 
-export function HighlightsSection({ storeUserId, section, primaryColor }: Props) {
+export function HighlightsSection({ storeUserId, primaryColor }: Props) {
   const { data: highlights } = usePublicHighlights(storeUserId);
   const [viewing, setViewing] = useState<StoreHighlight | null>(null);
 
   if (!highlights || highlights.length === 0) return null;
 
   return (
-    <SectionWrapper section={section} primaryColor={primaryColor}>
+    <div className="max-w-7xl mx-auto px-4">
       <div className="flex gap-4 overflow-x-auto pb-2 px-1 scrollbar-hide">
         {highlights.map((h) => (
           <button
@@ -51,7 +48,7 @@ export function HighlightsSection({ storeUserId, section, primaryColor }: Props)
           primaryColor={primaryColor}
         />
       )}
-    </SectionWrapper>
+    </div>
   );
 }
 
@@ -69,7 +66,8 @@ function StoryViewer({
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
-  const DURATION = 5000;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const DURATION = 10000; // 10 seconds for images
 
   const goNext = useCallback(() => {
     if (current < items.length - 1) {
@@ -87,8 +85,9 @@ function StoryViewer({
     }
   }, [current]);
 
+  // Image auto-advance timer (10s)
   useEffect(() => {
-    if (paused || items[current]?.media_type === "video") return;
+    if (paused || !items[current] || items[current].media_type === "video") return;
     const interval = 50;
     timerRef.current = setInterval(() => {
       setProgress((p) => {
@@ -103,12 +102,23 @@ function StoryViewer({
     return () => clearInterval(timerRef.current);
   }, [current, paused, goNext, items]);
 
+  // Video progress tracking
+  const handleVideoTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !video.duration) return;
+    setProgress((video.currentTime / video.duration) * 100);
+  }, []);
+
+  // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
-      if (e.key === " ") { e.preventDefault(); setPaused((p) => !p); }
+      if (e.key === " ") {
+        e.preventDefault();
+        setPaused((p) => !p);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -170,12 +180,14 @@ function StoryViewer({
         <div className="w-full h-full flex items-center justify-center">
           {item.media_type === "video" ? (
             <video
+              ref={videoRef}
               key={item.id}
               src={item.media_url}
               className="w-full h-full object-contain"
               autoPlay
               playsInline
               onEnded={goNext}
+              onTimeUpdate={handleVideoTimeUpdate}
               onPause={() => setPaused(true)}
               onPlay={() => setPaused(false)}
             />
@@ -189,7 +201,7 @@ function StoryViewer({
           )}
         </div>
 
-        {/* Navigation zones */}
+        {/* Navigation zones (touch) */}
         <button
           className="absolute left-0 top-16 bottom-16 w-1/3 z-10"
           onClick={goPrev}
@@ -201,21 +213,22 @@ function StoryViewer({
           aria-label="Próximo"
         />
 
-        {/* Arrows for desktop */}
+        {/* Left arrow - always visible */}
         {current > 0 && (
           <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 rounded-full p-1 text-white/80 hover:text-white hidden md:block"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
             onClick={goPrev}
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
         )}
+        {/* Right arrow - always visible */}
         {current < items.length - 1 && (
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 rounded-full p-1 text-white/80 hover:text-white hidden md:block"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
             onClick={goNext}
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-6 w-6" />
           </button>
         )}
       </div>

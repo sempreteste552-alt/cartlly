@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Plus, Trash2, Pencil, Image, Video, Star, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Image, Video, Star, X, Upload } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   useStoreHighlights,
   useCreateHighlight,
@@ -16,14 +18,71 @@ import {
   type StoreHighlight,
 } from "@/hooks/useStoreHighlights";
 
+async function uploadFile(file: File, folder: string): Promise<string> {
+  const ext = file.name.split(".").pop() || "bin";
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function FileUploadButton({
+  label,
+  accept,
+  onUploaded,
+  loading,
+  setLoading,
+}: {
+  label: string;
+  accept: string;
+  onUploaded: (url: string, type: "image" | "video") => void;
+  loading: boolean;
+  setLoading: (v: boolean) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      const url = await uploadFile(file, "highlights");
+      const type = file.type.startsWith("video") ? "video" : "image";
+      onUploaded(url, type);
+    } catch (err: any) {
+      toast.error("Erro no upload: " + err.message);
+    } finally {
+      setLoading(false);
+      if (ref.current) ref.current.value = "";
+    }
+  };
+
+  return (
+    <>
+      <input ref={ref} type="file" accept={accept} className="hidden" onChange={handleChange} />
+      <Button
+        type="button"
+        variant="outline"
+        disabled={loading}
+        onClick={() => ref.current?.click()}
+        className="w-full"
+      >
+        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+        {label}
+      </Button>
+    </>
+  );
+}
+
 function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; onClose: () => void }) {
   const updateHighlight = useUpdateHighlight();
   const addItem = useAddHighlightItem();
   const deleteItem = useDeleteHighlightItem();
   const [name, setName] = useState(highlight.name);
   const [coverUrl, setCoverUrl] = useState(highlight.cover_url || "");
-  const [newMediaUrl, setNewMediaUrl] = useState("");
-  const [newMediaType, setNewMediaType] = useState<"image" | "video">("image");
+  const [uploading, setUploading] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const handleSave = () => {
     updateHighlight.mutate(
@@ -32,15 +91,18 @@ function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; on
     );
   };
 
-  const handleAddMedia = () => {
-    if (!newMediaUrl.trim()) return;
-    addItem.mutate({
-      highlight_id: highlight.id,
-      media_type: newMediaType,
-      media_url: newMediaUrl.trim(),
-      sort_order: (highlight.items?.length || 0) * 10,
-    });
-    setNewMediaUrl("");
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file, "highlights/covers");
+      setCoverUrl(url);
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -50,13 +112,23 @@ function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; on
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Última Edição" />
       </div>
       <div className="space-y-2">
-        <Label>URL da Capa</Label>
-        <Input value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://..." />
-        {coverUrl && (
-          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary mx-auto">
-            <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
+        <Label>Capa do Destaque</Label>
+        <div className="flex items-center gap-3">
+          {coverUrl && (
+            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary shrink-0">
+              <img src={coverUrl} alt="Capa" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="flex-1">
+            <label className="cursor-pointer">
+              <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+              <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {coverUrl ? "Trocar capa" : "Enviar capa"}
+              </div>
+            </label>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Media items */}
@@ -93,39 +165,20 @@ function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; on
           </p>
         )}
 
-        {/* Add new media */}
-        <div className="flex gap-2">
-          <div className="flex gap-1 shrink-0">
-            <Button
-              type="button"
-              variant={newMediaType === "image" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setNewMediaType("image")}
-              className="h-9"
-            >
-              <Image className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant={newMediaType === "video" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setNewMediaType("video")}
-              className="h-9"
-            >
-              <Video className="h-4 w-4" />
-            </Button>
-          </div>
-          <Input
-            value={newMediaUrl}
-            onChange={(e) => setNewMediaUrl(e.target.value)}
-            placeholder={`URL da ${newMediaType === "video" ? "vídeo" : "imagem"}...`}
-            className="flex-1"
-            onKeyDown={(e) => e.key === "Enter" && handleAddMedia()}
-          />
-          <Button size="sm" onClick={handleAddMedia} disabled={!newMediaUrl.trim() || addItem.isPending} className="h-9">
-            {addItem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </Button>
-        </div>
+        <FileUploadButton
+          label="Enviar imagem ou vídeo"
+          accept="image/*,video/*"
+          loading={uploadingMedia}
+          setLoading={setUploadingMedia}
+          onUploaded={(url, type) => {
+            addItem.mutate({
+              highlight_id: highlight.id,
+              media_type: type,
+              media_url: url,
+              sort_order: (highlight.items?.length || 0) * 10,
+            });
+          }}
+        />
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
@@ -143,20 +196,34 @@ export default function HighlightsManager() {
   const { data: highlights, isLoading } = useStoreHighlights();
   const createHighlight = useCreateHighlight();
   const deleteHighlight = useDeleteHighlight();
+  const addItem = useAddHighlightItem();
   const [editing, setEditing] = useState<StoreHighlight | null>(null);
   const [newName, setNewName] = useState("");
-  const [newCover, setNewCover] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [createdHighlight, setCreatedHighlight] = useState<StoreHighlight | null>(null);
-  const addItem = useAddHighlightItem();
-  const [newMediaUrl, setNewMediaUrl] = useState("");
-  const [newMediaType, setNewMediaType] = useState<"image" | "video">("image");
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [coverPreview, setCoverPreview] = useState("");
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const url = await uploadFile(file, "highlights/covers");
+      setCoverPreview(url);
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setUploadingCover(false);
+    }
+  };
 
   const handleCreate = () => {
     if (!newName.trim()) return;
     createHighlight.mutate(
-      { name: newName.trim(), cover_url: newCover.trim() || undefined },
+      { name: newName.trim(), cover_url: coverPreview || undefined },
       {
         onSuccess: (data) => {
           setCreatedHighlight(data);
@@ -166,23 +233,12 @@ export default function HighlightsManager() {
     );
   };
 
-  const handleAddMediaToNew = () => {
-    if (!createdHighlight || !newMediaUrl.trim()) return;
-    addItem.mutate({
-      highlight_id: createdHighlight.id,
-      media_type: newMediaType,
-      media_url: newMediaUrl.trim(),
-    });
-    setNewMediaUrl("");
-  };
-
   const resetCreate = () => {
     setShowCreate(false);
     setStep(1);
     setNewName("");
-    setNewCover("");
+    setCoverPreview("");
     setCreatedHighlight(null);
-    setNewMediaUrl("");
   };
 
   if (isLoading) {
@@ -218,13 +274,24 @@ export default function HighlightsManager() {
                 <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: Última Edição" />
               </div>
               <div className="space-y-2">
-                <Label>URL da Capa (opcional)</Label>
-                <Input value={newCover} onChange={(e) => setNewCover(e.target.value)} placeholder="https://..." />
-                {newCover && (
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary mx-auto mt-2">
-                    <img src={newCover} alt="Preview capa" className="w-full h-full object-cover" />
+                <Label>Capa (opcional)</Label>
+                <label className="cursor-pointer block">
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
+                  <div className="border-2 border-dashed rounded-lg p-4 text-center hover:border-primary transition-colors">
+                    {uploadingCover ? (
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                    ) : coverPreview ? (
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary mx-auto">
+                        <img src={coverPreview} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm">Clique para enviar a capa</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                </label>
               </div>
               <Button onClick={handleCreate} disabled={!newName.trim() || createHighlight.isPending} className="w-full">
                 {createHighlight.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -233,37 +300,21 @@ export default function HighlightsManager() {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Adicione imagens ou vídeos ao destaque <strong>{createdHighlight?.name}</strong>.</p>
-              <div className="flex gap-2">
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant={newMediaType === "image" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setNewMediaType("image")}
-                  >
-                    <Image className="h-4 w-4 mr-1" /> Imagem
-                  </Button>
-                  <Button
-                    variant={newMediaType === "video" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setNewMediaType("video")}
-                  >
-                    <Video className="h-4 w-4 mr-1" /> Vídeo
-                  </Button>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={newMediaUrl}
-                  onChange={(e) => setNewMediaUrl(e.target.value)}
-                  placeholder={`URL da ${newMediaType === "video" ? "vídeo" : "imagem"}...`}
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddMediaToNew()}
-                />
-                <Button onClick={handleAddMediaToNew} disabled={!newMediaUrl.trim() || addItem.isPending}>
-                  {addItem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                </Button>
-              </div>
+              <p className="text-sm text-muted-foreground">Envie imagens ou vídeos ao destaque <strong>{createdHighlight?.name}</strong>.</p>
+              <FileUploadButton
+                label="Enviar imagem ou vídeo"
+                accept="image/*,video/*"
+                loading={uploadingMedia}
+                setLoading={setUploadingMedia}
+                onUploaded={(url, type) => {
+                  if (!createdHighlight) return;
+                  addItem.mutate({
+                    highlight_id: createdHighlight.id,
+                    media_type: type,
+                    media_url: url,
+                  });
+                }}
+              />
               <Button variant="outline" className="w-full" onClick={resetCreate}>
                 Concluir
               </Button>
