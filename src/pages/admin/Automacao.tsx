@@ -319,15 +319,18 @@ export default function Automacao() {
 
   // === HELPERS ===
 
-  const statusColor = (s: string) => s === "sent" ? "default" : s === "failed" ? "destructive" : "secondary";
+  const statusColor = (s: string) => s === "sent" ? "default" : s === "failed" ? "destructive" : s === "skipped" ? "outline" : "secondary";
   const triggerLabel = (t: string) => ({
     abandoned_cart: "🛒 Carrinho Abandonado",
     daily_promo: "📢 Promoção Diária",
+    promo_campaign: "🎯 Campanha Promo",
     wishlist_reminder: "💜 Lembrete Wishlist",
     new_customer: "🎉 Novo Cliente",
     review_thankyou: "⭐ Avaliação",
     restock: "📦 Reposição",
     new_product: "🆕 Novo Produto",
+    product_view: "👀 Retargeting Produto",
+    inactivity: "💤 Reengajamento",
   }[t] || t);
 
   const triggerIcon = (t: string) => {
@@ -568,7 +571,7 @@ export default function Automacao() {
             const edits = getRuleEdit(rule.id);
             const currentWait = edits.wait_minutes ?? rule.wait_minutes;
             const currentCooldown = edits.cooldown_minutes ?? rule.cooldown_minutes ?? 60;
-            const currentMaxSends = edits.max_sends_per_day ?? rule.max_sends_per_day ?? 3;
+            const currentMaxSends = edits.max_sends_per_day ?? rule.max_sends_per_day ?? 6;
             const currentTone = edits.ai_tone ?? rule.ai_tone ?? "friendly";
             const currentTemplate = edits.message_template ?? rule.message_template ?? "";
             const currentHoursStart = edits.allowed_hours_start ?? rule.allowed_hours_start;
@@ -610,7 +613,13 @@ export default function Automacao() {
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
                       <div><span className="text-muted-foreground text-xs">Aguardar</span><p className="font-medium">{rule.wait_minutes} min</p></div>
                       <div><span className="text-muted-foreground text-xs">Cooldown</span><p className="font-medium">{rule.cooldown_minutes || 60} min</p></div>
-                      <div><span className="text-muted-foreground text-xs">Máx/dia</span><p className="font-medium">{rule.max_sends_per_day || 3}</p></div>
+                      <div>
+                        <span className="text-muted-foreground text-xs">Frequência</span>
+                        <p className="font-medium">
+                          {(rule.max_sends_per_day || 6) <= 4 ? "🟢 Baixa" : (rule.max_sends_per_day || 6) <= 7 ? "🟡 Média" : "🔴 Agressiva"}
+                          <span className="text-xs text-muted-foreground ml-1">({rule.max_sends_per_day || 6}/dia)</span>
+                        </p>
+                      </div>
                       <div><span className="text-muted-foreground text-xs">Tom IA</span><p className="font-medium capitalize">{rule.ai_tone || "amigável"}</p></div>
                       <div>
                         <span className="text-muted-foreground text-xs">Horário</span>
@@ -635,8 +644,19 @@ export default function Automacao() {
                           <p className="text-[10px] text-muted-foreground">Intervalo entre envios</p>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs">Máx envios/dia</Label>
-                          <Input type="number" min={1} max={50} value={currentMaxSends} onChange={e => setRuleEdit(rule.id, "max_sends_per_day", parseInt(e.target.value) || 1)} className="h-8 text-sm" />
+                          <Label className="text-xs">Nível de frequência</Label>
+                          <Select value={currentMaxSends <= 4 ? "low" : currentMaxSends <= 7 ? "medium" : "aggressive"} onValueChange={v => {
+                            const presets: Record<string, number> = { low: 4, medium: 6, aggressive: 10 };
+                            setRuleEdit(rule.id, "max_sends_per_day", presets[v] || 6);
+                          }}>
+                            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">🟢 Baixa (4/dia)</SelectItem>
+                              <SelectItem value="medium">🟡 Média (6/dia)</SelectItem>
+                              <SelectItem value="aggressive">🔴 Agressiva (10/dia)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-[10px] text-muted-foreground">Controla limite diário + cooldown entre envios</p>
                         </div>
                       </div>
 
