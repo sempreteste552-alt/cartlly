@@ -15,9 +15,10 @@ interface Props {
   buttonColor: string;
   buttonTextColor: string;
   onAddToCart?: (name: string, image?: string | null) => void;
+  onTrack?: (event: string, metadata?: Record<string, unknown>) => void;
 }
 
-export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
+export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart, onTrack }: Props) {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
