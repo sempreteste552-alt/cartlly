@@ -26,18 +26,22 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
   const [currentIdx, setCurrentIdx] = useState(0);
   const [previewProduct, setPreviewProduct] = useState<any>(null);
 
-  const dismissed = typeof window !== "undefined" ? sessionStorage.getItem("restock_dismissed") : null;
+  // Use alert colors or fallback to props
+  const alertBgColor = alert?.bg_color || primaryColor;
+  const alertTextColor = alert?.text_color || "#ffffff";
+  const alertCardBgColor = alert?.card_bg_color || "#ffffff";
+  const alertAccentColor = alert?.accent_color || primaryColor;
 
   const restockProducts = allProducts?.filter((p) =>
     alert?.product_ids?.includes(p.id)
   ) ?? [];
 
   useEffect(() => {
-    if (alert && restockProducts.length > 0 && !dismissed) {
+    if (alert && restockProducts.length > 0) {
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
     }
-  }, [alert, restockProducts.length, dismissed]);
+  }, [alert, restockProducts.length]);
 
   // Autoplay carousel
   useEffect(() => {
@@ -50,7 +54,6 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
 
   const handleClose = useCallback(() => {
     setVisible(false);
-    sessionStorage.setItem("restock_dismissed", "1");
   }, []);
 
   const formatPrice = (price: number) =>
@@ -72,12 +75,12 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
       <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[61] mx-auto max-w-md animate-scale-in">
         <div
           className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-          style={{ background: `linear-gradient(145deg, ${primaryColor}15, ${primaryColor}05)`, backdropFilter: "blur(20px)" }}
+          style={{ background: `linear-gradient(145deg, ${alertBgColor}25, ${alertBgColor}08)`, backdropFilter: "blur(20px)" }}
         >
           {/* Glow effect */}
           <div
             className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-30 pointer-events-none"
-            style={{ background: primaryColor }}
+            style={{ background: alertAccentColor }}
           />
 
           {/* Close button */}
@@ -91,8 +94,8 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
           {/* Header */}
           <div className="px-5 pt-5 pb-2">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-5 w-5 animate-pulse" style={{ color: primaryColor }} />
-              <h3 className="text-lg font-bold text-foreground leading-tight">
+              <Sparkles className="h-5 w-5 animate-pulse" style={{ color: alertAccentColor }} />
+              <h3 className="text-lg font-bold leading-tight" style={{ color: alertTextColor === '#ffffff' ? undefined : alertTextColor }}>
                 {alert?.title || "🔥 Produtos de volta!"}
               </h3>
             </div>
@@ -103,7 +106,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
 
           {/* Carousel */}
           <div className="relative px-5 py-3">
-            <div className="relative bg-card rounded-xl overflow-hidden shadow-inner">
+            <div className="relative rounded-xl overflow-hidden shadow-inner" style={{ backgroundColor: alertCardBgColor }}>
               {/* Product image */}
               <div className="aspect-[4/3] relative overflow-hidden">
                 {product?.image_url ? (
@@ -146,7 +149,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
                         className="h-1.5 rounded-full transition-all duration-300"
                         style={{
                           width: i === currentIdx ? 16 : 6,
-                          backgroundColor: i === currentIdx ? primaryColor : "rgba(255,255,255,0.5)",
+                          backgroundColor: i === currentIdx ? alertAccentColor : "rgba(255,255,255,0.5)",
                         }}
                       />
                     ))}
@@ -157,7 +160,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
               {/* Product info */}
               <div className="p-3">
                 <p className="font-semibold text-sm text-foreground line-clamp-1">{product?.name}</p>
-                <p className="text-lg font-bold mt-0.5" style={{ color: primaryColor }}>
+                <p className="text-lg font-bold mt-0.5" style={{ color: alertAccentColor }}>
                   {formatPrice(product?.price || 0)}
                 </p>
               </div>
@@ -178,7 +181,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
               <Button
                 variant="outline"
                 className="w-full font-bold text-sm transition-transform active:scale-95"
-                style={{ borderColor: primaryColor, color: primaryColor }}
+                style={{ borderColor: alertAccentColor, color: alertAccentColor }}
               >
                 Ver Produto
               </Button>
@@ -201,7 +204,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
             />
           )}
           <div>
-            <p className="text-2xl font-bold" style={{ color: primaryColor }}>
+            <p className="text-2xl font-bold" style={{ color: alertAccentColor }}>
               {formatPrice(previewProduct?.price || 0)}
             </p>
             {previewProduct?.description && (

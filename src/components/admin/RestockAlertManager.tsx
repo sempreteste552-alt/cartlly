@@ -26,6 +26,10 @@ export default function RestockAlertManager() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushTitle, setPushTitle] = useState("Reposição de estoque!");
   const [pushBody, setPushBody] = useState("Produtos que você estava esperando voltaram!");
+  const [bgColor, setBgColor] = useState("#6d28d9");
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [cardBgColor, setCardBgColor] = useState("#ffffff");
+  const [accentColor, setAccentColor] = useState("#6d28d9");
 
   useEffect(() => {
     if (alert) {
@@ -37,6 +41,10 @@ export default function RestockAlertManager() {
       setPushEnabled(alert.push_enabled);
       setPushTitle(alert.push_title || "");
       setPushBody(alert.push_body || "");
+      setBgColor(alert.bg_color || "#6d28d9");
+      setTextColor(alert.text_color || "#ffffff");
+      setCardBgColor(alert.card_bg_color || "#ffffff");
+      setAccentColor(alert.accent_color || "#6d28d9");
     }
   }, [alert]);
 
@@ -55,6 +63,10 @@ export default function RestockAlertManager() {
         push_enabled: pushEnabled,
         push_title: pushTitle,
         push_body: pushBody,
+        bg_color: bgColor,
+        text_color: textColor,
+        card_bg_color: cardBgColor,
+        accent_color: accentColor,
       });
       toast.success("Alerta de reposição salvo!");
     } catch {
@@ -159,6 +171,50 @@ export default function RestockAlertManager() {
             })}
           </div>
         )}
+
+        {/* Color customization */}
+        <div className="border rounded-lg p-4 space-y-3 mt-4">
+          <Label className="font-semibold">🎨 Cores do Pop-up</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Fundo do pop-up</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer border" />
+                <Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer border" />
+                <Input value={textColor} onChange={(e) => setTextColor(e.target.value)} className="flex-1 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Fundo do card</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={cardBgColor} onChange={(e) => setCardBgColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer border" />
+                <Input value={cardBgColor} onChange={(e) => setCardBgColor(e.target.value)} className="flex-1 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Cor de destaque</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="h-8 w-10 rounded cursor-pointer border" />
+                <Input value={accentColor} onChange={(e) => setAccentColor(e.target.value)} className="flex-1 text-xs" />
+              </div>
+            </div>
+          </div>
+          {/* Preview swatch */}
+          <div className="rounded-lg p-3 flex items-center gap-3" style={{ background: `linear-gradient(145deg, ${bgColor}30, ${bgColor}10)` }}>
+            <div className="h-8 w-8 rounded-full" style={{ backgroundColor: accentColor }} />
+            <div>
+              <p className="text-sm font-bold" style={{ color: textColor === '#ffffff' ? '#000' : textColor }}>Preview</p>
+              <p className="text-xs" style={{ color: accentColor }}>Cor de destaque</p>
+            </div>
+            <div className="ml-auto h-6 w-12 rounded" style={{ backgroundColor: cardBgColor, border: '1px solid #e5e7eb' }} />
+          </div>
+        </div>
 
         {/* Push notification settings */}
         <div className="border rounded-lg p-4 space-y-3 mt-4">

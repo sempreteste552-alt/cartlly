@@ -1409,7 +1409,10 @@ export type Database = {
       }
       store_restock_alerts: {
         Row: {
+          accent_color: string
           active: boolean
+          bg_color: string
+          card_bg_color: string
           created_at: string
           cta_text: string
           id: string
@@ -1418,12 +1421,16 @@ export type Database = {
           push_enabled: boolean
           push_title: string | null
           subtitle: string | null
+          text_color: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          accent_color?: string
           active?: boolean
+          bg_color?: string
+          card_bg_color?: string
           created_at?: string
           cta_text?: string
           id?: string
@@ -1432,12 +1439,16 @@ export type Database = {
           push_enabled?: boolean
           push_title?: string | null
           subtitle?: string | null
+          text_color?: string
           title?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          accent_color?: string
           active?: boolean
+          bg_color?: string
+          card_bg_color?: string
           created_at?: string
           cta_text?: string
           id?: string
@@ -1446,6 +1457,7 @@ export type Database = {
           push_enabled?: boolean
           push_title?: string | null
           subtitle?: string | null
+          text_color?: string
           title?: string
           updated_at?: string
           user_id?: string

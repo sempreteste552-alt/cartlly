@@ -12,6 +12,10 @@ export interface RestockAlert {
   push_enabled: boolean;
   push_title: string | null;
   push_body: string | null;
+  bg_color: string;
+  text_color: string;
+  card_bg_color: string;
+  accent_color: string;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +74,10 @@ export function useUpsertRestockAlert() {
             push_enabled: alert.push_enabled,
             push_title: alert.push_title,
             push_body: alert.push_body,
+            bg_color: alert.bg_color,
+            text_color: alert.text_color,
+            card_bg_color: alert.card_bg_color,
+            accent_color: alert.accent_color,
             updated_at: new Date().toISOString(),
           } as any)
           .eq("id", alert.id);
@@ -87,6 +95,10 @@ export function useUpsertRestockAlert() {
             push_enabled: alert.push_enabled ?? false,
             push_title: alert.push_title,
             push_body: alert.push_body,
+            bg_color: alert.bg_color ?? '#6d28d9',
+            text_color: alert.text_color ?? '#ffffff',
+            card_bg_color: alert.card_bg_color ?? '#ffffff',
+            accent_color: alert.accent_color ?? '#6d28d9',
           } as any);
         if (error) throw error;
       }
