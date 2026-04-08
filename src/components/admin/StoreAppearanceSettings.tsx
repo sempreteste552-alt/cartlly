@@ -194,6 +194,45 @@ export default function StoreAppearanceSettings() {
           </CardContent>
         </Card>
 
+        {/* Favicon */}
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Image className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Favicon</CardTitle></div>
+            <CardDescription>Ícone que aparece na aba do navegador e ao instalar o app</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <input
+              ref={faviconRef}
+              type="file"
+              accept="image/png,image/x-icon,image/svg+xml,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFaviconUpload(f);
+              }}
+            />
+            {faviconUrl ? (
+              <div className="flex items-center gap-4">
+                <img src={faviconUrl} alt="Favicon" className="h-12 w-12 rounded border border-border object-contain bg-muted p-1" />
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => faviconRef.current?.click()} disabled={uploadingFavicon}>
+                    {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Trocar
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFaviconUrl("")}>
+                    <X className="h-4 w-4 mr-1" /> Remover
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="outline" onClick={() => faviconRef.current?.click()} disabled={uploadingFavicon}>
+                {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                Enviar Favicon
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">Recomendado: PNG ou ICO, 32x32 ou 192x192 pixels</p>
+        </Card>
+
         {/* Tipografia */}
         <Card className="border-border">
           <CardHeader>
