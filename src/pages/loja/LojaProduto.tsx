@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useMemo, useCallback } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
+import Autoplay from "embla-carousel-autoplay";
 import { useProductImages } from "@/hooks/useProductImages";
 import { useProductVariants } from "@/hooks/useProductVariants";
 import { useLojaContext } from "./LojaLayout";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 
 export default function LojaProduto() {
   const { id, slug } = useParams();
+  const navigate = useNavigate();
   const { cart, settings, storeUserId, openCart } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
@@ -43,6 +45,19 @@ export default function LojaProduto() {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
+
+  const handleProductClick = useCallback((e: React.MouseEvent, productId: string) => {
+    e.preventDefault();
+    setNavigatingProductId(productId);
+    setIsNavigating(true);
+    setTimeout(() => {
+      navigate(`${basePath}/produto/${productId}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => { setIsNavigating(false); setNavigatingProductId(null); }, 300);
+    }, 400);
+  }, [navigate, basePath]);
 
   const variantGroups = useMemo(() => {
     if (!variants || variants.length === 0) return {};
@@ -103,7 +118,13 @@ export default function LojaProduto() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <>
+      {isNavigating && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center" style={{ animation: "fadeIn 0.3s ease-out" }}>
+          <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
+        </div>
+      )}
+    <div className="max-w-7xl mx-auto px-4 py-6" style={{ animation: "fadeSlideIn 0.4s ease-out" }}>
       <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
@@ -311,25 +332,45 @@ export default function LojaProduto() {
       {similarProducts.length > 0 && (
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Produtos Similares</h2>
-          <Carousel opts={{ align: "start", loop: similarProducts.length > 4 }} className="w-full">
+          <Carousel
+            opts={{ align: "start", loop: similarProducts.length > 4 }}
+            plugins={[Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })]}
+            className="w-full"
+          >
             <CarouselContent className="-ml-3">
               {similarProducts.map((p) => (
                 <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                  <Link to={`${basePath}/produto/${p.id}`} className="group block">
-                    <Card className="overflow-hidden border-gray-200 hover:shadow-lg transition-shadow">
-                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                  <a
+                    href={`${basePath}/produto/${p.id}`}
+                    onClick={(e) => handleProductClick(e, p.id)}
+                    className="group block"
+                  >
+                    <Card
+                      className="overflow-hidden border-gray-200 hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+                      style={{
+                        transition: "all 0.5s cubic-bezier(0.4,0,0.2,1)",
+                        ...(navigatingProductId === p.id
+                          ? { transform: "scale(0.92)", opacity: 0.5, boxShadow: `0 0 30px ${primaryColor}40` }
+                          : {}),
+                      }}
+                    >
+                      <div className="aspect-square bg-gray-50 overflow-hidden relative">
                         {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
                         )}
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          style={{ background: `linear-gradient(to top, ${primaryColor}18, transparent 60%)` }}
+                        />
                       </div>
                       <div className="p-3">
                         <p className="text-sm font-medium line-clamp-2">{p.name}</p>
                         <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
                       </div>
                     </Card>
-                  </Link>
+                  </a>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -349,5 +390,6 @@ export default function LojaProduto() {
         />
       )}
     </div>
+    </>
   );
 }
