@@ -117,7 +117,7 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
     <Button
       variant="ghost"
       size="icon"
-      className="relative"
+      className={`relative ${className || ""}`}
       title={isSubscribed ? "Desativar notificações" : "Ativar notificações"}
       onClick={isSubscribed ? unsubscribe : subscribe}
       disabled={loading}
