@@ -186,7 +186,37 @@ const TEMPLATES: Record<string, { title: string; body: string }[]> = {
   ],
 };
 
-function pickTemplate(state: string): { title: string; body: string } {
+// Product-aware templates — used when we know the product name
+const PRODUCT_TEMPLATES: Record<string, { title: string; body: string }[]> = {
+  abandoned_cart: [
+    { title: "🛒 \"{product}\" espera por você!", body: "{greetings}, {name}! O \"{product}\" ainda está no seu carrinho na {store}." },
+    { title: "⏳ Ainda pensando no \"{product}\"?", body: "{name}, garanta o \"{product}\" antes que acabe na {store}!" },
+    { title: "🔥 \"{product}\" quase esgotando!", body: "{greetings}! {name}, corre que o \"{product}\" está acabando na {store}!" },
+    { title: "💛 Não esquece do \"{product}\"!", body: "{name}, seu \"{product}\" da {store} tá te esperando!" },
+    { title: "🎯 Falta pouco pro \"{product}\"!", body: "{greetings}, {name}! Finalize e leve o \"{product}\" da {store}." },
+  ],
+  browsing: [
+    { title: "👀 Curtiu o \"{product}\"?", body: "{greetings}, {name}! O \"{product}\" da {store} combina com você!" },
+    { title: "✨ \"{product}\" te esperando!", body: "{name}, volte e garanta o \"{product}\" na {store}!" },
+    { title: "🔥 \"{product}\" é tendência!", body: "{greetings}! {name}, o \"{product}\" está bombando na {store}." },
+    { title: "💜 Gostou do \"{product}\"?", body: "{name}, o \"{product}\" da {store} está disponível. Aproveite!" },
+    { title: "🎁 \"{product}\" com desconto?", body: "{greetings}, {name}! Confira condições especiais do \"{product}\" na {store}." },
+  ],
+  inactive: [
+    { title: "💜 Lembra do \"{product}\"?", body: "{greetings}, {name}! O \"{product}\" da {store} ainda espera por você." },
+    { title: "🌟 \"{product}\" com novidades!", body: "{name}, o \"{product}\" que você viu na {store} pode ter preço novo!" },
+    { title: "🔔 \"{product}\" disponível!", body: "{greetings}! {name}, o \"{product}\" da {store} está te chamando." },
+    { title: "😊 Sentiu falta do \"{product}\"?", body: "{name}, volte à {store} e confira o \"{product}\"!" },
+    { title: "🎯 \"{product}\" pra você!", body: "{greetings}, {name}! O \"{product}\" continua na {store}. Venha ver!" },
+  ],
+};
+
+function pickTemplate(state: string, hasProduct = false): { title: string; body: string } {
+  // 70% chance to use product template when product is available
+  if (hasProduct && PRODUCT_TEMPLATES[state]?.length && Math.random() < 0.7) {
+    const pool = PRODUCT_TEMPLATES[state];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
   const pool = TEMPLATES[state];
   if (!pool || pool.length === 0) return { title: "🔔 Novidade!", body: "Confira as novidades da loja!" };
   return pool[Math.floor(Math.random() * pool.length)];
