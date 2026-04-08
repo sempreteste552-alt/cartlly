@@ -293,7 +293,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 ) : (
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
-                <Button className="w-full mt-2 transition-transform active:scale-95" size="sm" style={{ backgroundColor: buttonColor, color: buttonTextColor }} disabled={product.stock <= 0 && !(product as any).made_to_order} onClick={(e) => { e.preventDefault(); cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); toast.success("Adicionado ao carrinho!"); }}>
+                <Button className="w-full mt-2 transition-transform active:scale-95" size="sm" style={{ backgroundColor: buttonColor, color: buttonTextColor }} disabled={product.stock <= 0 && !(product as any).made_to_order} onClick={(e) => { e.preventDefault(); cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); onAddToCart(product.name, product.image_url); }}>
                   <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
                 </Button>
               </div>
