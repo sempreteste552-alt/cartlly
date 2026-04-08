@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
             body: body || "",
             url: url || "/",
             type: "store_promotion",
+            store_user_id: user.id,
           }),
         });
 
