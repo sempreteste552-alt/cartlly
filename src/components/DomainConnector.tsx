@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Globe, CheckCircle2, Clock, XCircle, Loader2, RefreshCw,
-  ExternalLink, ArrowRight, Server, Copy, Check, AlertTriangle
+  ExternalLink, ArrowRight, Server, Copy, Check, AlertTriangle, HelpCircle, Upload
 } from "lucide-react";
 
 interface DomainConnectorProps {
