@@ -128,33 +128,33 @@ export default function Login() {
     setLoading(true);
 
     try {
+      setAlertCard(null);
       if (isForgotPassword) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        toast.success("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
+        setAlertCard({ type: "success", message: "E-mail de redefinição enviado! Verifique sua caixa de entrada." });
         setIsForgotPassword(false);
       } else if (isRegister) {
         if (!acceptedTerms) {
-          toast.error("Você precisa aceitar os Termos de Uso para criar sua conta.");
+          setAlertCard({ type: "error", message: "Você precisa aceitar os Termos de Uso para criar sua conta." });
           setLoading(false);
           return;
         }
         const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
         if (!slug) {
-          toast.error("Defina um slug válido para sua loja.");
+          setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
           setLoading(false);
           return;
         }
-        // Check slug availability
         const { data: existingSlug } = await supabase
           .from("store_settings")
           .select("id")
           .eq("store_slug", slug)
           .maybeSingle();
         if (existingSlug) {
-          toast.error("Este slug já está em uso. Escolha outro.");
+          setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
           setLoading(false);
           return;
         }
@@ -172,11 +172,9 @@ export default function Login() {
           }
           throw signUpError;
         }
-        // Supabase returns a fake user with empty identities for existing emails
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
-        // Create store_settings with slug and store name
         if (signUpData.user) {
           await supabase.from("store_settings").insert({
             user_id: signUpData.user.id,
@@ -184,15 +182,15 @@ export default function Login() {
             store_slug: slug,
           });
         }
-        // Sign out since email confirmation is required
         await supabase.auth.signOut();
-        // Show email verification screen
         setShowEmailSent(true);
       } else {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
-            throw new Error("Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.");
+            setAlertCard({ type: "warning", message: "Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de confirmação." });
+            setLoading(false);
+            return;
           }
           if (loginError.message.includes("Invalid login")) {
             throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
@@ -202,7 +200,7 @@ export default function Login() {
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao autenticar");
+      setAlertCard({ type: "error", message: error.message || "Erro ao autenticar" });
     } finally {
       setLoading(false);
     }
