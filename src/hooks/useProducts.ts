@@ -95,11 +95,12 @@ export function useDeleteProduct() {
 export function useUploadProductImage() {
   return useMutation({
     mutationFn: async (file: File) => {
-      const ext = file.name.split(".").pop();
+      const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
       const fileName = `${crypto.randomUUID()}.${ext}`;
+      const contentType = file.type || "application/octet-stream";
       const { error } = await supabase.storage
         .from("product-images")
-        .upload(fileName, file, { contentType: file.type });
+        .upload(fileName, file, { contentType, upsert: false });
       if (error) throw error;
       const { data: urlData } = supabase.storage
         .from("product-images")

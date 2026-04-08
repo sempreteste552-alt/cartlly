@@ -27,7 +27,9 @@ serve(async (req) => {
       .map((c: any) => `• ${c.code}: ${c.discount_type === "percentage" ? c.discount_value + "%" : "R$" + c.discount_value} | ${c.active ? "Ativo" : "Inativo"} | Usos: ${c.used_count}/${c.max_uses || "∞"}${c.expires_at ? ` | Expira: ${c.expires_at}` : ""}`)
       .join("\n");
 
-    const systemPrompt = `Você é o Assistente IA COMPLETO da plataforma de e-commerce. Você tem acesso TOTAL aos dados da loja e pode EXECUTAR AÇÕES.
+    const aiName = storeContext?.aiName || "Assistente IA";
+
+    const systemPrompt = `Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce. Você tem acesso TOTAL aos dados da loja e pode EXECUTAR AÇÕES.
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}
@@ -53,32 +55,28 @@ CUPONS:
 ${couponsInfo || "Nenhum cupom"}
 
 SUAS CAPACIDADES DE AÇÃO:
-Você pode EXECUTAR ações incluindo blocos de ação no final da resposta. Use o formato:
+Quando o lojista pedir para executar uma ação, PRIMEIRO explique o que vai fazer em linguagem natural, depois inclua o bloco de ação INVISÍVEL no final da sua resposta. Os blocos são processados automaticamente e NÃO são mostrados ao lojista.
 
-1. **Enviar Push para Clientes** — Quando o lojista pedir para criar/enviar uma promoção:
-\`\`\`action:send_push
-{"title": "🔥 Título da promoção", "body": "Texto da notificação push (máx 130 chars)"}
-\`\`\`
+FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
-2. **Criar Cupom de Desconto** — Quando o lojista pedir para criar um cupom:
-\`\`\`action:create_coupon
-{"code": "CODIGO", "discount_type": "percentage", "discount_value": 10, "max_uses": 100, "min_order_value": 0, "expires_at": null}
-\`\`\`
+Para enviar push para clientes:
+[ACTION_PUSH]{"title": "Título", "body": "Texto da notificação"}[/ACTION_PUSH]
 
-REGRAS IMPORTANTES:
-- Responda SEMPRE em português do Brasil
-- Seja objetivo e prático nas sugestões
-- Use os dados reais da loja para personalizar
-- Formate respostas com markdown
-- Quando sugerir campanhas, inclua: nome, descrição, público-alvo, desconto e duração
-- Quando o lojista pedir para ENVIAR promoção ou push, CONFIRME o texto e INCLUA o bloco action:send_push
-- Quando o lojista pedir para CRIAR cupom, CONFIRME os detalhes e INCLUA o bloco action:create_coupon
-- Os blocos de ação serão processados automaticamente pelo sistema
-- SEMPRE mostre ao lojista o que vai fazer ANTES de incluir o bloco de ação
-- Se o lojista pedir "gere um texto de promoção e envie", gere, mostre e inclua o action:send_push
-- Para cupons, o discount_type pode ser "percentage" ou "fixed"
-- O cupom criado ficará visível automaticamente na loja para os clientes
-- Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente aos clientes`;
+Para criar cupom de desconto:
+[ACTION_COUPON]{"code": "CODIGO", "discount_type": "percentage", "discount_value": 10, "max_uses": 100, "min_order_value": 0, "expires_at": null}[/ACTION_COUPON]
+
+REGRAS CRÍTICAS:
+- NUNCA responda com JSON puro. SEMPRE responda em português do Brasil com texto formatado em Markdown.
+- Seja objetivo, profissional e prático nas sugestões.
+- Use os dados reais da loja para personalizar as respostas.
+- Formate respostas com **negrito**, listas, emojis e markdown rico.
+- Quando o lojista pedir para criar um cupom, CONFIRME os detalhes no texto E inclua o bloco [ACTION_COUPON] no final.
+- Quando o lojista pedir para enviar promoção/push, gere o texto, mostre ao lojista E inclua o bloco [ACTION_PUSH] no final.
+- Os blocos de ação são INVISÍVEIS para o usuário — o sistema os processa automaticamente.
+- Para cupons, discount_type pode ser "percentage" ou "fixed".
+- O cupom criado ficará visível automaticamente na loja.
+- NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_PUSH] e [ACTION_COUPON].
+- Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
