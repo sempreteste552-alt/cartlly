@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { PlanGate } from "@/components/PlanGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -347,6 +348,7 @@ export default function Automacao() {
   };
 
   return (
+    <PlanGate feature="abandoned_cart">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -792,5 +794,6 @@ export default function Automacao() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }
