@@ -33,12 +33,14 @@ function FileUploadButton({
   onUploaded,
   loading,
   setLoading,
+  userId,
 }: {
   label: string;
   accept: string;
   onUploaded: (url: string, type: "image" | "video") => void;
   loading: boolean;
   setLoading: (v: boolean) => void;
+  userId: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
 
@@ -47,7 +49,7 @@ function FileUploadButton({
     if (!file) return;
     setLoading(true);
     try {
-      const url = await uploadFile(file, "highlights");
+      const url = await uploadFile(file, "highlights", userId);
       const type = file.type.startsWith("video") ? "video" : "image";
       onUploaded(url, type);
     } catch (err: any) {
@@ -75,7 +77,7 @@ function FileUploadButton({
   );
 }
 
-function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; onClose: () => void }) {
+function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighlight; onClose: () => void; userId: string }) {
   const updateHighlight = useUpdateHighlight();
   const addItem = useAddHighlightItem();
   const deleteItem = useDeleteHighlightItem();
@@ -96,7 +98,7 @@ function HighlightEditor({ highlight, onClose }: { highlight: StoreHighlight; on
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadFile(file, "highlights/covers");
+      const url = await uploadFile(file, "highlights/covers", userId);
       setCoverUrl(url);
     } catch (err: any) {
       toast.error("Erro: " + err.message);
