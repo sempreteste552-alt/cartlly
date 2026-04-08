@@ -231,6 +231,7 @@ export default function StoreAppearanceSettings() {
               </Button>
             )}
             <p className="text-xs text-muted-foreground">Recomendado: PNG ou ICO, 32x32 ou 192x192 pixels</p>
+          </CardContent>
         </Card>
 
         {/* Tipografia */}
