@@ -9,6 +9,7 @@ import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
