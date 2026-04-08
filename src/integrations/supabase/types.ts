@@ -1842,10 +1842,95 @@ export type Database = {
           },
         ]
       }
+      store_marketing_config_public: {
+        Row: {
+          announcement_bar_bg_color: string | null
+          announcement_bar_enabled: boolean | null
+          announcement_bar_link: string | null
+          announcement_bar_text: string | null
+          announcement_bar_text_color: string | null
+          countdown_bg_color: string | null
+          countdown_enabled: boolean | null
+          countdown_end_date: string | null
+          countdown_text: string | null
+          countdown_text_color: string | null
+          created_at: string | null
+          free_shipping_bar_color: string | null
+          free_shipping_bar_enabled: boolean | null
+          free_shipping_threshold: number | null
+          id: string | null
+          popup_coupon_code: string | null
+          popup_coupon_delay_seconds: number | null
+          popup_coupon_description: string | null
+          popup_coupon_enabled: boolean | null
+          popup_coupon_image_url: string | null
+          popup_coupon_title: string | null
+          trust_badges: Json | null
+          trust_badges_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          announcement_bar_bg_color?: string | null
+          announcement_bar_enabled?: boolean | null
+          announcement_bar_link?: string | null
+          announcement_bar_text?: string | null
+          announcement_bar_text_color?: string | null
+          countdown_bg_color?: string | null
+          countdown_enabled?: boolean | null
+          countdown_end_date?: string | null
+          countdown_text?: string | null
+          countdown_text_color?: string | null
+          created_at?: string | null
+          free_shipping_bar_color?: string | null
+          free_shipping_bar_enabled?: boolean | null
+          free_shipping_threshold?: number | null
+          id?: string | null
+          popup_coupon_code?: string | null
+          popup_coupon_delay_seconds?: number | null
+          popup_coupon_description?: string | null
+          popup_coupon_enabled?: boolean | null
+          popup_coupon_image_url?: string | null
+          popup_coupon_title?: string | null
+          trust_badges?: Json | null
+          trust_badges_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          announcement_bar_bg_color?: string | null
+          announcement_bar_enabled?: boolean | null
+          announcement_bar_link?: string | null
+          announcement_bar_text?: string | null
+          announcement_bar_text_color?: string | null
+          countdown_bg_color?: string | null
+          countdown_enabled?: boolean | null
+          countdown_end_date?: string | null
+          countdown_text?: string | null
+          countdown_text_color?: string | null
+          created_at?: string | null
+          free_shipping_bar_color?: string | null
+          free_shipping_bar_enabled?: boolean | null
+          free_shipping_threshold?: number | null
+          id?: string | null
+          popup_coupon_code?: string | null
+          popup_coupon_delay_seconds?: number | null
+          popup_coupon_description?: string | null
+          popup_coupon_enabled?: boolean | null
+          popup_coupon_image_url?: string | null
+          popup_coupon_title?: string | null
+          trust_badges?: Json | null
+          trust_badges_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       store_settings_public: {
         Row: {
           accent_color: string | null
           admin_accent_color: string | null
+          admin_blocked: boolean | null
           admin_primary_color: string | null
           button_color: string | null
           button_text_color: string | null
@@ -1857,7 +1942,6 @@ export type Database = {
           footer_bg_color: string | null
           footer_text_color: string | null
           gateway_environment: string | null
-          gateway_public_key: string | null
           google_maps_url: string | null
           header_bg_color: string | null
           header_text_color: string | null
@@ -1910,6 +1994,7 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           admin_accent_color?: string | null
+          admin_blocked?: boolean | null
           admin_primary_color?: string | null
           button_color?: string | null
           button_text_color?: string | null
@@ -1921,7 +2006,6 @@ export type Database = {
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
-          gateway_public_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
@@ -1974,6 +2058,7 @@ export type Database = {
         Update: {
           accent_color?: string | null
           admin_accent_color?: string | null
+          admin_blocked?: boolean | null
           admin_primary_color?: string | null
           button_color?: string | null
           button_text_color?: string | null
@@ -1985,7 +2070,6 @@ export type Database = {
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
-          gateway_public_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
