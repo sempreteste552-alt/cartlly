@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
@@ -15,6 +15,7 @@ import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
+import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 
 export default function LojaHome() {
@@ -30,6 +31,7 @@ export default function LojaHome() {
   const { data: banners } = usePublicBanners(storeUserId);
   const { data: categories } = usePublicCategories(storeUserId);
   const wishlist = useWishlist(storeUserId);
+  const cartNotif = useCartNotification();
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
@@ -134,7 +136,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -152,10 +154,22 @@ export default function LojaHome() {
               accentColor={accentColor}
               wishlist={wishlist}
               basePath={basePath}
+              onAddToCart={cartNotif.show}
             />
           ))
         )}
       </div>
+
+      {cartNotif.notification && (
+        <CartNotification
+          productName={cartNotif.notification.productName}
+          productImage={cartNotif.notification.productImage}
+          basePath={basePath}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+          onClose={cartNotif.hide}
+        />
+      )}
     </div>
   );
 }
@@ -173,6 +187,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   accentColor: string;
   wishlist: any;
   basePath: string;
+  onAddToCart: (name: string, image?: string | null) => void;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
 
@@ -198,7 +213,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -210,6 +225,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   accentColor: string;
   wishlist: ReturnType<typeof import("@/hooks/useWishlist").useWishlist>;
   basePath: string;
+  onAddToCart: (name: string, image?: string | null) => void;
 }) {
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
 
@@ -277,7 +293,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 ) : (
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
-                <Button className="w-full mt-2 transition-transform active:scale-95" size="sm" style={{ backgroundColor: buttonColor, color: buttonTextColor }} disabled={product.stock <= 0 && !(product as any).made_to_order} onClick={(e) => { e.preventDefault(); cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); toast.success("Adicionado ao carrinho!"); }}>
+                <Button className="w-full mt-2 transition-transform active:scale-95" size="sm" style={{ backgroundColor: buttonColor, color: buttonTextColor }} disabled={product.stock <= 0 && !(product as any).made_to_order} onClick={(e) => { e.preventDefault(); cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); onAddToCart(product.name, product.image_url); }}>
                   <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
                 </Button>
               </div>

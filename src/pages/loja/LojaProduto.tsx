@@ -15,6 +15,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
+import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 
 export default function LojaProduto() {
@@ -24,6 +25,7 @@ export default function LojaProduto() {
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
+  const cartNotif = useCartNotification();
 
   const product = products?.find((p) => p.id === id);
   const basePath = slug ? `/loja/${slug}` : "/loja";
@@ -207,7 +209,7 @@ export default function LojaProduto() {
               className="flex-1 h-12 text-base"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               disabled={product.stock <= 0 && !(product as any).made_to_order}
-              onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
+              onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
             </Button>
@@ -335,6 +337,16 @@ export default function LojaProduto() {
             <CarouselNext className="right-0" />
           </Carousel>
         </div>
+      )}
+      {cartNotif.notification && (
+        <CartNotification
+          productName={cartNotif.notification.productName}
+          productImage={cartNotif.notification.productImage}
+          basePath={basePath}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+          onClose={cartNotif.hide}
+        />
       )}
     </div>
   );
