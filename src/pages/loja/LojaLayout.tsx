@@ -34,6 +34,9 @@ import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 
+import { useEventTracker } from "@/hooks/useEventTracker";
+import type { TrackableEvent } from "@/hooks/useEventTracker";
+
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
   settings: any;
@@ -42,6 +45,7 @@ export interface LojaContextType {
   storeUserId?: string;
   openCart: () => void;
   basePath: string;
+  track: (event: TrackableEvent, metadata?: Record<string, unknown>) => void;
 }
 
 import { createContext, useContext } from "react";
