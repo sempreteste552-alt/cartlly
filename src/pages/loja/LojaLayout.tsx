@@ -349,7 +349,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
-            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
