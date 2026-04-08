@@ -196,6 +196,9 @@ export default function LojaLayout() {
           color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
         }}
       >
+        {/* PWA Install Banner — very top */}
+        <PWAInstallBanner />
+
         {/* Marketing: Countdown Bar — top of everything */}
         {marketingConfig && <CountdownBar config={marketingConfig} />}
 
