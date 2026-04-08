@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
     const { data: subs } = await serviceClient
       .from("push_subscriptions")
       .select("user_id")
-      .in("user_id", customerUserIds);
+      .in("user_id", customerUserIds)
+      .eq("store_user_id", user.id);
 
     const uniqueUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
 
