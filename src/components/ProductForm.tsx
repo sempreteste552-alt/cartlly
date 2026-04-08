@@ -87,7 +87,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       return;
     }
     for (let i = 0; i < files.length; i++) {
-      if (files[i].size > 5 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 5MB.`); continue; }
+      if (files[i].size > 10 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 10MB.`); continue; }
       const url = await uploadImage.mutateAsync(files[i]);
       setAdditionalImages((prev) => [...prev, url]);
     }
@@ -198,7 +198,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                 )}
               </div>
             )}
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input ref={fileRef} type="file" accept="image/*,video/*,.webp,.heic,.heif,.avif,.svg" className="hidden" onChange={handleFileChange} />
           </div>
 
           {/* Additional Images */}
@@ -226,8 +226,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                 </div>
               )}
             </div>
-            <input ref={additionalFileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
-            <p className="text-xs text-muted-foreground">As imagens adicionais aparecem no slideshow do card do produto</p>
+            <input ref={additionalFileRef} type="file" accept="image/*,video/*,.webp,.heic,.heif,.avif,.svg" multiple className="hidden" onChange={handleAdditionalFileChange} />
+            <p className="text-xs text-muted-foreground">Aceita imagens (JPG, PNG, WEBP, HEIC, SVG) e vídeos. Máx 10MB cada.</p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
