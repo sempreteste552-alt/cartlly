@@ -173,10 +173,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   className="hidden"
-                  onChange={handleImageSelect}
+                  onChange={handleMediaSelect}
                 />
                 <Button
                   type="button"
