@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       .from("abandoned_carts")
       .select("*")
       .eq("recovered", false)
-      .lt("abandoned_at", thirtyMinAgo)
+      .lt("abandoned_at", twentyMinAgo)
       .or(`last_reminder_at.is.null,last_reminder_at.lt.${oneHourAgo}`)
       .lt("reminder_sent_count", 5)
       .not("customer_id", "is", null);
