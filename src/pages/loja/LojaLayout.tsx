@@ -240,6 +240,13 @@ export default function LojaLayout() {
           primaryColor={settings?.primary_color}
         />
 
+        {/* Push notification permission prompt — auto-shows on first visit */}
+        <PushPermissionPrompt
+          storeName={settings?.store_name}
+          logoUrl={settings?.logo_url}
+          primaryColor={settings?.primary_color}
+        />
+
         {/* Marketing: Countdown Bar — top of everything */}
         {marketingConfig && <CountdownBar config={marketingConfig} />}
 
