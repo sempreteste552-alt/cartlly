@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -26,7 +26,7 @@ import HighlightsManager from "@/components/admin/HighlightsManager";
 import MarketingConversionSettings from "@/components/admin/MarketingConversionSettings";
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
 import RestockAlertManager from "@/components/admin/RestockAlertManager";
-
+import PushNotificationSettings from "@/components/admin/PushNotificationSettings";
 
 function AccountEmailChanger() {
   const [newEmail, setNewEmail] = useState("");
@@ -702,6 +702,10 @@ export default function Configuracoes() {
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Marketing</span>
           </TabsTrigger>
+          <TabsTrigger value="push" className="flex items-center gap-1.5 text-xs py-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Push</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
@@ -724,6 +728,10 @@ export default function Configuracoes() {
 
         <TabsContent value="marketing" className="mt-6">
           <MarketingConversionSettings />
+        </TabsContent>
+
+        <TabsContent value="push" className="mt-6">
+          <PushNotificationSettings />
         </TabsContent>
       </Tabs>
     </div>
