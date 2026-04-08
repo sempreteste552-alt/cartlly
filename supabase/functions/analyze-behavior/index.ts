@@ -9,6 +9,7 @@ const corsHeaders = {
 const ABANDONED_CART_MINUTES = 30;
 const INACTIVE_HOURS = 24;
 const ACTIVE_MIN_SESSIONS = 2;
+const BROWSING_EXIT_MINUTES = 15; // User viewed products then left
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,13 +23,14 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const abandonedThreshold = new Date(now.getTime() - ABANDONED_CART_MINUTES * 60 * 1000).toISOString();
+    const browsingExitThreshold = new Date(now.getTime() - BROWSING_EXIT_MINUTES * 60 * 1000).toISOString();
     const inactiveThreshold = new Date(now.getTime() - INACTIVE_HOURS * 60 * 60 * 1000).toISOString();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
     // 1. Get all distinct customer+store combos with recent events
     const { data: recentEvents, error: evErr } = await supabase
       .from("customer_behavior_events")
-      .select("customer_id, user_id, event_type, session_id, created_at")
+      .select("customer_id, user_id, event_type, session_id, product_id, created_at")
       .not("customer_id", "is", null)
       .gte("created_at", inactiveThreshold)
       .order("created_at", { ascending: false })
@@ -59,6 +61,13 @@ Deno.serve(async (req) => {
       metadata: Record<string, unknown>;
     }> = [];
 
+    // Collect retargeting sequence triggers
+    const retargetingTriggers: Array<{
+      customer_id: string;
+      store_user_id: string;
+      product_id: string;
+    }> = [];
+
     for (const [key, events] of grouped) {
       const [customerId, storeUserId] = key.split("::");
       const lastEvent = events[0];
@@ -69,7 +78,7 @@ Deno.serve(async (req) => {
       // Determine state
       let state = "browsing";
 
-      // Check purchase_completed → active
+      // Check purchase_completed → active (and stop any active retargeting)
       if (eventTypes.has("purchase_completed")) {
         state = "active";
       }
@@ -80,6 +89,32 @@ Deno.serve(async (req) => {
         lastEvent.created_at < abandonedThreshold
       ) {
         state = "abandoned_cart";
+      }
+      // Check browsing_exit: viewed products, no add_to_cart, no purchase, last event > 15min ago
+      else if (
+        eventTypes.has("product_view") &&
+        !eventTypes.has("add_to_cart") &&
+        !eventTypes.has("purchase_completed") &&
+        lastEvent.created_at < browsingExitThreshold
+      ) {
+        state = "browsing_exit";
+
+        // Collect viewed product IDs for retargeting sequences
+        const viewedProductIds = new Set<string>();
+        for (const ev of events) {
+          if (ev.event_type === "product_view" && ev.product_id) {
+            viewedProductIds.add(ev.product_id);
+          }
+        }
+        // Take last 5 viewed products for retargeting
+        const productArr = [...viewedProductIds].slice(0, 5);
+        for (const pid of productArr) {
+          retargetingTriggers.push({
+            customer_id: customerId,
+            store_user_id: storeUserId,
+            product_id: pid,
+          });
+        }
       }
       // Check active user: multiple sessions today
       else if (sessionIds.size >= ACTIVE_MIN_SESSIONS) {
@@ -116,6 +151,16 @@ Deno.serve(async (req) => {
           event_types: [...eventTypes],
         },
       });
+
+      // STOP CONDITIONS: If user returned (active/browsing), stop active retargeting sequences
+      if (state === "active" || (state === "browsing" && existing?.state !== "browsing")) {
+        await supabase
+          .from("retargeting_sequences")
+          .update({ status: "stopped", stopped_reason: state === "active" ? "purchased" : "user_returned" })
+          .eq("customer_id", customerId)
+          .eq("store_user_id", storeUserId)
+          .eq("status", "active");
+      }
     }
 
     // Also mark users with NO recent events as inactive
@@ -139,7 +184,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Batch upsert
+    // Batch upsert states
     if (upserts.length > 0) {
       const { error: upsertErr } = await supabase
         .from("customer_states")
@@ -147,10 +192,54 @@ Deno.serve(async (req) => {
       if (upsertErr) throw upsertErr;
     }
 
-    console.log(`[analyze-behavior] Processed ${upserts.length} customer states`);
+    // Create retargeting sequences for browsing_exit users
+    let sequencesCreated = 0;
+    for (const trigger of retargetingTriggers) {
+      // Check if active sequence already exists for this customer+product
+      const { data: existing } = await supabase
+        .from("retargeting_sequences")
+        .select("id")
+        .eq("customer_id", trigger.customer_id)
+        .eq("store_user_id", trigger.store_user_id)
+        .eq("product_id", trigger.product_id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (existing) continue; // Already has active sequence
+
+      // Also check if we already sent max pushes for this product (max 3 per product ever)
+      const { count } = await supabase
+        .from("retargeting_sequences")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", trigger.customer_id)
+        .eq("product_id", trigger.product_id)
+        .gte("pushes_sent", 3);
+
+      if ((count || 0) > 0) continue; // Already maxed out for this product
+
+      // Random delay for step 1: 15-30 minutes from now
+      const delayMinutes = 15 + Math.random() * 15;
+      const nextPushAt = new Date(now.getTime() + delayMinutes * 60 * 1000).toISOString();
+
+      const { error: insertErr } = await supabase
+        .from("retargeting_sequences")
+        .insert({
+          customer_id: trigger.customer_id,
+          store_user_id: trigger.store_user_id,
+          product_id: trigger.product_id,
+          current_step: 1,
+          max_steps: 3,
+          status: "active",
+          next_push_at: nextPushAt,
+        });
+
+      if (!insertErr) sequencesCreated++;
+    }
+
+    console.log(`[analyze-behavior] Processed ${upserts.length} states, created ${sequencesCreated} retargeting sequences`);
 
     return new Response(
-      JSON.stringify({ processed: upserts.length }),
+      JSON.stringify({ processed: upserts.length, sequences_created: sequencesCreated }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
