@@ -2936,7 +2936,6 @@ export type Database = {
           read_ct: number
         }[]
       }
-      store_exists: { Args: { _store_user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "tenant"
