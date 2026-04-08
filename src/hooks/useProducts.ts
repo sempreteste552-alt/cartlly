@@ -84,9 +84,42 @@ export function useCreateProduct() {
 
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ProductUpdate & { id: string }) => {
+      // If trying to publish, check limit
+      if (updates.published === true && user) {
+        const { count } = await supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("published", true);
+
+        const { data: sub } = await supabase
+          .from("tenant_subscriptions")
+          .select("status, tenant_plans(max_products)")
+          .eq("user_id", user.id)
+          .in("status", ["active", "trial", "trial_expired", "past_due", "canceled", "suspended"])
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const plan = sub?.tenant_plans as any;
+        const maxProducts = plan?.max_products ?? 10;
+        const isTrialActive = sub?.status === "trial";
+        const blockedStatuses = ["trial_expired", "past_due", "canceled", "suspended"];
+        const isBlocked = !sub || blockedStatuses.includes(sub.status);
+
+        if (isBlocked) {
+          throw new Error("Sua assinatura está inativa. Ative seu plano para publicar produtos.");
+        }
+
+        if (!isTrialActive && (count ?? 0) >= maxProducts) {
+          throw new Error(`Limite de ${maxProducts} produtos publicados atingido. Faça upgrade para publicar mais.`);
+        }
+      }
+
       const { data, error } = await supabase
         .from("products")
         .update(updates)
