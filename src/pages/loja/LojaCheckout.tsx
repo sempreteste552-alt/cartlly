@@ -27,7 +27,7 @@ import pixLogo from "@/assets/pix-logo.webp";
 type CheckoutPhase = "info" | "payment" | "success";
 
 export default function LojaCheckout() {
-  const { cart, settings } = useLojaContext();
+  const { cart, settings, track } = useLojaContext();
   const navigate = useNavigate();
   const { user, customer, loading: authLoading } = useCustomerAuth();
   const createReview = useCreateReview();
