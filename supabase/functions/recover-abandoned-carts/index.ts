@@ -899,6 +899,26 @@ Saudação: ${greetings}`;
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
     userPrompt = ctx._customUserPrompt || "";
+
+  } else if (ctx.type === "new_coupon") {
+    systemPrompt = `Você é uma assistente de marketing ANIMADA da loja "${ctx.storeName}".
+Um NOVO CUPOM de desconto foi criado!
+
+REGRAS OBRIGATÓRIAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com 1 emoji de desconto (🎟️ 🏷️ 💰 🔥 ✨ 🎁 💸 etc)
+- body: máximo 130 caracteres, MENCIONE o código do cupom "${ctx.couponCode}" e o desconto "${ctx.discountText}" e a loja "${ctx.storeName}"
+- Use saudação: "${greetings}" (é ${dayName})
+- Tom: empolgado, urgente, convidativo, crie senso de oportunidade
+- NUNCA repita a mesma mensagem
+- Seed: ${seed}
+${dateInstructions}`;
+
+    userPrompt = `Loja: ${ctx.storeName}
+Cupom: ${ctx.couponCode}
+Desconto: ${ctx.discountText}
+Dia: ${dayName}
+Saudação: ${greetings}`;
   }
 
   if (!systemPrompt) return null;
