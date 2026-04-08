@@ -344,14 +344,90 @@ async function getStoreMap(supabase: any, storeUserIds: string[]) {
   return new Map((stores || []).map((s: any) => [s.user_id, s]));
 }
 
+function getSpecialDateContext(): string {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const dayOfWeek = now.getDay();
+  const parts: string[] = [];
+
+  // Brazilian holidays & special dates
+  const holidays: Record<string, string> = {
+    "1-1": "🎆 Ano Novo",
+    "2-14": "💕 Dia dos Namorados (internacional)",
+    "3-8": "🌸 Dia Internacional da Mulher",
+    "4-21": "🇧🇷 Tiradentes",
+    "5-1": "👷 Dia do Trabalho",
+    "6-12": "💑 Dia dos Namorados",
+    "6-24": "🎉 São João",
+    "7-20": "👩‍👧 Dia do Amigo",
+    "8-11": "👨 Dia dos Pais (próximo)",
+    "9-7": "🇧🇷 Independência do Brasil",
+    "10-12": "👧 Dia das Crianças / N.S. Aparecida",
+    "10-31": "🎃 Halloween",
+    "11-15": "🇧🇷 Proclamação da República",
+    "11-20": "✊ Dia da Consciência Negra",
+    "11-25": "🛍️ Black Friday se aproxima!",
+    "11-29": "🛍️ Black Friday!",
+    "12-24": "🎄 Véspera de Natal",
+    "12-25": "🎄 Natal",
+    "12-31": "🎆 Réveillon",
+  };
+
+  // Check exact date
+  const key = `${month}-${day}`;
+  if (holidays[key]) {
+    parts.push(`HOJE É ${holidays[key]}`);
+  }
+
+  // Check nearby dates (next 3 days)
+  for (let offset = 1; offset <= 3; offset++) {
+    const future = new Date(now.getTime() + offset * 86400000);
+    const fKey = `${future.getMonth() + 1}-${future.getDate()}`;
+    if (holidays[fKey]) {
+      parts.push(`Em ${offset} dia(s): ${holidays[fKey]}`);
+    }
+  }
+
+  // Weekend context
+  if (dayOfWeek === 6) parts.push("É SÁBADO! Dia de compras e lazer 🛒");
+  if (dayOfWeek === 0) parts.push("É DOMINGO! Dia de descanso e presentes 🎁");
+  if (dayOfWeek === 5) parts.push("É SEXTA-FEIRA! Fim de semana chegando 🎊");
+  if (dayOfWeek === 1) parts.push("É SEGUNDA-FEIRA! Começando a semana com energia ⚡");
+
+  // Month themes
+  const monthThemes: Record<number, string> = {
+    1: "Mês de recomeço e metas novas",
+    2: "Mês do Carnaval 🎭",
+    3: "Mês da Mulher 🌸",
+    5: "Mês das Mães 💐",
+    6: "Mês dos Namorados 💕 e Festas Juninas 🎉",
+    8: "Mês dos Pais 👨",
+    10: "Mês das Crianças 👧",
+    11: "Mês da Black Friday 🛍️",
+    12: "Mês do Natal e festas 🎄🎆",
+  };
+  if (monthThemes[month]) parts.push(`Contexto do mês: ${monthThemes[month]}`);
+
+  return parts.length > 0 ? parts.join("\n") : "Dia comum, sem data especial";
+}
+
 async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: string; body: string } | null> {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const greetings = ctx.hour < 12 ? "Bom dia" : ctx.hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[ctx.dayOfWeek] || "hoje";
   const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}`;
+  const specialDate = getSpecialDateContext();
 
   let systemPrompt = "";
   let userPrompt = "";
+
+  const dateInstructions = `
+- CONTEXTO DE DATAS ESPECIAIS (USE para personalizar a mensagem!):
+${specialDate}
+- Se for feriado/data especial, INCORPORE na mensagem (ex: "Neste Natal...", "Aproveite a Black Friday...", "Feliz Sábado...")
+- Se for fim de semana, use tom mais descontraído e convidativo
+- Se for segunda-feira, use tom motivacional e energético`;
 
   if (ctx.type === "abandoned_cart") {
     systemPrompt = `Você é uma assistente de marketing MUITO criativa e educada da loja "${ctx.storeName}".
@@ -365,7 +441,8 @@ REGRAS OBRIGATÓRIAS:
 - Tom: amigável, educado, gentil, sem pressão
 - NUNCA repita a mesma mensagem. Use frases DIFERENTES a cada envio
 - Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
-- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar`;
+- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar
+${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
 Loja: ${ctx.storeName}
@@ -374,7 +451,8 @@ Valor: R$ ${ctx.totalValue}
 Itens: ${ctx.itemCount}
 Lembrete nº: ${(ctx.reminderCount || 0) + 1}
 Dia: ${dayName}
-Saudação: ${greetings}`;
+Saudação: ${greetings}
+Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "new_customer") {
     systemPrompt = `Você é uma assistente de marketing MUITO alegre e educada da loja "${ctx.storeName}".
@@ -387,12 +465,14 @@ REGRAS OBRIGATÓRIAS:
 - Use saudação: "${greetings}" (é ${dayName})
 - Tom: MUITO alegre, acolhedor, caloroso, faça o cliente se sentir especial
 - NUNCA repita a mesma mensagem
-- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}`;
+- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
+${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
 Loja: ${ctx.storeName}
 Dia: ${dayName}
-Saudação: ${greetings}`;
+Saudação: ${greetings}
+Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "daily_promo") {
     systemPrompt = `Você é uma assistente de marketing criativa e animada da loja "${ctx.storeName}".
@@ -406,12 +486,16 @@ REGRAS OBRIGATÓRIAS:
 - Tom: animado, convidativo, positivo
 - Crie uma mensagem que atraia o cliente para visitar a loja
 - NUNCA repita a mesma mensagem de dias anteriores
-- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}`;
+- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
+${dateInstructions}
+- Se for data especial/feriado, FOQUE a mensagem nessa data (ex: "Presente de Natal na ${ctx.storeName}!", "Black Friday imperdível!")
+- Se for sábado/domingo, foque em lazer e aproveitamento do fim de semana`;
 
     userPrompt = `Loja: ${ctx.storeName}
 Dia: ${dayName}
 Saudação: ${greetings}
-Clientes com push: ${ctx.customerCount || "vários"}`;
+Clientes com push: ${ctx.customerCount || "vários"}
+Datas especiais: ${specialDate}`;
   }
 
   if (!systemPrompt) return null;
