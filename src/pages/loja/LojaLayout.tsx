@@ -40,6 +40,7 @@ export interface LojaContextType {
   setSearchTerm: (s: string) => void;
   storeUserId?: string;
   openCart: () => void;
+  basePath: string;
 }
 
 import { createContext, useContext } from "react";
