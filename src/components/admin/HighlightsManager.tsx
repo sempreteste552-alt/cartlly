@@ -18,10 +18,10 @@ import {
   type StoreHighlight,
 } from "@/hooks/useStoreHighlights";
 
-async function uploadFile(file: File, folder: string): Promise<string> {
+async function uploadFile(file: File, folder: string, userId: string): Promise<string> {
   const ext = file.name.split(".").pop() || "bin";
-  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true });
+  const path = `${userId}/${folder}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw error;
   const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
   return data.publicUrl;
