@@ -88,9 +88,11 @@ export default function LojaLayout() {
   const storeStartUrl = isCustomDomain
     ? `${window.location.origin}/`
     : slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeFirstName = settings?.store_name?.split(" ")[0] || "";
+  const pwaName = settings?.store_name ? `Loja ${storeFirstName}` : undefined;
   usePwaManifest({
-    name: settings?.store_name || undefined,
-    shortName: settings?.store_name?.slice(0, 12) || undefined,
+    name: pwaName,
+    shortName: pwaName?.slice(0, 12) || undefined,
     themeColor: settings?.primary_color || undefined,
     iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
     startUrl: storeStartUrl,
