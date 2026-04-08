@@ -4,7 +4,7 @@ import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
-import { BannerCarousel } from "@/components/storefront/BannerCarousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,7 +80,29 @@ export default function LojaHome() {
           />
           {banners && banners.length > 0 && (
             <div className="max-w-7xl mx-auto px-4 pt-4">
-              <BannerCarousel banners={banners} imageInterval={10000} />
+              <Carousel opts={{ loop: true }} className="w-full">
+                <CarouselContent>
+                  {banners.map((banner) => (
+                    <CarouselItem key={banner.id}>
+                      {(banner as any).media_type === "video" ? (
+                        <video
+                          src={banner.image_url}
+                          className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
+                          autoPlay muted loop playsInline
+                        />
+                      ) : banner.link_url ? (
+                        <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
+                          <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                        </a>
+                      ) : (
+                        <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                      )}
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
             </div>
           )}
         </>
