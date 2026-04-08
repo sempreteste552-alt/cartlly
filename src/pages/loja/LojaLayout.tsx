@@ -62,6 +62,17 @@ export default function LojaLayout() {
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
+  // Dynamic PWA manifest with tenant context
+  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  usePwaManifest({
+    name: settings?.store_name || undefined,
+    shortName: settings?.store_name?.slice(0, 12) || undefined,
+    themeColor: settings?.primary_color || undefined,
+    iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
+    startUrl: storeStartUrl,
+    scope: storeStartUrl,
+  });
+
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
