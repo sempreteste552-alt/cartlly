@@ -52,7 +52,7 @@ export default function LojaLayout() {
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
   const { user, customer, signOut } = useCustomerAuth();
-  const cart = useCart();
+  const cart = useCart(slug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
