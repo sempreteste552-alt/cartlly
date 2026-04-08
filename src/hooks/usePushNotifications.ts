@@ -49,9 +49,7 @@ export function usePushNotifications() {
     if (!user || !("serviceWorker" in navigator)) return;
 
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js')) || 
-                           await navigator.serviceWorker.getRegistration('/sw-push.js');
+      const registration = await navigator.serviceWorker.ready;
       
       if (!registration) {
         setIsSubscribed(false);
@@ -87,7 +85,6 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
-      // iOS 16.4+ specific: Notification.requestPermission() must be called after a user gesture
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
@@ -97,9 +94,8 @@ export function usePushNotifications() {
         return;
       }
 
-      // Register with a specific scope to avoid conflicts with VitePWA's sw.js
-      const registration = await navigator.serviceWorker.register("/sw-push.js", { scope: '/' });
-      await navigator.serviceWorker.ready;
+      // Use the VitePWA service worker (which imports sw-push.js via importScripts)
+      const registration = await navigator.serviceWorker.ready;
 
       let subscription = await registration.pushManager.getSubscription();
 
@@ -127,8 +123,7 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js'));
+      const registration = await navigator.serviceWorker.ready;
       
       if (registration) {
         const subscription = await registration.pushManager.getSubscription();
