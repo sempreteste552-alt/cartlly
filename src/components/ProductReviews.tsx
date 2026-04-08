@@ -186,9 +186,9 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   disabled={imageFiles.length >= 2}
                 >
                   <ImagePlus className="h-4 w-4 mr-1" />
-                  Adicionar Foto ({imageFiles.length}/2)
+                  Adicionar Foto/Vídeo ({imageFiles.length}/2)
                 </Button>
-                <span className="text-xs text-muted-foreground">Máx. 2 fotos, 5MB cada</span>
+                <span className="text-xs text-muted-foreground">Máx. 2 arquivos (fotos 5MB, vídeos 20MB/10s)</span>
               </div>
               {imagePreviews.length > 0 && (
                 <div className="flex gap-2">
