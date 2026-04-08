@@ -239,18 +239,25 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
                 {r.image_urls && r.image_urls.length > 0 && (
                   <div className="flex gap-2 mt-3">
-                    {r.image_urls.map((url, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setZoomImage(url)}
-                        className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
-                      >
-                        <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
-                          <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </button>
-                    ))}
+                    {r.image_urls.map((url, i) => {
+                      const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(url);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setZoomImage(url)}
+                          className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
+                        >
+                          {isVideo ? (
+                            <video src={url} className="h-full w-full object-cover" muted />
+                          ) : (
+                            <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                            <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
