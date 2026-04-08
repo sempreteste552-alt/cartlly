@@ -105,3 +105,18 @@ export function useAllProductReviews(productIds: string[]) {
     },
   });
 }
+
+export function useBestSellingProducts(storeUserId?: string) {
+  return useQuery({
+    queryKey: ["best_selling_products", storeUserId],
+    enabled: !!storeUserId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_best_selling_products", {
+        _store_user_id: storeUserId!,
+        _limit: 10,
+      });
+      if (error) throw error;
+      return new Set((data as any[])?.map((d: any) => d.product_id) ?? []);
+    },
+  });
+}

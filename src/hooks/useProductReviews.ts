@@ -8,6 +8,7 @@ export interface ProductReview {
   customer_email: string | null;
   rating: number;
   comment: string | null;
+  image_urls: string[];
   created_at: string;
 }
 
@@ -22,7 +23,7 @@ export function useProductReviews(productId: string | undefined) {
         .eq("product_id", productId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as ProductReview[];
+      return (data as any[]).map((d) => ({ ...d, customer_email: null })) as ProductReview[];
     },
   });
 }
@@ -42,6 +43,7 @@ export function useCreateReview() {
       customer_email?: string;
       rating: number;
       comment?: string;
+      image_urls?: string[];
     }) => {
       const { data, error } = await supabase
         .from("product_reviews")

@@ -1,13 +1,13 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
-import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
+import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star, Share2, Heart } from "lucide-react";
+import { ShoppingCart, Star, Share2, Heart, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -36,6 +36,7 @@ export default function LojaHome() {
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
   const { data: productImagesMap } = usePublicProductImages(productIds);
+  const { data: bestSellers } = useBestSellingProducts(storeUserId);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -137,7 +138,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -149,6 +150,7 @@ export default function LojaHome() {
               cart={cart}
               ratings={ratings}
               productImagesMap={productImagesMap}
+              bestSellers={bestSellers}
               buttonColor={buttonColor}
               buttonTextColor={buttonTextColor}
               primaryColor={primaryColor}
@@ -182,6 +184,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   cart: any;
   ratings?: Record<string, { average: number; count: number }>;
   productImagesMap?: Record<string, string[]>;
+  bestSellers?: Set<string>;
   buttonColor: string;
   buttonTextColor: string;
   primaryColor: string;
@@ -214,12 +217,13 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
   ratings?: Record<string, { average: number; count: number }>;
   productImagesMap?: Record<string, string[]>;
+  bestSellers?: Set<string>;
   buttonColor: string;
   buttonTextColor: string;
   primaryColor: string;
@@ -273,6 +277,13 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 {new Date(product.created_at).getTime() > Date.now() - 7 * 86400000 && (
                   <div className="absolute top-2 left-2 z-10">
                     <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>NOVO</Badge>
+                  </div>
+                )}
+                {bestSellers?.has(product.id) && (
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm flex items-center gap-0.5" style={{ backgroundColor: "#f59e0b", color: "#fff" }}>
+                      <Award className="h-3 w-3" /> RECOMENDADO
+                    </Badge>
                   </div>
                 )}
               </div>

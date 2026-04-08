@@ -741,6 +741,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string
           id: string
+          image_urls: string[]
           product_id: string
           rating: number
         }
@@ -750,6 +751,7 @@ export type Database = {
           customer_email?: string | null
           customer_name: string
           id?: string
+          image_urls?: string[]
           product_id: string
           rating: number
         }
@@ -759,6 +761,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string
           id?: string
+          image_urls?: string[]
           product_id?: string
           rating?: number
         }
@@ -1873,6 +1876,7 @@ export type Database = {
           created_at: string | null
           customer_name: string | null
           id: string | null
+          image_urls: string[] | null
           product_id: string | null
           rating: number | null
         }
@@ -1881,6 +1885,7 @@ export type Database = {
           created_at?: string | null
           customer_name?: string | null
           id?: string | null
+          image_urls?: string[] | null
           product_id?: string | null
           rating?: number | null
         }
@@ -1889,6 +1894,7 @@ export type Database = {
           created_at?: string | null
           customer_name?: string | null
           id?: string | null
+          image_urls?: string[] | null
           product_id?: string | null
           rating?: number | null
         }
@@ -2194,6 +2200,13 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_best_selling_products: {
+        Args: { _limit?: number; _store_user_id: string }
+        Returns: {
+          product_id: string
+          total_sold: number
+        }[]
       }
       has_role: {
         Args: {
