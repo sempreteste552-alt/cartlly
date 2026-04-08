@@ -245,6 +245,7 @@ export default function LojaLayout() {
           storeName={settings?.store_name}
           logoUrl={settings?.logo_url}
           primaryColor={settings?.primary_color}
+          storeUserId={settings?.user_id}
         />
 
         {/* Marketing: Countdown Bar — top of everything */}
@@ -344,7 +345,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
-            <StorePushOptIn primaryColor={primaryColor} />
+            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             {!isAdminPreview && (
