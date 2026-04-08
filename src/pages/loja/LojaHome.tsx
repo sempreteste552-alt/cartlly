@@ -279,6 +279,13 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                     <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>NOVO</Badge>
                   </div>
                 )}
+                {bestSellers?.has(product.id) && (
+                  <div className="absolute bottom-2 left-2 z-10">
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm flex items-center gap-0.5" style={{ backgroundColor: "#f59e0b", color: "#fff" }}>
+                      <Award className="h-3 w-3" /> RECOMENDADO
+                    </Badge>
+                  </div>
+                )}
               </div>
               <div className="p-3 text-foreground">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
