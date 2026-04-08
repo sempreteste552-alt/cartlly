@@ -57,8 +57,10 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Handle OAuth callback for store customers
         if (event === "SIGNED_IN" && session?.user) {
+          const u = session.user;
+
+          // Handle OAuth callback for store customers
           const authContextStr = localStorage.getItem("auth_context");
           if (authContextStr) {
             try {
@@ -66,16 +68,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
               if (authContext.type === "store_customer" && authContext.store_user_id) {
                 localStorage.removeItem("auth_context");
                 const storeUserId = authContext.store_user_id;
-                const u = session.user;
 
-                // Set is_customer metadata if not already set
                 if (!u.user_metadata?.is_customer) {
                   await supabase.auth.updateUser({
                     data: { is_customer: true, store_customer_signup: true },
                   });
                 }
 
-                // Check if customer record exists for this store
                 const { data: existing } = await supabase
                   .from("customers")
                   .select("id")
@@ -93,10 +92,45 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                   await generateWelcomeCoupon(storeUserId, u.user_metadata?.display_name || u.user_metadata?.full_name || "Cliente");
                 }
 
-                // Delete any accidentally created tenant profile
                 await supabase.from("profiles").delete().eq("user_id", u.id);
               }
             } catch { /* ignore parse errors */ }
+          }
+
+          // Handle email confirmation redirect — auto-create customer record if pending
+          const pendingStr = localStorage.getItem("pending_customer_signup");
+          if (pendingStr) {
+            try {
+              const pending = JSON.parse(pendingStr);
+              if (pending.auth_user_id === u.id && pending.store_user_id) {
+                localStorage.removeItem("pending_customer_signup");
+
+                // Ensure is_customer metadata is set
+                if (!u.user_metadata?.is_customer) {
+                  await supabase.auth.updateUser({ data: { is_customer: true } });
+                }
+
+                const { data: existing } = await supabase
+                  .from("customers")
+                  .select("id")
+                  .eq("auth_user_id", u.id)
+                  .eq("store_user_id", pending.store_user_id)
+                  .maybeSingle();
+
+                if (!existing) {
+                  await supabase.from("customers").insert({
+                    auth_user_id: u.id,
+                    store_user_id: pending.store_user_id,
+                    name: pending.name || u.user_metadata?.display_name || u.email?.split("@")[0] || "Cliente",
+                    email: u.email || "",
+                  } as any);
+                  await generateWelcomeCoupon(pending.store_user_id, pending.name || "Cliente");
+                }
+
+                // Reload customer profile
+                loadCustomerProfile(u.id).catch(() => {});
+              }
+            } catch { /* ignore */ }
           }
         }
       }
