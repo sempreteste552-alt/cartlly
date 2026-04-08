@@ -3,6 +3,7 @@ import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
+import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -195,6 +196,9 @@ export default function LojaLayout() {
           color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
         }}
       >
+        {/* PWA Install Banner — very top */}
+        <PWAInstallBanner />
+
         {/* Marketing: Countdown Bar — top of everything */}
         {marketingConfig && <CountdownBar config={marketingConfig} />}
 
