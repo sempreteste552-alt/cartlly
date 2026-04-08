@@ -18,6 +18,7 @@ export type FeatureKey =
   | "whatsapp_sales" | "reviews"
   | "mega_menu" | "custom_fonts" | "video_blocks" | "conversion_widgets"
   | "advanced_product_cards" | "custom_home_sections" | "premium_banners"
+  | "push_customers"
   | "enterprise_permissions";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
