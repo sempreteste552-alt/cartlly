@@ -1967,6 +1967,7 @@ export type Database = {
           domain_last_check: string | null
           domain_status: string
           facebook_url: string | null
+          favicon_url: string | null
           footer_bg_color: string
           footer_text_color: string
           gateway_environment: string
@@ -2034,6 +2035,7 @@ export type Database = {
           domain_last_check?: string | null
           domain_status?: string
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
           gateway_environment?: string
@@ -2101,6 +2103,7 @@ export type Database = {
           domain_last_check?: string | null
           domain_status?: string
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
           gateway_environment?: string
@@ -2558,6 +2561,7 @@ export type Database = {
           domain_last_check: string | null
           domain_status: string | null
           facebook_url: string | null
+          favicon_url: string | null
           footer_bg_color: string | null
           footer_text_color: string | null
           gateway_environment: string | null
@@ -2624,6 +2628,7 @@ export type Database = {
           domain_last_check?: string | null
           domain_status?: string | null
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
@@ -2690,6 +2695,7 @@ export type Database = {
           domain_last_check?: string | null
           domain_status?: string | null
           facebook_url?: string | null
+          favicon_url?: string | null
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
