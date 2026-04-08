@@ -28,14 +28,30 @@ export function AdminLayout() {
   const adminName = (settings as any)?.store_name
     ? `Admin ${(settings as any).store_name}`
     : "Painel Admin";
+  const adminShortName = "Painel Admin";
   usePwaManifest({
     name: adminName,
-    shortName: adminName.slice(0, 12),
+    shortName: adminShortName,
     themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
     iconUrl: (settings as any)?.logo_url || undefined,
     startUrl: `${window.location.origin}/admin/`,
     scope: `${window.location.origin}/admin/`,
   });
+
+  // Update document title and apple-mobile-web-app-title for admin
+  useEffect(() => {
+    document.title = adminName;
+    let meta = document.querySelector('meta[name="apple-mobile-web-app-title"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "apple-mobile-web-app-title";
+      document.head.appendChild(meta);
+    }
+    meta.content = adminShortName;
+    return () => {
+      document.title = "Cartlly - Sua Loja Online";
+    };
+  }, [adminName]);
 
   const { data: currentSub } = useQuery({
     queryKey: ["admin_layout_sub", user?.id],

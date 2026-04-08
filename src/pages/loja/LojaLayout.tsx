@@ -84,20 +84,40 @@ export default function LojaLayout() {
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
+  // Build a readable store name from slug (first 2 words, capitalized)
+  const slugToName = (s: string) =>
+    s.split("-").slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
   // Dynamic PWA manifest with tenant context
   const storeStartUrl = isCustomDomain
     ? `${window.location.origin}/`
     : slug ? `${window.location.origin}/loja/${slug}/` : undefined;
-  const storeFirstName = settings?.store_name?.split(" ")[0] || "";
-  const pwaName = settings?.store_name ? `Loja ${storeFirstName}` : undefined;
+  const resolvedStoreName = settings?.store_name || (slug ? slugToName(slug) : "Loja");
+  const pwaName = `Loja ${resolvedStoreName.split(" ").slice(0, 2).join(" ")}`;
+  const pwaShortName = pwaName.length > 12 ? pwaName.slice(0, 12).trim() : pwaName;
   usePwaManifest({
     name: pwaName,
-    shortName: pwaName?.slice(0, 12) || undefined,
+    shortName: pwaShortName,
     themeColor: settings?.primary_color || undefined,
     iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
     startUrl: storeStartUrl,
     scope: storeStartUrl,
   });
+
+  // Update document title and apple-mobile-web-app-title dynamically
+  useEffect(() => {
+    document.title = pwaName;
+    let meta = document.querySelector('meta[name="apple-mobile-web-app-title"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "apple-mobile-web-app-title";
+      document.head.appendChild(meta);
+    }
+    meta.content = pwaName;
+    return () => {
+      document.title = "Cartlly - Sua Loja Online";
+    };
+  }, [pwaName]);
 
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settings && user.id === settings.user_id;
