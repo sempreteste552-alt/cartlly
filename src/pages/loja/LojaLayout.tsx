@@ -373,7 +373,7 @@ export default function LojaLayout() {
                   className="pl-9 bg-secondary border-border rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { track("search", { search_term: searchTerm }); navigate(basePath); } }}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
