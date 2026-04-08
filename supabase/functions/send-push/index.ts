@@ -144,6 +144,15 @@ async function encryptPayload(
   return { encrypted: body, salt, serverPublicKey: serverPublicKeyRaw };
 }
 
+/** Pad or trim a byte array to exactly `len` bytes (left-pad with zeros). */
+function padTo(buf: Uint8Array, len: number): Uint8Array {
+  if (buf.length === len) return buf;
+  if (buf.length > len) return buf.slice(buf.length - len);
+  const padded = new Uint8Array(len);
+  padded.set(buf, len - buf.length);
+  return padded;
+}
+
 async function generateVapidAuthHeader(
   endpoint: string,
   vapidPublicKey: string,
@@ -166,9 +175,14 @@ async function generateVapidAuthHeader(
   const rawPrivate = b64urlDecode(vapidPrivateKey);
   const rawPublic = b64urlDecode(vapidPublicKey);
 
-  const x = b64url(rawPublic.slice(1, 33));
-  const y = b64url(rawPublic.slice(33, 65));
-  const d = b64url(rawPrivate);
+  // rawPublic is 65 bytes: 0x04 || x(32) || y(32)
+  const xBytes = padTo(rawPublic.slice(1, 33), 32);
+  const yBytes = padTo(rawPublic.slice(33, 65), 32);
+  const dBytes = padTo(rawPrivate, 32);
+
+  const x = b64url(xBytes);
+  const y = b64url(yBytes);
+  const d = b64url(dBytes);
 
   const key = await crypto.subtle.importKey(
     "jwk",
@@ -178,25 +192,37 @@ async function generateVapidAuthHeader(
     ["sign"]
   );
 
-  const signature = await crypto.subtle.sign(
+  const signatureBuf = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
     key,
     enc.encode(unsignedToken)
   );
 
-  const sigBytes = new Uint8Array(signature);
+  // Web Crypto may return DER-encoded signature; we need raw r||s (64 bytes)
+  const sigBytes = new Uint8Array(signatureBuf);
   let r: Uint8Array, s: Uint8Array;
-  if (sigBytes.length === 64) {
-    r = sigBytes.slice(0, 32);
-    s = sigBytes.slice(32, 64);
+
+  if (sigBytes.length !== 64 && sigBytes[0] === 0x30) {
+    // DER encoded — parse it
+    let offset = 2;
+    if (sigBytes[1] & 0x80) offset += (sigBytes[1] & 0x7f);
+    if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
+    offset++;
+    const rLen = sigBytes[offset++];
+    r = sigBytes.slice(offset, offset + rLen);
+    offset += rLen;
+    if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
+    offset++;
+    const sLen = sigBytes[offset++];
+    s = sigBytes.slice(offset, offset + sLen);
   } else {
     r = sigBytes.slice(0, 32);
-    s = sigBytes.slice(32);
+    s = sigBytes.slice(32, 64);
   }
 
   const rawSig = new Uint8Array(64);
-  rawSig.set(r.length > 32 ? r.slice(r.length - 32) : r, 32 - Math.min(r.length, 32));
-  rawSig.set(s.length > 32 ? s.slice(s.length - 32) : s, 64 - Math.min(s.length, 32));
+  rawSig.set(padTo(r, 32), 0);
+  rawSig.set(padTo(s, 32), 32);
 
   const token = `${unsignedToken}.${b64url(rawSig)}`;
 

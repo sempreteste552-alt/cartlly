@@ -67,6 +67,15 @@ async function encryptPayload(clientPublicKeyB64: string, clientAuthB64: string,
   return concat(salt, rs, new Uint8Array([serverPublicKeyRaw.length]), serverPublicKeyRaw, ciphertext);
 }
 
+/** Pad or trim a byte array to exactly `len` bytes (left-pad with zeros). */
+function padTo(buf: Uint8Array, len: number): Uint8Array {
+  if (buf.length === len) return buf;
+  if (buf.length > len) return buf.slice(buf.length - len);
+  const padded = new Uint8Array(len);
+  padded.set(buf, len - buf.length);
+  return padded;
+}
+
 async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string, vapidPrivateKey: string) {
   const urlObj = new URL(endpoint);
   const audience = `${urlObj.protocol}//${urlObj.host}`;
@@ -80,20 +89,70 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
   const payloadB64 = b64url(enc.encode(JSON.stringify(payload)));
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  const rawPrivate = b64urlDecode(vapidPrivateKey);
-  const rawPublic = b64urlDecode(vapidPublicKey);
-  const x = b64url(rawPublic.slice(1, 33));
-  const y = b64url(rawPublic.slice(33, 65));
-  const d = b64url(rawPrivate);
+  const rawPrivate = b64urlDecode(vapidPrivateKey.trim());
+  const rawPublic = b64urlDecode(vapidPublicKey.trim());
 
-  const key = await crypto.subtle.importKey("jwk", { kty: "EC", crv: "P-256", x, y, d }, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
-  const signature = new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, enc.encode(unsignedToken)));
+  console.log(`VAPID key sizes: public=${rawPublic.length} bytes, private=${rawPrivate.length} bytes, public[0]=0x${rawPublic[0]?.toString(16)}`);
+
+  // rawPublic is 65 bytes: 0x04 || x(32) || y(32)
+  const xBytes = padTo(rawPublic.slice(1, 33), 32);
+  const yBytes = padTo(rawPublic.slice(33, 65), 32);
+  const dBytes = padTo(rawPrivate, 32);
+
+  const x = b64url(xBytes);
+  const y = b64url(yBytes);
+  const d = b64url(dBytes);
+
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    { kty: "EC", crv: "P-256", x, y, d },
+    { name: "ECDSA", namedCurve: "P-256" },
+    true,
+    ["sign"]
+  );
+
+  // Verify the public key matches by re-exporting
+  const exportedPublic = new Uint8Array(await crypto.subtle.exportKey("raw", 
+    (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])).publicKey
+  ));
+  // Actually just export from the imported key pair
+  const jwkExported = await crypto.subtle.exportKey("jwk", key);
+  console.log(`JWK exported crv=${jwkExported.crv}, x length=${jwkExported.x?.length}, y length=${jwkExported.y?.length}`);
+
+  const signatureBuf = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    enc.encode(unsignedToken)
+  );
+
+  // Web Crypto may return DER-encoded signature; we need raw r||s (64 bytes)
+  const sigBytes = new Uint8Array(signatureBuf);
+  let r: Uint8Array, s: Uint8Array;
+
+  if (sigBytes.length !== 64 && sigBytes[0] === 0x30) {
+    // DER encoded — parse it
+    let offset = 2;
+    if (sigBytes[1] & 0x80) offset += (sigBytes[1] & 0x7f);
+    // r
+    if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
+    offset++;
+    const rLen = sigBytes[offset++];
+    r = sigBytes.slice(offset, offset + rLen);
+    offset += rLen;
+    // s
+    if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
+    offset++;
+    const sLen = sigBytes[offset++];
+    s = sigBytes.slice(offset, offset + sLen);
+  } else {
+    // Raw r||s
+    r = sigBytes.slice(0, 32);
+    s = sigBytes.slice(32, 64);
+  }
 
   const rawSig = new Uint8Array(64);
-  const r = signature.slice(0, 32);
-  const s = signature.slice(32, 64);
-  rawSig.set(r.length > 32 ? r.slice(r.length - 32) : r, 32 - Math.min(r.length, 32));
-  rawSig.set(s.length > 32 ? s.slice(s.length - 32) : s, 64 - Math.min(s.length, 32));
+  rawSig.set(padTo(r, 32), 0);
+  rawSig.set(padTo(s, 32), 32);
 
   return { token: `${unsignedToken}.${b64url(rawSig)}`, vapidKey: vapidPublicKey };
 }
@@ -123,7 +182,6 @@ Deno.serve(async (req) => {
       .eq("user_id", target_user_id);
 
     if (!subs || subs.length === 0) {
-      // Log even if no subs found
       await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
       return json({ sent: 0, message: "No push subscriptions" });
     }
@@ -138,15 +196,10 @@ Deno.serve(async (req) => {
       data: extraData || {},
     };
 
-    // Add actions based on event type
     if (type === "payment_approved" || type === "new_order") {
-      pushPayload.actions = [
-        { action: "view_order", title: "📋 Ver Pedido" },
-      ];
+      pushPayload.actions = [{ action: "view_order", title: "📋 Ver Pedido" }];
     } else if (type === "pix_generated" || type === "boleto_generated") {
-      pushPayload.actions = [
-        { action: "view_payment", title: "💰 Ver Pagamento" },
-      ];
+      pushPayload.actions = [{ action: "view_payment", title: "💰 Ver Pagamento" }];
     }
 
     const payloadStr = JSON.stringify(pushPayload);
@@ -156,7 +209,6 @@ Deno.serve(async (req) => {
     for (const sub of subs) {
       try {
         if (sub.platform === "web" || !sub.platform || sub.platform === "") {
-          // Web Push via VAPID
           const { token, vapidKey } = await generateVapidAuthHeader(sub.endpoint, vapidPublicKey, vapidPrivateKey);
           const encrypted = await encryptPayload(sub.p256dh, sub.auth, payloadStr);
 
@@ -185,7 +237,6 @@ Deno.serve(async (req) => {
             await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
           }
         }
-        // Future: handle "android"/"ios" platforms via FCM here
       } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
         failures.push(`${sub.id}: ${e.message}`);
