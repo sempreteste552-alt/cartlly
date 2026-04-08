@@ -537,6 +537,57 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_states: {
+        Row: {
+          created_at: string
+          customer_id: string
+          discount_available: boolean
+          id: string
+          intent_level: string
+          last_activity_at: string
+          last_product_id: string | null
+          last_product_name: string | null
+          low_stock: boolean
+          metadata: Json
+          state: string
+          state_changed_at: string
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          discount_available?: boolean
+          id?: string
+          intent_level?: string
+          last_activity_at?: string
+          last_product_id?: string | null
+          last_product_name?: string | null
+          low_stock?: boolean
+          metadata?: Json
+          state?: string
+          state_changed_at?: string
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          discount_available?: boolean
+          id?: string
+          intent_level?: string
+          last_activity_at?: string
+          last_product_id?: string | null
+          last_product_name?: string | null
+          low_stock?: boolean
+          metadata?: Json
+          state?: string
+          state_changed_at?: string
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_wishlist: {
         Row: {
           created_at: string
@@ -1355,38 +1406,53 @@ export type Database = {
       push_logs: {
         Row: {
           body: string | null
+          clicked_at: string | null
           created_at: string
+          customer_id: string | null
+          delivered_at: string | null
           error_message: string | null
           event_type: string
           id: string
           payload: Json | null
           status: string
+          store_user_id: string | null
           subscription_id: string | null
           title: string
+          trigger_type: string | null
           user_id: string
         }
         Insert: {
           body?: string | null
+          clicked_at?: string | null
           created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           event_type?: string
           id?: string
           payload?: Json | null
           status?: string
+          store_user_id?: string | null
           subscription_id?: string | null
           title: string
+          trigger_type?: string | null
           user_id: string
         }
         Update: {
           body?: string | null
+          clicked_at?: string | null
           created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           event_type?: string
           id?: string
           payload?: Json | null
           status?: string
+          store_user_id?: string | null
           subscription_id?: string | null
           title?: string
+          trigger_type?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1468,6 +1534,54 @@ export type Database = {
           recommended_product_ids?: string[]
           source_product_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      retargeting_sequences: {
+        Row: {
+          created_at: string
+          current_step: number
+          customer_id: string
+          id: string
+          last_push_at: string | null
+          max_steps: number
+          next_push_at: string | null
+          product_id: string | null
+          pushes_sent: number
+          status: string
+          stopped_reason: string | null
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: number
+          customer_id: string
+          id?: string
+          last_push_at?: string | null
+          max_steps?: number
+          next_push_at?: string | null
+          product_id?: string | null
+          pushes_sent?: number
+          status?: string
+          stopped_reason?: string | null
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: number
+          customer_id?: string
+          id?: string
+          last_push_at?: string | null
+          max_steps?: number
+          next_push_at?: string | null
+          product_id?: string | null
+          pushes_sent?: number
+          status?: string
+          stopped_reason?: string | null
+          store_user_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2369,9 +2483,11 @@ export type Database = {
           created_at: string
           current_period_end: string
           current_period_start: string
+          downgrade_applied_at: string | null
           feature_overrides: Json
           id: string
           plan_id: string
+          plan_reminders_sent: number[]
           status: string
           trial_ends_at: string | null
           updated_at: string
@@ -2381,9 +2497,11 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
           plan_id: string
+          plan_reminders_sent?: number[]
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -2393,9 +2511,11 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
           plan_id?: string
+          plan_reminders_sent?: number[]
           status?: string
           trial_ends_at?: string | null
           updated_at?: string
