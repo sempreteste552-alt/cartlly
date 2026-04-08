@@ -151,6 +151,7 @@ function GeneralSettingsTab() {
   const [welcomeCouponDiscountValue, setWelcomeCouponDiscountValue] = useState(10);
   const [welcomeCouponMinOrder, setWelcomeCouponMinOrder] = useState<string>("");
   const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
+  const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
 
   useEffect(() => {
     if (settings) {
@@ -193,6 +194,7 @@ function GeneralSettingsTab() {
       setWelcomeCouponDiscountValue(settings.welcome_coupon_discount_value ?? 10);
       setWelcomeCouponMinOrder(settings.welcome_coupon_min_order ? String(settings.welcome_coupon_min_order) : "");
       setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
+      setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
     }
   }, [settings]);
 
