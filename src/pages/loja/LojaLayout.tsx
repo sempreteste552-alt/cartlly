@@ -5,7 +5,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -22,6 +22,7 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { isPlatformHost } from "@/lib/storeDomain";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -49,11 +50,22 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
-  const storeThemeScope = `store-${slug || "default"}`;
+  
+  // Detect if we're on a custom domain (not platform host and no slug in URL)
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const isCustomDomain = !slug && !isPlatformHost(hostname);
+  
+  const storeThemeScope = `store-${slug || hostname || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
+  
+  // Use slug-based lookup when slug exists, domain-based when on custom domain
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
+  const { data: settingsByDomain, isLoading: domainLoading } = useResolvedPublicStore(isCustomDomain ? undefined : slug);
+  
   const { user, customer, signOut } = useCustomerAuth();
-  const cart = useCart(slug);
+  const resolvedSettings = slug ? settingsBySlug : (isCustomDomain ? settingsByDomain : settingsBySlug);
+  const resolvedSlug = resolvedSettings?.store_slug;
+  const cart = useCart(slug || resolvedSlug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
@@ -62,8 +74,8 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const settings = settingsBySlug;
-  const isLoading = slugLoading;
+  const settings = resolvedSettings;
+  const isLoading = slug ? slugLoading : (isCustomDomain ? domainLoading : slugLoading);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
