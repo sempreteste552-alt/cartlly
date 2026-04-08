@@ -40,14 +40,16 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     try {
       await signIn(email, password, storeUserId);
       toast.success("Login efetuado com sucesso!", { duration: 3000 });
+      setEmail("");
+      setPassword("");
       onOpenChange(false);
     } catch (err: any) {
       const msg = err.message || "Erro ao fazer login";
-      if (msg.includes("Email not confirmed") || msg.includes("não foi verificado")) {
+      if (msg.includes("Confirme seu e-mail") || msg.includes("Email not confirmed") || msg.includes("não foi verificado")) {
         setAlertCard({ type: "warning", message: "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada e clique no link de verificação." });
         setRegisteredEmail(email);
         setShowEmailConfirmCard(true);
-      } else if (msg.includes("Invalid login") || msg.includes("inválidos")) {
+      } else if (msg.includes("inválidos") || msg.includes("Invalid login")) {
         setAlertCard({ type: "error", message: "E-mail ou senha incorretos. Verifique seus dados e tente novamente." });
       } else {
         setAlertCard({ type: "error", message: msg });
@@ -73,11 +75,17 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
       setTab("login");
     } catch (err: any) {
       const msg = err.message || "Erro ao criar conta";
-      if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
+      if (msg.includes("Verifique seu e-mail") || msg.includes("confirmar o cadastro")) {
+        // This is expected — email confirmation required
+        setRegisteredEmail(email);
+        setShowEmailConfirmCard(true);
+        setAlertCard({ type: "success", message: "Conta criada! Verifique seu e-mail para confirmar antes de fazer login." });
+        setTab("login");
+      } else if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
         setAlertCard({ type: "error", message: "Este e-mail já existe em outra conta e não pode ser reaproveitado nesta loja." });
         setTab("login");
-      } else if (msg.includes("já está cadastrado nesta loja")) {
-        setAlertCard({ type: "warning", message: "Este e-mail já está registrado nesta loja. Faça login." });
+      } else if (msg.includes("já está cadastrado nesta loja") || msg.includes("já possui conta")) {
+        setAlertCard({ type: "warning", message: "Este e-mail já está registrado. Faça login." });
         setTab("login");
       } else {
         setAlertCard({ type: "error", message: msg });

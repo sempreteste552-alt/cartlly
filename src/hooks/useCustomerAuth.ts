@@ -152,17 +152,12 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       setCustomerLoading(false);
       return;
     }
-    const isCustomer = user.user_metadata?.is_customer === true;
-    if (!isCustomer) {
-      setCustomer(null);
-      setCustomerLoading(false);
-      return;
-    }
+    // Always try to load profile — metadata might not be set yet
     loadCustomerProfile(user.id).catch(() => {
       setCustomer(null);
       setCustomerLoading(false);
     });
-  }, [loadCustomerProfile, user]);
+  }, [loadCustomerProfile, user?.id]);
 
   const normalizeEmail = (email: string) => email.toLowerCase().trim();
 
@@ -284,36 +279,47 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    // Ensure is_customer metadata is set
-    if (!data.user.user_metadata?.is_customer) {
-      await supabase.auth.updateUser({ data: { is_customer: true } });
+    // --- From here on, user IS authenticated. Never throw. ---
+
+    // Ensure is_customer metadata is set (non-critical)
+    try {
+      if (!data.user.user_metadata?.is_customer) {
+        await supabase.auth.updateUser({ data: { is_customer: true } });
+      }
+    } catch (e) {
+      console.warn("Failed to set is_customer metadata:", e);
     }
 
     // Clear any pending signup data
     localStorage.removeItem("pending_customer_signup");
 
-    // Check if customer record exists for this store; create if missing
-    let { data: customerRecord } = await supabase
-      .from("customers")
-      .select("id, name, email")
-      .eq("auth_user_id", data.user.id)
-      .eq("store_user_id", storeUserId)
-      .maybeSingle();
+    // Check if customer record exists for this store; create if missing (non-critical)
+    try {
+      const { data: customerRecord } = await supabase
+        .from("customers")
+        .select("id, name, email")
+        .eq("auth_user_id", data.user.id)
+        .eq("store_user_id", storeUserId)
+        .maybeSingle();
 
-    if (!customerRecord) {
-      const { error: insertErr } = await supabase.from("customers").insert({
-        auth_user_id: data.user.id,
-        store_user_id: storeUserId,
-        name: data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente",
-        email: data.user.email || "",
-      } as any);
-      if (insertErr && !insertErr.message.includes("duplicate")) {
-        console.error("Failed to auto-create customer record:", insertErr);
+      if (!customerRecord) {
+        await supabase.from("customers").insert({
+          auth_user_id: data.user.id,
+          store_user_id: storeUserId,
+          name: data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "Cliente",
+          email: data.user.email || "",
+        } as any);
       }
+    } catch (e) {
+      console.warn("Failed to ensure customer record:", e);
     }
 
-    // Force reload customer profile so UI updates immediately
-    await loadCustomerProfile(data.user.id).catch(() => {});
+    // Force reload customer profile so UI updates immediately (non-critical)
+    try {
+      await loadCustomerProfile(data.user.id);
+    } catch (e) {
+      console.warn("Failed to load customer profile:", e);
+    }
 
     return data;
   };
