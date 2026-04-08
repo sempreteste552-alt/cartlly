@@ -150,6 +150,7 @@ export default function LojaHome() {
               cart={cart}
               ratings={ratings}
               productImagesMap={productImagesMap}
+              bestSellers={bestSellers}
               buttonColor={buttonColor}
               buttonTextColor={buttonTextColor}
               primaryColor={primaryColor}
