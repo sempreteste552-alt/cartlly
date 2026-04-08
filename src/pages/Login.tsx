@@ -74,9 +74,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const loginText = useTypewriter(LOGIN_PHRASES);
-  const registerText = useTypewriter(REGISTER_PHRASES);
+  const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
   useEffect(() => {
     if (user) {
