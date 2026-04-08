@@ -217,12 +217,13 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
   ratings?: Record<string, { average: number; count: number }>;
   productImagesMap?: Record<string, string[]>;
+  bestSellers?: Set<string>;
   buttonColor: string;
   buttonTextColor: string;
   primaryColor: string;
