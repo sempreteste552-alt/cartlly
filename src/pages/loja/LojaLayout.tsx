@@ -9,7 +9,7 @@ import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicSto
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -452,6 +452,7 @@ export default function LojaLayout() {
             {[
               { icon: Home, label: "Início", to: basePath },
               { icon: Package, label: "Produtos", to: basePath },
+              { icon: Ticket, label: "Cupons", to: `${basePath}/cupons` },
               { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout` },
               { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
@@ -527,6 +528,17 @@ export default function LojaLayout() {
               <div>
                 <h3 className="font-bold text-lg mb-3">{storeName}</h3>
                 {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">Links</h3>
+                <div className="space-y-2 text-sm opacity-60">
+                  <Link to={`${basePath}/cupons`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                    <Ticket className="h-3.5 w-3.5" /> Cupons de Desconto
+                  </Link>
+                  <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                    <Truck className="h-3.5 w-3.5" /> Rastrear Pedido
+                  </Link>
+                </div>
               </div>
               <div>
                 <h3 className="font-bold mb-3">Contato</h3>
