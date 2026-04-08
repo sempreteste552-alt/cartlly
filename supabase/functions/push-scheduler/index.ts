@@ -8,11 +8,23 @@ const corsHeaders = {
 const MAX_PUSH_PER_DAY = 3;
 const MIN_INTERVAL_MINUTES = 30;
 
+// Randomized delay ranges (minutes) — scheduler picks a random point within range
 const TRIGGER_DELAYS: Record<string, { min: number; max: number }> = {
-  abandoned_cart: { min: 30, max: 30 },
-  browsing: { min: 15, max: 45 },
-  inactive: { min: 120, max: 360 },
+  abandoned_cart: { min: 20, max: 45 },
+  browsing: { min: 12, max: 50 },
+  inactive: { min: 90, max: 420 },
 };
+
+// Returns a random delay within range for this customer (seeded by customer_id for consistency)
+function randomDelayInRange(min: number, max: number, seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const ratio = (Math.abs(hash) % 1000) / 1000;
+  return min + ratio * (max - min);
+}
 
 // ── Template pools (50+ per type) ──────────────────────────────────
 const TEMPLATES: Record<string, { title: string; body: string }[]> = {
@@ -174,7 +186,37 @@ const TEMPLATES: Record<string, { title: string; body: string }[]> = {
   ],
 };
 
-function pickTemplate(state: string): { title: string; body: string } {
+// Product-aware templates — used when we know the product name
+const PRODUCT_TEMPLATES: Record<string, { title: string; body: string }[]> = {
+  abandoned_cart: [
+    { title: "🛒 \"{product}\" espera por você!", body: "{greetings}, {name}! O \"{product}\" ainda está no seu carrinho na {store}." },
+    { title: "⏳ Ainda pensando no \"{product}\"?", body: "{name}, garanta o \"{product}\" antes que acabe na {store}!" },
+    { title: "🔥 \"{product}\" quase esgotando!", body: "{greetings}! {name}, corre que o \"{product}\" está acabando na {store}!" },
+    { title: "💛 Não esquece do \"{product}\"!", body: "{name}, seu \"{product}\" da {store} tá te esperando!" },
+    { title: "🎯 Falta pouco pro \"{product}\"!", body: "{greetings}, {name}! Finalize e leve o \"{product}\" da {store}." },
+  ],
+  browsing: [
+    { title: "👀 Curtiu o \"{product}\"?", body: "{greetings}, {name}! O \"{product}\" da {store} combina com você!" },
+    { title: "✨ \"{product}\" te esperando!", body: "{name}, volte e garanta o \"{product}\" na {store}!" },
+    { title: "🔥 \"{product}\" é tendência!", body: "{greetings}! {name}, o \"{product}\" está bombando na {store}." },
+    { title: "💜 Gostou do \"{product}\"?", body: "{name}, o \"{product}\" da {store} está disponível. Aproveite!" },
+    { title: "🎁 \"{product}\" com desconto?", body: "{greetings}, {name}! Confira condições especiais do \"{product}\" na {store}." },
+  ],
+  inactive: [
+    { title: "💜 Lembra do \"{product}\"?", body: "{greetings}, {name}! O \"{product}\" da {store} ainda espera por você." },
+    { title: "🌟 \"{product}\" com novidades!", body: "{name}, o \"{product}\" que você viu na {store} pode ter preço novo!" },
+    { title: "🔔 \"{product}\" disponível!", body: "{greetings}! {name}, o \"{product}\" da {store} está te chamando." },
+    { title: "😊 Sentiu falta do \"{product}\"?", body: "{name}, volte à {store} e confira o \"{product}\"!" },
+    { title: "🎯 \"{product}\" pra você!", body: "{greetings}, {name}! O \"{product}\" continua na {store}. Venha ver!" },
+  ],
+};
+
+function pickTemplate(state: string, hasProduct = false): { title: string; body: string } {
+  // 70% chance to use product template when product is available
+  if (hasProduct && PRODUCT_TEMPLATES[state]?.length && Math.random() < 0.7) {
+    const pool = PRODUCT_TEMPLATES[state];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
   const pool = TEMPLATES[state];
   if (!pool || pool.length === 0) return { title: "🔔 Novidade!", body: "Confira as novidades da loja!" };
   return pool[Math.floor(Math.random() * pool.length)];
@@ -236,6 +278,29 @@ Deno.serve(async (req) => {
     const { data: pushSubs } = await supabase.from("push_subscriptions").select("user_id").in("user_id", authUserIds);
     const hasPush = new Set((pushSubs || []).map((s: any) => s.user_id));
 
+    // 4. Fetch recent product views for personalization
+    const { data: recentEvents } = await supabase
+      .from("customer_behavior_events")
+      .select("customer_id, product_id, event_type")
+      .in("customer_id", customerIds.filter(Boolean))
+      .in("event_type", ["product_view", "add_to_cart"])
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    const customerLastProduct = new Map<string, string>();
+    for (const ev of recentEvents || []) {
+      if (ev.customer_id && ev.product_id && !customerLastProduct.has(ev.customer_id)) {
+        customerLastProduct.set(ev.customer_id, ev.product_id);
+      }
+    }
+
+    const productIds = [...new Set(customerLastProduct.values())];
+    const productNameMap = new Map<string, string>();
+    if (productIds.length > 0) {
+      const { data: products } = await supabase.from("products").select("id, name").in("id", productIds);
+      for (const p of products || []) productNameMap.set(p.id, p.name);
+    }
+
     let sent = 0, skipped = 0;
 
     for (const state of states) {
@@ -248,35 +313,48 @@ Deno.serve(async (req) => {
 
       const delays = TRIGGER_DELAYS[state.state];
       if (!delays) { skipped++; continue; }
+
+      // Randomized delay per customer — natural, not robotic
+      const targetDelay = randomDelayInRange(delays.min, delays.max, state.customer_id);
       const stateChangedAt = new Date(state.state_changed_at);
       const elapsedMin = (now.getTime() - stateChangedAt.getTime()) / (60 * 1000);
-      if (elapsedMin < delays.min || elapsedMin > delays.max * 3) { skipped++; continue; }
+      if (elapsedMin < targetDelay) { skipped++; continue; }
+      if (elapsedMin > delays.max * 3) { skipped++; continue; }
 
       const store = storeMap.get(state.store_user_id);
       const storeName = store?.store_name || store?.store_slug || "Loja";
 
-      // Pick random template
-      const tpl = pickTemplate(state.state);
-      const vars = { greetings, name: customer.name || "cliente", store: storeName };
+      // Resolve product name for personalization
+      const lastProductId = customerLastProduct.get(state.customer_id);
+      const productName = lastProductId ? productNameMap.get(lastProductId) : undefined;
+
+      // Pick random template and fill
+      const tpl = pickTemplate(state.state, !!productName);
+      const vars: Record<string, string> = {
+        greetings, name: customer.name || "cliente",
+        store: storeName, product: productName || "",
+      };
       let title = fillTemplate(tpl.title, vars);
       let body = fillTemplate(tpl.body, vars);
 
-      // AI rewrite for variation (50% chance to save costs)
+      // AI rewrite with product context (50% chance)
       if (lovableApiKey && Math.random() > 0.5) {
         try {
-          const aiMsg = await aiRewrite(lovableApiKey, title, body, state.state, storeName, customer.name, greetings);
+          const ctx = productName ? `Produto visualizado: "${productName}". ` : "";
+          const aiMsg = await aiRewrite(lovableApiKey, title, body, state.state, storeName, customer.name, greetings, ctx);
           if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
         } catch (e) { console.error("AI rewrite error:", e); }
       }
 
-      // Send push
+      // Send push — deep link to product if available
       try {
         const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             target_user_id: customer.auth_user_id,
-            title, body, url: "/",
+            title, body,
+            url: lastProductId ? `/produto/${lastProductId}` : "/",
             type: `behavior_${state.state}`,
             store_user_id: state.store_user_id,
           }),
@@ -292,6 +370,7 @@ Deno.serve(async (req) => {
           ai_generated: !!lovableApiKey,
           status: pushData.sent > 0 ? "sent" : "failed",
           error_message: pushData.sent > 0 ? null : JSON.stringify(pushData).slice(0, 200),
+          related_product_id: lastProductId || null,
         });
 
         if (pushData.sent > 0) sent++; else skipped++;
@@ -311,7 +390,8 @@ Deno.serve(async (req) => {
 
 async function aiRewrite(
   apiKey: string, baseTitle: string, baseBody: string,
-  state: string, storeName: string, customerName: string, greetings: string
+  state: string, storeName: string, customerName: string, greetings: string,
+  productContext = ""
 ): Promise<{ title: string; body: string } | null> {
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -322,9 +402,10 @@ async function aiRewrite(
         {
           role: "system",
           content: `Reescreva esta notificação push para a loja "${storeName}". Mantenha curta e de alta conversão.
+${productContext ? `CONTEXTO: ${productContext}` : ""}
 REGRAS: Responda APENAS JSON: {"title":"...","body":"..."}
 - title: máx 50 chars, comece com emoji diferente do original
-- body: máx 130 chars
+- body: máx 130 chars${productContext ? ", mencione o produto pelo nome se possível" : ""}
 - Use tom ${state === "abandoned_cart" ? "urgente mas gentil" : state === "browsing" ? "curioso e convidativo" : "carinhoso e acolhedor"}
 - Varie palavras, emojis e estrutura do original
 - Saudação: "${greetings}"`,
