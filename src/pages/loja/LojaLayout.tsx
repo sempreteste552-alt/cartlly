@@ -182,9 +182,9 @@ export default function LojaLayout() {
     }
   }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
 
-  // No slug AND not a custom domain → no store to show
+  // No slug AND not a custom domain → redirect to login
   if (!slug && !isCustomDomain) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (isLoading) {
