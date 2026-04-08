@@ -87,14 +87,18 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
-                <Route index element={<LojaHome />} />
-                <Route path="produto/:id" element={<LojaProduto />} />
-                <Route path="checkout" element={<LojaCheckout />} />
-                <Route path="rastreio" element={<LojaRastreio />} />
-                <Route path="rastreio/:orderId" element={<LojaRastreio />} />
-                <Route path="cupons" element={<LojaCupons />} />
-              </Route>
+              {isPlatformHost(typeof window !== "undefined" ? window.location.hostname : "") ? (
+                <Route path="/" element={<Navigate to="/admin" replace />} />
+              ) : (
+                <Route path="/" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
+                  <Route index element={<LojaHome />} />
+                  <Route path="produto/:id" element={<LojaProduto />} />
+                  <Route path="checkout" element={<LojaCheckout />} />
+                  <Route path="rastreio" element={<LojaRastreio />} />
+                  <Route path="rastreio/:orderId" element={<LojaRastreio />} />
+                  <Route path="cupons" element={<LojaCupons />} />
+                </Route>
+              )}
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
