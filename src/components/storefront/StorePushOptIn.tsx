@@ -34,7 +34,7 @@ export function StorePushOptIn({ primaryColor, storeUserId }: StorePushOptInProp
       { onConflict: "user_id,endpoint" }
     );
     if (error) throw error;
-  }, [user]);
+  }, [user, storeUserId]);
 
   const checkSubscription = useCallback(async () => {
     if (!user || !("serviceWorker" in navigator)) return;

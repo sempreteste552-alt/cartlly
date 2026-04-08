@@ -45,13 +45,19 @@ Deno.serve(async (req) => {
       return json({ sent: 0, total_customers: customers.length, customers_with_push: 0, removed: 0, message: "Nenhum cliente com conta encontrado" });
     }
 
+    // Get push subscriptions for these customers
+    // Include subs with matching store_user_id OR null store_user_id (legacy)
     const { data: subs } = await serviceClient
       .from("push_subscriptions")
-      .select("user_id")
-      .in("user_id", customerUserIds)
-      .eq("store_user_id", user.id);
+      .select("user_id, store_user_id")
+      .in("user_id", customerUserIds);
 
-    const uniqueUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
+    // Filter: keep subs where store_user_id matches this store OR is null
+    const validSubs = (subs || []).filter(
+      (s: any) => !s.store_user_id || s.store_user_id === user.id
+    );
+
+    const uniqueUserIds = [...new Set(validSubs.map((s: any) => s.user_id))];
 
     let sent = 0;
     let removed = 0;

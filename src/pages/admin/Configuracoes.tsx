@@ -111,6 +111,7 @@ function GeneralSettingsTab() {
   const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
+  const faviconFileRef = useRef<HTMLInputElement>(null);
 
   const [storeName, setStoreName] = useState("");
   const [storeDescription, setStoreDescription] = useState("");
@@ -152,6 +153,8 @@ function GeneralSettingsTab() {
   const [welcomeCouponMinOrder, setWelcomeCouponMinOrder] = useState<string>("");
   const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -195,8 +198,34 @@ function GeneralSettingsTab() {
       setWelcomeCouponMinOrder(settings.welcome_coupon_min_order ? String(settings.welcome_coupon_min_order) : "");
       setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
+      setFaviconUrl((settings as any).favicon_url ?? "");
     }
   }, [settings]);
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 512 * 1024) { toast.error("Favicon deve ter no máximo 512KB"); return; }
+    setUploadingFavicon(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `${user!.id}/favicon.${ext}`;
+      const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type, upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
+      setFaviconUrl(urlData.publicUrl);
+      // Auto-save favicon
+      if (settings) {
+        await supabase.from("store_settings").update({ favicon_url: urlData.publicUrl } as any).eq("id", settings.id);
+        toast.success("Favicon salvo!");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao enviar favicon: " + (err.message || "Erro"));
+    } finally {
+      setUploadingFavicon(false);
+      if (faviconFileRef.current) faviconFileRef.current.value = "";
+    }
+  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -591,6 +620,42 @@ function GeneralSettingsTab() {
 
       <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Personalizado">
         <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} />
+
+        {/* Favicon Upload */}
+        <Card className="border-border mt-4">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Image className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Favicon</CardTitle>
+            </div>
+            <CardDescription>Ícone exibido na aba do navegador da sua loja</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {faviconUrl && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                <img src={faviconUrl} alt="Favicon" className="h-8 w-8 rounded object-contain" />
+                <span className="text-xs text-muted-foreground truncate flex-1">{faviconUrl.split("/").pop()}</span>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setFaviconUrl(""); }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                ref={faviconFileRef}
+                type="file"
+                accept="image/png,image/x-icon,image/svg+xml,image/jpeg"
+                className="hidden"
+                onChange={handleFaviconUpload}
+              />
+              <Button variant="outline" size="sm" onClick={() => faviconFileRef.current?.click()} disabled={uploadingFavicon}>
+                {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                {faviconUrl ? "Alterar Favicon" : "Enviar Favicon"}
+              </Button>
+              <span className="text-xs text-muted-foreground">PNG, ICO ou SVG (máx. 512KB)</span>
+            </div>
+          </CardContent>
+        </Card>
       </LockedFeature>
 
       {/* Welcome Coupon */}
