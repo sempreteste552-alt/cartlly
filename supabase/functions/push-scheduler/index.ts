@@ -392,8 +392,8 @@ Deno.serve(async (req) => {
         const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, dailyCount, priority, freqConfig);
         
         if (spamCheck.skip) {
-          // Reschedule instead of dropping
-          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 45 : 120;
+          // Reschedule with shorter delays to avoid pushing too far
+          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 35 : 60;
           const nextTime = new Date(Date.now() + rescheduleMinutes * 60 * 1000).toISOString();
           await supabase.from("retargeting_sequences").update({ next_push_at: nextTime }).eq("id", seq.id);
           results.anti_spam_blocked++;
