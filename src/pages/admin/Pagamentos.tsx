@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, CreditCard, MessageCircle, BarChart3 } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
+import { PlanGate } from "@/components/PlanGate";
 
 export default function Pagamentos() {
   const { data: settings, isLoading } = useStoreSettings();
@@ -45,6 +46,7 @@ export default function Pagamentos() {
   }
 
   return (
+    <PlanGate feature="gateway">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Pagamentos</h1>
@@ -103,5 +105,6 @@ export default function Pagamentos() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }
