@@ -25,6 +25,7 @@ import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
 import HighlightsManager from "@/components/admin/HighlightsManager";
 import MarketingConversionSettings from "@/components/admin/MarketingConversionSettings";
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
+import RestockAlertManager from "@/components/admin/RestockAlertManager";
 
 
 function AccountEmailChanger() {
@@ -669,6 +670,7 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="home" className="mt-6 space-y-8">
+          <RestockAlertManager />
           <HighlightsManager />
           <HomeBuilderManager />
         </TabsContent>

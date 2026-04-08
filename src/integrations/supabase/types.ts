@@ -1407,6 +1407,51 @@ export type Database = {
         }
         Relationships: []
       }
+      store_restock_alerts: {
+        Row: {
+          active: boolean
+          created_at: string
+          cta_text: string
+          id: string
+          product_ids: string[]
+          push_body: string | null
+          push_enabled: boolean
+          push_title: string | null
+          subtitle: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          cta_text?: string
+          id?: string
+          product_ids?: string[]
+          push_body?: string | null
+          push_enabled?: boolean
+          push_title?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          cta_text?: string
+          id?: string
+          product_ids?: string[]
+          push_body?: string | null
+          push_enabled?: boolean
+          push_title?: string | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           accent_color: string
