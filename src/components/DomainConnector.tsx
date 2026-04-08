@@ -424,6 +424,58 @@ export default function DomainConnector({
             </div>
           </div>
         )}
+        {/* Tutorial */}
+        <Accordion type="single" collapsible className="mt-2">
+          <AccordionItem value="tutorial" className="border-border">
+            <AccordionTrigger className="text-sm py-2">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-primary" />
+                Tutorial: Como configurar o domínio
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm space-y-4 text-muted-foreground">
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">⚠️ Importante: NÃO altere os Nameservers (NS)</p>
+                <p>Você <strong>não</strong> precisa mudar os nameservers do seu domínio. Apenas adicione os registros DNS (A e TXT) no painel do seu provedor atual.</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">Passo a passo:</p>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>Acesse o <strong>painel de DNS</strong> do seu provedor de domínio (Hostinger, GoDaddy, Cloudflare, Registro.br, etc.)</li>
+                  <li>Adicione um registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">@</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
+                  <li>Adicione outro registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">www</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
+                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId?.slice(0, 12) || "..."}</code></li>
+                  <li>Aguarde a propagação DNS (pode levar de 5 minutos a 72 horas)</li>
+                  <li>Clique em <strong>"Verificar Conexão"</strong> acima</li>
+                </ol>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">Se usar Cloudflare:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Desative o proxy (nuvem laranja)</strong> no registro A — use DNS Only (nuvem cinza)</li>
+                  <li>Se preferir manter o proxy ativo, use CNAME em vez de A record</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-medium text-foreground">Problemas comuns:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li><strong>Registro A não detectado:</strong> Verifique se não há outro registro A conflitante para @ ou www</li>
+                  <li><strong>TXT não detectado:</strong> Certifique-se de que o nome é <code className="bg-muted px-1 rounded">_lovable</code> (com underscore)</li>
+                  <li><strong>Demora na propagação:</strong> Use <a href="https://dnschecker.org" target="_blank" rel="noopener noreferrer" className="text-primary underline">dnschecker.org</a> para verificar</li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <p className="text-xs">
+                  <strong>💡 Dica:</strong> Após o domínio ser verificado, o botão "Ver Loja" no painel usará automaticamente seu domínio personalizado e o certificado SSL será provisionado em poucos minutos.
+                </p>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );
