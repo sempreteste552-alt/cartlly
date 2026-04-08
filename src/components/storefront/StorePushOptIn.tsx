@@ -4,19 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { toast } from "sonner";
-
-const VAPID_PUBLIC_KEY = "BMSURaNYT8eRI-b-z742PQF-Hnqeb71f2f7Rk3_ttdSEEmLOTLKHd8jC_y8Fg_R7PviPuMF0es8gIkYxUVCiXQ8";
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
+import { ensureCurrentPushSubscription, getValidPushSubscription } from "@/lib/pushSubscription";
 
 interface StorePushOptInProps {
   primaryColor?: string;
@@ -50,9 +38,20 @@ export function StorePushOptIn({ primaryColor }: StorePushOptInProps) {
     if (!user || !("serviceWorker" in navigator)) return;
     try {
       const registration = await navigator.serviceWorker.ready;
-      if (!registration) { setIsSubscribed(false); return; }
-      const subscription = await registration.pushManager.getSubscription();
-      if (!subscription) { setIsSubscribed(false); return; }
+      if (!registration) {
+        setIsSubscribed(false);
+        return;
+      }
+
+      const subscription = Notification.permission === "granted"
+        ? await ensureCurrentPushSubscription(registration)
+        : await getValidPushSubscription(registration);
+
+      if (!subscription) {
+        setIsSubscribed(false);
+        return;
+      }
+
       await persistSubscription(subscription);
       setIsSubscribed(true);
     } catch {
@@ -77,13 +76,7 @@ export function StorePushOptIn({ primaryColor }: StorePushOptInProps) {
         return;
       }
       const registration = await navigator.serviceWorker.ready;
-      let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-        });
-      }
+      const subscription = await ensureCurrentPushSubscription(registration);
       await persistSubscription(subscription);
       setIsSubscribed(true);
       toast.success("🔔 Notificações ativadas! Você receberá promoções e atualizações.");
@@ -113,7 +106,6 @@ export function StorePushOptIn({ primaryColor }: StorePushOptInProps) {
     }
   }, [user]);
 
-  // Don't show if not supported or user not logged in
   if (!isSupported || !user) return null;
 
   const color = primaryColor || "#6d28d9";
