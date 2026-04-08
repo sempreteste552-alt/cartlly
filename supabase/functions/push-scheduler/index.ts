@@ -248,6 +248,29 @@ Deno.serve(async (req) => {
     const { data: pushSubs } = await supabase.from("push_subscriptions").select("user_id").in("user_id", authUserIds);
     const hasPush = new Set((pushSubs || []).map((s: any) => s.user_id));
 
+    // 4. Fetch recent product views for personalization
+    const { data: recentEvents } = await supabase
+      .from("customer_behavior_events")
+      .select("customer_id, product_id, event_type")
+      .in("customer_id", customerIds.filter(Boolean))
+      .in("event_type", ["product_view", "add_to_cart"])
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    const customerLastProduct = new Map<string, string>();
+    for (const ev of recentEvents || []) {
+      if (ev.customer_id && ev.product_id && !customerLastProduct.has(ev.customer_id)) {
+        customerLastProduct.set(ev.customer_id, ev.product_id);
+      }
+    }
+
+    const productIds = [...new Set(customerLastProduct.values())];
+    const productNameMap = new Map<string, string>();
+    if (productIds.length > 0) {
+      const { data: products } = await supabase.from("products").select("id, name").in("id", productIds);
+      for (const p of products || []) productNameMap.set(p.id, p.name);
+    }
+
     let sent = 0, skipped = 0;
 
     for (const state of states) {
@@ -260,35 +283,48 @@ Deno.serve(async (req) => {
 
       const delays = TRIGGER_DELAYS[state.state];
       if (!delays) { skipped++; continue; }
+
+      // Randomized delay per customer — natural, not robotic
+      const targetDelay = randomDelayInRange(delays.min, delays.max, state.customer_id);
       const stateChangedAt = new Date(state.state_changed_at);
       const elapsedMin = (now.getTime() - stateChangedAt.getTime()) / (60 * 1000);
-      if (elapsedMin < delays.min || elapsedMin > delays.max * 3) { skipped++; continue; }
+      if (elapsedMin < targetDelay) { skipped++; continue; }
+      if (elapsedMin > delays.max * 3) { skipped++; continue; }
 
       const store = storeMap.get(state.store_user_id);
       const storeName = store?.store_name || store?.store_slug || "Loja";
 
-      // Pick random template
+      // Resolve product name for personalization
+      const lastProductId = customerLastProduct.get(state.customer_id);
+      const productName = lastProductId ? productNameMap.get(lastProductId) : undefined;
+
+      // Pick random template and fill
       const tpl = pickTemplate(state.state);
-      const vars = { greetings, name: customer.name || "cliente", store: storeName };
+      const vars: Record<string, string> = {
+        greetings, name: customer.name || "cliente",
+        store: storeName, product: productName || "",
+      };
       let title = fillTemplate(tpl.title, vars);
       let body = fillTemplate(tpl.body, vars);
 
-      // AI rewrite for variation (50% chance to save costs)
+      // AI rewrite with product context (50% chance)
       if (lovableApiKey && Math.random() > 0.5) {
         try {
-          const aiMsg = await aiRewrite(lovableApiKey, title, body, state.state, storeName, customer.name, greetings);
+          const ctx = productName ? `Produto visualizado: "${productName}". ` : "";
+          const aiMsg = await aiRewrite(lovableApiKey, title, body, state.state, storeName, customer.name, greetings, ctx);
           if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
         } catch (e) { console.error("AI rewrite error:", e); }
       }
 
-      // Send push
+      // Send push — deep link to product if available
       try {
         const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             target_user_id: customer.auth_user_id,
-            title, body, url: "/",
+            title, body,
+            url: lastProductId ? `/produto/${lastProductId}` : "/",
             type: `behavior_${state.state}`,
             store_user_id: state.store_user_id,
           }),
@@ -304,6 +340,7 @@ Deno.serve(async (req) => {
           ai_generated: !!lovableApiKey,
           status: pushData.sent > 0 ? "sent" : "failed",
           error_message: pushData.sent > 0 ? null : JSON.stringify(pushData).slice(0, 200),
+          related_product_id: lastProductId || null,
         });
 
         if (pushData.sent > 0) sent++; else skipped++;
