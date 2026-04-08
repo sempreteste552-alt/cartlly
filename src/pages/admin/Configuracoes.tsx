@@ -13,7 +13,7 @@ import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useDeleteBanner } from "@/hooks/useStoreBanners";
+import { useStoreBanners, useCreateBanner, useDeleteBanner, useUpdateBannerLink } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -107,6 +107,7 @@ function GeneralSettingsTab() {
   const { data: banners } = useStoreBanners();
   const createBanner = useCreateBanner();
   const deleteBanner = useDeleteBanner();
+  const updateBannerLink = useUpdateBannerLink();
   const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
