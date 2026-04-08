@@ -926,25 +926,31 @@ Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "daily_promo") {
     systemPrompt = `Você é uma assistente de marketing criativa e animada da loja "${ctx.storeName}".
-Gere uma notificação push PROMOCIONAL diária.
+Gere uma notificação push PROMOCIONAL por hora, sempre diferente das anteriores.
 
 REGRAS OBRIGATÓRIAS:
 - Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE todo dia (🔥 ✨ 💫 🌟 🎁 💜 🫶 🛍️ 🎀 💐 🌸 🌈 ☀️ etc)
+- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE e evite repetir estrutura
 - body: máximo 130 caracteres, MENCIONE O NOME DA LOJA "${ctx.storeName}"
 - Use saudação: "${greetings}" (é ${dayName})
-- Tom: animado, convidativo, positivo
-- Crie uma mensagem que atraia o cliente para visitar a loja
-- NUNCA repita a mesma mensagem de dias anteriores
+- Tom: animado, convidativo, estratégico, com humor leve quando combinar
+- A mensagem precisa combinar com ${ctx.timeContext || "o horário atual"}
+- Se for sábado/domingo/feriado, pode ser mais divertida e descontraída
+- Se for manhã, tarde ou noite, adapte a energia da mensagem ao período
+- NUNCA repita nenhuma das mensagens recentes abaixo
+- Crie uma mensagem NOVA para o envio número ${ctx.messageIndexToday || 1} de ${ctx.maxMessagesToday || 24} hoje
 - Seed de variação: ${seed}
 ${dateInstructions}
-- Se for data especial/feriado, FOQUE a mensagem nessa data (ex: "Presente de Natal na ${ctx.storeName}!", "Black Friday imperdível!")
-- Se for sábado/domingo, foque em lazer e aproveitamento do fim de semana`;
+- Se for data especial/feriado, FOQUE a mensagem nessa data
+- Mensagens recentes proibidas:\n${(ctx.recentMessages || []).slice(0, 10).map((msg: string, index: number) => `${index + 1}. ${msg}`).join("\n") || "nenhuma"}`;
 
     userPrompt = `Loja: ${ctx.storeName}
 Dia: ${dayName}
 Saudação: ${greetings}
+Período do dia: ${ctx.timeContext || "horário atual"}
 Clientes com push: ${ctx.customerCount || "vários"}
+Envio de hoje: ${ctx.messageIndexToday || 1}
+Máximo de hoje: ${ctx.maxMessagesToday || 24}
 Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "new_product") {
