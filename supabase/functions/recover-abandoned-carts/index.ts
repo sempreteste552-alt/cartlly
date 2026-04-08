@@ -34,6 +34,9 @@ Deno.serve(async (req) => {
     if (triggerType === "new_product") {
       return await handleNewProduct(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
+    if (triggerType === "new_coupon") {
+      return await handleNewCoupon(supabase, supabaseUrl, lovableApiKey, requestBody);
+    }
 
     // === ABANDONED CART RECOVERY ===
     // Fetch the store's abandoned_cart rule to get timing settings
