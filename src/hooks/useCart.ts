@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 export interface CartItem {
   id: string;
@@ -8,8 +8,54 @@ export interface CartItem {
   quantity: number;
 }
 
-export function useCart() {
-  const [items, setItems] = useState<CartItem[]>([]);
+interface CartState {
+  items: CartItem[];
+  updatedAt: number;
+}
+
+function getStorageKey(slug?: string) {
+  return `cart_${slug || "default"}`;
+}
+
+function loadCartFromStorage(slug?: string): CartItem[] {
+  try {
+    const raw = localStorage.getItem(getStorageKey(slug));
+    if (!raw) return [];
+    const state: CartState = JSON.parse(raw);
+    // Expire carts older than 7 days
+    if (Date.now() - state.updatedAt > 7 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(getStorageKey(slug));
+      return [];
+    }
+    return state.items || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCartToStorage(items: CartItem[], slug?: string) {
+  try {
+    const state: CartState = { items, updatedAt: Date.now() };
+    localStorage.setItem(getStorageKey(slug), JSON.stringify(state));
+  } catch { /* quota exceeded */ }
+}
+
+export function useCart(slug?: string) {
+  const [items, setItems] = useState<CartItem[]>(() => loadCartFromStorage(slug));
+  const slugRef = useRef(slug);
+
+  // Re-load when slug changes
+  useEffect(() => {
+    if (slugRef.current !== slug) {
+      slugRef.current = slug;
+      setItems(loadCartFromStorage(slug));
+    }
+  }, [slug]);
+
+  // Persist on every change
+  useEffect(() => {
+    saveCartToStorage(items, slugRef.current);
+  }, [items]);
 
   const addItem = useCallback((product: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
