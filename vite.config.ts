@@ -23,20 +23,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         importScripts: ["/sw-push.js"],
       },
-      manifest: {
-        name: "Cartlly - Sua Loja Online",
-        short_name: "Cartlly",
-        description: "Gerencie sua loja online com facilidade",
-        theme_color: "#6d28d9",
-        background_color: "#ffffff",
-        display: "standalone",
-        orientation: "portrait",
-        icons: [
-          { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
-          { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
+      manifest: false,
     }),
   ].filter(Boolean),
   resolve: {
