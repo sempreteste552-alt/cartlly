@@ -280,10 +280,38 @@ export function AIChatWidget() {
     );
   }
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const handleChatImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      if (file.size > 4 * 1024 * 1024) { toast.error("Imagem muito grande (máx 4MB)"); continue; }
+      try {
+        const dataUrl = await fileToDataUrl(file);
+        setPendingImages(prev => [...prev, dataUrl]);
+      } catch { toast.error("Erro ao carregar imagem"); }
+    }
+    e.target.value = "";
+  };
 
-    const userMsg: Msg = { role: "user", content: text.trim() };
+  const sendMessage = async (text: string) => {
+    if ((!text.trim() && pendingImages.length === 0) || isLoading) return;
+
+    const images = [...pendingImages];
+    setPendingImages([]);
+
+    let userContent: MsgContent;
+    if (images.length > 0) {
+      const parts: MsgContent = [];
+      if (text.trim()) parts.push({ type: "text", text: text.trim() });
+      for (const img of images) {
+        parts.push({ type: "image_url", image_url: { url: img } });
+      }
+      userContent = parts;
+    } else {
+      userContent = text.trim();
+    }
+
+    const userMsg: Msg = { role: "user", content: userContent };
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
     setInput("");
