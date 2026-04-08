@@ -21,6 +21,7 @@ import { toast } from "sonner";
 
 export default function LojaProduto() {
   const { id, slug } = useParams();
+  const navigate = useNavigate();
   const { cart, settings, storeUserId, openCart } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
@@ -44,6 +45,19 @@ export default function LojaProduto() {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
+
+  const handleProductClick = useCallback((e: React.MouseEvent, productId: string) => {
+    e.preventDefault();
+    setNavigatingProductId(productId);
+    setIsNavigating(true);
+    setTimeout(() => {
+      navigate(`${basePath}/produto/${productId}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => { setIsNavigating(false); setNavigatingProductId(null); }, 300);
+    }, 400);
+  }, [navigate, basePath]);
 
   const variantGroups = useMemo(() => {
     if (!variants || variants.length === 0) return {};
