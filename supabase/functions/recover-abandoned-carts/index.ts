@@ -304,7 +304,7 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
 async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, storeUserId: string | null) {
   let rulesQuery = supabase
     .from("automation_rules")
-    .select("user_id, cooldown_minutes, max_sends_per_day")
+    .select("user_id")
     .eq("trigger_type", "daily_promo")
     .eq("enabled", true);
 
@@ -313,52 +313,24 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
   const { data: rules } = await rulesQuery;
   if (!rules || rules.length === 0) return json({ processed: 0, message: "No daily promo rules enabled" });
 
-  const ruleMap = new Map(
-    rules.map((r: any) => [
-      r.user_id,
-      {
-        cooldown_minutes: r.cooldown_minutes ?? 60,
-        max_sends_per_day: r.max_sends_per_day ?? 24,
-      },
-    ])
-  );
-
-  const storeIds = [...ruleMap.keys()];
+  const storeIds = [...new Set(rules.map((r: any) => r.user_id))];
   const storeMap = await getStoreMap(supabase, storeIds);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+
+  const currentHourStart = new Date();
+  currentHourStart.setMinutes(0, 0, 0);
 
   let totalSent = 0;
 
   for (const sid of storeIds) {
-    const rule = ruleMap.get(sid);
-    if (!rule) continue;
-
-    const { data: recentExecs } = await supabase
+    const { data: hourExecs } = await supabase
       .from("automation_executions")
-      .select("message_text, sent_at")
+      .select("id")
       .eq("user_id", sid)
       .eq("trigger_type", "daily_promo")
-      .gte("sent_at", todayStart.toISOString())
-      .order("sent_at", { ascending: false })
-      .limit(Math.max(rule.max_sends_per_day, 24));
+      .gte("sent_at", currentHourStart.toISOString())
+      .limit(1);
 
-    const executionsToday = recentExecs || [];
-    if (executionsToday.length >= rule.max_sends_per_day) continue;
-
-    const currentHourStart = new Date();
-    currentHourStart.setMinutes(0, 0, 0);
-
-    const alreadySentThisHour = executionsToday.some((exec: any) => new Date(exec.sent_at).getTime() >= currentHourStart.getTime());
-    if (alreadySentThisHour) continue;
-
-    const lastExecAt = executionsToday[0]?.sent_at;
-    const cooldownMs = rule.cooldown_minutes * 60 * 1000;
-    if (lastExecAt && (Date.now() - new Date(lastExecAt).getTime()) < cooldownMs) continue;
-
-    const recentMessages = executionsToday
-      .map((exec: any) => exec.message_text)
-      .filter(Boolean);
+    if (hourExecs && hourExecs.length > 0) continue;
 
     const store = storeMap.get(sid);
     const storeName = store?.store_name || "Loja";
@@ -379,34 +351,11 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
     const pushUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
     if (pushUserIds.length === 0) continue;
 
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const hour = now.getHours();
-    const timeContext = hour < 12 ? "manhã" : hour < 18 ? "tarde" : hour < 22 ? "noite" : "madrugada";
-    const messageIndexToday = executionsToday.length + 1;
+    const dayOfWeek = new Date().getDay();
+    const hour = new Date().getHours();
 
-    const fallbackVariants = [
-      {
-        title: `✨ ${timeContext === "manhã" ? "Bom dia" : timeContext === "tarde" ? "Boa tarde" : "Boa noite"} na ${storeName}!`,
-        body: `${timeContext === "manhã" ? "Comece o dia" : timeContext === "tarde" ? "Seu momento de aproveitar" : "Passe na loja hoje"} com novidades e ofertas especiais.`,
-      },
-      {
-        title: `🛍️ Hora de aproveitar na ${storeName}`,
-        body: `${dayOfWeek === 0 || dayOfWeek === 6 ? "Clima perfeito de fim de semana" : "Tem oportunidade boa te esperando"} com ofertas novas na loja.`,
-      },
-      {
-        title: `🎁 Novidades fresquinhas na ${storeName}`,
-        body: `${timeContext === "noite" ? "Feche o dia com um achado especial" : "Dê uma olhada nas promoções e descubra algo novo"}.`,
-      },
-      {
-        title: `${dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 ? "😄" : "🔥"} Promo diferente na ${storeName}`,
-        body: `${dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 ? "Hoje o mood é relaxar e garimpar ofertas boas" : "Uma chance certeira para aproveitar promoções do momento"}.`,
-      },
-    ];
-
-    const fallback = fallbackVariants[(messageIndexToday - 1) % fallbackVariants.length];
-    let title = fallback.title;
-    let body = fallback.body;
+    let title = `✨ Novidades na ${storeName}!`;
+    let body = `Confira as ofertas especiais de hoje! Temos novidades esperando por você.`;
 
     if (lovableApiKey) {
       try {
@@ -416,26 +365,10 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
           dayOfWeek,
           hour,
           customerCount: pushUserIds.length,
-          recentMessages: recentMessages.slice(0, 10),
-          messageIndexToday,
-          maxMessagesToday: rule.max_sends_per_day,
-          timeContext,
         });
-
-        if (aiMsg) {
-          const normalizedCandidate = `${aiMsg.title} — ${aiMsg.body}`.toLowerCase().replace(/\s+/g, " ").trim();
-          const isRepeated = recentMessages.some((msg: string) => msg.toLowerCase().replace(/\s+/g, " ").trim() === normalizedCandidate);
-          if (!isRepeated) {
-            title = aiMsg.title;
-            body = aiMsg.body;
-          }
-        }
-      } catch (e) {
-        console.error("AI daily promo error:", e);
-      }
+        if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
+      } catch (e) { console.error("AI daily promo error:", e); }
     }
-
-    let storeSent = 0;
 
     for (const uid of pushUserIds) {
       try {
@@ -443,14 +376,11 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            target_user_id: uid, title, body, url: "/", type: "daily_promo", store_user_id: sid,
+            target_user_id: uid, title, body, url: "/", type: "daily_promo",
           }),
         });
         const data = await resp.json();
-        if (data.sent > 0) {
-          totalSent++;
-          storeSent++;
-        }
+        if (data.sent > 0) totalSent++;
       } catch (e) { console.error("Daily promo push error:", e); }
     }
 
@@ -460,8 +390,7 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       channel: "push",
       message_text: `${title} — ${body}`,
       ai_generated: !!lovableApiKey,
-      status: storeSent > 0 ? "sent" : "failed",
-      error_message: storeSent > 0 ? null : "No deliveries completed for this hourly campaign",
+      status: totalSent > 0 ? "sent" : "failed",
     });
   }
 
@@ -926,31 +855,25 @@ Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "daily_promo") {
     systemPrompt = `Você é uma assistente de marketing criativa e animada da loja "${ctx.storeName}".
-Gere uma notificação push PROMOCIONAL por hora, sempre diferente das anteriores.
+Gere uma notificação push PROMOCIONAL diária.
 
 REGRAS OBRIGATÓRIAS:
 - Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE e evite repetir estrutura
+- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE todo dia (🔥 ✨ 💫 🌟 🎁 💜 🫶 🛍️ 🎀 💐 🌸 🌈 ☀️ etc)
 - body: máximo 130 caracteres, MENCIONE O NOME DA LOJA "${ctx.storeName}"
 - Use saudação: "${greetings}" (é ${dayName})
-- Tom: animado, convidativo, estratégico, com humor leve quando combinar
-- A mensagem precisa combinar com ${ctx.timeContext || "o horário atual"}
-- Se for sábado/domingo/feriado, pode ser mais divertida e descontraída
-- Se for manhã, tarde ou noite, adapte a energia da mensagem ao período
-- NUNCA repita nenhuma das mensagens recentes abaixo
-- Crie uma mensagem NOVA para o envio número ${ctx.messageIndexToday || 1} de ${ctx.maxMessagesToday || 24} hoje
+- Tom: animado, convidativo, positivo
+- Crie uma mensagem que atraia o cliente para visitar a loja
+- NUNCA repita a mesma mensagem de dias anteriores
 - Seed de variação: ${seed}
 ${dateInstructions}
-- Se for data especial/feriado, FOQUE a mensagem nessa data
-- Mensagens recentes proibidas:\n${(ctx.recentMessages || []).slice(0, 10).map((msg: string, index: number) => `${index + 1}. ${msg}`).join("\n") || "nenhuma"}`;
+- Se for data especial/feriado, FOQUE a mensagem nessa data (ex: "Presente de Natal na ${ctx.storeName}!", "Black Friday imperdível!")
+- Se for sábado/domingo, foque em lazer e aproveitamento do fim de semana`;
 
     userPrompt = `Loja: ${ctx.storeName}
 Dia: ${dayName}
 Saudação: ${greetings}
-Período do dia: ${ctx.timeContext || "horário atual"}
 Clientes com push: ${ctx.customerCount || "vários"}
-Envio de hoje: ${ctx.messageIndexToday || 1}
-Máximo de hoje: ${ctx.maxMessagesToday || 24}
 Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "new_product") {

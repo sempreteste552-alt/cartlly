@@ -24,7 +24,10 @@ function concat(...arrays: Uint8Array[]): Uint8Array {
   const len = arrays.reduce((s, a) => s + a.length, 0);
   const result = new Uint8Array(len);
   let offset = 0;
-  for (const a of arrays) { result.set(a, offset); offset += a.length; }
+  for (const a of arrays) {
+    result.set(a, offset);
+    offset += a.length;
+  }
   return result;
 }
 
@@ -99,7 +102,8 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
 
   const signatureBuf = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, enc.encode(unsignedToken));
   const sigBytes = new Uint8Array(signatureBuf);
-  let r: Uint8Array, s: Uint8Array;
+  let r: Uint8Array;
+  let s: Uint8Array;
 
   if (sigBytes.length !== 64 && sigBytes[0] === 0x30) {
     let offset = 2;
@@ -125,63 +129,8 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
   return { token: `${unsignedToken}.${b64url(rawSig)}`, vapidKey: vapidPublicKey };
 }
 
-function shouldDeleteSubscription(status: number, responseText: string): boolean {
-  return status === 404 || status === 410 ||
-    responseText.includes("VapidPkHashMismatch") ||
-    responseText.includes("do not correspond to the credentials used");
-}
-
-function isTransientError(status: number): boolean {
-  return status === 429 || status >= 500;
-}
-
-async function sendWithRetry(
-  sub: any, vapidPublicKey: string, vapidPrivateKey: string,
-  payloadStr: string, maxRetries = 2
-): Promise<{ status: number; text: string }> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const { token, vapidKey } = await generateVapidAuthHeader(sub.endpoint, vapidPublicKey, vapidPrivateKey);
-    const encrypted = await encryptPayload(sub.p256dh, sub.auth, payloadStr);
-
-    const resp = await fetch(sub.endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Encoding": "aes128gcm",
-        "Authorization": `vapid t=${token}, k=${vapidKey}`,
-        "TTL": "86400",
-        "Urgency": "high",
-      },
-      body: encrypted,
-    });
-
-    if (resp.status === 200 || resp.status === 201) return { status: resp.status, text: "" };
-
-    const text = await resp.text();
-    if (!isTransientError(resp.status) || attempt === maxRetries) return { status: resp.status, text };
-
-    await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
-  }
-  return { status: 500, text: "Max retries exceeded" };
-}
-
-async function logPush(
-  supabase: any, userId: string, subscriptionId: string | null,
-  eventType: string, title: string, body: string | undefined,
-  payload: any, status: string, errorMessage: string | null,
-  extras?: { store_user_id?: string; customer_id?: string; trigger_type?: string }
-) {
-  try {
-    await supabase.from("push_logs").insert({
-      user_id: userId, subscription_id: subscriptionId,
-      event_type: eventType, title, body: body || null,
-      payload: payload || {}, status, error_message: errorMessage,
-      store_user_id: extras?.store_user_id || null,
-      customer_id: extras?.customer_id || null,
-      trigger_type: extras?.trigger_type || eventType,
-      delivered_at: (status === "sent" || status === "delivered") ? new Date().toISOString() : null,
-    });
-  } catch (e) { console.error("Failed to log push:", e); }
+function shouldDeleteSubscription(status: number, responseText: string) {
+  return status === 404 || status === 410 || responseText.includes("VapidPkHashMismatch") || responseText.includes("do not correspond to the credentials used to create the subscriptions");
 }
 
 Deno.serve(async (req) => {
@@ -189,21 +138,29 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id, customer_id } = body;
-    const logExtras = { store_user_id, customer_id, trigger_type: type };
+    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
 
-    if (!target_user_id || !title) return json({ error: "target_user_id and title required" }, 400);
+    if (!target_user_id || !title) {
+      return json({ error: "target_user_id and title required" }, 400);
+    }
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-    if (!vapidPublicKey || !vapidPrivateKey) return json({ error: "VAPID not configured" }, 500);
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      return json({ error: "VAPID not configured" }, 500);
+    }
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    let query = supabase.from("push_subscriptions").select("*").eq("user_id", target_user_id);
+    let query = supabase
+      .from("push_subscriptions")
+      .select("*")
+      .eq("user_id", target_user_id);
 
+    // Tenant isolation: if store_user_id provided, include matching OR null (legacy)
     if (store_user_id) {
       query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
+      // Safety: never send store promotions to the store owner themselves
       if (target_user_id === store_user_id) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store push to store owner" });
       }
@@ -212,23 +169,16 @@ Deno.serve(async (req) => {
     const { data: subs } = await query;
 
     if (!subs || subs.length === 0) {
-      await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null, logExtras);
+      await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
       return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
 
-    // Validate subscriptions: must have endpoint + keys
-    const validSubs = subs.filter((s: any) => s.endpoint && s.p256dh && s.auth);
-    const invalidSubs = subs.filter((s: any) => !s.endpoint || !s.p256dh || !s.auth);
-
-    if (invalidSubs.length > 0) {
-      const ids = invalidSubs.map((s: any) => s.id);
-      await supabase.from("push_subscriptions").delete().in("id", ids);
-      console.log(`Cleaned ${invalidSubs.length} invalid subscriptions`);
-    }
-
     const pushPayload: any = {
-      title, body: msgBody || "", url: url || "/admin",
-      type: type || "general", tag: tag || type || "default",
+      title,
+      body: msgBody || "",
+      url: url || "/admin",
+      type: type || "general",
+      tag: tag || type || "default",
       data: extraData || {},
     };
 
@@ -243,38 +193,84 @@ Deno.serve(async (req) => {
     let removed = 0;
     const failures: string[] = [];
 
-    for (const sub of validSubs) {
+    for (const sub of subs) {
       try {
-        const result = await sendWithRetry(sub, vapidPublicKey, vapidPrivateKey, payloadStr);
+        if (sub.platform === "web" || !sub.platform || sub.platform === "") {
+          const { token, vapidKey } = await generateVapidAuthHeader(sub.endpoint, vapidPublicKey, vapidPrivateKey);
+          const encrypted = await encryptPayload(sub.p256dh, sub.auth, payloadStr);
 
-        if (result.status === 200 || result.status === 201) {
-          sent++;
-          await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null, logExtras);
-        } else if (shouldDeleteSubscription(result.status, result.text)) {
-          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
-          removed++;
-          await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", result.text.slice(0, 200), logExtras);
-        } else {
-          console.error(`Push failed ${sub.id}: ${result.status} ${result.text}`);
-          failures.push(`${sub.id}: ${result.status}`);
-          await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${result.status}: ${result.text.slice(0, 200)}`, logExtras);
+          const resp = await fetch(sub.endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/octet-stream",
+              "Content-Encoding": "aes128gcm",
+              "Authorization": `vapid t=${token}, k=${vapidKey}`,
+              "TTL": "86400",
+              "Urgency": "high",
+            },
+            body: encrypted,
+          });
+
+          if (resp.status === 201 || resp.status === 200) {
+            sent++;
+            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
+          } else {
+            const text = await resp.text();
+            if (shouldDeleteSubscription(resp.status, text)) {
+              await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+              removed++;
+              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
+            } else {
+              console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
+              failures.push(`${sub.id}: ${resp.status}`);
+              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+            }
+          }
         }
       } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
         failures.push(`${sub.id}: ${e.message}`);
-        await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200), logExtras);
+        await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
       }
     }
 
-    return json({ sent, total: validSubs.length, removed, failures });
+    return json({ sent, total: subs.length, removed, failures });
   } catch (error: any) {
     console.error("Internal push error:", error);
-    return json({ error: error.message, fallback: true }, 200);
+    return json({ error: error.message }, 500);
   }
 });
 
 function json(data: any, status = 200) {
   return new Response(JSON.stringify(data), {
-    status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function logPush(
+  supabase: any,
+  userId: string,
+  subscriptionId: string | null,
+  eventType: string,
+  title: string,
+  body: string | undefined,
+  payload: any,
+  status: string,
+  errorMessage: string | null
+) {
+  try {
+    await supabase.from("push_logs").insert({
+      user_id: userId,
+      subscription_id: subscriptionId,
+      event_type: eventType,
+      title,
+      body: body || null,
+      payload: payload || {},
+      status,
+      error_message: errorMessage,
+    });
+  } catch (e) {
+    console.error("Failed to log push:", e);
+  }
 }

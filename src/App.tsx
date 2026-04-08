@@ -37,7 +37,6 @@ import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import { isPlatformHost } from "@/lib/storeDomain";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,21 +75,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 }
 
-/**
- * Root route guard: on platform hosts (lovable.app, localhost), redirect to /login.
- * On custom domains, render the store layout.
- */
-function RootStoreGuard() {
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  if (isPlatformHost(hostname)) {
-    return <Navigate to="/login" replace />;
-  }
-  return (
-    <CustomerAuthProvider>
-      <LojaLayout />
-    </CustomerAuthProvider>
-  );
-}
+
 
 const App = () => (
   <ErrorBoundary>
@@ -101,7 +86,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<RootStoreGuard />}>
+              <Route path="/" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
                 <Route index element={<LojaHome />} />
                 <Route path="produto/:id" element={<LojaProduto />} />
                 <Route path="checkout" element={<LojaCheckout />} />

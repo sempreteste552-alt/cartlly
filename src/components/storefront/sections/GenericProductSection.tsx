@@ -15,10 +15,9 @@ interface Props {
   buttonColor: string;
   buttonTextColor: string;
   onAddToCart?: (name: string, image?: string | null) => void;
-  onTrack?: (event: string, metadata?: Record<string, unknown>) => void;
 }
 
-export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart, onTrack }: Props) {
+export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
@@ -75,7 +74,6 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                   onClick={(e) => {
                     e.preventDefault();
                     cart?.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
-                    onTrack?.("add_to_cart", { product_id: product.id, cart_value: (cart?.total || 0) + product.price });
                     onAddToCart?.(product.name, product.image_url);
                   }}
                 >

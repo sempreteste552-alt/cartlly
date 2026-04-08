@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link, useNavigate, useParams, useLocation, Navigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -22,7 +22,6 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
-import { isPlatformHost } from "@/lib/storeDomain";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -34,9 +33,6 @@ import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 
-import { useEventTracker } from "@/hooks/useEventTracker";
-import type { TrackableEvent } from "@/hooks/useEventTracker";
-
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
   settings: any;
@@ -45,7 +41,6 @@ export interface LojaContextType {
   storeUserId?: string;
   openCart: () => void;
   basePath: string;
-  track: (event: TrackableEvent, metadata?: Record<string, unknown>) => void;
 }
 
 import { createContext, useContext } from "react";
@@ -54,22 +49,11 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
-  
-  // Detect if we're on a custom domain (not platform host and no slug in URL)
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  const isCustomDomain = !slug && !isPlatformHost(hostname);
-  
-  const storeThemeScope = `store-${slug || hostname || "default"}`;
+  const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
-  
-  // Use slug-based lookup when slug exists, domain-based when on custom domain
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
-  const { data: settingsByDomain, isLoading: domainLoading } = useResolvedPublicStore(isCustomDomain ? undefined : slug);
-  
   const { user, customer, signOut } = useCustomerAuth();
-  const resolvedSettings = slug ? settingsBySlug : (isCustomDomain ? settingsByDomain : settingsBySlug);
-  const resolvedSlug = resolvedSettings?.store_slug;
-  const cart = useCart(slug || resolvedSlug);
+  const cart = useCart(slug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
@@ -78,49 +62,25 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const settings = resolvedSettings;
-  const isLoading = slug ? slugLoading : (isCustomDomain ? domainLoading : slugLoading);
+  const settings = settingsBySlug;
+  const isLoading = slugLoading;
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
-  // Build a readable store name from slug (first 2 words, capitalized)
-  const slugToName = (s: string) =>
-    s.split("-").slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-
   // Dynamic PWA manifest with tenant context
-  const storeStartUrl = isCustomDomain
-    ? `${window.location.origin}/`
-    : slug ? `${window.location.origin}/loja/${slug}/` : undefined;
-  const resolvedStoreName = settings?.store_name || (slug ? slugToName(slug) : "Loja");
-  const pwaName = `Loja ${resolvedStoreName.split(" ").slice(0, 2).join(" ")}`;
-  const pwaShortName = pwaName.length > 12 ? pwaName.slice(0, 12).trim() : pwaName;
+  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
   usePwaManifest({
-    name: pwaName,
-    shortName: pwaShortName,
+    name: settings?.store_name || undefined,
+    shortName: settings?.store_name?.slice(0, 12) || undefined,
     themeColor: settings?.primary_color || undefined,
     iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
     startUrl: storeStartUrl,
     scope: storeStartUrl,
   });
 
-  // Update document title and apple-mobile-web-app-title dynamically
-  useEffect(() => {
-    document.title = pwaName;
-    let meta = document.querySelector('meta[name="apple-mobile-web-app-title"]') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "apple-mobile-web-app-title";
-      document.head.appendChild(meta);
-    }
-    meta.content = pwaName;
-    return () => {
-      document.title = "Cartlly - Sua Loja Online";
-    };
-  }, [pwaName]);
-
   // Detect if current user is the store owner (admin previewing)
-  const isAdminPreview = !!user && !!settings && user.id === settings.user_id;
+  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
   // Apply dark class based on user preference or store setting
   useEffect(() => {
@@ -138,8 +98,7 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const basePath = isCustomDomain ? "" : (slug ? `/loja/${slug}` : "/loja");
-  const { track } = useEventTracker(settings?.user_id);
+  const basePath = slug ? `/loja/${slug}` : "/loja";
   const logoSize = settings?.logo_size || 32;
 
   // Apply store colors as CSS custom properties for the entire store
@@ -196,43 +155,40 @@ export default function LojaLayout() {
     }
   }, [themeConfig?.favicon_url]);
 
-  // Redirect slug access to custom domain when domain is verified
-  useEffect(() => {
-    if (slug && settings?.custom_domain && settings?.domain_status === "verified" && isPlatformHost(hostname)) {
-      const targetUrl = `https://${settings.custom_domain}${location.pathname.replace(`/loja/${slug}`, "") || "/"}`;
-      window.location.replace(targetUrl);
-    }
-  }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
-
-  // No slug AND not a custom domain → redirect to login
-  if (!slug && !isCustomDomain) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (isLoading) {
+  // Slug is required — no default store
+  if (!slug) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!settings) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">
-            {isCustomDomain
-              ? `O domínio "${hostname}" não está vinculado a nenhuma loja ou o DNS ainda não foi verificado.`
-              : `A loja "${slug}" não existe ou foi removida.`}
-          </p>
+          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
         </div>
       </div>
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (slug && !settings) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-6xl">🔍</div>
+          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
+          <p className="text-gray-400">A loja "{slug}" não existe ou foi removida.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Store blocked by super admin
   if (settings && (settings as any).store_blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
@@ -273,7 +229,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, track }}>
+    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors"
         style={{ 
@@ -387,7 +343,7 @@ export default function LojaLayout() {
                   className="pl-9 bg-secondary border-border rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { track("search", { search_term: searchTerm }); navigate(basePath); } }}
+                  onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>

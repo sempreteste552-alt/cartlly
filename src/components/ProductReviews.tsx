@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { MessageSquare, User, ImagePlus, X, ZoomIn } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -140,45 +138,6 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 
-  const useCarousel = reviews && reviews.length > 3;
-
-  const ReviewCard = ({ r }: { r: NonNullable<typeof reviews>[number] }) => (
-    <div className="border rounded-lg p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">{r.customer_name}</span>
-        </div>
-        <span className="text-xs text-muted-foreground">{formatDate(r.created_at)}</span>
-      </div>
-      <StarRating rating={r.rating} size={16} />
-      {r.comment && <p className="text-sm text-muted-foreground mt-2 line-clamp-4">{r.comment}</p>}
-      {r.image_urls && r.image_urls.length > 0 && (
-        <div className="flex gap-2 mt-3">
-          {r.image_urls.map((url, i) => {
-            const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(url);
-            return (
-              <button
-                key={i}
-                onClick={() => setZoomImage(url)}
-                className="relative h-16 w-16 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
-              >
-                {isVideo ? (
-                  <video src={url} className="h-full w-full object-cover" muted />
-                ) : (
-                  <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
-                  <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <div className="mt-10">
       <Separator />
@@ -189,7 +148,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             {count > 0 && (
               <div className="flex items-center gap-2 mt-1">
                 <StarRating rating={Math.round(average)} size={18} />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-gray-500">
                   {average.toFixed(1)} ({count} {count === 1 ? "avaliação" : "avaliações"})
                 </span>
               </div>
@@ -201,13 +160,14 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         </div>
 
         {showForm && (
-          <div className="border rounded-lg p-4 mb-6 space-y-3 bg-muted/50">
+          <div className="border rounded-lg p-4 mb-6 space-y-3 bg-gray-50">
             <p className="font-medium text-sm">Deixe sua avaliação</p>
             <StarRating rating={rating} interactive onChange={setRating} size={28} />
             <Input placeholder="Seu nome *" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
             <Input placeholder="E-mail (opcional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
             <Textarea placeholder="Comentário (opcional)" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} rows={3} />
 
+            {/* Image upload */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <input
@@ -241,7 +201,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       )}
                       <button
                         onClick={() => removeImage(i)}
-                        className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                        className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -252,7 +212,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleSubmit} disabled={createReview.isPending || uploading}>
+              <Button onClick={handleSubmit} disabled={createReview.isPending || uploading} className="bg-black text-white hover:bg-gray-800">
                 {uploading || createReview.isPending ? "Enviando..." : "Enviar"}
               </Button>
               <Button variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -261,45 +221,54 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         )}
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Carregando avaliações...</p>
+          <p className="text-sm text-gray-400">Carregando avaliações...</p>
         ) : !reviews || reviews.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma avaliação ainda. Seja o primeiro!</p>
-        ) : useCarousel ? (
-          <Carousel
-            opts={{ align: "start", loop: true }}
-            plugins={[Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })]}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-3">
-              {reviews.map((r) => (
-                <CarouselItem key={r.id} className="pl-3 basis-full sm:basis-1/2 md:basis-1/3">
-                  <ReviewCard r={r} />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-0" />
-            <CarouselNext className="right-0" />
-          </Carousel>
+          <p className="text-sm text-gray-400">Nenhuma avaliação ainda. Seja o primeiro!</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {reviews.map((r) => (
-              <ReviewCard key={r.id} r={r} />
+              <div key={r.id} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="font-medium text-sm">{r.customer_name}</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{formatDate(r.created_at)}</span>
+                </div>
+                <StarRating rating={r.rating} size={16} />
+                {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
+                {r.image_urls && r.image_urls.length > 0 && (
+                  <div className="flex gap-2 mt-3">
+                    {r.image_urls.map((url, i) => {
+                      const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(url);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setZoomImage(url)}
+                          className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
+                        >
+                          {isVideo ? (
+                            <video src={url} className="h-full w-full object-cover" muted />
+                          ) : (
+                            <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                            <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Zoom dialog with close button */}
+      {/* Zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
-        <DialogContent className="max-w-lg p-2 relative">
-          <DialogTitle className="sr-only">Visualizar mídia</DialogTitle>
-          <button
-            onClick={() => setZoomImage(null)}
-            className="absolute top-3 right-3 z-50 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center border shadow-sm hover:bg-background transition-colors"
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <DialogContent className="max-w-lg p-1">
           {zoomImage && (/\.(mp4|webm|mov|ogg)$/i.test(zoomImage) ? (
             <video src={zoomImage} controls autoPlay className="w-full rounded-lg" />
           ) : (
