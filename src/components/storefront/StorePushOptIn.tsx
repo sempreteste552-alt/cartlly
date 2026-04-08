@@ -9,9 +9,10 @@ import { ensureCurrentPushSubscription, getValidPushSubscription } from "@/lib/p
 interface StorePushOptInProps {
   primaryColor?: string;
   storeUserId?: string;
+  className?: string;
 }
 
-export function StorePushOptIn({ primaryColor, storeUserId }: StorePushOptInProps) {
+export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePushOptInProps) {
   const { user } = useCustomerAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -116,7 +117,7 @@ export function StorePushOptIn({ primaryColor, storeUserId }: StorePushOptInProp
     <Button
       variant="ghost"
       size="icon"
-      className="relative"
+      className={`relative ${className || ""}`}
       title={isSubscribed ? "Desativar notificações" : "Ativar notificações"}
       onClick={isSubscribed ? unsubscribe : subscribe}
       disabled={loading}

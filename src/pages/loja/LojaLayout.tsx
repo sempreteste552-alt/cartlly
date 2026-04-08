@@ -349,7 +349,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
-            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
@@ -505,6 +505,10 @@ export default function LojaLayout() {
                 </div>
               );
             })}
+            {/* Push notification opt-in inside mobile menu */}
+            <div className="px-3 py-2">
+              <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+            </div>
           </nav>
         </div>
 
