@@ -194,7 +194,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <div className="flex gap-2">
                   {imagePreviews.map((src, i) => (
                     <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden border">
-                      <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                      {imageFiles[i]?.type.startsWith("video/") ? (
+                        <video src={src} className="h-full w-full object-cover" muted />
+                      ) : (
+                        <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                      )}
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
