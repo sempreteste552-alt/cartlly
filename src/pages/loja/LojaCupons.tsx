@@ -42,9 +42,14 @@ export default function LojaCupons() {
         <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15` }}>
           <Ticket className="h-6 w-6" style={{ color: primaryColor }} />
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
-          <p className="text-sm text-muted-foreground">Aproveite nossas ofertas especiais</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
+            <p className="text-sm text-muted-foreground">Aproveite nossas ofertas especiais</p>
+          </div>
+          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
+            {coupons?.length || 0} cupom(ns)
+          </span>
         </div>
       </div>
 
