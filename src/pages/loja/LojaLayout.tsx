@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
-import { AnnouncementBar, FreeShippingBar, PopupCoupon } from "@/components/storefront/MarketingWidgets";
+import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -192,6 +192,9 @@ export default function LojaLayout() {
           color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
         }}
       >
+        {/* Marketing: Countdown Bar — top of everything */}
+        {marketingConfig && <CountdownBar config={marketingConfig} />}
+
         {/* Marketing: Announcement Bar */}
         {marketingConfig && <AnnouncementBar config={marketingConfig} />}
 

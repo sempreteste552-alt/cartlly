@@ -1,9 +1,62 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Timer } from "lucide-react";
 import type { StoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+
+// ── Countdown Bar ──
+export function CountdownBar({ config }: { config: StoreMarketingConfig }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    if (!config.countdown_enabled || !config.countdown_end_date) return;
+    const target = new Date(config.countdown_end_date).getTime();
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) { setExpired(true); return; }
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [config.countdown_enabled, config.countdown_end_date]);
+
+  if (!config.countdown_enabled || !config.countdown_end_date || expired) return null;
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div
+      className="relative py-2.5 px-4 text-center animate-pulse"
+      style={{ backgroundColor: config.countdown_bg_color, color: config.countdown_text_color }}
+    >
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2">
+          <Timer className="h-4 w-4 animate-spin" style={{ animationDuration: "3s" }} />
+          {config.countdown_text && (
+            <span className="text-sm font-semibold">{config.countdown_text}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 font-mono text-sm font-bold tracking-wider">
+          <span className="bg-white/20 backdrop-blur rounded px-1.5 py-0.5">{pad(timeLeft.days)}d</span>
+          <span>:</span>
+          <span className="bg-white/20 backdrop-blur rounded px-1.5 py-0.5">{pad(timeLeft.hours)}h</span>
+          <span>:</span>
+          <span className="bg-white/20 backdrop-blur rounded px-1.5 py-0.5">{pad(timeLeft.minutes)}m</span>
+          <span>:</span>
+          <span className="bg-white/20 backdrop-blur rounded px-1.5 py-0.5">{pad(timeLeft.seconds)}s</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Announcement Bar ──
 export function AnnouncementBar({ config }: { config: StoreMarketingConfig }) {
