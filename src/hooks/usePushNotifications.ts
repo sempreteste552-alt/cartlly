@@ -26,6 +26,7 @@ export function usePushNotifications() {
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
+        store_user_id: user.id,
       },
       { onConflict: "user_id,endpoint" }
     );
