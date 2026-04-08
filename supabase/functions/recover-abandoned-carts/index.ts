@@ -19,11 +19,12 @@ Deno.serve(async (req) => {
 
     const { data: carts, error: cartErr } = await supabase
       .from("abandoned_carts")
-      .select("*, customers!inner(name, email, auth_user_id, store_user_id)")
+      .select("*")
       .eq("recovered", false)
       .lt("abandoned_at", thirtyMinAgo)
       .or(`last_reminder_at.is.null,last_reminder_at.lt.${twoHoursAgo}`)
-      .lt("reminder_sent_count", 3);
+      .lt("reminder_sent_count", 3)
+      .not("customer_id", "is", null);
 
     if (cartErr) {
       console.error("Query error:", cartErr);
@@ -33,6 +34,15 @@ Deno.serve(async (req) => {
     if (!carts || carts.length === 0) {
       return json({ processed: 0, message: "No abandoned carts to process" });
     }
+
+    // Fetch customer data for all carts
+    const customerIds = [...new Set(carts.map(c => c.customer_id).filter(Boolean))];
+    const { data: customers } = await supabase
+      .from("customers")
+      .select("id, name, email, auth_user_id, store_user_id")
+      .in("id", customerIds);
+
+    const customerMap = new Map((customers || []).map(c => [c.id, c]));
 
     let sent = 0;
     let skipped = 0;
