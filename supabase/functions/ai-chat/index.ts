@@ -14,32 +14,71 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Você é o Assistente IA da plataforma de e-commerce. Você ajuda lojistas a gerenciar suas lojas de forma inteligente.
+    // Build rich context from all admin data
+    const productsInfo = (storeContext?.products || []).slice(0, 50)
+      .map((p: any) => `• ${p.name} — R$${p.price} | Estoque: ${p.stock} | ${p.published ? "Publicado" : "Rascunho"}${p.category ? ` | Cat: ${p.category}` : ""}`)
+      .join("\n");
 
-CONTEXTO DA LOJA:
+    const ordersInfo = (storeContext?.recentOrders || []).slice(0, 20)
+      .map((o: any) => `• #${o.id} — ${o.customer} — R$${o.total} — ${o.status} — ${o.date}`)
+      .join("\n");
+
+    const couponsInfo = (storeContext?.coupons || [])
+      .map((c: any) => `• ${c.code}: ${c.discount_type === "percentage" ? c.discount_value + "%" : "R$" + c.discount_value} | ${c.active ? "Ativo" : "Inativo"} | Usos: ${c.used_count}/${c.max_uses || "∞"}${c.expires_at ? ` | Expira: ${c.expires_at}` : ""}`)
+      .join("\n");
+
+    const systemPrompt = `Você é o Assistente IA COMPLETO da plataforma de e-commerce. Você tem acesso TOTAL aos dados da loja e pode EXECUTAR AÇÕES.
+
+DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}
+- Slug: ${storeContext?.storeSlug || ""}
+- WhatsApp: ${storeContext?.storeWhatsapp || "Não configurado"}
 - Produtos cadastrados: ${storeContext?.totalProducts || 0}
 - Pedidos totais: ${storeContext?.totalOrders || 0}
 - Receita total: R$ ${storeContext?.totalRevenue?.toFixed(2) || "0.00"}
 - Categorias: ${storeContext?.categories?.join(", ") || "Nenhuma"}
 - Cupons ativos: ${storeContext?.activeCoupons || 0}
+- Venda via WhatsApp: ${storeContext?.sellViaWhatsapp ? "Sim" : "Não"}
+- PIX: ${storeContext?.paymentPix ? "Sim" : "Não"}
+- Cartão: ${storeContext?.paymentCreditCard ? "Sim" : "Não"}
+- Frete: ${storeContext?.shippingEnabled ? "Ativo" : "Inativo"}
 
-SUAS CAPACIDADES:
-1. **Campanhas**: Sugerir campanhas promocionais baseadas no perfil da loja, sazonalidade e histórico
-2. **Produtos**: Sugerir novos produtos, melhorias em descrições, estratégias de precificação
-3. **Promoções**: Criar estratégias de cupons, descontos progressivos, combos
-4. **Marketing**: Ideias de posts para redes sociais, emails de engajamento
-5. **Análise**: Interpretar dados de vendas, identificar tendências e oportunidades
-6. **Estoque**: Alertar sobre produtos com estoque baixo, sugerir reposição
-7. **Fidelização**: Estratégias para reter clientes e aumentar ticket médio
+PRODUTOS (detalhado):
+${productsInfo || "Nenhum produto cadastrado"}
 
-REGRAS:
-- Responda sempre em português do Brasil
+PEDIDOS RECENTES:
+${ordersInfo || "Nenhum pedido"}
+
+CUPONS:
+${couponsInfo || "Nenhum cupom"}
+
+SUAS CAPACIDADES DE AÇÃO:
+Você pode EXECUTAR ações incluindo blocos de ação no final da resposta. Use o formato:
+
+1. **Enviar Push para Clientes** — Quando o lojista pedir para criar/enviar uma promoção:
+\`\`\`action:send_push
+{"title": "🔥 Título da promoção", "body": "Texto da notificação push (máx 130 chars)"}
+\`\`\`
+
+2. **Criar Cupom de Desconto** — Quando o lojista pedir para criar um cupom:
+\`\`\`action:create_coupon
+{"code": "CODIGO", "discount_type": "percentage", "discount_value": 10, "max_uses": 100, "min_order_value": 0, "expires_at": null}
+\`\`\`
+
+REGRAS IMPORTANTES:
+- Responda SEMPRE em português do Brasil
 - Seja objetivo e prático nas sugestões
-- Use dados da loja quando disponíveis para personalizar sugestões
-- Formate respostas com markdown para melhor legibilidade
-- Quando sugerir campanhas, inclua: nome, descrição, público-alvo, desconto sugerido e duração
-- Seja proativo: sugira ações mesmo quando não perguntado diretamente`;
+- Use os dados reais da loja para personalizar
+- Formate respostas com markdown
+- Quando sugerir campanhas, inclua: nome, descrição, público-alvo, desconto e duração
+- Quando o lojista pedir para ENVIAR promoção ou push, CONFIRME o texto e INCLUA o bloco action:send_push
+- Quando o lojista pedir para CRIAR cupom, CONFIRME os detalhes e INCLUA o bloco action:create_coupon
+- Os blocos de ação serão processados automaticamente pelo sistema
+- SEMPRE mostre ao lojista o que vai fazer ANTES de incluir o bloco de ação
+- Se o lojista pedir "gere um texto de promoção e envie", gere, mostre e inclua o action:send_push
+- Para cupons, o discount_type pode ser "percentage" ou "fixed"
+- O cupom criado ficará visível automaticamente na loja para os clientes
+- Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente aos clientes`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
