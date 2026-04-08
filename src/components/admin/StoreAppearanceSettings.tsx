@@ -62,6 +62,9 @@ export default function StoreAppearanceSettings() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [textColor, setTextColor] = useState("#000000");
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>('light');
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const faviconRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config) {
@@ -81,6 +84,7 @@ export default function StoreAppearanceSettings() {
       setBackgroundColor(config.background_color || "#ffffff");
       setTextColor(config.text_color || "#000000");
       setThemeMode(config.theme_mode || 'light');
+      setFaviconUrl(config.favicon_url || "");
     }
   }, [config]);
 
