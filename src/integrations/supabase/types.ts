@@ -954,6 +954,7 @@ export type Database = {
           id: string
           p256dh: string
           platform: string
+          store_user_id: string | null
           user_id: string
         }
         Insert: {
@@ -963,6 +964,7 @@ export type Database = {
           id?: string
           p256dh: string
           platform?: string
+          store_user_id?: string | null
           user_id: string
         }
         Update: {
@@ -972,6 +974,7 @@ export type Database = {
           id?: string
           p256dh?: string
           platform?: string
+          store_user_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1764,6 +1767,72 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      tenant_messages: {
+        Row: {
+          audience_type: string
+          body: string | null
+          channel: string
+          created_at: string
+          delivered_count: number
+          failed_count: number
+          id: string
+          is_global: boolean
+          message_type: string
+          priority: string
+          sender_type: string
+          sender_user_id: string
+          source_tenant_id: string
+          status: string
+          target_area: string
+          target_slug: string | null
+          target_tenant_id: string | null
+          target_user_id: string | null
+          title: string
+        }
+        Insert: {
+          audience_type: string
+          body?: string | null
+          channel?: string
+          created_at?: string
+          delivered_count?: number
+          failed_count?: number
+          id?: string
+          is_global?: boolean
+          message_type?: string
+          priority?: string
+          sender_type?: string
+          sender_user_id: string
+          source_tenant_id: string
+          status?: string
+          target_area?: string
+          target_slug?: string | null
+          target_tenant_id?: string | null
+          target_user_id?: string | null
+          title: string
+        }
+        Update: {
+          audience_type?: string
+          body?: string | null
+          channel?: string
+          created_at?: string
+          delivered_count?: number
+          failed_count?: number
+          id?: string
+          is_global?: boolean
+          message_type?: string
+          priority?: string
+          sender_type?: string
+          sender_user_id?: string
+          source_tenant_id?: string
+          status?: string
+          target_area?: string
+          target_slug?: string | null
+          target_tenant_id?: string | null
+          target_user_id?: string | null
+          title?: string
         }
         Relationships: []
       }

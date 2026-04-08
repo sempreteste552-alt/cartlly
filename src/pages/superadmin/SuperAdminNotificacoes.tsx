@@ -87,42 +87,50 @@ export default function SuperAdminNotificacoes() {
     }
     setSending(true);
     try {
-      if (targetUserId === "all") {
-        // Broadcast: create one notification per tenant
-        const tenantIds = tenants?.map(t => t.user_id) || [];
-        if (tenantIds.length === 0) {
-          // If no tenants, create broadcast with null target
-          const { error } = await supabase.from("admin_notifications").insert({
-            sender_user_id: user!.id,
-            target_user_id: null,
-            title: title.trim(),
-            message: message.trim(),
-            type,
-          } as any);
-          if (error) throw error;
-        } else {
-          const rows = tenantIds.map(tid => ({
-            sender_user_id: user!.id,
-            target_user_id: tid,
-            title: title.trim(),
-            message: message.trim(),
-            type,
-          }));
-          const { error } = await supabase.from("admin_notifications").insert(rows as any);
-          if (error) throw error;
-        }
-      } else {
+      const tenantIds = targetUserId === "all"
+        ? (tenants?.map(t => t.user_id) || [])
+        : [targetUserId];
+
+      if (tenantIds.length === 0 && targetUserId === "all") {
+        // Broadcast with null target
         const { error } = await supabase.from("admin_notifications").insert({
           sender_user_id: user!.id,
-          target_user_id: targetUserId,
+          target_user_id: null,
           title: title.trim(),
           message: message.trim(),
           type,
         } as any);
         if (error) throw error;
+      } else {
+        // Create one notification per target tenant
+        const rows = tenantIds.map(tid => ({
+          sender_user_id: user!.id,
+          target_user_id: tid,
+          title: title.trim(),
+          message: message.trim(),
+          type,
+        }));
+        const { error } = await supabase.from("admin_notifications").insert(rows as any);
+        if (error) throw error;
       }
 
-      toast.success("Notificação enviada!");
+      // Log to tenant_messages for audit trail
+      await supabase.from("tenant_messages").insert({
+        source_tenant_id: user!.id,
+        sender_type: "super_admin",
+        sender_user_id: user!.id,
+        audience_type: targetUserId === "all" ? "super_admin_to_tenant_admins" : "super_admin_to_one_tenant",
+        target_area: "admin_panel",
+        target_tenant_id: targetUserId === "all" ? null : targetUserId,
+        channel: "in_app",
+        title: title.trim(),
+        body: message.trim(),
+        message_type: type,
+        is_global: targetUserId === "all",
+        delivered_count: tenantIds.length,
+      } as any);
+
+      toast.success(`Notificação enviada para ${tenantIds.length} tenant(s)!`);
       queryClient.invalidateQueries({ queryKey: ["admin_notifications"] });
       setFormOpen(false);
       setTitle(""); setMessage(""); setType("info"); setTargetUserId("all");

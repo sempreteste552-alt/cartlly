@@ -8,9 +8,10 @@ import { ensureCurrentPushSubscription, getValidPushSubscription } from "@/lib/p
 
 interface StorePushOptInProps {
   primaryColor?: string;
+  storeUserId?: string;
 }
 
-export function StorePushOptIn({ primaryColor }: StorePushOptInProps) {
+export function StorePushOptIn({ primaryColor, storeUserId }: StorePushOptInProps) {
   const { user } = useCustomerAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -28,6 +29,7 @@ export function StorePushOptIn({ primaryColor }: StorePushOptInProps) {
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
+        store_user_id: storeUserId || null,
       },
       { onConflict: "user_id,endpoint" }
     );

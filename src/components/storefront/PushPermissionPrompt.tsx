@@ -10,9 +10,10 @@ interface PushPermissionPromptProps {
   storeName?: string;
   logoUrl?: string;
   primaryColor?: string;
+  storeUserId?: string;
 }
 
-export function PushPermissionPrompt({ storeName, logoUrl, primaryColor }: PushPermissionPromptProps) {
+export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUserId }: PushPermissionPromptProps) {
   const { user } = useCustomerAuth();
   const [show, setShow] = useState(false);
 
@@ -51,6 +52,7 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor }: PushP
               endpoint: json.endpoint,
               p256dh: json.keys.p256dh,
               auth: json.keys.auth,
+              store_user_id: storeUserId || null,
             },
             { onConflict: "user_id,endpoint" }
           );
