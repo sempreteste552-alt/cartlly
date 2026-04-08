@@ -51,8 +51,6 @@ async function shouldSkipAntiSpam(
   if (dailyCount >= 25) {
     return { skip: true, reason: "hard_daily_ceiling" };
   }
-    return { skip: true, reason: "hard_daily_ceiling" };
-  }
 
   // Check cooldown: last push must be > cooldownMinutes ago
   const cooldown = Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
