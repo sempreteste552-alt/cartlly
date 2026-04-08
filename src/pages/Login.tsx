@@ -76,6 +76,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
+  const loginText = useTypewriter(LOGIN_PHRASES);
+  const registerText = useTypewriter(REGISTER_PHRASES);
+
   useEffect(() => {
     if (user) {
       // Never redirect customer accounts to admin
