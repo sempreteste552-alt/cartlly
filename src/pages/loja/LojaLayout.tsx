@@ -5,6 +5,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
+import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
@@ -60,6 +61,17 @@ export default function LojaLayout() {
   const isLoading = slugLoading;
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
+
+  // Dynamic PWA manifest with tenant context
+  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  usePwaManifest({
+    name: settings?.store_name || undefined,
+    shortName: settings?.store_name?.slice(0, 12) || undefined,
+    themeColor: settings?.primary_color || undefined,
+    iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
+    startUrl: storeStartUrl,
+    scope: storeStartUrl,
+  });
 
   // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
