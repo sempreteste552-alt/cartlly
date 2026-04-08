@@ -136,7 +136,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -154,10 +154,22 @@ export default function LojaHome() {
               accentColor={accentColor}
               wishlist={wishlist}
               basePath={basePath}
+              onAddToCart={cartNotif.show}
             />
           ))
         )}
       </div>
+
+      {cartNotif.notification && (
+        <CartNotification
+          productName={cartNotif.notification.productName}
+          productImage={cartNotif.notification.productImage}
+          basePath={basePath}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+          onClose={cartNotif.hide}
+        />
+      )}
     </div>
   );
 }
