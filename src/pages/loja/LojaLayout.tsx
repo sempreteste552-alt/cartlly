@@ -114,6 +114,29 @@ export default function LojaLayout() {
     }
   }, [settings, themeConfig]);
 
+  // Apply favicon dynamically
+  useEffect(() => {
+    const faviconHref = themeConfig?.favicon_url;
+    if (faviconHref) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href = faviconHref;
+
+      // Also set apple-touch-icon for iOS home screen
+      let apple: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']");
+      if (!apple) {
+        apple = document.createElement("link");
+        apple.rel = "apple-touch-icon";
+        document.head.appendChild(apple);
+      }
+      apple.href = faviconHref;
+    }
+  }, [themeConfig?.favicon_url]);
+
   // Slug is required — no default store
   if (!slug) {
     return (

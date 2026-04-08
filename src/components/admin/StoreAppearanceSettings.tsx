@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,12 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Type, Layers, LayoutGrid, Monitor, Palette, Eye } from "lucide-react";
+import { Loader2, Type, Layers, LayoutGrid, Monitor, Palette, Eye, Upload, Image, X } from "lucide-react";
 import { useStoreThemeConfig, useUpdateStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LockedFeature } from "@/components/LockedFeature";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const FONT_OPTIONS = [
   "Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Playfair Display",
@@ -60,6 +62,9 @@ export default function StoreAppearanceSettings() {
   const [backgroundColor, setBackgroundColor] = useState("#ffffff");
   const [textColor, setTextColor] = useState("#000000");
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>('light');
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const faviconRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config) {
@@ -79,8 +84,30 @@ export default function StoreAppearanceSettings() {
       setBackgroundColor(config.background_color || "#ffffff");
       setTextColor(config.text_color || "#000000");
       setThemeMode(config.theme_mode || 'light');
+      setFaviconUrl(config.favicon_url || "");
     }
   }, [config]);
+
+  const handleFaviconUpload = async (file: File) => {
+    setUploadingFavicon(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `favicon-${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("store-assets")
+        .upload(fileName, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from("store-assets")
+        .getPublicUrl(fileName);
+      setFaviconUrl(urlData.publicUrl);
+      toast.success("Favicon enviado!");
+    } catch (err: any) {
+      toast.error("Erro no upload: " + err.message);
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
 
   const handleSave = () => {
     if (!config) return;
@@ -102,6 +129,7 @@ export default function StoreAppearanceSettings() {
       background_color: backgroundColor,
       text_color: textColor,
       theme_mode: themeMode,
+      favicon_url: faviconUrl.trim() || null,
     });
   };
 
@@ -163,6 +191,46 @@ export default function StoreAppearanceSettings() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Favicon */}
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2"><Image className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Favicon</CardTitle></div>
+            <CardDescription>Ícone que aparece na aba do navegador e ao instalar o app</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <input
+              ref={faviconRef}
+              type="file"
+              accept="image/png,image/x-icon,image/svg+xml,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFaviconUpload(f);
+              }}
+            />
+            {faviconUrl ? (
+              <div className="flex items-center gap-4">
+                <img src={faviconUrl} alt="Favicon" className="h-12 w-12 rounded border border-border object-contain bg-muted p-1" />
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => faviconRef.current?.click()} disabled={uploadingFavicon}>
+                    {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Trocar
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFaviconUrl("")}>
+                    <X className="h-4 w-4 mr-1" /> Remover
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="outline" onClick={() => faviconRef.current?.click()} disabled={uploadingFavicon}>
+                {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                Enviar Favicon
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">Recomendado: PNG ou ICO, 32x32 ou 192x192 pixels</p>
           </CardContent>
         </Card>
 
