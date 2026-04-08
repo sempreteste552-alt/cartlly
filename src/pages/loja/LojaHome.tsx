@@ -31,6 +31,7 @@ export default function LojaHome() {
   const { data: banners } = usePublicBanners(storeUserId);
   const { data: categories } = usePublicCategories(storeUserId);
   const wishlist = useWishlist(storeUserId);
+  const cartNotif = useCartNotification();
 
   const productIds = useMemo(() => products?.map((p) => p.id) ?? [], [products]);
   const { data: ratings } = useAllProductReviews(productIds);
