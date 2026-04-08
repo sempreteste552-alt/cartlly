@@ -69,16 +69,9 @@ export default function LojaHome() {
 
   return (
     <div className="space-y-6">
-      {/* Dynamic Premium Sections - Hidden during search */}
       {!searchTerm.trim() && (
         <>
-          <DynamicHomeSections
-            storeUserId={storeUserId}
-            products={products || []}
-            settings={settings}
-            cart={cart}
-            basePath={basePath}
-          />
+          {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
             <div className="max-w-7xl mx-auto px-4 pt-4">
               <Carousel opts={{ loop: true }} className="w-full">
@@ -90,13 +83,14 @@ export default function LojaHome() {
                           src={banner.image_url}
                           className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
                           autoPlay muted loop playsInline
+                          preload="metadata"
                         />
                       ) : banner.link_url ? (
                         <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
-                          <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                          <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" loading="lazy" />
                         </a>
                       ) : (
-                        <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" />
+                        <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" loading="lazy" />
                       )}
                     </CarouselItem>
                   ))}
@@ -104,12 +98,20 @@ export default function LojaHome() {
                 <CarouselPrevious className="left-2" />
                 <CarouselNext className="right-2" />
               </Carousel>
-          </div>
+            </div>
           )}
-          {/* Highlights below banner */}
-          <div className="mt-4">
-            <HighlightsSection storeUserId={storeUserId} primaryColor={primaryColor} />
-          </div>
+
+          {/* 2. Destaques (Stories) - abaixo do banner */}
+          <HighlightsSection storeUserId={storeUserId} primaryColor={primaryColor} />
+
+          {/* 3. Seções dinâmicas (produtos em destaque, etc.) */}
+          <DynamicHomeSections
+            storeUserId={storeUserId}
+            products={products || []}
+            settings={settings}
+            cart={cart}
+            basePath={basePath}
+          />
         </>
       )}
 
