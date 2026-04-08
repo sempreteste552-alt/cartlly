@@ -669,6 +669,7 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="home" className="mt-6 space-y-8">
+          <RestockAlertManager />
           <HighlightsManager />
           <HomeBuilderManager />
         </TabsContent>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
+import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -449,6 +450,15 @@ export default function LojaLayout() {
         <main>
           <Outlet />
         </main>
+
+        {/* Restock Alert Card */}
+        <RestockAlertCard
+          storeUserId={settings?.user_id}
+          basePath={basePath}
+          primaryColor={primaryColor}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+        />
 
         {/* Footer */}
         <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
