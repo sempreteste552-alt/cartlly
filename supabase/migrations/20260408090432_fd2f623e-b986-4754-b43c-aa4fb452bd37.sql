@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_notification_send_push ON public.admin_notifications;

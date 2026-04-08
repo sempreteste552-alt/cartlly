@@ -138,7 +138,8 @@ export default function PushNotificationSettings() {
       } else if ((data?.removed || 0) > 0) {
         toast.warning("Foram removidos dispositivos antigos/inválidos dos clientes. Eles precisam ativar o push novamente na loja.");
       } else {
-        toast.warning("Nenhum cliente com dispositivo push válido encontrado.");
+        const msg = data?.message || `Nenhum dos seus ${data?.total_customers || 0} cliente(s) ativou notificações push. Eles precisam clicar no 🔔 dentro da loja para ativar.`;
+        toast.warning(msg, { duration: 8000 });
       }
     } catch (err: any) {
       toast.error("Erro ao enviar: " + (err.message || "Erro desconhecido"));
