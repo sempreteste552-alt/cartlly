@@ -72,32 +72,7 @@ export default function LojaHome() {
         <>
           {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
-            <div className="max-w-7xl mx-auto px-4 pt-4">
-              <Carousel opts={{ loop: true }} className="w-full">
-                <CarouselContent>
-                  {banners.map((banner) => (
-                    <CarouselItem key={banner.id}>
-                      {(banner as any).media_type === "video" ? (
-                        <video
-                          src={banner.image_url}
-                          className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg"
-                          autoPlay muted loop playsInline
-                          preload="metadata"
-                        />
-                      ) : banner.link_url ? (
-                        <a href={banner.link_url} target="_blank" rel="noopener noreferrer">
-                          <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" loading="lazy" />
-                        </a>
-                      ) : (
-                        <img src={banner.image_url} alt="Banner" className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-lg" loading="lazy" />
-                      )}
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
-              </Carousel>
-            </div>
+            <BannerCarousel banners={banners} />
           )}
 
           {/* 2. Destaques (Stories) - abaixo do banner */}
