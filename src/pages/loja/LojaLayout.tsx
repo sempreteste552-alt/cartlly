@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
-import { AnnouncementBar, FreeShippingBar, PopupCoupon } from "@/components/storefront/MarketingWidgets";
+import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
