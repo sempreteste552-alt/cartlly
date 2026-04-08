@@ -88,6 +88,27 @@ export default function StoreAppearanceSettings() {
     }
   }, [config]);
 
+  const handleFaviconUpload = async (file: File) => {
+    setUploadingFavicon(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `favicon-${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("store-assets")
+        .upload(fileName, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from("store-assets")
+        .getPublicUrl(fileName);
+      setFaviconUrl(urlData.publicUrl);
+      toast.success("Favicon enviado!");
+    } catch (err: any) {
+      toast.error("Erro no upload: " + err.message);
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
   const handleSave = () => {
     if (!config) return;
     updateConfig.mutate({
@@ -108,6 +129,7 @@ export default function StoreAppearanceSettings() {
       background_color: backgroundColor,
       text_color: textColor,
       theme_mode: themeMode,
+      favicon_url: faviconUrl.trim() || null,
     });
   };
 
