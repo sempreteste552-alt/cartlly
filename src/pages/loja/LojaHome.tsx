@@ -5,7 +5,6 @@ import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
 import { Card } from "@/components/ui/card";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Star, Share2, Heart, ChevronLeft, ChevronRight } from "lucide-react";
