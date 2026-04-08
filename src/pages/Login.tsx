@@ -74,6 +74,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
@@ -127,33 +128,33 @@ export default function Login() {
     setLoading(true);
 
     try {
+      setAlertCard(null);
       if (isForgotPassword) {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
-        toast.success("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
+        setAlertCard({ type: "success", message: "E-mail de redefinição enviado! Verifique sua caixa de entrada." });
         setIsForgotPassword(false);
       } else if (isRegister) {
         if (!acceptedTerms) {
-          toast.error("Você precisa aceitar os Termos de Uso para criar sua conta.");
+          setAlertCard({ type: "error", message: "Você precisa aceitar os Termos de Uso para criar sua conta." });
           setLoading(false);
           return;
         }
         const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
         if (!slug) {
-          toast.error("Defina um slug válido para sua loja.");
+          setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
           setLoading(false);
           return;
         }
-        // Check slug availability
         const { data: existingSlug } = await supabase
           .from("store_settings")
           .select("id")
           .eq("store_slug", slug)
           .maybeSingle();
         if (existingSlug) {
-          toast.error("Este slug já está em uso. Escolha outro.");
+          setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
           setLoading(false);
           return;
         }
@@ -171,11 +172,9 @@ export default function Login() {
           }
           throw signUpError;
         }
-        // Supabase returns a fake user with empty identities for existing emails
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
-        // Create store_settings with slug and store name
         if (signUpData.user) {
           await supabase.from("store_settings").insert({
             user_id: signUpData.user.id,
@@ -183,15 +182,15 @@ export default function Login() {
             store_slug: slug,
           });
         }
-        // Sign out since email confirmation is required
         await supabase.auth.signOut();
-        // Show email verification screen
         setShowEmailSent(true);
       } else {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
-            throw new Error("Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada.");
+            setAlertCard({ type: "warning", message: "Seu e-mail ainda não foi verificado. Verifique sua caixa de entrada e clique no link de confirmação." });
+            setLoading(false);
+            return;
           }
           if (loginError.message.includes("Invalid login")) {
             throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
@@ -201,7 +200,7 @@ export default function Login() {
         navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
       }
     } catch (error: any) {
-      toast.error(error.message || "Erro ao autenticar");
+      setAlertCard({ type: "error", message: error.message || "Erro ao autenticar" });
     } finally {
       setLoading(false);
     }
@@ -321,6 +320,46 @@ export default function Login() {
           </CardHeader>
 
           <CardContent className="pb-8">
+            {/* Alert Card */}
+            {alertCard && (
+              <div className={`mb-4 rounded-lg border p-3 ${
+                alertCard.type === "error" ? "border-destructive/40 bg-destructive/5" :
+                alertCard.type === "warning" ? "border-yellow-500/40 bg-yellow-500/5" :
+                "border-green-500/40 bg-green-500/5"
+              }`}>
+                <div className={`flex items-start gap-2 ${
+                  alertCard.type === "error" ? "text-destructive" :
+                  alertCard.type === "warning" ? "text-yellow-600 dark:text-yellow-400" :
+                  "text-green-600 dark:text-green-400"
+                }`}>
+                  {alertCard.type === "error" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  ) : alertCard.type === "warning" ? (
+                    <Mail className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p className="text-sm font-medium leading-tight">{alertCard.message}</p>
+                </div>
+                {alertCard.type === "warning" && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.auth.resend({ type: "signup", email });
+                        if (error) throw error;
+                        toast.success("E-mail de verificação reenviado!");
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro ao reenviar");
+                      }
+                    }}
+                    className="mt-2 text-xs text-blue-500 hover:underline font-medium ml-6"
+                  >
+                    Reenviar e-mail de verificação
+                  </button>
+                )}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
