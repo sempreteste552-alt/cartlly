@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Download, Share, Plus, MoreVertical } from "lucide-react";
+import { X, Download, Share, Plus, MoreVertical, Bell, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Platform = "ios" | "android" | "desktop" | null;
@@ -18,24 +18,25 @@ function isStandalone(): boolean {
   );
 }
 
-export function PWAInstallBanner() {
+interface PWAInstallBannerProps {
+  storeName?: string;
+  logoUrl?: string;
+  primaryColor?: string;
+}
+
+export function PWAInstallBanner({ storeName, logoUrl, primaryColor }: PWAInstallBannerProps) {
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    // Don't show if already installed or dismissed recently
     if (isStandalone()) return;
-
     const dismissed = sessionStorage.getItem("pwa-banner-dismissed");
     if (dismissed) return;
-
-    const plat = detectPlatform();
-    setPlatform(plat);
+    setPlatform(detectPlatform());
     setShow(true);
 
-    // Listen for beforeinstallprompt (Android/Chrome)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -62,31 +63,44 @@ export function PWAInstallBanner() {
 
   if (!show) return null;
 
+  const name = storeName || "nossa loja";
+  const bgColor = primaryColor || "#6d28d9";
+
   return (
     <>
       {/* Banner */}
-      <div className="relative z-[60] bg-gradient-to-r from-violet-600 to-purple-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <Download className="h-4 w-4 shrink-0 animate-bounce" />
-            <p className="text-xs sm:text-sm font-medium truncate">
-              {platform === "ios"
-                ? "Adicione à tela de início para receber notificações!"
-                : platform === "android"
-                ? "Baixe o app para receber notificações em tempo real!"
-                : "Instale o app para notificações em tempo real!"}
-            </p>
+      <div className="relative z-[60]" style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}>
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {logoUrl ? (
+              <img src={logoUrl} alt={name} className="h-8 w-8 rounded-lg object-contain bg-white/20 p-0.5 shrink-0" />
+            ) : (
+              <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <Gift className="h-4 w-4 text-white" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-bold text-white truncate">
+                📲 Baixe o app de {name}!
+              </p>
+              <p className="text-[10px] sm:text-xs text-white/80 truncate">
+                {platform === "ios"
+                  ? "Adicione à tela de início e fique por dentro das promoções"
+                  : "Receba ofertas e promoções exclusivas em tempo real"}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              variant="secondary"
-              className="h-7 text-xs font-bold bg-white text-purple-700 hover:bg-purple-50 px-3"
+              className="h-8 text-xs font-bold px-4 shadow-lg"
+              style={{ backgroundColor: "white", color: bgColor }}
               onClick={handleInstall}
             >
-              {platform === "ios" ? "Como fazer" : "Instalar"}
+              <Download className="h-3.5 w-3.5 mr-1" />
+              {platform === "ios" ? "Instalar" : "Baixar App"}
             </Button>
-            <button onClick={dismiss} className="p-1 hover:bg-white/20 rounded">
+            <button onClick={dismiss} className="p-1 hover:bg-white/20 rounded text-white/70 hover:text-white">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -101,48 +115,69 @@ export function PWAInstallBanner() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                {platform === "ios" ? "Instalar no iPhone/iPad" : "Instalar no Android"}
-              </h3>
+              <div className="flex items-center gap-3">
+                {logoUrl && <img src={logoUrl} alt={name} className="h-10 w-10 rounded-xl object-contain" />}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Instalar {name}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {platform === "ios" ? "iPhone / iPad" : "Android"}
+                  </p>
+                </div>
+              </div>
               <button onClick={() => setShowInstructions(false)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
 
+            <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: `${bgColor}10` }}>
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4" style={{ color: bgColor }} />
+                <p className="text-sm font-medium" style={{ color: bgColor }}>Por que instalar?</p>
+              </div>
+              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 pl-6 list-disc">
+                <li>Receba notificações de promoções exclusivas</li>
+                <li>Acesso rápido direto da tela inicial</li>
+                <li>Experiência de app nativo</li>
+              </ul>
+            </div>
+
             {platform === "ios" ? (
               <div className="space-y-4">
-                <Step number={1} icon={<Share className="h-5 w-5 text-blue-500" />}>
-                  Toque no botão <strong>Compartilhar</strong> <Share className="inline h-4 w-4 text-blue-500" /> na barra inferior do Safari
+                <Step number={1} color={bgColor} icon={<Share className="h-5 w-5" style={{ color: bgColor }} />}>
+                  Toque no botão <strong>Compartilhar</strong> <Share className="inline h-3.5 w-3.5" style={{ color: bgColor }} /> na barra do Safari
                 </Step>
-                <Step number={2} icon={<Plus className="h-5 w-5 text-green-500" />}>
-                  Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
+                <Step number={2} color={bgColor} icon={<Plus className="h-5 w-5" style={{ color: bgColor }} />}>
+                  Toque em <strong>"Adicionar à Tela de Início"</strong>
                 </Step>
-                <Step number={3} icon={<Download className="h-5 w-5 text-purple-500" />}>
-                  Toque em <strong>"Adicionar"</strong> no canto superior direito
+                <Step number={3} color={bgColor} icon={<Download className="h-5 w-5" style={{ color: bgColor }} />}>
+                  Confirme tocando em <strong>"Adicionar"</strong>
                 </Step>
-                <p className="text-xs text-gray-500 dark:text-gray-400 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
-                  ⚠️ Use o <strong>Safari</strong> para instalar. Outros navegadores não suportam essa função no iOS.
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
+                  ⚠️ Use o <strong>Safari</strong> para instalar. Outros navegadores não suportam no iOS.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <Step number={1} icon={<MoreVertical className="h-5 w-5 text-gray-600" />}>
-                  Toque no menu <strong>⋮</strong> (três pontos) no canto superior do navegador
+                <Step number={1} color={bgColor} icon={<MoreVertical className="h-5 w-5" style={{ color: bgColor }} />}>
+                  Toque no menu <strong>⋮</strong> (três pontos) no navegador
                 </Step>
-                <Step number={2} icon={<Download className="h-5 w-5 text-blue-500" />}>
+                <Step number={2} color={bgColor} icon={<Download className="h-5 w-5" style={{ color: bgColor }} />}>
                   Toque em <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>
                 </Step>
-                <Step number={3} icon={<Plus className="h-5 w-5 text-green-500" />}>
+                <Step number={3} color={bgColor} icon={<Plus className="h-5 w-5" style={{ color: bgColor }} />}>
                   Confirme tocando em <strong>"Instalar"</strong>
                 </Step>
               </div>
             )}
 
             <Button
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full text-white"
+              style={{ backgroundColor: bgColor }}
               onClick={() => setShowInstructions(false)}
             >
-              Entendi!
+              Entendi! 🎉
             </Button>
           </div>
         </div>
@@ -151,11 +186,11 @@ export function PWAInstallBanner() {
   );
 }
 
-function Step({ number, icon, children }: { number: number; icon: React.ReactNode; children: React.ReactNode }) {
+function Step({ number, icon, children, color }: { number: number; icon: React.ReactNode; children: React.ReactNode; color: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/50 shrink-0">
-        <span className="text-sm font-bold text-purple-700 dark:text-purple-300">{number}</span>
+      <div className="flex items-center justify-center h-8 w-8 rounded-full shrink-0" style={{ backgroundColor: `${color}15` }}>
+        <span className="text-sm font-bold" style={{ color }}>{number}</span>
       </div>
       <div className="flex items-start gap-2 pt-1">
         {icon}
@@ -163,4 +198,12 @@ function Step({ number, icon, children }: { number: number; icon: React.ReactNod
       </div>
     </div>
   );
+}
+
+function adjustColor(hex: string, amount: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, Math.min(255, ((num >> 16) & 0xff) + amount));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amount));
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }

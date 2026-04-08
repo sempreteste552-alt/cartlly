@@ -6,15 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Send, Loader2, CheckCircle, XCircle, Smartphone, Users } from "lucide-react";
+import { Bell, Send, Loader2, CheckCircle, XCircle, Smartphone, Users, Megaphone } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
+import { LockedFeature } from "@/components/LockedFeature";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
 export default function PushNotificationSettings() {
   const { user } = useAuth();
+  const { ctx } = useTenantContext();
   const { isSupported, isSubscribed, permission, subscribe, unsubscribe, loading } = usePushNotifications();
 
   const [testTitle, setTestTitle] = useState("🔔 Teste de Notificação");
@@ -22,7 +26,12 @@ export default function PushNotificationSettings() {
   const [testUrl, setTestUrl] = useState("/admin");
   const [sending, setSending] = useState(false);
 
-  // Fetch push subscriptions count
+  // Customer push state
+  const [custTitle, setCustTitle] = useState("🔥 Novidades na loja!");
+  const [custBody, setCustBody] = useState("Confira nossas promoções exclusivas!");
+  const [custUrl, setCustUrl] = useState("");
+  const [sendingCust, setSendingCust] = useState(false);
+
   const { data: subscriptions } = useQuery({
     queryKey: ["push-subscriptions", user?.id],
     queryFn: async () => {
@@ -36,7 +45,19 @@ export default function PushNotificationSettings() {
     enabled: !!user,
   });
 
-  // Fetch push logs
+  const { data: customerCount } = useQuery({
+    queryKey: ["customer-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("customers")
+        .select("id", { count: "exact", head: true })
+        .eq("store_user_id", user.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
   const { data: pushLogs } = useQuery({
     queryKey: ["push-logs", user?.id],
     queryFn: async () => {
@@ -76,6 +97,27 @@ export default function PushNotificationSettings() {
       toast.error("Erro ao enviar: " + (err.message || "Erro desconhecido"));
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleSendToCustomers = async () => {
+    if (!user) return;
+    if (!custTitle.trim()) return toast.error("Título é obrigatório");
+    setSendingCust(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-push-customers", {
+        body: {
+          title: custTitle,
+          body: custBody,
+          url: custUrl || "/",
+        },
+      });
+      if (error) throw error;
+      toast.success(`📢 Push enviado! ${data?.sent || 0} notificação(ões) entregue(s) para ${data?.customers_with_push || 0} cliente(s).`);
+    } catch (err: any) {
+      toast.error("Erro ao enviar: " + (err.message || "Erro desconhecido"));
+    } finally {
+      setSendingCust(false);
     }
   };
 
@@ -148,47 +190,29 @@ export default function PushNotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Test Push */}
+      {/* Test Push - for admin */}
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Enviar Teste</CardTitle>
+            <CardTitle className="text-lg">Enviar Teste (Meus Dispositivos)</CardTitle>
           </div>
-          <CardDescription>Envie uma notificação de teste para seus dispositivos</CardDescription>
+          <CardDescription>Envie uma notificação de teste para seus próprios dispositivos</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Título</Label>
-            <Input
-              value={testTitle}
-              onChange={(e) => setTestTitle(e.target.value)}
-              placeholder="Título da notificação"
-              maxLength={100}
-            />
+            <Input value={testTitle} onChange={(e) => setTestTitle(e.target.value)} placeholder="Título da notificação" maxLength={100} />
           </div>
           <div className="space-y-2">
             <Label>Mensagem</Label>
-            <Textarea
-              value={testBody}
-              onChange={(e) => setTestBody(e.target.value)}
-              placeholder="Corpo da notificação..."
-              rows={3}
-              maxLength={500}
-            />
+            <Textarea value={testBody} onChange={(e) => setTestBody(e.target.value)} placeholder="Corpo da notificação..." rows={2} maxLength={500} />
           </div>
           <div className="space-y-2">
-            <Label>URL ao clicar (opcional)</Label>
-            <Input
-              value={testUrl}
-              onChange={(e) => setTestUrl(e.target.value)}
-              placeholder="/admin"
-            />
+            <Label>URL ao clicar</Label>
+            <Input value={testUrl} onChange={(e) => setTestUrl(e.target.value)} placeholder="/admin" />
           </div>
-
-          {/* Preview */}
-          <div className="rounded-lg border border-border p-4 bg-muted/30">
-            <p className="text-xs text-muted-foreground mb-2">Preview</p>
+          <div className="rounded-lg border border-border p-3 bg-muted/30">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
                 <Bell className="h-5 w-5 text-primary" />
@@ -199,17 +223,63 @@ export default function PushNotificationSettings() {
               </div>
             </div>
           </div>
-
-          <Button
-            className="w-full"
-            onClick={handleSendTest}
-            disabled={sending || !testTitle.trim()}
-          >
+          <Button className="w-full" onClick={handleSendTest} disabled={sending || !testTitle.trim()}>
             {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-            Enviar Notificação de Teste
+            Enviar Teste
           </Button>
         </CardContent>
       </Card>
+
+      {/* Send Push to Customers - PRO+ only */}
+      <LockedFeature isLocked={!canAccess("push_customers", ctx)} featureName="Push para Clientes">
+        <Card className="border-border border-primary/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Enviar Push para Clientes</CardTitle>
+              <Badge variant="outline" className="text-xs ml-auto">PRO</Badge>
+            </div>
+            <CardDescription>
+              Envie notificações push para todos os clientes que instalaram o app da sua loja.
+              {customerCount != null && (
+                <span className="font-medium"> ({customerCount} clientes cadastrados)</span>
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={custTitle} onChange={(e) => setCustTitle(e.target.value)} placeholder="🔥 Super promoção!" maxLength={100} />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <Textarea value={custBody} onChange={(e) => setCustBody(e.target.value)} placeholder="Confira as novidades da nossa loja..." rows={3} maxLength={500} />
+            </div>
+            <div className="space-y-2">
+              <Label>URL ao clicar (opcional)</Label>
+              <Input value={custUrl} onChange={(e) => setCustUrl(e.target.value)} placeholder="Deixe vazio para ir à home da loja" />
+            </div>
+
+            <div className="rounded-lg border border-border p-3 bg-muted/30">
+              <p className="text-xs text-muted-foreground mb-2">Preview da notificação</p>
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                  <Megaphone className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{custTitle || "Título"}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{custBody || "Mensagem..."}</p>
+                </div>
+              </div>
+            </div>
+
+            <Button className="w-full" onClick={handleSendToCustomers} disabled={sendingCust || !custTitle.trim()}>
+              {sendingCust ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Megaphone className="h-4 w-4 mr-2" />}
+              Enviar para Todos os Clientes
+            </Button>
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Push Logs */}
       {pushLogs && pushLogs.length > 0 && (
