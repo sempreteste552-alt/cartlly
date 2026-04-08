@@ -1406,38 +1406,53 @@ export type Database = {
       push_logs: {
         Row: {
           body: string | null
+          clicked_at: string | null
           created_at: string
+          customer_id: string | null
+          delivered_at: string | null
           error_message: string | null
           event_type: string
           id: string
           payload: Json | null
           status: string
+          store_user_id: string | null
           subscription_id: string | null
           title: string
+          trigger_type: string | null
           user_id: string
         }
         Insert: {
           body?: string | null
+          clicked_at?: string | null
           created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           event_type?: string
           id?: string
           payload?: Json | null
           status?: string
+          store_user_id?: string | null
           subscription_id?: string | null
           title: string
+          trigger_type?: string | null
           user_id: string
         }
         Update: {
           body?: string | null
+          clicked_at?: string | null
           created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
           error_message?: string | null
           event_type?: string
           id?: string
           payload?: Json | null
           status?: string
+          store_user_id?: string | null
           subscription_id?: string | null
           title?: string
+          trigger_type?: string | null
           user_id?: string
         }
         Relationships: [

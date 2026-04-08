@@ -16,10 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Bot, ShoppingCart, Bell, History, Zap, RefreshCw, Send, Users, BellRing, Heart,
   Clock, TrendingUp, AlertTriangle, Settings2, Timer, CheckCircle2, XCircle, Eye,
-  Sparkles, MessageCircle, Gift, UserPlus, Hourglass
+  Sparkles, MessageCircle, Gift, UserPlus, Hourglass, BarChart3, MousePointerClick,
+  Target, Activity, Filter, ChevronDown, Search
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -66,6 +68,24 @@ interface AbandonedCart {
   reminder_sent_count: number;
   last_reminder_at: string | null;
   recovered: boolean;
+}
+
+interface PushLog {
+  id: string;
+  user_id: string;
+  store_user_id: string | null;
+  subscription_id: string | null;
+  event_type: string;
+  trigger_type: string | null;
+  title: string;
+  body: string | null;
+  payload: any;
+  status: string;
+  error_message: string | null;
+  customer_id: string | null;
+  clicked_at: string | null;
+  delivered_at: string | null;
+  created_at: string;
 }
 
 function LiveCountdown({ targetMinutes, abandonedAt }: { targetMinutes: number; abandonedAt: string }) {
@@ -133,6 +153,546 @@ function CartStatusBadge({ cart, waitMinutes }: { cart: AbandonedCart; waitMinut
         <Clock className="h-2.5 w-2.5 animate-pulse" /> Aguardando
       </Badge>
       <LiveCountdown targetMinutes={waitMinutes} abandonedAt={cart.abandoned_at} />
+    </div>
+  );
+}
+
+// === PUSH DASHBOARD COMPONENT ===
+function PushDashboard({ userId }: { userId: string }) {
+  const [filterTrigger, setFilterTrigger] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDate, setFilterDate] = useState<string>("7d");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLog, setSelectedLog] = useState<PushLog | null>(null);
+
+  const dateFilter = () => {
+    const now = new Date();
+    switch (filterDate) {
+      case "1d": return new Date(now.getTime() - 86400000).toISOString();
+      case "7d": return new Date(now.getTime() - 7 * 86400000).toISOString();
+      case "30d": return new Date(now.getTime() - 30 * 86400000).toISOString();
+      default: return new Date(now.getTime() - 7 * 86400000).toISOString();
+    }
+  };
+
+  const { data: pushLogs = [], isLoading } = useQuery({
+    queryKey: ["push-logs-dashboard", userId, filterDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("push_logs")
+        .select("*")
+        .or(`user_id.eq.${userId},store_user_id.eq.${userId}`)
+        .gte("created_at", dateFilter())
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data || []) as PushLog[];
+    },
+    enabled: !!userId,
+    refetchInterval: 30000,
+  });
+
+  // Customer names for logs
+  const customerIds = [...new Set(pushLogs.map(l => l.customer_id).filter(Boolean))];
+  const { data: logCustomerNames = {} } = useQuery({
+    queryKey: ["push-log-customers", customerIds.join(",")],
+    queryFn: async () => {
+      if (customerIds.length === 0) return {};
+      const { data } = await supabase
+        .from("customers").select("id, name, email").in("id", customerIds as string[]);
+      const map: Record<string, { name: string; email: string }> = {};
+      (data || []).forEach((c: any) => { map[c.id] = { name: c.name, email: c.email }; });
+      return map;
+    },
+    enabled: customerIds.length > 0,
+  });
+
+  // Filtered logs
+  const filtered = pushLogs.filter(log => {
+    if (filterTrigger !== "all" && log.trigger_type !== filterTrigger && log.event_type !== filterTrigger) return false;
+    if (filterStatus !== "all" && log.status !== filterStatus) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      return (
+        log.title?.toLowerCase().includes(term) ||
+        log.body?.toLowerCase().includes(term) ||
+        log.error_message?.toLowerCase().includes(term)
+      );
+    }
+    return true;
+  });
+
+  // Metrics
+  const totalSent = pushLogs.filter(l => l.status === "sent" || l.status === "delivered").length;
+  const totalDelivered = pushLogs.filter(l => l.delivered_at || l.status === "delivered").length;
+  const totalClicked = pushLogs.filter(l => l.clicked_at).length;
+  const totalFailed = pushLogs.filter(l => l.status === "failed" || l.status === "error").length;
+  const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
+  const ctr = totalSent > 0 ? ((totalClicked / totalSent) * 100).toFixed(1) : "0.0";
+
+  // By trigger type
+  const byTrigger = pushLogs.reduce((acc, log) => {
+    const key = log.trigger_type || log.event_type || "other";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const triggerLabel = (t: string) => ({
+    abandoned_cart: "🛒 Carrinho",
+    daily_promo: "📢 Promoção",
+    wishlist_reminder: "💜 Wishlist",
+    new_customer: "🎉 Boas-vindas",
+    review_thankyou: "⭐ Avaliação",
+    new_product: "🆕 Novo Produto",
+    new_coupon: "🎟️ Cupom",
+    manual: "📨 Manual",
+    admin_message: "📋 Admin",
+  }[t] || t);
+
+  return (
+    <div className="space-y-4">
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <Send className="h-3.5 w-3.5" /> Enviados
+            </div>
+            <p className="text-2xl font-bold">{totalSent}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Entregues
+            </div>
+            <p className="text-2xl font-bold">{totalDelivered}</p>
+            <p className="text-[10px] text-muted-foreground">{deliveryRate}% taxa</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <MousePointerClick className="h-3.5 w-3.5" /> Cliques
+            </div>
+            <p className="text-2xl font-bold">{totalClicked}</p>
+            <p className="text-[10px] text-muted-foreground">{ctr}% CTR</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <XCircle className="h-3.5 w-3.5" /> Falhas
+            </div>
+            <p className="text-2xl font-bold text-destructive">{totalFailed}</p>
+          </CardContent>
+        </Card>
+        <Card className="col-span-2">
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <Target className="h-3.5 w-3.5" /> Por Tipo
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {Object.entries(byTrigger).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([key, count]) => (
+                <Badge key={key} variant="outline" className="text-[10px] gap-1">
+                  {triggerLabel(key)} <span className="font-bold">{count}</span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título, mensagem..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+        <Select value={filterTrigger} onValueChange={setFilterTrigger}>
+          <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Tipo" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            <SelectItem value="abandoned_cart">🛒 Carrinho</SelectItem>
+            <SelectItem value="daily_promo">📢 Promoção</SelectItem>
+            <SelectItem value="new_customer">🎉 Boas-vindas</SelectItem>
+            <SelectItem value="new_product">🆕 Novo Produto</SelectItem>
+            <SelectItem value="new_coupon">🎟️ Cupom</SelectItem>
+            <SelectItem value="review_thankyou">⭐ Avaliação</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="sent">Enviados</SelectItem>
+            <SelectItem value="delivered">Entregues</SelectItem>
+            <SelectItem value="failed">Falhas</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterDate} onValueChange={setFilterDate}>
+          <SelectTrigger className="w-[120px] h-9"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1d">Hoje</SelectItem>
+            <SelectItem value="7d">7 dias</SelectItem>
+            <SelectItem value="30d">30 dias</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Logs Table */}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <p className="text-center text-muted-foreground py-8">Carregando...</p>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-12 space-y-2">
+              <Bell className="h-10 w-10 mx-auto text-muted-foreground/30" />
+              <p className="text-muted-foreground">Nenhuma notificação encontrada.</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-[500px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Título / Mensagem</TableHead>
+                    <TableHead>Destinatário</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((log) => {
+                    const customer = log.customer_id ? (logCustomerNames as any)[log.customer_id] : null;
+                    return (
+                      <TableRow key={log.id} className={log.status === "failed" ? "bg-destructive/5" : log.clicked_at ? "bg-green-500/5" : ""}>
+                        <TableCell className="text-xs whitespace-nowrap">
+                          {format(new Date(log.created_at), "dd/MM HH:mm")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px]">
+                            {triggerLabel(log.trigger_type || log.event_type)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[250px]">
+                          <p className="text-sm font-medium truncate">{log.title}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{log.body || "—"}</p>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {customer ? (
+                            <div>
+                              <p className="font-medium">{customer.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{customer.email}</p>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-0.5">
+                            <Badge
+                              variant={log.status === "sent" || log.status === "delivered" ? "default" : "destructive"}
+                              className="text-[10px] gap-1 w-fit"
+                            >
+                              {log.status === "sent" || log.status === "delivered" ? (
+                                <CheckCircle2 className="h-2.5 w-2.5" />
+                              ) : (
+                                <XCircle className="h-2.5 w-2.5" />
+                              )}
+                              {log.status}
+                            </Badge>
+                            {log.clicked_at && (
+                              <Badge variant="secondary" className="text-[10px] gap-1 w-fit">
+                                <MousePointerClick className="h-2.5 w-2.5" /> Clicou
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedLog(log)}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">Detalhes da Notificação</DialogTitle>
+            <DialogDescription>Informações completas sobre o envio</DialogDescription>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                <p className="font-semibold text-sm">{selectedLog.title}</p>
+                <p className="text-sm text-muted-foreground">{selectedLog.body || "Sem corpo"}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground text-xs">Tipo</span>
+                  <p className="font-medium">{triggerLabel(selectedLog.trigger_type || selectedLog.event_type)}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Status</span>
+                  <p>
+                    <Badge variant={selectedLog.status === "sent" || selectedLog.status === "delivered" ? "default" : "destructive"}>
+                      {selectedLog.status}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Enviado em</span>
+                  <p className="font-medium">{format(new Date(selectedLog.created_at), "dd/MM/yyyy HH:mm:ss")}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Entregue em</span>
+                  <p className="font-medium">
+                    {selectedLog.delivered_at ? format(new Date(selectedLog.delivered_at), "dd/MM/yyyy HH:mm:ss") : "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Clicado em</span>
+                  <p className="font-medium">
+                    {selectedLog.clicked_at ? format(new Date(selectedLog.clicked_at), "dd/MM/yyyy HH:mm:ss") : "—"}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs">Destinatário</span>
+                  <p className="font-medium">
+                    {selectedLog.customer_id && (logCustomerNames as any)[selectedLog.customer_id]
+                      ? (logCustomerNames as any)[selectedLog.customer_id].name
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+              {selectedLog.error_message && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                  <p className="text-xs font-medium text-destructive mb-1">Erro</p>
+                  <p className="text-xs text-destructive/80 break-all">{selectedLog.error_message}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// === RETARGETING DASHBOARD COMPONENT ===
+function RetargetingDashboard({ userId }: { userId: string }) {
+  const { data: sequences = [] } = useQuery({
+    queryKey: ["retargeting-sequences", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("retargeting_sequences")
+        .select("*")
+        .eq("store_user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const { data: customerStates = [] } = useQuery({
+    queryKey: ["customer-states", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_states")
+        .select("*")
+        .eq("store_user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const activeSequences = sequences.filter(s => s.status === "active").length;
+  const completedSequences = sequences.filter(s => s.status === "completed").length;
+  const highIntent = customerStates.filter(s => s.intent_level === "high").length;
+  const mediumIntent = customerStates.filter(s => s.intent_level === "medium").length;
+
+  const intentLabel = (level: string) => ({
+    high: "🔥 Alto",
+    medium: "🟡 Médio",
+    low: "⚪ Baixo",
+  }[level] || level);
+
+  const stateLabel = (state: string) => ({
+    browsing: "Navegando",
+    cart_added: "Carrinho",
+    checkout_started: "Checkout",
+    purchased: "Comprou",
+    inactive: "Inativo",
+  }[state] || state);
+
+  return (
+    <div className="space-y-4">
+      {/* Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <Activity className="h-3.5 w-3.5" /> Sequências Ativas
+            </div>
+            <p className="text-2xl font-bold">{activeSequences}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Completadas
+            </div>
+            <p className="text-2xl font-bold text-green-600">{completedSequences}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <TrendingUp className="h-3.5 w-3.5" /> Alta Intenção
+            </div>
+            <p className="text-2xl font-bold text-primary">{highIntent}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium mb-1">
+              <Target className="h-3.5 w-3.5" /> Média Intenção
+            </div>
+            <p className="text-2xl font-bold">{mediumIntent}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Customer Intent States */}
+      {customerStates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" /> Intenção de Compra dos Clientes
+            </CardTitle>
+            <CardDescription>Detecção automática baseada em comportamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[300px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Intenção</TableHead>
+                    <TableHead>Último Produto</TableHead>
+                    <TableHead>Última Atividade</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerStates.map((state) => (
+                    <TableRow key={state.id}>
+                      <TableCell className="text-xs font-medium">{state.customer_id?.slice(0, 8)}...</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px]">{stateLabel(state.state)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={state.intent_level === "high" ? "default" : state.intent_level === "medium" ? "secondary" : "outline"}
+                          className="text-[10px]"
+                        >
+                          {intentLabel(state.intent_level)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs truncate max-w-[120px]">{state.last_product_name || "—"}</TableCell>
+                      <TableCell className="text-xs">
+                        {formatDistanceToNow(new Date(state.last_activity_at), { locale: ptBR, addSuffix: true })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Active Sequences */}
+      {sequences.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" /> Sequências de Retargeting
+            </CardTitle>
+            <CardDescription>Fluxos automáticos de reengajamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[300px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Etapa</TableHead>
+                    <TableHead>Pushes Enviados</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Próximo Envio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sequences.map((seq) => (
+                    <TableRow key={seq.id}>
+                      <TableCell className="text-xs font-medium">{seq.customer_id?.slice(0, 8)}...</TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium">{seq.current_step}/{seq.max_steps}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px]">{seq.pushes_sent}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={seq.status === "active" ? "default" : seq.status === "completed" ? "secondary" : "outline"}
+                          className="text-[10px]"
+                        >
+                          {seq.status === "active" ? "Ativo" : seq.status === "completed" ? "Completo" : seq.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {seq.next_push_at ? format(new Date(seq.next_push_at), "dd/MM HH:mm") : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {customerStates.length === 0 && sequences.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center space-y-2">
+            <Target className="h-10 w-10 mx-auto text-muted-foreground/30" />
+            <p className="text-muted-foreground">O sistema de retargeting será ativado automaticamente quando seus clientes navegarem na loja.</p>
+            <p className="text-xs text-muted-foreground">A IA detecta intenção de compra e cria sequências personalizadas de push.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -244,7 +804,6 @@ export default function Automacao() {
 
   const totalAbandoned = abandonedCarts.length;
   const totalAbandonedValue = abandonedCarts.reduce((s, c) => s + (c.total || 0), 0);
-  const pendingReminder = abandonedCarts.filter(c => c.reminder_sent_count === 0).length;
   const activelyTracking = abandonedCarts.filter(c => {
     const mins = (Date.now() - new Date(c.abandoned_at).getTime()) / 60000;
     return mins < waitMinutes && c.reminder_sent_count === 0;
@@ -311,6 +870,7 @@ export default function Automacao() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["automation-executions"] });
       queryClient.invalidateQueries({ queryKey: ["abandoned-carts-detail"] });
+      queryClient.invalidateQueries({ queryKey: ["push-logs-dashboard"] });
       toast.success(`✅ IA executou! Enviados: ${data?.sent || 0}, Processados: ${data?.processed || 0}`);
     },
     onError: (err: any) => {
@@ -329,6 +889,7 @@ export default function Automacao() {
     review_thankyou: "⭐ Avaliação",
     restock: "📦 Reposição",
     new_product: "🆕 Novo Produto",
+    new_coupon: "🎟️ Novo Cupom",
   }[t] || t);
 
   const triggerIcon = (t: string) => {
@@ -364,6 +925,7 @@ export default function Automacao() {
           <Button size="sm" variant="outline" onClick={() => {
             queryClient.invalidateQueries({ queryKey: ["abandoned-carts-detail"] });
             queryClient.invalidateQueries({ queryKey: ["automation-executions"] });
+            queryClient.invalidateQueries({ queryKey: ["push-logs-dashboard"] });
           }}>
             <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
           </Button>
@@ -471,12 +1033,24 @@ export default function Automacao() {
         </Card>
       </div>
 
-      <Tabs defaultValue="carts" className="space-y-4">
+      <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="dashboard" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Dashboard Push</TabsTrigger>
+          <TabsTrigger value="retargeting" className="gap-1.5"><Target className="h-4 w-4" /> Retargeting</TabsTrigger>
           <TabsTrigger value="carts" className="gap-1.5"><ShoppingCart className="h-4 w-4" /> Carrinhos ({totalAbandoned})</TabsTrigger>
           <TabsTrigger value="rules" className="gap-1.5"><Settings2 className="h-4 w-4" /> Configuração</TabsTrigger>
           <TabsTrigger value="history" className="gap-1.5"><History className="h-4 w-4" /> Histórico ({executions.length})</TabsTrigger>
         </TabsList>
+
+        {/* === PUSH DASHBOARD === */}
+        <TabsContent value="dashboard">
+          {user && <PushDashboard userId={user.id} />}
+        </TabsContent>
+
+        {/* === RETARGETING === */}
+        <TabsContent value="retargeting">
+          {user && <RetargetingDashboard userId={user.id} />}
+        </TabsContent>
 
         {/* === CARRINHOS ABANDONADOS === */}
         <TabsContent value="carts">
