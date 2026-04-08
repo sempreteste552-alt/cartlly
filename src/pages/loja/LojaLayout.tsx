@@ -231,11 +231,15 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
       <div 
-        className="min-h-screen pb-16 md:pb-0 transition-colors"
-        style={{ 
-          backgroundColor: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--background))' : (themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff"),
-          color: themeConfig?.theme_mode === 'dark' ? 'hsl(var(--foreground))' : (themeConfig?.text_color || "#000000")
-        }}
+        className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
+        style={
+          (themeConfig?.theme_mode === 'dark' || storeDark)
+            ? undefined
+            : {
+                backgroundColor: themeConfig?.background_color || (settings as any).page_bg_color || undefined,
+                color: themeConfig?.text_color || undefined,
+              }
+        }
       >
         {/* PWA Install Banner — very top */}
         <PWAInstallBanner 
