@@ -338,6 +338,16 @@ export default function LojaProduto() {
           </Carousel>
         </div>
       )}
+      {cartNotif.notification && (
+        <CartNotification
+          productName={cartNotif.notification.productName}
+          productImage={cartNotif.notification.productImage}
+          basePath={basePath}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+          onClose={cartNotif.hide}
+        />
+      )}
     </div>
   );
 }

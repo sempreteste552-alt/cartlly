@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
@@ -15,6 +15,7 @@ import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
+import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 
 export default function LojaHome() {
