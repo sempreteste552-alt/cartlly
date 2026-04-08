@@ -206,7 +206,15 @@ export default function LojaLayout() {
     );
   }
 
-  // Store blocked by super admin
+  // Redirect slug access to custom domain when domain is verified
+  useEffect(() => {
+    if (slug && settings?.custom_domain && settings?.domain_status === "verified" && isPlatformHost(hostname)) {
+      const targetUrl = `https://${settings.custom_domain}${location.pathname.replace(`/loja/${slug}`, "") || "/"}`;
+      window.location.replace(targetUrl);
+    }
+  }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
+
+
   if (settings && (settings as any).store_blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
