@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 export default function LojaProduto() {
   const { id, slug } = useParams();
-  const { cart, settings, storeUserId } = useLojaContext();
+  const { cart, settings, storeUserId, openCart } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
