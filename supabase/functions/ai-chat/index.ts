@@ -83,7 +83,7 @@ ANÁLISE DE IMAGENS:
 - Se receber um print de configuração de domínio (Hostinger, GoDaddy, Cloudflare, etc.), analise se os registros DNS estão corretos: A record apontando para 185.158.133.1 e TXT record _lovable com o valor de verificação.
 - Se receber uma foto de produto, avalie qualidade, iluminação, composição e sugira melhorias.
 - Se receber um print da loja, analise layout, UX e sugira ajustes.
-- Sempre descreva o que vê na imagem e dê orientações práticas.`;`;
+- Sempre descreva o que vê na imagem e dê orientações práticas.`;
 
     // Check if any message contains images (multimodal)
     const hasImages = messages.some((m: any) => Array.isArray(m.content) && m.content.some((p: any) => p.type === "image_url"));
