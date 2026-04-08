@@ -5,6 +5,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const TARGET_IP = "185.158.133.1";
+
+function sanitizeDomain(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "");
+}
+
+async function resolveDns(name: string, type: string) {
+  const response = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(name)}&type=${type}`);
+  return response.json();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -12,27 +28,35 @@ Deno.serve(async (req) => {
 
   try {
     const { settingsId, domain } = await req.json();
-    if (!settingsId || !domain) {
+    const requestedDomain = sanitizeDomain(domain || "");
+
+    if (!settingsId || !requestedDomain) {
       return new Response(JSON.stringify({ error: "Missing settingsId or domain" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Validate domain format
-    const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
-    if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(cleanDomain)) {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(requestedDomain)) {
       return new Response(JSON.stringify({ error: "Invalid domain format" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const apexDomain = requestedDomain.replace(/^www\./, "");
+    const aHosts = Array.from(new Set([requestedDomain, apexDomain].filter(Boolean)));
+    const txtHosts = Array.from(
+      new Set([
+        `_lovable.${requestedDomain}`,
+        `_lovable.${apexDomain}`,
+      ].filter(Boolean)),
+    );
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get the store settings
     const { data: settings, error: settingsError } = await supabase
       .from("store_settings")
       .select("id, custom_domain, user_id")
@@ -52,8 +76,9 @@ Deno.serve(async (req) => {
     let txtRecordFound = false;
     let nameservers: string[] = [];
     let detectedProvider = "other";
+    const checkedAHosts: Array<{ host: string; records: string[] }> = [];
+    const checkedTxtHosts: Array<{ host: string; records: string[] }> = [];
 
-    // Provider detection map
     const providerMap: Record<string, string[]> = {
       hostinger: ["hostinger", "dns-parking"],
       godaddy: ["godaddy", "domaincontrol"],
@@ -62,10 +87,8 @@ Deno.serve(async (req) => {
       namecheap: ["namecheap", "registrar-servers"],
     };
 
-    // NS lookup for provider detection
     try {
-      const nsRes = await fetch(`https://dns.google/resolve?name=${cleanDomain}&type=NS`);
-      const nsData = await nsRes.json();
+      const nsData = await resolveDns(apexDomain, "NS");
       if (nsData.Answer) {
         nameservers = nsData.Answer.map((r: any) => (r.data || "").toLowerCase());
         for (const [provider, patterns] of Object.entries(providerMap)) {
@@ -79,41 +102,41 @@ Deno.serve(async (req) => {
       console.error("NS lookup error:", e);
     }
 
-    // Verify A record
-    try {
-      const aResponse = await fetch(`https://dns.google/resolve?name=${cleanDomain}&type=A`);
-      const aData = await aResponse.json();
-      if (aData.Answer) {
-        aRecordFound = aData.Answer.some((r: any) => r.data === "185.158.133.1");
+    for (const host of aHosts) {
+      try {
+        const aData = await resolveDns(host, "A");
+        const records = (aData.Answer || []).map((r: any) => String(r.data || ""));
+        checkedAHosts.push({ host, records });
+        if (records.some((record) => record === TARGET_IP)) {
+          aRecordFound = true;
+        }
+      } catch (e) {
+        console.error(`A record check error for ${host}:`, e);
       }
-    } catch (e) {
-      console.error("A record check error:", e);
     }
 
-    // Verify TXT record
-    try {
-      const txtResponse = await fetch(`https://dns.google/resolve?name=_lovable.${cleanDomain}&type=TXT`);
-      const txtData = await txtResponse.json();
-      if (txtData.Answer) {
-        txtRecordFound = txtData.Answer.some((r: any) => {
-          const val = (r.data || "").replace(/"/g, "").trim();
-          return val === expectedTxt;
-        });
+    for (const host of txtHosts) {
+      try {
+        const txtData = await resolveDns(host, "TXT");
+        const records = (txtData.Answer || []).map((r: any) => String(r.data || "").replace(/"/g, "").trim());
+        checkedTxtHosts.push({ host, records });
+        if (records.some((record) => record === expectedTxt)) {
+          txtRecordFound = true;
+        }
+      } catch (e) {
+        console.error(`TXT record check error for ${host}:`, e);
       }
-    } catch (e) {
-      console.error("TXT record check error:", e);
     }
 
     const dnsVerified = aRecordFound && txtRecordFound;
     const newStatus = dnsVerified ? "verified" : (aRecordFound || txtRecordFound ? "pending" : "failed");
 
-    // Update domain status
     const { error: updateError } = await supabase
       .from("store_settings")
       .update({
         domain_status: newStatus,
         domain_last_check: new Date().toISOString(),
-        custom_domain: domain,
+        custom_domain: requestedDomain,
       })
       .eq("id", settingsId);
 
@@ -126,11 +149,13 @@ Deno.serve(async (req) => {
         status: newStatus,
         aRecord: aRecordFound,
         txtRecord: txtRecordFound,
-        domain: cleanDomain,
+        domain: requestedDomain,
         provider: detectedProvider,
         nameservers,
+        checkedAHosts,
+        checkedTxtHosts,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Error:", error);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,9 +83,18 @@ function detectProviderFromNS(nameservers: string[]): string {
   return "other";
 }
 
+function normalizeDomain(domain: string): string {
+  return domain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "");
+}
+
 function isValidDomain(domain: string): boolean {
-  const cleaned = domain.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
-  return /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}(\.[a-zA-Z]{2,})?$/.test(cleaned);
+  const cleaned = normalizeDomain(domain);
+  return /^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(cleaned);
 }
 
 export default function DomainConnector({
@@ -96,6 +106,7 @@ export default function DomainConnector({
   onDomainChange,
   onSave,
 }: DomainConnectorProps) {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<"input" | "detecting" | "instructions" | "verifying" | "done">(
     domainStatus === "verified" ? "done" : currentDomain ? "instructions" : "input"
   );
@@ -114,9 +125,9 @@ export default function DomainConnector({
     100;
 
   const handleProceed = async () => {
-    const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
+    const cleanDomain = normalizeDomain(domain);
     if (!isValidDomain(cleanDomain)) {
-      toast.error("Formato de domínio inválido. Ex: minhaloja.com.br");
+      toast.error("Formato de domínio inválido. Ex: minhaloja.com.br ou www.minhaloja.com.br");
       return;
     }
 
@@ -125,8 +136,8 @@ export default function DomainConnector({
     setStep("detecting");
 
     try {
-      // Detect provider via NS lookup using Google DNS
-      const nsRes = await fetch(`https://dns.google/resolve?name=${cleanDomain}&type=NS`);
+      const providerLookupDomain = cleanDomain.replace(/^www\./, "");
+      const nsRes = await fetch(`https://dns.google/resolve?name=${providerLookupDomain}&type=NS`);
       const nsData = await nsRes.json();
       const nsList = nsData.Answer?.map((r: any) => r.data) || [];
       setNameservers(nsList);
@@ -144,14 +155,26 @@ export default function DomainConnector({
       toast.error("Salve as configurações primeiro antes de verificar");
       return;
     }
+
+    const domainToVerify = normalizeDomain(domain);
+    if (!isValidDomain(domainToVerify)) {
+      toast.error("Informe um domínio válido antes de verificar");
+      return;
+    }
+
     setStep("verifying");
     setChecking(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-domain", {
-        body: { settingsId, domain },
+        body: { settingsId, domain: domainToVerify },
       });
       if (error) throw error;
+
+      setDomain(data?.domain || domainToVerify);
+      onDomainChange(data?.domain || domainToVerify);
       setVerifyResult(data);
+      await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+
       if (data?.status === "verified") {
         setStep("done");
         toast.success("Domínio verificado com sucesso! ✅");
@@ -160,7 +183,7 @@ export default function DomainConnector({
         toast.info("DNS parcialmente configurado. Continue com os registros faltantes.");
       } else {
         setStep("instructions");
-        toast.error("DNS ainda não apontado. Verifique os registros.");
+        toast.error("DNS ainda não apontado corretamente. Verifique os registros mostrados.");
       }
     } catch (err: any) {
       setStep("instructions");
