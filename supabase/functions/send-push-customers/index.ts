@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       (s: any) => !s.store_user_id || s.store_user_id === user.id
     );
 
-    const uniqueUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
+    const uniqueUserIds = [...new Set(validSubs.map((s: any) => s.user_id))];
 
     let sent = 0;
     let removed = 0;
