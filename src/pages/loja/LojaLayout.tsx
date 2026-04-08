@@ -640,7 +640,7 @@ export default function LojaLayout() {
             </div>
             {!isAdminPreview && (
               <button
-                onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+                onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
                 className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
                 style={{ color: user ? primaryColor : undefined }}
               >
