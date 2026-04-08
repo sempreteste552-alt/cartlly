@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
 import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
+import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
 import { toast } from "sonner";
 
 export default function LojaHome() {
@@ -103,8 +104,12 @@ export default function LojaHome() {
                 <CarouselPrevious className="left-2" />
                 <CarouselNext className="right-2" />
               </Carousel>
-            </div>
+          </div>
           )}
+          {/* Highlights below banner */}
+          <div className="mt-4">
+            <HighlightsSection storeUserId={storeUserId} primaryColor={primaryColor} />
+          </div>
         </>
       )}
 
