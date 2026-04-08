@@ -44,6 +44,15 @@ function saveAISettings(settings: { name: string; avatarUrl: string }) {
   localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(settings));
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 // Strip action blocks from visible text
 function cleanContent(content: string): string {
   return content
