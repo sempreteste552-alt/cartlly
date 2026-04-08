@@ -143,6 +143,35 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_wishlist: {
         Row: {
           created_at: string

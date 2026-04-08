@@ -9,7 +9,7 @@ import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicSto
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +19,8 @@ import { StoreMarquee } from "@/components/StoreMarquee";
 import { StorePushOptIn } from "@/components/storefront/StorePushOptIn";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
+import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
+import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
@@ -61,6 +63,7 @@ export default function LojaLayout() {
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
+  const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
@@ -346,6 +349,7 @@ export default function LojaLayout() {
             </div>
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+            <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             {!isAdminPreview && (
@@ -615,14 +619,9 @@ export default function LojaLayout() {
               </div>
               <span className="text-[10px] mt-0.5 font-medium">Carrinho</span>
             </Link>
-            <Link
-              to={`${basePath}/rastreio`}
-              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isRastreio ? primaryColor : undefined }}
-            >
-              <Truck className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
-            </Link>
+            <div className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-muted-foreground">
+              <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} isMobileNav />
+            </div>
             {!isAdminPreview && (
               <button
                 onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
