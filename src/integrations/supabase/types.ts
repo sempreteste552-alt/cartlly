@@ -1998,6 +1998,7 @@ export type Database = {
           admin_accent_color: string | null
           admin_blocked: boolean | null
           admin_primary_color: string | null
+          banner_mobile_format: string | null
           button_color: string | null
           button_text_color: string | null
           created_at: string | null
@@ -2008,6 +2009,7 @@ export type Database = {
           footer_bg_color: string | null
           footer_text_color: string | null
           gateway_environment: string | null
+          gateway_public_key: string | null
           google_maps_url: string | null
           header_bg_color: string | null
           header_text_color: string | null
@@ -2062,6 +2064,7 @@ export type Database = {
           admin_accent_color?: string | null
           admin_blocked?: boolean | null
           admin_primary_color?: string | null
+          banner_mobile_format?: string | null
           button_color?: string | null
           button_text_color?: string | null
           created_at?: string | null
@@ -2072,6 +2075,7 @@ export type Database = {
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
+          gateway_public_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
@@ -2126,6 +2130,7 @@ export type Database = {
           admin_accent_color?: string | null
           admin_blocked?: boolean | null
           admin_primary_color?: string | null
+          banner_mobile_format?: string | null
           button_color?: string | null
           button_text_color?: string | null
           created_at?: string | null
@@ -2136,6 +2141,7 @@ export type Database = {
           footer_bg_color?: string | null
           footer_text_color?: string | null
           gateway_environment?: string | null
+          gateway_public_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string | null
           header_text_color?: string | null
