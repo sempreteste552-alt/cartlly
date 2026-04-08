@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
-    // Optional: trigger_type from body (abandoned_cart, daily_promo, new_customer)
     let triggerType = "abandoned_cart";
     let manualStoreUserId: string | null = null;
     let requestBody: any = {};
@@ -26,31 +25,47 @@ Deno.serve(async (req) => {
     if (triggerType === "new_customer") {
       return await handleNewCustomer(supabase, supabaseUrl, lovableApiKey, manualStoreUserId);
     }
-
     if (triggerType === "daily_promo") {
       return await handleDailyPromo(supabase, supabaseUrl, lovableApiKey, manualStoreUserId);
     }
-
     if (triggerType === "review_thankyou") {
       return await handleReviewThankyou(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
+    if (triggerType === "new_product") {
+      return await handleNewProduct(supabase, supabaseUrl, lovableApiKey, requestBody);
+    }
 
     // === ABANDONED CART RECOVERY ===
-    const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // Fetch the store's abandoned_cart rule to get timing settings
+    let ruleQuery = supabase
+      .from("automation_rules")
+      .select("user_id, wait_minutes, cooldown_minutes, max_sends_per_day, enabled, offer_discount, discount_code, discount_percentage")
+      .eq("trigger_type", "abandoned_cart")
+      .eq("enabled", true);
+
+    if (manualStoreUserId) ruleQuery = ruleQuery.eq("user_id", manualStoreUserId);
+
+    const { data: cartRules } = await ruleQuery;
+    if (!cartRules || cartRules.length === 0) {
+      return json({ processed: 0, message: "No abandoned_cart rules enabled" });
+    }
+
+    // Build a map of store settings
+    const ruleMap = new Map(cartRules.map((r: any) => [r.user_id, r]));
+    const storeIds = cartRules.map((r: any) => r.user_id);
+
+    // Use shortest wait_minutes across stores for initial query, but filter per-store later
+    const minWait = Math.min(...cartRules.map((r: any) => r.wait_minutes || 20));
+    const cutoff = new Date(Date.now() - minWait * 60 * 1000).toISOString();
 
     let query = supabase
       .from("abandoned_carts")
       .select("*")
       .eq("recovered", false)
-      .lt("abandoned_at", twentyMinAgo)
-      .or(`last_reminder_at.is.null,last_reminder_at.lt.${oneHourAgo}`)
+      .lt("abandoned_at", cutoff)
       .lt("reminder_sent_count", 5)
-      .not("customer_id", "is", null);
-
-    if (manualStoreUserId) {
-      query = query.eq("user_id", manualStoreUserId);
-    }
+      .not("customer_id", "is", null)
+      .in("user_id", storeIds);
 
     const { data: carts, error: cartErr } = await query;
 
@@ -71,9 +86,25 @@ Deno.serve(async (req) => {
       .in("id", customerIds);
     const customerMap = new Map((customers || []).map(c => [c.id, c]));
 
-    // Fetch store settings for all relevant stores
     const storeUserIds = [...new Set(carts.map(c => c.user_id))];
     const storeMap = await getStoreMap(supabase, storeUserIds);
+
+    // Check today's executions for dedup
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { data: todayExecs } = await supabase
+      .from("automation_executions")
+      .select("customer_id, message_text, sent_at")
+      .eq("trigger_type", "abandoned_cart")
+      .gte("sent_at", todayStart.toISOString())
+      .in("user_id", storeIds);
+
+    const todayMessages = new Set((todayExecs || []).map((e: any) => `${e.customer_id}:${e.message_text?.slice(0, 60)}`));
+    const todayCountByCustomer = new Map<string, number>();
+    (todayExecs || []).forEach((e: any) => {
+      const cid = e.customer_id || "";
+      todayCountByCustomer.set(cid, (todayCountByCustomer.get(cid) || 0) + 1);
+    });
 
     let sent = 0;
     let skipped = 0;
@@ -85,11 +116,32 @@ Deno.serve(async (req) => {
         const customer = customerMap.get(cart.customer_id);
         if (!customer?.auth_user_id || !customer?.store_user_id) { skipped++; continue; }
 
+        const rule = ruleMap.get(cart.user_id);
+        if (!rule) { skipped++; continue; }
+
+        // Check per-store wait time
+        const waitMs = (rule.wait_minutes || 20) * 60 * 1000;
+        if (Date.now() - new Date(cart.abandoned_at).getTime() < waitMs) { skipped++; continue; }
+
+        // Check cooldown
+        const cooldownMs = (rule.cooldown_minutes || 60) * 60 * 1000;
+        if (cart.last_reminder_at && (Date.now() - new Date(cart.last_reminder_at).getTime()) < cooldownMs) { skipped++; continue; }
+
+        // Check max sends per day for this customer
+        const maxSends = rule.max_sends_per_day || 5;
+        const custTodayCount = todayCountByCustomer.get(cart.customer_id) || 0;
+        if (custTodayCount >= maxSends) { skipped++; continue; }
+
         const store = storeMap.get(cart.user_id);
         const storeName = store?.store_name || "nossa loja";
         const items = Array.isArray(cart.items) ? cart.items : [];
         const itemNames = items.slice(0, 3).map((i: any) => i.name || "Produto").join(", ");
         const totalValue = cart.total || items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 1)), 0);
+
+        // Discount context
+        const discountCtx = rule.offer_discount && rule.discount_code
+          ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
+          : { hasDiscount: false, code: "", percentage: 0 };
 
         let title = "🛒 Seus itens estão te esperando!";
         let body = `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!`;
@@ -106,8 +158,16 @@ Deno.serve(async (req) => {
               reminderCount: cart.reminder_sent_count,
               dayOfWeek,
               hour,
+              ...discountCtx,
             });
-            if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
+            if (aiMsg) {
+              // Dedup: check if same message already sent today
+              const dedupKey = `${cart.customer_id}:${aiMsg.title} — ${aiMsg.body}`.slice(0, 60 + cart.customer_id.length + 1);
+              if (!todayMessages.has(dedupKey.slice(0, `${cart.customer_id}:`.length + 60))) {
+                title = aiMsg.title;
+                body = aiMsg.body;
+              }
+            }
           } catch (e) { console.error("AI error:", e); }
         }
 
@@ -156,7 +216,6 @@ Deno.serve(async (req) => {
 
 // === NEW CUSTOMER WELCOME ===
 async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, storeUserId: string | null) {
-  // Find customers created in the last 10 minutes that haven't received a welcome push
   const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
   let query = supabase
@@ -171,7 +230,6 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
     return json({ processed: 0, message: "No new customers" });
   }
 
-  // Check which already got a welcome push
   const { data: existingExecs } = await supabase
     .from("automation_executions")
     .select("customer_id")
@@ -240,7 +298,6 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
 
 // === DAILY PROMO ===
 async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, storeUserId: string | null) {
-  // Get stores with daily_promo rule enabled
   let rulesQuery = supabase
     .from("automation_rules")
     .select("user_id")
@@ -255,7 +312,6 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
   const storeIds = [...new Set(rules.map((r: any) => r.user_id))];
   const storeMap = await getStoreMap(supabase, storeIds);
 
-  // Check if already sent today for each store
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -270,12 +326,11 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       .gte("sent_at", todayStart.toISOString())
       .limit(1);
 
-    if (todayExecs && todayExecs.length > 0) continue; // Already sent today
+    if (todayExecs && todayExecs.length > 0) continue;
 
     const store = storeMap.get(sid);
     const storeName = store?.store_name || "Loja";
 
-    // Get customers with push for this store
     const { data: customers } = await supabase
       .from("customers")
       .select("id, name, auth_user_id")
@@ -311,7 +366,6 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       } catch (e) { console.error("AI daily promo error:", e); }
     }
 
-    // Send to all push-enabled customers
     for (const uid of pushUserIds) {
       try {
         const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
@@ -346,7 +400,6 @@ async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableA
     return json({ error: "Missing required fields" }, 400);
   }
 
-  // Find the customer's auth_user_id by name from this store
   const { data: customers } = await supabase
     .from("customers")
     .select("id, auth_user_id, name")
@@ -358,12 +411,10 @@ async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableA
     return json({ processed: 0, message: "Customer not found or no auth_user_id" });
   }
 
-  // Get store info
   const storeMap = await getStoreMap(supabase, [store_user_id]);
   const store = storeMap.get(store_user_id);
   const storeName = store?.store_name || "nossa loja";
 
-  // Get product name
   const { data: product } = await supabase
     .from("products").select("name").eq("id", product_id).single();
   const productName = product?.name || "produto";
@@ -426,7 +477,6 @@ REGRAS:
     } catch (e) { console.error("AI review error:", e); }
   }
 
-  // Send push
   try {
     const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
       method: "POST",
@@ -459,6 +509,110 @@ REGRAS:
   }
 }
 
+// === NEW PRODUCT PUSH ===
+async function handleNewProduct(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, body: any) {
+  const { store_user_id, product_id, product_name, product_price } = body;
+  if (!store_user_id || !product_id) {
+    return json({ error: "Missing store_user_id or product_id" }, 400);
+  }
+
+  // Check if rule enabled for this store
+  const { data: rule } = await supabase
+    .from("automation_rules")
+    .select("enabled")
+    .eq("user_id", store_user_id)
+    .eq("trigger_type", "new_product")
+    .eq("enabled", true)
+    .limit(1)
+    .maybeSingle();
+
+  // If no rule or disabled, still send (default behavior from trigger)
+  // But check dedup - don't send for same product twice
+  const { data: existingExec } = await supabase
+    .from("automation_executions")
+    .select("id")
+    .eq("user_id", store_user_id)
+    .eq("trigger_type", "new_product")
+    .ilike("message_text", `%${product_name?.slice(0, 30)}%`)
+    .limit(1);
+
+  if (existingExec && existingExec.length > 0) {
+    return json({ processed: 0, message: "Already sent for this product" });
+  }
+
+  const storeMap = await getStoreMap(supabase, [store_user_id]);
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+
+  // Get customers with push
+  const { data: customers } = await supabase
+    .from("customers")
+    .select("id, name, auth_user_id")
+    .eq("store_user_id", store_user_id);
+
+  if (!customers || customers.length === 0) {
+    return json({ processed: 0, message: "No customers" });
+  }
+
+  const customerUserIds = customers.map((c: any) => c.auth_user_id).filter(Boolean);
+  if (customerUserIds.length === 0) return json({ processed: 0, message: "No customer auth ids" });
+
+  const { data: subs } = await supabase
+    .from("push_subscriptions")
+    .select("user_id")
+    .in("user_id", customerUserIds);
+
+  const pushUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
+  if (pushUserIds.length === 0) return json({ processed: 0, message: "No push subscriptions" });
+
+  const dayOfWeek = new Date().getDay();
+  const hour = new Date().getHours();
+  const priceFormatted = product_price ? `R$ ${Number(product_price).toFixed(2)}` : "";
+
+  let title = `🆕 Novidade na ${storeName}!`;
+  let msgBody = `Acabou de chegar: ${product_name || "novo produto"}${priceFormatted ? ` por ${priceFormatted}` : ""}. Confira! 🛍️`;
+
+  if (lovableApiKey) {
+    try {
+      const aiMsg = await generateAIMessage(lovableApiKey, {
+        type: "new_product",
+        storeName,
+        productName: product_name || "novo produto",
+        productPrice: priceFormatted,
+        dayOfWeek,
+        hour,
+      });
+      if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+    } catch (e) { console.error("AI new product error:", e); }
+  }
+
+  let sent = 0;
+  for (const uid of pushUserIds) {
+    try {
+      const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_user_id: uid, title, body: msgBody, url: "/", type: "new_product",
+        }),
+      });
+      const data = await resp.json();
+      if (data.sent > 0) sent++;
+    } catch (e) { console.error("New product push error:", e); }
+  }
+
+  await supabase.from("automation_executions").insert({
+    user_id: store_user_id,
+    trigger_type: "new_product",
+    channel: "push",
+    message_text: `${title} — ${msgBody}`,
+    ai_generated: !!lovableApiKey,
+    status: sent > 0 ? "sent" : "failed",
+  });
+
+  return json({ processed: pushUserIds.length, sent });
+}
+
 // === HELPERS ===
 
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
@@ -476,7 +630,6 @@ function getSpecialDateContext(): string {
   const dayOfWeek = now.getDay();
   const parts: string[] = [];
 
-  // Brazilian holidays & special dates
   const holidays: Record<string, string> = {
     "1-1": "🎆 Ano Novo",
     "2-14": "💕 Dia dos Namorados (internacional)",
@@ -499,28 +652,20 @@ function getSpecialDateContext(): string {
     "12-31": "🎆 Réveillon",
   };
 
-  // Check exact date
   const key = `${month}-${day}`;
-  if (holidays[key]) {
-    parts.push(`HOJE É ${holidays[key]}`);
-  }
+  if (holidays[key]) parts.push(`HOJE É ${holidays[key]}`);
 
-  // Check nearby dates (next 3 days)
   for (let offset = 1; offset <= 3; offset++) {
     const future = new Date(now.getTime() + offset * 86400000);
     const fKey = `${future.getMonth() + 1}-${future.getDate()}`;
-    if (holidays[fKey]) {
-      parts.push(`Em ${offset} dia(s): ${holidays[fKey]}`);
-    }
+    if (holidays[fKey]) parts.push(`Em ${offset} dia(s): ${holidays[fKey]}`);
   }
 
-  // Weekend context
   if (dayOfWeek === 6) parts.push("É SÁBADO! Dia de compras e lazer 🛒");
   if (dayOfWeek === 0) parts.push("É DOMINGO! Dia de descanso e presentes 🎁");
   if (dayOfWeek === 5) parts.push("É SEXTA-FEIRA! Fim de semana chegando 🎊");
   if (dayOfWeek === 1) parts.push("É SEGUNDA-FEIRA! Começando a semana com energia ⚡");
 
-  // Month themes
   const monthThemes: Record<number, string> = {
     1: "Mês de recomeço e metas novas",
     2: "Mês do Carnaval 🎭",
@@ -541,7 +686,7 @@ async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: str
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const greetings = ctx.hour < 12 ? "Bom dia" : ctx.hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[ctx.dayOfWeek] || "hoje";
-  const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}`;
+  const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}-${Date.now()}`;
   const specialDate = getSpecialDateContext();
 
   let systemPrompt = "";
@@ -555,6 +700,10 @@ ${specialDate}
 - Se for segunda-feira, use tom motivacional e energético`;
 
   if (ctx.type === "abandoned_cart") {
+    const discountLine = ctx.hasDiscount
+      ? `\n- INCLUA O CUPOM DE DESCONTO "${ctx.code}" (${ctx.percentage}% OFF) na mensagem! Exemplo: "Use o cupom ${ctx.code} e ganhe ${ctx.percentage}% de desconto!"`
+      : "";
+
     systemPrompt = `Você é uma assistente de marketing MUITO criativa e educada da loja "${ctx.storeName}".
 Gere uma notificação push ÚNICA para recuperar um carrinho abandonado. 
 
@@ -564,9 +713,9 @@ REGRAS OBRIGATÓRIAS:
 - body: máximo 130 caracteres, mencione o nome do cliente e o nome da loja "${ctx.storeName}"
 - Use saudação adequada: "${greetings}" (é ${dayName})
 - Tom: amigável, educado, gentil, sem pressão
-- NUNCA repita a mesma mensagem. Use frases DIFERENTES a cada envio
-- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
-- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar
+- NUNCA repita a mesma mensagem. Use frases COMPLETAMENTE DIFERENTES a cada envio
+- Seed de variação (use para criar mensagem única): ${seed}
+- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar${discountLine}
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
@@ -577,7 +726,8 @@ Itens: ${ctx.itemCount}
 Lembrete nº: ${(ctx.reminderCount || 0) + 1}
 Dia: ${dayName}
 Saudação: ${greetings}
-Datas especiais: ${specialDate}`;
+Datas especiais: ${specialDate}
+${ctx.hasDiscount ? `CUPOM: ${ctx.code} (${ctx.percentage}% OFF)` : "Sem desconto"}`;
 
   } else if (ctx.type === "new_customer") {
     systemPrompt = `Você é uma assistente de marketing MUITO alegre e educada da loja "${ctx.storeName}".
@@ -590,7 +740,7 @@ REGRAS OBRIGATÓRIAS:
 - Use saudação: "${greetings}" (é ${dayName})
 - Tom: MUITO alegre, acolhedor, caloroso, faça o cliente se sentir especial
 - NUNCA repita a mesma mensagem
-- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
+- Seed de variação: ${seed}
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
@@ -611,7 +761,7 @@ REGRAS OBRIGATÓRIAS:
 - Tom: animado, convidativo, positivo
 - Crie uma mensagem que atraia o cliente para visitar a loja
 - NUNCA repita a mesma mensagem de dias anteriores
-- Seed de variação: ${seed}-${Math.random().toString(36).slice(2, 6)}
+- Seed de variação: ${seed}
 ${dateInstructions}
 - Se for data especial/feriado, FOQUE a mensagem nessa data (ex: "Presente de Natal na ${ctx.storeName}!", "Black Friday imperdível!")
 - Se for sábado/domingo, foque em lazer e aproveitamento do fim de semana`;
@@ -621,6 +771,28 @@ Dia: ${dayName}
 Saudação: ${greetings}
 Clientes com push: ${ctx.customerCount || "vários"}
 Datas especiais: ${specialDate}`;
+
+  } else if (ctx.type === "new_product") {
+    systemPrompt = `Você é uma assistente de marketing EMPOLGADA da loja "${ctx.storeName}".
+Um NOVO PRODUTO acabou de ser adicionado à loja!
+
+REGRAS OBRIGATÓRIAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com 1 emoji de novidade (🆕 ✨ 🔥 🎁 💎 🌟 🛍️ etc)
+- body: máximo 130 caracteres, MENCIONE o nome do produto e da loja "${ctx.storeName}"
+- ${ctx.productPrice ? `Mencione o preço: ${ctx.productPrice}` : ""}
+- Use saudação: "${greetings}" (é ${dayName})
+- Tom: empolgado, convidativo, crie FOMO (medo de ficar sem)
+- NUNCA repita a mesma mensagem
+- Seed: ${seed}
+${dateInstructions}`;
+
+    userPrompt = `Loja: ${ctx.storeName}
+Produto: ${ctx.productName}
+Preço: ${ctx.productPrice || "não informado"}
+Dia: ${dayName}
+Saudação: ${greetings}`;
+
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
     userPrompt = ctx._customUserPrompt || "";
