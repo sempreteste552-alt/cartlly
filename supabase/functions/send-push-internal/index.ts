@@ -157,9 +157,9 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("user_id", target_user_id);
 
-    // Tenant isolation: if store_user_id provided, only send to subscriptions for that store
+    // Tenant isolation: if store_user_id provided, include matching OR null (legacy)
     if (store_user_id) {
-      query = query.eq("store_user_id", store_user_id);
+      query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
       // Safety: never send store promotions to the store owner themselves
       if (target_user_id === store_user_id) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store push to store owner" });
