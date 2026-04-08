@@ -13,6 +13,7 @@ import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
 import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
+import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { toast } from "sonner";
 
 export default function LojaHome() {
