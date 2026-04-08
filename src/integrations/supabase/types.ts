@@ -1507,6 +1507,54 @@ export type Database = {
         }
         Relationships: []
       }
+      retargeting_sequences: {
+        Row: {
+          created_at: string
+          current_step: number
+          customer_id: string
+          id: string
+          last_push_at: string | null
+          max_steps: number
+          next_push_at: string | null
+          product_id: string | null
+          pushes_sent: number
+          status: string
+          stopped_reason: string | null
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: number
+          customer_id: string
+          id?: string
+          last_push_at?: string | null
+          max_steps?: number
+          next_push_at?: string | null
+          product_id?: string | null
+          pushes_sent?: number
+          status?: string
+          stopped_reason?: string | null
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: number
+          customer_id?: string
+          id?: string
+          last_push_at?: string | null
+          max_steps?: number
+          next_push_at?: string | null
+          product_id?: string | null
+          pushes_sent?: number
+          status?: string
+          stopped_reason?: string | null
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_settings: {
         Row: {
           id: string
