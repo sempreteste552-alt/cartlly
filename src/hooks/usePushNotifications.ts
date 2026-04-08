@@ -123,8 +123,7 @@ export function usePushNotifications() {
     setLoading(true);
 
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js'));
+      const registration = await navigator.serviceWorker.ready;
       
       if (registration) {
         const subscription = await registration.pushManager.getSubscription();
