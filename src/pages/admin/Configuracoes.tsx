@@ -383,19 +383,58 @@ function GeneralSettingsTab() {
           <div className="flex items-center gap-2"><Image className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Banners</CardTitle></div>
           <CardDescription>Carrossel de banners na página inicial</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        <CardContent className="space-y-4">
+          {/* Mobile format selector */}
+          <div className="space-y-2">
+            <Label>Formato do Banner em Mobile</Label>
+            <Select value={bannerMobileFormat} onValueChange={setBannerMobileFormat}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="landscape">Paisagem (padrão)</SelectItem>
+                <SelectItem value="square">Quadrado (Instagram Post)</SelectItem>
+                <SelectItem value="portrait">Retrato (4:5)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Escolha como o banner aparece em celulares</p>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
             {banners?.map((b) => (
-              <div key={b.id} className="relative group">
-                {(b as any).media_type === "video" ? (
-                  <video src={b.image_url} className="w-full h-24 rounded-lg object-cover border border-border" muted loop playsInline onMouseEnter={(e) => (e.target as HTMLVideoElement).play()} onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }} />
-                ) : (
-                  <img src={b.image_url} alt="Banner" className="w-full h-24 rounded-lg object-cover border border-border" />
-                )}
-                <Badge variant="secondary" className="absolute bottom-1 left-1 text-[10px] px-1.5">{(b as any).media_type === "video" ? "Vídeo" : "Imagem"}</Badge>
-                <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteBanner.mutate(b.id)}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+              <div key={b.id} className="border border-border rounded-lg p-3 space-y-2">
+                <div className="flex gap-3">
+                  <div className="relative group shrink-0">
+                    {(b as any).media_type === "video" ? (
+                      <video src={b.image_url} className="w-24 h-16 rounded object-cover border border-border" muted loop playsInline onMouseEnter={(e) => (e.target as HTMLVideoElement).play()} onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }} />
+                    ) : (
+                      <img src={b.image_url} alt="Banner" className="w-24 h-16 rounded object-cover border border-border" />
+                    )}
+                    <Badge variant="secondary" className="absolute bottom-0.5 left-0.5 text-[9px] px-1">{(b as any).media_type === "video" ? "Vídeo" : "Imagem"}</Badge>
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <Label className="text-xs">Link de redirecionamento</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        placeholder="https://..."
+                        defaultValue={(b as any).link_url || ""}
+                        className="h-8 text-xs"
+                        onBlur={(e) => {
+                          const val = e.target.value.trim() || null;
+                          if (val !== ((b as any).link_url || null)) {
+                            updateBannerLink.mutate({ id: b.id, link_url: val });
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Ao clicar no banner, redireciona para este link</p>
+                  </div>
+                  <Button variant="destructive" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteBanner.mutate(b.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
