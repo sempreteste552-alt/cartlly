@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { X, Download, Bell, Share, Plus, MoreVertical } from "lucide-react";
+import { X, Download, Bell, Share, Plus, MoreVertical, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 
-type Platform = "ios" | "android" | "desktop" | null;
+type Platform = "ios" | "android" | "desktop";
 
 function detectPlatform(): Platform {
   const ua = navigator.userAgent || "";
@@ -21,37 +20,46 @@ function isStandalone(): boolean {
 
 export function AdminPushBanner() {
   const [show, setShow] = useState(false);
-  const [platform, setPlatform] = useState<Platform>(null);
+  const [platform, setPlatform] = useState<Platform>("desktop");
   const [showInstructions, setShowInstructions] = useState(false);
-  const { isSupported, isSubscribed, subscribe, loading } = usePushNotifications();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    if (!isSupported) return;
-    if (isSubscribed) return;
-    // Always show if not subscribed and not dismissed this session
-    const dismissed = sessionStorage.getItem("admin-push-banner-dismissed");
-    if (dismissed) return;
+    // Hide only if already installed as standalone app
+    if (isStandalone()) return;
+
     setPlatform(detectPlatform());
     setShow(true);
-  }, [isSupported, isSubscribed]);
 
-  const dismiss = () => {
-    setShow(false);
-    sessionStorage.setItem("admin-push-banner-dismissed", "1");
-  };
+    // Capture the native install prompt (Chrome/Edge on desktop & Android)
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   const handleClick = async () => {
-    if (isStandalone() || platform === "desktop") {
-      // Can directly subscribe
-      await subscribe();
-      if (!loading) dismiss();
+    if (deferredPrompt) {
+      // Use native browser install prompt
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      if (result.outcome === "accepted") {
+        setShow(false);
+      }
+      setDeferredPrompt(null);
     } else {
-      // Show install instructions
+      // Show manual instructions
       setShowInstructions(true);
     }
   };
 
   if (!show) return null;
+
+  const platformLabel =
+    platform === "ios" ? "iPhone / iPad" :
+    platform === "android" ? "Android" : "Desktop";
 
   return (
     <>
@@ -60,7 +68,7 @@ export function AdminPushBanner() {
           <div className="flex items-center gap-2 min-w-0">
             <Bell className="h-4 w-4 shrink-0 animate-pulse" />
             <p className="truncate">
-              <span className="font-semibold">📲 Baixe o app</span> para receber notificações de vendas, pagamentos e eventos em tempo real!
+              <span className="font-semibold">📲 Instale o app</span> para receber notificações de vendas, pagamentos e eventos em tempo real!
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -69,14 +77,10 @@ export function AdminPushBanner() {
               variant="secondary"
               className="h-7 text-xs font-bold px-3"
               onClick={handleClick}
-              disabled={loading}
             >
               <Download className="h-3.5 w-3.5 mr-1" />
-              {platform === "ios" ? "Instalar" : "Ativar"}
+              Instalar App
             </Button>
-            <button onClick={dismiss} className="p-1 hover:bg-white/20 rounded text-primary-foreground/70 hover:text-primary-foreground">
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -91,9 +95,7 @@ export function AdminPushBanner() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold">Instalar App Administrativo</h3>
-                <p className="text-xs text-muted-foreground">
-                  {platform === "ios" ? "iPhone / iPad" : "Android"}
-                </p>
+                <p className="text-xs text-muted-foreground">{platformLabel}</p>
               </div>
               <button onClick={() => setShowInstructions(false)} className="p-1 rounded hover:bg-muted">
                 <X className="h-5 w-5 text-muted-foreground" />
@@ -113,32 +115,51 @@ export function AdminPushBanner() {
               </ul>
             </div>
 
-            {platform === "ios" ? (
+            {platform === "ios" && (
               <div className="space-y-4">
                 <Step number={1} icon={<Share className="h-5 w-5 text-primary" />}>
-                  Toque no botão <strong>Compartilhar</strong> <Share className="inline h-3.5 w-3.5 text-primary" /> na barra do Safari
+                  Toque no botão <strong>Compartilhar</strong> <Share className="inline h-3.5 w-3.5 text-primary" /> na barra inferior do Safari
                 </Step>
                 <Step number={2} icon={<Plus className="h-5 w-5 text-primary" />}>
-                  Toque em <strong>"Adicionar à Tela de Início"</strong>
+                  Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong>
                 </Step>
                 <Step number={3} icon={<Bell className="h-5 w-5 text-primary" />}>
-                  Abra o app e <strong>ative as notificações</strong>
+                  Abra o app na tela de início e <strong>permita as notificações</strong>
                 </Step>
                 <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
-                  ⚠️ Use o <strong>Safari</strong> para instalar. Outros navegadores não suportam no iOS.
+                  ⚠️ Use o <strong>Safari</strong> para instalar. Chrome e outros navegadores não suportam instalação no iOS.
                 </p>
               </div>
-            ) : (
+            )}
+
+            {platform === "android" && (
               <div className="space-y-4">
                 <Step number={1} icon={<MoreVertical className="h-5 w-5 text-primary" />}>
-                  Toque no menu <strong>⋮</strong> (três pontos) no navegador
+                  Toque no menu <strong>⋮</strong> (três pontos) no canto superior do Chrome
                 </Step>
                 <Step number={2} icon={<Download className="h-5 w-5 text-primary" />}>
                   Toque em <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>
                 </Step>
                 <Step number={3} icon={<Bell className="h-5 w-5 text-primary" />}>
-                  Abra o app e <strong>ative as notificações push</strong>
+                  Abra o app instalado e <strong>permita as notificações</strong> quando solicitado
                 </Step>
+              </div>
+            )}
+
+            {platform === "desktop" && (
+              <div className="space-y-4">
+                <Step number={1} icon={<Monitor className="h-5 w-5 text-primary" />}>
+                  No <strong>Chrome ou Edge</strong>, clique no ícone de <strong>instalação</strong> (⊕) na barra de endereço
+                </Step>
+                <Step number={2} icon={<Download className="h-5 w-5 text-primary" />}>
+                  Clique em <strong>"Instalar"</strong> na janela que aparecer
+                </Step>
+                <Step number={3} icon={<Bell className="h-5 w-5 text-primary" />}>
+                  O app abrirá em uma janela separada. <strong>Permita as notificações</strong> quando solicitado
+                </Step>
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
+                  💡 Se não aparecer o ícone de instalação, acesse o menu <strong>⋮ → "Instalar app"</strong> ou <strong>"Criar atalho"</strong>.
+                </p>
               </div>
             )}
 
