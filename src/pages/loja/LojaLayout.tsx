@@ -336,6 +336,7 @@ export default function LojaLayout() {
               </div>
             </div>
 
+            <StorePushOptIn primaryColor={primaryColor} />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             {!isAdminPreview && (
