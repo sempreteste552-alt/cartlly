@@ -39,6 +39,9 @@ interface AutomationRule {
   allowed_hours_start: number | null;
   allowed_hours_end: number | null;
   target_segment: string | null;
+  offer_discount: boolean;
+  discount_code: string | null;
+  discount_percentage: number | null;
 }
 
 interface AutomationExecution {
@@ -281,10 +284,11 @@ export default function Automacao() {
   const createDefaults = useMutation({
     mutationFn: async () => {
       const defaults = [
-        { user_id: user!.id, name: "Recuperar Carrinho Abandonado", trigger_type: "abandoned_cart", channel: "push", wait_minutes: 20, cooldown_minutes: 60, max_sends_per_day: 5, ai_generated: true, ai_tone: "friendly", enabled: true, message_template: "Olá {customer_name}! Você deixou itens no carrinho. Volte e finalize!" },
+        { user_id: user!.id, name: "Recuperar Carrinho Abandonado", trigger_type: "abandoned_cart", channel: "push", wait_minutes: 20, cooldown_minutes: 60, max_sends_per_day: 5, ai_generated: true, ai_tone: "friendly", enabled: true, message_template: "Olá {customer_name}! Você deixou itens no carrinho. Volte e finalize!", offer_discount: false, discount_code: "", discount_percentage: 0 },
         { user_id: user!.id, name: "Boas-vindas Novo Cliente", trigger_type: "new_customer", channel: "push", wait_minutes: 0, cooldown_minutes: 0, max_sends_per_day: 50, ai_generated: true, ai_tone: "joyful", enabled: true, message_template: "Bem-vindo(a) à nossa loja! 🎉" },
         { user_id: user!.id, name: "Alerta Diário de Promoções", trigger_type: "daily_promo", channel: "push", wait_minutes: 0, cooldown_minutes: 1440, max_sends_per_day: 1, ai_generated: true, ai_tone: "exciting", enabled: true, message_template: "🔥 Confira as novidades e ofertas do dia!" },
         { user_id: user!.id, name: "Lembrete de Wishlist", trigger_type: "wishlist_reminder", channel: "push", wait_minutes: 1440, cooldown_minutes: 4320, max_sends_per_day: 1, ai_generated: true, ai_tone: "friendly", enabled: false, message_template: "💜 Os produtos da sua lista de desejos estão disponíveis!" },
+        { user_id: user!.id, name: "Novo Produto Adicionado", trigger_type: "new_product", channel: "push", wait_minutes: 10, cooldown_minutes: 0, max_sends_per_day: 10, ai_generated: true, ai_tone: "exciting", enabled: true, message_template: "🆕 Acabou de chegar: {product_name}! Confira!" },
       ];
       const { error } = await supabase.from("automation_rules").insert(defaults);
       if (error) throw error;
@@ -323,6 +327,7 @@ export default function Automacao() {
     new_customer: "🎉 Novo Cliente",
     review_thankyou: "⭐ Avaliação",
     restock: "📦 Reposição",
+    new_product: "🆕 Novo Produto",
   }[t] || t);
 
   const triggerIcon = (t: string) => {
@@ -331,6 +336,7 @@ export default function Automacao() {
       daily_promo: <Gift className="h-5 w-5" />,
       new_customer: <UserPlus className="h-5 w-5" />,
       wishlist_reminder: <Heart className="h-5 w-5" />,
+      new_product: <Sparkles className="h-5 w-5" />,
     };
     return map[t] || <Zap className="h-5 w-5" />;
   };
@@ -567,6 +573,10 @@ export default function Automacao() {
             const currentTemplate = edits.message_template ?? rule.message_template ?? "";
             const currentHoursStart = edits.allowed_hours_start ?? rule.allowed_hours_start;
             const currentHoursEnd = edits.allowed_hours_end ?? rule.allowed_hours_end;
+            const currentOfferDiscount = edits.offer_discount ?? (rule as any).offer_discount ?? false;
+            const currentDiscountCode = edits.discount_code ?? (rule as any).discount_code ?? "";
+            const currentDiscountPercentage = edits.discount_percentage ?? (rule as any).discount_percentage ?? 0;
+            const isAbandonedCart = rule.trigger_type === "abandoned_cart";
 
             return (
               <Card key={rule.id} className={`transition-all ${rule.enabled ? "border-primary/20" : "opacity-60"}`}>
@@ -662,6 +672,33 @@ export default function Automacao() {
                         <Textarea value={currentTemplate} onChange={e => setRuleEdit(rule.id, "message_template", e.target.value)} className="text-sm min-h-[60px]" placeholder="Ex: Olá {customer_name}! Volte e finalize sua compra 🛒" />
                         <p className="text-[10px] text-muted-foreground">Variáveis: {"{customer_name}"}, {"{store_name}"}, {"{item_count}"}, {"{total_value}"}</p>
                       </div>
+
+                      {isAbandonedCart && (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium flex items-center gap-1.5"><Gift className="h-4 w-4 text-primary" /> Oferecer desconto na recuperação</p>
+                              <p className="text-[10px] text-muted-foreground">A IA incluirá o cupom na mensagem de recuperação</p>
+                            </div>
+                            <Switch
+                              checked={currentOfferDiscount}
+                              onCheckedChange={(v) => setRuleEdit(rule.id, "offer_discount", v)}
+                            />
+                          </div>
+                          {currentOfferDiscount && (
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Código do cupom</Label>
+                                <Input value={currentDiscountCode} onChange={e => setRuleEdit(rule.id, "discount_code", e.target.value.toUpperCase())} className="h-8 text-sm" placeholder="Ex: VOLTA10" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">% de desconto</Label>
+                                <Input type="number" min={1} max={100} value={currentDiscountPercentage} onChange={e => setRuleEdit(rule.id, "discount_percentage", parseInt(e.target.value) || 0)} className="h-8 text-sm" placeholder="10" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => { setEditingRule(null); setRuleEdits(prev => { const n = { ...prev }; delete n[rule.id]; return n; }); }}>
