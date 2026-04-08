@@ -284,7 +284,15 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    // Check if customer record exists for this store; create if missing (e.g. OAuth or cross-store)
+    // Ensure is_customer metadata is set
+    if (!data.user.user_metadata?.is_customer) {
+      await supabase.auth.updateUser({ data: { is_customer: true } });
+    }
+
+    // Clear any pending signup data
+    localStorage.removeItem("pending_customer_signup");
+
+    // Check if customer record exists for this store; create if missing
     let { data: customerRecord } = await supabase
       .from("customers")
       .select("id, name, email")
@@ -293,7 +301,6 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       .maybeSingle();
 
     if (!customerRecord) {
-      // Auto-create customer record for this store
       const { error: insertErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
@@ -304,6 +311,9 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         console.error("Failed to auto-create customer record:", insertErr);
       }
     }
+
+    // Force reload customer profile so UI updates immediately
+    await loadCustomerProfile(data.user.id).catch(() => {});
 
     return data;
   };
