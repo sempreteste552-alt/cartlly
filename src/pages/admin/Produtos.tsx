@@ -98,6 +98,14 @@ export default function Produtos() {
   };
 
   const handleTogglePublished = (product: Product) => {
+    // Block publishing if it would exceed the plan limit
+    if (!product.published) {
+      const publishedCount = products?.filter(p => p.published).length ?? 0;
+      if (publishedCount >= limits.maxProducts) {
+        toast.error(`Limite de ${limits.maxProducts} produtos publicados atingido. Faça upgrade para publicar mais.`);
+        return;
+      }
+    }
     updateProduct.mutate({ id: product.id, published: !product.published });
   };
 
