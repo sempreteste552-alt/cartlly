@@ -15,6 +15,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
+import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 
 export default function LojaProduto() {
@@ -24,6 +25,7 @@ export default function LojaProduto() {
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
+  const cartNotif = useCartNotification();
 
   const product = products?.find((p) => p.id === id);
   const basePath = slug ? `/loja/${slug}` : "/loja";
