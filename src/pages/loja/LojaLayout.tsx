@@ -380,10 +380,10 @@ export default function LojaLayout() {
           </div>
         </header>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Professional animated */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-500 ease-out border-b border-border ${
-            mobileMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          className={`lg:hidden overflow-hidden border-b border-border transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            mobileMenu ? "max-h-[500px] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
           }`}
           style={{ backgroundColor: headerBgColor, color: headerTextColor }}
         >
@@ -394,33 +394,55 @@ export default function LojaLayout() {
               { icon: ShoppingCart, label: `Carrinho (${cart.count})`, to: `${basePath}/checkout` },
               { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
-            ].map((item: any, i) => (
-              <div key={i}>
-                {item.external ? (
-                  <a
-                    href={item.to}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenu(false)}
-                    style={{ color: headerTextColor }}
+            ].map((item: any, i) => {
+              const content = (
+                <div className="flex items-center gap-3 w-full">
+                  <item.icon
+                    className="h-5 w-5 transition-all duration-500"
+                    style={{
+                      color: primaryColor,
+                      opacity: mobileMenu ? 1 : 0,
+                      transform: mobileMenu ? "translateX(0) scale(1)" : "translateX(-12px) scale(0.8)",
+                      transitionDelay: mobileMenu ? `${i * 80 + 100}ms` : "0ms",
+                    }}
+                  />
+                  <span
+                    className="text-sm font-medium transition-all duration-500"
+                    style={{
+                      opacity: mobileMenu ? 1 : 0,
+                      transform: mobileMenu ? "translateX(0)" : "translateX(-20px)",
+                      transitionDelay: mobileMenu ? `${i * 80 + 160}ms` : "0ms",
+                      filter: mobileMenu ? "blur(0)" : "blur(4px)",
+                    }}
                   >
-                    <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
-                    <span>{item.label}</span>
-                  </a>
-                ) : (
-                  <Link
-                    to={item.to}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium hover:bg-muted transition-colors"
-                    onClick={() => setMobileMenu(false)}
-                    style={{ color: headerTextColor }}
-                  >
-                    <item.icon className="h-5 w-5" style={{ color: primaryColor }} />
-                    <span>{item.label}</span>
-                  </Link>
-                )}
-              </div>
-            ))}
+                    {item.label}
+                  </span>
+                </div>
+              );
+
+              const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors duration-300";
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    opacity: mobileMenu ? 1 : 0,
+                    transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
+                    transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
+                  }}
+                >
+                  {item.external ? (
+                    <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
+                      {content}
+                    </a>
+                  ) : (
+                    <Link to={item.to} className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
+                      {content}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 
