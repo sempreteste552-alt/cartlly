@@ -524,7 +524,7 @@ export default function LojaLayout() {
         {/* Footer */}
         <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
           <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <h3 className="font-bold text-lg mb-3">{storeName}</h3>
                 {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
