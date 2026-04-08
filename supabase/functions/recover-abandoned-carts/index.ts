@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     }
 
     // === ABANDONED CART RECOVERY ===
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     let query = supabase
