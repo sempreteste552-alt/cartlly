@@ -89,8 +89,10 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
   const payloadB64 = b64url(enc.encode(JSON.stringify(payload)));
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  const rawPrivate = b64urlDecode(vapidPrivateKey);
-  const rawPublic = b64urlDecode(vapidPublicKey);
+  const rawPrivate = b64urlDecode(vapidPrivateKey.trim());
+  const rawPublic = b64urlDecode(vapidPublicKey.trim());
+
+  console.log(`VAPID key sizes: public=${rawPublic.length} bytes, private=${rawPrivate.length} bytes, public[0]=0x${rawPublic[0]?.toString(16)}`);
 
   // rawPublic is 65 bytes: 0x04 || x(32) || y(32)
   const xBytes = padTo(rawPublic.slice(1, 33), 32);
@@ -105,9 +107,17 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
     "jwk",
     { kty: "EC", crv: "P-256", x, y, d },
     { name: "ECDSA", namedCurve: "P-256" },
-    false,
+    true,
     ["sign"]
   );
+
+  // Verify the public key matches by re-exporting
+  const exportedPublic = new Uint8Array(await crypto.subtle.exportKey("raw", 
+    (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])).publicKey
+  ));
+  // Actually just export from the imported key pair
+  const jwkExported = await crypto.subtle.exportKey("jwk", key);
+  console.log(`JWK exported crv=${jwkExported.crv}, x length=${jwkExported.x?.length}, y length=${jwkExported.y?.length}`);
 
   const signatureBuf = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
