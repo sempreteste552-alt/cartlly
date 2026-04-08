@@ -209,7 +209,7 @@ export default function LojaProduto() {
               className="flex-1 h-12 text-base"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               disabled={product.stock <= 0 && !(product as any).made_to_order}
-              onClick={() => cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url })}
+              onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
             </Button>
