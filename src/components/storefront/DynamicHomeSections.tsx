@@ -28,9 +28,10 @@ interface Props {
   settings?: any;
   cart?: any;
   basePath?: string;
+  onAddToCart?: (name: string, image?: string | null) => void;
 }
 
-export function DynamicHomeSections({ storeUserId, products, settings, cart, basePath }: Props) {
+export function DynamicHomeSections({ storeUserId, products, settings, cart, basePath, onAddToCart }: Props) {
   const { data: sections } = usePublicHomeSections(storeUserId);
   const isMobile = useIsMobile();
 
@@ -56,6 +57,7 @@ export function DynamicHomeSections({ storeUserId, products, settings, cart, bas
             primaryColor={primaryColor}
             buttonColor={buttonColor}
             buttonTextColor={buttonTextColor}
+            onAddToCart={onAddToCart}
           />
         ))}
     </div>
@@ -72,6 +74,7 @@ function DynamicSection({
   primaryColor,
   buttonColor,
   buttonTextColor,
+  onAddToCart,
 }: {
   section: StoreHomeSection;
   storeUserId?: string;
@@ -82,6 +85,7 @@ function DynamicSection({
   primaryColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  onAddToCart?: (name: string, image?: string | null) => void;
 }) {
   switch (section.section_type) {
     case "hero_banner":
@@ -103,6 +107,7 @@ function DynamicSection({
           primaryColor={primaryColor}
           buttonColor={buttonColor}
           buttonTextColor={buttonTextColor}
+          onAddToCart={onAddToCart}
         />
       );
 
@@ -116,6 +121,7 @@ function DynamicSection({
           primaryColor={primaryColor}
           buttonColor={buttonColor}
           buttonTextColor={buttonTextColor}
+          onAddToCart={onAddToCart}
         />
       );
 

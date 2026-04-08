@@ -5,7 +5,6 @@ import { SectionWrapper } from "../DynamicHomeSections";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
-import { toast } from "sonner";
 
 interface Props {
   section: StoreHomeSection;
@@ -15,9 +14,10 @@ interface Props {
   primaryColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  onAddToCart?: (name: string, image?: string | null) => void;
 }
 
-export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor }: Props) {
+export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
@@ -27,7 +27,6 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
 
     switch (section.section_type) {
       case "best_sellers":
-        // For now show first N products (would need sales data for real sorting)
         return products.slice(0, limit);
       case "new_arrivals":
         return [...products]
@@ -68,17 +67,17 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                   {formatPrice(product.price)}
                 </p>
                 <Button
-                  className="w-full mt-2"
+                  className="w-full mt-2 transition-transform active:scale-95"
                   size="sm"
                   style={{ backgroundColor: buttonColor, color: buttonTextColor }}
                   disabled={product.stock <= 0 && !product.made_to_order}
                   onClick={(e) => {
                     e.preventDefault();
                     cart?.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
-                    toast.success("Adicionado ao carrinho!");
+                    onAddToCart?.(product.name, product.image_url);
                   }}
                 >
-                  <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
+                  <ShoppingCart className="mr-1 h-3 w-3" /> Adicionar ao Carrinho
                 </Button>
               </div>
             </Card>

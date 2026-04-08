@@ -95,6 +95,7 @@ export default function LojaHome() {
             settings={settings}
             cart={cart}
             basePath={basePath}
+            onAddToCart={cartNotif.show}
           />
         </>
       )}
