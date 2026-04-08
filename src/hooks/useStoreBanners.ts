@@ -55,6 +55,24 @@ export function useCreateBanner() {
   });
 }
 
+export function useUpdateBannerLink() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, link_url }: { id: string; link_url: string | null }) => {
+      const { error } = await supabase
+        .from("store_banners")
+        .update({ link_url } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+      toast.success("Link atualizado!");
+    },
+    onError: (e) => toast.error("Erro: " + e.message),
+  });
+}
+
 export function useDeleteBanner() {
   const queryClient = useQueryClient();
   return useMutation({
