@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { StoreMarquee } from "@/components/StoreMarquee";
+import { StorePushOptIn } from "@/components/storefront/StorePushOptIn";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
