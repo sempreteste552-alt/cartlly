@@ -28,7 +28,8 @@ export function useTenantContext() {
       const { count: productCount } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id);
+        .eq("user_id", user!.id)
+        .eq("published", true);
 
       const plan = sub?.tenant_plans as any;
       const planFeatures = (typeof plan?.features === "object" && !Array.isArray(plan?.features))
