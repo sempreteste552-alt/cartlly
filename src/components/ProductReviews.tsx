@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useProductReviews, useAverageRating, useCreateReview } from "@/hooks/useProductReviews";
 import { StarRating } from "./StarRating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MessageSquare, User } from "lucide-react";
+import { MessageSquare, User, ImagePlus, X, ZoomIn } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductReviewsProps {
   productId: string;
@@ -22,32 +24,87 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   const [email, setEmail] = useState("");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = () => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (imageFiles.length + files.length > 2) {
+      toast.error("Máximo de 2 imagens por avaliação");
+      return;
+    }
+    const validFiles = files.filter((f) => {
+      if (!f.type.startsWith("image/")) { toast.error("Apenas imagens são permitidas"); return false; }
+      if (f.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB"); return false; }
+      return true;
+    });
+    setImageFiles((prev) => [...prev, ...validFiles].slice(0, 2));
+    validFiles.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string].slice(0, 2));
+      reader.readAsDataURL(f);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (idx: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const file of imageFiles) {
+      const ext = file.name.split(".").pop();
+      const path = `reviews/${productId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      urls.push(urlData.publicUrl);
+    }
+    return urls;
+  };
+
+  const handleSubmit = async () => {
     if (!name.trim()) return toast.error("Informe seu nome");
     if (rating === 0) return toast.error("Selecione uma avaliação");
     if (name.length > 100 || comment.length > 1000) return toast.error("Texto muito longo");
 
-    createReview.mutate(
-      {
-        product_id: productId,
-        customer_name: name.trim(),
-        customer_email: email.trim() || undefined,
-        rating,
-        comment: comment.trim() || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Avaliação enviada!");
-          setShowForm(false);
-          setName("");
-          setEmail("");
-          setRating(0);
-          setComment("");
+    try {
+      setUploading(true);
+      const imageUrls = imageFiles.length > 0 ? await uploadImages() : [];
+
+      createReview.mutate(
+        {
+          product_id: productId,
+          customer_name: name.trim(),
+          customer_email: email.trim() || undefined,
+          rating,
+          comment: comment.trim() || undefined,
+          image_urls: imageUrls,
         },
-        onError: () => toast.error("Erro ao enviar avaliação"),
-      }
-    );
+        {
+          onSuccess: () => {
+            toast.success("Avaliação enviada!");
+            setShowForm(false);
+            setName("");
+            setEmail("");
+            setRating(0);
+            setComment("");
+            setImageFiles([]);
+            setImagePreviews([]);
+            setUploading(false);
+          },
+          onError: () => { toast.error("Erro ao enviar avaliação"); setUploading(false); },
+        }
+      );
+    } catch {
+      toast.error("Erro ao enviar imagens");
+      setUploading(false);
+    }
   };
 
   const formatDate = (d: string) =>
@@ -81,9 +138,50 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             <Input placeholder="Seu nome *" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
             <Input placeholder="E-mail (opcional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} />
             <Textarea placeholder="Comentário (opcional)" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} rows={3} />
+
+            {/* Image upload */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={imageFiles.length >= 2}
+                >
+                  <ImagePlus className="h-4 w-4 mr-1" />
+                  Adicionar Foto ({imageFiles.length}/2)
+                </Button>
+                <span className="text-xs text-muted-foreground">Máx. 2 fotos, 5MB cada</span>
+              </div>
+              {imagePreviews.length > 0 && (
+                <div className="flex gap-2">
+                  {imagePreviews.map((src, i) => (
+                    <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden border">
+                      <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                      <button
+                        onClick={() => removeImage(i)}
+                        className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
-              <Button onClick={handleSubmit} disabled={createReview.isPending} className="bg-black text-white hover:bg-gray-800">
-                {createReview.isPending ? "Enviando..." : "Enviar"}
+              <Button onClick={handleSubmit} disabled={createReview.isPending || uploading} className="bg-black text-white hover:bg-gray-800">
+                {uploading || createReview.isPending ? "Enviando..." : "Enviar"}
               </Button>
               <Button variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Button>
             </div>
@@ -107,11 +205,34 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 </div>
                 <StarRating rating={r.rating} size={16} />
                 {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
+                {r.image_urls && r.image_urls.length > 0 && (
+                  <div className="flex gap-2 mt-3">
+                    {r.image_urls.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setZoomImage(url)}
+                        className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
+                      >
+                        <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                          <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Zoom dialog */}
+      <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
+        <DialogContent className="max-w-lg p-1">
+          {zoomImage && <img src={zoomImage} alt="Review" className="w-full rounded-lg" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
