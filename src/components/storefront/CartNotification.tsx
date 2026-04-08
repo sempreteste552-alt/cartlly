@@ -28,7 +28,7 @@ export function CartNotification({
   }, [onClose]);
 
   useEffect(() => {
-    const timer = setTimeout(handleClose, 2000);
+    const timer = setTimeout(handleClose, 4000);
     return () => clearTimeout(timer);
   }, [handleClose]);
 
