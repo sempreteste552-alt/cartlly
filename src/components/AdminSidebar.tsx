@@ -43,8 +43,9 @@ export function AdminSidebar() {
   const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
   const customDomain = (settings as any)?.custom_domain;
+  const domainStatus = (settings as any)?.domain_status;
   const sanitizedCustomDomain = customDomain?.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const storeUrl = sanitizedCustomDomain
+  const storeUrl = (sanitizedCustomDomain && domainStatus === "verified")
     ? `https://${sanitizedCustomDomain}`
     : (storeSlug ? `/loja/${storeSlug}` : "/loja");
 
