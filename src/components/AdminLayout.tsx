@@ -7,6 +7,7 @@ import { AIChatWidget } from "@/components/AIChatWidget";
 import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
 import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
+import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +102,8 @@ export function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          {/* Push notification install banner */}
+          <AdminPushBanner />
           <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-1" />
