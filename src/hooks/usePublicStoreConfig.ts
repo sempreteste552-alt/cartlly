@@ -44,7 +44,7 @@ export function usePublicMarketingConfig(storeUserId?: string) {
     enabled: !!storeUserId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("store_marketing_config" as any)
+        .from("store_marketing_config_public" as any)
         .select("*")
         .eq("user_id", storeUserId!)
         .maybeSingle();
