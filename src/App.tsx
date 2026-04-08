@@ -20,6 +20,7 @@ import Clientes from "./pages/admin/Clientes";
 import Pagamentos from "./pages/admin/Pagamentos";
 import MeuPlano from "./pages/admin/MeuPlano";
 import Paginas from "./pages/admin/Paginas";
+import Automacao from "./pages/admin/Automacao";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
@@ -111,6 +112,7 @@ const App = () => (
                 <Route path="clientes" element={<Clientes />} />
                 <Route path="plano" element={<MeuPlano />} />
                 <Route path="paginas" element={<Paginas />} />
+                <Route path="automacao" element={<Automacao />} />
               </Route>
               {/* Multi-tenant: store by slug only — no default /loja */}
               <Route path="/loja" element={<Navigate to="/login" replace />} />
