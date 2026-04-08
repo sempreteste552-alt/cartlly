@@ -1,14 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import { Card } from "@/components/ui/card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star, Share2, Heart } from "lucide-react";
+import { ShoppingCart, Star, Share2, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useWishlist } from "@/hooks/useWishlist";
