@@ -8,11 +8,23 @@ const corsHeaders = {
 const MAX_PUSH_PER_DAY = 3;
 const MIN_INTERVAL_MINUTES = 30;
 
+// Randomized delay ranges (minutes) — scheduler picks a random point within range
 const TRIGGER_DELAYS: Record<string, { min: number; max: number }> = {
-  abandoned_cart: { min: 30, max: 30 },
-  browsing: { min: 15, max: 45 },
-  inactive: { min: 120, max: 360 },
+  abandoned_cart: { min: 20, max: 45 },
+  browsing: { min: 12, max: 50 },
+  inactive: { min: 90, max: 420 },
 };
+
+// Returns a random delay within range for this customer (seeded by customer_id for consistency)
+function randomDelayInRange(min: number, max: number, seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const ratio = (Math.abs(hash) % 1000) / 1000;
+  return min + ratio * (max - min);
+}
 
 // ── Template pools (50+ per type) ──────────────────────────────────
 const TEMPLATES: Record<string, { title: string; body: string }[]> = {
