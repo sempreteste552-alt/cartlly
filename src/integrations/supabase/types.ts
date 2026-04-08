@@ -255,11 +255,14 @@ export type Database = {
           created_at: string
           cta_link: string | null
           cta_text: string | null
+          discount_code: string | null
+          discount_percentage: number | null
           enabled: boolean
           id: string
           max_sends_per_day: number | null
           message_template: string | null
           name: string
+          offer_discount: boolean
           target_segment: string | null
           trigger_type: string
           updated_at: string
@@ -276,11 +279,14 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          discount_code?: string | null
+          discount_percentage?: number | null
           enabled?: boolean
           id?: string
           max_sends_per_day?: number | null
           message_template?: string | null
           name: string
+          offer_discount?: boolean
           target_segment?: string | null
           trigger_type?: string
           updated_at?: string
@@ -297,11 +303,14 @@ export type Database = {
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
+          discount_code?: string | null
+          discount_percentage?: number | null
           enabled?: boolean
           id?: string
           max_sends_per_day?: number | null
           message_template?: string | null
           name?: string
+          offer_discount?: boolean
           target_segment?: string | null
           trigger_type?: string
           updated_at?: string
