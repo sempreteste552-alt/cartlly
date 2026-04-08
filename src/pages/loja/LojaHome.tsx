@@ -160,6 +160,44 @@ export default function LojaHome() {
   );
 }
 
+function CategorySection({ catName, catProducts, ...gridProps }: {
+  catName: string;
+  catProducts: any[];
+  formatPrice: (p: number) => string;
+  cart: any;
+  ratings?: Record<string, { average: number; count: number }>;
+  productImagesMap?: Record<string, string[]>;
+  buttonColor: string;
+  buttonTextColor: string;
+  primaryColor: string;
+  accentColor: string;
+  wishlist: any;
+  basePath: string;
+}) {
+  const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
+
+  return (
+    <div id={`category-${catName}`}>
+      <div
+        ref={titleRef}
+        className="mb-4 pb-2 overflow-hidden"
+        style={{ borderBottom: `2px solid ${gridProps.primaryColor}20` }}
+      >
+        <h2
+          className="text-xl font-bold transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{
+            opacity: titleVisible ? 1 : 0,
+            transform: titleVisible ? "translateY(0)" : "translateY(100%)",
+          }}
+        >
+          {catName}
+        </h2>
+      </div>
+      <ProductGrid products={catProducts} {...gridProps} />
+    </div>
+  );
+}
+
 function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath }: {
   products: any[];
   formatPrice: (p: number) => string;
@@ -173,6 +211,8 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   wishlist: ReturnType<typeof import("@/hooks/useWishlist").useWishlist>;
   basePath: string;
 }) {
+  const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
+
   const handleShare = async (e: React.MouseEvent, product: any) => {
     e.preventDefault();
     e.stopPropagation();
@@ -188,66 +228,37 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {products.map((product) => {
+    <div ref={ref} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {products.map((product, index) => {
         const r = ratings?.[product.id];
         const additionalImages = productImagesMap?.[product.id] ?? [];
-        // Use first additional image as fallback if product.image_url is null
         const mainImage = product.image_url || additionalImages[0] || null;
         const extraImages = product.image_url 
           ? additionalImages 
           : additionalImages.slice(1);
         return (
-          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
-            <Card
-              className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
-            >
-              {/* Glow border effect on hover */}
+          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group" style={getItemStyle(index)}>
+            <Card className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card">
               <div
                 className="absolute -inset-[1px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}40, ${accentColor}40, ${primaryColor}20)`,
-                  filter: "blur(8px)",
-                }}
+                style={{ background: `linear-gradient(135deg, ${primaryColor}40, ${accentColor}40, ${primaryColor}20)`, filter: "blur(8px)" }}
               />
-
               <div className="aspect-square overflow-hidden relative">
-                <ProductImageSlideshow
-                  mainImage={mainImage}
-                  additionalImages={extraImages}
-                  alt={product.name}
-                  className="h-full w-full"
-                  showArrows
-                  autoplaySpeed={3500}
-                  glowColor={primaryColor}
-                />
+                <ProductImageSlideshow mainImage={mainImage} additionalImages={extraImages} alt={product.name} className="h-full w-full" showArrows autoplaySpeed={3500} glowColor={primaryColor} />
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }}
-                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110"
-                    title="Favoritar"
-                  >
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110" title="Favoritar">
                     <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
                   </button>
-                  <button
-                    onClick={(e) => handleShare(e, product)}
-                    className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110"
-                    title="Compartilhar"
-                  >
+                  <button onClick={(e) => handleShare(e, product)} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110" title="Compartilhar">
                     <Share2 className="h-4 w-4 text-foreground" />
                   </button>
                 </div>
-
-                {/* "Novo" badge for recent products (< 7 days) */}
                 {new Date(product.created_at).getTime() > Date.now() - 7 * 86400000 && (
                   <div className="absolute top-2 left-2 z-10">
-                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>
-                      NOVO
-                    </Badge>
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>NOVO</Badge>
                   </div>
                 )}
               </div>
-
               <div className="p-3 text-foreground">
                 <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
                 {r && r.count > 0 && (
@@ -258,9 +269,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  ou 12x de {formatPrice(product.price / 12)}
-                </p>
+                <p className="text-[10px] text-muted-foreground">ou 12x de {formatPrice(product.price / 12)}</p>
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
                 ) : (product as any).made_to_order ? (
@@ -268,17 +277,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 ) : (
                   <p className="text-xs text-red-500 mt-1">Esgotado</p>
                 )}
-                <Button
-                  className="w-full mt-2 transition-transform active:scale-95"
-                  size="sm"
-                  style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-                  disabled={product.stock <= 0 && !(product as any).made_to_order}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
-                    toast.success("Adicionado ao carrinho!");
-                  }}
-                >
+                <Button className="w-full mt-2 transition-transform active:scale-95" size="sm" style={{ backgroundColor: buttonColor, color: buttonTextColor }} disabled={product.stock <= 0 && !(product as any).made_to_order} onClick={(e) => { e.preventDefault(); cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); toast.success("Adicionado ao carrinho!"); }}>
                   <ShoppingCart className="mr-1 h-3 w-3" /> Comprar
                 </Button>
               </div>
