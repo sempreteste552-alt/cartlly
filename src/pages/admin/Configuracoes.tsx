@@ -111,6 +111,7 @@ function GeneralSettingsTab() {
   const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
+  const faviconFileRef = useRef<HTMLInputElement>(null);
 
   const [storeName, setStoreName] = useState("");
   const [storeDescription, setStoreDescription] = useState("");
@@ -152,6 +153,8 @@ function GeneralSettingsTab() {
   const [welcomeCouponMinOrder, setWelcomeCouponMinOrder] = useState<string>("");
   const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
     if (settings) {
