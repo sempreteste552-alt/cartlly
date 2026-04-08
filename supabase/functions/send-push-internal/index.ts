@@ -5,11 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// ============================================================
-// Internal push sender v2 — Rich payloads with event types + logging
-// Accepts: { target_user_id, title, body, url, type, data, tag }
-// ============================================================
-
 function b64url(buf: Uint8Array): string {
   let binary = "";
   for (const b of buf) binary += String.fromCharCode(b);
@@ -29,7 +24,10 @@ function concat(...arrays: Uint8Array[]): Uint8Array {
   const len = arrays.reduce((s, a) => s + a.length, 0);
   const result = new Uint8Array(len);
   let offset = 0;
-  for (const a of arrays) { result.set(a, offset); offset += a.length; }
+  for (const a of arrays) {
+    result.set(a, offset);
+    offset += a.length;
+  }
   return result;
 }
 
@@ -67,7 +65,6 @@ async function encryptPayload(clientPublicKeyB64: string, clientAuthB64: string,
   return concat(salt, rs, new Uint8Array([serverPublicKeyRaw.length]), serverPublicKeyRaw, ciphertext);
 }
 
-/** Pad or trim a byte array to exactly `len` bytes (left-pad with zeros). */
 function padTo(buf: Uint8Array, len: number): Uint8Array {
   if (buf.length === len) return buf;
   if (buf.length > len) return buf.slice(buf.length - len);
@@ -91,61 +88,36 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
 
   const rawPrivate = b64urlDecode(vapidPrivateKey.trim());
   const rawPublic = b64urlDecode(vapidPublicKey.trim());
-
-  console.log(`VAPID key sizes: public=${rawPublic.length} bytes, private=${rawPrivate.length} bytes, public[0]=0x${rawPublic[0]?.toString(16)}`);
-
-  // rawPublic is 65 bytes: 0x04 || x(32) || y(32)
   const xBytes = padTo(rawPublic.slice(1, 33), 32);
   const yBytes = padTo(rawPublic.slice(33, 65), 32);
   const dBytes = padTo(rawPrivate, 32);
 
-  const x = b64url(xBytes);
-  const y = b64url(yBytes);
-  const d = b64url(dBytes);
-
   const key = await crypto.subtle.importKey(
     "jwk",
-    { kty: "EC", crv: "P-256", x, y, d },
+    { kty: "EC", crv: "P-256", x: b64url(xBytes), y: b64url(yBytes), d: b64url(dBytes) },
     { name: "ECDSA", namedCurve: "P-256" },
     true,
     ["sign"]
   );
 
-  // Verify the public key matches by re-exporting
-  const exportedPublic = new Uint8Array(await crypto.subtle.exportKey("raw", 
-    (await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"])).publicKey
-  ));
-  // Actually just export from the imported key pair
-  const jwkExported = await crypto.subtle.exportKey("jwk", key);
-  console.log(`JWK exported crv=${jwkExported.crv}, x length=${jwkExported.x?.length}, y length=${jwkExported.y?.length}`);
-
-  const signatureBuf = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    key,
-    enc.encode(unsignedToken)
-  );
-
-  // Web Crypto may return DER-encoded signature; we need raw r||s (64 bytes)
+  const signatureBuf = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, enc.encode(unsignedToken));
   const sigBytes = new Uint8Array(signatureBuf);
-  let r: Uint8Array, s: Uint8Array;
+  let r: Uint8Array;
+  let s: Uint8Array;
 
   if (sigBytes.length !== 64 && sigBytes[0] === 0x30) {
-    // DER encoded — parse it
     let offset = 2;
-    if (sigBytes[1] & 0x80) offset += (sigBytes[1] & 0x7f);
-    // r
+    if (sigBytes[1] & 0x80) offset += sigBytes[1] & 0x7f;
     if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
     offset++;
     const rLen = sigBytes[offset++];
     r = sigBytes.slice(offset, offset + rLen);
     offset += rLen;
-    // s
     if (sigBytes[offset] !== 0x02) throw new Error("Invalid DER sig");
     offset++;
     const sLen = sigBytes[offset++];
     s = sigBytes.slice(offset, offset + sLen);
   } else {
-    // Raw r||s
     r = sigBytes.slice(0, 32);
     s = sigBytes.slice(32, 64);
   }
@@ -155,6 +127,10 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
   rawSig.set(padTo(s, 32), 32);
 
   return { token: `${unsignedToken}.${b64url(rawSig)}`, vapidKey: vapidPublicKey };
+}
+
+function shouldDeleteSubscription(status: number, responseText: string) {
+  return status === 404 || status === 410 || responseText.includes("VapidPkHashMismatch") || responseText.includes("do not correspond to the credentials used to create the subscriptions");
 }
 
 Deno.serve(async (req) => {
@@ -183,10 +159,9 @@ Deno.serve(async (req) => {
 
     if (!subs || subs.length === 0) {
       await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
-      return json({ sent: 0, message: "No push subscriptions" });
+      return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
 
-    // Build rich payload
     const pushPayload: any = {
       title,
       body: msgBody || "",
@@ -204,6 +179,7 @@ Deno.serve(async (req) => {
 
     const payloadStr = JSON.stringify(pushPayload);
     let sent = 0;
+    let removed = 0;
     const failures: string[] = [];
 
     for (const sub of subs) {
@@ -227,14 +203,17 @@ Deno.serve(async (req) => {
           if (resp.status === 201 || resp.status === 200) {
             sent++;
             await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
-          } else if (resp.status === 404 || resp.status === 410) {
-            await supabase.from("push_subscriptions").delete().eq("id", sub.id);
-            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", "Subscription expired/removed");
           } else {
             const text = await resp.text();
-            console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
-            failures.push(`${sub.id}: ${resp.status}`);
-            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+            if (shouldDeleteSubscription(resp.status, text)) {
+              await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+              removed++;
+              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
+            } else {
+              console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
+              failures.push(`${sub.id}: ${resp.status}`);
+              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+            }
           }
         }
       } catch (e: any) {
@@ -244,7 +223,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({ sent, total: subs.length, failures });
+    return json({ sent, total: subs.length, removed, failures });
   } catch (error: any) {
     console.error("Internal push error:", error);
     return json({ error: error.message }, 500);
