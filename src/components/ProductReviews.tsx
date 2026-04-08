@@ -269,7 +269,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
       {/* Zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
         <DialogContent className="max-w-lg p-1">
-          {zoomImage && <img src={zoomImage} alt="Review" className="w-full rounded-lg" />}
+          {zoomImage && (/\.(mp4|webm|mov|ogg)$/i.test(zoomImage) ? (
+            <video src={zoomImage} controls autoPlay className="w-full rounded-lg" />
+          ) : (
+            <img src={zoomImage} alt="Review" className="w-full rounded-lg" />
+          ))}
         </DialogContent>
       </Dialog>
     </div>
