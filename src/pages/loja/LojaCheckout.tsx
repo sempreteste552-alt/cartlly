@@ -56,6 +56,7 @@ export default function LojaCheckout() {
   // Confetti on success
   useEffect(() => {
     if (phase === "success") {
+      track("purchase_completed", { order_id: orderId, cart_value: savedFinalTotal });
       const duration = 2000;
       const end = Date.now() + duration;
       const frame = () => {
