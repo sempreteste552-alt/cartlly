@@ -58,7 +58,28 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Block customer accounts from accessing admin panel
   if (user?.user_metadata?.is_customer === true) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-lg text-center space-y-4">
+          <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-destructive/10">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-destructive" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Acesso Restrito</h1>
+          <p className="text-sm text-muted-foreground">Esta área é exclusiva para lojistas. Contas de clientes não têm acesso ao painel administrativo.</p>
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+            <p className="text-xs text-destructive font-medium">🚫 Você está logado como cliente, não como lojista.</p>
+          </div>
+          <div className="flex flex-col gap-2 pt-2">
+            <button onClick={() => { import("@/integrations/supabase/client").then(m => m.supabase.auth.signOut()); }} className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+              Sair e Entrar como Lojista
+            </button>
+            <button onClick={() => window.location.href = "/"} className="w-full rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors">
+              Voltar para a Loja
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check if account is blocked or deactivated
