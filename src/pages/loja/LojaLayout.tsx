@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
-import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
+import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut } from "lucide-react";
