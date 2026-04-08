@@ -49,9 +49,7 @@ export function usePushNotifications() {
     if (!user || !("serviceWorker" in navigator)) return;
 
     try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      const registration = registrations.find(r => r.active?.scriptURL.includes('sw-push.js')) || 
-                           await navigator.serviceWorker.getRegistration('/sw-push.js');
+      const registration = await navigator.serviceWorker.ready;
       
       if (!registration) {
         setIsSubscribed(false);
