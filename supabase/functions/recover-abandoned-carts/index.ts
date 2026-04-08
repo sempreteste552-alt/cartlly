@@ -182,6 +182,7 @@ Deno.serve(async (req) => {
             title, body,
             url: "/",
             type: "abandoned_cart",
+            store_user_id: customer.store_user_id,
             data: { cartId: cart.id, itemCount: items.length },
           }),
         });
@@ -315,21 +316,21 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
   const storeIds = [...new Set(rules.map((r: any) => r.user_id))];
   const storeMap = await getStoreMap(supabase, storeIds);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const currentHourStart = new Date();
+  currentHourStart.setMinutes(0, 0, 0);
 
   let totalSent = 0;
 
   for (const sid of storeIds) {
-    const { data: todayExecs } = await supabase
+    const { data: hourExecs } = await supabase
       .from("automation_executions")
       .select("id")
       .eq("user_id", sid)
       .eq("trigger_type", "daily_promo")
-      .gte("sent_at", todayStart.toISOString())
+      .gte("sent_at", currentHourStart.toISOString())
       .limit(1);
 
-    if (todayExecs && todayExecs.length > 0) continue;
+    if (hourExecs && hourExecs.length > 0) continue;
 
     const store = storeMap.get(sid);
     const storeName = store?.store_name || "Loja";
