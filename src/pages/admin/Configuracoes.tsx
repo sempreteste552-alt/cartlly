@@ -198,6 +198,7 @@ function GeneralSettingsTab() {
       setWelcomeCouponMinOrder(settings.welcome_coupon_min_order ? String(settings.welcome_coupon_min_order) : "");
       setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
+      setFaviconUrl((settings as any).favicon_url ?? "");
     }
   }, [settings]);
 
