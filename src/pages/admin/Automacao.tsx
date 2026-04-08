@@ -196,15 +196,17 @@ export default function Automacao() {
   });
 
   const triggerRecovery = useMutation({
-    mutationFn: async () => {
-      const resp = await supabase.functions.invoke("recover-abandoned-carts");
+    mutationFn: async (triggerType: string = "abandoned_cart") => {
+      const resp = await supabase.functions.invoke("recover-abandoned-carts", {
+        body: { trigger_type: triggerType, store_user_id: user?.id },
+      });
       if (resp.error) throw resp.error;
       return resp.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["automation-executions"] });
       queryClient.invalidateQueries({ queryKey: ["abandoned-carts-detail"] });
-      toast.success(`Recuperação executada! Enviados: ${data?.sent || 0}, Ignorados: ${data?.skipped || 0}`);
+      toast.success(`Automação executada! Enviados: ${data?.sent || 0}, Processados: ${data?.processed || 0}`);
     },
     onError: (err: any) => {
       toast.error("Erro ao executar: " + (err.message || "Erro desconhecido"));
