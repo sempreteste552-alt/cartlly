@@ -25,6 +25,7 @@ import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
 import HighlightsManager from "@/components/admin/HighlightsManager";
 import MarketingConversionSettings from "@/components/admin/MarketingConversionSettings";
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
+import RestockAlertManager from "@/components/admin/RestockAlertManager";
 
 
 function AccountEmailChanger() {
