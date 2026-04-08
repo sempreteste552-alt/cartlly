@@ -39,6 +39,9 @@ interface AutomationRule {
   allowed_hours_start: number | null;
   allowed_hours_end: number | null;
   target_segment: string | null;
+  offer_discount: boolean;
+  discount_code: string | null;
+  discount_percentage: number | null;
 }
 
 interface AutomationExecution {
