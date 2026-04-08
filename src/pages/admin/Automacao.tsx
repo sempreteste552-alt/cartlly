@@ -281,10 +281,11 @@ export default function Automacao() {
   const createDefaults = useMutation({
     mutationFn: async () => {
       const defaults = [
-        { user_id: user!.id, name: "Recuperar Carrinho Abandonado", trigger_type: "abandoned_cart", channel: "push", wait_minutes: 20, cooldown_minutes: 60, max_sends_per_day: 5, ai_generated: true, ai_tone: "friendly", enabled: true, message_template: "Olá {customer_name}! Você deixou itens no carrinho. Volte e finalize!" },
+        { user_id: user!.id, name: "Recuperar Carrinho Abandonado", trigger_type: "abandoned_cart", channel: "push", wait_minutes: 20, cooldown_minutes: 60, max_sends_per_day: 5, ai_generated: true, ai_tone: "friendly", enabled: true, message_template: "Olá {customer_name}! Você deixou itens no carrinho. Volte e finalize!", offer_discount: false, discount_code: "", discount_percentage: 0 },
         { user_id: user!.id, name: "Boas-vindas Novo Cliente", trigger_type: "new_customer", channel: "push", wait_minutes: 0, cooldown_minutes: 0, max_sends_per_day: 50, ai_generated: true, ai_tone: "joyful", enabled: true, message_template: "Bem-vindo(a) à nossa loja! 🎉" },
         { user_id: user!.id, name: "Alerta Diário de Promoções", trigger_type: "daily_promo", channel: "push", wait_minutes: 0, cooldown_minutes: 1440, max_sends_per_day: 1, ai_generated: true, ai_tone: "exciting", enabled: true, message_template: "🔥 Confira as novidades e ofertas do dia!" },
         { user_id: user!.id, name: "Lembrete de Wishlist", trigger_type: "wishlist_reminder", channel: "push", wait_minutes: 1440, cooldown_minutes: 4320, max_sends_per_day: 1, ai_generated: true, ai_tone: "friendly", enabled: false, message_template: "💜 Os produtos da sua lista de desejos estão disponíveis!" },
+        { user_id: user!.id, name: "Novo Produto Adicionado", trigger_type: "new_product", channel: "push", wait_minutes: 10, cooldown_minutes: 0, max_sends_per_day: 10, ai_generated: true, ai_tone: "exciting", enabled: true, message_template: "🆕 Acabou de chegar: {product_name}! Confira!" },
       ];
       const { error } = await supabase.from("automation_rules").insert(defaults);
       if (error) throw error;
