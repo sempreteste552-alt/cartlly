@@ -118,7 +118,13 @@ export default function LojaProduto() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <>
+      {isNavigating && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center" style={{ animation: "fadeIn 0.3s ease-out" }}>
+          <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
+        </div>
+      )}
+    <div className="max-w-7xl mx-auto px-4 py-6" style={{ animation: "fadeSlideIn 0.4s ease-out" }}>
       <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
