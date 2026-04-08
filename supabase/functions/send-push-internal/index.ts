@@ -168,13 +168,18 @@ async function sendWithRetry(
 async function logPush(
   supabase: any, userId: string, subscriptionId: string | null,
   eventType: string, title: string, body: string | undefined,
-  payload: any, status: string, errorMessage: string | null
+  payload: any, status: string, errorMessage: string | null,
+  extras?: { store_user_id?: string; customer_id?: string; trigger_type?: string }
 ) {
   try {
     await supabase.from("push_logs").insert({
       user_id: userId, subscription_id: subscriptionId,
       event_type: eventType, title, body: body || null,
       payload: payload || {}, status, error_message: errorMessage,
+      store_user_id: extras?.store_user_id || null,
+      customer_id: extras?.customer_id || null,
+      trigger_type: extras?.trigger_type || eventType,
+      delivered_at: (status === "sent" || status === "delivered") ? new Date().toISOString() : null,
     });
   } catch (e) { console.error("Failed to log push:", e); }
 }
