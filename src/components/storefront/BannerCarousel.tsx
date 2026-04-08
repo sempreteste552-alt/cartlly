@@ -10,7 +10,7 @@ interface Banner {
 
 const ZOOM_DURATION = 8000;
 
-export function BannerCarousel({ banners }: { banners: Banner[] }) {
+export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banners: Banner[]; mobileFormat?: string }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -89,9 +89,15 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
 
   if (!banners.length) return null;
 
+  // Mobile aspect ratio based on format
+  const mobileAspect =
+    mobileFormat === "square" ? "aspect-square" :
+    mobileFormat === "portrait" ? "aspect-[4/5]" :
+    "h-48";
+
   return (
     <div className="max-w-7xl mx-auto px-4 pt-4">
-      <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden bg-muted">
+      <div className={`relative w-full ${mobileAspect} sm:h-64 md:h-80 rounded-lg overflow-hidden bg-muted`}>
         {banners.map((banner, index) => {
           const active = index === current;
           const isVideo = banner.media_type === "video";
@@ -102,19 +108,21 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
               className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             >
               {isVideo ? (
-                <video
-                  ref={(element) => {
-                    videoRefs.current[index] = element;
-                  }}
-                  src={banner.image_url}
-                  className="w-full h-full object-cover"
-                  muted
-                  playsInline
-                  preload="metadata"
-                  onEnded={() => {
-                    if (index === current) goNext();
-                  }}
-                />
+                <MaybeLink href={banner.link_url} disabled={!active}>
+                  <video
+                    ref={(element) => {
+                      videoRefs.current[index] = element;
+                    }}
+                    src={banner.image_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                    onEnded={() => {
+                      if (index === current) goNext();
+                    }}
+                  />
+                </MaybeLink>
               ) : (
                 <MaybeLink href={banner.link_url} disabled={!active}>
                   <img
