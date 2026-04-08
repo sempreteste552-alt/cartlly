@@ -75,11 +75,17 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
       setTab("login");
     } catch (err: any) {
       const msg = err.message || "Erro ao criar conta";
-      if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
+      if (msg.includes("Verifique seu e-mail") || msg.includes("confirmar o cadastro")) {
+        // This is expected — email confirmation required
+        setRegisteredEmail(email);
+        setShowEmailConfirmCard(true);
+        setAlertCard({ type: "success", message: "Conta criada! Verifique seu e-mail para confirmar antes de fazer login." });
+        setTab("login");
+      } else if (msg.includes("já está cadastrado em outra conta") || msg.includes("already")) {
         setAlertCard({ type: "error", message: "Este e-mail já existe em outra conta e não pode ser reaproveitado nesta loja." });
         setTab("login");
-      } else if (msg.includes("já está cadastrado nesta loja")) {
-        setAlertCard({ type: "warning", message: "Este e-mail já está registrado nesta loja. Faça login." });
+      } else if (msg.includes("já está cadastrado nesta loja") || msg.includes("já possui conta")) {
+        setAlertCard({ type: "warning", message: "Este e-mail já está registrado. Faça login." });
         setTab("login");
       } else {
         setAlertCard({ type: "error", message: msg });
