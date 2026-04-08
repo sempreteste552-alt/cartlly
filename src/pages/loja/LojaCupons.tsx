@@ -1,29 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLojaContext } from "./LojaLayout";
 import { Copy, Check, Tag, Ticket, Clock, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { usePublicCoupons } from "@/hooks/usePublicCoupons";
 
 export default function LojaCupons() {
   const { storeUserId, settings } = useLojaContext();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const { data: coupons, isLoading } = useQuery({
-    queryKey: ["public_coupons_page", storeUserId],
-    enabled: !!storeUserId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("coupons")
-        .select("code, discount_type, discount_value, expires_at, min_order_value")
-        .eq("user_id", storeUserId!)
-        .eq("active", true)
-        .or("max_uses.is.null,used_count.lt.max_uses");
-      if (error) throw error;
-      return (data || []).filter(c => !c.expires_at || new Date(c.expires_at) > new Date());
-    },
-    staleTime: 60_000,
-  });
+  const { data: coupons, isLoading } = usePublicCoupons(storeUserId);
 
   const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
