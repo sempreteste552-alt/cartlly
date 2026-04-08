@@ -187,6 +187,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   accentColor: string;
   wishlist: any;
   basePath: string;
+  onAddToCart: (name: string, image?: string | null) => void;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
 
@@ -212,7 +213,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -224,6 +225,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   accentColor: string;
   wishlist: ReturnType<typeof import("@/hooks/useWishlist").useWishlist>;
   basePath: string;
+  onAddToCart: (name: string, image?: string | null) => void;
 }) {
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
 
