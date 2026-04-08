@@ -36,7 +36,10 @@ Deno.serve(async (req) => {
       return json({ sent: 0, total_customers: 0, customers_with_push: 0, removed: 0, message: "Nenhum cliente encontrado" });
     }
 
-    const customerUserIds = customers.map((c: any) => c.auth_user_id).filter(Boolean);
+    // Exclude the store owner from the customer list to prevent self-notification
+    const customerUserIds = customers
+      .map((c: any) => c.auth_user_id)
+      .filter((id: string) => id && id !== user.id);
 
     if (customerUserIds.length === 0) {
       return json({ sent: 0, total_customers: customers.length, customers_with_push: 0, removed: 0, message: "Nenhum cliente com conta encontrado" });
