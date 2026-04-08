@@ -537,6 +537,42 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_states: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          last_activity_at: string
+          metadata: Json
+          state: string
+          state_changed_at: string
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          last_activity_at?: string
+          metadata?: Json
+          state?: string
+          state_changed_at?: string
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          last_activity_at?: string
+          metadata?: Json
+          state?: string
+          state_changed_at?: string
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_wishlist: {
         Row: {
           created_at: string
