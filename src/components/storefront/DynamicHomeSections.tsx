@@ -9,6 +9,7 @@ import { CountdownSection } from "./sections/CountdownSection";
 import { FAQSection } from "./sections/FAQSection";
 import { CustomHTMLSection } from "./sections/CustomHTMLSection";
 import { GenericProductSection } from "./sections/GenericProductSection";
+import { HighlightsSection } from "./sections/HighlightsSection";
 import { useEffect, useState } from "react";
 
 function useIsMobile() {
@@ -47,6 +48,7 @@ export function DynamicHomeSections({ storeUserId, products, settings, cart, bas
           <DynamicSection
             key={section.id}
             section={section}
+            storeUserId={storeUserId}
             products={products}
             settings={settings}
             cart={cart}
@@ -62,6 +64,7 @@ export function DynamicHomeSections({ storeUserId, products, settings, cart, bas
 
 function DynamicSection({
   section,
+  storeUserId,
   products,
   settings,
   cart,
@@ -71,6 +74,7 @@ function DynamicSection({
   buttonTextColor,
 }: {
   section: StoreHomeSection;
+  storeUserId?: string;
   products?: any[];
   settings?: any;
   cart?: any;
@@ -134,6 +138,8 @@ function DynamicSection({
     case "custom_html":
       return <CustomHTMLSection section={section} />;
 
+    case "highlights":
+      return <HighlightsSection section={section} storeUserId={storeUserId} primaryColor={primaryColor} />;
     case "instagram_feed":
       return (
         <SectionWrapper section={section} primaryColor={primaryColor}>

@@ -1090,6 +1090,74 @@ export type Database = {
         }
         Relationships: []
       }
+      store_highlight_items: {
+        Row: {
+          created_at: string
+          highlight_id: string
+          id: string
+          media_type: string
+          media_url: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          highlight_id: string
+          id?: string
+          media_type?: string
+          media_url: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          highlight_id?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_highlight_items_highlight_id_fkey"
+            columns: ["highlight_id"]
+            isOneToOne: false
+            referencedRelation: "store_highlights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_highlights: {
+        Row: {
+          active: boolean
+          cover_url: string | null
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_home_sections: {
         Row: {
           button_link: string | null

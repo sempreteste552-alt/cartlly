@@ -22,6 +22,7 @@ import { LockedFeature } from "@/components/LockedFeature";
 import { toast } from "sonner";
 import StoreAppearanceSettings from "@/components/admin/StoreAppearanceSettings";
 import HomeBuilderManager from "@/components/admin/HomeBuilderManager";
+import HighlightsManager from "@/components/admin/HighlightsManager";
 import MarketingConversionSettings from "@/components/admin/MarketingConversionSettings";
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
 
@@ -667,7 +668,8 @@ export default function Configuracoes() {
           <StoreAppearanceSettings />
         </TabsContent>
 
-        <TabsContent value="home" className="mt-6">
+        <TabsContent value="home" className="mt-6 space-y-8">
+          <HighlightsManager />
           <HomeBuilderManager />
         </TabsContent>
 
