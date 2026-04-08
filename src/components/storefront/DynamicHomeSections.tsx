@@ -138,6 +138,8 @@ function DynamicSection({
     case "custom_html":
       return <CustomHTMLSection section={section} />;
 
+    case "highlights":
+      return <HighlightsSection section={section} storeUserId={storeUserId} primaryColor={primaryColor} />;
     case "instagram_feed":
       return (
         <SectionWrapper section={section} primaryColor={primaryColor}>
