@@ -702,6 +702,10 @@ export default function Configuracoes() {
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Marketing</span>
           </TabsTrigger>
+          <TabsTrigger value="push" className="flex items-center gap-1.5 text-xs py-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Push</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
@@ -724,6 +728,10 @@ export default function Configuracoes() {
 
         <TabsContent value="marketing" className="mt-6">
           <MarketingConversionSettings />
+        </TabsContent>
+
+        <TabsContent value="push" className="mt-6">
+          <PushNotificationSettings />
         </TabsContent>
       </Tabs>
     </div>
