@@ -208,7 +208,7 @@ function GeneralSettingsTab() {
     if (file.size > 50 * 1024 * 1024) return toast.error("Máximo 50MB para banner.");
     const isVideo = file.type.startsWith("video/");
     const ext = file.name.split(".").pop();
-    const fileName = `banner-${crypto.randomUUID()}.${ext}`;
+    const fileName = `${user!.id}/banners/banner-${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type });
     if (error) { toast.error("Erro no upload: " + error.message); return; }
     const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
