@@ -324,6 +324,7 @@ export default function Automacao() {
     new_customer: "🎉 Novo Cliente",
     review_thankyou: "⭐ Avaliação",
     restock: "📦 Reposição",
+    new_product: "🆕 Novo Produto",
   }[t] || t);
 
   const triggerIcon = (t: string) => {
@@ -332,6 +333,7 @@ export default function Automacao() {
       daily_promo: <Gift className="h-5 w-5" />,
       new_customer: <UserPlus className="h-5 w-5" />,
       wishlist_reminder: <Heart className="h-5 w-5" />,
+      new_product: <Sparkles className="h-5 w-5" />,
     };
     return map[t] || <Zap className="h-5 w-5" />;
   };
