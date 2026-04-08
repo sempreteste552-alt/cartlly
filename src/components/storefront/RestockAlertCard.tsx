@@ -26,18 +26,22 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
   const [currentIdx, setCurrentIdx] = useState(0);
   const [previewProduct, setPreviewProduct] = useState<any>(null);
 
-  const dismissed = typeof window !== "undefined" ? sessionStorage.getItem("restock_dismissed") : null;
+  // Use alert colors or fallback to props
+  const alertBgColor = alert?.bg_color || primaryColor;
+  const alertTextColor = alert?.text_color || "#ffffff";
+  const alertCardBgColor = alert?.card_bg_color || "#ffffff";
+  const alertAccentColor = alert?.accent_color || primaryColor;
 
   const restockProducts = allProducts?.filter((p) =>
     alert?.product_ids?.includes(p.id)
   ) ?? [];
 
   useEffect(() => {
-    if (alert && restockProducts.length > 0 && !dismissed) {
+    if (alert && restockProducts.length > 0) {
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
     }
-  }, [alert, restockProducts.length, dismissed]);
+  }, [alert, restockProducts.length]);
 
   // Autoplay carousel
   useEffect(() => {
@@ -50,7 +54,6 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
 
   const handleClose = useCallback(() => {
     setVisible(false);
-    sessionStorage.setItem("restock_dismissed", "1");
   }, []);
 
   const formatPrice = (price: number) =>
