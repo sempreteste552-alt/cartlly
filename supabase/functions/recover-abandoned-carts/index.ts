@@ -16,10 +16,11 @@ Deno.serve(async (req) => {
     // Optional: trigger_type from body (abandoned_cart, daily_promo, new_customer)
     let triggerType = "abandoned_cart";
     let manualStoreUserId: string | null = null;
+    let requestBody: any = {};
     try {
-      const body = await req.json();
-      triggerType = body.trigger_type || "abandoned_cart";
-      manualStoreUserId = body.store_user_id || null;
+      requestBody = await req.json();
+      triggerType = requestBody.trigger_type || "abandoned_cart";
+      manualStoreUserId = requestBody.store_user_id || null;
     } catch { /* no body = default */ }
 
     if (triggerType === "new_customer") {
@@ -28,6 +29,10 @@ Deno.serve(async (req) => {
 
     if (triggerType === "daily_promo") {
       return await handleDailyPromo(supabase, supabaseUrl, lovableApiKey, manualStoreUserId);
+    }
+
+    if (triggerType === "review_thankyou") {
+      return await handleReviewThankyou(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
 
     // === ABANDONED CART RECOVERY ===
