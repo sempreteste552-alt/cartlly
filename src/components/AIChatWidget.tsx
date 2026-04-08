@@ -512,10 +512,15 @@ export function AIChatWidget() {
               }`}>
                 {msg.role === "assistant" ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
-                    <ReactMarkdown>{cleanContent(msg.content)}</ReactMarkdown>
+                    <ReactMarkdown>{cleanContent(getTextContent(msg.content))}</ReactMarkdown>
                   </div>
                 ) : (
-                  <p>{msg.content}</p>
+                  <>
+                    {getImageUrls(msg.content).map((url, idx) => (
+                      <img key={idx} src={url} alt="Imagem enviada" className="rounded-lg max-h-40 mb-1" />
+                    ))}
+                    {getTextContent(msg.content) && <p>{getTextContent(msg.content)}</p>}
+                  </>
                 )}
               </div>
               {msg.role === "user" && (
@@ -548,20 +553,47 @@ export function AIChatWidget() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-border p-3">
+        <div className="border-t border-border p-3 space-y-2">
+          {pendingImages.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {pendingImages.map((img, idx) => (
+                <div key={idx} className="relative">
+                  <img src={img} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-border" />
+                  <button
+                    type="button"
+                    onClick={() => setPendingImages(prev => prev.filter((_, i) => i !== idx))}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <form
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
             className="flex gap-2"
           >
+            <input
+              ref={chatImageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleChatImageUpload}
+            />
+            <Button type="button" variant="ghost" size="icon" className="flex-shrink-0" onClick={() => chatImageInputRef.current?.click()} disabled={isLoading}>
+              <ImagePlus className="h-4 w-4" />
+            </Button>
             <Input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Pergunte algo ou peça uma ação..."
+              placeholder="Pergunte algo ou envie uma imagem..."
               disabled={isLoading}
               className="flex-1 text-sm"
             />
-            <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+            <Button type="submit" size="icon" disabled={isLoading || (!input.trim() && pendingImages.length === 0)}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
