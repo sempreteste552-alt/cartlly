@@ -34,6 +34,9 @@ import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 
+import { useEventTracker } from "@/hooks/useEventTracker";
+import type { TrackableEvent } from "@/hooks/useEventTracker";
+
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
   settings: any;
@@ -42,6 +45,7 @@ export interface LojaContextType {
   storeUserId?: string;
   openCart: () => void;
   basePath: string;
+  track: (event: TrackableEvent, metadata?: Record<string, unknown>) => void;
 }
 
 import { createContext, useContext } from "react";
@@ -113,6 +117,7 @@ export default function LojaLayout() {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
   const basePath = isCustomDomain ? "" : (slug ? `/loja/${slug}` : "/loja");
+  const { track } = useEventTracker(settings?.user_id);
   const logoSize = settings?.logo_size || 32;
 
   // Apply store colors as CSS custom properties for the entire store
@@ -254,7 +259,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
+    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, track }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors"
         style={{ 
@@ -368,7 +373,7 @@ export default function LojaLayout() {
                   className="pl-9 bg-secondary border-border rounded-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { track("search", { search_term: searchTerm }); navigate(basePath); } }}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>

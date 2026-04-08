@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
@@ -22,12 +22,17 @@ import { toast } from "sonner";
 export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, settings, storeUserId, openCart, basePath, track } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
   const cartNotif = useCartNotification();
+
+  // Track product view
+  useEffect(() => {
+    if (id) track("product_view", { product_id: id });
+  }, [id, track]);
 
   const product = products?.find((p) => p.id === id);
 
@@ -229,7 +234,7 @@ export default function LojaProduto() {
               className="flex-1 h-12 text-base"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               disabled={product.stock <= 0 && !(product as any).made_to_order}
-              onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
+              onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); track("add_to_cart", { product_id: product.id, cart_value: cart.total + effectivePrice }); cartNotif.show(product.name, product.image_url); }}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
             </Button>

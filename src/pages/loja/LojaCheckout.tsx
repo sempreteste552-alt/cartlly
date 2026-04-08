@@ -27,7 +27,7 @@ import pixLogo from "@/assets/pix-logo.webp";
 type CheckoutPhase = "info" | "payment" | "success";
 
 export default function LojaCheckout() {
-  const { cart, settings } = useLojaContext();
+  const { cart, settings, track } = useLojaContext();
   const navigate = useNavigate();
   const { user, customer, loading: authLoading } = useCustomerAuth();
   const createReview = useCreateReview();
@@ -56,6 +56,7 @@ export default function LojaCheckout() {
   // Confetti on success
   useEffect(() => {
     if (phase === "success") {
+      track("purchase_completed", { order_id: orderId, cart_value: savedFinalTotal });
       const duration = 2000;
       const end = Date.now() + duration;
       const frame = () => {
@@ -186,6 +187,8 @@ export default function LojaCheckout() {
     if (!name.trim()) return toast.error("Informe seu nome");
     if (!phone.trim()) return toast.error("Informe seu telefone");
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
+
+    track("checkout_started", { cart_value: cart.total, item_count: cart.count });
 
     // Require customer login before payment (not for WhatsApp)
     if (!viaWhatsApp && authLoading) {
