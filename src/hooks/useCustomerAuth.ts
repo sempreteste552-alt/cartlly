@@ -57,8 +57,10 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Handle OAuth callback for store customers
         if (event === "SIGNED_IN" && session?.user) {
+          const u = session.user;
+
+          // Handle OAuth callback for store customers
           const authContextStr = localStorage.getItem("auth_context");
           if (authContextStr) {
             try {
@@ -66,16 +68,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
               if (authContext.type === "store_customer" && authContext.store_user_id) {
                 localStorage.removeItem("auth_context");
                 const storeUserId = authContext.store_user_id;
-                const u = session.user;
 
-                // Set is_customer metadata if not already set
                 if (!u.user_metadata?.is_customer) {
                   await supabase.auth.updateUser({
                     data: { is_customer: true, store_customer_signup: true },
                   });
                 }
 
-                // Check if customer record exists for this store
                 const { data: existing } = await supabase
                   .from("customers")
                   .select("id")
@@ -93,10 +92,45 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                   await generateWelcomeCoupon(storeUserId, u.user_metadata?.display_name || u.user_metadata?.full_name || "Cliente");
                 }
 
-                // Delete any accidentally created tenant profile
                 await supabase.from("profiles").delete().eq("user_id", u.id);
               }
             } catch { /* ignore parse errors */ }
+          }
+
+          // Handle email confirmation redirect — auto-create customer record if pending
+          const pendingStr = localStorage.getItem("pending_customer_signup");
+          if (pendingStr) {
+            try {
+              const pending = JSON.parse(pendingStr);
+              if (pending.auth_user_id === u.id && pending.store_user_id) {
+                localStorage.removeItem("pending_customer_signup");
+
+                // Ensure is_customer metadata is set
+                if (!u.user_metadata?.is_customer) {
+                  await supabase.auth.updateUser({ data: { is_customer: true } });
+                }
+
+                const { data: existing } = await supabase
+                  .from("customers")
+                  .select("id")
+                  .eq("auth_user_id", u.id)
+                  .eq("store_user_id", pending.store_user_id)
+                  .maybeSingle();
+
+                if (!existing) {
+                  await supabase.from("customers").insert({
+                    auth_user_id: u.id,
+                    store_user_id: pending.store_user_id,
+                    name: pending.name || u.user_metadata?.display_name || u.email?.split("@")[0] || "Cliente",
+                    email: u.email || "",
+                  } as any);
+                  await generateWelcomeCoupon(pending.store_user_id, pending.name || "Cliente");
+                }
+
+                // Reload customer profile
+                loadCustomerProfile(u.id).catch(() => {});
+              }
+            } catch { /* ignore */ }
           }
         }
       }
@@ -208,6 +242,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user && !data.session) {
+      // Email confirmation required — save pending info so SIGNED_IN handler can create customer record
+      localStorage.setItem("pending_customer_signup", JSON.stringify({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name,
+        email: normalizedEmail,
+      }));
       throw new Error("Verifique seu e-mail para confirmar o cadastro antes de fazer login.");
     }
 
@@ -243,7 +284,15 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       throw error;
     }
 
-    // Check if customer record exists for this store; create if missing (e.g. OAuth or cross-store)
+    // Ensure is_customer metadata is set
+    if (!data.user.user_metadata?.is_customer) {
+      await supabase.auth.updateUser({ data: { is_customer: true } });
+    }
+
+    // Clear any pending signup data
+    localStorage.removeItem("pending_customer_signup");
+
+    // Check if customer record exists for this store; create if missing
     let { data: customerRecord } = await supabase
       .from("customers")
       .select("id, name, email")
@@ -252,7 +301,6 @@ function useCustomerAuthState(): CustomerAuthContextValue {
       .maybeSingle();
 
     if (!customerRecord) {
-      // Auto-create customer record for this store
       const { error: insertErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
@@ -263,6 +311,9 @@ function useCustomerAuthState(): CustomerAuthContextValue {
         console.error("Failed to auto-create customer record:", insertErr);
       }
     }
+
+    // Force reload customer profile so UI updates immediately
+    await loadCustomerProfile(data.user.id).catch(() => {});
 
     return data;
   };
