@@ -82,7 +82,7 @@ export default function LojaHome() {
         <>
           {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
-            <BannerCarousel banners={banners} />
+            <BannerCarousel banners={banners} mobileFormat={(settings as any)?.banner_mobile_format || "landscape"} />
           )}
 
           {/* 2. Destaques (Stories) - abaixo do banner */}
