@@ -465,7 +465,12 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                     <UserCheck className="mr-2 h-3 w-3" /> Ativar Manualmente
                   </Button>
                   {storeSettings?.store_slug && (
-                    <Button variant="outline" size="sm" onClick={() => window.open(`/loja/${storeSettings.store_slug}`, "_blank")}>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const cd = (storeSettings as any)?.custom_domain;
+                      const ds = (storeSettings as any)?.domain_status;
+                      const url = (cd && ds === "verified") ? `https://${cd.replace(/^https?:\/\//, "")}` : `/loja/${storeSettings.store_slug}`;
+                      window.open(url, "_blank");
+                    }}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja
                     </Button>
                   )}
