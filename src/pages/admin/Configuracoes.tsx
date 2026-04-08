@@ -202,6 +202,31 @@ function GeneralSettingsTab() {
     }
   }, [settings]);
 
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 512 * 1024) { toast.error("Favicon deve ter no máximo 512KB"); return; }
+    setUploadingFavicon(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `${user!.id}/favicon.${ext}`;
+      const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type, upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
+      setFaviconUrl(urlData.publicUrl);
+      // Auto-save favicon
+      if (settings) {
+        await supabase.from("store_settings").update({ favicon_url: urlData.publicUrl } as any).eq("id", settings.id);
+        toast.success("Favicon salvo!");
+      }
+    } catch (err: any) {
+      toast.error("Erro ao enviar favicon: " + (err.message || "Erro"));
+    } finally {
+      setUploadingFavicon(false);
+      if (faviconFileRef.current) faviconFileRef.current.value = "";
+    }
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
