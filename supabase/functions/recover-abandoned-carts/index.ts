@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     for (const cart of carts) {
       try {
-        const customer = (cart as any).customers;
+        const customer = customerMap.get(cart.customer_id);
         if (!customer?.auth_user_id || !customer?.store_user_id) {
           skipped++;
           continue;
