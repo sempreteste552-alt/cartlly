@@ -31,14 +31,14 @@ Deno.serve(async (req) => {
     }
 
     // === ABANDONED CART RECOVERY ===
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
     let query = supabase
       .from("abandoned_carts")
       .select("*")
       .eq("recovered", false)
-      .lt("abandoned_at", thirtyMinAgo)
+      .lt("abandoned_at", twentyMinAgo)
       .or(`last_reminder_at.is.null,last_reminder_at.lt.${oneHourAgo}`)
       .lt("reminder_sent_count", 5)
       .not("customer_id", "is", null);
