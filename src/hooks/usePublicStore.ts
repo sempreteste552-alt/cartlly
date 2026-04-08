@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isPlatformHost, normalizeDomain } from "@/lib/storeDomain";
 
 export function usePublicProducts(storeUserId?: string) {
   return useQuery({
@@ -32,6 +33,7 @@ export function usePublicStoreSettings() {
     },
   });
 }
+
 export function usePublicThemeConfig(storeUserId?: string) {
   return useQuery({
     queryKey: ["public_theme_config", storeUserId],
@@ -64,6 +66,29 @@ export function usePublicStoreBySlug(slug: string | undefined) {
   });
 }
 
+export function useResolvedPublicStore(slug?: string) {
+  const hostname = typeof window !== "undefined" ? normalizeDomain(window.location.hostname) : "";
+  const shouldResolveByDomain = !slug && hostname && !isPlatformHost(hostname);
+
+  return useQuery({
+    queryKey: ["public_store_settings_resolved", slug, hostname],
+    enabled: !!slug || shouldResolveByDomain,
+    queryFn: async () => {
+      let query = supabase.from("store_settings_public").select("*");
+
+      if (slug) {
+        query = query.eq("store_slug", slug);
+      } else {
+        query = query.eq("custom_domain", hostname).eq("domain_status", "verified");
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function usePublicCategories(storeUserId?: string) {
   return useQuery({
     queryKey: ["public_categories", storeUserId],
@@ -80,7 +105,6 @@ export function usePublicCategories(storeUserId?: string) {
   });
 }
 
-// Bulk reviews for star ratings on product cards
 export function useAllProductReviews(productIds: string[]) {
   return useQuery({
     queryKey: ["all_product_reviews", productIds],
