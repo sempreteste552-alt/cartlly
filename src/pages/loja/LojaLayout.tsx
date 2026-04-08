@@ -63,6 +63,7 @@ export default function LojaLayout() {
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
+  const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
