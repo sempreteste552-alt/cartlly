@@ -54,12 +54,23 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+// Extract text from MsgContent
+function getTextContent(content: MsgContent): string {
+  if (typeof content === "string") return content;
+  return content.filter((p) => p.type === "text").map((p) => (p as any).text).join("");
+}
+
+// Extract images from MsgContent
+function getImageUrls(content: MsgContent): string[] {
+  if (typeof content === "string") return [];
+  return content.filter((p) => p.type === "image_url").map((p) => (p as any).image_url.url);
+}
+
 // Strip action blocks from visible text
 function cleanContent(content: string): string {
   return content
     .replace(/\[ACTION_PUSH\][\s\S]*?\[\/ACTION_PUSH\]/g, "")
     .replace(/\[ACTION_COUPON\][\s\S]*?\[\/ACTION_COUPON\]/g, "")
-    // Legacy format cleanup
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
 }
@@ -73,7 +84,9 @@ export function AIChatWidget() {
   const [aiSettings, setAiSettings] = useState(loadAISettings);
   const [tempName, setTempName] = useState(aiSettings.name);
   const [tempAvatar, setTempAvatar] = useState(aiSettings.avatarUrl);
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isLocked } = usePlanFeatures();
