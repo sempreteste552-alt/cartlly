@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_carts: {
+        Row: {
+          abandoned_at: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          items: Json
+          last_reminder_at: string | null
+          recovered: boolean
+          recovered_order_id: string | null
+          reminder_sent_count: number
+          session_id: string | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abandoned_at?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          items?: Json
+          last_reminder_at?: string | null
+          recovered?: boolean
+          recovered_order_id?: string | null
+          reminder_sent_count?: number
+          session_id?: string | null
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abandoned_at?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          items?: Json
+          last_reminder_at?: string | null
+          recovered?: boolean
+          recovered_order_id?: string | null
+          reminder_sent_count?: number
+          session_id?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -44,6 +92,48 @@ export type Database = {
           target_user_id?: string | null
           title?: string
           type?: string
+        }
+        Relationships: []
+      }
+      ai_message_templates: {
+        Row: {
+          channel: string
+          created_at: string
+          enabled: boolean
+          id: string
+          is_default: boolean
+          template_text: string
+          tone: string
+          trigger_type: string
+          updated_at: string
+          user_id: string
+          variables: string[] | null
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          template_text: string
+          tone?: string
+          trigger_type: string
+          updated_at?: string
+          user_id: string
+          variables?: string[] | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_default?: boolean
+          template_text?: string
+          tone?: string
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+          variables?: string[] | null
         }
         Relationships: []
       }
@@ -80,6 +170,146 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_executions: {
+        Row: {
+          ai_generated: boolean
+          channel: string
+          clicked_at: string | null
+          converted_at: string | null
+          created_at: string
+          customer_id: string | null
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          message_text: string | null
+          opened_at: string | null
+          related_order_id: string | null
+          related_product_id: string | null
+          revenue_attributed: number | null
+          rule_id: string | null
+          sent_at: string
+          status: string
+          trigger_type: string
+          user_id: string
+        }
+        Insert: {
+          ai_generated?: boolean
+          channel?: string
+          clicked_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_text?: string | null
+          opened_at?: string | null
+          related_order_id?: string | null
+          related_product_id?: string | null
+          revenue_attributed?: number | null
+          rule_id?: string | null
+          sent_at?: string
+          status?: string
+          trigger_type: string
+          user_id: string
+        }
+        Update: {
+          ai_generated?: boolean
+          channel?: string
+          clicked_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_text?: string | null
+          opened_at?: string | null
+          related_order_id?: string | null
+          related_product_id?: string | null
+          revenue_attributed?: number | null
+          rule_id?: string | null
+          sent_at?: string
+          status?: string
+          trigger_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_executions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          ai_generated: boolean
+          ai_tone: string | null
+          allowed_hours_end: number | null
+          allowed_hours_start: number | null
+          channel: string
+          cooldown_minutes: number | null
+          created_at: string
+          cta_link: string | null
+          cta_text: string | null
+          enabled: boolean
+          id: string
+          max_sends_per_day: number | null
+          message_template: string | null
+          name: string
+          target_segment: string | null
+          trigger_type: string
+          updated_at: string
+          user_id: string
+          wait_minutes: number
+        }
+        Insert: {
+          ai_generated?: boolean
+          ai_tone?: string | null
+          allowed_hours_end?: number | null
+          allowed_hours_start?: number | null
+          channel?: string
+          cooldown_minutes?: number | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          enabled?: boolean
+          id?: string
+          max_sends_per_day?: number | null
+          message_template?: string | null
+          name: string
+          target_segment?: string | null
+          trigger_type?: string
+          updated_at?: string
+          user_id: string
+          wait_minutes?: number
+        }
+        Update: {
+          ai_generated?: boolean
+          ai_tone?: string | null
+          allowed_hours_end?: number | null
+          allowed_hours_start?: number | null
+          channel?: string
+          cooldown_minutes?: number | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          enabled?: boolean
+          id?: string
+          max_sends_per_day?: number | null
+          message_template?: string | null
+          name?: string
+          target_segment?: string | null
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+          wait_minutes?: number
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -98,6 +328,54 @@ export type Database = {
           id?: string
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      communication_preferences: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email_enabled: boolean
+          id: string
+          in_app_enabled: boolean
+          opted_out_at: string | null
+          push_enabled: boolean
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
+          sms_enabled: boolean
+          store_user_id: string
+          updated_at: string
+          whatsapp_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          opted_out_at?: string | null
+          push_enabled?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          sms_enabled?: boolean
+          store_user_id: string
+          updated_at?: string
+          whatsapp_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email_enabled?: boolean
+          id?: string
+          in_app_enabled?: boolean
+          opted_out_at?: string | null
+          push_enabled?: boolean
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          sms_enabled?: boolean
+          store_user_id?: string
+          updated_at?: string
+          whatsapp_enabled?: boolean
         }
         Relationships: []
       }
@@ -143,6 +421,42 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_behavior_events: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          customer_id: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          product_id: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          product_id?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          product_id?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_message_reads: {
         Row: {
           id: string
@@ -171,6 +485,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      customer_segments: {
+        Row: {
+          auto_update: boolean
+          created_at: string
+          customer_count: number
+          description: string | null
+          enabled: boolean
+          filter_rules: Json
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_update?: boolean
+          created_at?: string
+          customer_count?: number
+          description?: string | null
+          enabled?: boolean
+          filter_rules?: Json
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_update?: boolean
+          created_at?: string
+          customer_count?: number
+          description?: string | null
+          enabled?: boolean
+          filter_rules?: Json
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       customer_wishlist: {
         Row: {
@@ -399,6 +755,65 @@ export type Database = {
           success?: boolean
         }
         Relationships: []
+      }
+      message_delivery_logs: {
+        Row: {
+          channel: string
+          clicked_at: string | null
+          created_at: string
+          customer_id: string | null
+          delivered_at: string | null
+          error_details: string | null
+          execution_id: string | null
+          external_id: string | null
+          id: string
+          opened_at: string | null
+          provider: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          clicked_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          error_details?: string | null
+          execution_id?: string | null
+          external_id?: string | null
+          id?: string
+          opened_at?: string | null
+          provider?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          error_details?: string | null
+          execution_id?: string | null
+          external_id?: string | null
+          id?: string
+          opened_at?: string | null
+          provider?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_delivery_logs_execution_id_fkey"
+            columns: ["execution_id"]
+            isOneToOne: false
+            referencedRelation: "automation_executions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -1004,6 +1419,45 @@ export type Database = {
           p256dh?: string
           platform?: string
           store_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recommendation_logs: {
+        Row: {
+          algorithm: string
+          clicked_product_id: string | null
+          converted: boolean
+          converted_order_id: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          recommended_product_ids: string[]
+          source_product_id: string | null
+          user_id: string
+        }
+        Insert: {
+          algorithm?: string
+          clicked_product_id?: string | null
+          converted?: boolean
+          converted_order_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          recommended_product_ids?: string[]
+          source_product_id?: string | null
+          user_id: string
+        }
+        Update: {
+          algorithm?: string
+          clicked_product_id?: string | null
+          converted?: boolean
+          converted_order_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          recommended_product_ids?: string[]
+          source_product_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2293,6 +2747,10 @@ export type Database = {
       }
     }
     Functions: {
+      create_default_segments: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       customer_email_exists_globally: {
         Args: { _email: string }
         Returns: boolean
