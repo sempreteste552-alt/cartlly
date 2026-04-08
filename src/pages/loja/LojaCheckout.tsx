@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { randomUUID } from "crypto";
 import { useNavigate } from "react-router-dom";
 import { useLojaContext } from "./LojaLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,9 +125,12 @@ export default function LojaCheckout() {
     const userId = settings?.user_id;
     if (!userId) throw new Error("Loja não configurada");
 
-    const { data: order, error: orderErr } = await supabase
+    const orderId = randomUUID();
+
+    const { error: orderErr } = await supabase
       .from("orders")
       .insert({
+        id: orderId,
         user_id: userId,
         customer_name: name.trim(),
         customer_email: email.trim() || null,
@@ -142,12 +146,10 @@ export default function LojaCheckout() {
         coupon_code: appliedCoupon?.code || null,
         discount_amount: discountAmount,
       } as any)
-      .select()
-      .single();
     if (orderErr) throw orderErr;
 
     const items = cart.items.map((i) => ({
-      order_id: order.id,
+      order_id: orderId,
       product_id: i.id,
       product_name: i.name,
       product_image: i.image_url,
@@ -157,7 +159,8 @@ export default function LojaCheckout() {
     const { error: itemsErr } = await supabase.from("order_items").insert(items);
     if (itemsErr) throw itemsErr;
 
-    await supabase.from("order_status_history").insert({ order_id: order.id, status: "pendente" });
+    const { error: historyErr } = await supabase.from("order_status_history").insert({ order_id: orderId, status: "pendente" });
+    if (historyErr) throw historyErr;
 
     if (appliedCoupon && settings?.user_id) {
       await (supabase as any).rpc("increment_coupon_usage", {
@@ -166,7 +169,7 @@ export default function LojaCheckout() {
       });
     }
 
-    return order;
+    return { id: orderId };
   };
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
