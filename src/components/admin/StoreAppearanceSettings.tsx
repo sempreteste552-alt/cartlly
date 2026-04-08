@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,12 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Type, Layers, LayoutGrid, Monitor, Palette, Eye } from "lucide-react";
+import { Loader2, Type, Layers, LayoutGrid, Monitor, Palette, Eye, Upload, Image, X } from "lucide-react";
 import { useStoreThemeConfig, useUpdateStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LockedFeature } from "@/components/LockedFeature";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const FONT_OPTIONS = [
   "Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Playfair Display",
