@@ -81,7 +81,9 @@ export default function LojaLayout() {
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
   // Dynamic PWA manifest with tenant context
-  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeStartUrl = isCustomDomain
+    ? `${window.location.origin}/`
+    : slug ? `${window.location.origin}/loja/${slug}/` : undefined;
   usePwaManifest({
     name: settings?.store_name || undefined,
     shortName: settings?.store_name?.slice(0, 12) || undefined,
@@ -92,7 +94,7 @@ export default function LojaLayout() {
   });
 
   // Detect if current user is the store owner (admin previewing)
-  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
+  const isAdminPreview = !!user && !!settings && user.id === settings.user_id;
 
   // Apply dark class based on user preference or store setting
   useEffect(() => {
