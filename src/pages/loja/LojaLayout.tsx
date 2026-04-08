@@ -5,7 +5,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -22,6 +22,7 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { isPlatformHost } from "@/lib/storeDomain";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -49,11 +50,22 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
-  const storeThemeScope = `store-${slug || "default"}`;
+  
+  // Detect if we're on a custom domain (not platform host and no slug in URL)
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const isCustomDomain = !slug && !isPlatformHost(hostname);
+  
+  const storeThemeScope = `store-${slug || hostname || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
+  
+  // Use slug-based lookup when slug exists, domain-based when on custom domain
   const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
+  const { data: settingsByDomain, isLoading: domainLoading } = useResolvedPublicStore(isCustomDomain ? undefined : slug);
+  
   const { user, customer, signOut } = useCustomerAuth();
-  const cart = useCart(slug);
+  const resolvedSettings = slug ? settingsBySlug : (isCustomDomain ? settingsByDomain : settingsBySlug);
+  const resolvedSlug = resolvedSettings?.store_slug;
+  const cart = useCart(slug || resolvedSlug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
@@ -62,14 +74,16 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const settings = settingsBySlug;
-  const isLoading = slugLoading;
+  const settings = resolvedSettings;
+  const isLoading = slug ? slugLoading : (isCustomDomain ? domainLoading : slugLoading);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
 
   // Dynamic PWA manifest with tenant context
-  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeStartUrl = isCustomDomain
+    ? `${window.location.origin}/`
+    : slug ? `${window.location.origin}/loja/${slug}/` : undefined;
   usePwaManifest({
     name: settings?.store_name || undefined,
     shortName: settings?.store_name?.slice(0, 12) || undefined,
@@ -80,7 +94,7 @@ export default function LojaLayout() {
   });
 
   // Detect if current user is the store owner (admin previewing)
-  const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
+  const isAdminPreview = !!user && !!settings && user.id === settings.user_id;
 
   // Apply dark class based on user preference or store setting
   useEffect(() => {
@@ -98,7 +112,7 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const basePath = slug ? `/loja/${slug}` : "/loja";
+  const basePath = isCustomDomain ? "" : (slug ? `/loja/${slug}` : "/loja");
   const logoSize = settings?.logo_size || 32;
 
   // Apply store colors as CSS custom properties for the entire store
@@ -155,14 +169,22 @@ export default function LojaLayout() {
     }
   }, [themeConfig?.favicon_url]);
 
-  // Slug is required — no default store
-  if (!slug) {
+  // Redirect slug access to custom domain when domain is verified
+  useEffect(() => {
+    if (slug && settings?.custom_domain && settings?.domain_status === "verified" && isPlatformHost(hostname)) {
+      const targetUrl = `https://${settings.custom_domain}${location.pathname.replace(`/loja/${slug}`, "") || "/"}`;
+      window.location.replace(targetUrl);
+    }
+  }, [slug, settings?.custom_domain, settings?.domain_status, hostname, location.pathname]);
+
+  // No slug AND not a custom domain → no store to show
+  if (!slug && !isCustomDomain) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
+          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
         </div>
       </div>
     );
@@ -170,25 +192,28 @@ export default function LojaLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
-  if (slug && !settings) {
+  if (!settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">A loja "{slug}" não existe ou foi removida.</p>
+          <p className="text-muted-foreground">
+            {isCustomDomain
+              ? `O domínio "${hostname}" não está vinculado a nenhuma loja ou o DNS ainda não foi verificado.`
+              : `A loja "${slug}" não existe ou foi removida.`}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Store blocked by super admin
   if (settings && (settings as any).store_blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
