@@ -1,29 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLojaContext } from "./LojaLayout";
 import { Copy, Check, Tag, Ticket, Clock, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { usePublicCoupons } from "@/hooks/usePublicCoupons";
 
 export default function LojaCupons() {
   const { storeUserId, settings } = useLojaContext();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const { data: coupons, isLoading } = useQuery({
-    queryKey: ["public_coupons_page", storeUserId],
-    enabled: !!storeUserId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("coupons")
-        .select("code, discount_type, discount_value, expires_at, min_order_value")
-        .eq("user_id", storeUserId!)
-        .eq("active", true)
-        .or("max_uses.is.null,used_count.lt.max_uses");
-      if (error) throw error;
-      return (data || []).filter(c => !c.expires_at || new Date(c.expires_at) > new Date());
-    },
-    staleTime: 60_000,
-  });
+  const { data: coupons, isLoading } = usePublicCoupons(storeUserId);
 
   const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
@@ -57,9 +42,14 @@ export default function LojaCupons() {
         <div className="h-12 w-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15` }}>
           <Ticket className="h-6 w-6" style={{ color: primaryColor }} />
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
-          <p className="text-sm text-muted-foreground">Aproveite nossas ofertas especiais</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
+            <p className="text-sm text-muted-foreground">Aproveite nossas ofertas especiais</p>
+          </div>
+          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
+            {coupons?.length || 0} cupom(ns)
+          </span>
         </div>
       </div>
 

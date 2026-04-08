@@ -1,30 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { usePublicCoupons } from "@/hooks/usePublicCoupons";
 
 export function ActiveCouponsBanner({ storeUserId, primaryColor }: { storeUserId?: string; primaryColor?: string }) {
   const [expanded, setExpanded] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const { data: coupons } = useQuery({
-    queryKey: ["public_active_coupons", storeUserId],
-    enabled: !!storeUserId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("coupons")
-        .select("code, discount_type, discount_value, expires_at, min_order_value")
-        .eq("user_id", storeUserId!)
-        .eq("active", true)
-        .or("max_uses.is.null,used_count.lt.max_uses");
-      if (error) throw error;
-      // Filter expired on client
-      return (data || []).filter(c => !c.expires_at || new Date(c.expires_at) > new Date());
-    },
-    staleTime: 60_000,
-  });
+  const { data: coupons } = usePublicCoupons(storeUserId);
 
   if (!coupons || coupons.length === 0) return null;
 
@@ -53,6 +37,9 @@ export function ActiveCouponsBanner({ storeUserId, primaryColor }: { storeUserId
           <span className="text-sm font-semibold" style={{ color }}>
             Cupons disponíveis
           </span>
+          <Badge variant="secondary" className="text-[10px]" style={{ backgroundColor: `${color}15`, color }}>
+            {coupons.length}
+          </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
           {visibleCoupons.map((c) => (
