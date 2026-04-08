@@ -360,7 +360,8 @@ Deno.serve(async (req) => {
 
 async function aiRewrite(
   apiKey: string, baseTitle: string, baseBody: string,
-  state: string, storeName: string, customerName: string, greetings: string
+  state: string, storeName: string, customerName: string, greetings: string,
+  productContext = ""
 ): Promise<{ title: string; body: string } | null> {
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -371,9 +372,10 @@ async function aiRewrite(
         {
           role: "system",
           content: `Reescreva esta notificação push para a loja "${storeName}". Mantenha curta e de alta conversão.
+${productContext ? `CONTEXTO: ${productContext}` : ""}
 REGRAS: Responda APENAS JSON: {"title":"...","body":"..."}
 - title: máx 50 chars, comece com emoji diferente do original
-- body: máx 130 chars
+- body: máx 130 chars${productContext ? ", mencione o produto pelo nome se possível" : ""}
 - Use tom ${state === "abandoned_cart" ? "urgente mas gentil" : state === "browsing" ? "curioso e convidativo" : "carinhoso e acolhedor"}
 - Varie palavras, emojis e estrutura do original
 - Saudação: "${greetings}"`,
