@@ -30,22 +30,50 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+        if (video.duration > 10) {
+          toast.error("Vídeo deve ter no máximo 10 segundos");
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+      video.onerror = () => { URL.revokeObjectURL(video.src); resolve(false); };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleMediaSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (imageFiles.length + files.length > 2) {
-      toast.error("Máximo de 2 imagens por avaliação");
+      toast.error("Máximo de 2 arquivos por avaliação");
       return;
     }
-    const validFiles = files.filter((f) => {
-      if (!f.type.startsWith("image/")) { toast.error("Apenas imagens são permitidas"); return false; }
-      if (f.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB"); return false; }
-      return true;
-    });
-    setImageFiles((prev) => [...prev, ...validFiles].slice(0, 2));
-    validFiles.forEach((f) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string].slice(0, 2));
-      reader.readAsDataURL(f);
+    const validated: File[] = [];
+    for (const f of files) {
+      const isImage = f.type.startsWith("image/");
+      const isVideo = f.type.startsWith("video/");
+      if (!isImage && !isVideo) { toast.error("Apenas imagens e vídeos são permitidos"); continue; }
+      if (isImage && f.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 5MB"); continue; }
+      if (isVideo && f.size > 20 * 1024 * 1024) { toast.error("Vídeo deve ter no máximo 20MB"); continue; }
+      if (isVideo && !(await validateVideoDuration(f))) continue;
+      validated.push(f);
+    }
+    if (validated.length === 0) { if (fileInputRef.current) fileInputRef.current.value = ""; return; }
+    setImageFiles((prev) => [...prev, ...validated].slice(0, 2));
+    validated.forEach((f) => {
+      if (f.type.startsWith("video/")) {
+        setImagePreviews((prev) => [...prev, URL.createObjectURL(f)].slice(0, 2));
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => setImagePreviews((prev) => [...prev, ev.target?.result as string].slice(0, 2));
+        reader.readAsDataURL(f);
+      }
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -145,10 +173,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   className="hidden"
-                  onChange={handleImageSelect}
+                  onChange={handleMediaSelect}
                 />
                 <Button
                   type="button"
@@ -158,15 +186,19 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   disabled={imageFiles.length >= 2}
                 >
                   <ImagePlus className="h-4 w-4 mr-1" />
-                  Adicionar Foto ({imageFiles.length}/2)
+                  Adicionar Foto/Vídeo ({imageFiles.length}/2)
                 </Button>
-                <span className="text-xs text-muted-foreground">Máx. 2 fotos, 5MB cada</span>
+                <span className="text-xs text-muted-foreground">Máx. 2 arquivos (fotos 5MB, vídeos 20MB/10s)</span>
               </div>
               {imagePreviews.length > 0 && (
                 <div className="flex gap-2">
                   {imagePreviews.map((src, i) => (
                     <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden border">
-                      <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                      {imageFiles[i]?.type.startsWith("video/") ? (
+                        <video src={src} className="h-full w-full object-cover" muted />
+                      ) : (
+                        <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
+                      )}
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
@@ -207,18 +239,25 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                 {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
                 {r.image_urls && r.image_urls.length > 0 && (
                   <div className="flex gap-2 mt-3">
-                    {r.image_urls.map((url, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setZoomImage(url)}
-                        className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
-                      >
-                        <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
-                          <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      </button>
-                    ))}
+                    {r.image_urls.map((url, i) => {
+                      const isVideo = /\.(mp4|webm|mov|ogg)$/i.test(url);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setZoomImage(url)}
+                          className="relative h-20 w-20 rounded-lg overflow-hidden border hover:opacity-90 transition-opacity group"
+                        >
+                          {isVideo ? (
+                            <video src={url} className="h-full w-full object-cover" muted />
+                          ) : (
+                            <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 flex items-center justify-center transition-colors">
+                            <ZoomIn className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -230,7 +269,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
       {/* Zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={() => setZoomImage(null)}>
         <DialogContent className="max-w-lg p-1">
-          {zoomImage && <img src={zoomImage} alt="Review" className="w-full rounded-lg" />}
+          {zoomImage && (/\.(mp4|webm|mov|ogg)$/i.test(zoomImage) ? (
+            <video src={zoomImage} controls autoPlay className="w-full rounded-lg" />
+          ) : (
+            <img src={zoomImage} alt="Review" className="w-full rounded-lg" />
+          ))}
         </DialogContent>
       </Dialog>
     </div>
