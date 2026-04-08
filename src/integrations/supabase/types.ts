@@ -2201,6 +2201,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_best_selling_products: {
+        Args: { _limit?: number; _store_user_id: string }
+        Returns: {
+          product_id: string
+          total_sold: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
