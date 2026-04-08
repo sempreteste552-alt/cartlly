@@ -187,6 +187,8 @@ export default function LojaCheckout() {
     if (!phone.trim()) return toast.error("Informe seu telefone");
     if (cart.items.length === 0) return toast.error("Carrinho vazio");
 
+    track("checkout_started", { cart_value: cart.total, item_count: cart.count });
+
     // Require customer login before payment (not for WhatsApp)
     if (!viaWhatsApp && authLoading) {
       toast.info("Aguarde, estamos confirmando seu login...");
