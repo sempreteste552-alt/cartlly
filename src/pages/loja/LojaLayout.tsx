@@ -197,7 +197,11 @@ export default function LojaLayout() {
         }}
       >
         {/* PWA Install Banner — very top */}
-        <PWAInstallBanner />
+        <PWAInstallBanner 
+          storeName={settings?.store_name}
+          logoUrl={settings?.logo_url}
+          primaryColor={settings?.primary_color}
+        />
 
         {/* Marketing: Countdown Bar — top of everything */}
         {marketingConfig && <CountdownBar config={marketingConfig} />}
