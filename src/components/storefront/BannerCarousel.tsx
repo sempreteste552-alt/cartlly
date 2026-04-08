@@ -8,44 +8,81 @@ interface Banner {
   media_type?: string;
 }
 
-const ZOOM_DURATION = 8000; // 8s zoom on images then advance
+const ZOOM_DURATION = 8000;
 
 export function BannerCarousel({ banners }: { banners: Banner[] }) {
   const [current, setCurrent] = useState(0);
-  const [zooming, setZooming] = useState(true);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  const goTo = useCallback((idx: number) => {
-    setCurrent(idx);
-    setZooming(false);
-    // Reset zoom animation
-    requestAnimationFrame(() => setZooming(true));
-  }, []);
+  const goTo = useCallback(
+    (idx: number) => {
+      setCurrent((idx + banners.length) % banners.length);
+    },
+    [banners.length]
+  );
 
   const goNext = useCallback(() => {
-    goTo((current + 1) % banners.length);
-  }, [current, banners.length, goTo]);
+    setCurrent((prev) => (prev + 1) % banners.length);
+  }, [banners.length]);
 
   const goPrev = useCallback(() => {
-    goTo((current - 1 + banners.length) % banners.length);
-  }, [current, banners.length, goTo]);
-
-  // Auto-advance for images
-  const banner = banners[current];
-  const isVideo = (banner as any)?.media_type === "video";
+    setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
+  }, [banners.length]);
 
   useEffect(() => {
-    if (isVideo) return; // video advances on end
-    timerRef.current = setTimeout(goNext, ZOOM_DURATION);
-    return () => clearTimeout(timerRef.current);
-  }, [current, isVideo, goNext]);
+    if (!banners.length) return;
 
-  // Keyboard
+    clearTimeout(timerRef.current);
+
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      if (index !== current) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    });
+
+    const activeBanner = banners[current];
+    const activeIsVideo = activeBanner?.media_type === "video";
+
+    if (!activeIsVideo) {
+      timerRef.current = setTimeout(goNext, ZOOM_DURATION);
+      return () => clearTimeout(timerRef.current);
+    }
+
+    const activeVideo = videoRefs.current[current];
+    if (!activeVideo) return;
+
+    const startPlayback = () => {
+      activeVideo.currentTime = 0;
+      activeVideo.play().catch(() => undefined);
+    };
+
+    if (activeVideo.readyState >= 2) {
+      startPlayback();
+      return;
+    }
+
+    const handleLoadedData = () => {
+      startPlayback();
+      activeVideo.removeEventListener("loadeddata", handleLoadedData);
+    };
+
+    activeVideo.addEventListener("loadeddata", handleLoadedData);
+
+    return () => {
+      activeVideo.removeEventListener("loadeddata", handleLoadedData);
+      clearTimeout(timerRef.current);
+    };
+  }, [banners, current, goNext]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
+
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrev]);
@@ -55,36 +92,36 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-4">
       <div className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden bg-muted">
-        {/* Slides */}
-        {banners.map((b, i) => {
-          const active = i === current;
-          const bIsVideo = (b as any)?.media_type === "video";
+        {banners.map((banner, index) => {
+          const active = index === current;
+          const isVideo = banner.media_type === "video";
 
           return (
             <div
-              key={b.id}
-              className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0"}`}
+              key={banner.id}
+              className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             >
-              {bIsVideo ? (
+              {isVideo ? (
                 <video
-                  src={b.image_url}
+                  ref={(element) => {
+                    videoRefs.current[index] = element;
+                  }}
+                  src={banner.image_url}
                   className="w-full h-full object-cover"
-                  autoPlay={active}
                   muted
                   playsInline
                   preload="metadata"
-                  onEnded={goNext}
-                  {...(!active && { pause: true } as any)}
+                  onEnded={() => {
+                    if (index === current) goNext();
+                  }}
                 />
               ) : (
-                <MaybeLink href={b.link_url}>
+                <MaybeLink href={banner.link_url} disabled={!active}>
                   <img
-                    src={b.image_url}
+                    src={banner.image_url}
                     alt="Banner"
-                    className={`w-full h-full object-cover transition-transform ${
-                      active && zooming ? "animate-ken-burns" : ""
-                    }`}
-                    loading={i === 0 ? "eager" : "lazy"}
+                    className={`w-full h-full object-cover ${active ? "animate-ken-burns" : ""}`}
+                    loading={index === 0 ? "eager" : "lazy"}
                   />
                 </MaybeLink>
               )}
@@ -92,19 +129,18 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
           );
         })}
 
-        {/* Arrows */}
         {banners.length > 1 && (
           <>
             <button
               onClick={goPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 rounded-full p-1.5 text-white transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/40 p-1.5 text-white transition-colors hover:bg-black/60"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={goNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 rounded-full p-1.5 text-white transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/40 p-1.5 text-white transition-colors hover:bg-black/60"
               aria-label="Próximo"
             >
               <ChevronRight className="h-5 w-5" />
@@ -112,16 +148,14 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
           </>
         )}
 
-        {/* Dots */}
         {banners.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-            {banners.map((_, i) => (
+          <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+            {banners.map((_, index) => (
               <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all ${
-                  i === current ? "w-6 bg-white" : "w-2 bg-white/50"
-                }`}
+                key={index}
+                onClick={() => goTo(index)}
+                className={`h-2 rounded-full transition-all ${index === current ? "w-6 bg-white" : "w-2 bg-white/50"}`}
+                aria-label={`Ir para banner ${index + 1}`}
               />
             ))}
           </div>
@@ -131,13 +165,22 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   );
 }
 
-function MaybeLink({ href, children }: { href?: string | null; children: React.ReactNode }) {
-  if (href) {
+function MaybeLink({
+  href,
+  children,
+  disabled = false,
+}: {
+  href?: string | null;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  if (href && !disabled) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+      <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
         {children}
       </a>
     );
   }
-  return <>{children}</>;
+
+  return <div className="h-full w-full">{children}</div>;
 }
