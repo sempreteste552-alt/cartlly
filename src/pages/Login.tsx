@@ -320,7 +320,46 @@ export default function Login() {
           </CardHeader>
 
           <CardContent className="pb-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Alert Card */}
+            {alertCard && (
+              <div className={`mb-4 rounded-lg border p-3 ${
+                alertCard.type === "error" ? "border-destructive/40 bg-destructive/5" :
+                alertCard.type === "warning" ? "border-yellow-500/40 bg-yellow-500/5" :
+                "border-green-500/40 bg-green-500/5"
+              }`}>
+                <div className={`flex items-start gap-2 ${
+                  alertCard.type === "error" ? "text-destructive" :
+                  alertCard.type === "warning" ? "text-yellow-600 dark:text-yellow-400" :
+                  "text-green-600 dark:text-green-400"
+                }`}>
+                  {alertCard.type === "error" ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  ) : alertCard.type === "warning" ? (
+                    <Mail className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p className="text-sm font-medium leading-tight">{alertCard.message}</p>
+                </div>
+                {alertCard.type === "warning" && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.auth.resend({ type: "signup", email });
+                        if (error) throw error;
+                        toast.success("E-mail de verificação reenviado!");
+                      } catch (err: any) {
+                        toast.error(err.message || "Erro ao reenviar");
+                      }
+                    }}
+                    className="mt-2 text-xs text-blue-500 hover:underline font-medium ml-6"
+                  >
+                    Reenviar e-mail de verificação
+                  </button>
+                )}
+              </div>
+            )}
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
