@@ -74,7 +74,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 5MB.");
+    if (file.size > 10 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 10MB.");
     const url = await uploadImage.mutateAsync(file);
     setImageUrl(url);
   };
