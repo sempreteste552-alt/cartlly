@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { normalizeDomain } from "@/lib/storeDomain";
 
 const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -45,7 +46,7 @@ export function AdminSidebar() {
   const storeSlug = (settings as any)?.store_slug;
   const customDomain = (settings as any)?.custom_domain;
   const domainStatus = (settings as any)?.domain_status;
-  const sanitizedCustomDomain = customDomain?.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const sanitizedCustomDomain = normalizeDomain(customDomain);
   const storeUrl = (sanitizedCustomDomain && domainStatus === "verified")
     ? `https://${sanitizedCustomDomain}`
     : (storeSlug ? `/loja/${storeSlug}` : "/loja");

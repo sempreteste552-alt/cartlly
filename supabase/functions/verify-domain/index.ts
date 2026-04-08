@@ -21,6 +21,18 @@ async function resolveDns(name: string, type: string) {
   return response.json();
 }
 
+async function checkHttps(domain: string) {
+  try {
+    const response = await fetch(`https://${domain}`, {
+      method: "HEAD",
+      redirect: "manual",
+    });
+    return response.status >= 200 && response.status < 400;
+  } catch (_error) {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -129,7 +141,8 @@ Deno.serve(async (req) => {
     }
 
     const dnsVerified = aRecordFound && txtRecordFound;
-    const newStatus = dnsVerified ? "verified" : (aRecordFound || txtRecordFound ? "pending" : "failed");
+    const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
+    const newStatus = sslReady ? "verified" : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
 
     const { error: updateError } = await supabase
       .from("store_settings")
@@ -149,6 +162,7 @@ Deno.serve(async (req) => {
         status: newStatus,
         aRecord: aRecordFound,
         txtRecord: txtRecordFound,
+        sslReady,
         domain: requestedDomain,
         provider: detectedProvider,
         nameservers,

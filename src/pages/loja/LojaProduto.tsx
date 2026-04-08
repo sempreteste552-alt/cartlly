@@ -20,9 +20,9 @@ import { CartNotification, useCartNotification } from "@/components/storefront/C
 import { toast } from "sonner";
 
 export default function LojaProduto() {
-  const { id, slug } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, settings, storeUserId, openCart } = useLojaContext();
+  const { cart, settings, storeUserId, openCart, basePath } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
@@ -30,7 +30,6 @@ export default function LojaProduto() {
   const cartNotif = useCartNotification();
 
   const product = products?.find((p) => p.id === id);
-  const basePath = slug ? `/loja/${slug}` : "/loja";
 
   const allImages = useMemo(() => {
     const images: string[] = [];
