@@ -72,6 +72,7 @@ export function AIChatWidget() {
   const [aiSettings, setAiSettings] = useState(loadAISettings);
   const [tempName, setTempName] = useState(aiSettings.name);
   const [tempAvatar, setTempAvatar] = useState(aiSettings.avatarUrl);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isLocked } = usePlanFeatures();
@@ -226,6 +227,21 @@ export function AIChatWidget() {
       }
     }
   }, [user, queryClient]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx 2MB)");
+      return;
+    }
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setTempAvatar(dataUrl);
+    } catch {
+      toast.error("Erro ao carregar imagem");
+    }
+  };
 
   const saveSettings = () => {
     const newSettings = { name: tempName.trim() || "Assistente IA", avatarUrl: tempAvatar.trim() };
@@ -530,9 +546,25 @@ export function AIChatWidget() {
               <Input value={tempName} onChange={(e) => setTempName(e.target.value)} placeholder="Assistente IA" maxLength={30} />
             </div>
             <div className="space-y-2">
-              <Label>URL do Avatar (opcional)</Label>
-              <Input value={tempAvatar} onChange={(e) => setTempAvatar(e.target.value)} placeholder="https://..." />
-              <p className="text-xs text-muted-foreground">Cole a URL de uma imagem para o avatar da IA</p>
+              <Label>Avatar da IA</Label>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <div className="flex gap-2 items-center">
+                <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()}>
+                  Enviar imagem
+                </Button>
+                {tempAvatar && (
+                  <Button variant="ghost" size="sm" onClick={() => setTempAvatar("")}>
+                    Remover
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">JPG, PNG ou WebP (máx 2MB)</p>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSettingsOpen(false)}>Cancelar</Button>
