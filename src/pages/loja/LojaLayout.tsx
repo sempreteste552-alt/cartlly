@@ -4,6 +4,7 @@ import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
+import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
@@ -234,6 +235,13 @@ export default function LojaLayout() {
       >
         {/* PWA Install Banner — very top */}
         <PWAInstallBanner 
+          storeName={settings?.store_name}
+          logoUrl={settings?.logo_url}
+          primaryColor={settings?.primary_color}
+        />
+
+        {/* Push notification permission prompt — auto-shows on first visit */}
+        <PushPermissionPrompt
           storeName={settings?.store_name}
           logoUrl={settings?.logo_url}
           primaryColor={settings?.primary_color}
