@@ -242,6 +242,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user && !data.session) {
+      // Email confirmation required — save pending info so SIGNED_IN handler can create customer record
+      localStorage.setItem("pending_customer_signup", JSON.stringify({
+        auth_user_id: data.user.id,
+        store_user_id: storeUserId,
+        name,
+        email: normalizedEmail,
+      }));
       throw new Error("Verifique seu e-mail para confirmar o cadastro antes de fazer login.");
     }
 
