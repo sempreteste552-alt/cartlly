@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag } = body;
+    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
 
     if (!target_user_id || !title) {
       return json({ error: "target_user_id and title required" }, 400);
@@ -152,10 +152,17 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { data: subs } = await supabase
+    let query = supabase
       .from("push_subscriptions")
       .select("*")
       .eq("user_id", target_user_id);
+
+    // Tenant isolation: if store_user_id provided, only send to subscriptions for that store
+    if (store_user_id) {
+      query = query.eq("store_user_id", store_user_id);
+    }
+
+    const { data: subs } = await query;
 
     if (!subs || subs.length === 0) {
       await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
