@@ -16,16 +16,16 @@ function json(data: any, status = 200) {
 type Priority = "high" | "medium" | "low";
 
 const PRIORITY_CONFIG = {
-  high: { bypassSoftLimit: true, minCooldownMinutes: 30 },   // cart, product_view
-  medium: { bypassSoftLimit: false, minCooldownMinutes: 60 }, // inactivity
-  low: { bypassSoftLimit: false, minCooldownMinutes: 60 },    // promotions
+  high: { bypassSoftLimit: true, minCooldownMinutes: 10 },   // cart, product_view
+  medium: { bypassSoftLimit: false, minCooldownMinutes: 20 }, // inactivity
+  low: { bypassSoftLimit: false, minCooldownMinutes: 30 },    // promotions
 };
 
 // Frequency presets (admin-configurable via automation_rules.max_sends_per_day)
 const FREQUENCY_PRESETS: Record<string, { softDailyLimit: number; cooldownMinutes: number }> = {
-  low: { softDailyLimit: 4, cooldownMinutes: 90 },
-  medium: { softDailyLimit: 6, cooldownMinutes: 60 },
-  aggressive: { softDailyLimit: 10, cooldownMinutes: 30 },
+  low: { softDailyLimit: 8, cooldownMinutes: 30 },
+  medium: { softDailyLimit: 12, cooldownMinutes: 20 },
+  aggressive: { softDailyLimit: 20, cooldownMinutes: 10 },
 };
 
 function getFrequencyConfig(maxSendsPerDay: number | null) {
@@ -48,7 +48,9 @@ async function shouldSkipAntiSpam(
     return { skip: true, reason: "soft_daily_limit" };
   }
   // Hard ceiling even for high priority
-  if (dailyCount >= 12) {
+  if (dailyCount >= 25) {
+    return { skip: true, reason: "hard_daily_ceiling" };
+  }
     return { skip: true, reason: "hard_daily_ceiling" };
   }
 
@@ -81,15 +83,15 @@ async function shouldSkipAntiSpam(
     }
   }
 
-  // Anti-spam: don't repeat same product within 4 hours
+  // Anti-spam: don't repeat same product within 1 hour
   if (productId) {
-    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recentProduct } = await supabase
       .from("automation_executions")
       .select("id")
       .eq("customer_id", customerId)
       .eq("related_product_id", productId)
-      .gte("sent_at", fourHoursAgo)
+      .gte("sent_at", oneHourAgo)
       .limit(1);
     if (recentProduct && recentProduct.length > 0) {
       return { skip: true, reason: "same_product_recently" };
@@ -392,8 +394,8 @@ Deno.serve(async (req) => {
         const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, dailyCount, priority, freqConfig);
         
         if (spamCheck.skip) {
-          // Reschedule with shorter delays to avoid pushing too far
-          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 35 : 60;
+          // Reschedule with short delays
+          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 15 : 25;
           const nextTime = new Date(Date.now() + rescheduleMinutes * 60 * 1000).toISOString();
           await supabase.from("retargeting_sequences").update({ next_push_at: nextTime }).eq("id", seq.id);
           results.anti_spam_blocked++;
