@@ -541,8 +541,13 @@ export type Database = {
         Row: {
           created_at: string
           customer_id: string
+          discount_available: boolean
           id: string
+          intent_level: string
           last_activity_at: string
+          last_product_id: string | null
+          last_product_name: string | null
+          low_stock: boolean
           metadata: Json
           state: string
           state_changed_at: string
@@ -552,8 +557,13 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_id: string
+          discount_available?: boolean
           id?: string
+          intent_level?: string
           last_activity_at?: string
+          last_product_id?: string | null
+          last_product_name?: string | null
+          low_stock?: boolean
           metadata?: Json
           state?: string
           state_changed_at?: string
@@ -563,8 +573,13 @@ export type Database = {
         Update: {
           created_at?: string
           customer_id?: string
+          discount_available?: boolean
           id?: string
+          intent_level?: string
           last_activity_at?: string
+          last_product_id?: string | null
+          last_product_name?: string | null
+          low_stock?: boolean
           metadata?: Json
           state?: string
           state_changed_at?: string
