@@ -619,14 +619,24 @@ export default function LojaLayout() {
               </div>
               <span className="text-[10px] mt-0.5 font-medium">Carrinho</span>
             </Link>
-            <Link
-              to={`${basePath}/rastreio`}
-              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-              style={{ color: isRastreio ? primaryColor : undefined }}
-            >
-              <Truck className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">Rastreio</span>
-            </Link>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-muted-foreground">
+                  <div className="relative">
+                    <Bell className="h-5 w-5" />
+                    {notifUnread > 0 && (
+                      <span className="absolute -top-1.5 -right-2.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: "#ef4444" }}>
+                        {notifUnread > 9 ? "9+" : notifUnread}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] mt-0.5 font-medium">Avisos</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0 mb-2" align="center" side="top" sideOffset={8}>
+                <CustomerNotificationsBellContent storeUserId={settings?.user_id} primaryColor={primaryColor} />
+              </PopoverContent>
+            </Popover>
             {!isAdminPreview && (
               <button
                 onClick={() => user && customer ? setProfileModalOpen(true) : setAuthModalOpen(true)}
