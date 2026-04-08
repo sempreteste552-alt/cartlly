@@ -33,6 +33,7 @@ export interface LojaContextType {
   searchTerm: string;
   setSearchTerm: (s: string) => void;
   storeUserId?: string;
+  openCart: () => void;
 }
 
 import { createContext, useContext } from "react";
@@ -186,7 +187,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id }}>
+    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true) }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors"
         style={{ 

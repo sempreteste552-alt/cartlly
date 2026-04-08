@@ -21,7 +21,7 @@ import { toast } from "sonner";
 export default function LojaHome() {
   const { slug } = useParams();
   const location = useLocation();
-  const { cart, searchTerm, settings, storeUserId } = useLojaContext();
+  const { cart, searchTerm, settings, storeUserId, openCart } = useLojaContext();
 
   // Smooth scroll to top on page load
   useEffect(() => {
@@ -165,10 +165,10 @@ export default function LojaHome() {
         <CartNotification
           productName={cartNotif.notification.productName}
           productImage={cartNotif.notification.productImage}
-          basePath={basePath}
           buttonColor={buttonColor}
           buttonTextColor={buttonTextColor}
           onClose={cartNotif.hide}
+          onOpenCart={openCart}
         />
       )}
     </div>

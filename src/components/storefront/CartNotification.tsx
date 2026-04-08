@@ -1,24 +1,23 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { ShoppingCart, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CartNotificationProps {
   productName: string;
   productImage?: string | null;
-  basePath: string;
   buttonColor?: string;
   buttonTextColor?: string;
   onClose: () => void;
+  onOpenCart: () => void;
 }
 
 export function CartNotification({
   productName,
   productImage,
-  basePath,
   buttonColor = "#000",
   buttonTextColor = "#fff",
   onClose,
+  onOpenCart,
 }: CartNotificationProps) {
   const [exiting, setExiting] = useState(false);
 
@@ -82,16 +81,18 @@ export function CartNotification({
           >
             Continuar comprando
           </Button>
-          <Link to={`${basePath}/checkout`} className="flex-1" onClick={handleClose}>
-            <Button
-              size="sm"
-              className="w-full text-xs transition-transform active:scale-95"
-              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-            >
-              <ShoppingCart className="mr-1 h-3 w-3" />
-              Ver Carrinho
-            </Button>
-          </Link>
+          <Button
+            size="sm"
+            className="flex-1 text-xs transition-transform active:scale-95"
+            style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+            onClick={() => {
+              handleClose();
+              onOpenCart();
+            }}
+          >
+            <ShoppingCart className="mr-1 h-3 w-3" />
+            Ver Carrinho
+          </Button>
         </div>
       </div>
     </div>
