@@ -156,38 +156,50 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <ScrollArea className="max-h-[450px]">
+        <ScrollArea className="flex-1 overflow-y-auto max-h-[500px]">
           {notifications.length === 0 ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              <Bell className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p>Sua central de notificações está vazia</p>
+            <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground/60 space-y-3">
+              <div className="p-4 bg-muted rounded-full">
+                <Bell className="h-8 w-8 opacity-40" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground/80">Sua central está vazia</p>
+                <p className="text-xs">Você receberá atualizações aqui.</p>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col">
               {notifications.map((n) => (
-                <div key={n.id} className="group relative">
+                <div key={n.id} className="group relative border-b last:border-0 hover:bg-muted/30 transition-all duration-200">
                   <button
                     onClick={() => { if (!n.read) markAsRead(n.id); }}
-                    className={`w-full text-left p-4 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5 border-l-2 border-primary" : "border-l-2 border-transparent"}`}
+                    className={`w-full text-left p-4.5 pl-6 pr-12 transition-colors relative ${!n.read ? "bg-primary/[0.03]" : "opacity-75"}`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl shrink-0 mt-0.5">{getNotificationEmoji(n.type)}</span>
-                      <div className="flex-1 min-w-0 pr-6">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={`text-sm truncate ${!n.read ? "font-bold text-foreground" : "font-medium text-muted-foreground"}`}>{n.title}</p>
-                          {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 animate-pulse" />}
+                    {!n.read && (
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary shadow-sm shadow-primary/40 animate-pulse" />
+                    )}
+                    <div className="flex items-start gap-4">
+                      <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-sm bg-white border border-border/50 group-hover:scale-110 transition-transform`}>
+                        <span className="text-xl leading-none block">{getNotificationEmoji(n.type)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className={`text-sm truncate leading-snug tracking-tight ${!n.read ? "font-bold text-foreground" : "font-medium text-muted-foreground"}`}>{n.title}</p>
                         </div>
-                        <p className={`text-xs mt-1 leading-relaxed ${!n.read ? "text-foreground/80" : "text-muted-foreground/70"}`}>
+                        <p className={`text-xs leading-relaxed line-clamp-2 ${!n.read ? "text-foreground/85 font-normal" : "text-muted-foreground/75 font-normal"}`}>
                           {n.message}
                         </p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-2 font-medium">{formatDate(n.created_at)}</p>
+                        <div className="flex items-center gap-1.5 mt-2.5">
+                          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide uppercase">{formatDate(n.created_at)}</span>
+                          {!n.read && <span className="text-[10px] text-primary/70 font-bold px-1.5 py-0.5 bg-primary/5 rounded-md uppercase tracking-wider">Novo</span>}
+                        </div>
                       </div>
                     </div>
                   </button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all hover:text-destructive hover:bg-destructive/10 rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteNotification(n.id);
@@ -196,7 +208,6 @@ export function AdminNotificationsBell() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Separator />
                 </div>
               ))}
             </div>
