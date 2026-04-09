@@ -398,9 +398,12 @@ export default function LojaProduto() {
           <Separator />
 
           {productPageConfig?.enable_trust_badges && (
-            <div className="flex flex-col items-center gap-3 py-3">
-              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-14 w-auto max-w-full object-contain" />
-              <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-12 w-auto max-w-full object-contain" />
+            <div className="flex flex-col items-center gap-4 py-4">
+              <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
+              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
+              <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xs object-contain" />
+              </div>
             </div>
           )}
 

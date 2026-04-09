@@ -898,9 +898,12 @@ export default function LojaCheckout() {
         </Card>
 
         {/* Trust badges */}
-        <div className="flex flex-col items-center gap-4 py-4">
-          <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-16 w-auto max-w-full object-contain" />
-          <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-14 w-auto max-w-full object-contain" />
+        <div className="flex flex-col items-center gap-5 py-6">
+          <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
+          <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
+          <div className="bg-muted/50 rounded-xl p-4 border border-border">
+            <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xs object-contain" />
+          </div>
         </div>
 
         {/* Actions */}
