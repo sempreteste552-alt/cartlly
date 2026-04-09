@@ -462,9 +462,17 @@ function GeneralSettingsTab() {
           <Separator />
 
           <div className="space-y-3">
-            {banners?.map((b) => (
+            {banners?.map((b, index) => (
               <div key={b.id} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-start">
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={() => moveBanner(index, "up")}>
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === (banners?.length ?? 1) - 1} onClick={() => moveBanner(index, "down")}>
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <div className="relative group shrink-0">
                     {(b as any).media_type === "video" ? (
                       <video src={b.image_url} className="w-24 h-16 rounded object-cover border border-border" muted loop playsInline onMouseEnter={(e) => (e.target as HTMLVideoElement).play()} onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }} />
