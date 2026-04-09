@@ -56,7 +56,7 @@ export default function Pedidos() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div id="orders-header" className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Pedidos</h1>
           <p className="text-muted-foreground">Acompanhe e gerencie os pedidos da loja</p>
