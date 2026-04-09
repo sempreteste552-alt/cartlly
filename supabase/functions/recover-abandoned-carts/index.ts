@@ -788,8 +788,15 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
   const storeName = storeMap.get(store_user_id)?.store_name || "nossa loja";
   const productName = product?.name || "um produto";
 
-  let title = `👀 Você deu uma olhadinha...`;
-  let msgBody = `Oi ${customer.name}! Notamos que você gostou de "${productName}" na ${storeName}. Aproveite para garantir o seu!`;
+  const productViewFallbacks = [
+    { title: `👀 Você deu uma olhadinha...`, body: `Oi ${customer.name}! Notamos que você gostou de "${productName}" na ${storeName}. Aproveite para garantir o seu!` },
+    { title: `✨ O que achou do item?`, body: `${customer.name}, vimos seu interesse em "${productName}" na ${storeName}. Ainda temos em estoque!` },
+    { title: `💖 Uma escolha excelente!`, body: `Oi ${customer.name}, o produto "${productName}" combina muito com você. Que tal levar para casa?` },
+    { title: `🎁 Temos novidades pra você`, body: `Notamos que você viu "${productName}" na ${storeName}. Confira se ainda temos sua numeração/cor!` }
+  ];
+  const randomPVFallback = productViewFallbacks[Math.floor(Math.random() * productViewFallbacks.length)];
+  let title = randomPVFallback.title;
+  let msgBody = randomPVFallback.body;
 
   if (lovableApiKey) {
     try {
