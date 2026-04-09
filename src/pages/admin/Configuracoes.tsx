@@ -27,6 +27,7 @@ import MarketingConversionSettings from "@/components/admin/MarketingConversionS
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
 import RestockAlertManager from "@/components/admin/RestockAlertManager";
 import PushNotificationSettings from "@/components/admin/PushNotificationSettings";
+import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 
 function AccountEmailChanger() {
   const [newEmail, setNewEmail] = useState("");
