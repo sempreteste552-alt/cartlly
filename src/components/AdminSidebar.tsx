@@ -76,7 +76,7 @@ export function AdminSidebar() {
                 <span className="text-sm font-semibold text-sidebar-foreground truncate">
                   {(settings as any)?.store_name || "Minha Loja"}
                 </span>
-                {planSlug === "PREMIUM" && (
+                {(planSlug === "PREMIUM" || planSlug === "PRO") && !ctx.isTrialExpired && ctx.subscriptionStatus === "active" && (
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
                 )}
               </div>
