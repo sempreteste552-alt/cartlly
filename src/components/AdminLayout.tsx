@@ -17,7 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Clock } from "lucide-react";
+import { Crown, Clock, HelpCircle } from "lucide-react";
+import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
