@@ -7,7 +7,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
-import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,12 +49,6 @@ function getTextContent(content: MsgContent): string {
   return content.filter((p) => p.type === "text").map((p) => (p as any).text).join("");
 }
 
-// Extract images from MsgContent
-function getImageUrls(content: MsgContent): string[] {
-  if (typeof content === "string") return [];
-  return content.filter((p) => p.type === "image_url").map((p) => (p as any).image_url.url);
-}
-
 // Strip action blocks from visible text
 function cleanContent(content: string): string {
   return content
@@ -70,9 +64,6 @@ export function AIChatWidget() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [aiSettings, setAiSettings] = useState(loadAISettings);
-  const [tempName, setTempName] = useState(aiSettings.name);
-  const [tempAvatar, setTempAvatar] = useState(aiSettings.avatarUrl);
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const chatImageInputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +79,21 @@ export function AIChatWidget() {
   const { data: coupons } = useCoupons();
   const { data: orders } = useOrders();
   const { data: settings } = useStoreSettings();
+  const updateSettings = useUpdateStoreSettings();
+
+  const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
+  const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
+
+  const [tempName, setTempName] = useState(aiName);
+  const [tempAvatar, setTempAvatar] = useState(aiAvatarUrl);
+
+  // Sync temp state when settings are loaded/updated
+  useEffect(() => {
+    if (settings) {
+      setTempName((settings as any).ai_name || AI_SETTINGS_DEFAULT.name);
+      setTempAvatar((settings as any).ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl);
+    }
+  }, [settings]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -147,11 +153,9 @@ export function AIChatWidget() {
       shippingEnabled: (settings as any)?.shipping_enabled || false,
       aiName: aiName,
     };
-  }, [products, categories, coupons, orders, settings, aiSettings.name]);
+  }, [products, categories, coupons, orders, settings, aiName]);
 
-  // Process AI action commands embedded in responses
   const processAIActions = useCallback(async (content: string) => {
-    // New format: [ACTION_PUSH]{...}[/ACTION_PUSH]
     const pushMatch = content.match(/\[ACTION_PUSH\]([\s\S]*?)\[\/ACTION_PUSH\]/);
     if (pushMatch && user) {
       try {
@@ -193,42 +197,6 @@ export function AIChatWidget() {
         console.error("Coupon action error:", e);
       }
     }
-
-    // Legacy format support
-    const actionRegex = /```action:(\w+)\s*\n([\s\S]*?)```/g;
-    let match;
-    while ((match = actionRegex.exec(content)) !== null) {
-      const actionType = match[1];
-      try {
-        const payload = JSON.parse(match[2].trim());
-        if (actionType === "send_push" && user) {
-          const resp = await supabase.functions.invoke("send-push-customers", {
-            body: { title: payload.title, body: payload.body, store_user_id: user.id },
-          });
-          if (resp.error) toast.error("Erro ao enviar push: " + resp.error.message);
-          else toast.success(`✅ Push enviado para ${resp.data?.sent || 0} clientes!`);
-        }
-        if (actionType === "create_coupon" && user) {
-          const { error } = await supabase.from("coupons").insert({
-            user_id: user.id,
-            code: payload.code?.toUpperCase() || "AI" + Date.now().toString(36).toUpperCase(),
-            discount_type: payload.discount_type || "percentage",
-            discount_value: payload.discount_value || 10,
-            active: true,
-            max_uses: payload.max_uses || null,
-            min_order_value: payload.min_order_value || 0,
-            expires_at: payload.expires_at || null,
-          });
-          if (error) toast.error("Erro ao criar cupom: " + error.message);
-          else {
-            toast.success(`✅ Cupom ${payload.code || ""} criado!`);
-            queryClient.invalidateQueries({ queryKey: ["coupons"] });
-          }
-        }
-      } catch (e) {
-        console.error("Legacy action parse error:", e);
-      }
-    }
   }, [user, queryClient]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,7 +216,6 @@ export function AIChatWidget() {
 
   const saveSettings = async () => {
     if (!settings?.id) return;
-    
     try {
       await updateSettings.mutateAsync({
         id: settings.id,
@@ -260,21 +227,6 @@ export function AIChatWidget() {
       console.error("Error saving AI settings:", error);
     }
   };
-
-  if (aiLocked) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
-          title="Chat IA bloqueado — Faça upgrade do plano"
-          disabled
-        >
-          <Lock className="h-6 w-6" />
-        </Button>
-      </div>
-    );
-  }
 
   const handleChatImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -376,30 +328,6 @@ export function AIChatWidget() {
         }
       }
 
-      // Flush remaining
-      if (textBuffer.trim()) {
-        for (const raw of textBuffer.split("\n")) {
-          if (!raw || !raw.startsWith("data: ")) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantSoFar += content;
-              setMessages((prev) => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: "assistant", content: assistantSoFar }];
-              });
-            }
-          } catch {}
-        }
-      }
-
-      // Process any action blocks in the final response
       if (assistantSoFar) {
         await processAIActions(assistantSoFar);
       }
@@ -410,6 +338,21 @@ export function AIChatWidget() {
       setIsLoading(false);
     }
   };
+
+  if (aiLocked) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
+          title="Chat IA bloqueado — Faça upgrade do plano"
+          disabled
+        >
+          <Lock className="h-6 w-6" />
+        </Button>
+      </div>
+    );
+  }
 
   if (!open) {
     return (
@@ -432,8 +375,8 @@ export function AIChatWidget() {
         <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              {aiSettings.avatarUrl ? (
-                <AvatarImage src={aiSettings.avatarUrl} alt={aiSettings.name} />
+              {aiAvatarUrl ? (
+                <AvatarImage src={aiAvatarUrl} alt={aiName} />
               ) : null}
               <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xs">
                 {aiInitials}
@@ -448,209 +391,171 @@ export function AIChatWidget() {
             <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
               <Settings2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setMessages([])}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setOpen(false)}>
               <Minimize2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setOpen(false)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setMessages([]); setOpen(false); }}>
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Messages */}
-        <div id="chat-messages" ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          <FeatureTutorialCard
-            id="ai_chat_tutorial"
-            title="Seu Assistente de Vendas IA"
-            description="Eu posso te ajudar a analisar suas vendas, criar campanhas de marketing, gerar textos e até criar cupons de desconto."
-            steps={[
-              "Peça para analisar suas vendas da semana",
-              "Solicite ideias de posts para redes sociais",
-              "Crie cupons de desconto por comando",
-              "Envie notificações push para seus clientes"
-            ]}
-            className="mb-4"
-          />
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30">
           {messages.length === 0 && (
             <div className="space-y-4">
-              <div className="text-center py-4">
-                <Avatar className="h-16 w-16 mx-auto mb-3">
-                  {aiSettings.avatarUrl ? (
-                    <AvatarImage src={aiSettings.avatarUrl} alt={aiSettings.name} />
-                  ) : null}
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                    {aiInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="text-sm font-medium text-foreground">Olá! Sou {aiSettings.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">Posso enviar promoções, criar cupons, analisar vendas e muito mais</p>
+              <div className="flex flex-col items-center text-center space-y-2 py-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold">Olá! Como posso ajudar hoje?</h3>
+                <p className="text-sm text-muted-foreground px-4">
+                  Eu sou seu assistente inteligente. Posso analisar suas vendas, sugerir produtos, criar cupons e muito mais.
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {QUICK_ACTIONS.map((action) => (
-                  <button
+                  <Button
                     key={action.label}
+                    variant="outline"
+                    className="justify-start text-xs h-auto py-2.5 px-3 whitespace-normal text-left border-border/60 hover:border-primary/50 hover:bg-primary/5"
                     onClick={() => sendMessage(action.prompt)}
-                    className="rounded-lg border border-border p-2.5 text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
                   >
-                    <span className="text-xs">{action.label}</span>
-                  </button>
+                    {action.label}
+                  </Button>
                 ))}
               </div>
             </div>
           )}
 
           {messages.map((msg, i) => (
-            <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              {msg.role === "assistant" && (
-                <div className="flex-shrink-0 mt-1">
-                  <Avatar className="h-7 w-7">
-                    {aiSettings.avatarUrl ? (
-                      <AvatarImage src={aiSettings.avatarUrl} alt={aiSettings.name} />
-                    ) : null}
-                    <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                      {aiInitials}
-                    </AvatarFallback>
-                  </Avatar>
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
-              )}
-              <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
-              }`}>
-                {msg.role === "assistant" ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5">
-                    <ReactMarkdown>{cleanContent(getTextContent(msg.content))}</ReactMarkdown>
-                  </div>
-                ) : (
-                  <>
-                    {getImageUrls(msg.content).map((url, idx) => (
-                      <img key={idx} src={url} alt="Imagem enviada" className="rounded-lg max-h-40 mb-1" />
-                    ))}
-                    {getTextContent(msg.content) && <p>{getTextContent(msg.content)}</p>}
-                  </>
-                )}
+                <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
+                  <ReactMarkdown className="prose prose-sm dark:prose-invert break-words max-w-full">
+                    {cleanContent(getTextContent(msg.content))}
+                  </ReactMarkdown>
+                  
+                  {/* Show uploaded images in user messages */}
+                  {msg.role === "user" && typeof msg.content !== "string" && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {msg.content.filter(p => p.type === "image_url").map((img: any, idx) => (
+                        <img key={idx} src={img.image_url.url} className="h-20 w-20 object-cover rounded-md border border-white/20" alt="Upload" />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              {msg.role === "user" && (
-                <div className="flex-shrink-0 mt-1">
-                  <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                      <User className="h-3.5 w-3.5" />
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              )}
             </div>
           ))}
-
-          {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div className="flex gap-2">
-              <Avatar className="h-7 w-7">
-                {aiSettings.avatarUrl ? (
-                  <AvatarImage src={aiSettings.avatarUrl} alt={aiSettings.name} />
-                ) : null}
-                <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                  {aiInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-muted rounded-xl px-3 py-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="flex gap-3 max-w-[85%]">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div className="bg-card border border-border rounded-2xl px-4 py-2.5 flex items-center shadow-sm">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Input */}
-        <div className="border-t border-border p-3 space-y-2">
+        {/* Footer with Input */}
+        <div className="p-4 bg-card border-t border-border">
           {pendingImages.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2 mb-3">
               {pendingImages.map((img, idx) => (
-                <div key={idx} className="relative">
-                  <img src={img} alt="Preview" className="h-16 w-16 object-cover rounded-lg border border-border" />
-                  <button
-                    type="button"
+                <div key={idx} className="relative group">
+                  <img src={img} className="h-12 w-12 object-cover rounded-md border border-border" alt="Pendente" />
+                  <button 
                     onClick={() => setPendingImages(prev => prev.filter((_, i) => i !== idx))}
-                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
+                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    ×
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
               ))}
             </div>
           )}
-          <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
-            className="flex gap-2"
-          >
-            <input
-              ref={chatImageInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleChatImageUpload}
+          <div className="flex gap-2">
+            <input 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              className="hidden" 
+              ref={chatImageInputRef} 
+              onChange={handleChatImageUpload} 
             />
-            <Button type="button" variant="ghost" size="icon" className="flex-shrink-0" onClick={() => chatImageInputRef.current?.click()} disabled={isLoading}>
-              <ImagePlus className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="shrink-0 h-10 w-10" 
+              onClick={() => chatImageInputRef.current?.click()}
+            >
+              <ImagePlus className="h-5 w-5" />
             </Button>
             <Input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Pergunte algo ou envie uma imagem..."
-              disabled={isLoading}
-              className="flex-1 text-sm"
+              placeholder="Digite sua mensagem..."
+              onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+              className="flex-1"
             />
-            <Button type="submit" size="icon" disabled={isLoading || (!input.trim() && pendingImages.length === 0)}>
-              <Send className="h-4 w-4" />
+            <Button onClick={() => sendMessage(input)} disabled={isLoading} className="shrink-0 h-10 w-10" size="icon">
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
-          </form>
+          </div>
         </div>
       </div>
 
-      {/* AI Settings Dialog */}
+      {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Personalizar Assistente IA</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <Avatar className="h-20 w-20">
-                {tempAvatar ? <AvatarImage src={tempAvatar} alt="Preview" /> : null}
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                  {(tempName || "IA").slice(0, 2).toUpperCase()}
+          <div className="space-y-6 py-4">
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="h-24 w-24 border-2 border-primary/20">
+                {tempAvatar ? (
+                  <AvatarImage src={tempAvatar} alt={tempName} />
+                ) : null}
+                <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                  {tempName.slice(0, 2).toUpperCase() || "AI"}
                 </AvatarFallback>
               </Avatar>
-            </div>
-            <div className="space-y-2">
-              <Label>Nome da IA</Label>
-              <Input value={tempName} onChange={(e) => setTempName(e.target.value)} placeholder="Assistente IA" maxLength={30} />
-            </div>
-            <div className="space-y-2">
-              <Label>Avatar da IA</Label>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                ref={avatarInputRef} 
+                onChange={handleAvatarUpload} 
               />
-              <div className="flex gap-2 items-center">
-                <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()}>
-                  Enviar imagem
-                </Button>
-                {tempAvatar && (
-                  <Button variant="ghost" size="sm" onClick={() => setTempAvatar("")}>
-                    Remover
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">JPG, PNG ou WebP (máx 2MB)</p>
+              <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()}>
+                Alterar Avatar
+              </Button>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setSettingsOpen(false)}>Cancelar</Button>
-              <Button onClick={saveSettings}>Salvar</Button>
+            
+            <div className="space-y-2">
+              <Label>Nome do Assistente</Label>
+              <Input 
+                value={tempName} 
+                onChange={(e) => setTempName(e.target.value)} 
+                placeholder="Ex: Cartlly Bot, Maria, Suporte IA..." 
+              />
+            </div>
+
+            <div className="pt-2">
+              <Button onClick={saveSettings} className="w-full" disabled={updateSettings.isPending}>
+                {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
+              </Button>
             </div>
           </div>
         </DialogContent>
