@@ -42,50 +42,68 @@ async function shouldSkipAntiSpam(
   supabase: any,
   customerId: string,
   productId: string | null,
-  dailyCount: number,
+  triggerCount: number,
   priority: Priority,
-  freqConfig: { softDailyLimit: number; cooldownMinutes: number }
+  freqConfig: { softDailyLimit: number; cooldownMinutes: number },
+  triggerType?: string
 ): Promise<{ skip: boolean; reason?: string }> {
-  // Check soft daily limit (high priority can bypass)
-  if (dailyCount >= freqConfig.softDailyLimit && !PRIORITY_CONFIG[priority].bypassSoftLimit) {
-    return { skip: true, reason: "soft_daily_limit" };
+  // Specific limit: 3 per day for cart, product_view, wishlist as requested
+  if (triggerType === "abandoned_cart" || triggerType === "product_view" || triggerType === "wishlist_reminder") {
+    if (triggerCount >= 3) {
+      return { skip: true, reason: "type_daily_limit" };
+    }
   }
-  // Hard ceiling even for high priority
-  if (dailyCount >= 25) {
+
+  // Hard ceiling for any single type
+  if (triggerCount >= 25) {
     return { skip: true, reason: "hard_daily_ceiling" };
   }
 
   // Check cooldown: last push must be > cooldownMinutes ago
-  const cooldown = Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
+  // Hourly engagement has its own 60min cooldown
+  const cooldown = triggerType === "hourly_engagement" 
+    ? 60 
+    : Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
+    
   const cooldownCutoff = new Date(Date.now() - cooldown * 60 * 1000).toISOString();
-  const { data: recentPush } = await supabase
+  
+  let recentQuery = supabase
     .from("automation_executions")
     .select("id")
     .eq("customer_id", customerId)
     .eq("status", "sent")
-    .gte("sent_at", cooldownCutoff)
-    .limit(1);
+    .gte("sent_at", cooldownCutoff);
+
+  // If hourly engagement, only check against other hourly engagements
+  if (triggerType === "hourly_engagement") {
+    recentQuery = recentQuery.eq("trigger_type", "hourly_engagement");
+  }
+
+  const { data: recentPush } = await recentQuery.limit(1);
+
   if (recentPush && recentPush.length > 0) {
     return { skip: true, reason: "cooldown" };
   }
 
-  // Anti-spam: skip if user ignored last 3 pushes (sent but never clicked)
+  // Anti-spam: skip if user ignored last 5 pushes (more lenient for hourly)
+  const ignoredLimit = triggerType === "hourly_engagement" ? 10 : 3;
   const { data: lastPushes } = await supabase
     .from("automation_executions")
     .select("clicked_at")
     .eq("customer_id", customerId)
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
-    .limit(3);
-  if (lastPushes && lastPushes.length >= 3) {
+    .limit(ignoredLimit);
+
+  if (lastPushes && lastPushes.length >= ignoredLimit) {
     const allIgnored = lastPushes.every((p: any) => !p.clicked_at);
     if (allIgnored) {
-      return { skip: true, reason: "ignored_3_consecutive" };
+      return { skip: true, reason: "ignored_consecutive" };
     }
   }
 
   // Anti-spam: don't repeat same product within 1 hour
-  if (productId) {
+  if (productId && triggerType !== "hourly_engagement") {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recentProduct } = await supabase
       .from("automation_executions")
