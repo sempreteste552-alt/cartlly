@@ -49,8 +49,46 @@ export default function LojaCheckout() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [complement, setComplement] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const handleCepBlur = async () => {
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      setCepLoading(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await response.json();
+        if (data.erro) {
+          toast.error("CEP não encontrado");
+        } else {
+          setStreet(data.logradouro);
+          setNeighborhood(data.bairro);
+          setCity(data.localidade);
+          setState(data.uf);
+          toast.success("Endereço preenchido automaticamente");
+        }
+      } catch (error) {
+        toast.error("Erro ao buscar CEP");
+      } finally {
+        setCepLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fullAddress = [street, number, neighborhood, city, state, cep].filter(Boolean).join(", ");
+    setAddress(fullAddress);
+  }, [street, number, neighborhood, city, state, cep]);
 
   // Review state
   const [reviewRatings, setReviewRatings] = useState<Record<string, number>>({});
