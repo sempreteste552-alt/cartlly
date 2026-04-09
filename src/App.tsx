@@ -22,6 +22,7 @@ import Pagamentos from "./pages/admin/Pagamentos";
 import MeuPlano from "./pages/admin/MeuPlano";
 import Paginas from "./pages/admin/Paginas";
 import Automacao from "./pages/admin/Automacao";
+import SetupStore from "./pages/admin/SetupStore";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
@@ -99,6 +100,7 @@ const App = () => (
               </Route>
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/setup-store" element={<ProtectedRoute><SetupStore /></ProtectedRoute>} />
               <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
               {/* Super Admin */}
               <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
