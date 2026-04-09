@@ -45,11 +45,29 @@ export default function LojaCheckout() {
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const { globalCep } = useLojaContext();
 
+  const validateCoupon = useValidateCoupon();
+  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [complement, setComplement] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saveData, setSaveData] = useState(true);
+  const [cepLoading, setCepLoading] = useState(false);
+
   useEffect(() => {
     if (globalCep && !cep) {
       const formatted = formatCEP(globalCep);
       setCep(formatted);
-      // Trigger address auto-fill
       const clean = globalCep.replace(/\D/g, "");
       if (clean.length === 8) {
         (async () => {
@@ -69,24 +87,6 @@ export default function LojaCheckout() {
       }
     }
   }, [globalCep]);
-  const validateCoupon = useValidateCoupon();
-  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [cep, setCep] = useState("");
-  const [street, setStreet] = useState("");
-  const [number, setNumber] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [complement, setComplement] = useState("");
-  const [address, setAddress] = useState("");
-  const [notes, setNotes] = useState("");
-  const [saveData, setSaveData] = useState(true);
-  const [cepLoading, setCepLoading] = useState(false);
 
   const handleCepBlur = async () => {
     const cleanCep = cep.replace(/\D/g, "");
