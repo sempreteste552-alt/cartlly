@@ -566,7 +566,9 @@ Deno.serve(async (req) => {
 
           // Update daily count in memory
           if (wasSent) {
-            globalDailyCounts.set(seq.customer_id, (globalDailyCounts.get(seq.customer_id) || 0) + 1);
+            const counts = triggerCountsByCustomer.get(seq.customer_id) || new Map();
+            counts.set(triggerType, (counts.get(triggerType) || 0) + 1);
+            triggerCountsByCustomer.set(seq.customer_id, counts);
           }
 
           // Advance sequence
@@ -597,7 +599,13 @@ Deno.serve(async (req) => {
           } else if (seqType === "cart_abandonment") {
             results.cart_abandonment.processed++;
             wasSent ? results.cart_abandonment.sent++ : results.cart_abandonment.skipped++;
+          } else if (seqType === "wishlist") {
+            results.wishlist_reminder.processed++;
+            wasSent ? results.wishlist_reminder.sent++ : results.wishlist_reminder.skipped++;
           } else {
+            results.inactivity.processed++;
+            wasSent ? results.inactivity.sent++ : results.inactivity.skipped++;
+          }
             results.inactivity.processed++;
             wasSent ? results.inactivity.sent++ : results.inactivity.skipped++;
           }
