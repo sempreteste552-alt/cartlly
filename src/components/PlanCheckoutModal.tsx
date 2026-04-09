@@ -251,39 +251,39 @@ export default function PlanCheckoutModal({
   /* ================================================================ */
   return (
     <Dialog open={open} onOpenChange={(o) => { if (step !== "loading") onOpenChange(o); }}>
-      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-border/50 shadow-2xl [&>button]:hidden rounded-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 overflow-hidden border-border/50 shadow-2xl [&>button]:hidden rounded-2xl flex flex-col max-h-[96vh] sm:max-h-[90vh]">
 
         {/* ── Premium Header ── */}
-        <div className={`relative bg-gradient-to-br ${gradient} px-6 py-6 text-white`}>
+        <div className={`relative bg-gradient-to-br ${gradient} px-5 py-4 sm:px-6 sm:py-5 text-white shrink-0`}>
           <button
             onClick={() => { if (step !== "loading") onOpenChange(false); }}
-            className="absolute right-4 top-4 rounded-full p-1.5 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
+            className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-1.5 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm z-10"
           >
             <X className="h-4 w-4 text-white/90" />
           </button>
 
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg">
-              <PlanIcon className="h-7 w-7 text-white" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg shrink-0">
+              <PlanIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-white/70 uppercase tracking-wider">Checkout seguro</p>
-              <h2 className="text-xl font-bold">Plano {planName}</h2>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl font-extrabold">{formatPrice(planPrice)}</span>
-                <span className="text-sm text-white/70">/mês</span>
+              <p className="text-[10px] sm:text-xs font-medium text-white/70 uppercase tracking-wider">Checkout seguro</p>
+              <h2 className="text-lg sm:text-xl font-bold leading-tight">Plano {planName}</h2>
+              <div className="flex items-baseline gap-1 mt-0">
+                <span className="text-xl sm:text-2xl font-extrabold">{formatPrice(planPrice)}</span>
+                <span className="text-xs sm:text-sm text-white/70">/mês</span>
               </div>
             </div>
           </div>
 
           {/* Trust badges with real images */}
-          <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-white/15">
-            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-14 w-auto object-contain drop-shadow-lg" />
-            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/15">
+            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-10 sm:h-14 w-auto object-contain drop-shadow-lg" />
+            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-7 sm:h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
           </div>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="px-5 py-5 sm:px-6 sm:py-6 overflow-y-auto flex-1 custom-scrollbar">
 
           {/* ==================== STEP: FORM ==================== */}
           {step === "form" && (
