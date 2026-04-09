@@ -17,9 +17,16 @@ export default function SetupStore() {
   const [storeSlug, setStoreSlug] = useState("");
 
   useEffect(() => {
-    // If user already has a slug, they shouldn't be here
+    // If user already has a slug or is super admin, they shouldn't be here
     const checkSlug = async () => {
       if (!user) return;
+      
+      const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        navigate("/superadmin");
+        return;
+      }
+
       const { data } = await supabase
         .from("store_settings")
         .select("store_slug")
