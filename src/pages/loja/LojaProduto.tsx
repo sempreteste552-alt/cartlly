@@ -199,8 +199,22 @@ export default function LojaProduto() {
           <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
         </div>
       )}
-    <div className="max-w-7xl mx-auto px-4 py-6" style={{ animation: "fadeSlideIn 0.4s ease-out" }}>
-      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <style>{`
+        @keyframes pdp-fade-up {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .pdp-reveal {
+          animation: pdp-fade-up 0.5s ease-out both;
+        }
+        .pdp-reveal-d1 { animation-delay: 0.05s; }
+        .pdp-reveal-d2 { animation-delay: 0.15s; }
+        .pdp-reveal-d3 { animation-delay: 0.25s; }
+        .pdp-reveal-d4 { animation-delay: 0.35s; }
+        .pdp-reveal-d5 { animation-delay: 0.45s; }
+      `}</style>
+      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4 pdp-reveal">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
