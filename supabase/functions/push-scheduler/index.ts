@@ -453,10 +453,10 @@ Deno.serve(async (req) => {
               sequenceType: seqType,
             });
           } catch {
-            msg = pickRandomMessage(step.templates, customer.name, productName, storeName);
+            msg = pickVariedMessage(step.templates, customer.name, productName, storeName, stepIndex, seq.customer_id, seq.product_id);
           }
         } else {
-          msg = pickRandomMessage(step.templates, customer.name, productName, storeName);
+          msg = pickVariedMessage(step.templates, customer.name, productName, storeName, stepIndex, seq.customer_id, seq.product_id);
         }
 
         // Send push
