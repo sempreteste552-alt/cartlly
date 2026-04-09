@@ -85,6 +85,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
   const [saveCard, setSaveCard] = useState(false);
   const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [mpIssuerId, setMpIssuerId] = useState<string>("");
+  const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
+  const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
 
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState(initialCpf || "");
