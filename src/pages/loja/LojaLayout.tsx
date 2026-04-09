@@ -553,21 +553,21 @@ export default function LojaLayout() {
               />
             </div>
           </div>
-        </header>
 
-        {/* Mobile Menu - Fixed overlay below header */}
-        {mobileMenu && (
+          {/* Mobile Menu - inside sticky header */}
+          {mobileMenu && (
+            <div
+              className="lg:hidden fixed inset-0 z-30 bg-black/30"
+              style={{ top: "inherit" }}
+              onClick={() => setMobileMenu(false)}
+            />
+          )}
           <div
-            className="lg:hidden fixed inset-0 z-40 bg-black/30"
-            onClick={() => setMobileMenu(false)}
-          />
-        )}
-        <div
-          className={`lg:hidden overflow-hidden overflow-y-auto border-b border-border shadow-lg transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
-          }`}
-          style={{ backgroundColor: headerBgColor, color: headerTextColor }}
-        >
+            className={`lg:hidden overflow-hidden overflow-y-auto border-t border-border transition-all ease-[cubic-bezier(0.16,1,0.3,1)] relative z-40 ${
+              mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
+            }`}
+            style={{ backgroundColor: headerBgColor, color: headerTextColor }}
+          >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {[
               { icon: Home, label: "Início", to: basePath },
