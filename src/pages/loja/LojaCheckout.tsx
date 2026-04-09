@@ -375,6 +375,89 @@ export default function LojaCheckout() {
           </div>
         </div>
 
+        {/* Review prompt - MOVED TO THE BEGINNING */}
+        {orderItems.length > 0 && (
+          <Card className="border-primary/20 shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Avalie seus produtos agora
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">Sua opinião nos ajuda muito!</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {orderItems.map((item) => (
+                <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {item.image_url && <img src={item.image_url} alt={item.name} className="h-12 w-12 rounded object-cover" />}
+                      <p className="font-medium text-sm line-clamp-1">{item.name}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleShareProduct(item)} title="Compartilhar">
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleShareInstagram(item)} title="Postar no Instagram" className="text-pink-600 hover:text-pink-700 hover:bg-pink-50">
+                        <Instagram className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {reviewsSubmitted.has(item.id) ? (
+                    <p className="text-sm text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
+                  ) : (
+                    <>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setReviewRatings((prev) => ({ ...prev, [item.id]: star }))}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`h-6 w-6 ${
+                                (reviewRatings[item.id] || 0) >= star
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <Textarea
+                        placeholder="Deixe um comentário (opcional)"
+                        value={reviewComments[item.id] || ""}
+                        onChange={(e) => setReviewComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        className="text-sm"
+                        rows={2}
+                      />
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => handleSubmitReview(item.id)}
+                        disabled={!reviewRatings[item.id] || createReview.isPending}
+                      >
+                        {createReview.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                        Enviar Avaliação
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ))}
+
+              {settings?.instagram_url && (
+                <Button 
+                  variant="outline" 
+                  className="w-full border-pink-200 text-pink-600 hover:bg-pink-50 hover:border-pink-300 gap-2"
+                  onClick={() => window.open(settings.instagram_url, "_blank")}
+                >
+                  <Instagram className="h-4 w-4" /> Siga a {settings?.store_name} no Instagram
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Bank-Style Receipt Slip */}
         <div className="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl overflow-hidden overflow-visible">
           {/* Decorative "cut" edge at top and bottom (optional, but sleek) */}
@@ -498,74 +581,6 @@ export default function LojaCheckout() {
             </Button>
           </div>
         </div>
-
-
-        {/* Review prompt */}
-        {orderItems.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Avalie seus produtos
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">Sua opinião nos ajuda a melhorar!</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {orderItems.map((item) => (
-                <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {item.image_url && <img src={item.image_url} alt={item.name} className="h-12 w-12 rounded object-cover" />}
-                      <p className="font-medium text-sm">{item.name}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleShareProduct(item)} title="Compartilhar">
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {reviewsSubmitted.has(item.id) ? (
-                    <p className="text-sm text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
-                  ) : (
-                    <>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => setReviewRatings((prev) => ({ ...prev, [item.id]: star }))}
-                            className="transition-transform hover:scale-110"
-                          >
-                            <Star
-                              className={`h-6 w-6 ${
-                                (reviewRatings[item.id] || 0) >= star
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                      <Textarea
-                        placeholder="Deixe um comentário (opcional)"
-                        value={reviewComments[item.id] || ""}
-                        onChange={(e) => setReviewComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                        className="text-sm"
-                        rows={2}
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => handleSubmitReview(item.id)}
-                        disabled={!reviewRatings[item.id] || createReview.isPending}
-                      >
-                        {createReview.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                        Enviar Avaliação
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
       </div>
     );
   }
