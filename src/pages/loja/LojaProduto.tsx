@@ -428,7 +428,7 @@ export default function LojaProduto() {
           <Separator />
 
           {productPageConfig?.enable_trust_badges && (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div className="flex flex-col items-center gap-4 py-4 pdp-reveal pdp-reveal-d3">
               <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
               <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
               <div className="bg-muted/50 rounded-xl p-3 border border-border">
@@ -466,7 +466,7 @@ export default function LojaProduto() {
 
       {/* Recently Viewed */}
       {productPageConfig?.enable_recently_viewed && recentlyViewedProducts.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-12 pdp-reveal pdp-reveal-d4">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Vistos Recentemente</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {recentlyViewedProducts.map((p) => (
@@ -488,7 +488,7 @@ export default function LojaProduto() {
 
       {/* Category Best Sellers */}
       {productPageConfig?.enable_category_best_sellers && bestSellersInCategory.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-12 pdp-reveal pdp-reveal-d5">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Mais Vendidos da Categoria</h2>
           <Carousel
             opts={{ align: "start" }}
