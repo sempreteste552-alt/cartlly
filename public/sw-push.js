@@ -10,6 +10,8 @@ const EVENT_ICONS = {
   plan_activated: '/pwa-192x192.png',
   admin_message: '/pwa-192x192.png',
   tenant_status: '/pwa-192x192.png',
+  low_stock: '/pwa-192x192.png',
+  out_of_stock: '/pwa-192x192.png',
   default: '/pwa-192x192.png',
 };
 

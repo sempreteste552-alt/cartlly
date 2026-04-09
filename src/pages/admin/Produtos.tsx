@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import { PlanGate } from "@/components/PlanGate";
 import { Progress } from "@/components/ui/progress";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function Produtos() {
@@ -37,6 +37,7 @@ export default function Produtos() {
   const deleteCategory = useDeleteCategory();
   const { ctx } = useTenantContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -46,6 +47,20 @@ export default function Produtos() {
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
+
+  // Auto-open product editor when navigating from dashboard low-stock alert
+  useEffect(() => {
+    const state = location.state as { editProductId?: string } | null;
+    if (state?.editProductId && products) {
+      const product = products.find((p) => p.id === state.editProductId);
+      if (product) {
+        setEditingProduct(product);
+        setFormOpen(true);
+        // Clear state to prevent re-opening on refresh
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [location.state, products, navigate, location.pathname]);
 
   const limits = getPlanLimits(ctx);
   const canCreate = canCreateProduct(ctx);
