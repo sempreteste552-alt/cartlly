@@ -108,6 +108,30 @@ export default function LojaLayout() {
     }
   }, [slug]);
 
+  // Log search terms
+  useEffect(() => {
+    if (searchTerm.trim().length > 2 && settings?.user_id) {
+      const timer = setTimeout(async () => {
+        try {
+          // Check if this term was already logged recently to avoid duplicates
+          const lastSearch = localStorage.getItem(`last_search_${settings.user_id}`);
+          const currentSearch = searchTerm.trim().toLowerCase();
+          
+          if (lastSearch !== currentSearch) {
+            await supabase.from("search_logs").insert({
+              user_id: settings.user_id,
+              term: currentSearch
+            });
+            localStorage.setItem(`last_search_${settings.user_id}`, currentSearch);
+          }
+        } catch (error) {
+          console.error("Error logging search:", error);
+        }
+      }, 1500); // 1.5s debounce
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, settings?.user_id]);
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");

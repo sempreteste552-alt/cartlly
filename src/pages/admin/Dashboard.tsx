@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3 } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
@@ -41,6 +42,29 @@ export default function Dashboard() {
       const { data, error } = await supabase.from("payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: topSearches } = useQuery({
+    queryKey: ["top_searches", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("search_logs")
+        .select("term")
+        .eq("user_id", user!.id);
+      
+      if (error) throw error;
+      
+      const counts: Record<string, number> = {};
+      data.forEach(log => {
+        counts[log.term] = (counts[log.term] || 0) + 1;
+      });
+      
+      return Object.entries(counts)
+        .map(([term, count]) => ({ term, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
     },
     enabled: !!user,
   });
@@ -84,6 +108,14 @@ export default function Dashboard() {
     });
     return Object.values(counts).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
   }, [allOrderItems]);
+
+  const mostViewedProducts = useMemo(() => {
+    if (!products) return [];
+    return [...products]
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .filter(p => (p.views || 0) > 0)
+      .slice(0, 5);
+  }, [products]);
 
   const revenueByDay = useMemo(() => {
     if (!orders) return [];
@@ -368,32 +400,93 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Top Products */}
-      <Card className="border-border shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Award className="h-4 w-4 text-amber-500" /> Top 5 Produtos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {topProducts.length > 0 ? (
-            <div className="space-y-2">
-              {topProducts.map((p, i) => (
-                <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i + 1}</span>
-                    <div>
-                      <p className="text-sm font-medium">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.quantity} vendidos</p>
+      {/* Insights Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Top Mais Vendidos */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length > 0 ? (
+              <div className="space-y-2">
+                {topProducts.map((p, i) => (
+                  <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium truncate">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{p.quantity} vendidos</p>
+                      </div>
                     </div>
+                    <p className="text-xs font-bold shrink-0">{formatCurrency(p.revenue)}</p>
                   </div>
-                  <p className="text-sm font-bold">{formatCurrency(p.revenue)}</p>
-                </div>
-              ))}
-            </div>
-          ) : <p className="text-sm text-muted-foreground text-center py-4">Sem vendas</p>}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem vendas</p>}
+          </CardContent>
+        </Card>
+
+        {/* Top Mais Visitados */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {mostViewedProducts.length > 0 ? (
+              <div className="space-y-2">
+                {mostViewedProducts.map((p, i) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[10px] font-bold text-blue-500">{i + 1}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {p.image_url && (
+                          <img src={p.image_url} alt="" className="h-6 w-6 rounded object-cover flex-shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium truncate">{p.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{p.views || 0} visitas</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
+                      <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem visitas</p>}
+          </CardContent>
+        </Card>
+
+        {/* Top Termos Pesquisados */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Search className="h-4 w-4 text-purple-500" /> Top Buscas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topSearches && topSearches.length > 0 ? (
+              <div className="space-y-2">
+                {topSearches.map((s, i) => (
+                  <div key={s.term} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-500/10 text-[10px] font-bold text-purple-500">{i + 1}</span>
+                      <p className="text-xs font-medium capitalize truncate">{s.term}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 h-4">{s.count}x</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem buscas</p>}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Recent Orders */}
       <Card className="border-border shadow-sm">
