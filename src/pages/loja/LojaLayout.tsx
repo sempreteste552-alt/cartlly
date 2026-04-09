@@ -473,22 +473,8 @@ export default function LojaLayout() {
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
-              <div className="relative w-48 group">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
-                <Input
-                  placeholder={globalCity || "Seu CEP"}
-                  className="pl-9 bg-secondary border-border rounded-full font-mono text-xs"
-                  value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                  onChange={(e) => handleGlobalCepChange(e.target.value)}
-                  style={{ "--tw-ring-color": primaryColor } as any}
-                />
-                {globalCity && (
-                  <span className="absolute -bottom-5 left-3 text-[10px] text-muted-foreground whitespace-nowrap">
-                    📍 {globalCity}
-                  </span>
-                )}
-              </div>
             </div>
+
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
