@@ -709,6 +709,45 @@ Deno.serve(async (req) => {
         results.sequences_created++;
       }
     }
+    // ========== 3.1) CREATE WISHLIST SEQUENCES ==========
+    const wishlistCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: recentWishlist } = await supabase
+      .from("customer_wishlist")
+      .select("customer_id, product_id, store_user_id, created_at")
+      .gte("created_at", wishlistCutoff)
+      .limit(50);
+
+    if (recentWishlist && recentWishlist.length > 0) {
+      const wishCustIds = [...new Set(recentWishlist.map((w: any) => w.customer_id))];
+      const { data: activeWishSeqs } = await supabase
+        .from("retargeting_sequences")
+        .select("customer_id, product_id")
+        .in("customer_id", wishCustIds)
+        .eq("status", "active")
+        .eq("metadata->>sequence_type", "wishlist");
+      
+      const hasActiveWish = new Set((activeWishSeqs || []).map((s: any) => `${s.customer_id}:${s.product_id}`));
+
+      for (const wish of recentWishlist) {
+        const key = `${wish.customer_id}:${wish.product_id}`;
+        if (hasActiveWish.has(key)) continue;
+
+        const firstStepDelay = WISHLIST_SEQUENCE[0].delayMinutes;
+        const nextPushAt = new Date(Date.now() + firstStepDelay * 60 * 1000).toISOString();
+
+        await supabase.from("retargeting_sequences").insert({
+          customer_id: wish.customer_id,
+          store_user_id: wish.store_user_id,
+          product_id: wish.product_id,
+          status: "active",
+          current_step: 0,
+          max_steps: WISHLIST_SEQUENCE.length,
+          next_push_at: nextPushAt,
+          metadata: { sequence_type: "wishlist" },
+        });
+        results.sequences_created++;
+      }
+    }
 
     // ========== 4) CREATE INACTIVITY SEQUENCES ==========
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
