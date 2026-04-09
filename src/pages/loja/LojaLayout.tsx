@@ -285,28 +285,42 @@ export default function LojaLayout() {
     }
   }, [settings, themeConfig]);
 
-  // Apply favicon dynamically
+  // Apply favicon dynamically — use favicon_url, fallback to logo_url
   useEffect(() => {
-    const faviconHref = themeConfig?.favicon_url;
-    if (faviconHref) {
+    const iconHref = themeConfig?.favicon_url || settings?.logo_url;
+    if (iconHref) {
+      // Standard favicon
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
       if (!link) {
         link = document.createElement("link");
         link.rel = "icon";
         document.head.appendChild(link);
       }
-      link.href = faviconHref;
+      link.href = iconHref;
 
-      // Also set apple-touch-icon for iOS home screen
-      let apple: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']");
-      if (!apple) {
-        apple = document.createElement("link");
-        apple.rel = "apple-touch-icon";
-        document.head.appendChild(apple);
+      // Apple touch icon (iOS home screen) — multiple sizes for best quality
+      const appleSizes = ["180x180", "152x152", "120x120"];
+      appleSizes.forEach((size) => {
+        let apple: HTMLLinkElement | null = document.querySelector(`link[rel='apple-touch-icon'][sizes='${size}']`);
+        if (!apple) {
+          apple = document.createElement("link");
+          apple.rel = "apple-touch-icon";
+          apple.setAttribute("sizes", size);
+          document.head.appendChild(apple);
+        }
+        apple.href = iconHref;
+      });
+
+      // Default apple-touch-icon without sizes
+      let appleDefault: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']:not([sizes])");
+      if (!appleDefault) {
+        appleDefault = document.createElement("link");
+        appleDefault.rel = "apple-touch-icon";
+        document.head.appendChild(appleDefault);
       }
-      apple.href = faviconHref;
+      appleDefault.href = iconHref;
     }
-  }, [themeConfig?.favicon_url]);
+  }, [themeConfig?.favicon_url, settings?.logo_url]);
 
   // Slug is required — no default store
   if (!slug) {
