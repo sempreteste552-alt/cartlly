@@ -740,34 +740,28 @@ export default function LojaLayout() {
                 <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
                 <span className="text-sm font-semibold">Onde você está?</span>
               </div>
+              {globalCity && (
+                <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
+              )}
               <div className="flex gap-2">
                 <Input
                   placeholder="Seu CEP (00000-000)"
                   className="bg-secondary border-border font-mono h-11"
-                  value={globalCep}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
-                    setGlobalCep(val);
-                    if (val.length === 8) {
-                      localStorage.setItem("global_cep", val);
-                      toast.success("Localização atualizada!");
-                    }
-                  }}
+                  value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                  onChange={(e) => handleGlobalCepChange(e.target.value)}
                   inputMode="numeric"
-                  maxLength={8}
+                  maxLength={9}
                 />
                 <Button 
                   variant="outline" 
                   className="h-11 aspect-square p-0"
-                  onClick={() => {
-                    if (globalCep.length === 8) toast.success("Localização salva!");
-                    else toast.error("Digite um CEP válido");
-                  }}
+                  onClick={detectMyLocation}
+                  title="Detectar minha localização"
                 >
                   <LocateFixed className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Isso ajuda a calcular prazos e frete automaticamente.</p>
+              <p className="text-[10px] text-muted-foreground">Toque em <LocateFixed className="h-3 w-3 inline" /> para detectar automaticamente ou digite seu CEP.</p>
             </div>
 
             {/* Push notification opt-in inside mobile menu */}
