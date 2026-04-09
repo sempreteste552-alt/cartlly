@@ -12,7 +12,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
 import { useProductImages } from "@/hooks/useProductImages";
 import { useTenantContext } from "@/hooks/useTenantContext";
-import { canAccess } from "@/lib/planPermissions";
+import { canAccess, getMaxProductImages } from "@/lib/planPermissions";
 
 interface ProductFormProps {
   open: boolean;
@@ -51,6 +51,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const { ctx } = useTenantContext();
   const aiLocked = !canAccess("ai_tools", ctx);
   const canVideo = canAccess("product_video", ctx);
+  const maxImages = getMaxProductImages(ctx);
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
@@ -100,8 +101,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleAdditionalFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (additionalImages.length + files.length > 9) {
-      alert("Máximo de 9 imagens adicionais.");
+    if (additionalImages.length + files.length > maxImages) {
+      alert(`Máximo de ${maxImages} imagens adicionais no seu plano.`);
       return;
     }
     for (let i = 0; i < files.length; i++) {
@@ -239,33 +240,39 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           </div>
 
           {/* Additional Images */}
-          <div className="space-y-2">
-            <Label>Imagens Adicionais ({additionalImages.length}/9)</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {additionalImages.map((url, i) => (
-                <div key={i} className="relative group">
-                  <img src={url} alt={`Extra ${i + 1}`} className="h-20 w-full rounded-md object-cover border border-border" />
-                  <button type="button" onClick={() => removeAdditionalImage(i)} className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              {additionalImages.length < 9 && (
-                <div
-                  onClick={() => additionalFileRef.current?.click()}
-                  className="flex h-20 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border hover:border-primary/50 transition-colors"
-                >
-                  {uploadImage.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  ) : (
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              )}
+          {maxImages > 0 ? (
+            <div className="space-y-2">
+              <Label>Imagens Adicionais ({additionalImages.length}/{maxImages})</Label>
+              <div className="grid grid-cols-4 gap-2">
+                {additionalImages.map((url, i) => (
+                  <div key={i} className="relative group">
+                    <img src={url} alt={`Extra ${i + 1}`} className="h-20 w-full rounded-md object-cover border border-border" />
+                    <button type="button" onClick={() => removeAdditionalImage(i)} className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {additionalImages.length < maxImages && (
+                  <div
+                    onClick={() => additionalFileRef.current?.click()}
+                    className="flex h-20 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border hover:border-primary/50 transition-colors"
+                  >
+                    {uploadImage.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
+              </div>
+              <input ref={additionalFileRef} type="file" accept="*/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
+              <p className="text-xs text-muted-foreground">Aceita qualquer formato de imagem. Máx 50MB cada.</p>
             </div>
-            <input ref={additionalFileRef} type="file" accept="*/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
-            <p className="text-xs text-muted-foreground">Aceita qualquer formato de imagem. Máx 50MB cada.</p>
-          </div>
+          ) : (
+            <p className="text-xs text-muted-foreground border border-dashed border-border rounded-lg p-3">
+              📸 Imagens adicionais disponíveis a partir do plano STARTER. Faça upgrade para adicionar mais fotos.
+            </p>
+          )}
 
           {/* Video Section - only for plans with product_video */}
           {canVideo && (
