@@ -563,10 +563,10 @@ export default function LojaLayout() {
           />
         )}
         <div
-          className={`lg:hidden fixed left-0 right-0 z-40 border-b border-border shadow-lg overflow-y-auto transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 pointer-events-none duration-500"
+          className={`lg:hidden overflow-hidden overflow-y-auto border-b border-border shadow-lg transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
           }`}
-          style={{ backgroundColor: headerBgColor, color: headerTextColor, top: "auto" }}
+          style={{ backgroundColor: headerBgColor, color: headerTextColor }}
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {[
