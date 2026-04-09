@@ -100,5 +100,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
+  // Check if store slug is missing (onboarding)
+  if (!(storeSettings as any)?.store_slug && window.location.pathname !== "/setup-store") {
+    return <Navigate to="/setup-store" replace />;
+  }
+
   return <>{children}</>;
 }
