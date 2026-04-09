@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
@@ -18,6 +18,40 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
+
+interface LockedDashboardCardProps {
+  children: ReactNode;
+  locked: boolean;
+  minPlan: "STARTER" | "PRO" | "PREMIUM";
+  title: string;
+  description: string;
+}
+
+function LockedDashboardCard({ children, locked, minPlan, title, description }: LockedDashboardCardProps) {
+  if (!locked) return <>{children}</>;
+
+  return (
+    <div className="relative h-full overflow-hidden rounded-xl">
+      <div className="pointer-events-none select-none opacity-45 blur-[3px] h-full">
+        {children}
+      </div>
+      <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/82 p-4 backdrop-blur-sm">
+        <div className="max-w-xs text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
+            <Lock className="h-5 w-5 text-primary" />
+          </div>
+          <p className="text-sm font-semibold text-foreground">{title} bloqueado</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+            {description} No plano <strong>{minPlan}</strong> isso é liberado para você parar de decidir no escuro e vender melhor.
+          </p>
+          <Button size="sm" className="mt-3" onClick={() => window.location.assign(`/admin/plano?upgrade=${minPlan}`)}>
+            Fazer upgrade para {minPlan}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data: products } = useProducts();
@@ -188,6 +222,17 @@ export default function Dashboard() {
     };
   }, [payments]);
 
+  const kpiCards = [
+    { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+    { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
+    ...(hasGateway ? [
+      { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+    ] : []),
+    { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
+    { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
+  ];
+
   return (
     <div className="space-y-6">
       <WelcomeTrialCard />
@@ -201,35 +246,34 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500" },
-          ...(hasStarterAnalytics ? [
-            { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500" },
-          ] : []),
-          ...(hasGateway ? [
-            { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500" },
-            { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500" },
-          ] : []),
-          ...(hasStarterAnalytics ? [
-            { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500" },
-          ] : []),
-          ...(hasProAnalytics ? [
-            { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground" },
-          ] : []),
-        ].map((s) => (
-          <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm`}>
-                <s.icon className={`h-4 w-4 ${s.iconColor}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{s.value}</div>
-              <p className="text-xs text-muted-foreground">{s.desc}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {kpiCards.map((s) => {
+          const card = (
+            <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow h-full`}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm">
+                  <s.icon className={`h-4 w-4 ${s.iconColor}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground">{s.value}</div>
+                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              </CardContent>
+            </Card>
+          );
+
+          return s.locked ? (
+            <LockedDashboardCard
+              key={s.label}
+              locked={s.locked}
+              minPlan={s.minPlan}
+              title={s.label}
+              description={s.lockDescription}
+            >
+              {card}
+            </LockedDashboardCard>
+          ) : card;
+        })}
       </div>
 
       {/* Payment Summary - only for plans with gateway */}
@@ -267,55 +311,67 @@ export default function Dashboard() {
       )}
 
       {/* Low stock - clickable cards */}
-      {hasProAnalytics && (metrics.lowStock.length > 0 || metrics.outOfStock.length > 0) && (
-        <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Alerta de Estoque</span>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {metrics.outOfStock.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left w-full"
-                >
-                  {p.image_url ? (
-                    <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="h-10 w-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                      <Package className="h-5 w-5 text-red-500" />
+      {(metrics.lowStock.length > 0 || metrics.outOfStock.length > 0 || !hasProAnalytics) && (
+        <LockedDashboardCard
+          locked={!hasProAnalytics}
+          minPlan="PRO"
+          title="Alerta de Estoque"
+          description="Você continua correndo risco de anunciar produto sem saldo e perder pedido bom por falta de aviso."
+        >
+          <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Alerta de Estoque</span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {metrics.outOfStock.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left w-full"
+                  >
+                    {p.image_url ? (
+                      <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                        <Package className="h-5 w-5 text-red-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
+                      <p className="text-xs text-red-600 font-semibold">🚨 Esgotado</p>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
-                    <p className="text-xs text-red-600 font-semibold">🚨 Esgotado</p>
-                  </div>
-                </button>
-              ))}
-              {metrics.lowStock.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left w-full"
-                >
-                  {p.image_url ? (
-                    <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="h-10 w-10 rounded bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                      <Package className="h-5 w-5 text-amber-500" />
+                  </button>
+                ))}
+                {metrics.lowStock.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left w-full"
+                  >
+                    {p.image_url ? (
+                      <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                        <Package className="h-5 w-5 text-amber-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
+                      <p className="text-xs text-amber-600 font-semibold">⚠️ {p.stock} restantes</p>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
-                    <p className="text-xs text-amber-600 font-semibold">⚠️ {p.stock} restantes</p>
+                  </button>
+                ))}
+                {metrics.lowStock.length === 0 && metrics.outOfStock.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                    Nenhum alerta crítico no momento.
                   </div>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </LockedDashboardCard>
       )}
 
       <MultiStoreManager />
@@ -344,56 +400,66 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {hasPremiumAnalytics && (
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pedidos por Dia</CardTitle></CardHeader>
-          <CardContent>
-            {ordersByDay.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={ordersByDay}>
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="hsl(142 71% 45%)" strokeWidth={2} dot={{ r: 3 }} name="Pedidos" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
-          </CardContent>
-        </Card>
-        )}
+        <LockedDashboardCard
+          locked={!hasPremiumAnalytics}
+          minPlan="PREMIUM"
+          title="Pedidos por Dia"
+          description="Sem esse gráfico você vende sem ritmo, reage tarde e deixa tendência passar batida."
+        >
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pedidos por Dia</CardTitle></CardHeader>
+            <CardContent>
+              {ordersByDay.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={ordersByDay}>
+                    <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="count" stroke="hsl(142 71% 45%)" strokeWidth={2} dot={{ r: 3 }} name="Pedidos" />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
+            </CardContent>
+          </Card>
+        </LockedDashboardCard>
 
-        {hasPremiumAnalytics && (
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
-          <CardContent>
-            {ordersByStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={ordersByStatus}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    dataKey="value"
-                    label={false}
-                  >
-                    {ordersByStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                    formatter={(value: string, entry: any) => `${value}: ${entry.payload?.value ?? ''}`}
-                  />
-                  <Tooltip formatter={(v: number, name: string) => [v, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
-          </CardContent>
-        </Card>
-        )}
+        <LockedDashboardCard
+          locked={!hasPremiumAnalytics}
+          minPlan="PREMIUM"
+          title="Status dos Pedidos"
+          description="Sem essa leitura você só descobre gargalo quando o cliente já está impaciente ou foi embora."
+        >
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
+            <CardContent>
+              {ordersByStatus.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={ordersByStatus}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      dataKey="value"
+                      label={false}
+                    >
+                      {ordersByStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                      formatter={(value: string, entry: any) => `${value}: ${entry.payload?.value ?? ''}`}
+                    />
+                    <Tooltip formatter={(v: number, name: string) => [v, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
+            </CardContent>
+          </Card>
+        </LockedDashboardCard>
 
         {hasStarterAnalytics && (
         <Card className="border-border shadow-sm">
@@ -424,71 +490,84 @@ export default function Dashboard() {
       </div>
 
       {/* Insights Section */}
-      {hasPremiumAnalytics && (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Top Mais Vendidos */}
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topProducts.length > 0 ? (
-              <div className="space-y-2">
-                {topProducts.map((p, i) => (
-                  <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{i + 1}</span>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium truncate">{p.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{p.quantity} vendidos</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-bold shrink-0">{formatCurrency(p.revenue)}</p>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem vendas</p>}
-          </CardContent>
-        </Card>
-
-        {/* Top Mais Visitados */}
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {mostViewedProducts.length > 0 ? (
-              <div className="space-y-2">
-                {mostViewedProducts.map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[10px] font-bold text-blue-500">{i + 1}</span>
+        <LockedDashboardCard
+          locked={!hasPremiumAnalytics}
+          minPlan="PREMIUM"
+          title="Top Vendidos"
+          description="Sem essa lista você insiste no produto errado e deixa de empurrar o que realmente gira caixa."
+        >
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topProducts.length > 0 ? (
+                <div className="space-y-2">
+                  {topProducts.map((p, i) => (
+                    <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center gap-2 min-w-0">
-                        {p.image_url && (
-                          <img src={p.image_url} alt="" className="h-6 w-6 rounded object-cover flex-shrink-0" />
-                        )}
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{i + 1}</span>
                         <div className="min-w-0">
                           <p className="text-xs font-medium truncate">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{p.views || 0} visitas</p>
+                          <p className="text-[10px] text-muted-foreground">{p.quantity} vendidos</p>
                         </div>
                       </div>
+                      <p className="text-xs font-bold shrink-0">{formatCurrency(p.revenue)}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
-                      <TrendingUp className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem visitas</p>}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              ) : <p className="text-sm text-muted-foreground text-center py-4">Sem vendas</p>}
+            </CardContent>
+          </Card>
+        </LockedDashboardCard>
+
+        {/* Top Mais Visitados */}
+        <LockedDashboardCard
+          locked={!hasPremiumAnalytics}
+          minPlan="PREMIUM"
+          title="Top Visitados"
+          description="Sem essa visão você não sabe onde existe interesse real e perde chance de converter o tráfego certo."
+        >
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {mostViewedProducts.length > 0 ? (
+                <div className="space-y-2">
+                  {mostViewedProducts.map((p, i) => (
+                    <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[10px] font-bold text-blue-500">{i + 1}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {p.image_url && (
+                            <img src={p.image_url} alt="" className="h-6 w-6 rounded object-cover flex-shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate">{p.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{p.views || 0} visitas</p>
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
+                        <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-sm text-muted-foreground text-center py-4">Sem visitas</p>}
+            </CardContent>
+          </Card>
+        </LockedDashboardCard>
 
         {/* Top Termos Pesquisados */}
-        <Card className="border-border shadow-sm">
+        {hasPremiumAnalytics && <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Search className="h-4 w-4 text-purple-500" /> Top Buscas
@@ -509,9 +588,8 @@ export default function Dashboard() {
               </div>
             ) : <p className="text-sm text-muted-foreground text-center py-4">Sem buscas</p>}
           </CardContent>
-        </Card>
+        </Card>}
       </div>
-      )}
 
       {/* Recent Orders */}
       <Card className="border-border shadow-sm">
