@@ -43,6 +43,7 @@ export default function Produtos() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
@@ -68,6 +69,13 @@ export default function Produtos() {
   const aiAvailable = canAccess("ai_content", ctx);
 
   const filteredProducts = products?.filter((p) => {
+    // Filter by archived status
+    if (showArchived) {
+      if (!(p as any).is_archived) return false;
+    } else {
+      if ((p as any).is_archived) return false;
+    }
+
     if (filterCategory === "all") return true;
     if (filterCategory === "none") return !p.category_id;
     return p.category_id === filterCategory;
@@ -113,7 +121,16 @@ export default function Produtos() {
   };
 
   const handleTogglePublished = (product: Product) => {
-    updateProduct.mutate({ id: product.id, published: !product.published });
+    if ((product as any).is_archived && !product.published) {
+      // If unarchiving, we might want to also set is_archived to false
+      updateProduct.mutate({ id: product.id, published: true, is_archived: false } as any);
+    } else {
+      updateProduct.mutate({ id: product.id, published: !product.published });
+    }
+  };
+
+  const handleUnarchive = (id: string) => {
+    updateProduct.mutate({ id, is_archived: false, published: true } as any);
   };
 
   const handleDelete = () => {
@@ -207,24 +224,46 @@ export default function Produtos() {
         </CardContent>
       </Card>
 
-      {/* Filter */}
-      {categories && categories.length > 0 && (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Filtrar:</span>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas categorias</SelectItem>
-              <SelectItem value="none">Sem categoria</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {categories && categories.length > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground">Filtrar:</span>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas categorias</SelectItem>
+                  <SelectItem value="none">Sem categoria</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </div>
-      )}
+        
+        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg border border-border">
+          <Button 
+            variant={!showArchived ? "secondary" : "ghost"} 
+            size="sm" 
+            onClick={() => setShowArchived(false)}
+            className="text-xs h-8"
+          >
+            Ativos
+          </Button>
+          <Button 
+            variant={showArchived ? "secondary" : "ghost"} 
+            size="sm" 
+            onClick={() => setShowArchived(true)}
+            className="text-xs h-8"
+          >
+            Arquivados
+          </Button>
+        </div>
+      </div>
 
       {!filteredProducts?.length ? (
         <Card className="border-border">
@@ -284,16 +323,28 @@ export default function Produtos() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
+                    {(product as any).is_archived ? (
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Arquivado</Badge>
+                    ) : (
+                      <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
-                        <Layers className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {(product as any).is_archived ? (
+                        <Button variant="outline" size="sm" onClick={() => handleUnarchive(product.id)} className="h-8 text-xs">
+                          Reativar
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
+                            <Layers className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
