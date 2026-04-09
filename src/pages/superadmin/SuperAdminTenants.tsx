@@ -347,7 +347,25 @@ export default function SuperAdminTenants() {
     else badges.push(<Badge key="approved" variant="default" className="bg-green-600"><CheckCircle className="mr-1 h-3 w-3" />Ativo</Badge>);
     
     if (tenant.subscription) {
-      badges.push(<Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs"><CreditCard className="mr-1 h-3 w-3" />Assinante</Badge>);
+      const planName = (tenant.subscription.tenant_plans as any)?.name || "—";
+      const subStatus = tenant.subscription.status;
+      const isTrial = subStatus === "trial";
+      const isFree = planName === "FREE";
+      const isPaid = !isFree && !isTrial && subStatus === "active";
+      
+      if (isTrial) {
+        const trialEnd = tenant.subscription.trial_ends_at ? new Date(tenant.subscription.trial_ends_at) : null;
+        const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000)) : 0;
+        badges.push(<Badge key="sub" variant="outline" className="border-purple-500/50 text-purple-600 text-xs"><Clock className="mr-1 h-3 w-3" />Trial {daysLeft}d</Badge>);
+      } else if (isPaid) {
+        badges.push(<Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs"><CreditCard className="mr-1 h-3 w-3" />{planName}</Badge>);
+      } else if (isFree) {
+        badges.push(<Badge key="sub" variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs">FREE</Badge>);
+      } else {
+        badges.push(<Badge key="sub" variant="outline" className="border-orange-500/50 text-orange-600 text-xs">{subStatus}</Badge>);
+      }
+    } else {
+      badges.push(<Badge key="nosub" variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs">Sem plano</Badge>);
     }
     
     if (storeBlocked) badges.push(<Badge key="store" variant="outline" className="border-orange-500/50 text-orange-600 text-xs"><StoreIcon className="mr-1 h-3 w-3" />Loja bloq.</Badge>);
