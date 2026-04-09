@@ -775,7 +775,7 @@ Deno.serve(async (req) => {
             if (personalizedProduct) selectedProduct = personalizedProduct;
           }
 
-          const msg = pickRandomMessage(PROMO_CAMPAIGN_TEMPLATES, customer.name, selectedProduct.name, storeName);
+          const msg = pickVariedMessage(PROMO_CAMPAIGN_TEMPLATES, customer.name, selectedProduct.name, storeName, dailyCount, customer.id, selectedProduct.id);
 
           try {
             const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
