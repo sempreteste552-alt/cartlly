@@ -367,12 +367,12 @@ export default function LojaLayout() {
 
   const storeName = settings?.store_name || "Loja";
   const primaryColor = settings?.primary_color || "#6d28d9";
-  const headerBgColor = settings?.header_bg_color || "#ffffff";
-  const headerTextColor = settings?.header_text_color || "#000000";
-  const footerBgColor = settings?.footer_bg_color || "#000000";
-  const footerTextColor = settings?.footer_text_color || "#ffffff";
-  const buttonColor = settings?.button_color || "#000000";
-  const buttonTextColor = settings?.button_text_color || "#ffffff";
+  const headerBgColor = isDarkMode ? "#000000" : (settings?.header_bg_color || "#ffffff");
+  const headerTextColor = isDarkMode ? "#fafafa" : (settings?.header_text_color || "#000000");
+  const footerBgColor = isDarkMode ? "#080808" : (settings?.footer_bg_color || "#000000");
+  const footerTextColor = isDarkMode ? "#e5e5e5" : (settings?.footer_text_color || "#ffffff");
+  const buttonColor = isDarkMode ? primaryColor : (settings?.button_color || "#000000");
+  const buttonTextColor = isDarkMode ? "#ffffff" : (settings?.button_text_color || "#ffffff");
 
   // Bottom nav items for mobile
   const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
@@ -493,7 +493,7 @@ export default function LojaLayout() {
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
-            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
+            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={true} />
 
             {/* Social icons in header - all devices */}
             <div className="flex items-center gap-1.5">
@@ -767,6 +767,12 @@ export default function LojaLayout() {
               <p className="text-[10px] text-muted-foreground">Informe seu CEP para calcular o frete, ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar.</p>
             </div>
             )}
+
+            {/* Theme toggle in mobile menu */}
+            <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
+              <ThemeToggle scope={storeThemeScope} applyToRoot={true} />
+              <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
+            </div>
 
             {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
