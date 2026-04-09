@@ -273,10 +273,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
       if (method === "credit_card") {
         // Use Mercado Pago SDK to generate a proper card token
-        if (settings?.payment_gateway === "mercadopago") {
+        if (settings?.payment_gateway === "mercadopago" || settings?.payment_gateway === "pagbank") {
           setTokenizing(true);
           try {
-            const token = await generateCardToken();
+            const token = await generateCardToken(settings.payment_gateway);
             params.card_token = token;
           } catch (tokenErr: any) {
             toast.error(tokenErr.message || "Erro ao processar dados do cartão");
@@ -285,7 +285,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           }
           setTokenizing(false);
         } else {
-          // For other gateways, send raw (they handle differently)
+          // For other gateways, send raw or handle differently
           params.card_token = cardNumber.replace(/\s/g, "");
         }
         params.installments = parseInt(cardInstallments);
