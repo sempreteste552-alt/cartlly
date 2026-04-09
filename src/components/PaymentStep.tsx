@@ -226,7 +226,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       const result = await createPayment.mutateAsync(params);
       setPaymentData(result);
 
-      if (result.paymentResult?.status === "approved") {
+      if (result.paymentResult?.status === "approved" || result.paymentResult?.status === "paid" || result.payment?.status === "approved" || result.payment?.status === "paid") {
         toast.success("Pagamento aprovado!");
         onSuccess(method);
       }
