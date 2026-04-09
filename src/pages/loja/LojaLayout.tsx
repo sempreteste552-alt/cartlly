@@ -63,6 +63,7 @@ export default function LojaLayout() {
   const [globalCep, setGlobalCep] = useState("");
   const [globalCity, setGlobalCity] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
+  const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -472,22 +473,8 @@ export default function LojaLayout() {
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
-              <div className="relative w-48 group">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
-                <Input
-                  placeholder={globalCity || "Seu CEP"}
-                  className="pl-9 bg-secondary border-border rounded-full font-mono text-xs"
-                  value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                  onChange={(e) => handleGlobalCepChange(e.target.value)}
-                  style={{ "--tw-ring-color": primaryColor } as any}
-                />
-                {globalCity && (
-                  <span className="absolute -bottom-5 left-3 text-[10px] text-muted-foreground whitespace-nowrap">
-                    📍 {globalCity}
-                  </span>
-                )}
-              </div>
             </div>
+
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
@@ -771,6 +758,54 @@ export default function LojaLayout() {
           </nav>
         </div>
         </header>
+
+        {/* Location Bar - after header */}
+        <div className="border-b border-border bg-secondary/50">
+          <div className="max-w-7xl mx-auto px-4">
+            <button
+              className="w-full flex items-center gap-2 py-2 text-sm hover:opacity-80 transition-opacity"
+              onClick={() => setLocationBarOpen(!locationBarOpen)}
+            >
+              <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
+              <span className="font-medium truncate">
+                {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : "Onde você está?")}
+              </span>
+              <span className="text-muted-foreground text-xs ml-auto shrink-0">
+                {locationBarOpen ? "Fechar" : "Alterar"}
+              </span>
+            </button>
+            {locationBarOpen && (
+              <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Seu CEP (00000-000)"
+                    className="bg-background border-border font-mono h-10"
+                    value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                    onChange={(e) => handleGlobalCepChange(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={9}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="h-10 aspect-square p-0"
+                    onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
+                    title="Detectar minha localização"
+                  >
+                    <LocateFixed className="h-4 w-4" />
+                  </Button>
+                </div>
+                {globalCity && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    📍 {globalCity}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">
+                  Digite seu CEP ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar automaticamente.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <main>
           <Outlet />

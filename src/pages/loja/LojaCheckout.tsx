@@ -45,11 +45,6 @@ export default function LojaCheckout() {
   const [errors, setErrors] = useState<Set<string>>(new Set());
   const { globalCep } = useLojaContext();
 
-  useEffect(() => {
-    if (globalCep && !cep) {
-      setCep(globalCep);
-    }
-  }, [globalCep]);
   const validateCoupon = useValidateCoupon();
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
 
@@ -68,6 +63,30 @@ export default function LojaCheckout() {
   const [notes, setNotes] = useState("");
   const [saveData, setSaveData] = useState(true);
   const [cepLoading, setCepLoading] = useState(false);
+
+  useEffect(() => {
+    if (globalCep && !cep) {
+      const formatted = formatCEP(globalCep);
+      setCep(formatted);
+      const clean = globalCep.replace(/\D/g, "");
+      if (clean.length === 8) {
+        (async () => {
+          setCepLoading(true);
+          try {
+            const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+            const data = await res.json();
+            if (data && !data.erro) {
+              if (data.logradouro) setStreet(data.logradouro);
+              if (data.bairro) setNeighborhood(data.bairro);
+              if (data.localidade) setCity(data.localidade);
+              if (data.uf) setState(data.uf);
+            }
+          } catch { /* ignore */ }
+          setCepLoading(false);
+        })();
+      }
+    }
+  }, [globalCep]);
 
   const handleCepBlur = async () => {
     const cleanCep = cep.replace(/\D/g, "");
