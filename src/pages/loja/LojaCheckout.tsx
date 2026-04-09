@@ -281,14 +281,36 @@ export default function LojaCheckout() {
   };
 
   const handleShareProduct = async (item: any) => {
-    const url = `${window.location.origin}/loja/produto/${item.id}`;
+    const url = `${window.location.origin}/loja/${settings?.store_slug || "loja"}/produto/${item.id}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: item.name, text: `Confira: ${item.name}`, url });
+        await navigator.share({ title: item.name, text: `Confira este produto na ${settings?.store_name}: ${item.name}`, url });
       } catch {}
     } else {
       await navigator.clipboard.writeText(url);
       toast.success("Link copiado!");
+    }
+  };
+
+  const handleShareInstagram = async (item: any) => {
+    const url = `${window.location.origin}/loja/${settings?.store_slug || "loja"}/produto/${item.id}`;
+    const caption = `Acabei de comprar este ${item.name} na ${settings?.store_name}! 😍✨\n\nConfira aqui: ${url}`;
+    
+    try {
+      await navigator.clipboard.writeText(caption);
+      toast.success("Legenda educada copiada! Agora você pode colar no seu Instagram 📸", {
+        description: "A legenda foi copiada para sua área de transferência.",
+        duration: 5000,
+      });
+      
+      // If store has Instagram, try to open it
+      if (settings?.instagram_url) {
+        setTimeout(() => {
+          window.open(settings.instagram_url, "_blank");
+        }, 1500);
+      }
+    } catch {
+      toast.error("Erro ao copiar legenda");
     }
   };
 
