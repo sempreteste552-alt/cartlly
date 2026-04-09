@@ -101,6 +101,12 @@ export function ProductImageSlideshow({
     setFailedImages((prev) => (prev.includes(src) ? prev : [...prev, src]));
   };
 
+  // Ken Burns slow zoom cycle
+  const [zoomKey, setZoomKey] = useState(0);
+  useEffect(() => {
+    setZoomKey((k) => k + 1);
+  }, [currentIndex]);
+
   if (visibleImages.length === 0) {
     return (
       <div className={`flex h-full w-full items-center justify-center bg-muted/30 ${className}`}>
@@ -111,6 +117,22 @@ export function ProductImageSlideshow({
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
+      <style>{`
+        @keyframes kenburns-in {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.08); }
+        }
+        @keyframes kenburns-out {
+          0% { transform: scale(1.08); }
+          100% { transform: scale(1); }
+        }
+        .kenburns-zoom {
+          animation: kenburns-in ${autoplaySpeed > 2000 ? autoplaySpeed / 1000 : 6}s ease-in-out forwards;
+        }
+        .kenburns-zoom-single {
+          animation: kenburns-in 8s ease-in-out alternate infinite;
+        }
+      `}</style>
       <div
         className={`relative min-h-0 flex-1 overflow-hidden group ${className}`}
         onMouseEnter={() => setIsHovering(true)}
@@ -120,11 +142,13 @@ export function ProductImageSlideshow({
       >
         {visibleImages.map((src, i) => (
           <img
-            key={src}
+            key={`${src}-${i === currentIndex ? zoomKey : 'idle'}`}
             src={src}
             alt={`${alt} ${i + 1}`}
-            className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-in-out ${
-              i === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out ${
+              i === currentIndex
+                ? `opacity-100 ${visibleImages.length === 1 ? "kenburns-zoom-single" : "kenburns-zoom"}`
+                : "opacity-0"
             }`}
             loading={i === 0 ? "eager" : "lazy"}
             fetchPriority={i === 0 ? "high" : "auto"}
