@@ -101,8 +101,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleAdditionalFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    if (additionalImages.length + files.length > 9) {
-      alert("Máximo de 9 imagens adicionais.");
+    if (additionalImages.length + files.length > maxImages) {
+      alert(`Máximo de ${maxImages} imagens adicionais no seu plano.`);
       return;
     }
     for (let i = 0; i < files.length; i++) {
