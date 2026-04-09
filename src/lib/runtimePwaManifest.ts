@@ -1,4 +1,5 @@
 const MANIFEST_ID = "runtime-pwa-manifest";
+const APPLE_ICON_SIZES = ["180x180", "167x167", "152x152", "120x120"];
 
 const DEFAULT_ICONS = [
   { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
@@ -7,55 +8,84 @@ const DEFAULT_ICONS = [
 ];
 
 export interface PwaManifestOptions {
-  /** App name shown on home screen */
   name?: string;
-  /** Short name (max ~12 chars) */
   shortName?: string;
-  /** Theme color (hex) */
   themeColor?: string;
-  /** Background color (hex) */
   backgroundColor?: string;
-  /** Custom icon URL (used for all sizes) */
   iconUrl?: string;
-  /** Override start_url — defaults to current path */
+  iconVersion?: string;
   startUrl?: string;
-  /** Override scope — defaults to current path */
   scope?: string;
 }
 
 function getCurrentPath() {
   const { origin, pathname } = window.location;
-  // Ensure trailing slash for scope matching
   const cleanPath = pathname.endsWith("/") ? pathname : `${pathname}/`;
   return `${origin}${cleanPath}`;
 }
 
-/**
- * Apply (or update) a runtime PWA manifest in <head>.
- * Call this whenever tenant context changes so the install prompt
- * reflects the correct name, icon, start_url and scope.
- */
+function withCacheBust(url: string, version?: string) {
+  if (!version) return url;
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+    parsed.searchParams.set("v", version);
+    return parsed.toString();
+  } catch {
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}v=${encodeURIComponent(version)}`;
+  }
+}
+
+function upsertMeta(name: string, content: string) {
+  let meta = document.querySelector(`meta[name='${name}']`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", name);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+}
+
+function upsertLink(selector: string, attributes: Record<string, string>, href: string) {
+  const existing = document.querySelector(selector) as HTMLLinkElement | null;
+  const link = existing ?? document.createElement("link");
+
+  Object.entries(attributes).forEach(([key, value]) => {
+    link.setAttribute(key, value);
+  });
+
+  link.href = href;
+
+  if (!existing) {
+    document.head.appendChild(link);
+  }
+}
+
 export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   if (typeof window === "undefined" || typeof document === "undefined") return;
 
   const currentPath = getCurrentPath();
   const startUrl = options.startUrl || currentPath;
   const scope = options.scope || currentPath;
+  const appName = options.name || "Cartlly - Sua Loja Online";
+  const shortName = options.shortName || appName.slice(0, 12) || "Cartlly";
+  const resolvedIconUrl = options.iconUrl
+    ? withCacheBust(options.iconUrl, options.iconVersion)
+    : undefined;
 
-  const icons = options.iconUrl
+  const icons = resolvedIconUrl
     ? [
-        { src: options.iconUrl, sizes: "192x192", type: "image/png" },
-        { src: options.iconUrl, sizes: "512x512", type: "image/png" },
-        { src: options.iconUrl, sizes: "512x512", type: "image/png", purpose: "maskable" },
+        { src: resolvedIconUrl, sizes: "192x192", type: "image/png" },
+        { src: resolvedIconUrl, sizes: "512x512", type: "image/png" },
+        { src: resolvedIconUrl, sizes: "512x512", type: "image/png", purpose: "maskable" },
       ]
     : DEFAULT_ICONS;
 
   const manifest = {
-    name: options.name || "Cartlly - Sua Loja Online",
-    short_name: options.shortName || options.name?.slice(0, 12) || "Cartlly",
-    description: options.name
-      ? `Acesse ${options.name} direto da sua tela inicial`
-      : "Gerencie sua loja online com facilidade",
+    name: appName,
+    short_name: shortName,
+    description: `Acesse ${appName} direto da sua tela inicial`,
     theme_color: options.themeColor || "#6d28d9",
     background_color: options.backgroundColor || "#ffffff",
     display: "standalone" as const,
@@ -71,7 +101,6 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   });
   const manifestUrl = URL.createObjectURL(manifestBlob);
 
-  // Revoke old blob if any
   const existing = document.getElementById(MANIFEST_ID) as HTMLLinkElement | null;
   if (existing?.href?.startsWith("blob:")) {
     URL.revokeObjectURL(existing.href);
@@ -83,9 +112,27 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   link.href = manifestUrl;
 
   if (!existing) {
-    // Remove any static manifest link first
     const staticManifest = document.querySelector('link[rel="manifest"]:not(#runtime-pwa-manifest)');
     staticManifest?.remove();
     document.head.appendChild(link);
+  }
+
+  document.title = appName;
+  upsertMeta("theme-color", manifest.theme_color);
+  upsertMeta("application-name", appName);
+  upsertMeta("apple-mobile-web-app-title", shortName);
+
+  if (resolvedIconUrl) {
+    upsertLink('link[rel="icon"]', { rel: "icon" }, resolvedIconUrl);
+    upsertLink('link[rel="shortcut icon"]', { rel: "shortcut icon" }, resolvedIconUrl);
+    upsertLink('link[rel="apple-touch-icon"]:not([sizes])', { rel: "apple-touch-icon" }, resolvedIconUrl);
+
+    APPLE_ICON_SIZES.forEach((size) => {
+      upsertLink(
+        `link[rel="apple-touch-icon"][sizes="${size}"]`,
+        { rel: "apple-touch-icon", sizes: size },
+        resolvedIconUrl,
+      );
+    });
   }
 }
