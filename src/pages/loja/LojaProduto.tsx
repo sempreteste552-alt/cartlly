@@ -124,6 +124,16 @@ export default function LojaProduto() {
       .slice(0, 8);
   }, [product, products]);
 
+  const buyTogetherProduct = useMemo(() => {
+    if (!productPageConfig?.enable_buy_together || !products || products.length < 2) return null;
+    return products.find((p) => p.id !== product.id && p.category_id === product.category_id);
+  }, [product, products, productPageConfig?.enable_buy_together]);
+
+  const bundlePrice = useMemo(() => {
+    if (!buyTogetherProduct) return 0;
+    return (effectivePrice + buyTogetherProduct.price) * 0.95; // 5% discount
+  }, [effectivePrice, buyTogetherProduct]);
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
@@ -469,6 +479,42 @@ export default function LojaProduto() {
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{product.description}</p>
               </div>
             </>
+          )}
+
+          {productPageConfig?.enable_buy_together && buyTogetherProduct && (
+            <div className="mt-6 p-4 border border-primary/20 rounded-xl bg-primary/5 space-y-4">
+              <h3 className="font-bold flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                Compre Junto e Ganhe 5% OFF
+              </h3>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
+                  </div>
+                  <span className="text-xl font-bold text-gray-400">+</span>
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                    <img src={buyTogetherProduct.image_url} alt={buyTogetherProduct.name} className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 line-through">{formatPrice(effectivePrice + buyTogetherProduct.price)}</p>
+                  <p className="text-xl font-black text-primary">{formatPrice(bundlePrice)}</p>
+                </div>
+              </div>
+              <Button 
+                className="w-full h-11" 
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+                onClick={() => {
+                  cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url });
+                  cart.addItem({ id: buyTogetherProduct.id, name: buyTogetherProduct.name, price: buyTogetherProduct.price, image_url: buyTogetherProduct.image_url });
+                  cartNotif.show("Combo Adicionado!", product.image_url);
+                  openCart();
+                }}
+              >
+                Adicionar Ambos ao Carrinho
+              </Button>
+            </div>
           )}
         </div>
       </div>
