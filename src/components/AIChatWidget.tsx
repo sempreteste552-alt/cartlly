@@ -463,7 +463,19 @@ export function AIChatWidget() {
         </div>
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div id="chat-messages" ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          <FeatureTutorialCard
+            id="ai_chat_tutorial"
+            title="Seu Assistente de Vendas IA"
+            description="Eu posso te ajudar a analisar suas vendas, criar campanhas de marketing, gerar textos e até criar cupons de desconto."
+            steps={[
+              "Peça para analisar suas vendas da semana",
+              "Solicite ideias de posts para redes sociais",
+              "Crie cupons de desconto por comando",
+              "Envie notificações push para seus clientes"
+            ]}
+            className="mb-4"
+          />
           {messages.length === 0 && (
             <div className="space-y-4">
               <div className="text-center py-4">
