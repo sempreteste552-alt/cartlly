@@ -28,7 +28,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_settings")
-        .select("admin_blocked, store_blocked")
+        .select("admin_blocked, store_blocked, store_slug")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
