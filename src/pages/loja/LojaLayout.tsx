@@ -434,8 +434,8 @@ export default function LojaLayout() {
               </div>
             </Link>
 
-            <div className="flex-1 max-w-xl mx-auto hidden sm:block">
-              <div className="relative">
+            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
                 <Input
                   placeholder="Buscar produtos..."
@@ -443,6 +443,20 @@ export default function LojaLayout() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
+                  style={{ "--tw-ring-color": primaryColor } as any}
+                />
+              </div>
+              <div className="relative w-40">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
+                <Input
+                  placeholder="Seu CEP"
+                  className="pl-9 bg-secondary border-border rounded-full font-mono text-xs"
+                  value={globalCep}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                    setGlobalCep(val);
+                    if (val.length === 8) localStorage.setItem("global_cep", val);
+                  }}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
