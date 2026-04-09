@@ -103,6 +103,7 @@ export function AdminSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/admin"}
+                      id={item.title === "Produtos" ? "sidebar-products" : item.title === "Pedidos" ? "sidebar-orders" : undefined}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
@@ -127,6 +128,7 @@ export function AdminSidebar() {
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink
                       to={item.url}
+                      id={item.title === "Loja" ? "sidebar-config" : undefined}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
@@ -165,6 +167,7 @@ export function AdminSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a
+                    id="store-preview-btn"
                     href={storeUrl}
                     target="_blank"
                     rel="noopener noreferrer"

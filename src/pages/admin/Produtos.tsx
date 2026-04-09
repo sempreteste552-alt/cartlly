@@ -157,7 +157,7 @@ export default function Produtos() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div id="products-header" className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
           <p className="text-muted-foreground">
@@ -180,6 +180,7 @@ export default function Produtos() {
             Categorias
           </Button>
           <Button
+            id="new-product-btn"
             onClick={() => {
               if (!canCreate) {
                 toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
@@ -278,7 +279,7 @@ export default function Produtos() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border">
+        <Card id="products-table" className="border-border">
           <Table>
             <TableHeader>
               <TableRow>

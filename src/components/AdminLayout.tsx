@@ -17,7 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Clock } from "lucide-react";
+import { Crown, Clock, HelpCircle } from "lucide-react";
+import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
@@ -135,10 +138,26 @@ export function AdminLayout() {
                 </Badge>
               )}
               <ThemeToggle scope="admin" />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={startTutorial}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Reiniciar Tutorial</p>
+                </TooltipContent>
+              </Tooltip>
               <AdminNotificationsBell />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">
+            <OnboardingTutorial />
             <TrialBanner />
             <Outlet />
           </main>

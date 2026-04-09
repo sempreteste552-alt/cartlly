@@ -185,7 +185,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <WelcomeTrialCard />
 
-      <div>
+      <div id="dashboard-welcome">
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-primary" /> Dashboard
         </h1>
@@ -193,7 +193,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards - Premium gradient style */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500" },
           { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500" },
