@@ -76,6 +76,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
   const loginText = useTypewriter(LOGIN_PHRASES);
@@ -209,6 +210,8 @@ export default function Login() {
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {
+        // Save stay connected preference
+        localStorage.setItem("stay_connected", stayConnected ? "true" : "false");
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
