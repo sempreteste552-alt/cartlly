@@ -220,7 +220,22 @@ export default function Login() {
           }
           throw loginError;
         }
-        navigate(email === SUPER_ADMIN_EMAIL ? "/superadmin" : "/admin");
+        if (email === SUPER_ADMIN_EMAIL) {
+          navigate("/superadmin");
+        } else {
+          // Check for onboarding
+          const { data: store } = await supabase
+            .from("store_settings")
+            .select("store_slug")
+            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+            .maybeSingle();
+          
+          if (!store?.store_slug) {
+            navigate("/setup-store");
+          } else {
+            navigate("/admin");
+          }
+        }
       }
     } catch (error: any) {
       setAlertCard({ type: "error", message: error.message || "Erro ao autenticar" });
