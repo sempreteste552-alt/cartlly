@@ -464,6 +464,10 @@ Deno.serve(async (req) => {
           sequenceDef = CART_ABANDONMENT_SEQUENCE;
           triggerType = "abandoned_cart";
           priority = "high";
+        } else if (seqType === "wishlist") {
+          sequenceDef = WISHLIST_SEQUENCE;
+          triggerType = "wishlist_reminder";
+          priority = "high";
         } else if (seqType === "inactivity") {
           sequenceDef = INACTIVITY_SEQUENCE;
           triggerType = "inactivity";
@@ -475,13 +479,15 @@ Deno.serve(async (req) => {
         }
 
         // Smart rate limiting via anti-spam
-        const dailyCount = globalDailyCounts.get(seq.customer_id) || 0;
+        const userCounts = triggerCountsByCustomer.get(seq.customer_id);
+        const triggerCount = userCounts?.get(triggerType) || 0;
+        
         const freqConfig = storeFreqMap.get(seq.store_user_id) || defaultFreq;
-        const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, dailyCount, priority, freqConfig);
+        const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, triggerCount, priority, freqConfig, triggerType);
         
         if (spamCheck.skip) {
           // Reschedule with short delays
-          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 15 : 25;
+          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 30 : 60;
           const nextTime = new Date(Date.now() + rescheduleMinutes * 60 * 1000).toISOString();
           await supabase.from("retargeting_sequences").update({ next_push_at: nextTime }).eq("id", seq.id);
           results.anti_spam_blocked++;
