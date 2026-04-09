@@ -11,7 +11,7 @@ import { usePublicStoreBySlug, usePublicThemeConfig, usePublicProductPageConfig 
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket, BadgeCheck } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket, BadgeCheck, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -24,6 +24,7 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { toast } from "sonner";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
@@ -44,6 +45,8 @@ export interface LojaContextType {
   storeUserId?: string;
   openCart: () => void;
   basePath: string;
+  globalCep: string;
+  setGlobalCep: (cep: string) => void;
 }
 
 import { createContext, useContext } from "react";
@@ -59,11 +62,42 @@ export default function LojaLayout() {
   const cart = useCart(slug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [globalCep, setGlobalCep] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Auto-recognize location by IP
+  useEffect(() => {
+    const savedCep = localStorage.getItem("global_cep");
+    if (savedCep) {
+      setGlobalCep(savedCep);
+      return;
+    }
+
+    const recognizeLocation = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        if (data && data.postal) {
+          const cleanCep = data.postal.replace(/\D/g, "");
+          if (cleanCep.length === 8) {
+            setGlobalCep(cleanCep);
+            localStorage.setItem("global_cep", cleanCep);
+            toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error recognizing location:", error);
+      }
+    };
+    
+    // Small delay to let other things load first
+    const timer = setTimeout(recognizeLocation, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
@@ -206,11 +240,11 @@ export default function LojaLayout() {
   // Slug is required — no default store
   if (!slug) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
+          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
         </div>
       </div>
     );
@@ -218,19 +252,19 @@ export default function LojaLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   if (slug && !settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">A loja "{slug}" não existe ou foi removida.</p>
+          <p className="text-muted-foreground">A loja "{slug}" não existe ou foi removida.</p>
         </div>
       </div>
     );
@@ -239,11 +273,11 @@ export default function LojaLayout() {
   // Store blocked by super admin
   if (settings && (settings as any).store_blocked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8 max-w-md">
           <div className="text-6xl">🚫</div>
           <h1 className="text-3xl font-bold">Loja Indisponível</h1>
-          <p className="text-gray-400">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
+          <p className="text-muted-foreground">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
         </div>
       </div>
     );
@@ -251,11 +285,11 @@ export default function LojaLayout() {
 
   if (settings && !settings.store_open) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🚧</div>
           <h1 className="text-3xl font-bold">Loja Fechada</h1>
-          <p className="text-gray-400">Estamos temporariamente fechados. Volte em breve!</p>
+          <p className="text-muted-foreground">Estamos temporariamente fechados. Volte em breve!</p>
         </div>
       </div>
     );
@@ -277,7 +311,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
+    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
         style={
@@ -400,8 +434,8 @@ export default function LojaLayout() {
               </div>
             </Link>
 
-            <div className="flex-1 max-w-xl mx-auto hidden sm:block">
-              <div className="relative">
+            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
                 <Input
                   placeholder="Buscar produtos..."
@@ -409,6 +443,20 @@ export default function LojaLayout() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
+                  style={{ "--tw-ring-color": primaryColor } as any}
+                />
+              </div>
+              <div className="relative w-40">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
+                <Input
+                  placeholder="Seu CEP"
+                  className="pl-9 bg-secondary border-border rounded-full font-mono text-xs"
+                  value={globalCep}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                    setGlobalCep(val);
+                    if (val.length === 8) localStorage.setItem("global_cep", val);
+                  }}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
@@ -578,6 +626,50 @@ export default function LojaLayout() {
                 </div>
               );
             })}
+            
+            {/* Global CEP Input in Mobile Menu */}
+            <div 
+              className="px-3 py-4 border-t border-border mt-2 space-y-2"
+              style={{
+                opacity: mobileMenu ? 1 : 0,
+                transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
+                transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 400ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 400ms",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
+                <span className="text-sm font-semibold">Onde você está?</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Seu CEP (00000-000)"
+                  className="bg-secondary border-border font-mono h-11"
+                  value={globalCep}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                    setGlobalCep(val);
+                    if (val.length === 8) {
+                      localStorage.setItem("global_cep", val);
+                      toast.success("Localização atualizada!");
+                    }
+                  }}
+                  inputMode="numeric"
+                  maxLength={8}
+                />
+                <Button 
+                  variant="outline" 
+                  className="h-11 aspect-square p-0"
+                  onClick={() => {
+                    if (globalCep.length === 8) toast.success("Localização salva!");
+                    else toast.error("Digite um CEP válido");
+                  }}
+                >
+                  <LocateFixed className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Isso ajuda a calcular prazos e frete automaticamente.</p>
+            </div>
+
             {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
               <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />

@@ -44,6 +44,14 @@ export default function LojaCheckout() {
   const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
   const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
   const [savedPayerCpf, setSavedPayerCpf] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Set<string>>(new Set());
+  const { globalCep } = useLojaContext();
+
+  useEffect(() => {
+    if (globalCep && !cep) {
+      setCep(globalCep);
+    }
+  }, [globalCep]);
   const validateCoupon = useValidateCoupon();
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
 
@@ -261,15 +269,26 @@ export default function LojaCheckout() {
   }, [user, authLoading, pendingPayment]);
 
   const handleSubmit = async (viaWhatsApp = false) => {
-    if (!name.trim()) return toast.error("Informe seu nome completo");
-    if (!phone.trim()) return toast.error("Informe seu telefone");
-    if (!cpf.trim() || !validateCPF(cpf)) return toast.error("CPF inválido ou não informado");
-    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) return toast.error("CEP obrigatório e deve ter 8 dígitos");
-    if (!street.trim()) return toast.error("Informe o nome da rua");
-    if (!number.trim()) return toast.error("Informe o número do endereço");
-    if (!neighborhood.trim()) return toast.error("Informe o bairro");
-    if (!city.trim()) return toast.error("Informe a cidade");
-    if (!state.trim()) return toast.error("Informe o estado");
+    const newErrors = new Set<string>();
+    if (!name.trim()) newErrors.add("name");
+    if (!phone.trim()) newErrors.add("phone");
+    if (!cpf.trim() || !validateCPF(cpf)) newErrors.add("cpf");
+    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) newErrors.add("cep");
+    if (!street.trim()) newErrors.add("street");
+    if (!number.trim()) newErrors.add("number");
+    if (!neighborhood.trim()) newErrors.add("neighborhood");
+    if (!city.trim()) newErrors.add("city");
+    if (!state.trim()) newErrors.add("state");
+
+    setErrors(newErrors);
+
+    if (newErrors.size > 0) {
+      toast.error("Por favor, preencha corretamente todos os campos destacados em vermelho.");
+      const firstError = document.querySelector(".border-destructive");
+      if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     if (cart.items.length === 0) return toast.error("Seu carrinho está vazio");
 
     // Require customer login before payment (not for WhatsApp)
@@ -789,21 +808,21 @@ export default function LojaCheckout() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={errors.size > 0 ? "border-destructive ring-1 ring-destructive ring-offset-2" : ""}>
           <CardHeader><CardTitle className="text-base">Seus Dados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome Completo *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" maxLength={100} />
+                <Label className={errors.has("name") ? "text-destructive" : ""}>Nome Completo *</Label>
+                <Input value={name} onChange={(e) => { setName(e.target.value); if(errors.has("name")) setErrors(prev => { const s = new Set(prev); s.delete("name"); return s; }); }} placeholder="Seu nome completo" maxLength={100} className={errors.has("name") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>CPF *</Label>
-                <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
+                <Label className={errors.has("cpf") ? "text-destructive" : ""}>CPF *</Label>
+                <Input value={cpf} onChange={(e) => { setCpf(formatCPF(e.target.value)); if(errors.has("cpf")) setErrors(prev => { const s = new Set(prev); s.delete("cpf"); return s; }); }} placeholder="000.000.000-00" maxLength={14} className={errors.has("cpf") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Telefone *</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" maxLength={20} />
+                <Label className={errors.has("phone") ? "text-destructive" : ""}>Telefone *</Label>
+                <Input value={phone} onChange={(e) => { setPhone(e.target.value); if(errors.has("phone")) setErrors(prev => { const s = new Set(prev); s.delete("phone"); return s; }); }} placeholder="(11) 99999-9999" maxLength={20} className={errors.has("phone") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
@@ -816,28 +835,29 @@ export default function LojaCheckout() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>CEP *</Label>
+                <Label className={errors.has("cep") ? "text-destructive" : ""}>CEP *</Label>
                 <div className="relative">
                   <Input 
                     value={cep} 
-                    onChange={(e) => setCep(formatCEP(e.target.value))} 
+                    onChange={(e) => { setCep(formatCEP(e.target.value)); if(errors.has("cep")) setErrors(prev => { const s = new Set(prev); s.delete("cep"); return s; }); }} 
                     onBlur={handleCepBlur}
                     placeholder="00000-000" 
                     maxLength={9} 
+                    className={errors.has("cep") ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
                   {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
               </div>
               <div className="sm:col-span-2 space-y-2">
-                <Label>Rua/Logradouro *</Label>
-                <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Ex: Rua das Flores" />
+                <Label className={errors.has("street") ? "text-destructive" : ""}>Rua/Logradouro *</Label>
+                <Input value={street} onChange={(e) => { setStreet(e.target.value); if(errors.has("street")) setErrors(prev => { const s = new Set(prev); s.delete("street"); return s; }); }} placeholder="Ex: Rua das Flores" className={errors.has("street") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Número *</Label>
-                <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº" />
+                <Label className={errors.has("number") ? "text-destructive" : ""}>Número *</Label>
+                <Input value={number} onChange={(e) => { setNumber(e.target.value); if(errors.has("number")) setErrors(prev => { const s = new Set(prev); s.delete("number"); return s; }); }} placeholder="Nº" className={errors.has("number") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="sm:col-span-2 space-y-2">
                 <Label>Complemento</Label>
@@ -847,16 +867,16 @@ export default function LojaCheckout() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Bairro *</Label>
-                <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Seu bairro" />
+                <Label className={errors.has("neighborhood") ? "text-destructive" : ""}>Bairro *</Label>
+                <Input value={neighborhood} onChange={(e) => { setNeighborhood(e.target.value); if(errors.has("neighborhood")) setErrors(prev => { const s = new Set(prev); s.delete("neighborhood"); return s; }); }} placeholder="Seu bairro" className={errors.has("neighborhood") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Cidade *</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" />
+                <Label className={errors.has("city") ? "text-destructive" : ""}>Cidade *</Label>
+                <Input value={city} onChange={(e) => { setCity(e.target.value); if(errors.has("city")) setErrors(prev => { const s = new Set(prev); s.delete("city"); return s; }); }} placeholder="Sua cidade" className={errors.has("city") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Estado (UF) *</Label>
-                <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} placeholder="UF" maxLength={2} />
+                <Label className={errors.has("state") ? "text-destructive" : ""}>Estado (UF) *</Label>
+                <Input value={state} onChange={(e) => { setState(e.target.value.toUpperCase()); if(errors.has("state")) setErrors(prev => { const s = new Set(prev); s.delete("state"); return s; }); }} placeholder="UF" maxLength={2} className={errors.has("state") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
             </div>
 

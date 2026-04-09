@@ -305,7 +305,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         toast.success("Pagamento aprovado!");
         onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
       } else if (result.paymentResult?.status === "rejected" || result.payment?.status === "rejected") {
-        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.");
+        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão. (Se seu banco não notificou, a transação foi bloqueada pelo gateway de segurança)");
         setPaymentData(null); // Clear to allow retry
       } else {
         // Pending status (PIX/Boleto)
