@@ -188,7 +188,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
         )}
 
         <FileUploadButton
-          label="Enviar imagem ou vídeo"
+          label="Enviar imagens ou vídeos"
           accept="image/*,video/*"
           loading={uploadingMedia}
           setLoading={setUploadingMedia}
@@ -326,7 +326,7 @@ export default function HighlightsManager() {
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Envie imagens ou vídeos ao destaque <strong>{createdHighlight?.name}</strong>.</p>
               <FileUploadButton
-                label="Enviar imagem ou vídeo"
+                label="Enviar imagens ou vídeos"
                 accept="image/*,video/*"
                 loading={uploadingMedia}
                 setLoading={setUploadingMedia}
