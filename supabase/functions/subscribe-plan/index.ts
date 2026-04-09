@@ -234,7 +234,8 @@ async function activateSubscription(supabase: any, userId: string, planId: strin
 async function processMercadoPago(
   accessToken: string, plan: any, method: string,
   email: string, name: string, document: string,
-  cardToken?: string, installments?: number, userId?: string
+  cardToken?: string, installments?: number, userId?: string,
+  deviceId?: string, paymentMethodId?: string, issuerId?: string
 ) {
   const paymentData: any = {
     transaction_amount: Number(plan.price),
