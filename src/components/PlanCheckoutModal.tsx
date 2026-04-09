@@ -451,22 +451,22 @@ export default function PlanCheckoutModal({
               </div>
 
               {/* QR Code */}
-              <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-white rounded-2xl shadow-lg border border-border/20">
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-border/20">
                   {pixQrBase64 ? (
                     <img
                       src={pixQrBase64.startsWith("data:") ? pixQrBase64 : `data:image/png;base64,${pixQrBase64}`}
                       alt="QR Code PIX"
-                      className="w-56 h-56 rounded-xl"
+                      className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg sm:rounded-xl"
                     />
                   ) : (
-                    <div className="w-56 h-56 rounded-xl bg-muted flex items-center justify-center">
-                      <QrCode className="h-24 w-24 text-muted-foreground/20" />
+                    <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center">
+                      <QrCode className="h-20 w-20 sm:h-24 sm:w-24 text-muted-foreground/20" />
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground text-center font-medium">
-                  Escaneie o QR Code com o app do seu banco
+                <p className="text-xs sm:text-sm text-muted-foreground text-center font-medium max-w-[240px]">
+                  Escaneie o QR Code com o app do seu banco ou copie o código abaixo
                 </p>
               </div>
 
