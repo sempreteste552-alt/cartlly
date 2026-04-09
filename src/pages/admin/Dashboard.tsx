@@ -14,6 +14,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
 import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -23,6 +25,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const { ctx } = useTenantContext();
+  const hasGateway = canAccess("gateway", ctx);
 
   const { data: allOrderItems } = useQuery({
     queryKey: ["all_order_items", user?.id],
