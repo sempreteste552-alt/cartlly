@@ -758,6 +758,8 @@ function GeneralSettingsTab() {
 
 
 export default function Configuracoes() {
+  const { ctx } = useTenantContext();
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
@@ -798,6 +800,7 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-6">
+          <LockedFeature isLocked={!canAccess("appearance_settings", ctx)} featureName="Personalização de Aparência">
           <FeatureTutorialCard
             id="appearance_settings"
             title="Personalização de Aparência"
@@ -810,12 +813,19 @@ export default function Configuracoes() {
             ]}
           />
           <StoreAppearanceSettings />
+          </LockedFeature>
         </TabsContent>
 
         <TabsContent value="home" className="mt-6 space-y-8">
-          <RestockAlertManager />
-          <HighlightsManager />
-          <HomeBuilderManager />
+          <LockedFeature isLocked={!canAccess("restock_alerts", ctx)} featureName="Alerta de Reposição">
+            <RestockAlertManager />
+          </LockedFeature>
+          <LockedFeature isLocked={!canAccess("highlights_stories", ctx)} featureName="Destaques (Stories)">
+            <HighlightsManager />
+          </LockedFeature>
+          <LockedFeature isLocked={!canAccess("home_builder", ctx)} featureName="Editor da Home">
+            <HomeBuilderManager />
+          </LockedFeature>
         </TabsContent>
 
         <TabsContent value="product" className="mt-6">
@@ -849,7 +859,9 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="push" className="mt-6">
-          <PushNotificationSettings />
+          <LockedFeature isLocked={!canAccess("push_customers", ctx)} featureName="Push Notifications">
+            <PushNotificationSettings />
+          </LockedFeature>
         </TabsContent>
       </Tabs>
     </div>

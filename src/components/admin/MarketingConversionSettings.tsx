@@ -10,11 +10,15 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, Megaphone, Gift, Timer, Truck, ShieldCheck } from "lucide-react";
 import { useStoreMarketingConfig, useUpdateStoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
+import { LockedFeature } from "@/components/LockedFeature";
 
 export default function MarketingConversionSettings() {
   const { data: config, isLoading } = useStoreMarketingConfig();
   const updateConfig = useUpdateStoreMarketingConfig();
   const { isLocked } = usePlanFeatures();
+  const { ctx } = useTenantContext();
 
   const [announcementEnabled, setAnnouncementEnabled] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
@@ -97,7 +101,8 @@ export default function MarketingConversionSettings() {
   return (
     <div className="space-y-6">
       {/* Announcement Bar */}
-      <Card className="border-primary/30 animate-pulse shadow-lg shadow-primary/10">
+      <LockedFeature isLocked={!canAccess("announcement_bar", ctx)} featureName="Barra de Anúncio">
+      <Card className="border-primary/30 shadow-lg shadow-primary/10">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
@@ -149,8 +154,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Popup Coupon */}
+      <LockedFeature isLocked={!canAccess("popup_coupon", ctx)} featureName="Popup de Cupom">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -189,8 +196,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Countdown Banner */}
+      <LockedFeature isLocked={!canAccess("countdown_timer", ctx)} featureName="Contagem Regressiva">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -235,8 +244,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Free Shipping Bar */}
+      <LockedFeature isLocked={!canAccess("free_shipping_bar", ctx)} featureName="Barra de Frete Grátis">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -275,8 +286,10 @@ export default function MarketingConversionSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Trust Badges */}
+      <LockedFeature isLocked={!canAccess("trust_badges", ctx)} featureName="Selos de Confiança">
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -293,6 +306,7 @@ export default function MarketingConversionSettings() {
           </div>
         </CardContent>
       </Card>
+      </LockedFeature>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateConfig.isPending} size="lg">
