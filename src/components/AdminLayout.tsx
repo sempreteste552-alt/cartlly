@@ -167,7 +167,7 @@ export function AdminLayout() {
           </main>
         </div>
         <WhatsAppSupportBubble />
-        {features.ai_tools && <AIChatWidget />}
+        {aiAvailable && <AIChatWidget />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
