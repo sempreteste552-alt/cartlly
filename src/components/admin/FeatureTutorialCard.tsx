@@ -29,13 +29,13 @@ export function FeatureTutorialCard({
     const isDismissed = localStorage.getItem(storageKey) === "true";
     const views = parseInt(localStorage.getItem(viewsKey) || "0");
     
-    if (isDismissed || views >= 2) {
+    if (isDismissed || views >= 1) {
       setDismissed(true);
     } else {
       // Small timeout to avoid double counting in dev mode or fast re-renders
       const timer = setTimeout(() => {
         const currentViews = parseInt(localStorage.getItem(viewsKey) || "0");
-        if (currentViews < 2) {
+        if (currentViews < 1) {
           localStorage.setItem(viewsKey, (currentViews + 1).toString());
         }
       }, 500);

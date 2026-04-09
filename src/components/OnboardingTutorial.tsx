@@ -12,8 +12,8 @@ export const OnboardingTutorial = () => {
     const tutorialViews = parseInt(localStorage.getItem("onboarding_tutorial_views") || "0");
     const tutorialActive = sessionStorage.getItem("onboarding_tutorial_active");
 
-    // Automatically activate tutorial for new users on their first visit to dashboard, but only up to 2 times
-    if (!tutorialCompleted && !tutorialActive && location.pathname === "/admin" && tutorialViews < 2) {
+    // Automatically activate tutorial for new users on their first visit to dashboard, but only up to 1 time
+    if (!tutorialCompleted && !tutorialActive && location.pathname === "/admin" && tutorialViews < 1) {
       sessionStorage.setItem("onboarding_tutorial_active", "true");
       localStorage.setItem("onboarding_tutorial_views", (tutorialViews + 1).toString());
     }
