@@ -352,16 +352,24 @@ export default function LojaLayout() {
             </Button>
 
             <Link to={basePath} className="flex items-center gap-2 shrink-0">
-              {settings?.logo_url ? (
-                <img
-                  src={settings.logo_url}
-                  alt={storeName}
-                  style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
-                  className="object-contain"
-                />
-              ) : (
-                <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
-              )}
+              <div className="relative inline-flex items-center">
+                {settings?.logo_url ? (
+                  <div className="relative">
+                    <img
+                      src={settings.logo_url}
+                      alt={storeName}
+                      style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
+                      className="object-contain"
+                    />
+                    <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
+                    <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] mt-0.5" />
+                  </div>
+                )}
+              </div>
             </Link>
 
             <div className="flex-1 max-w-xl mx-auto hidden sm:block">
