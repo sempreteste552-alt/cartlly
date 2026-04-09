@@ -190,13 +190,23 @@ export default function LojaLayout() {
   });
   const hasShippingZones = (shippingZonesData?.length ?? 0) > 0;
 
-  // Dynamic PWA manifest with tenant context
+  const storeInstallName = settings?.store_name?.trim()
+    || slug
+      ?.replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+    || undefined;
   const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeIconUrl = themeConfig?.favicon_url || settings?.favicon_url || settings?.logo_url || undefined;
+  const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
+
   usePwaManifest({
-    name: settings?.store_name || undefined,
-    shortName: settings?.store_name?.slice(0, 12) || undefined,
+    name: storeInstallName,
+    shortName: storeInstallName?.slice(0, 12) || undefined,
     themeColor: settings?.primary_color || undefined,
-    iconUrl: themeConfig?.favicon_url || settings?.logo_url || undefined,
+    iconUrl: storeIconUrl,
+    iconVersion: storeIconVersion,
     startUrl: storeStartUrl,
     scope: storeStartUrl,
   });
@@ -284,43 +294,6 @@ export default function LojaLayout() {
       };
     }
   }, [settings, themeConfig]);
-
-  // Apply favicon dynamically — use favicon_url, fallback to logo_url
-  useEffect(() => {
-    const iconHref = themeConfig?.favicon_url || settings?.logo_url;
-    if (iconHref) {
-      // Standard favicon
-      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.href = iconHref;
-
-      // Apple touch icon (iOS home screen) — multiple sizes for best quality
-      const appleSizes = ["180x180", "152x152", "120x120"];
-      appleSizes.forEach((size) => {
-        let apple: HTMLLinkElement | null = document.querySelector(`link[rel='apple-touch-icon'][sizes='${size}']`);
-        if (!apple) {
-          apple = document.createElement("link");
-          apple.rel = "apple-touch-icon";
-          apple.setAttribute("sizes", size);
-          document.head.appendChild(apple);
-        }
-        apple.href = iconHref;
-      });
-
-      // Default apple-touch-icon without sizes
-      let appleDefault: HTMLLinkElement | null = document.querySelector("link[rel='apple-touch-icon']:not([sizes])");
-      if (!appleDefault) {
-        appleDefault = document.createElement("link");
-        appleDefault.rel = "apple-touch-icon";
-        document.head.appendChild(appleDefault);
-      }
-      appleDefault.href = iconHref;
-    }
-  }, [themeConfig?.favicon_url, settings?.logo_url]);
 
   // Slug is required — no default store
   if (!slug) {
