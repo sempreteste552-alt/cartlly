@@ -73,7 +73,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
             <button onClick={() => { import("@/integrations/supabase/client").then(m => m.supabase.auth.signOut()); }} className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
               Sair e Entrar como Lojista
             </button>
-            <button onClick={() => window.location.href = "/"} className="w-full rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors">
+            <button 
+              onClick={() => {
+                const storeSlug = (storeSettings as any)?.store_slug;
+                const lastSlug = localStorage.getItem("last_visited_store");
+                const backUrl = storeSlug ? `/loja/${storeSlug}` : (lastSlug ? `/loja/${lastSlug}` : "/");
+                window.location.href = backUrl;
+              }} 
+              className="w-full rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+            >
               Voltar para a Loja
             </button>
           </div>
