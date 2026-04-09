@@ -269,15 +269,26 @@ export default function LojaCheckout() {
   }, [user, authLoading, pendingPayment]);
 
   const handleSubmit = async (viaWhatsApp = false) => {
-    if (!name.trim()) return toast.error("Informe seu nome completo");
-    if (!phone.trim()) return toast.error("Informe seu telefone");
-    if (!cpf.trim() || !validateCPF(cpf)) return toast.error("CPF inválido ou não informado");
-    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) return toast.error("CEP obrigatório e deve ter 8 dígitos");
-    if (!street.trim()) return toast.error("Informe o nome da rua");
-    if (!number.trim()) return toast.error("Informe o número do endereço");
-    if (!neighborhood.trim()) return toast.error("Informe o bairro");
-    if (!city.trim()) return toast.error("Informe a cidade");
-    if (!state.trim()) return toast.error("Informe o estado");
+    const newErrors = new Set<string>();
+    if (!name.trim()) newErrors.add("name");
+    if (!phone.trim()) newErrors.add("phone");
+    if (!cpf.trim() || !validateCPF(cpf)) newErrors.add("cpf");
+    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) newErrors.add("cep");
+    if (!street.trim()) newErrors.add("street");
+    if (!number.trim()) newErrors.add("number");
+    if (!neighborhood.trim()) newErrors.add("neighborhood");
+    if (!city.trim()) newErrors.add("city");
+    if (!state.trim()) newErrors.add("state");
+
+    setErrors(newErrors);
+
+    if (newErrors.size > 0) {
+      toast.error("Por favor, preencha corretamente todos os campos destacados em vermelho.");
+      const firstError = document.querySelector(".border-destructive");
+      if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
     if (cart.items.length === 0) return toast.error("Seu carrinho está vazio");
 
     // Require customer login before payment (not for WhatsApp)
