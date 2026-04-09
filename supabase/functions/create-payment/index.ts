@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
     // ==================== PAYMENT PROCESSING ====================
     const { 
       order_id, method, card_token, card_type, installments, store_user_id, 
-      payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id 
+      payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id, issuer_id 
     } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
