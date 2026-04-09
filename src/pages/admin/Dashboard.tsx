@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye } from "lucide-react";
+import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
