@@ -26,6 +26,13 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
 export function generateReceiptPdf(data: ReceiptData): void {
+  const cleanCpf = data.customerCpf?.replace(/\D/g, "") || "";
+  const maskedCpf = cleanCpf.length === 11 
+    ? `***.***.***-${cleanCpf.slice(-2)}` 
+    : data.customerCpf || "—";
+    
+  const authenticationCode = (data.orderId.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32);
+
   const html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -33,177 +40,195 @@ export function generateReceiptPdf(data: ReceiptData): void {
   <meta charset="UTF-8">
   <title>Comprovante - Pedido #${data.orderId.slice(0, 8)}</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      font-family: 'Inter', sans-serif; 
       color: #1a1a1a; 
-      padding: 40px; 
-      background-color: #f4f4f7;
+      padding: 20px; 
+      background-color: #f8fafc;
     }
     .receipt {
       max-width: 500px;
       margin: 0 auto;
       background: white;
       padding: 40px;
-      border-radius: 24px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-      border: 1px solid #eee;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header .icon { 
-      width: 60px; height: 60px; 
-      background: #e7f9ee; 
-      border-radius: 50%; 
-      margin: 0 auto 16px; 
-      display: flex; align-items: center; justify-content: center;
-      color: #22c55e;
-      font-size: 32px;
+    .bank-header {
+      border-bottom: 2px solid #1a1a1a;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
     }
-    .header h1 { font-size: 18px; color: #1a1a1a; margin-bottom: 4px; font-weight: 700; }
-    .header p { font-size: 14px; color: #666; }
-
-    .amount-section {
+    .bank-header h1 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+    .bank-header .date {
+      font-size: 12px;
+      color: #64748b;
+    }
+    
+    .main-value {
       text-align: center;
       padding: 30px 0;
-      border-bottom: 1px dashed #eee;
-      margin-bottom: 30px;
+      background: #f1f5f9;
+      margin-bottom: 25px;
     }
-    .amount-section .label { 
-      font-size: 10px; 
-      text-transform: uppercase; 
-      letter-spacing: 1px; 
-      color: #999; 
+    .main-value .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #64748b;
       font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+    .main-value .amount {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #64748b;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .info-row .label {
+      color: #64748b;
+    }
+    .info-row .value {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .items-list {
+      margin-bottom: 20px;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 5px;
+      color: #334155;
+    }
+
+    .authentication {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px dashed #cbd5e1;
+      text-align: center;
+    }
+    .authentication p {
+      font-size: 9px;
+      color: #94a3b8;
+      text-transform: uppercase;
       margin-bottom: 8px;
     }
-    .amount-section .value { 
-      font-size: 36px; 
-      font-weight: 800; 
-      color: #1a1a1a; 
-      letter-spacing: -1px;
+    .auth-code {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 10px;
+      color: #475569;
+      word-break: break-all;
     }
-    .status-badge {
-      display: inline-block;
-      background: #e7f9ee;
-      color: #16a34a;
-      padding: 4px 12px;
-      border-radius: 100px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 12px;
-    }
-
-    .info-grid { display: grid; grid-template-cols: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
-    .info-item .label { font-size: 10px; text-transform: uppercase; color: #999; font-weight: 700; margin-bottom: 4px; }
-    .info-item .value { font-size: 13px; font-weight: 600; color: #1a1a1a; }
-
-    .items-section { margin-bottom: 30px; }
-    .section-title { font-size: 11px; text-transform: uppercase; color: #999; font-weight: 700; margin-bottom: 16px; }
-    .item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
-    .item-info { flex: 1; }
-    .item-name { font-weight: 600; color: #1a1a1a; }
-    .item-meta { font-size: 12px; color: #666; margin-top: 2px; }
-    .item-price { font-weight: 700; color: #1a1a1a; }
-
-    .summary-box { 
-      background: #f9fafb; 
-      border-radius: 16px; 
-      padding: 20px; 
-      margin-bottom: 30px;
-    }
-    .summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666; }
-    .summary-row.total { 
-      margin-top: 12px; 
-      padding-top: 12px; 
-      border-top: 1px solid #eee; 
-      font-weight: 700; 
-      color: #1a1a1a;
-      font-size: 15px;
-    }
-
-    .footer { text-align: center; color: #999; font-size: 11px; margin-top: 40px; }
     
+    .footer-note {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
     @media print {
       body { background: white; padding: 0; }
-      .receipt { box-shadow: none; border: none; width: 100%; max-width: none; }
+      .receipt { box-shadow: none; border: 1px solid #000; width: 100%; max-width: none; }
     }
   </style>
 </head>
 <body>
   <div class="receipt">
-    <div class="header">
-      <div class="icon">✓</div>
-      <h1>Comprovante de Compra</h1>
-      <p>Operação realizada com sucesso</p>
+    <div class="bank-header">
+      <h1>Comprovante de Transação</h1>
+      <div class="date">${data.date}</div>
     </div>
 
-    <div class="amount-section">
+    <div class="main-value">
       <div class="label">Valor Total</div>
-      <div class="value">${formatPrice(data.total)}</div>
-      <div class="status-badge">Confirmado</div>
+      <div class="amount">${formatPrice(data.total)}</div>
     </div>
 
-    <div class="info-grid">
-      <div class="info-item">
-        <div class="label">Data e Hora</div>
-        <div class="value">${data.date}</div>
+    <div class="section">
+      <div class="section-title">Dados do Beneficiário</div>
+      <div class="info-row">
+        <span class="label">Nome/Razão Social:</span>
+        <span class="value">${data.storeName}</span>
       </div>
-      <div class="info-item" style="text-align: right">
-        <div class="label">ID da Transação</div>
-        <div class="value">#${data.orderId.slice(0, 18).toUpperCase()}</div>
-      </div>
-      <div class="info-item">
-        <div class="label">Destinatário</div>
-        <div class="value">${data.storeName}</div>
-      </div>
-      <div class="info-item" style="text-align: right">
-        <div class="label">Pagador</div>
-        <div class="value">${data.customerName}</div>
+      <div class="info-row">
+        <span class="label">Identificação:</span>
+        <span class="value">PAGAMENTO DE PEDIDO #${data.orderId.slice(0, 8).toUpperCase()}</span>
       </div>
     </div>
 
-    <div class="items-section">
-      <div class="section-title">Detalhamento dos Itens</div>
-      ${data.items.map(item => `
-        <div class="item">
-          <div class="item-info">
-            <div class="item-name">${item.name}</div>
-            <div class="item-meta">${item.quantity}x • ${formatPrice(item.price)}</div>
+    <div class="section">
+      <div class="section-title">Dados do Pagador</div>
+      <div class="info-row">
+        <span class="label">Nome:</span>
+        <span class="value">${data.customerName}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">CPF:</span>
+        <span class="value">${maskedCpf}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Meio de Pagamento:</span>
+        <span class="value">${data.paymentMethod}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Detalhamento da Compra</div>
+      <div class="items-list">
+        ${data.items.map(item => `
+          <div class="item-row">
+            <span>${item.quantity}x ${item.name}</span>
+            <span>${formatPrice(item.price * item.quantity)}</span>
           </div>
-          <div class="item-price">${formatPrice(item.price * item.quantity)}</div>
-        </div>
-      `).join("")}
-    </div>
-
-    <div class="summary-box">
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <span>${formatPrice(data.subtotal)}</span>
+        `).join("")}
       </div>
-      ${data.discount > 0 ? `
-      <div class="summary-row" style="color: #16a34a">
-        <span>Desconto</span>
-        <span>-${formatPrice(data.discount)}</span>
-      </div>` : ""}
-      ${data.shipping > 0 ? `
-      <div class="summary-row">
-        <span>Frete</span>
-        <span>${formatPrice(data.shipping)}</span>
-      </div>` : ""}
-      <div class="summary-row total">
-        <span>Total Pago</span>
-        <span>${formatPrice(data.total)}</span>
+      <div class="info-row" style="margin-top: 10px; font-weight: 700; border-top: 1px solid #f1f5f9; padding-top: 5px;">
+        <span class="label" style="color: #1a1a1a">Total:</span>
+        <span class="value">${formatPrice(data.total)}</span>
       </div>
     </div>
 
-    <div class="info-item">
-      <div class="label">Forma de Pagamento</div>
-      <div class="value">${data.paymentMethod}</div>
+    <div class="authentication">
+      <p>Autenticação Eletrônica</p>
+      <div class="auth-code">${authenticationCode}</div>
     </div>
 
-    <div class="footer">
-      Comprovante gerado eletronicamente em ${data.date}<br>
-      Este documento serve como recibo de sua transação.
+    <div class="footer-note">
+      Comprovante gerado eletronicamente em conformidade com as normas bancárias.<br>
+      Este documento é um registro de transação financeira.
     </div>
   </div>
 </body>
