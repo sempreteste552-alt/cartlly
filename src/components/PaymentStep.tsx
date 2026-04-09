@@ -538,6 +538,18 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </Select>
           </div>
 
+          <div className="flex items-center space-x-2 pt-1 pb-2">
+            <Checkbox 
+              id="saveCard" 
+              checked={saveCard} 
+              onCheckedChange={(checked) => setSaveCard(checked as boolean)}
+            />
+            <Label htmlFor="saveCard" className="text-xs font-medium leading-none cursor-pointer flex items-center gap-2">
+              <Save className="h-3 w-3 text-muted-foreground" />
+              Salvar cartão para as próximas compras
+            </Label>
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => { setShowCardForm(false); setSelectedMethod(null); }}>
               Voltar
