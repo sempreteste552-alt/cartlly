@@ -14,11 +14,12 @@ interface AIProductToolsProps {
   onApplyDescription: (desc: string) => void;
   onApplyName: (name: string) => void;
   onApplyPrice: (price: string) => void;
+  locked?: boolean;
 }
 
 export function AIProductTools({
   name, description, price, category, imageUrl,
-  onApplyDescription, onApplyName, onApplyPrice,
+  onApplyDescription, onApplyName, onApplyPrice, locked = false,
 }: AIProductToolsProps) {
   const aiEnhance = useAIProductEnhance();
   const [seoResult, setSeoResult] = useState<SEOResult | null>(null);
@@ -67,6 +68,7 @@ export function AIProductTools({
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   const isLoading = aiEnhance.isPending;
+  const handleUpgrade = () => window.location.assign("/admin/plano");
 
   return (
     <div className="space-y-3">
@@ -79,7 +81,7 @@ export function AIProductTools({
         <Button
           type="button" variant="outline" size="sm"
           onClick={handleGenerateSEO}
-          disabled={isLoading || !name}
+          disabled={locked || isLoading || !name}
         >
           {activeAction === "seo" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
           Gerar Descrição SEO
@@ -87,7 +89,7 @@ export function AIProductTools({
         <Button
           type="button" variant="outline" size="sm"
           onClick={handleSuggestPrice}
-          disabled={isLoading || !name}
+          disabled={locked || isLoading || !name}
         >
           {activeAction === "price" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <DollarSign className="mr-1.5 h-3.5 w-3.5" />}
           Sugerir Preço
@@ -95,12 +97,27 @@ export function AIProductTools({
         <Button
           type="button" variant="outline" size="sm"
           onClick={handleAnalyzeImage}
-          disabled={isLoading || !imageUrl}
+          disabled={locked || isLoading || !imageUrl}
         >
           {activeAction === "image" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="mr-1.5 h-3.5 w-3.5" />}
           Analisar Imagem
         </Button>
       </div>
+
+      {locked && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-3 space-y-2">
+            <span className="text-sm font-semibold text-foreground">IA bloqueada no seu plano</span>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Cada produto sem descrição persuasiva, preço estratégico e análise inteligente é dinheiro ficando na mesa.
+              Desbloqueie a IA para vender com mais velocidade e muito mais força.
+            </p>
+            <Button type="button" size="sm" className="gap-2" onClick={handleUpgrade}>
+              <ArrowRight className="h-3.5 w-3.5" /> Desbloquear IA agora
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* SEO Result */}
       {seoResult && (

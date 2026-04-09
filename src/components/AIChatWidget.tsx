@@ -341,15 +341,21 @@ export function AIChatWidget() {
 
   if (aiLocked) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-lg opacity-50 cursor-not-allowed"
-          title="Chat IA bloqueado — Faça upgrade do plano"
-          disabled
-        >
-          <Lock className="h-6 w-6" />
-        </Button>
+      <div className="fixed bottom-4 right-4 z-50 w-72 rounded-2xl border border-border bg-card p-4 shadow-2xl">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+            <Lock className="h-5 w-5 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-foreground">Assistente IA bloqueado</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Sem IA você responde mais devagar, analisa pior e vende abaixo do que poderia. Desbloqueie agora para usar automação e inteligência a seu favor.
+            </p>
+            <Button size="sm" className="gap-2" onClick={() => window.location.assign("/admin/plano")}>
+              <Sparkles className="h-3.5 w-3.5" /> Desbloquear IA
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

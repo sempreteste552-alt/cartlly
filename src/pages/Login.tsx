@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import siteSeguro from "@/assets/site-seguro.webp";
-import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
+import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
@@ -193,7 +193,7 @@ export default function Login() {
               store_name: storeName.trim(),
               store_slug: slug
             },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: getAuthRedirectOrigin(),
           },
         });
         if (signUpError) {
