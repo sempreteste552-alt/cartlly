@@ -169,7 +169,10 @@ export function generateReceiptPdf(data: ReceiptData): void {
 <body>
   <div class="receipt">
     <div class="bank-header">
-      <h1>Comprovante de Transação</h1>
+      <div>
+        ${data.storeLogoUrl ? `<img src="${data.storeLogoUrl}" alt="${data.storeName}" style="max-height:36px;max-width:160px;object-fit:contain;margin-bottom:6px;" />` : ""}
+        <h1>Comprovante de Transação</h1>
+      </div>
       <div class="date">${data.date}</div>
     </div>
 
