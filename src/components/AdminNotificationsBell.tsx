@@ -151,34 +151,50 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <ScrollArea className="max-h-72">
+        <ScrollArea className="max-h-[450px]">
           {notifications.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              Nenhuma notificação
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              <Bell className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p>Sua central de notificações está vazia</p>
             </div>
           ) : (
-            notifications.map((n) => (
-              <div key={n.id}>
-                <button
-                  onClick={() => { if (!n.read) markAsRead(n.id); }}
-                  className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="text-lg shrink-0 mt-0.5">{getNotificationEmoji(n.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm truncate ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                        {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0" />}
+            <div className="flex flex-col">
+              {notifications.map((n) => (
+                <div key={n.id} className="group relative">
+                  <button
+                    onClick={() => { if (!n.read) markAsRead(n.id); }}
+                    className={`w-full text-left p-4 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5 border-l-2 border-primary" : "border-l-2 border-transparent"}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl shrink-0 mt-0.5">{getNotificationEmoji(n.type)}</span>
+                      <div className="flex-1 min-w-0 pr-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={`text-sm truncate ${!n.read ? "font-bold text-foreground" : "font-medium text-muted-foreground"}`}>{n.title}</p>
+                          {!n.read && <span className="h-2 w-2 rounded-full bg-primary shrink-0 animate-pulse" />}
+                        </div>
+                        <p className={`text-xs mt-1 leading-relaxed ${!n.read ? "text-foreground/80" : "text-muted-foreground/70"}`}>
+                          {n.message}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-2 font-medium">{formatDate(n.created_at)}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-1">{formatDate(n.created_at)}</p>
                     </div>
-                  </div>
-                </button>
-                <Separator />
-              </div>
-            ))
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteNotification(n.id);
+                    }}
+                    title="Excluir notificação"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Separator />
+                </div>
+              ))}
+            </div>
           )}
         </ScrollArea>
       </PopoverContent>
