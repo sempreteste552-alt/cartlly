@@ -181,38 +181,58 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return nums;
   };
 
-  const generateCardToken = async (): Promise<string> => {
+  const generateCardToken = async (gateway: string): Promise<string> => {
     const publicKey = settings?.gateway_public_key;
     if (!publicKey) throw new Error("Chave pública do gateway não configurada");
-
-    if (!window.MercadoPago) {
-      throw new Error("SDK do Mercado Pago não carregado. Recarregue a página.");
-    }
-
-    const mp = new window.MercadoPago(publicKey, {
-      locale: "pt-BR",
-    });
 
     const [expMonth, expYear] = cardExpiry.split("/");
     const fullYear = expYear?.length === 2 ? `20${expYear}` : expYear;
 
-    const cardData = {
-      cardNumber: cardNumber.replace(/\s/g, ""),
-      cardholderName: cardName,
-      cardExpirationMonth: expMonth,
-      cardExpirationYear: fullYear,
-      securityCode: cardCvv,
-      identificationType: "CPF",
-      identificationNumber: cardCpf.replace(/\D/g, ""),
-    };
-
-    const tokenResponse = await mp.createCardToken(cardData);
-
-    if (!tokenResponse?.id) {
-      throw new Error("Não foi possível gerar o token do cartão. Verifique os dados.");
+    if (gateway === "mercadopago") {
+      if (!window.MercadoPago) throw new Error("SDK do Mercado Pago não carregado.");
+      const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+      const cardData = {
+        cardNumber: cardNumber.replace(/\s/g, ""),
+        cardholderName: cardName,
+        cardExpirationMonth: expMonth,
+        cardExpirationYear: fullYear,
+        securityCode: cardCvv,
+        identificationType: "CPF",
+        identificationNumber: cardCpf.replace(/\D/g, ""),
+      };
+      const tokenResponse = await mp.createCardToken(cardData);
+      if (!tokenResponse?.id) throw new Error("Não foi possível gerar o token do cartão Mercado Pago.");
+      return tokenResponse.id;
+    } else if (gateway === "pagbank") {
+      // For PagBank, we can use the card data to generate the encrypted card token
+      // Note: PagBank SDK is window.PagSeguro and uses a different approach.
+      // But we can manually implement the encryption if needed or use the SDK.
+      // Assuming we have the SDK loaded, we use its encryption function.
+      if (!window.PagSeguro) throw new Error("SDK do PagBank não carregado.");
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const card = window.PagSeguro.encryptCard({
+            publicKey: publicKey,
+            holder: cardName,
+            number: cardNumber.replace(/\s/g, ""),
+            expMonth: expMonth,
+            expYear: fullYear,
+            securityCode: cardCvv,
+          });
+          
+          if (card?.encryptedCard) {
+            resolve(card.encryptedCard);
+          } else {
+            reject(new Error("Erro ao criptografar cartão PagBank."));
+          }
+        } catch (err: any) {
+          reject(new Error("Erro no SDK do PagBank: " + err.message));
+        }
+      });
     }
 
-    return tokenResponse.id;
+    return cardNumber.replace(/\s/g, "");
   };
 
   const handlePay = async (method: "pix" | "credit_card" | "boleto") => {
