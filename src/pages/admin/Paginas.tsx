@@ -23,6 +23,7 @@ import {
   BookOpen, Shield, HelpCircle, Phone, Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PlanGate } from "@/components/PlanGate";
 
 interface StorePage {
   id: string;
@@ -194,6 +195,7 @@ export default function Paginas() {
   }
 
   return (
+    <PlanGate feature="store_pages">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -371,5 +373,6 @@ export default function Paginas() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </PlanGate>
   );
 }

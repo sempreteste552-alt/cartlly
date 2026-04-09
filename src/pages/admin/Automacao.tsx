@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PlanGate } from "@/components/PlanGate";
 
 interface AutomationRule {
   id: string;
@@ -350,6 +351,7 @@ export default function Automacao() {
   };
 
   return (
+    <PlanGate feature="automation">
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -812,5 +814,6 @@ export default function Automacao() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }
