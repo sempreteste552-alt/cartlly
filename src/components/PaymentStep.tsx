@@ -84,6 +84,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardInstallments, setCardInstallments] = useState("1");
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
   const [saveCard, setSaveCard] = useState(false);
+  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
 
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState(initialCpf || "");
@@ -168,7 +169,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
-    { id: "credit_card" as const, label: "Cartão de Crédito", desc: "Parcelamento disponível", icon: CreditCard, enabled: settings?.payment_credit_card },
+    { id: "credit_card" as const, label: "Cartão", desc: "Crédito ou Débito", icon: CreditCard, enabled: settings?.payment_credit_card },
     { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
@@ -273,6 +274,13 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         store_user_id: storeUserId,
       };
 
+      // Split cardName into first and last name for more reliable processing
+      const nameParts = cardName.trim().split(" ");
+      if (method === "credit_card") {
+        params.payer_first_name = nameParts[0];
+        params.payer_last_name = nameParts.slice(1).join(" ");
+      }
+
       if (method === "credit_card") {
         // Use Mercado Pago SDK to generate a proper card token
         if (settings?.payment_gateway === "mercadopago" || settings?.payment_gateway === "pagbank") {
@@ -290,8 +298,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           // For other gateways, send raw or handle differently
           params.card_token = cardNumber.replace(/\s/g, "");
         }
-        params.installments = parseInt(cardInstallments);
+        params.installments = cardType === "debit" ? 1 : parseInt(cardInstallments);
         params.payer_cpf = cardCpf.replace(/\D/g, "");
+        params.card_type = cardType;
       }
 
       if (method === "pix" || method === "boleto") {
@@ -525,18 +534,45 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <CpfInputField label="CPF do Titular" value={cardCpf} onChange={setCardCpf} />
 
           <div className="space-y-2">
-            <Label>Parcelas</Label>
-            <Select value={cardInstallments} onValueChange={setCardInstallments}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Tipo do Cartão</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={cardType === "credit" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => setCardType("credit")}
+              >
+                Crédito
+              </Button>
+              <Button
+                type="button"
+                variant={cardType === "debit" ? "default" : "outline"}
+                className="flex-1"
+                onClick={() => {
+                  setCardType("debit");
+                  setCardInstallments("1");
+                }}
+              >
+                Débito
+              </Button>
+            </div>
           </div>
+
+          {cardType === "credit" && (
+            <div className="space-y-2">
+              <Label>Parcelas</Label>
+              <Select value={cardInstallments} onValueChange={setCardInstallments}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2 pt-1 pb-2">
             <Checkbox 
