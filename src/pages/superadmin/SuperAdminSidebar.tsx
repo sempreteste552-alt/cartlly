@@ -39,7 +39,7 @@ function BadgeCount({ count }: { count: number }) {
 }
 
 export function SuperAdminSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut, user } = useAuth();
@@ -58,6 +58,10 @@ export function SuperAdminSidebar() {
   const isActive = (path: string) => {
     if (path === "/superadmin") return location.pathname === "/superadmin";
     return location.pathname.startsWith(path);
+  };
+
+  const handleMenuClick = () => {
+    if (isMobile) setOpenMobile(false);
   };
 
   const totalBadges = badges.tenants + badges.solicitacoes + badges.notificacoes;
@@ -98,6 +102,7 @@ export function SuperAdminSidebar() {
                       end={item.url === "/superadmin"}
                       className="hover:bg-sidebar-accent/50"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={handleMenuClick}
                     >
                       <div className="relative">
                         <item.icon className="h-4 w-4" />
