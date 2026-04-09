@@ -62,6 +62,7 @@ export default function Produtos() {
     }
   }, [location.state, products, navigate, location.pathname]);
 
+  const limits = getPlanLimits(ctx);
   const canCreate = canCreateProduct(ctx);
   const productLimitMsg = getProductLimitReason(ctx);
   const aiAvailable = canAccess("ai_content", ctx);
