@@ -28,6 +28,8 @@ export function AdminLayout() {
   const { data: settings } = useStoreSettings();
   const { user } = useAuth();
   const { features } = usePlanFeatures();
+  const { ctx } = useTenantContext();
+  const aiAvailable = canAccess("ai_tools", ctx);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
