@@ -154,6 +154,7 @@ function GeneralSettingsTab() {
   const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
   const [faviconUrl, setFaviconUrl] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
