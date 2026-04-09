@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
     const { data: subs } = await query;
 
     if (!subs || subs.length === 0) {
-      await logPush(supabase, target_user_id || customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
+      await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
       return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
 
@@ -267,7 +267,8 @@ function json(data: any, status = 200) {
 
 async function logPush(
   supabase: any,
-  userId: string,
+  userId: string | null,
+  customerId: string | null,
   subscriptionId: string | null,
   eventType: string,
   title: string,
@@ -279,6 +280,7 @@ async function logPush(
   try {
     await supabase.from("push_logs").insert({
       user_id: userId,
+      customer_id: customerId,
       subscription_id: subscriptionId,
       event_type: eventType,
       title,
