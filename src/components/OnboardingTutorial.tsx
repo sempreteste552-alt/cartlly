@@ -207,7 +207,7 @@ export const OnboardingTutorial = () => {
         ...commonConfig,
         steps: [
           {
-            element: "h1:contains('Cupons')",
+            element: "#coupons-header",
             popover: {
               title: "Promoções 🎫",
               description: "Gerencie seus cupons de desconto aqui. Defina limites de uso, datas de expiração e valores.",
