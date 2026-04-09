@@ -244,9 +244,14 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    const authHeader = req.headers.get("Authorization");
+    const isAdminCall = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "impossible-key");
+
+    if (!isAdminCall) {
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
     }
 
     const { title, body, url, targetUserId } = await req.json();
