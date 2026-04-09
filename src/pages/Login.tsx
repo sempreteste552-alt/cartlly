@@ -470,6 +470,18 @@ export default function Login() {
                   </label>
                 </div>
               )}
+              {!isRegister && !isForgotPassword && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="stayConnected"
+                    checked={stayConnected}
+                    onCheckedChange={(checked) => setStayConnected(checked === true)}
+                  />
+                  <label htmlFor="stayConnected" className="text-sm text-muted-foreground cursor-pointer select-none">
+                    Ficar conectado
+                  </label>
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
