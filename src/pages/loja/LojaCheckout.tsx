@@ -21,10 +21,8 @@ import ShippingCalculator from "@/components/ShippingCalculator";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 import confetti from "canvas-confetti";
-import siteSeguro from "@/assets/site-seguro.webp";
-import compraSegura from "@/assets/compra-segura.webp";
-import paymentCards from "@/assets/payment-cards.webp";
-import pixLogo from "@/assets/pix-logo.webp";
+import paymentMethodsImg from "@/assets/payment-methods.png";
+import securityBadgesImg from "@/assets/security-badges.png";
 import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
 
 type CheckoutPhase = "info" | "payment" | "success";
@@ -900,18 +898,10 @@ export default function LojaCheckout() {
         </Card>
 
         {/* Trust badges */}
-        {marketingConfig?.trust_badges_enabled && (
-          <>
-            <div className="flex items-center justify-center gap-4 flex-wrap py-3">
-              <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
-              <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
-            </div>
-            <div className="flex items-center justify-center gap-4 py-2">
-              <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
-              <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
-            </div>
-          </>
-        )}
+        <div className="flex flex-col items-center gap-4 py-4">
+          <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-16 w-auto max-w-full object-contain" />
+          <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-14 w-auto max-w-full object-contain" />
+        </div>
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
