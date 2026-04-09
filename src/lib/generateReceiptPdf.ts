@@ -13,6 +13,7 @@ interface ReceiptData {
   customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
+  customerCpf?: string;
   items: ReceiptItem[];
   subtotal: number;
   discount: number;
