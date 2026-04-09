@@ -571,6 +571,15 @@ export default function LojaLayout() {
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
                     <Truck className="h-3.5 w-3.5" /> Rastrear Pedido
                   </Link>
+                  {storePages?.map((page) => (
+                    <Link
+                      key={page.slug}
+                      to={`${basePath}/p/${page.slug}`}
+                      className="block hover:opacity-100 transition-opacity"
+                    >
+                      {page.title}
+                    </Link>
+                  ))}
                 </div>
               </div>
               <div>
