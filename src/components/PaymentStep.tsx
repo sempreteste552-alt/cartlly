@@ -18,6 +18,7 @@ import compraSegura from "@/assets/compra-segura.webp";
 declare global {
   interface Window {
     MercadoPago: any;
+    PagSeguro: any;
   }
 }
 
@@ -180,38 +181,58 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return nums;
   };
 
-  const generateCardToken = async (): Promise<string> => {
+  const generateCardToken = async (gateway: string): Promise<string> => {
     const publicKey = settings?.gateway_public_key;
     if (!publicKey) throw new Error("Chave pública do gateway não configurada");
-
-    if (!window.MercadoPago) {
-      throw new Error("SDK do Mercado Pago não carregado. Recarregue a página.");
-    }
-
-    const mp = new window.MercadoPago(publicKey, {
-      locale: "pt-BR",
-    });
 
     const [expMonth, expYear] = cardExpiry.split("/");
     const fullYear = expYear?.length === 2 ? `20${expYear}` : expYear;
 
-    const cardData = {
-      cardNumber: cardNumber.replace(/\s/g, ""),
-      cardholderName: cardName,
-      cardExpirationMonth: expMonth,
-      cardExpirationYear: fullYear,
-      securityCode: cardCvv,
-      identificationType: "CPF",
-      identificationNumber: cardCpf.replace(/\D/g, ""),
-    };
-
-    const tokenResponse = await mp.createCardToken(cardData);
-
-    if (!tokenResponse?.id) {
-      throw new Error("Não foi possível gerar o token do cartão. Verifique os dados.");
+    if (gateway === "mercadopago") {
+      if (!window.MercadoPago) throw new Error("SDK do Mercado Pago não carregado.");
+      const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+      const cardData = {
+        cardNumber: cardNumber.replace(/\s/g, ""),
+        cardholderName: cardName,
+        cardExpirationMonth: expMonth,
+        cardExpirationYear: fullYear,
+        securityCode: cardCvv,
+        identificationType: "CPF",
+        identificationNumber: cardCpf.replace(/\D/g, ""),
+      };
+      const tokenResponse = await mp.createCardToken(cardData);
+      if (!tokenResponse?.id) throw new Error("Não foi possível gerar o token do cartão Mercado Pago.");
+      return tokenResponse.id;
+    } else if (gateway === "pagbank") {
+      // For PagBank, we can use the card data to generate the encrypted card token
+      // Note: PagBank SDK is window.PagSeguro and uses a different approach.
+      // But we can manually implement the encryption if needed or use the SDK.
+      // Assuming we have the SDK loaded, we use its encryption function.
+      if (!window.PagSeguro) throw new Error("SDK do PagBank não carregado.");
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const card = window.PagSeguro.encryptCard({
+            publicKey: publicKey,
+            holder: cardName,
+            number: cardNumber.replace(/\s/g, ""),
+            expMonth: expMonth,
+            expYear: fullYear,
+            securityCode: cardCvv,
+          });
+          
+          if (card?.encryptedCard) {
+            resolve(card.encryptedCard);
+          } else {
+            reject(new Error("Erro ao criptografar cartão PagBank."));
+          }
+        } catch (err: any) {
+          reject(new Error("Erro no SDK do PagBank: " + err.message));
+        }
+      });
     }
 
-    return tokenResponse.id;
+    return cardNumber.replace(/\s/g, "");
   };
 
   const handlePay = async (method: "pix" | "credit_card" | "boleto") => {
@@ -252,10 +273,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
       if (method === "credit_card") {
         // Use Mercado Pago SDK to generate a proper card token
-        if (settings?.payment_gateway === "mercadopago") {
+        if (settings?.payment_gateway === "mercadopago" || settings?.payment_gateway === "pagbank") {
           setTokenizing(true);
           try {
-            const token = await generateCardToken();
+            const token = await generateCardToken(settings.payment_gateway);
             params.card_token = token;
           } catch (tokenErr: any) {
             toast.error(tokenErr.message || "Erro ao processar dados do cartão");
@@ -264,7 +285,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           }
           setTokenizing(false);
         } else {
-          // For other gateways, send raw (they handle differently)
+          // For other gateways, send raw or handle differently
           params.card_token = cardNumber.replace(/\s/g, "");
         }
         params.installments = parseInt(cardInstallments);
@@ -281,6 +302,17 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       if (result.paymentResult?.status === "approved" || result.paymentResult?.status === "paid" || result.payment?.status === "approved" || result.payment?.status === "paid") {
         toast.success("Pagamento aprovado!");
         onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
+      } else if (result.paymentResult?.status === "rejected" || result.payment?.status === "rejected") {
+        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.");
+        setPaymentData(null); // Clear to allow retry
+      } else {
+        // Pending status (PIX/Boleto)
+        if (method === "pix" || method === "boleto") {
+          toast.info("Aguardando pagamento...");
+        } else {
+          toast.warning("Seu pagamento está em análise pelo gateway.");
+          // For card, if it's pending, we don't automatically redirect
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
@@ -407,7 +439,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   }
 
   // Show credit card result (approved)
-  if (paymentData && selectedMethod === "credit_card") {
+  if (paymentData && selectedMethod === "credit_card" && (paymentData.paymentResult?.status === "approved" || paymentData.payment?.status === "approved" || paymentStatus === "approved")) {
     return (
       <Card>
         <CardHeader>
