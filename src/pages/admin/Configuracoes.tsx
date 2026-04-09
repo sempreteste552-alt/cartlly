@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck, ArrowUp, ArrowDown } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useDeleteBanner, useUpdateBannerLink } from "@/hooks/useStoreBanners";
+import { useStoreBanners, useCreateBanner, useDeleteBanner, useUpdateBannerLink, useReorderBanners } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -109,6 +109,16 @@ function GeneralSettingsTab() {
   const createBanner = useCreateBanner();
   const deleteBanner = useDeleteBanner();
   const updateBannerLink = useUpdateBannerLink();
+  const reorderBanners = useReorderBanners();
+
+  const moveBanner = (index: number, direction: "up" | "down") => {
+    if (!banners) return;
+    const arr = [...banners];
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= arr.length) return;
+    [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
+    reorderBanners.mutate(arr.map((b) => b.id));
+  };
   const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
@@ -452,9 +462,17 @@ function GeneralSettingsTab() {
           <Separator />
 
           <div className="space-y-3">
-            {banners?.map((b) => (
+            {banners?.map((b, index) => (
               <div key={b.id} className="border border-border rounded-lg p-3 space-y-2">
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-start">
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === 0} onClick={() => moveBanner(index, "up")}>
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" disabled={index === (banners?.length ?? 1) - 1} onClick={() => moveBanner(index, "down")}>
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <div className="relative group shrink-0">
                     {(b as any).media_type === "video" ? (
                       <video src={b.image_url} className="w-24 h-16 rounded object-cover border border-border" muted loop playsInline onMouseEnter={(e) => (e.target as HTMLVideoElement).play()} onMouseLeave={(e) => { const v = e.target as HTMLVideoElement; v.pause(); v.currentTime = 0; }} />

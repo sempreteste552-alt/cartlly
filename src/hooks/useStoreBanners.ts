@@ -73,6 +73,24 @@ export function useUpdateBannerLink() {
   });
 }
 
+export function useReorderBanners() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const updates = orderedIds.map((id, index) =>
+        supabase.from("store_banners").update({ sort_order: index } as any).eq("id", id)
+      );
+      const results = await Promise.all(updates);
+      const err = results.find((r) => r.error);
+      if (err?.error) throw err.error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+    },
+    onError: (e) => toast.error("Erro ao reordenar: " + e.message),
+  });
+}
+
 export function useDeleteBanner() {
   const queryClient = useQueryClient();
   return useMutation({
