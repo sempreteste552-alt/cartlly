@@ -56,8 +56,8 @@ export function PlanGate({ feature, children, inline }: PlanGateProps) {
           <div>
             <h3 className="text-lg font-bold text-foreground">{meta?.label ?? "Recurso Premium"}</h3>
             <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-              Enquanto esse recurso fica bloqueado, sua loja opera abaixo do potencial e perde oportunidades que concorrentes já capturam.
-              {" "}{meta?.description ?? "Este recurso aumenta percepção, conversão e faturamento."}
+              {meta?.description ?? "Este recurso aumenta conversão e faturamento."}{" "}
+              Enquanto fica bloqueado, sua loja opera abaixo do potencial e perde vendas que concorrentes já capturam. Desbloqueie e veja a diferença.
             </p>
           </div>
           <p className="text-xs text-muted-foreground/70">{reason}</p>
