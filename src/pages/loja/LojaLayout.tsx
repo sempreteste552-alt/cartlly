@@ -385,14 +385,14 @@ export default function LojaLayout() {
                       style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
                       className="object-contain"
                     />
-                    {(settings?.is_verified || settings?.is_premium_plan) && (
+                    {settings?.is_verified && (
                       <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
                     )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5">
                     <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
-                    {(settings?.is_verified || settings?.is_premium_plan) && (
+                    {settings?.is_verified && (
                       <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] mt-0.5" />
                     )}
                   </div>
@@ -605,7 +605,7 @@ export default function LojaLayout() {
               <div>
                 <h3 className="font-bold text-lg mb-3 flex items-center gap-1.5">
                   {storeName}
-                  {(settings?.is_verified || settings?.is_premium_plan) && (
+                  {settings?.is_verified && (
                     <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
                   )}
                 </h3>
@@ -675,12 +675,14 @@ export default function LojaLayout() {
               </div>
             </div>
             <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
-            <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
-              <img src={siteSeguro} alt="Site Seguro" className="h-8 brightness-0 invert opacity-70" />
-              <img src={compraSegura} alt="Compra Segura" className="h-8 brightness-0 invert opacity-70" />
-              <img src={paymentCards} alt="Bandeiras aceitas" className="h-5 brightness-0 invert opacity-60" />
-              <img src={pixLogo} alt="PIX" className="h-5 brightness-0 invert opacity-60" />
-            </div>
+            {marketingConfig?.trust_badges_enabled && (
+              <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
+                <img src={siteSeguro} alt="Site Seguro" className="h-8 brightness-0 invert opacity-70" />
+                <img src={compraSegura} alt="Compra Segura" className="h-8 brightness-0 invert opacity-70" />
+                <img src={paymentCards} alt="Bandeiras aceitas" className="h-5 brightness-0 invert opacity-60" />
+                <img src={pixLogo} alt="PIX" className="h-5 brightness-0 invert opacity-60" />
+              </div>
+            )}
             <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>

@@ -171,7 +171,11 @@ export default function Login() {
           email,
           password,
           options: {
-            data: { display_name: displayName },
+            data: { 
+              display_name: displayName,
+              store_name: storeName.trim(),
+              store_slug: slug
+            },
             emailRedirectTo: window.location.origin,
           },
         });
@@ -184,13 +188,7 @@ export default function Login() {
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
-        if (signUpData.user) {
-          await supabase.from("store_settings").insert({
-            user_id: signUpData.user.id,
-            store_name: storeName.trim() || displayName || "Minha Loja",
-            store_slug: slug,
-          });
-        }
+        // Store creation is now handled by database trigger handle_new_user_setup
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {

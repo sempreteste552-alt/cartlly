@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useValidateCoupon } from "@/hooks/useCoupons";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { useCreateReview } from "@/hooks/useProductReviews";
+import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export default function LojaCheckout() {
   const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
   const [savedPayerCpf, setSavedPayerCpf] = useState<string | null>(null);
   const validateCoupon = useValidateCoupon();
+  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -697,14 +699,18 @@ export default function LojaCheckout() {
         </Card>
 
         {/* Trust badges */}
-        <div className="flex items-center justify-center gap-4 flex-wrap py-3">
-          <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
-          <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
-        </div>
-        <div className="flex items-center justify-center gap-4 py-2">
-          <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
-          <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
-        </div>
+        {marketingConfig?.trust_badges_enabled && (
+          <>
+            <div className="flex items-center justify-center gap-4 flex-wrap py-3">
+              <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
+              <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
+            </div>
+            <div className="flex items-center justify-center gap-4 py-2">
+              <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
+              <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
+            </div>
+          </>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
