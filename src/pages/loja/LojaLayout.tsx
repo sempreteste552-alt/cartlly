@@ -7,7 +7,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig } from "@/hooks/usePublicStore";
+import { usePublicStoreBySlug, usePublicThemeConfig, usePublicProductPageConfig } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -38,6 +38,7 @@ import iconLocation from "@/assets/icon-location.png";
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
   settings: any;
+  productPageConfig?: any;
   searchTerm: string;
   setSearchTerm: (s: string) => void;
   storeUserId?: string;
@@ -69,6 +70,7 @@ export default function LojaLayout() {
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
+  const { data: productPageConfig } = usePublicProductPageConfig(settings?.user_id);
   const { data: storePages } = useQuery({
     queryKey: ["store_pages_public", settings?.user_id],
     enabled: !!settings?.user_id,
@@ -251,7 +253,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
+    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
         style={
