@@ -47,7 +47,26 @@ export default function LojaCheckout() {
 
   useEffect(() => {
     if (globalCep && !cep) {
-      setCep(globalCep);
+      const formatted = formatCEP(globalCep);
+      setCep(formatted);
+      // Trigger address auto-fill
+      const clean = globalCep.replace(/\D/g, "");
+      if (clean.length === 8) {
+        (async () => {
+          setCepLoading(true);
+          try {
+            const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+            const data = await res.json();
+            if (data && !data.erro) {
+              if (data.logradouro) setStreet(data.logradouro);
+              if (data.bairro) setNeighborhood(data.bairro);
+              if (data.localidade) setCity(data.localidade);
+              if (data.uf) setState(data.uf);
+            }
+          } catch { /* ignore */ }
+          setCepLoading(false);
+        })();
+      }
     }
   }, [globalCep]);
   const validateCoupon = useValidateCoupon();
