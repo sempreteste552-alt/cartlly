@@ -117,6 +117,28 @@ Deno.serve(async (req) => {
           },
         }, { onConflict: "customer_id,store_user_id" });
 
+      if (intentLevel === "high") {
+        try {
+          // Trigger product view recovery via recover-abandoned-carts function
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/recover-abandoned-carts`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              trigger_type: "product_view",
+              customer_id: customerId,
+              store_user_id: storeUserId,
+              product_id: lastProductId,
+            }),
+          });
+          console.log(`[analyze-behavior] Triggered product_view recovery for ${customerId}`);
+        } catch (err) {
+          console.error(`[analyze-behavior] Failed to trigger product_view for ${customerId}:`, err);
+        }
+      }
+
       if (upsertErr) {
         console.error(`[analyze-behavior] Upsert error for ${customerId}:`, upsertErr);
       } else {

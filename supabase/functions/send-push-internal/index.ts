@@ -138,10 +138,10 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { target_user_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
+    const { target_user_id, customer_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
 
-    if (!target_user_id || !title) {
-      return json({ error: "target_user_id and title required" }, 400);
+    if ((!target_user_id && !customer_id) || !title) {
+      return json({ error: "target_user_id or customer_id and title required" }, 400);
     }
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
@@ -154,8 +154,24 @@ Deno.serve(async (req) => {
 
     let query = supabase
       .from("push_subscriptions")
-      .select("*")
-      .eq("user_id", target_user_id);
+      .select("*");
+
+    if (target_user_id) {
+      query = query.eq("user_id", target_user_id);
+    } else if (customer_id) {
+      // Lookup subscription by customer_id if no auth user id provided
+      const { data: customerTokens } = await supabase
+        .from("customer_push_tokens")
+        .select("token")
+        .eq("customer_id", customer_id);
+      
+      if (customerTokens && customerTokens.length > 0) {
+        const tokens = customerTokens.map(t => t.token);
+        query = query.in("endpoint", tokens);
+      } else {
+        return json({ sent: 0, total: 0, removed: 0, message: "No tokens found for customer" });
+      }
+    }
 
     // Tenant isolation: if store_user_id provided, include matching OR null (legacy)
     if (store_user_id) {
@@ -170,7 +186,7 @@ Deno.serve(async (req) => {
     const { data: subs } = await query;
 
     if (!subs || subs.length === 0) {
-      await logPush(supabase, target_user_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
+      await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
       return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
 
@@ -214,24 +230,24 @@ Deno.serve(async (req) => {
 
           if (resp.status === 201 || resp.status === 200) {
             sent++;
-            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
+            await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
           } else {
             const text = await resp.text();
             if (shouldDeleteSubscription(resp.status, text)) {
               await supabase.from("push_subscriptions").delete().eq("id", sub.id);
               removed++;
-              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
             } else {
               console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
               failures.push(`${sub.id}: ${resp.status}`);
-              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
             }
           }
         }
       } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
         failures.push(`${sub.id}: ${e.message}`);
-        await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
+        await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
       }
     }
 
@@ -251,7 +267,8 @@ function json(data: any, status = 200) {
 
 async function logPush(
   supabase: any,
-  userId: string,
+  userId: string | null,
+  customerId: string | null,
   subscriptionId: string | null,
   eventType: string,
   title: string,
@@ -263,6 +280,7 @@ async function logPush(
   try {
     await supabase.from("push_logs").insert({
       user_id: userId,
+      customer_id: customerId,
       subscription_id: subscriptionId,
       event_type: eventType,
       title,
