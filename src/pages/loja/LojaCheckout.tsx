@@ -40,6 +40,7 @@ export default function LojaCheckout() {
   const [savedFinalTotal, setSavedFinalTotal] = useState<number>(0);
   const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
   const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
+  const [savedPayerCpf, setSavedPayerCpf] = useState<string | null>(null);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -324,6 +325,7 @@ export default function LojaCheckout() {
         customerEmail: email,
         customerPhone: phone,
         customerAddress: address,
+        customerCpf: savedPayerCpf || undefined,
         items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
         subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
         discount: savedDiscountAmount,
@@ -544,10 +546,11 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
-          onSuccess={(method) => {
+          onSuccess={(method, cpf) => {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
             setSavedShippingCost(shippingCost);
+            setSavedPayerCpf(cpf || null);
             // We don't overwrite orderItems here as it was already set in handleSubmit
             // This prevents race conditions with cart.clearCart()
             setPaymentMethod(method || "gateway");
