@@ -65,7 +65,7 @@ function CpfInputField({ label = "CPF", value, onChange }: CpfInputFieldProps) {
   );
 }
 
-export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess }: PaymentStepProps) {
+export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess, initialCpf = "" }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [showCardForm, setShowCardForm] = useState(false);
@@ -80,10 +80,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardInstallments, setCardInstallments] = useState("1");
-  const [cardCpf, setCardCpf] = useState("");
+  const [cardCpf, setCardCpf] = useState(initialCpf || "");
 
   // PIX/Boleto CPF
-  const [payerCpf, setPayerCpf] = useState("");
+  const [payerCpf, setPayerCpf] = useState(initialCpf || "");
 
   // Realtime order status tracking
   useEffect(() => {
