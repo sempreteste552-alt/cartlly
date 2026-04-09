@@ -106,7 +106,11 @@ async function handleMercadoPago(req: Request, supabase: any) {
 
     await supabase
       .from("payments")
-      .update({ status: newStatus, raw_response: mpData })
+      .update({ 
+        status: newStatus, 
+        status_detail: mpData.status_detail,
+        raw_response: mpData 
+      })
       .eq("id", payment.id);
 
     // Get order info for push notification
