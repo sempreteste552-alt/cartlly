@@ -26,6 +26,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
