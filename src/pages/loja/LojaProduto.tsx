@@ -180,11 +180,22 @@ export default function LojaProduto() {
         <div className="space-y-3">
           <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
-              <img
-                src={allImages[selectedImageIndex] || allImages[0]}
-                alt={product.name}
-                className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
-              />
+              allImages[selectedImageIndex]?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                <video
+                  src={allImages[selectedImageIndex]}
+                  controls
+                  className="w-full h-full object-contain"
+                  autoPlay
+                  muted
+                  loop
+                />
+              ) : (
+                <img
+                  src={allImages[selectedImageIndex] || allImages[0]}
+                  alt={product.name}
+                  className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
+                />
+              )
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Package className="h-24 w-24 text-gray-200" />
@@ -200,7 +211,13 @@ export default function LojaProduto() {
                   className="shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors"
                   style={{ borderColor: selectedImageIndex === i ? primaryColor : "#e5e7eb" }}
                 >
-                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  {img.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                    <div className="w-full h-full bg-black flex items-center justify-center">
+                      <Video className="h-6 w-6 text-white" />
+                    </div>
+                  ) : (
+                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  )}
                 </button>
               ))}
             </div>
