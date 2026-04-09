@@ -76,12 +76,35 @@ export function AdminNotificationsBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
-        <div className="flex items-center justify-between p-3 border-b">
-          <h3 className="font-semibold text-sm">🔔 Notificações</h3>
+        <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm">🔔 Notificações</h3>
+            {unreadCount > 0 && (
+              <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {unreadCount}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllAsRead}>
-                <CheckCheck className="h-3 w-3 mr-1" /> Todas
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-[10px] h-7 px-2" 
+                onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
+                title="Marcar todas como lidas"
+              >
+                <CheckCheck className="h-3 w-3 mr-1" /> Marcar Lidas
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-[10px] h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                onClick={(e) => { e.stopPropagation(); if (confirm("Limpar todas as notificações?")) clearAll(); }}
+              >
+                <Trash2 className="h-3 w-3 mr-1" /> Limpar
               </Button>
             )}
           </div>
