@@ -7,38 +7,86 @@ interface Props {
   primaryColor: string;
 }
 
+function getSeenKey(storeUserId?: string) {
+  return `highlights_seen_${storeUserId || "default"}`;
+}
+
+function getSeenSet(storeUserId?: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(getSeenKey(storeUserId));
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markSeen(highlightId: string, storeUserId?: string) {
+  const seen = getSeenSet(storeUserId);
+  seen.add(highlightId);
+  localStorage.setItem(getSeenKey(storeUserId), JSON.stringify([...seen]));
+}
+
 export function HighlightsSection({ storeUserId, primaryColor }: Props) {
   const { data: highlights } = usePublicHighlights(storeUserId);
   const [viewing, setViewing] = useState<StoreHighlight | null>(null);
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => getSeenSet(storeUserId));
+
+  const handleView = (h: StoreHighlight) => {
+    setViewing(h);
+    markSeen(h.id, storeUserId);
+    setSeenIds((prev) => new Set([...prev, h.id]));
+  };
 
   if (!highlights || highlights.length === 0) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-4">
+      {/* Spinning gradient keyframes */}
+      <style>{`
+        @keyframes highlight-ring-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       <div className="flex gap-4 overflow-x-auto pb-2 px-1 scrollbar-hide">
-        {highlights.map((h) => (
-          <button
-            key={h.id}
-            onClick={() => setViewing(h)}
-            className="flex flex-col items-center gap-1.5 shrink-0 group"
-          >
-            <div
-              className="w-[72px] h-[72px] rounded-full p-[3px] transition-transform group-hover:scale-105"
-              style={{ background: `linear-gradient(135deg, ${primaryColor}, hsl(280 80% 60%))` }}
+        {highlights.map((h) => {
+          const isSeen = seenIds.has(h.id);
+          return (
+            <button
+              key={h.id}
+              onClick={() => handleView(h)}
+              className="flex flex-col items-center gap-1.5 shrink-0 group"
             >
-              <div className="w-full h-full rounded-full overflow-hidden border-2 border-background bg-muted">
-                {h.cover_url ? (
-                  <img src={h.cover_url} alt={h.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
-                    {h.name.charAt(0).toUpperCase()}
-                  </div>
+              <div className="relative w-[72px] h-[72px] transition-transform group-hover:scale-105">
+                {/* Spinning gradient ring for unseen */}
+                {!isSeen && (
+                  <div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `conic-gradient(${primaryColor}, hsl(145 80% 45%), ${primaryColor}, hsl(280 80% 60%), ${primaryColor})`,
+                      animation: "highlight-ring-spin 2.5s linear infinite",
+                    }}
+                  />
                 )}
+                {/* Seen: subtle border */}
+                {isSeen && (
+                  <div className="absolute inset-0 rounded-full bg-muted-foreground/25" />
+                )}
+                {/* Inner circle */}
+                <div className="absolute inset-[3px] rounded-full overflow-hidden border-2 border-background bg-muted">
+                  {h.cover_url ? (
+                    <img src={h.cover_url} alt={h.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
+                      {h.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <span className="text-xs font-medium text-foreground truncate max-w-[76px]">{h.name}</span>
-          </button>
-        ))}
+              <span className="text-xs font-medium text-foreground truncate max-w-[76px]">{h.name}</span>
+            </button>
+          );
+        })}
       </div>
 
       {viewing && (
@@ -67,7 +115,7 @@ function StoryViewer({
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const DURATION = 10000; // 10 seconds for images
+  const DURATION = 10000;
 
   const goNext = useCallback(() => {
     if (current < items.length - 1) {
@@ -85,7 +133,6 @@ function StoryViewer({
     }
   }, [current]);
 
-  // Image auto-advance timer (10s)
   useEffect(() => {
     if (paused || !items[current] || items[current].media_type === "video") return;
     const interval = 50;
@@ -102,14 +149,12 @@ function StoryViewer({
     return () => clearInterval(timerRef.current);
   }, [current, paused, goNext, items]);
 
-  // Video progress tracking
   const handleVideoTimeUpdate = useCallback(() => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
     setProgress((video.currentTime / video.duration) * 100);
   }, []);
 
-  // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -134,7 +179,6 @@ function StoryViewer({
         className="relative w-full max-w-md h-[85vh] max-h-[700px] bg-black rounded-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Progress bars */}
         <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 p-2">
           {items.map((_, i) => (
             <div key={i} className="flex-1 h-[3px] rounded-full bg-white/30 overflow-hidden">
@@ -149,7 +193,6 @@ function StoryViewer({
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-4 pt-2">
           <div className="flex items-center gap-2">
             <div
@@ -176,7 +219,6 @@ function StoryViewer({
           </div>
         </div>
 
-        {/* Content */}
         <div className="w-full h-full flex items-center justify-center">
           {item.media_type === "video" ? (
             <video
@@ -201,7 +243,6 @@ function StoryViewer({
           )}
         </div>
 
-        {/* Navigation zones (touch) */}
         <button
           className="absolute left-0 top-16 bottom-16 w-1/3 z-10"
           onClick={goPrev}
@@ -213,7 +254,6 @@ function StoryViewer({
           aria-label="Próximo"
         />
 
-        {/* Left arrow - always visible */}
         {current > 0 && (
           <button
             className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
@@ -222,7 +262,6 @@ function StoryViewer({
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}
-        {/* Right arrow - always visible */}
         {current < items.length - 1 && (
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
