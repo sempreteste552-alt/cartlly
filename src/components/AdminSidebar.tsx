@@ -167,6 +167,7 @@ export function AdminSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a
+                    id="store-preview-btn"
                     href={storeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
