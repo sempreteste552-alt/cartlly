@@ -20,6 +20,7 @@ export default function Dashboard() {
   const { data: products } = useProducts();
   const { data: orders } = useOrders();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
 
   const { data: allOrderItems } = useQuery({
