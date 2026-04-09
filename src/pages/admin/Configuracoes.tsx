@@ -109,6 +109,16 @@ function GeneralSettingsTab() {
   const createBanner = useCreateBanner();
   const deleteBanner = useDeleteBanner();
   const updateBannerLink = useUpdateBannerLink();
+  const reorderBanners = useReorderBanners();
+
+  const moveBanner = (index: number, direction: "up" | "down") => {
+    if (!banners) return;
+    const arr = [...banners];
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= arr.length) return;
+    [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
+    reorderBanners.mutate(arr.map((b) => b.id));
+  };
   const { ctx } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
