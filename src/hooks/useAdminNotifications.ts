@@ -120,6 +120,7 @@ export function getNotificationEmoji(type: string): string {
     low_stock: "⚠️",
     review: "⭐",
     info: "ℹ️",
+    high_value_customer: "🔝",
   };
   return emojis[type] || "🔔";
 }
