@@ -590,9 +590,6 @@ Deno.serve(async (req) => {
             results.inactivity.processed++;
             wasSent ? results.inactivity.sent++ : results.inactivity.skipped++;
           }
-            results.inactivity.processed++;
-            wasSent ? results.inactivity.sent++ : results.inactivity.skipped++;
-          }
         } catch (err: any) {
           console.error(`Sequence push error ${seq.id}:`, err);
         }
