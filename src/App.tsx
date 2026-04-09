@@ -133,6 +133,7 @@ const App = () => (
                 <Route path="rastreio" element={<LojaRastreio />} />
                 <Route path="rastreio/:orderId" element={<LojaRastreio />} />
                 <Route path="cupons" element={<LojaCupons />} />
+                <Route path="p/:pageSlug" element={<LojaPagina />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
