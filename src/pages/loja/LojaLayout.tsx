@@ -358,15 +358,15 @@ export default function LojaLayout() {
         {/* Marketing: Popup Coupon */}
         {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
-        {/* Top bar */}
-        <div className="text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
+        {/* Top bar - hidden on mobile */}
+        <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {settings?.store_phone && (
                 <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{settings.store_phone}</span>
               )}
               {settings?.store_location && (
-                <span className="flex items-center gap-1 hidden sm:flex"><MapPin className="h-3 w-3" />{settings.store_location}</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{settings.store_location}</span>
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -389,8 +389,8 @@ export default function LojaLayout() {
                   <User className="h-3 w-3" /> Entrar
                 </button>
               )}
-              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 hidden sm:inline">Instagram</a>}
-              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 hidden sm:inline">Facebook</a>}
+              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">Instagram</a>}
+              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">Facebook</a>}
               {settings?.store_whatsapp && (
                 <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:opacity-80">
                   <MessageCircle className="h-3 w-3" /> WhatsApp
