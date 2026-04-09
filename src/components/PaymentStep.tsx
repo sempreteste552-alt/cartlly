@@ -184,7 +184,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return nums;
   };
 
-  const generateCardToken = async (gateway: string): Promise<string> => {
+  const generateCardToken = async (gateway: string): Promise<any> => {
     const publicKey = settings?.gateway_public_key;
     if (!publicKey) throw new Error("Chave pública do gateway não configurada");
 
@@ -194,6 +194,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     if (gateway === "mercadopago") {
       if (!window.MercadoPago) throw new Error("SDK do Mercado Pago não carregado.");
       const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+      
+      // Get Device ID for anti-fraud
+      const deviceId = mp.getDeviceId();
+      
       const cardData = {
         cardNumber: cardNumber.replace(/\s/g, ""),
         cardholderName: cardName,
@@ -203,14 +207,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         identificationType: "CPF",
         identificationNumber: cardCpf.replace(/\D/g, ""),
       };
+      
       const tokenResponse = await mp.createCardToken(cardData);
       if (!tokenResponse?.id) throw new Error("Não foi possível gerar o token do cartão Mercado Pago.");
-      return tokenResponse.id;
+      
+      return { token: tokenResponse.id, deviceId };
     } else if (gateway === "pagbank") {
-      // For PagBank, we can use the card data to generate the encrypted card token
-      // Note: PagBank SDK is window.PagSeguro and uses a different approach.
-      // But we can manually implement the encryption if needed or use the SDK.
-      // Assuming we have the SDK loaded, we use its encryption function.
       if (!window.PagSeguro) throw new Error("SDK do PagBank não carregado.");
       
       return new Promise((resolve, reject) => {
@@ -225,7 +227,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           });
           
           if (card?.encryptedCard) {
-            resolve(card.encryptedCard);
+            resolve({ token: card.encryptedCard });
           } else {
             reject(new Error("Erro ao criptografar cartão PagBank."));
           }
@@ -235,7 +237,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       });
     }
 
-    return cardNumber.replace(/\s/g, "");
+    return { token: cardNumber.replace(/\s/g, "") };
   };
 
   const handlePay = async (method: "pix" | "credit_card" | "boleto") => {
@@ -278,7 +280,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       const nameParts = cardName.trim().split(" ");
       if (method === "credit_card") {
         params.payer_first_name = nameParts[0];
-        params.payer_last_name = nameParts.slice(1).join(" ");
+        params.payer_last_name = nameParts.slice(1).join(" ") || nameParts[0];
       }
 
       if (method === "credit_card") {
@@ -286,8 +288,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         if (settings?.payment_gateway === "mercadopago" || settings?.payment_gateway === "pagbank") {
           setTokenizing(true);
           try {
-            const token = await generateCardToken(settings.payment_gateway);
-            params.card_token = token;
+            const cardResult = await generateCardToken(settings.payment_gateway);
+            params.card_token = cardResult.token;
+            params.device_id = cardResult.deviceId;
           } catch (tokenErr: any) {
             toast.error(tokenErr.message || "Erro ao processar dados do cartão");
             setTokenizing(false);
@@ -314,7 +317,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         toast.success("Pagamento aprovado!");
         onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
       } else if (result.paymentResult?.status === "rejected" || result.payment?.status === "rejected") {
-        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão. (Se seu banco não notificou, a transação foi bloqueada pelo gateway de segurança)");
+        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.");
         setPaymentData(null); // Clear to allow retry
       } else {
         // Pending status (PIX/Boleto)
@@ -322,7 +325,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           toast.info("Aguardando pagamento...");
         } else {
           toast.warning("Seu pagamento está em análise pelo gateway.");
-          // For card, if it's pending, we don't automatically redirect
         }
       }
     } catch (err: any) {
@@ -338,8 +340,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       toast.success("Código PIX copiado!");
     }
   };
-
-  // CPF field rendered inline to avoid remount/focus loss
 
   // Show PIX result
   if (paymentData && selectedMethod === "pix") {
@@ -624,7 +624,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <div className="flex items-center space-x-2 pt-1 pb-2">
             <Checkbox 
               id="savePayerData" 
-              checked={saveCard} // Reusing saveCard state for simplicity in this step
+              checked={saveCard}
               onCheckedChange={(checked) => setSaveCard(checked as boolean)}
             />
             <Label htmlFor="savePayerData" className="text-xs font-medium leading-none cursor-pointer flex items-center gap-2">
@@ -672,7 +672,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               if (method.id === "credit_card") {
                 handlePay(method.id);
               } else if (settings?.payment_gateway === "mercadopago") {
-                // Show CPF step for PIX/Boleto
                 setSelectedMethod(method.id);
               } else {
                 handlePay(method.id);
@@ -691,7 +690,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           </Button>
         ))}
         <Separator />
-        {/* Trust badges */}
         <div className="flex items-center justify-center gap-4 flex-wrap py-3">
           <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
           <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
