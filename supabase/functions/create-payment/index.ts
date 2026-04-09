@@ -16,6 +16,8 @@ interface PaymentRequest {
   payer_cpf?: string;
   payer_first_name?: string;
   payer_last_name?: string;
+  device_id?: string;
+  payment_method_id?: string;
 }
 
 Deno.serve(async (req) => {
@@ -120,7 +122,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PAYMENT PROCESSING ====================
-    const { order_id, method, card_token, card_type, installments, store_user_id, payer_cpf, payer_first_name, payer_last_name } = body as PaymentRequest;
+    const { order_id, method, card_token, card_type, installments, store_user_id, payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return json({ error: "Campos obrigatórios: order_id, method, store_user_id" }, 400);
@@ -163,7 +165,7 @@ Deno.serve(async (req) => {
 
     try {
       if (gateway === "mercadopago") {
-        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf, card_type, payer_first_name, payer_last_name);
+        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf, card_type, payer_first_name, payer_last_name, device_id, payment_method_id);
       } else if (gateway === "pagbank") {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment);
       } else if (gateway === "amplopay") {
@@ -319,27 +321,36 @@ async function createMercadoPagoPayment(
     if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão");
     paymentData.token = cardToken;
     paymentData.installments = (method === "debit_card" || cardType === "debit") ? 1 : (installments || 1);
+    if (paymentMethodId) {
+      paymentData.payment_method_id = paymentMethodId;
+    }
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
-    // Boleto requires payer address
-    if (order.customer_address) {
+    // Boleto requires payer address and identification
+    if (order.customer_address || order.shipping_street) {
       paymentData.payer.address = {
-        zip_code: order.shipping_cep?.replace(/\D/g, "") || "01000000",
-        street_name: order.customer_address,
-        street_number: "S/N",
-        city: "São Paulo",
-        federal_unit: "SP",
+        zip_code: (order.shipping_cep || order.customer_cep)?.replace(/\D/g, "") || "01000000",
+        street_name: order.customer_address || order.shipping_street || "Rua",
+        street_number: order.shipping_number || "S/N",
+        city: order.shipping_city || "São Paulo",
+        federal_unit: order.shipping_state || "SP",
       };
     }
   }
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+    "X-Idempotency-Key": crypto.randomUUID(),
+  };
+
+  if (deviceId) {
+    headers["X-Meli-Session-Id"] = deviceId;
+  }
+
   const response = await fetch(`${baseUrl}/payments`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-      "X-Idempotency-Key": crypto.randomUUID(),
-    },
+    headers,
     body: JSON.stringify(paymentData),
   });
 
