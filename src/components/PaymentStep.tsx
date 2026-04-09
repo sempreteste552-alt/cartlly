@@ -18,6 +18,7 @@ import compraSegura from "@/assets/compra-segura.webp";
 declare global {
   interface Window {
     MercadoPago: any;
+    PagSeguro: any;
   }
 }
 
