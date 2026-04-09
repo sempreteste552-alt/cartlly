@@ -83,8 +83,7 @@ Deno.serve(async (req) => {
             body: body || "",
             url: url || "/",
             type: "store_promotion",
-            // Don't pass store_user_id to avoid self-notification block
-            // since customers opted in deliberately
+            store_user_id: user.id,
           }),
         });
 
