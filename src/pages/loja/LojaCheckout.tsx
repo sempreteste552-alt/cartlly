@@ -445,6 +445,7 @@ export default function LojaCheckout() {
         orderId: orderId || "",
         date: formattedDate,
         storeName: settings?.store_name || "Loja",
+        storeLogoUrl: settings?.logo_url || undefined,
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
@@ -563,6 +564,12 @@ export default function LojaCheckout() {
           <div className="absolute -top-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50" />
           
           <div className="p-8 pt-10 space-y-8">
+            {/* Store Logo */}
+            {settings?.logo_url && (
+              <div className="flex justify-center pb-2">
+                <img src={settings.logo_url} alt={settings?.store_name || "Loja"} className="h-12 max-w-[180px] object-contain" />
+              </div>
+            )}
             {/* Main Value - Bank Style */}
             <div className="text-center space-y-1 pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800">
               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">Valor Total</p>
