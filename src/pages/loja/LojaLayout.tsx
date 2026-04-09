@@ -11,7 +11,7 @@ import { usePublicStoreBySlug, usePublicThemeConfig, usePublicProductPageConfig 
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -352,16 +352,28 @@ export default function LojaLayout() {
             </Button>
 
             <Link to={basePath} className="flex items-center gap-2 shrink-0">
-              {settings?.logo_url ? (
-                <img
-                  src={settings.logo_url}
-                  alt={storeName}
-                  style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
-                  className="object-contain"
-                />
-              ) : (
-                <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
-              )}
+              <div className="relative inline-flex items-center">
+                {settings?.logo_url ? (
+                  <div className="relative">
+                    <img
+                      src={settings.logo_url}
+                      alt={storeName}
+                      style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
+                      className="object-contain"
+                    />
+                    {settings?.is_verified && (
+                      <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
+                    {settings?.is_verified && (
+                      <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] mt-0.5" />
+                    )}
+                  </div>
+                )}
+              </div>
             </Link>
 
             <div className="flex-1 max-w-xl mx-auto hidden sm:block">
@@ -567,7 +579,12 @@ export default function LojaLayout() {
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
-                <h3 className="font-bold text-lg mb-3">{storeName}</h3>
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-1.5">
+                  {storeName}
+                  {settings?.is_verified && (
+                    <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                  )}
+                </h3>
                 {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
               </div>
               <div>

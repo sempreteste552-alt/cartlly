@@ -2110,6 +2110,7 @@ export type Database = {
           header_text_color: string | null
           id: string
           instagram_url: string | null
+          is_verified: boolean | null
           logo_size: number
           logo_url: string | null
           low_stock_threshold: number
@@ -2178,6 +2179,7 @@ export type Database = {
           header_text_color?: string | null
           id?: string
           instagram_url?: string | null
+          is_verified?: boolean | null
           logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
@@ -2246,6 +2248,7 @@ export type Database = {
           header_text_color?: string | null
           id?: string
           instagram_url?: string | null
+          is_verified?: boolean | null
           logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
@@ -2709,6 +2712,7 @@ export type Database = {
           header_text_color: string | null
           id: string | null
           instagram_url: string | null
+          is_verified: boolean | null
           logo_size: number | null
           logo_url: string | null
           low_stock_threshold: number | null
@@ -2776,6 +2780,7 @@ export type Database = {
           header_text_color?: string | null
           id?: string | null
           instagram_url?: string | null
+          is_verified?: boolean | null
           logo_size?: number | null
           logo_url?: string | null
           low_stock_threshold?: number | null
@@ -2843,6 +2848,7 @@ export type Database = {
           header_text_color?: string | null
           id?: string | null
           instagram_url?: string | null
+          is_verified?: boolean | null
           logo_size?: number | null
           logo_url?: string | null
           low_stock_threshold?: number | null
