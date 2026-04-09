@@ -19,7 +19,8 @@ export type FeatureKey =
   | "mega_menu" | "custom_fonts" | "video_blocks" | "conversion_widgets"
   | "advanced_product_cards" | "custom_home_sections" | "premium_banners"
   | "push_customers"
-  | "enterprise_permissions";
+  | "enterprise_permissions"
+  | "verified_badge";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
@@ -84,6 +85,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   scripts_custom:       { label: "Scripts & Pixels", description: "Inserir scripts e pixels", minPlan: "PREMIUM", category: "enterprise" },
   integrations_advanced:{ label: "Integrações Avançadas", description: "APIs e integrações externas", minPlan: "PREMIUM", category: "enterprise" },
   enterprise_permissions:{ label: "Permissões Enterprise", description: "Controle granular de acessos", minPlan: "PREMIUM", category: "enterprise" },
+  verified_badge:       { label: "Selo de Verificado", description: "Selo de conta verificada no nome da loja", minPlan: "PREMIUM", category: "design" },
 };
 
 // ─── Plan hierarchy ───────────────────────────────────────────────

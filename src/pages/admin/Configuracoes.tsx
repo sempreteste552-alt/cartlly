@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -154,6 +154,7 @@ function GeneralSettingsTab() {
   const [welcomeCouponExpiresDays, setWelcomeCouponExpiresDays] = useState(30);
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
   const [faviconUrl, setFaviconUrl] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
@@ -199,6 +200,7 @@ function GeneralSettingsTab() {
       setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
       setFaviconUrl((settings as any).favicon_url ?? "");
+      setIsVerified((settings as any).is_verified ?? false);
     }
   }, [settings]);
 
@@ -292,6 +294,7 @@ function GeneralSettingsTab() {
       welcome_coupon_min_order: welcomeCouponMinOrder ? Number(welcomeCouponMinOrder) : null,
       welcome_coupon_expires_days: welcomeCouponExpiresDays,
       banner_mobile_format: bannerMobileFormat,
+      is_verified: isVerified,
     } as any);
   };
 
@@ -317,6 +320,22 @@ function GeneralSettingsTab() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Verified Badge */}
+      <LockedFeature isLocked={!canAccess("verified_badge", ctx)} featureName="Selo de Verificado">
+        <Card className="border-border">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <BadgeCheck className="h-5 w-5 text-blue-500 fill-blue-500 stroke-white" />
+              <div>
+                <p className="font-medium">Selo de Verificado</p>
+                <p className="text-xs text-muted-foreground">Exibe um selo de verificado ao lado do nome da sua loja</p>
+              </div>
+            </div>
+            <Switch checked={isVerified} onCheckedChange={setIsVerified} />
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Marquee */}
       <LockedFeature isLocked={!canAccess("banners", ctx)} featureName="Letreiro (Marquee)">
