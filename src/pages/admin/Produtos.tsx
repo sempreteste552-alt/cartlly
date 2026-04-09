@@ -177,16 +177,14 @@ export default function Produtos() {
           </p>
         </div>
         <div className="flex gap-2">
-          {!aiAvailable ? (
-            <Button variant="outline" disabled title="Faça upgrade para usar IA">
-              <Lock className="mr-2 h-4 w-4" /> Importar com IA
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => setAiImportOpen(true)}>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Importar com IA
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => aiAvailable ? setAiImportOpen(true) : navigate("/admin/plano")}
+            className={!aiAvailable ? "border-primary/30 text-primary" : undefined}
+          >
+            {aiAvailable ? <Sparkles className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
+            {aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}
+          </Button>
           <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
             <Tag className="mr-2 h-4 w-4" />
             Categorias
