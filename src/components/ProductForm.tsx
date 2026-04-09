@@ -47,7 +47,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
   const { ctx } = useTenantContext();
-  const aiAvailable = canAccess("ai_tools", ctx);
+  const aiLocked = !canAccess("ai_tools", ctx);
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
@@ -142,19 +142,17 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} placeholder="Descrição do produto" rows={3} />
           </div>
 
-          {/* AI Tools - only for plans with AI */}
-          {aiAvailable && (
-            <AIProductTools
-              name={name}
-              description={description}
-              price={price}
-              category={categories?.find(c => c.id === categoryId)?.name || ""}
-              imageUrl={imageUrl}
-              onApplyDescription={setDescription}
-              onApplyName={setName}
-              onApplyPrice={setPrice}
-            />
-          )}
+          <AIProductTools
+            name={name}
+            description={description}
+            price={price}
+            category={categories?.find(c => c.id === categoryId)?.name || ""}
+            imageUrl={imageUrl}
+            onApplyDescription={setDescription}
+            onApplyName={setName}
+            onApplyPrice={setPrice}
+            locked={aiLocked}
+          />
 
           <div className="space-y-2">
             <Label>Categoria</Label>

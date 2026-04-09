@@ -55,11 +55,14 @@ export function PlanGate({ feature, children, inline }: PlanGateProps) {
           </div>
           <div>
             <h3 className="text-lg font-bold text-foreground">{meta?.label ?? "Recurso Premium"}</h3>
-            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{meta?.description ?? "Este recurso não está disponível no seu plano atual."}</p>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+              Enquanto esse recurso fica bloqueado, sua loja opera abaixo do potencial e perde oportunidades que concorrentes já capturam.
+              {" "}{meta?.description ?? "Este recurso aumenta percepção, conversão e faturamento."}
+            </p>
           </div>
           <p className="text-xs text-muted-foreground/70">{reason}</p>
           <Button onClick={() => navigate("/admin/plano")} className={`gap-2 bg-gradient-to-r ${planInfo.gradient} hover:opacity-90 text-white shadow-md`} size="sm">
-            <ArrowUpCircle className="h-4 w-4" /> Fazer Upgrade → {planInfo.label}
+            <ArrowUpCircle className="h-4 w-4" /> Quero desbloquear agora
           </Button>
         </div>
       </div>

@@ -28,11 +28,12 @@ export function LockedFeature({ children, isLocked, featureName, logoUrl }: Lock
             <Lock className="h-7 w-7 text-primary" />
           </div>
           <p className="text-base font-bold text-foreground">
-            {featureName || "Funcionalidade"} Bloqueada 🔒
+            {featureName || "Funcionalidade"} bloqueada 🔒
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Desbloqueie <strong>{featureName || "esta funcionalidade"}</strong> e acelere suas vendas! 
-            Faça upgrade do seu plano para ter acesso completo.
+            Você está vendo <strong>{featureName || "este recurso"}</strong>, mas continua perdendo vendas enquanto ele fica travado.
+            Esse tipo de função acelera conversão, aumenta o ticket e deixa sua loja com cara de operação profissional.
+            Se quiser parar de vender no básico, faça o upgrade agora.
           </p>
           <Button
             onClick={() => navigate("/admin/plano")}
@@ -40,7 +41,7 @@ export function LockedFeature({ children, isLocked, featureName, logoUrl }: Lock
             size="sm"
           >
             <ArrowUpCircle className="h-4 w-4" />
-            Ver Planos e Fazer Upgrade
+            Desbloquear e vender mais
           </Button>
         </div>
       </div>

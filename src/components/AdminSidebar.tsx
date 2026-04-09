@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck
+  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
@@ -55,9 +55,7 @@ export function AdminSidebar() {
     ? `https://${sanitizedCustomDomain}`
     : (storeSlug ? `/loja/${storeSlug}` : "/loja");
 
-  const configItems = configItemsBase.filter(
-    item => !item.feature || canAccess(item.feature, ctx)
-  );
+  const configItems = configItemsBase;
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
