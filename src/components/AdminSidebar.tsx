@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot,
+  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useTenantContext } from "@/hooks/useTenantContext";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
@@ -42,6 +43,8 @@ export function AdminSidebar() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
+  const { ctx } = useTenantContext();
+  const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
   const storeSlug = (settings as any)?.store_slug;
   const customDomain = (settings as any)?.custom_domain;
@@ -69,9 +72,14 @@ export function AdminSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                {(settings as any)?.store_name || "Minha Loja"}
-              </span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm font-semibold text-sidebar-foreground truncate">
+                  {(settings as any)?.store_name || "Minha Loja"}
+                </span>
+                {planSlug === "PREMIUM" && (
+                  <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
+                )}
+              </div>
               <span className="text-[11px] text-sidebar-foreground/50">Painel Admin</span>
             </div>
           )}
