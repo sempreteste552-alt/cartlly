@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useTenantContext } from "@/hooks/useTenantContext";
-import { isTenantActive } from "@/lib/planPermissions";
+import { isTenantActive, canAccess } from "@/lib/planPermissions";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
@@ -29,12 +29,12 @@ const mainItems = [
   { title: "Automação", url: "/admin/automacao", icon: Bot },
 ];
 
-const configItems = [
-  { title: "Loja", url: "/admin/config", icon: Settings },
-  { title: "Pagamentos", url: "/admin/pagamentos", icon: CreditCard },
-  { title: "Gateway", url: "/admin/gateway", icon: Zap },
-  { title: "Frete", url: "/admin/frete", icon: Truck },
-  { title: "Meu Plano", url: "/admin/plano", icon: Crown },
+const configItemsBase = [
+  { title: "Loja", url: "/admin/config", icon: Settings, feature: null },
+  { title: "Pagamentos", url: "/admin/pagamentos", icon: CreditCard, feature: "gateway" as const },
+  { title: "Gateway", url: "/admin/gateway", icon: Zap, feature: "gateway" as const },
+  { title: "Frete", url: "/admin/frete", icon: Truck, feature: null },
+  { title: "Meu Plano", url: "/admin/plano", icon: Crown, feature: null },
 ];
 
 export function AdminSidebar() {
@@ -54,6 +54,10 @@ export function AdminSidebar() {
   const storeUrl = (sanitizedCustomDomain && domainStatus === "verified")
     ? `https://${sanitizedCustomDomain}`
     : (storeSlug ? `/loja/${storeSlug}` : "/loja");
+
+  const configItems = configItemsBase.filter(
+    item => !item.feature || canAccess(item.feature, ctx)
+  );
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);

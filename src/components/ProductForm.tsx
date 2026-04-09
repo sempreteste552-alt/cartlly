@@ -11,6 +11,7 @@ import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
 import { useProductImages } from "@/hooks/useProductImages";
+import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 interface ProductFormProps {
   open: boolean;
@@ -44,6 +45,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const additionalFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
+  const { features } = usePlanFeatures();
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
@@ -138,17 +140,19 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} placeholder="Descrição do produto" rows={3} />
           </div>
 
-          {/* AI Tools */}
-          <AIProductTools
-            name={name}
-            description={description}
-            price={price}
-            category={categories?.find(c => c.id === categoryId)?.name || ""}
-            imageUrl={imageUrl}
-            onApplyDescription={setDescription}
-            onApplyName={setName}
-            onApplyPrice={setPrice}
-          />
+          {/* AI Tools - only for plans with AI */}
+          {features.ai_tools && (
+            <AIProductTools
+              name={name}
+              description={description}
+              price={price}
+              category={categories?.find(c => c.id === categoryId)?.name || ""}
+              imageUrl={imageUrl}
+              onApplyDescription={setDescription}
+              onApplyName={setName}
+              onApplyPrice={setPrice}
+            />
+          )}
 
           <div className="space-y-2">
             <Label>Categoria</Label>

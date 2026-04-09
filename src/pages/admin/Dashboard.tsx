@@ -14,6 +14,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
 import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -23,6 +25,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const { ctx } = useTenantContext();
+  const hasGateway = canAccess("gateway", ctx);
 
   const { data: allOrderItems } = useQuery({
     queryKey: ["all_order_items", user?.id],
@@ -192,13 +196,15 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">Visão geral da sua loja</p>
       </div>
 
-      {/* KPI Cards - Premium gradient style */}
+      {/* KPI Cards */}
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500" },
           { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500" },
-          { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500" },
-          { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500" },
+          ...(hasGateway ? [
+            { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500" },
+            { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500" },
+          ] : []),
           { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500" },
           { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground" },
         ].map((s) => (
@@ -217,37 +223,39 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Payment Summary - Compact */}
-      <div className="grid gap-3 sm:grid-cols-4">
-        <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-xs text-muted-foreground">Aprovados</span></div>
-            <p className="text-xl font-bold text-green-600 mt-1">{paymentMetrics.approved}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 to-transparent shadow-sm">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-yellow-600" /><span className="text-xs text-muted-foreground">Pendentes</span></div>
-            <p className="text-xl font-bold text-yellow-600 mt-1">{paymentMetrics.pending}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent shadow-sm">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-600" /><span className="text-xs text-muted-foreground">Recusados</span></div>
-            <p className="text-xl font-bold text-red-600 mt-1">{paymentMetrics.rejected}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border shadow-sm">
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground mb-1">Por Método</p>
-            <div className="flex gap-2 text-xs">
-              <Badge variant="outline" className="text-[10px] px-1.5">💰 {paymentMetrics.byMethod.pix}</Badge>
-              <Badge variant="outline" className="text-[10px] px-1.5">💳 {paymentMetrics.byMethod.credit_card}</Badge>
-              <Badge variant="outline" className="text-[10px] px-1.5">📄 {paymentMetrics.byMethod.boleto}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Payment Summary - only for plans with gateway */}
+      {hasGateway && (
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-xs text-muted-foreground">Aprovados</span></div>
+              <p className="text-xl font-bold text-green-600 mt-1">{paymentMetrics.approved}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 to-transparent shadow-sm">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-yellow-600" /><span className="text-xs text-muted-foreground">Pendentes</span></div>
+              <p className="text-xl font-bold text-yellow-600 mt-1">{paymentMetrics.pending}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent shadow-sm">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-600" /><span className="text-xs text-muted-foreground">Recusados</span></div>
+              <p className="text-xl font-bold text-red-600 mt-1">{paymentMetrics.rejected}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-border shadow-sm">
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground mb-1">Por Método</p>
+              <div className="flex gap-2 text-xs">
+                <Badge variant="outline" className="text-[10px] px-1.5">💰 {paymentMetrics.byMethod.pix}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5">💳 {paymentMetrics.byMethod.credit_card}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5">📄 {paymentMetrics.byMethod.boleto}</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Low stock - clickable cards */}
       {(metrics.lowStock.length > 0 || metrics.outOfStock.length > 0) && (
