@@ -315,10 +315,10 @@ async function createMercadoPagoPayment(
 
   if (method === "pix") {
     paymentData.payment_method_id = "pix";
-  } else if (method === "credit_card") {
-    if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão de crédito");
+  } else if (method === "credit_card" || method === "debit_card") {
+    if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão");
     paymentData.token = cardToken;
-    paymentData.installments = installments || 1;
+    paymentData.installments = (method === "debit_card" || cardType === "debit") ? 1 : (installments || 1);
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
     // Boleto requires payer address
@@ -371,7 +371,7 @@ async function createMercadoPagoPayment(
     result.boleto_expiration = data.date_of_expiration;
   }
 
-  if (method === "credit_card" && data.card) {
+  if ((method === "credit_card" || method === "debit_card") && data.card) {
     result.card_last_four = data.card.last_four_digits;
     result.card_brand = data.payment_method_id;
   }
