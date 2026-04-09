@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
-import siteSeguro from "@/assets/site-seguro.webp";
+import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
@@ -339,7 +339,7 @@ export default function Login() {
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardHeader className="text-center space-y-4 pt-8">
             <img src={cartlyLogo} alt="Cartly" className="mx-auto h-20 w-auto drop-shadow-lg" />
-            <img src={siteSeguro} alt="Site 100% Seguro" className="mx-auto h-16" />
+            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-12 object-contain" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
