@@ -68,8 +68,10 @@ Deno.serve(async (req) => {
         if (!targetEmail) {
           return new Response(JSON.stringify({ error: "Missing targetEmail" }), { status: 400, headers: corsHeaders });
         }
+        // Use origin from request headers, fallback to known app URL
+        const origin = req.headers.get("origin") || body.origin || "https://cartlly.lovable.app";
         const { error } = await adminClient.auth.resetPasswordForEmail(targetEmail, {
-          redirectTo: `${req.headers.get("origin") || supabaseUrl}/reset-password`,
+          redirectTo: `${origin}/reset-password`,
         });
         if (error) throw error;
         return new Response(JSON.stringify({ success: true, message: "Password reset email sent" }), { headers: corsHeaders });
