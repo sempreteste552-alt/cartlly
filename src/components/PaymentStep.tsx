@@ -84,6 +84,49 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState("");
 
+  // Realtime order status tracking
+  useEffect(() => {
+    if (!orderId) return;
+
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `id=eq.${orderId}`,
+        },
+        (payload) => {
+          const newStatus = payload.new.status;
+          if (["processando", "enviado", "entregue"].includes(newStatus)) {
+            toast.success("💰 Pedido confirmado e aprovado!");
+            onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+          }
+        }
+      )
+      .subscribe();
+
+    // Also check current status immediately in case it was already updated
+    const checkStatus = async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", orderId)
+        .single();
+      
+      if (data && ["processando", "enviado", "entregue"].includes(data.status)) {
+        onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+      }
+    };
+    checkStatus();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderId, selectedMethod, cardCpf, payerCpf, onSuccess]);
+
   // Poll payment status for PIX/Boleto
   useEffect(() => {
     if (!paymentData?.payment?.id) return;
