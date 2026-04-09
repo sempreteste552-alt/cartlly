@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Video } from "lucide-react";
 import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
@@ -42,12 +42,15 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [madeToOrder, setMadeToOrder] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
   const { ctx } = useTenantContext();
   const aiLocked = !canAccess("ai_tools", ctx);
+  const canVideo = canAccess("product_video", ctx);
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
@@ -66,19 +69,30 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
     }
   }, [initialData]);
 
-  // Load existing additional images
+  // Load existing additional images & videos
   useEffect(() => {
     if (existingImages && existingImages.length > 0) {
-      setAdditionalImages(existingImages.map((img: any) => img.image_url));
+      const imgs: string[] = [];
+      const vids: string[] = [];
+      existingImages.forEach((img: any) => {
+        if (img.image_url?.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i)) {
+          vids.push(img.image_url);
+        } else {
+          imgs.push(img.image_url);
+        }
+      });
+      setAdditionalImages(imgs);
+      setAdditionalVideos(vids);
     } else if (initialData) {
       setAdditionalImages([]);
+      setAdditionalVideos([]);
     }
   }, [existingImages, initialData?.id]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 10MB.");
+    if (file.size > 50 * 1024 * 1024) return alert("Arquivo muito grande. Máximo 50MB.");
     const url = await uploadImage.mutateAsync(file);
     setImageUrl(url);
   };
@@ -91,11 +105,30 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       return;
     }
     for (let i = 0; i < files.length; i++) {
-      if (files[i].size > 10 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 10MB.`); continue; }
+      if (files[i].size > 50 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 50MB.`); continue; }
       const url = await uploadImage.mutateAsync(files[i]);
       setAdditionalImages((prev) => [...prev, url]);
     }
     if (additionalFileRef.current) additionalFileRef.current.value = "";
+  };
+
+  const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    if (additionalVideos.length + files.length > 4) {
+      alert("Máximo de 4 vídeos.");
+      return;
+    }
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > 50 * 1024 * 1024) { alert(`${files[i].name} muito grande. Máximo 50MB.`); continue; }
+      const url = await uploadImage.mutateAsync(files[i]);
+      setAdditionalVideos((prev) => [...prev, url]);
+    }
+    if (videoFileRef.current) videoFileRef.current.value = "";
+  };
+
+  const removeVideo = (index: number) => {
+    setAdditionalVideos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const removeAdditionalImage = (index: number) => {
@@ -113,14 +146,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       published,
       category_id: categoryId || null,
       made_to_order: madeToOrder,
-      additionalImages,
+      additionalImages: [...additionalImages, ...additionalVideos],
     });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setAdditionalImages([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setAdditionalImages([]); setAdditionalVideos([]);
     }
     onOpenChange(isOpen);
   };
