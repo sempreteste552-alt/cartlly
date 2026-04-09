@@ -549,7 +549,8 @@ export default function LojaCheckout() {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
             setSavedShippingCost(shippingCost);
-            setOrderItems([...cart.items]);
+            // We don't overwrite orderItems here as it was already set in handleSubmit
+            // This prevents race conditions with cart.clearCart()
             setPaymentMethod(method || "gateway");
             setPaymentDate(new Date());
             cart.clearCart();
