@@ -502,7 +502,11 @@ export default function LojaLayout() {
                     transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
                   }}
                 >
-                  {item.external ? (
+                  {item.onClick ? (
+                    <button className={className} onClick={() => { setMobileMenu(false); item.onClick(); }} style={{ color: headerTextColor, width: '100%', textAlign: 'left' }}>
+                      {content}
+                    </button>
+                  ) : item.external ? (
                     <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
                       {content}
                     </a>
