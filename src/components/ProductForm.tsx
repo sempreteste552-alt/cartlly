@@ -51,6 +51,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const { ctx } = useTenantContext();
   const aiLocked = !canAccess("ai_tools", ctx);
   const canVideo = canAccess("product_video", ctx);
+  const maxImages = getMaxProductImages(ctx);
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
