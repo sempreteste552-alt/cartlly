@@ -305,6 +305,7 @@ export default function LojaCheckout() {
       case "pix": return <QrCode className="h-5 w-5" />;
       case "credit_card": return <CreditCard className="h-5 w-5" />;
       case "boleto": return <FileText className="h-5 w-5" />;
+      case "whatsapp": return <MessageCircle className="h-5 w-5 text-green-500" />;
       default: return <Receipt className="h-5 w-5" />;
     }
   };
