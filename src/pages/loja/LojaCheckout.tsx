@@ -849,15 +849,15 @@ export default function LojaCheckout() {
                 </div>
               </div>
               <div className="sm:col-span-2 space-y-2">
-                <Label>Rua/Logradouro *</Label>
-                <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Ex: Rua das Flores" />
+                <Label className={errors.has("street") ? "text-destructive" : ""}>Rua/Logradouro *</Label>
+                <Input value={street} onChange={(e) => { setStreet(e.target.value); if(errors.has("street")) setErrors(prev => { const s = new Set(prev); s.delete("street"); return s; }); }} placeholder="Ex: Rua das Flores" className={errors.has("street") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Número *</Label>
-                <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº" />
+                <Label className={errors.has("number") ? "text-destructive" : ""}>Número *</Label>
+                <Input value={number} onChange={(e) => { setNumber(e.target.value); if(errors.has("number")) setErrors(prev => { const s = new Set(prev); s.delete("number"); return s; }); }} placeholder="Nº" className={errors.has("number") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="sm:col-span-2 space-y-2">
                 <Label>Complemento</Label>
@@ -867,16 +867,16 @@ export default function LojaCheckout() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Bairro *</Label>
-                <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Seu bairro" />
+                <Label className={errors.has("neighborhood") ? "text-destructive" : ""}>Bairro *</Label>
+                <Input value={neighborhood} onChange={(e) => { setNeighborhood(e.target.value); if(errors.has("neighborhood")) setErrors(prev => { const s = new Set(prev); s.delete("neighborhood"); return s; }); }} placeholder="Seu bairro" className={errors.has("neighborhood") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Cidade *</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" />
+                <Label className={errors.has("city") ? "text-destructive" : ""}>Cidade *</Label>
+                <Input value={city} onChange={(e) => { setCity(e.target.value); if(errors.has("city")) setErrors(prev => { const s = new Set(prev); s.delete("city"); return s; }); }} placeholder="Sua cidade" className={errors.has("city") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Estado (UF) *</Label>
-                <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} placeholder="UF" maxLength={2} />
+                <Label className={errors.has("state") ? "text-destructive" : ""}>Estado (UF) *</Label>
+                <Input value={state} onChange={(e) => { setState(e.target.value.toUpperCase()); if(errors.has("state")) setErrors(prev => { const s = new Set(prev); s.delete("state"); return s; }); }} placeholder="UF" maxLength={2} className={errors.has("state") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
             </div>
 
