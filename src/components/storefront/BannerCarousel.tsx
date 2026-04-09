@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Banner {
@@ -182,7 +183,38 @@ function MaybeLink({
   children: React.ReactNode;
   disabled?: boolean;
 }) {
+  const navigate = useNavigate();
+
   if (href && !disabled) {
+    const isInternal = (() => {
+      try {
+        const url = new URL(href, window.location.origin);
+        return url.origin === window.location.origin;
+      } catch {
+        return href.startsWith("/");
+      }
+    })();
+
+    if (isInternal) {
+      const path = (() => {
+        try {
+          const url = new URL(href, window.location.origin);
+          return url.pathname + url.search + url.hash;
+        } catch {
+          return href;
+        }
+      })();
+
+      return (
+        <div
+          className="block h-full w-full cursor-pointer"
+          onClick={() => navigate(path)}
+        >
+          {children}
+        </div>
+      );
+    }
+
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
         {children}
