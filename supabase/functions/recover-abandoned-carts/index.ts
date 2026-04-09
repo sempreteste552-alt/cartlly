@@ -149,8 +149,15 @@ Deno.serve(async (req) => {
           ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
           : { hasDiscount: false, code: "", percentage: 0 };
 
-        let title = "🛒 Seus itens estão te esperando!";
-        let body = `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!`;
+        const abandonedCartFallbacks = [
+          { title: "🛒 Seus itens estão te esperando!", body: `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!` },
+          { title: "🛍️ Não esqueça seu carrinho!", body: `${customer.name}, temos novidades sobre os itens que você viu na ${storeName}.` },
+          { title: "✨ Que tal finalizar seu pedido?", body: `Oi ${customer.name}! Os produtos na ${storeName} estão acabando. Garanta os seus!` },
+          { title: "💖 Preparamos tudo com carinho", body: `Só falta você finalizar a compra na ${storeName}. Vamos nessa?` }
+        ];
+        const randomACFallback = abandonedCartFallbacks[Math.floor(Math.random() * abandonedCartFallbacks.length)];
+        let title = randomACFallback.title;
+        let body = randomACFallback.body;
 
         if (lovableApiKey) {
           try {
@@ -257,8 +264,15 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
     const store = storeMap.get(customer.store_user_id);
     const storeName = store?.store_name || "nossa loja";
 
-    let title = `🎉 Bem-vindo(a), ${customer.name}!`;
-    let body = `Que alegria ter você na ${storeName}! Confira nossas ofertas especiais.`;
+    const welcomeFallbacks = [
+      { title: `🎉 Bem-vindo(a), ${customer.name}!`, body: `Que alegria ter você na ${storeName}! Confira nossas ofertas especiais.` },
+      { title: `✨ Boas notícias na ${storeName}`, body: `Olá ${customer.name}! Obrigado por se cadastrar. Veja as novidades!` },
+      { title: `🎁 Um presente de boas-vindas`, body: `Oi ${customer.name}! Explore a ${storeName} e descubra produtos incríveis.` },
+      { title: `💜 Você agora faz parte da ${storeName}`, body: `Seja muito bem-vindo(a)! Temos ofertas exclusivas esperando por você.` }
+    ];
+    const randomWelcomeFallback = welcomeFallbacks[Math.floor(Math.random() * welcomeFallbacks.length)];
+    let title = randomWelcomeFallback.title;
+    let body = randomWelcomeFallback.body;
 
     if (lovableApiKey) {
       try {
@@ -359,7 +373,18 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
     const hour = new Date().getHours();
 
     let title = `✨ Novidades na ${storeName}!`;
-    let body = `Confira as ofertas especiais de hoje! Temos novidades esperando por você.`;
+    let body = `Temos ofertas incríveis preparadas para você hoje na ${storeName}. Venha conferir!`;
+
+    const fallbackMessages = [
+      { title: `🎁 Presente para você na ${storeName}`, body: `Preparamos uma seleção exclusiva de produtos que você vai amar. Confira!` },
+      { title: `✨ Brilhe com a ${storeName}`, body: `Novidades fresquinhas acabaram de chegar. Não perca as ofertas de hoje!` },
+      { title: `🛍️ Sua sacola te espera`, body: `Que tal dar uma olhadinha no que temos de novo na ${storeName} hoje?` },
+      { title: `🔥 Tendências na ${storeName}`, body: `Veja o que está fazendo sucesso na nossa loja agora mesmo!` }
+    ];
+    
+    const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+    title = randomFallback.title;
+    body = randomFallback.body;
 
     if (lovableApiKey) {
       try {
@@ -763,8 +788,15 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
   const storeName = storeMap.get(store_user_id)?.store_name || "nossa loja";
   const productName = product?.name || "um produto";
 
-  let title = `👀 Você deu uma olhadinha...`;
-  let msgBody = `Oi ${customer.name}! Notamos que você gostou de "${productName}" na ${storeName}. Aproveite para garantir o seu!`;
+  const productViewFallbacks = [
+    { title: `👀 Você deu uma olhadinha...`, body: `Oi ${customer.name}! Notamos que você gostou de "${productName}" na ${storeName}. Aproveite para garantir o seu!` },
+    { title: `✨ O que achou do item?`, body: `${customer.name}, vimos seu interesse em "${productName}" na ${storeName}. Ainda temos em estoque!` },
+    { title: `💖 Uma escolha excelente!`, body: `Oi ${customer.name}, o produto "${productName}" combina muito com você. Que tal levar para casa?` },
+    { title: `🎁 Temos novidades pra você`, body: `Notamos que você viu "${productName}" na ${storeName}. Confira se ainda temos sua numeração/cor!` }
+  ];
+  const randomPVFallback = productViewFallbacks[Math.floor(Math.random() * productViewFallbacks.length)];
+  let title = randomPVFallback.title;
+  let msgBody = randomPVFallback.body;
 
   if (lovableApiKey) {
     try {
