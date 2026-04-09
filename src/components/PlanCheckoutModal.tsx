@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
-import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -277,14 +276,6 @@ export default function PlanCheckoutModal({
             </div>
           </div>
 
-          {/* Trust badges with real images */}
-          <div className="flex flex-col items-center gap-3 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/15">
-            <div className="flex items-center justify-center gap-4">
-              <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-8 sm:h-10 w-auto object-contain drop-shadow-lg" />
-              <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="h-8 sm:h-10 w-auto object-contain drop-shadow-lg" />
-            </div>
-            <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-5 sm:h-7 w-auto object-contain drop-shadow-lg opacity-80" />
-          </div>
         </div>
 
         <div className="px-5 py-5 sm:px-6 sm:py-6 overflow-y-auto flex-1 custom-scrollbar">
@@ -410,12 +401,9 @@ export default function PlanCheckoutModal({
                 Pagar com PIX — {formatPrice(planPrice)}
               </Button>
 
-              <div className="flex items-center justify-center gap-4 mt-2">
-                <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-10 w-auto object-contain" />
-                <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="h-10 w-auto object-contain" />
-              </div>
-              <div className="flex items-center justify-center mt-2">
-                <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-6 w-auto object-contain opacity-70" />
+              <div className="flex flex-col items-center gap-3 mt-3 pt-3 border-t border-border/30">
+                <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-9 sm:h-11 w-auto object-contain" />
+                <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-6 sm:h-7 w-auto object-contain opacity-80" />
               </div>
             </div>
           )}
