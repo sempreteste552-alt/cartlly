@@ -75,36 +75,41 @@ export function AdminNotificationsBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end" sideOffset={8}>
-        <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">🔔 Notificações</h3>
-            {unreadCount > 0 && (
-              <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                {unreadCount}
-              </span>
-            )}
+      <PopoverContent className="w-[320px] sm:w-[400px] p-0 flex flex-col max-h-[85vh] overflow-hidden shadow-2xl border-primary/10" align="end" sideOffset={12}>
+        <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-20">
+          <div className="flex items-center gap-2.5">
+            <div className="bg-primary/10 p-1.5 rounded-lg">
+              <Bell className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm tracking-tight text-foreground">Notificações</h3>
+              {unreadCount > 0 && (
+                <p className="text-[10px] text-muted-foreground font-medium">
+                  {unreadCount} {unreadCount === 1 ? 'não lida' : 'não lidas'}
+                </p>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {unreadCount > 0 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-[10px] h-7 px-2" 
+                className="text-[11px] h-8 px-2.5 font-semibold text-primary hover:text-primary hover:bg-primary/5 rounded-full transition-all" 
                 onClick={(e) => { e.stopPropagation(); markAllAsRead(); }}
-                title="Marcar todas como lidas"
               >
-                <CheckCheck className="h-3 w-3 mr-1" /> Marcar Lidas
+                <CheckCheck className="h-3.5 w-3.5 mr-1.5" /> Marcar Lidas
               </Button>
             )}
             {notifications.length > 0 && (
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="text-[10px] h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                size="icon" 
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 rounded-full" 
                 onClick={(e) => { e.stopPropagation(); if (confirm("Limpar todas as notificações?")) clearAll(); }}
+                title="Limpar todas"
               >
-                <Trash2 className="h-3 w-3 mr-1" /> Limpar
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>
