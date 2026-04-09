@@ -1078,6 +1078,7 @@ export type Database = {
           created_at: string
           destination: string
           expires_at: string
+          hashed_code: string | null
           id: string
           max_attempts: number
           method: string
@@ -1091,6 +1092,7 @@ export type Database = {
           created_at?: string
           destination: string
           expires_at: string
+          hashed_code?: string | null
           id?: string
           max_attempts?: number
           method?: string
@@ -1104,6 +1106,7 @@ export type Database = {
           created_at?: string
           destination?: string
           expires_at?: string
+          hashed_code?: string | null
           id?: string
           max_attempts?: number
           method?: string
