@@ -101,6 +101,12 @@ export default function LojaLayout() {
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
 
   useEffect(() => {
+    if (slug) {
+      localStorage.setItem("last_visited_store", slug);
+    }
+  }, [slug]);
+
+  useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
