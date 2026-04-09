@@ -292,9 +292,16 @@ export default function LojaProduto() {
           <div className="flex items-center gap-4">
             <div className="space-y-1">
               <p className="text-3xl font-bold" style={{ color: primaryColor }}>{formatPrice(effectivePrice)}</p>
-              <p className="text-sm text-green-600">
-                ou 12x de {formatPrice(effectivePrice / 12)} sem juros
-              </p>
+              {(() => {
+                const maxInst = (settings as any)?.max_installments || 12;
+                return maxInst > 1 ? (
+                  <p className="text-sm text-green-600">
+                    ou {maxInst}x de {formatPrice(effectivePrice / maxInst)} sem juros
+                  </p>
+                ) : (
+                  <p className="text-sm text-green-600">à vista</p>
+                );
+              })()}
             </div>
             
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm animate-pulse" title="Visualizações reais deste produto">
