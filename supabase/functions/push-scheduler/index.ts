@@ -1005,7 +1005,19 @@ Deno.serve(async (req) => {
         
         const recentlyEngaged = new Set((recentEngagements || []).map((e: any) => e.customer_id));
         const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-        const dayName = dayNames[new Date().getDay()];
+        const now = new Date();
+        const dayName = dayNames[now.getDay()];
+        
+        // Special dates context
+        const specialDates: Record<string, string> = {
+          "25/12": "Natal",
+          "01/01": "Ano Novo",
+          "12/06": "Dia dos Namorados",
+          "09/04": "Páscoa", // Example for today
+        };
+        const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+        const specialEvent = specialDates[dateStr];
+
 
         const hour = new Date().getHours();
         const dayOfWeek = new Date().getDay();
@@ -1032,8 +1044,14 @@ Deno.serve(async (req) => {
           const store = storeMap.get(customer.store_user_id);
           const storeName = store?.store_name || "nossa loja";
           
-          const title = template.title.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
-          const body = template.body.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+          let title = template.title.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+          let body = template.body.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+          
+          if (specialEvent) {
+            title = `🎁 Especial ${specialEvent}: ${title}`;
+            body = `Em clima de ${specialEvent}, ${body}`;
+          }
+
 
           try {
             const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
