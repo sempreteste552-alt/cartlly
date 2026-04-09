@@ -495,6 +495,79 @@ export type Database = {
           },
         ]
       }
+      customer_notifications: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_push_tokens: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          id: string
+          platform: string | null
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          id?: string
+          platform?: string | null
+          token: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          id?: string
+          platform?: string | null
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_push_tokens_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_segments: {
         Row: {
           auto_update: boolean
