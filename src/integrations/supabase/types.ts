@@ -1594,6 +1594,27 @@ export type Database = {
         }
         Relationships: []
       }
+      search_logs: {
+        Row: {
+          created_at: string
+          id: string
+          term: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          term: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          term?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_settings: {
         Row: {
           id: string
