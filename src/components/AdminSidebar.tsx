@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { isTenantActive } from "@/lib/planPermissions";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
@@ -76,7 +77,7 @@ export function AdminSidebar() {
                 <span className="text-sm font-semibold text-sidebar-foreground truncate">
                   {(settings as any)?.store_name || "Minha Loja"}
                 </span>
-                {planSlug === "PREMIUM" && (
+                {(planSlug === "PREMIUM" || planSlug === "PRO") && isTenantActive(ctx) && (
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
                 )}
               </div>

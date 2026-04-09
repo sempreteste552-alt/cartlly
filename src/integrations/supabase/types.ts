@@ -2729,7 +2729,6 @@ export type Database = {
           payment_debit_card: boolean | null
           payment_gateway: string | null
           payment_pix: boolean | null
-          plan_name: string | null
           primary_color: string | null
           secondary_color: string | null
           sell_via_whatsapp: boolean | null

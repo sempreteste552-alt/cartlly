@@ -152,7 +152,6 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <WelcomeTrialCard />
-      <TrialBanner />
 
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">

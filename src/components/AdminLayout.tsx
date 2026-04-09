@@ -9,6 +9,7 @@ import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { AdminPendingOrdersAlert } from "@/components/admin/AdminPendingOrdersAlert";
 import { AdminPushBanner } from "@/components/AdminPushBanner";
+import { TrialBanner } from "@/components/TrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -138,6 +139,7 @@ export function AdminLayout() {
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">
+            <TrialBanner />
             <Outlet />
           </main>
         </div>
