@@ -20,13 +20,17 @@ export const OnboardingTutorial = () => {
 
     const currentPath = location.pathname;
 
+    const commonConfig = {
+      showProgress: true,
+      animate: true,
+      doneBtnText: "Próximo Passo",
+      nextBtnText: "Próximo",
+      prevBtnText: "Anterior",
+    };
+
     if (currentPath === "/admin") {
       const driverObj = driver({
-        showProgress: true,
-        animate: true,
-        doneBtnText: "Próximo Passo",
-        nextBtnText: "Próximo",
-        prevBtnText: "Anterior",
+        ...commonConfig,
         steps: [
           {
             element: "#dashboard-welcome",
@@ -47,7 +51,7 @@ export const OnboardingTutorial = () => {
             },
           },
           {
-            element: "#sidebar-products",
+            element: "#sidebar-produtos",
             popover: {
               title: "Gestão de Produtos 📦",
               description: "Aqui você cadastra e gerencia seus itens. Vamos ver como funciona?",
@@ -56,20 +60,8 @@ export const OnboardingTutorial = () => {
             },
           },
         ],
-        onDestroyed: () => {
-          // If the user closed manually, don't auto-navigate?
-          // But if they clicked "Done" (which is actually just closing it in driver.js)
-        },
-        onCloseClick: () => {
-          sessionStorage.removeItem("onboarding_tutorial_active");
-        },
-        onDestroyStarted: () => {
-           // This is a hacky way to know if we should navigate
-           // But driver.js doesn't tell us *how* it was destroyed
-        }
       });
 
-      // Simple hack: listen for the "done" button (last step button)
       const observer = new MutationObserver(() => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
@@ -86,11 +78,7 @@ export const OnboardingTutorial = () => {
 
     if (currentPath === "/admin/produtos") {
        const driverObj = driver({
-        showProgress: true,
-        animate: true,
-        doneBtnText: "Próximo Passo",
-        nextBtnText: "Próximo",
-        prevBtnText: "Anterior",
+        ...commonConfig,
         steps: [
           {
             element: "#products-header",
@@ -111,18 +99,15 @@ export const OnboardingTutorial = () => {
             },
           },
           {
-            element: "#products-table",
+            element: "#sidebar-pedidos",
             popover: {
-              title: "Lista de Produtos 📝",
-              description: "Veja rapidamente o status de cada item. Alterações de preço aqui refletem no checkout do cliente.",
-              side: "top",
+              title: "Gestão de Pedidos 🛒",
+              description: "Agora vamos ver como gerenciar suas vendas?",
+              side: "right",
               align: "start",
             },
           },
         ],
-        onCloseClick: () => {
-          sessionStorage.removeItem("onboarding_tutorial_active");
-        }
       });
 
       const observer = new MutationObserver(() => {
@@ -141,34 +126,145 @@ export const OnboardingTutorial = () => {
 
     if (currentPath === "/admin/pedidos") {
        const driverObj = driver({
-        showProgress: true,
-        animate: true,
-        doneBtnText: "Concluir",
-        nextBtnText: "Próximo",
-        prevBtnText: "Anterior",
+        ...commonConfig,
         steps: [
           {
             element: "#orders-header",
             popover: {
-              title: "Gerenciamento de Pedidos 🛒",
+              title: "Vendas e Pedidos 🛒",
               description: "Aqui aparecem todas as vendas. Você pode filtrar por status para organizar sua expedição.",
               side: "bottom",
               align: "start",
             },
           },
           {
-            element: "#orders-table",
+            element: "#sidebar-clientes",
             popover: {
-              title: "Acompanhamento 🔍",
-              description: "Clique no ícone de olho para ver detalhes do cliente, endereço e itens do pedido.",
-              side: "top",
+              title: "Base de Clientes 👥",
+              description: "Saiba quem são seus clientes e o histórico de compras de cada um.",
+              side: "right",
               align: "start",
             },
           },
         ],
-        onCloseClick: () => {
-          sessionStorage.removeItem("onboarding_tutorial_active");
+      });
+
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Próximo Passo") {
+           doneBtn.addEventListener("click", () => {
+             navigate("/admin/clientes");
+           }, { once: true });
         }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      driverObj.drive();
+      return () => observer.disconnect();
+    }
+
+    if (currentPath === "/admin/clientes") {
+      const driverObj = driver({
+        ...commonConfig,
+        steps: [
+          {
+            element: "h1:contains('Clientes')",
+            popover: {
+              title: "CRM de Clientes 👥",
+              description: "Aqui você tem acesso a todos os dados dos seus clientes para um atendimento personalizado.",
+              side: "bottom",
+              align: "start",
+            },
+          },
+          {
+            element: "#sidebar-cupons",
+            popover: {
+              title: "Marketing e Cupons 🎫",
+              description: "Crie promoções e cupons de desconto para alavancar suas vendas.",
+              side: "right",
+              align: "start",
+            },
+          },
+        ],
+      });
+
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Próximo Passo") {
+          doneBtn.addEventListener("click", () => {
+            navigate("/admin/cupons");
+          }, { once: true });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      driverObj.drive();
+      return () => observer.disconnect();
+    }
+
+    if (currentPath === "/admin/cupons") {
+      const driverObj = driver({
+        ...commonConfig,
+        steps: [
+          {
+            element: "h1:contains('Cupons')",
+            popover: {
+              title: "Promoções 🎫",
+              description: "Gerencie seus cupons de desconto aqui. Defina limites de uso, datas de expiração e valores.",
+              side: "bottom",
+              align: "start",
+            },
+          },
+          {
+            element: "#sidebar-loja",
+            popover: {
+              title: "Configurações da Loja ⚙️",
+              description: "Personalize o visual, domínio e informações da sua loja.",
+              side: "right",
+              align: "start",
+            },
+          },
+        ],
+      });
+
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Próximo Passo") {
+          doneBtn.addEventListener("click", () => {
+            navigate("/admin/config");
+          }, { once: true });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      driverObj.drive();
+      return () => observer.disconnect();
+    }
+
+    if (currentPath === "/admin/config") {
+      const driverObj = driver({
+        ...commonConfig,
+        doneBtnText: "Concluir",
+        steps: [
+          {
+            element: "h1:contains('Configurações')",
+            popover: {
+              title: "Sua Identidade 🎨",
+              description: "Altere cores, logos, banners e conecte seu domínio próprio para dar profissionalismo à sua marca.",
+              side: "bottom",
+              align: "start",
+            },
+          },
+          {
+            element: "#store-preview-btn",
+            popover: {
+              title: "Pronto para decolar! 🚀",
+              description: "Clique aqui a qualquer momento para ver como sua loja está ficando para os seus clientes.",
+              side: "right",
+              align: "start",
+            },
+          },
+        ],
       });
 
       const observer = new MutationObserver(() => {
