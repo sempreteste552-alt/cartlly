@@ -206,6 +206,9 @@ Deno.serve(async (req) => {
         boleto_expiration: paymentResult.boleto_expiration || null,
         card_last_four: paymentResult.card_last_four || null,
         card_brand: paymentResult.card_brand || null,
+        status_detail: paymentResult.status_detail || null,
+        issuer_id: paymentResult.issuer_id || null,
+        payment_method_id: paymentResult.payment_method_id || null,
         raw_response: paymentResult.raw,
       })
       .select()
