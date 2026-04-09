@@ -76,6 +76,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
   const loginText = useTypewriter(LOGIN_PHRASES);
@@ -209,6 +210,8 @@ export default function Login() {
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {
+        // Save stay connected preference
+        localStorage.setItem("stay_connected", stayConnected ? "true" : "false");
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
@@ -464,6 +467,18 @@ export default function Login() {
                     <a href="/termos" target="_blank" className="text-blue-500 hover:underline font-medium">Termos de Uso</a>{" "}
                     e a{" "}
                     <a href="/privacidade" target="_blank" className="text-blue-500 hover:underline font-medium">Política de Privacidade</a>
+                  </label>
+                </div>
+              )}
+              {!isRegister && !isForgotPassword && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="stayConnected"
+                    checked={stayConnected}
+                    onCheckedChange={(checked) => setStayConnected(checked === true)}
+                  />
+                  <label htmlFor="stayConnected" className="text-sm text-muted-foreground cursor-pointer select-none">
+                    Ficar conectado
                   </label>
                 </div>
               )}

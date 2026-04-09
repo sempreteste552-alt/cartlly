@@ -27,6 +27,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+
+      // If user chose not to stay connected, sign out after 24h of inactivity
+      if (session && localStorage.getItem("stay_connected") !== "true") {
+        const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+        let inactivityTimer: ReturnType<typeof setTimeout>;
+
+        const resetTimer = () => {
+          clearTimeout(inactivityTimer);
+          inactivityTimer = setTimeout(() => {
+            supabase.auth.signOut();
+          }, INACTIVITY_TIMEOUT);
+        };
+
+        const events = ["mousedown", "keydown", "scroll", "touchstart"];
+        events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+        resetTimer();
+
+        // Cleanup on unmount handled by subscription cleanup
+      }
     });
 
     return () => subscription.unsubscribe();
