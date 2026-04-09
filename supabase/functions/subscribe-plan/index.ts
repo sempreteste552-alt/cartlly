@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PROCESS PAYMENT ====================
-    const { user_id, plan_id, payment_method, document, phone, card_token, installments } = body;
+    const { user_id, plan_id, payment_method, document, phone, card_token, installments, device_id, payment_method_id, issuer_id } = body;
 
     if (!user_id || !plan_id) {
       return json({ error: "Dados incompletos" }, 400);
