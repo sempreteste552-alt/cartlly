@@ -358,10 +358,10 @@ export default function LojaLayout() {
         {/* Marketing: Popup Coupon */}
         {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
-        {/* Top bar - hidden on mobile */}
-        <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        {/* Top bar - phone & location only, hidden on mobile */}
+        {(settings?.store_phone || settings?.store_location) && (
+          <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
+            <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6">
               {settings?.store_phone && (
                 <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{settings.store_phone}</span>
               )}
@@ -369,36 +369,8 @@ export default function LojaLayout() {
                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{settings.store_location}</span>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              {user ? (
-                <div className="flex items-center gap-2">
-                  {isAdminPreview && (
-                    <span className="flex items-center gap-1 text-yellow-200 font-medium mr-1">
-                      👁️ Preview
-                    </span>
-                  )}
-                  <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
-                    <User className="h-3 w-3" /> {customer?.name?.split(" ")[0] || "Conta"}
-                  </button>
-                  <button onClick={() => { signOut(); }} className="flex items-center gap-1 hover:opacity-80 ml-2">
-                    <LogOut className="h-3 w-3" /> Sair
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setAuthModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
-                  <User className="h-3 w-3" /> Entrar
-                </button>
-              )}
-              {settings?.instagram_url && <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">Instagram</a>}
-              {settings?.facebook_url && <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80">Facebook</a>}
-              {settings?.store_whatsapp && (
-                <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:opacity-80">
-                  <MessageCircle className="h-3 w-3" /> WhatsApp
-                </a>
-              )}
-            </div>
           </div>
-        </div>
+        )}
 
         {/* Header */}
         <header className="sticky top-0 z-50 border-b border-border shadow-sm transition-colors" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
