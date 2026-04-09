@@ -69,7 +69,7 @@ export function AdminNotificationsBell() {
         <Button variant="ghost" size="icon" className="relative shrink-0 hover:bg-primary/5 rounded-full transition-all active:scale-95 group">
           <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[9px] font-black flex items-center justify-center border-2 border-background shadow-sm ring-1 ring-primary/20">
+            <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center border-2 border-background shadow-sm ring-1 ring-red-600/20">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
