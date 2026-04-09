@@ -7,6 +7,7 @@ import { AIChatWidget } from "@/components/AIChatWidget";
 import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
 import { WelcomeConfetti } from "@/components/WelcomeConfetti";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
+import { AdminPendingOrdersAlert } from "@/components/admin/AdminPendingOrdersAlert";
 import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
