@@ -1,6 +1,7 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
+import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
 interface CustomerAuthContextValue {
   session: Session | null;
@@ -350,10 +351,10 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: getPasswordResetRedirectUrl(),
     });
-    if (error) throw error;
+    if (error) throw new Error(getPasswordRecoveryErrorMessage(error));
   };
 
   const getOrders = async (storeUserId: string) => {

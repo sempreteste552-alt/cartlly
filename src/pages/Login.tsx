@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import siteSeguro from "@/assets/site-seguro.webp";
+import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
@@ -155,12 +156,12 @@ export default function Login() {
     try {
       setAlertCard(null);
       if (isForgotPassword) {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (error) throw error;
-        setAlertCard({ type: "success", message: "E-mail de redefinição enviado! Verifique sua caixa de entrada." });
-        setIsForgotPassword(false);
+          const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+            redirectTo: getPasswordResetRedirectUrl(),
+          });
+          if (error) throw new Error(getPasswordRecoveryErrorMessage(error));
+          setAlertCard({ type: "success", message: "Link de redefinição enviado! Verifique sua caixa de entrada e o spam." });
+          setIsForgotPassword(false);
       } else if (isRegister) {
         if (!acceptedTerms) {
           setAlertCard({ type: "error", message: "Você precisa aceitar os Termos de Uso para criar sua conta." });

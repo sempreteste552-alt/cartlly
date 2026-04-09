@@ -5,6 +5,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const FALLBACK_APP_ORIGIN = "https://cartlly.lovable.app";
+
+function getSafeAppOrigin(value?: string | null) {
+  if (!value) return FALLBACK_APP_ORIGIN;
+
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    const isPreviewHost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".lovable.app") ||
+      hostname.endsWith(".lovableproject.com");
+
+    return isPreviewHost ? FALLBACK_APP_ORIGIN : url.origin;
+  } catch {
+    return FALLBACK_APP_ORIGIN;
+  }
+}
+
+function getPasswordResetErrorMessage(message?: string) {
+  if (!message) return "Não foi possível enviar o link de redefinição agora.";
+
+  const waitMatch = message.match(/after\s+(\d+)\s+seconds?/i) || message.match(/ap[oó]s\s+(\d+)\s+segundos?/i);
+  if (message.includes("over_email_send_rate_limit") || /for security purposes/i.test(message) || waitMatch) {
+    const seconds = waitMatch?.[1];
+    return seconds
+      ? `Um link já foi solicitado há instantes. Aguarde ${seconds} segundos e tente novamente.`
+      : "Um link já foi solicitado há instantes. Aguarde alguns segundos e tente novamente.";
+  }
+
+  return message;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -68,12 +102,11 @@ Deno.serve(async (req) => {
         if (!targetEmail) {
           return new Response(JSON.stringify({ error: "Missing targetEmail" }), { status: 400, headers: corsHeaders });
         }
-        // Use origin from request headers, fallback to known app URL
-        const origin = req.headers.get("origin") || body.origin || "https://cartlly.lovable.app";
+        const origin = getSafeAppOrigin(req.headers.get("origin") || body.origin);
         const { error } = await adminClient.auth.resetPasswordForEmail(targetEmail, {
           redirectTo: `${origin}/reset-password`,
         });
-        if (error) throw error;
+        if (error) throw new Error(getPasswordResetErrorMessage(error.message));
         return new Response(JSON.stringify({ success: true, message: "Password reset email sent" }), { headers: corsHeaders });
       }
 

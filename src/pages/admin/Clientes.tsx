@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
 export default function Clientes() {
   const { user } = useAuth();
@@ -88,8 +89,10 @@ export default function Clientes() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (email: string) => {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: getPasswordResetRedirectUrl(),
+      });
+      if (error) throw new Error(getPasswordRecoveryErrorMessage(error));
     },
     onSuccess: () => toast.success("Link de redefinição enviado para o cliente!"),
     onError: (e) => toast.error("Erro: " + e.message),
