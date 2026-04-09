@@ -247,12 +247,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         securityCode: cardCvv,
         identificationType: cardCpf.replace(/\D/g, "").length > 11 ? "CNPJ" : "CPF",
         identificationNumber: cardCpf.replace(/\D/g, ""),
-      };
+      } as any;
+      
+      if (mpIssuerId) cardData.issuerId = mpIssuerId;
+      if (mpPaymentMethodId) cardData.paymentMethodId = mpPaymentMethodId;
       
       const tokenResponse = await mp.createCardToken(cardData);
       if (!tokenResponse?.id) throw new Error("Não foi possível gerar o token do cartão Mercado Pago.");
       
-      return { token: tokenResponse.id, deviceId };
+      return { 
+        token: tokenResponse.id, 
+        deviceId,
+        issuer_id: mpIssuerId,
+        payment_method_id: mpPaymentMethodId
+      };
     } else if (gateway === "pagbank") {
       if (!window.PagSeguro) throw new Error("SDK do PagBank não carregado.");
       
