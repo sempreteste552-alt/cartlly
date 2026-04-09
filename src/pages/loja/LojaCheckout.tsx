@@ -808,21 +808,21 @@ export default function LojaCheckout() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={errors.size > 0 ? "border-destructive ring-1 ring-destructive ring-offset-2" : ""}>
           <CardHeader><CardTitle className="text-base">Seus Dados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome Completo *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" maxLength={100} />
+                <Label className={errors.has("name") ? "text-destructive" : ""}>Nome Completo *</Label>
+                <Input value={name} onChange={(e) => { setName(e.target.value); if(errors.has("name")) setErrors(prev => { const s = new Set(prev); s.delete("name"); return s; }); }} placeholder="Seu nome completo" maxLength={100} className={errors.has("name") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>CPF *</Label>
-                <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
+                <Label className={errors.has("cpf") ? "text-destructive" : ""}>CPF *</Label>
+                <Input value={cpf} onChange={(e) => { setCpf(formatCPF(e.target.value)); if(errors.has("cpf")) setErrors(prev => { const s = new Set(prev); s.delete("cpf"); return s; }); }} placeholder="000.000.000-00" maxLength={14} className={errors.has("cpf") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label>Telefone *</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" maxLength={20} />
+                <Label className={errors.has("phone") ? "text-destructive" : ""}>Telefone *</Label>
+                <Input value={phone} onChange={(e) => { setPhone(e.target.value); if(errors.has("phone")) setErrors(prev => { const s = new Set(prev); s.delete("phone"); return s; }); }} placeholder="(11) 99999-9999" maxLength={20} className={errors.has("phone") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
@@ -835,14 +835,15 @@ export default function LojaCheckout() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>CEP *</Label>
+                <Label className={errors.has("cep") ? "text-destructive" : ""}>CEP *</Label>
                 <div className="relative">
                   <Input 
                     value={cep} 
-                    onChange={(e) => setCep(formatCEP(e.target.value))} 
+                    onChange={(e) => { setCep(formatCEP(e.target.value)); if(errors.has("cep")) setErrors(prev => { const s = new Set(prev); s.delete("cep"); return s; }); }} 
                     onBlur={handleCepBlur}
                     placeholder="00000-000" 
                     maxLength={9} 
+                    className={errors.has("cep") ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
                   {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
