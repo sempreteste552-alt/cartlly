@@ -27,6 +27,7 @@ interface PaymentStepProps {
   total: number;
   settings: any;
   onSuccess: (method?: string, cpf?: string) => void;
+  initialCpf?: string;
 }
 
 interface CpfInputFieldProps {
