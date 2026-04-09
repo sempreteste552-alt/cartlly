@@ -259,9 +259,16 @@ export default function LojaCheckout() {
   }, [user, authLoading, pendingPayment]);
 
   const handleSubmit = async (viaWhatsApp = false) => {
-    if (!name.trim()) return toast.error("Informe seu nome");
+    if (!name.trim()) return toast.error("Informe seu nome completo");
     if (!phone.trim()) return toast.error("Informe seu telefone");
-    if (cart.items.length === 0) return toast.error("Carrinho vazio");
+    if (!cpf.trim() || !validateCPF(cpf)) return toast.error("CPF inválido ou não informado");
+    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) return toast.error("CEP obrigatório e deve ter 8 dígitos");
+    if (!street.trim()) return toast.error("Informe o nome da rua");
+    if (!number.trim()) return toast.error("Informe o número do endereço");
+    if (!neighborhood.trim()) return toast.error("Informe o bairro");
+    if (!city.trim()) return toast.error("Informe a cidade");
+    if (!state.trim()) return toast.error("Informe o estado");
+    if (cart.items.length === 0) return toast.error("Seu carrinho está vazio");
 
     // Require customer login before payment (not for WhatsApp)
     if (!viaWhatsApp && authLoading) {
