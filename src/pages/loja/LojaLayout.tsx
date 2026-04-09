@@ -174,6 +174,21 @@ export default function LojaLayout() {
       return data;
     },
   });
+  const { data: shippingZonesData } = useQuery({
+    queryKey: ["store_shipping_zones_public", settings?.user_id],
+    enabled: !!settings?.user_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipping_zones")
+        .select("id")
+        .eq("user_id", settings!.user_id)
+        .eq("active", true)
+        .limit(1);
+      if (error) throw error;
+      return data;
+    },
+  });
+  const hasShippingZones = (shippingZonesData?.length ?? 0) > 0;
 
   // Dynamic PWA manifest with tenant context
   const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
