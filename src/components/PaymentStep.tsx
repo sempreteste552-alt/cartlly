@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock } from "lucide-react";
+import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock, Save } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -82,6 +83,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardCvv, setCardCvv] = useState("");
   const [cardInstallments, setCardInstallments] = useState("1");
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
+  const [saveCard, setSaveCard] = useState(false);
 
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState(initialCpf || "");
@@ -536,6 +538,18 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             </Select>
           </div>
 
+          <div className="flex items-center space-x-2 pt-1 pb-2">
+            <Checkbox 
+              id="saveCard" 
+              checked={saveCard} 
+              onCheckedChange={(checked) => setSaveCard(checked as boolean)}
+            />
+            <Label htmlFor="saveCard" className="text-xs font-medium leading-none cursor-pointer flex items-center gap-2">
+              <Save className="h-3 w-3 text-muted-foreground" />
+              Salvar cartão para as próximas compras
+            </Label>
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => { setShowCardForm(false); setSelectedMethod(null); }}>
               Voltar
@@ -570,6 +584,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         <CardContent className="space-y-4">
           <p className="text-2xl font-bold text-center">{formatPrice(total)}</p>
           <CpfInputField value={payerCpf} onChange={setPayerCpf} />
+          
+          <div className="flex items-center space-x-2 pt-1 pb-2">
+            <Checkbox 
+              id="savePayerData" 
+              checked={saveCard} // Reusing saveCard state for simplicity in this step
+              onCheckedChange={(checked) => setSaveCard(checked as boolean)}
+            />
+            <Label htmlFor="savePayerData" className="text-xs font-medium leading-none cursor-pointer flex items-center gap-2">
+              <Save className="h-3 w-3 text-muted-foreground" />
+              Salvar CPF para as próximas compras
+            </Label>
+          </div>
+
           <div className="flex gap-2 pt-2">
             <Button variant="outline" className="flex-1" onClick={() => setSelectedMethod(null)}>
               Voltar

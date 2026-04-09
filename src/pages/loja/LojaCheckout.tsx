@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -59,6 +60,7 @@ export default function LojaCheckout() {
   const [complement, setComplement] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [saveData, setSaveData] = useState(true);
   const [cepLoading, setCepLoading] = useState(false);
 
   const handleCepBlur = async () => {
@@ -324,6 +326,20 @@ export default function LojaCheckout() {
     } catch (err: any) {
       toast.error("Erro ao criar pedido: " + err.message);
     } finally {
+      if (saveData && user && customer) {
+        await supabase
+          .from("customers")
+          .update({
+            name: name.trim(),
+            phone: phone.trim(),
+            cpf: cpf.replace(/\D/g, ""),
+            cep: cep.replace(/\D/g, ""),
+            city: city.trim(),
+            state: state.trim(),
+            address: address.trim(),
+          })
+          .eq("id", customer.id);
+      }
       setLoading(false);
     }
   };
@@ -847,6 +863,18 @@ export default function LojaCheckout() {
             <div className="space-y-2">
               <Label>Observações do Pedido</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação para a entrega?" maxLength={500} />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox 
+                id="saveData" 
+                checked={saveData} 
+                onCheckedChange={(checked) => setSaveData(checked as boolean)}
+              />
+              <Label htmlFor="saveData" className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2">
+                <Save className="h-3 w-3 text-muted-foreground" />
+                Salvar meus dados para compras futuras
+              </Label>
             </div>
           </CardContent>
         </Card>
