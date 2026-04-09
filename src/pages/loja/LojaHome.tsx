@@ -115,9 +115,13 @@ export default function LojaHome() {
                 onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = primaryColor; e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = primaryColor; }}
                 onClick={() => {
-                  const el = document.getElementById(`category-${cat.name}`);
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+                   const el = document.getElementById(`category-${cat.name}`);
+                   if (el) {
+                     const yOffset = -80;
+                     const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                     window.scrollTo({ top: y, behavior: "smooth" });
+                   }
+                 }}
               >
                 {cat.name}
               </Badge>
