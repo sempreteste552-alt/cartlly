@@ -377,13 +377,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <p className="text-sm text-muted-foreground">
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
-          <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
-          <p className="text-[10px] text-muted-foreground mt-2">Você será redirecionado automaticamente em instantes...</p>
-          {/* Auto-redirect after a short delay */}
-          {useEffect(() => {
-            const timer = setTimeout(() => onSuccess("credit_card"), 3000);
-            return () => clearTimeout(timer);
-          }, [])}
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
+            <p className="text-[10px] text-muted-foreground animate-pulse">Você será redirecionado automaticamente em 3 segundos...</p>
+          </div>
         </CardContent>
       </Card>
     );
