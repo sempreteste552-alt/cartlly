@@ -240,11 +240,11 @@ export default function LojaLayout() {
   // Slug is required — no default store
   if (!slug) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">Acesse uma loja pelo seu endereço específico.</p>
+          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
         </div>
       </div>
     );
@@ -252,19 +252,19 @@ export default function LojaLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   if (slug && !settings) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-gray-400">A loja "{slug}" não existe ou foi removida.</p>
+          <p className="text-muted-foreground">A loja "{slug}" não existe ou foi removida.</p>
         </div>
       </div>
     );
@@ -273,11 +273,11 @@ export default function LojaLayout() {
   // Store blocked by super admin
   if (settings && (settings as any).store_blocked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8 max-w-md">
           <div className="text-6xl">🚫</div>
           <h1 className="text-3xl font-bold">Loja Indisponível</h1>
-          <p className="text-gray-400">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
+          <p className="text-muted-foreground">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
         </div>
       </div>
     );
@@ -285,11 +285,11 @@ export default function LojaLayout() {
 
   if (settings && !settings.store_open) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🚧</div>
           <h1 className="text-3xl font-bold">Loja Fechada</h1>
-          <p className="text-gray-400">Estamos temporariamente fechados. Volte em breve!</p>
+          <p className="text-muted-foreground">Estamos temporariamente fechados. Volte em breve!</p>
         </div>
       </div>
     );
