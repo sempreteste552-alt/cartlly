@@ -340,6 +340,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             const cardResult = await generateCardToken(settings.payment_gateway);
             params.card_token = cardResult.token;
             params.device_id = cardResult.deviceId;
+            params.issuer_id = cardResult.issuer_id;
+            params.payment_method_id = cardResult.payment_method_id;
+            params.installments = Number(cardInstallments);
+            params.card_type = cardType;
           } catch (tokenErr: any) {
             toast.error(tokenErr.message || "Erro ao processar dados do cartão");
             setTokenizing(false);
