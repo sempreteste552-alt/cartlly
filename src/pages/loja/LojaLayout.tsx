@@ -310,7 +310,7 @@ export default function LojaLayout() {
 
 
   return (
-    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath }}>
+    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
         className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
         style={
