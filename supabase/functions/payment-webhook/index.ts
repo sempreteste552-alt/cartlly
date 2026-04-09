@@ -43,14 +43,24 @@ async function handleMercadoPago(req: Request, supabase: any) {
   const body = await req.json();
   console.log("MP Webhook:", JSON.stringify(body));
 
-  if (body.type !== "payment" && body.action !== "payment.updated") {
+  const isLegacy = !!body.topic && !!body.resource;
+  const isNew = body.type === "payment" || body.action?.startsWith("payment.");
+
+  if (!isLegacy && !isNew) {
+    console.log("MP Webhook: Ignoring non-payment event:", JSON.stringify(body));
     return new Response(JSON.stringify({ received: true }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const paymentId = body.data?.id;
+  let paymentId = body.data?.id || body.id;
+  if (isLegacy && body.topic === "payment") {
+    const resource = body.resource;
+    paymentId = resource.split("/").pop();
+  }
+
   if (!paymentId) {
+    console.log("MP Webhook: No payment ID found in body:", JSON.stringify(body));
     return new Response(JSON.stringify({ error: "No payment ID" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -109,7 +119,14 @@ async function handleMercadoPago(req: Request, supabase: any) {
 
     // Update order status based on payment
     if (newStatus === "approved") {
-      await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+      console.log(`Updating order ${payment.order_id} to processando...`);
+      const { error: orderUpdateErr } = await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+      if (orderUpdateErr) {
+        console.error("Error updating order status:", orderUpdateErr);
+      } else {
+        console.log(`Order ${payment.order_id} updated to processando successfully.`);
+      }
+
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
 
       // 🔔 Push: Payment approved
