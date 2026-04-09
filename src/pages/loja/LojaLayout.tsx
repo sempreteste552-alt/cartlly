@@ -290,12 +290,13 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {isAdminPreview ? (
-                <span className="flex items-center gap-1 text-yellow-200 font-medium">
-                  👁️ Modo Preview
-                </span>
-              ) : user ? (
+              {user ? (
                 <div className="flex items-center gap-2">
+                  {isAdminPreview && (
+                    <span className="flex items-center gap-1 text-yellow-200 font-medium mr-1">
+                      👁️ Preview
+                    </span>
+                  )}
                   <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                     <User className="h-3 w-3" /> {customer?.name?.split(" ")[0] || "Conta"}
                   </button>
