@@ -32,7 +32,14 @@ export function FeatureTutorialCard({
     if (isDismissed || views >= 2) {
       setDismissed(true);
     } else {
-      localStorage.setItem(viewsKey, (views + 1).toString());
+      // Small timeout to avoid double counting in dev mode or fast re-renders
+      const timer = setTimeout(() => {
+        const currentViews = parseInt(localStorage.getItem(viewsKey) || "0");
+        if (currentViews < 2) {
+          localStorage.setItem(viewsKey, (currentViews + 1).toString());
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [id, storageKey, viewsKey]);
 

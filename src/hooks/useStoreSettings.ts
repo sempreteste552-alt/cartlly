@@ -18,11 +18,14 @@ export function useStoreSettings() {
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      // Auto-create if not exists
+      // Auto-create if not exists (fallback if trigger fails)
       if (!data && user) {
         const { data: created, error: createErr } = await supabase
           .from("store_settings")
-          .insert({ user_id: user.id })
+          .insert({ 
+            user_id: user.id,
+            store_name: "Minha Loja"
+          })
           .select()
           .single();
         if (createErr) throw createErr;
