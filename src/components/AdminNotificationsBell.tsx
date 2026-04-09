@@ -75,7 +75,7 @@ export function AdminNotificationsBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
+      <PopoverContent className="w-96 p-0" align="end" sideOffset={8}>
         <div className="flex items-center justify-between p-3 border-b sticky top-0 bg-background z-10">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm">🔔 Notificações</h3>
