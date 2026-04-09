@@ -34,13 +34,25 @@ export default function LojaProduto() {
 
   const product = products?.find((p) => p.id === id);
 
-  const allImages = useMemo(() => {
+  const { allImages, allVideos } = useMemo(() => {
     const images: string[] = [];
-    if (product?.image_url) images.push(product.image_url);
+    const videos: string[] = [];
+    if (product?.image_url) {
+      if (product.image_url.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i)) {
+        videos.push(product.image_url);
+      } else {
+        images.push(product.image_url);
+      }
+    }
     productImages?.forEach((img: any) => {
-      if (!images.includes(img.image_url)) images.push(img.image_url);
+      const url = img.image_url;
+      if (url?.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i)) {
+        if (!videos.includes(url)) videos.push(url);
+      } else {
+        if (!images.includes(url)) images.push(url);
+      }
     });
-    return images;
+    return { allImages: images, allVideos: videos };
   }, [product, productImages]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -197,22 +209,11 @@ export default function LojaProduto() {
         <div className="space-y-3">
           <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
-              allImages[selectedImageIndex]?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
-                <video
-                  src={allImages[selectedImageIndex]}
-                  controls
-                  className="w-full h-full object-contain"
-                  autoPlay
-                  muted
-                  loop
-                />
-              ) : (
-                <img
-                  src={allImages[selectedImageIndex] || allImages[0]}
-                  alt={product.name}
-                  className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
-                />
-              )
+              <img
+                src={allImages[selectedImageIndex] || allImages[0]}
+                alt={product.name}
+                className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Package className="h-24 w-24 text-gray-200" />
@@ -228,15 +229,30 @@ export default function LojaProduto() {
                   className="shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors"
                   style={{ borderColor: selectedImageIndex === i ? primaryColor : "#e5e7eb" }}
                 >
-                  {img.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
-                    <div className="w-full h-full bg-black flex items-center justify-center">
-                      <Video className="h-6 w-6 text-white" />
-                    </div>
-                  ) : (
-                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-                  )}
+                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Videos section below images */}
+          {allVideos.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <p className="text-sm font-medium flex items-center gap-1.5 text-gray-700">
+                <Video className="h-4 w-4" /> Vídeos do produto
+              </p>
+              <div className="space-y-3">
+                {allVideos.map((videoUrl, i) => (
+                  <div key={i} className="rounded-lg overflow-hidden border border-gray-200">
+                    <video
+                      src={videoUrl}
+                      controls
+                      className="w-full max-h-[400px] object-contain bg-black"
+                      preload="metadata"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
