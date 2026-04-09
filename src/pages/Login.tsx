@@ -185,6 +185,16 @@ export default function Login() {
           setLoading(false);
           return;
         }
+        if (!displayName.trim()) {
+          setAlertCard({ type: "error", message: "Informe seu nome completo." });
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setAlertCard({ type: "error", message: "A senha deve ter pelo menos 6 caracteres." });
+          setLoading(false);
+          return;
+        }
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -201,6 +211,15 @@ export default function Login() {
           if (signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")) {
             throw new Error("Este e-mail já está cadastrado. Faça login.");
           }
+          if (signUpError.message.includes("Password") && signUpError.message.includes("weak")) {
+            throw new Error("Senha muito fraca. Use letras maiúsculas, números e caracteres especiais.");
+          }
+          if (signUpError.message.includes("valid email") || signUpError.message.includes("invalid")) {
+            throw new Error("O e-mail informado não é válido. Verifique e tente novamente.");
+          }
+          if (signUpError.message.includes("Too many requests") || signUpError.message.includes("rate limit")) {
+            throw new Error("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+          }
           throw signUpError;
         }
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
@@ -212,6 +231,16 @@ export default function Login() {
       } else {
         // Save stay connected preference
         localStorage.setItem("stay_connected", stayConnected ? "true" : "false");
+        if (!email.trim() || !email.includes("@")) {
+          setAlertCard({ type: "error", message: "Informe um e-mail válido." });
+          setLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setAlertCard({ type: "error", message: "A senha deve ter pelo menos 6 caracteres." });
+          setLoading(false);
+          return;
+        }
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) {
           if (loginError.message.includes("Email not confirmed")) {
@@ -219,8 +248,11 @@ export default function Login() {
             setLoading(false);
             return;
           }
-          if (loginError.message.includes("Invalid login")) {
-            throw new Error("E-mail ou senha inválidos. Verifique seus dados.");
+          if (loginError.message.includes("Invalid login") || loginError.message.includes("invalid_credentials")) {
+            throw new Error("E-mail ou senha incorretos. Verifique seus dados e tente novamente.");
+          }
+          if (loginError.message.includes("Too many requests") || loginError.message.includes("rate limit")) {
+            throw new Error("Muitas tentativas de login. Aguarde alguns minutos.");
           }
           throw loginError;
         }
