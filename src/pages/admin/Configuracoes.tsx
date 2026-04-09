@@ -200,6 +200,7 @@ function GeneralSettingsTab() {
       setWelcomeCouponExpiresDays(settings.welcome_coupon_expires_days ?? 30);
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
       setFaviconUrl((settings as any).favicon_url ?? "");
+      setIsVerified((settings as any).is_verified ?? false);
     }
   }, [settings]);
 
