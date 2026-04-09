@@ -400,27 +400,28 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Top Products & Most Viewed */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Insights Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Top Mais Vendidos */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-500" /> Top 5 Mais Vendidos
+              <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
             </CardTitle>
           </CardHeader>
           <CardContent>
             {topProducts.length > 0 ? (
               <div className="space-y-2">
                 {topProducts.map((p, i) => (
-                  <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i + 1}</span>
+                  <div key={p.name} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{i + 1}</span>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.quantity} vendidos</p>
+                        <p className="text-xs font-medium truncate">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{p.quantity} vendidos</p>
                       </div>
                     </div>
-                    <p className="text-sm font-bold shrink-0">{formatCurrency(p.revenue)}</p>
+                    <p className="text-xs font-bold shrink-0">{formatCurrency(p.revenue)}</p>
                   </div>
                 ))}
               </div>
@@ -428,51 +429,64 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Top Mais Visitados */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Eye className="h-4 w-4 text-blue-500" /> Top 5 Mais Visitados
+              <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
             </CardTitle>
           </CardHeader>
           <CardContent>
             {mostViewedProducts.length > 0 ? (
               <div className="space-y-2">
                 {mostViewedProducts.map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/10 text-xs font-bold text-blue-500">{i + 1}</span>
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[10px] font-bold text-blue-500">{i + 1}</span>
                       <div className="flex items-center gap-2 min-w-0">
                         {p.image_url && (
-                          <img src={p.image_url} alt="" className="h-8 w-8 rounded object-cover flex-shrink-0" />
+                          <img src={p.image_url} alt="" className="h-6 w-6 rounded object-cover flex-shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">{p.views || 0} visualizações</p>
+                          <p className="text-xs font-medium truncate">{p.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{p.views || 0} visitas</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
+                      <TrendingUp className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem visitas</p>}
+          </CardContent>
+        </Card>
+
+        {/* Top Termos Pesquisados */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Search className="h-4 w-4 text-purple-500" /> Top 5 Termos Pesquisados
+              <Search className="h-4 w-4 text-purple-500" /> Top Buscas
             </CardTitle>
           </CardHeader>
           <CardContent>
             {topSearches && topSearches.length > 0 ? (
               <div className="space-y-2">
                 {topSearches.map((s, i) => (
-                  <div key={s.term} className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500/10 text-xs font-bold text-purple-500">{i + 1}</span>
-                      <p className="text-sm font-medium capitalize">{s.term}</p>
+                  <div key={s.term} className="flex items-center justify-between rounded-lg border border-border/50 p-2 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-500/10 text-[10px] font-bold text-purple-500">{i + 1}</span>
+                      <p className="text-xs font-medium capitalize truncate">{s.term}</p>
                     </div>
-                    <Badge variant="secondary" className="text-[10px]">{s.count} buscas</Badge>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 h-4">{s.count}x</Badge>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem buscas recentes</p>}
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem buscas</p>}
           </CardContent>
         </Card>
       </div>
-                      </div>
-                    </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </Button>
