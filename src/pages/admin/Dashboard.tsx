@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
@@ -216,20 +217,52 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Low stock */}
-      {metrics.lowStock.length > 0 && (
+      {/* Low stock - clickable cards */}
+      {(metrics.lowStock.length > 0 || metrics.outOfStock.length > 0) && (
         <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-sm">
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-700">Estoque Baixo</span>
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Alerta de Estoque</span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {metrics.lowStock.map((p) => (
-                <Badge key={p.id} variant="outline" className="border-amber-500/50 text-xs">{p.name} ({p.stock})</Badge>
-              ))}
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {metrics.outOfStock.map((p) => (
-                <Badge key={p.id} variant="destructive" className="text-xs">{p.name} (0)</Badge>
+                <button
+                  key={p.id}
+                  onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left w-full"
+                >
+                  {p.image_url ? (
+                    <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                      <Package className="h-5 w-5 text-red-500" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
+                    <p className="text-xs text-red-600 font-semibold">🚨 Esgotado</p>
+                  </div>
+                </button>
+              ))}
+              {metrics.lowStock.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left w-full"
+                >
+                  {p.image_url ? (
+                    <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                      <Package className="h-5 w-5 text-amber-500" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
+                    <p className="text-xs text-amber-600 font-semibold">⚠️ {p.stock} restantes</p>
+                  </div>
+                </button>
               ))}
             </div>
           </CardContent>
