@@ -308,163 +308,137 @@ export default function LojaCheckout() {
     }
   };
 
-  if (phase === "success") {
-    const receiptDate = paymentDate || new Date();
-    const formattedDate = new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    }).format(receiptDate);
-
-    const handleDownloadReceipt = () => {
-      generateReceiptPdf({
-        orderId: orderId || "",
-        date: formattedDate,
-        storeName: settings?.store_name || "Loja",
-        customerName: name,
-        customerEmail: email,
-        customerPhone: phone,
-        customerAddress: address,
-        items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
-        subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
-        discount: savedDiscountAmount,
-        shipping: savedShippingCost,
-        total: savedFinalTotal,
-        paymentMethod: getMethodLabel(paymentMethod),
-      });
-    };
-
     return (
-      <div className="max-w-lg mx-auto px-4 py-10 space-y-6">
-        {/* Thank you header */}
-        <div className="text-center space-y-3">
-          <div className="mx-auto w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-            <Heart className="h-10 w-10 text-green-500 fill-green-500" />
+      <div className="max-w-lg mx-auto px-4 py-10 space-y-8 animate-in fade-in duration-700">
+        {/* Success Header */}
+        <div className="text-center space-y-4">
+          <div className="mx-auto w-20 h-20 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-sm">
+            <CheckCircle className="h-10 w-10 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold">Obrigado pela sua compra! 🎉</h1>
-          <p className="text-muted-foreground">
-            {name ? `${name}, s` : "S"}eu pedido foi realizado com sucesso.
-          </p>
-          {settings?.store_name && (
-            <p className="text-sm text-muted-foreground">
-              Loja <span className="font-semibold text-foreground">{settings.store_name}</span> agradece sua preferência! 💜
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Pagamento Realizado!</h1>
+            <p className="text-muted-foreground text-sm">
+              Seu pedido em <span className="font-semibold text-foreground">{settings?.store_name}</span> foi confirmado.
             </p>
-          )}
+          </div>
         </div>
 
-        {/* Receipt card */}
-        <Card className="border-2 border-green-200 dark:border-green-800">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-primary" />
-                Recibo do Pedido
-              </CardTitle>
-              <Badge variant="outline" className="text-green-600 border-green-300 dark:border-green-700">
-                <CheckCircle className="h-3 w-3 mr-1" /> Confirmado
+        {/* Bank-Style Receipt Slip */}
+        <div className="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl overflow-hidden overflow-visible">
+          {/* Decorative "cut" edge at top and bottom (optional, but sleek) */}
+          <div className="absolute -top-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50" />
+          
+          <div className="p-8 pt-10 space-y-8">
+            {/* Main Value - Bank Style */}
+            <div className="text-center space-y-1 pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800">
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">Valor Total</p>
+              <h2 className="text-4xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tighter">
+                {formatPrice(savedFinalTotal)}
+              </h2>
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100 dark:bg-green-950 dark:text-green-400 dark:border-green-900 mt-2">
+                Operação Finalizada
               </Badge>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Order ID & Date */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs flex items-center gap-1">
-                  <Package className="h-3 w-3" /> Pedido
-                </p>
-                <code className="font-mono font-bold text-foreground">#{orderId?.slice(0, 8)}</code>
-              </div>
-              <div className="space-y-1 text-right">
-                <p className="text-muted-foreground text-xs flex items-center gap-1 justify-end">
-                  <CalendarDays className="h-3 w-3" /> Data
-                </p>
-                <p className="font-medium text-foreground">{formattedDate}</p>
-              </div>
-            </div>
 
-            <Separator />
+            {/* Receipt Details Grid */}
+            <div className="space-y-6 text-sm">
+              <div className="grid grid-cols-2 gap-y-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase font-bold text-zinc-400">Data e Hora</p>
+                  <p className="font-medium">{formattedDate}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] uppercase font-bold text-zinc-400">ID da Transação</p>
+                  <p className="font-mono font-medium text-xs break-all">#{orderId?.slice(0, 18).toUpperCase()}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase font-bold text-zinc-400">Destinatário</p>
+                  <p className="font-semibold">{settings?.store_name || "Loja Virtual"}</p>
+                  <p className="text-xs text-zinc-500">Pagamento de Pedido</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] uppercase font-bold text-zinc-400">Pagador</p>
+                  <p className="font-semibold">{name || "Cliente"}</p>
+                  <p className="text-xs text-zinc-500 truncate">{email || "—"}</p>
+                </div>
+              </div>
 
-            {/* Items */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Itens</p>
-              {orderItems.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-sm">
-                  {item.image_url && (
-                    <img src={item.image_url} alt={item.name} className="h-10 w-10 rounded object-cover border" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.quantity}x {formatPrice(item.price)}</p>
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-900 space-y-4">
+                <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Detalhamento</p>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span>
                   </div>
-                  <p className="font-semibold shrink-0">{formatPrice(item.price * item.quantity)}</p>
+                  
+                  {savedDiscountAmount > 0 && (
+                    <div className="flex justify-between text-green-600 font-medium">
+                      <span className="flex items-center gap-1">Desconto Aplicado</span>
+                      <span>-{formatPrice(savedDiscountAmount)}</span>
+                    </div>
+                  )}
+                  
+                  {savedShippingCost > 0 && (
+                    <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
+                      <span>Frete e Manuseio</span>
+                      <span>{formatPrice(savedShippingCost)}</span>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
 
-            <Separator />
-
-            {/* Totals */}
-            <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span>
-              </div>
-              {savedDiscountAmount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span className="flex items-center gap-1"><Ticket className="h-3 w-3" /> Desconto</span>
-                  <span>-{formatPrice(savedDiscountAmount)}</span>
+                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-zinc-100 dark:border-zinc-700">
+                      {getMethodIcon(paymentMethod)}
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-zinc-400">Meio de Pagamento</p>
+                      <p className="font-semibold text-xs">{getMethodLabel(paymentMethod)}</p>
+                    </div>
+                  </div>
                 </div>
-              )}
-              {savedShippingCost > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span>{formatPrice(savedShippingCost)}</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between text-lg font-bold pt-1">
-                <span>Total</span>
-                <span className="text-green-600">{formatPrice(savedFinalTotal)}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Payment method */}
-            <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-              {getMethodIcon(paymentMethod)}
-              <div>
-                <p className="text-xs text-muted-foreground">Forma de Pagamento</p>
-                <p className="font-semibold text-sm">{getMethodLabel(paymentMethod)}</p>
               </div>
             </div>
 
-            {/* Customer info */}
-            {(name || email || phone) && (
-              <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Dados do Cliente</p>
-                {name && <p><span className="text-muted-foreground">Nome:</span> {name}</p>}
-                {email && <p><span className="text-muted-foreground">E-mail:</span> {email}</p>}
-                {phone && <p><span className="text-muted-foreground">Telefone:</span> {phone}</p>}
-                {address && <p><span className="text-muted-foreground">Endereço:</span> {address}</p>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <div className="text-center pt-4 opacity-50">
+              <p className="text-[9px] text-zinc-400 uppercase tracking-widest">
+                Comprovante gerado eletronicamente
+              </p>
+            </div>
+          </div>
+          
+          <div className="absolute -bottom-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50 transform rotate-180" />
+        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <Button className="w-full" onClick={() => navigate("..")}>
-            🏠 Voltar à Loja
+        {/* Main Actions */}
+        <div className="grid grid-cols-1 gap-3 sm:px-4">
+          <Button 
+            className="w-full h-12 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 transition-opacity font-bold rounded-xl"
+            onClick={handleDownloadReceipt}
+          >
+            <Download className="mr-2 h-4 w-4" /> Baixar Comprovante PDF
           </Button>
-          <Button variant="outline" className="w-full" onClick={handleDownloadReceipt}>
-            <Download className="mr-2 h-4 w-4" /> Baixar Recibo em PDF
-          </Button>
-          {orderId && (
-            <Button variant="outline" className="w-full" onClick={() => navigate(`../rastreio/${orderId}`)}>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              className="h-11 rounded-xl border-zinc-200 dark:border-zinc-800"
+              onClick={() => navigate(`../rastreio/${orderId}`)}
+            >
               <Package className="mr-2 h-4 w-4" /> Ver Pedido
             </Button>
-          )}
+            <Button 
+              variant="ghost" 
+              className="h-11 rounded-xl"
+              onClick={() => navigate("..")}
+            >
+              🏠 Voltar à Loja
+            </Button>
+          </div>
         </div>
+
 
         {/* Review prompt */}
         {orderItems.length > 0 && (
