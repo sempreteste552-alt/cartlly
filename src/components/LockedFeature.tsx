@@ -36,7 +36,7 @@ export function LockedFeature({ children, isLocked, featureName, logoUrl }: Lock
             Se quiser parar de vender no básico, faça o upgrade agora.
           </p>
           <Button
-            onClick={() => navigate("/admin/plano")}
+            onClick={() => navigate("/admin/plano?upgrade=PREMIUM")}
             className="mt-1 gap-2"
             size="sm"
           >
