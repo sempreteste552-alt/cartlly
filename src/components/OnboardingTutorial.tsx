@@ -168,7 +168,7 @@ export const OnboardingTutorial = () => {
         ...commonConfig,
         steps: [
           {
-            element: "h1:contains('Clientes')",
+            element: "#customers-header",
             popover: {
               title: "CRM de Clientes 👥",
               description: "Aqui você tem acesso a todos os dados dos seus clientes para um atendimento personalizado.",
