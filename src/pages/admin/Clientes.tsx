@@ -161,7 +161,7 @@ export default function Clientes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div id="customers-header" className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes</h1>
           <p className="text-muted-foreground">Gerencie seus clientes e veja estatísticas de compra</p>

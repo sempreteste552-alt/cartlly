@@ -303,7 +303,7 @@ function GeneralSettingsTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="config-header" className="space-y-6">
       {/* Store Open/Closed */}
       <Card className="border-border">
         <CardContent className="flex items-center justify-between p-4">
