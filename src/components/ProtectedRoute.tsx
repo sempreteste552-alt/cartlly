@@ -56,8 +56,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Block customer accounts from accessing admin panel
-  if (user?.user_metadata?.is_customer === true) {
+  // Block customer accounts from accessing admin panel ONLY if they don't have a merchant profile
+  if (user?.user_metadata?.is_customer === true && !profile) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-lg text-center space-y-4">

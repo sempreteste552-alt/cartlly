@@ -106,23 +106,9 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      // Never redirect customer accounts to admin
-      const isCustomer = user.user_metadata?.is_customer === true;
-      if (isCustomer) {
-        // Customer accidentally on admin login page — check if there's a stored redirect
-        const authContextStr = localStorage.getItem("auth_context");
-        if (authContextStr) {
-          try {
-            const ctx = JSON.parse(authContextStr);
-            if (ctx.redirect_back) {
-              localStorage.removeItem("auth_context");
-              window.location.href = ctx.redirect_back;
-              return;
-            }
-          } catch { /* ignore */ }
-        }
-        // Sign out from admin context — they shouldn't be here
-        supabase.auth.signOut();
+      // Check for super admin first
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        navigate("/superadmin", { replace: true });
         return;
       }
 
@@ -133,18 +119,16 @@ export default function Login() {
           const ctx = JSON.parse(authContextStr);
           if (ctx.type === "store_customer" && ctx.redirect_back) {
             // This is a store customer who landed on /login after OAuth — redirect back to store
-            // The CustomerAuthProvider will handle the rest
             window.location.href = ctx.redirect_back;
             return;
           }
         } catch { /* ignore */ }
       }
 
-      if (user.email === SUPER_ADMIN_EMAIL) {
-        navigate("/superadmin", { replace: true });
-      } else {
-        navigate("/admin", { replace: true });
-      }
+      // If we're here, we're on the admin login page.
+      // We don't sign out automatically anymore, we let ProtectedRoute handle the authorization check.
+      // This allows merchants who also have is_customer=true to access their panel.
+      navigate("/admin", { replace: true });
     }
   }, [user, navigate]);
 
