@@ -320,6 +320,22 @@ function GeneralSettingsTab() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Verified Badge */}
+      <LockedFeature isLocked={!canAccess("verified_badge", ctx)} featureName="Selo de Verificado">
+        <Card className="border-border">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <BadgeCheck className="h-5 w-5 text-blue-500 fill-blue-500 stroke-white" />
+              <div>
+                <p className="font-medium">Selo de Verificado</p>
+                <p className="text-xs text-muted-foreground">Exibe um selo de verificado ao lado do nome da sua loja</p>
+              </div>
+            </div>
+            <Switch checked={isVerified} onCheckedChange={setIsVerified} />
+          </CardContent>
+        </Card>
+      </LockedFeature>
 
       {/* Marquee */}
       <LockedFeature isLocked={!canAccess("banners", ctx)} featureName="Letreiro (Marquee)">
