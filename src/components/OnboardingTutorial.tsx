@@ -247,7 +247,7 @@ export const OnboardingTutorial = () => {
         doneBtnText: "Concluir",
         steps: [
           {
-            element: "h1:contains('Configurações')",
+            element: "#config-header",
             popover: {
               title: "Sua Identidade 🎨",
               description: "Altere cores, logos, banners e conecte seu domínio próprio para dar profissionalismo à sua marca.",
