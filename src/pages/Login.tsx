@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import siteSeguro from "@/assets/site-seguro.webp";
 
@@ -78,6 +79,30 @@ export default function Login() {
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
+
+  const getPasswordStrength = (pass: string) => {
+    let score = 0;
+    if (!pass) return 0;
+    if (pass.length > 6) score += 25;
+    if (/[A-Z]/.test(pass)) score += 25;
+    if (/[0-9]/.test(pass)) score += 25;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 25;
+    return score;
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const getStrengthColor = (score: number) => {
+    if (score <= 25) return "bg-red-500";
+    if (score <= 50) return "bg-orange-500";
+    if (score <= 75) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+  const getStrengthLabel = (score: number) => {
+    if (score <= 25) return "Fraca";
+    if (score <= 50) return "Média";
+    if (score <= 75) return "Boa";
+    return "Forte";
+  };
 
   useEffect(() => {
     if (user) {
@@ -396,6 +421,20 @@ export default function Login() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {isRegister && password && (
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <ShieldCheck className="h-3 w-3" />
+                          Força da senha:
+                        </span>
+                        <span className="font-medium" style={{ color: passwordStrength <= 25 ? '#ef4444' : passwordStrength <= 50 ? '#f97316' : passwordStrength <= 75 ? '#eab308' : '#22c55e' }}>
+                          {getStrengthLabel(passwordStrength)}
+                        </span>
+                      </div>
+                      <Progress value={passwordStrength} className="h-1" indicatorClassName={getStrengthColor(passwordStrength)} />
+                    </div>
+                  )}
                   {!isRegister && (
                     <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-blue-500 hover:underline">
                       Esqueceu sua senha?
