@@ -523,7 +523,7 @@ export default function LojaCheckout() {
                   </div>
 
                   {reviewsSubmitted.has(item.id) ? (
-                    <p className="text-sm text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
+                    <p className="text-sm text-emerald-500 dark:text-emerald-400 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
                   ) : (
                     <>
                       <div className="flex gap-1">
@@ -537,7 +537,7 @@ export default function LojaCheckout() {
                               className={`h-6 w-6 ${
                                 (reviewRatings[item.id] || 0) >= star
                                   ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           </button>
@@ -578,7 +578,7 @@ export default function LojaCheckout() {
         )}
 
         {/* Bank-Style Receipt Slip */}
-        <div className="relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl overflow-hidden overflow-visible">
+        <div className="relative bg-card border border-border shadow-xl rounded-2xl overflow-hidden overflow-visible">
           {/* Decorative "cut" edge at top and bottom (optional, but sleek) */}
           <div className="absolute -top-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50" />
           
@@ -590,7 +590,7 @@ export default function LojaCheckout() {
               </div>
             )}
             {/* Main Value - Bank Style */}
-            <div className="text-center space-y-1 pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="text-center space-y-1 pb-6 border-b border-dashed border-border">
               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">Valor Total</p>
               <h2 className="text-4xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tighter">
                 {formatPrice(savedFinalTotal)}
@@ -636,7 +636,7 @@ export default function LojaCheckout() {
                   </div>
                   
                   {savedDiscountAmount > 0 && (
-                    <div className="flex justify-between text-green-600 font-medium">
+                    <div className="flex justify-between text-emerald-500 dark:text-emerald-400 font-medium">
                       <span className="flex items-center gap-1">Desconto Aplicado</span>
                       <span>-{formatPrice(savedDiscountAmount)}</span>
                     </div>
@@ -652,7 +652,7 @@ export default function LojaCheckout() {
 
                 <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm border border-zinc-100 dark:border-zinc-700">
+                    <div className="h-8 w-8 rounded-full bg-card flex items-center justify-center shadow-sm border border-border">
                       {getMethodIcon(paymentMethod)}
                     </div>
                     <div>
@@ -692,7 +692,7 @@ export default function LojaCheckout() {
           <div className="grid grid-cols-2 gap-3">
             <Button 
               variant="outline" 
-              className="h-11 rounded-xl border-zinc-200 dark:border-zinc-800"
+              className="h-11 rounded-xl border-border"
               onClick={() => navigate(`../rastreio/${orderId}`)}
             >
               <Package className="mr-2 h-4 w-4" /> Ver Pedido
@@ -767,11 +767,11 @@ export default function LojaCheckout() {
               <span>{formatPrice(cart.total)}</span>
             </div>
             {appliedCoupon && (
-              <div className="flex justify-between text-sm text-green-600">
+              <div className="flex justify-between text-sm text-emerald-500 dark:text-emerald-400">
                 <span className="flex items-center gap-1">
                   <Ticket className="h-3.5 w-3.5" />
                   Cupom {appliedCoupon.code}
-                  <button onClick={removeCoupon} className="text-gray-400 hover:text-destructive"><X className="h-3 w-3" /></button>
+                  <button onClick={removeCoupon} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                 </span>
                 <span>-{formatPrice(discountAmount)}</span>
               </div>
@@ -807,7 +807,7 @@ export default function LojaCheckout() {
           <CardContent className="p-4">
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Código do cupom"
                   value={couponCode}
@@ -965,7 +965,7 @@ export default function LojaCheckout() {
           {hasGateway && settings?.sell_via_whatsapp && settings?.store_whatsapp && (
             <Button
               variant="outline"
-              className="w-full border-green-500 text-green-600 hover:bg-green-50 h-12 text-base"
+              className="w-full border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10 h-12 text-base"
               onClick={() => handleSubmit(true)}
               disabled={loading}
             >

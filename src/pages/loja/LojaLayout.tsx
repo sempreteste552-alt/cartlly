@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -236,7 +236,8 @@ export default function LojaLayout() {
     }
   }, [searchTerm, settings?.user_id]);
 
-  useEffect(() => {
+  // Use useLayoutEffect for instant dark class toggle (no flash/delay)
+  useLayoutEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {

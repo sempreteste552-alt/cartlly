@@ -185,9 +185,9 @@ export default function LojaProduto() {
   if (!product) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <Package className="h-16 w-16 mx-auto text-gray-300" />
+        <Package className="h-16 w-16 mx-auto text-muted-foreground" />
         <h2 className="text-xl font-bold mt-4">Produto não encontrado</h2>
-        <Link to={basePath} className="text-sm text-gray-500 hover:underline mt-2 inline-block">Voltar para a loja</Link>
+        <Link to={basePath} className="text-sm text-muted-foreground hover:underline mt-2 inline-block">Voltar para a loja</Link>
       </div>
     );
   }
@@ -214,14 +214,14 @@ export default function LojaProduto() {
         .pdp-reveal-d4 { animation-delay: 0.35s; }
         .pdp-reveal-d5 { animation-delay: 0.45s; }
       `}</style>
-      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4 pdp-reveal">
+      <Link to={basePath} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 pdp-reveal">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
         <div className="space-y-3 pdp-reveal pdp-reveal-d1">
-          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
+          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
               <img
                 src={allImages[selectedImageIndex] || allImages[0]}
@@ -252,12 +252,12 @@ export default function LojaProduto() {
           {/* Videos section below images */}
           {allVideos.length > 0 && (
             <div className="space-y-2 pt-2">
-              <p className="text-sm font-medium flex items-center gap-1.5 text-gray-700">
+              <p className="text-sm font-medium flex items-center gap-1.5 text-foreground">
                 <Video className="h-4 w-4" /> Vídeos do produto
               </p>
               <div className="space-y-3">
                 {allVideos.map((videoUrl, i) => (
-                  <div key={i} className="rounded-lg overflow-hidden border border-gray-200">
+                  <div key={i} className="rounded-lg overflow-hidden border border-border">
                     <video
                       src={videoUrl}
                       controls
@@ -295,18 +295,18 @@ export default function LojaProduto() {
               {(() => {
                 const maxInst = (settings as any)?.max_installments || 12;
                 return maxInst > 1 ? (
-                  <p className="text-sm text-green-600">
+                  <p className="text-sm text-emerald-500 dark:text-emerald-400">
                     ou {maxInst}x de {formatPrice(effectivePrice / maxInst)} sem juros
                   </p>
                 ) : (
-                  <p className="text-sm text-green-600">à vista</p>
+                  <p className="text-sm text-emerald-500 dark:text-emerald-400">à vista</p>
                 );
               })()}
             </div>
             
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm animate-pulse" title="Visualizações reais deste produto">
-              <Eye className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-semibold text-gray-600">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-semibold text-muted-foreground">
                 {product.views || 0} visualizações
               </span>
             </div>
@@ -370,7 +370,7 @@ export default function LojaProduto() {
             {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
               <Button
                 variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50 h-12"
+                className="border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10 h-12"
                 onClick={() => setWhatsappDialogOpen(true)}
               >
                 <MessageCircle className="mr-2 h-5 w-5" /> WhatsApp
@@ -383,7 +383,7 @@ export default function LojaProduto() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-green-600" />
+                  <MessageCircle className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                   Falar pelo WhatsApp
                 </DialogTitle>
               </DialogHeader>
@@ -524,13 +524,13 @@ export default function LojaProduto() {
 
       {/* Sticky Cart Bar */}
       {productPageConfig?.enable_sticky_add_to_cart && showStickyCart && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 shadow-lg animate-in fade-in slide-in-from-bottom-full duration-300 md:hidden lg:flex items-center justify-center">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border p-4 shadow-lg animate-in fade-in slide-in-from-bottom-full duration-300 md:hidden lg:flex items-center justify-center">
           <div className="max-w-7xl w-full flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 hidden md:flex">
               <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded object-cover" />
               <div>
                 <p className="text-sm font-bold line-clamp-1">{product.name}</p>
-                <p className="text-xs text-gray-500">{formatPrice(effectivePrice)}</p>
+                <p className="text-xs text-muted-foreground">{formatPrice(effectivePrice)}</p>
               </div>
             </div>
             <div className="flex-1 md:max-w-xs">
@@ -551,7 +551,7 @@ export default function LojaProduto() {
               <Separator />
               <div>
                 <h3 className="font-bold mb-2">Descrição</h3>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{product.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p>
               </div>
             </>
           )}
@@ -564,16 +564,16 @@ export default function LojaProduto() {
               </h3>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2 flex-1">
-                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-card">
                     <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
                   </div>
-                  <span className="text-xl font-bold text-gray-400">+</span>
-                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                  <span className="text-xl font-bold text-muted-foreground">+</span>
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-card">
                     <img src={buyTogetherProduct.image_url} alt={buyTogetherProduct.name} className="w-full h-full object-contain" />
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500 line-through">{formatPrice(effectivePrice + buyTogetherProduct.price)}</p>
+                  <p className="text-xs text-muted-foreground line-through">{formatPrice(effectivePrice + buyTogetherProduct.price)}</p>
                   <p className="text-xl font-black text-primary">{formatPrice(bundlePrice)}</p>
                 </div>
               </div>
@@ -628,7 +628,7 @@ export default function LojaProduto() {
                         {p.image_url ? (
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-gray-300" /></div>
+                          <div className="w-full h-full flex items-center justify-center"><Package className="h-8 w-8 text-muted-foreground" /></div>
                         )}
                         <div
                           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"

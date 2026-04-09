@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useState, useCallback } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,7 +40,7 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
     return false;
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (applyToRoot) {
       if (dark) {
         document.documentElement.classList.add("dark");
