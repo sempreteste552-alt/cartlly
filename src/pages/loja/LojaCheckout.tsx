@@ -40,6 +40,7 @@ export default function LojaCheckout() {
   const [savedFinalTotal, setSavedFinalTotal] = useState<number>(0);
   const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
   const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
+  const [savedPayerCpf, setSavedPayerCpf] = useState<string | null>(null);
   const validateCoupon = useValidateCoupon();
 
   const [name, setName] = useState("");
@@ -304,6 +305,7 @@ export default function LojaCheckout() {
       case "pix": return <QrCode className="h-5 w-5" />;
       case "credit_card": return <CreditCard className="h-5 w-5" />;
       case "boleto": return <FileText className="h-5 w-5" />;
+      case "whatsapp": return <MessageCircle className="h-5 w-5 text-green-500" />;
       default: return <Receipt className="h-5 w-5" />;
     }
   };
@@ -324,6 +326,7 @@ export default function LojaCheckout() {
         customerEmail: email,
         customerPhone: phone,
         customerAddress: address,
+        customerCpf: savedPayerCpf || undefined,
         items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
         subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
         discount: savedDiscountAmount,
@@ -385,7 +388,9 @@ export default function LojaCheckout() {
                 <div className="space-y-1 text-right">
                   <p className="text-[10px] uppercase font-bold text-zinc-400">Pagador</p>
                   <p className="font-semibold">{name || "Cliente"}</p>
-                  <p className="text-xs text-zinc-500 truncate">{email || "—"}</p>
+                  <p className="text-xs text-zinc-500">
+                    {savedPayerCpf ? `CPF: ***.***.${savedPayerCpf.replace(/\D/g, "").slice(7, 9)}-${savedPayerCpf.replace(/\D/g, "").slice(9)}` : email || "—"}
+                  </p>
                 </div>
               </div>
 
@@ -427,8 +432,14 @@ export default function LojaCheckout() {
               </div>
             </div>
 
-            <div className="text-center pt-4 opacity-50">
-              <p className="text-[9px] text-zinc-400 uppercase tracking-widest">
+            <div className="text-center pt-8 border-t border-dashed border-zinc-100 dark:border-zinc-900 space-y-2">
+              <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
+                Autenticação Eletrônica
+              </p>
+              <p className="font-mono text-[8px] text-zinc-400 break-all px-4">
+                {(orderId?.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32)}
+              </p>
+              <p className="text-[9px] text-zinc-400 uppercase tracking-widest pt-2 opacity-50">
                 Comprovante gerado eletronicamente
               </p>
             </div>
@@ -544,10 +555,11 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
-          onSuccess={(method) => {
+          onSuccess={(method, cpf) => {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
             setSavedShippingCost(shippingCost);
+            setSavedPayerCpf(cpf || null);
             // We don't overwrite orderItems here as it was already set in handleSubmit
             // This prevents race conditions with cart.clearCart()
             setPaymentMethod(method || "gateway");

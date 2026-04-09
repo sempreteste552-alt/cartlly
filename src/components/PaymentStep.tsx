@@ -26,7 +26,7 @@ interface PaymentStepProps {
   storeUserId: string;
   total: number;
   settings: any;
-  onSuccess: (method?: string) => void;
+  onSuccess: (method?: string, cpf?: string) => void;
 }
 
 interface CpfInputFieldProps {
@@ -99,7 +99,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         setPaymentStatus("approved");
         toast.success("💰 Pagamento confirmado!");
         if (pollingRef.current) clearInterval(pollingRef.current);
-        setTimeout(() => onSuccess(selectedMethod || undefined), 1500);
+        setTimeout(() => onSuccess(selectedMethod || undefined, selectedMethod === "credit_card" ? cardCpf : payerCpf), 1500);
       } else if (data?.status === "rejected" || data?.status === "failed") {
         setPaymentStatus("rejected");
         toast.error("Pagamento recusado");
@@ -114,7 +114,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   // Auto-redirect for credit card if it's already approved but we are showing the intermediate screen
   useEffect(() => {
     if (paymentData && selectedMethod === "credit_card" && !paymentStatus) {
-      const timer = setTimeout(() => onSuccess("credit_card"), 3000);
+      const timer = setTimeout(() => onSuccess("credit_card", cardCpf), 3000);
       return () => clearTimeout(timer);
     }
   }, [paymentData, selectedMethod, paymentStatus]);
@@ -236,7 +236,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
       if (result.paymentResult?.status === "approved" || result.paymentResult?.status === "paid" || result.payment?.status === "approved" || result.payment?.status === "paid") {
         toast.success("Pagamento aprovado!");
-        onSuccess(method);
+        onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
@@ -378,7 +378,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
           <div className="space-y-2">
-            <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
+            <Button className="w-full" onClick={() => onSuccess("credit_card", cardCpf)}>Concluir</Button>
             <p className="text-[10px] text-muted-foreground animate-pulse">Você será redirecionado automaticamente em 3 segundos...</p>
           </div>
         </CardContent>
