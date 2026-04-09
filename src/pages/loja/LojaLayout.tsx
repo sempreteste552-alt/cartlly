@@ -63,6 +63,7 @@ export default function LojaLayout() {
   const [globalCep, setGlobalCep] = useState("");
   const [globalCity, setGlobalCity] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
+  const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
