@@ -131,7 +131,7 @@ export function AdminNotificationsBell() {
                   {!isSupported ? "Push não suportado" : "Ativar Notificações Push"}
                 </Button>
                 {/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches && (
-                  <p className="text-[10px] text-orange-600 font-medium px-1 text-center">
+                  <p className="text-[10px] text-amber-600 font-medium px-1 text-center">
                     No iOS, adicione à tela de início para receber notificações fora do navegador.
                   </p>
                 )}
