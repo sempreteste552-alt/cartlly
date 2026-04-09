@@ -235,7 +235,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                 )}
               </div>
             )}
-            <input ref={fileRef} type="file" accept="image/*,video/*,.webp,.heic,.heif,.avif,.svg" className="hidden" onChange={handleFileChange} />
+            <input ref={fileRef} type="file" accept="*/*" className="hidden" onChange={handleFileChange} />
           </div>
 
           {/* Additional Images */}
@@ -263,9 +263,48 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                 </div>
               )}
             </div>
-            <input ref={additionalFileRef} type="file" accept="image/*,video/*,.webp,.heic,.heif,.avif,.svg" multiple className="hidden" onChange={handleAdditionalFileChange} />
-            <p className="text-xs text-muted-foreground">Aceita imagens (JPG, PNG, WEBP, HEIC, SVG) e vídeos. Máx 10MB cada.</p>
+            <input ref={additionalFileRef} type="file" accept="*/*" multiple className="hidden" onChange={handleAdditionalFileChange} />
+            <p className="text-xs text-muted-foreground">Aceita qualquer formato de imagem. Máx 50MB cada.</p>
           </div>
+
+          {/* Video Section - only for plans with product_video */}
+          {canVideo && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Video className="h-4 w-4" />
+                Vídeos do Produto ({additionalVideos.length}/4)
+              </Label>
+              <div className="grid grid-cols-4 gap-2">
+                {additionalVideos.map((url, i) => (
+                  <div key={i} className="relative group">
+                    <div className="h-20 w-full rounded-md bg-black flex items-center justify-center border border-border">
+                      <Video className="h-6 w-6 text-white" />
+                    </div>
+                    <button type="button" onClick={() => removeVideo(i)} className="absolute -right-1 -top-1 rounded-full bg-destructive p-0.5 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                {additionalVideos.length < 4 && (
+                  <div
+                    onClick={() => videoFileRef.current?.click()}
+                    className="flex h-20 cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-border hover:border-primary/50 transition-colors"
+                  >
+                    {uploadImage.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <div className="text-center">
+                        <Video className="mx-auto h-4 w-4 text-muted-foreground" />
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">Vídeo</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <input ref={videoFileRef} type="file" accept="video/*" multiple className="hidden" onChange={handleVideoFileChange} />
+              <p className="text-xs text-muted-foreground">MP4, WebM, MOV. Máx 50MB cada.</p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
