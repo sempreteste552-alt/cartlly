@@ -281,6 +281,17 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       if (result.paymentResult?.status === "approved" || result.paymentResult?.status === "paid" || result.payment?.status === "approved" || result.payment?.status === "paid") {
         toast.success("Pagamento aprovado!");
         onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
+      } else if (result.paymentResult?.status === "rejected" || result.payment?.status === "rejected") {
+        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.");
+        setPaymentData(null); // Clear to allow retry
+      } else {
+        // Pending status (PIX/Boleto)
+        if (method === "pix" || method === "boleto") {
+          toast.info("Aguardando pagamento...");
+        } else {
+          toast.warning("Seu pagamento está em análise pelo gateway.");
+          // For card, if it's pending, we don't automatically redirect
+        }
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao processar pagamento");
