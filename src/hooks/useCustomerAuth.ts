@@ -202,6 +202,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
   const signUp = async (email: string, password: string, name: string, storeUserId: string) => {
     const normalizedEmail = normalizeEmail(email);
 
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      throw new Error("Informe um e-mail válido.");
+    }
+    if (!password || password.length < 6) {
+      throw new Error("A senha deve ter pelo menos 6 caracteres.");
+    }
+    if (!name.trim()) {
+      throw new Error("Informe seu nome completo.");
+    }
+
     // Only check if email exists in THIS store (not globally)
     const { data: existingCustomer } = await supabase
       .from("customers")
@@ -225,9 +235,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
 
     if (error) {
       if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-        // User exists in auth but not in this store — tell them to login instead
-        // (signIn will auto-create the customer record for this store)
         throw new Error("Este e-mail já possui conta. Faça login para acessar esta loja.");
+      }
+      if (error.message.includes("Password") && error.message.includes("weak")) {
+        throw new Error("Senha muito fraca. Use letras maiúsculas, números e caracteres especiais.");
+      }
+      if (error.message.includes("valid email") || error.message.includes("invalid")) {
+        throw new Error("O e-mail informado não é válido. Verifique e tente novamente.");
+      }
+      if (error.message.includes("Too many requests") || error.message.includes("rate limit")) {
+        throw new Error("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
       }
       throw error;
     }
@@ -238,7 +255,6 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user && !data.session) {
-      // Email confirmation required — save pending info so SIGNED_IN handler can create customer record
       localStorage.setItem("pending_customer_signup", JSON.stringify({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
@@ -265,6 +281,14 @@ function useCustomerAuthState(): CustomerAuthContextValue {
 
   const signIn = async (email: string, password: string, storeUserId: string) => {
     const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      throw new Error("Informe um e-mail válido.");
+    }
+    if (!password || password.length < 6) {
+      throw new Error("A senha deve ter pelo menos 6 caracteres.");
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
@@ -272,10 +296,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
 
     if (error) {
       if (error.message.includes("Invalid login") || error.message.includes("invalid_credentials")) {
-        throw new Error("E-mail ou senha inválidos. Verifique seus dados ou crie uma conta.");
+        throw new Error("E-mail ou senha incorretos. Verifique seus dados ou crie uma conta.");
       }
       if (error.message.includes("Email not confirmed")) {
-        throw new Error("Confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.");
+        throw new Error("Confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada e spam.");
+      }
+      if (error.message.includes("Too many requests") || error.message.includes("rate limit")) {
+        throw new Error("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
       }
       throw error;
     }
