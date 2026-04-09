@@ -111,7 +111,6 @@ Deno.serve(async (req) => {
         }
 
         if (gateway === "amplopay") {
-          // Amplopay - test with a simple balance check or config validation
           return json({ test_ok: true, message: "✅ Amplopay configurado. O teste real ocorre ao processar pagamentos.", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
         }
 
@@ -122,7 +121,10 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PAYMENT PROCESSING ====================
-    const { order_id, method, card_token, card_type, installments, store_user_id, payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id } = body as PaymentRequest;
+    const { 
+      order_id, method, card_token, card_type, installments, store_user_id, 
+      payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id 
+    } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return json({ error: "Campos obrigatórios: order_id, method, store_user_id" }, 400);
@@ -148,7 +150,7 @@ Deno.serve(async (req) => {
     }
 
     if (!secretKey) {
-      return json({ error: `O gateway ${gatewayLabel(gateway)} está configurado mas a chave secreta está vazia. O proprietário deve revisar as configurações.` }, 400);
+      return json({ error: `O gateway ${gatewayLabel(gateway)} está configurado mas a chave secreta está vazia.` }, 400);
     }
 
     const { data: order, error: orderErr } = await supabase
@@ -165,18 +167,21 @@ Deno.serve(async (req) => {
 
     try {
       if (gateway === "mercadopago") {
-        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf, card_type, payer_first_name, payer_last_name, device_id, payment_method_id);
+        paymentResult = await createMercadoPagoPayment(
+          order, method, secretKey, environment, card_token, installments, 
+          payer_cpf, card_type, payer_first_name, payer_last_name, device_id, payment_method_id
+        );
       } else if (gateway === "pagbank") {
-        paymentResult = await createPagBankPayment(order, method, secretKey, environment);
+        paymentResult = await createPagBankPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
       } else if (gateway === "amplopay") {
         paymentResult = await createAmplopayPayment(order, method, secretKey, publicKey, environment);
       } else {
-        return json({ error: `Gateway "${gateway}" não é suportado para pagamentos. Gateways disponíveis: Mercado Pago, PagBank, Amplopay.` }, 400);
+        return json({ error: `Gateway "${gateway}" não é suportado.` }, 400);
       }
     } catch (gwErr: any) {
       console.error(`Gateway ${gateway} error:`, gwErr.message);
       return json({
-        error: `Erro no ${gatewayLabel(gateway)}: ${gwErr.message}. Verifique as credenciais e tente novamente. Se o problema persistir, entre em contato com o suporte do ${gatewayLabel(gateway)}.`,
+        error: `Erro no ${gatewayLabel(gateway)}: ${gwErr.message}`,
         gateway_error: true,
       }, 502);
     }
@@ -206,14 +211,13 @@ Deno.serve(async (req) => {
 
     if (paymentErr) {
       console.error("Error saving payment:", paymentErr);
-      return json({ error: "Pagamento processado no gateway mas houve erro ao salvar no banco. Contacte o suporte." }, 500);
+      return json({ error: "Pagamento processado mas houve erro ao salvar no banco." }, 500);
     }
 
     if (paymentResult.status === "approved") {
       await supabase.from("orders").update({ status: "processando" }).eq("id", order_id);
       await supabase.from("order_status_history").insert({ order_id, status: "processando" });
 
-      // 🔔 Push: Payment approved (card instant approval)
       await sendRichPush(store_user_id, {
         title: "✅ Pagamento aprovado!",
         body: `${order.customer_name || "Cliente"} pagou R$ ${Number(order.total).toFixed(2).replace(".", ",")} via Cartão 💳`,
@@ -223,7 +227,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 🔔 Push: PIX generated
     if (method === "pix" && paymentResult.pix_qr_code) {
       await sendRichPush(store_user_id, {
         title: "💰 PIX gerado!",
@@ -234,7 +237,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 🔔 Push: Boleto generated
     if (method === "boleto" && paymentResult.boleto_url) {
       await sendRichPush(store_user_id, {
         title: "📄 Boleto gerado!",
@@ -280,20 +282,17 @@ async function createMercadoPagoPayment(
   payerCpf?: string,
   cardType?: "credit" | "debit",
   payerFirstName?: string,
-  payerLastName?: string
+  payerLastName?: string,
+  deviceId?: string,
+  paymentMethodId?: string
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
-
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
 
-  // Use payer info from request if available, fallback to order
   const firstName = (payerFirstName || order.payer_first_name || order.customer_name?.split(" ")[0] || "Cliente").trim();
   let lastName = (payerLastName || order.payer_last_name || order.customer_name?.split(" ").slice(1).join(" ") || "").trim();
 
-  // Mercado Pago requires a last name. If only one word was provided, use a placeholder or repeat first name
-  if (!lastName) {
-    lastName = firstName;
-  }
+  if (!lastName) lastName = firstName;
 
   const paymentData: any = {
     transaction_amount: Number(order.total),
@@ -307,7 +306,7 @@ async function createMercadoPagoPayment(
     },
   };
 
-  // Add payer identification (CPF) if provided - required for PIX/boleto
+  // Identification (CPF) is mandatory for Brazil
   if (payerCpf) {
     paymentData.payer.identification = {
       type: "CPF",
@@ -318,24 +317,21 @@ async function createMercadoPagoPayment(
   if (method === "pix") {
     paymentData.payment_method_id = "pix";
   } else if (method === "credit_card" || method === "debit_card") {
-    if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão");
+    if (!cardToken) throw new Error("Token do cartão é obrigatório");
     paymentData.token = cardToken;
     paymentData.installments = (method === "debit_card" || cardType === "debit") ? 1 : (installments || 1);
-    if (paymentMethodId) {
-      paymentData.payment_method_id = paymentMethodId;
-    }
+    if (paymentMethodId) paymentData.payment_method_id = paymentMethodId;
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
-    // Boleto requires payer address and identification
-    if (order.customer_address || order.shipping_street) {
-      paymentData.payer.address = {
-        zip_code: (order.shipping_cep || order.customer_cep)?.replace(/\D/g, "") || "01000000",
-        street_name: order.customer_address || order.shipping_street || "Rua",
-        street_number: order.shipping_number || "S/N",
-        city: order.shipping_city || "São Paulo",
-        federal_unit: order.shipping_state || "SP",
-      };
-    }
+    // Boleto requires full address in Brazil
+    paymentData.payer.address = {
+      zip_code: (order.shipping_cep || order.customer_cep || "01000000").replace(/\D/g, ""),
+      street_name: order.shipping_street || order.customer_address || "Rua",
+      street_number: order.shipping_number || "S/N",
+      neighborhood: order.shipping_neighborhood || "Centro",
+      city: order.shipping_city || "São Paulo",
+      federal_unit: order.shipping_state || "SP",
+    };
   }
 
   const headers: Record<string, string> = {
@@ -358,10 +354,7 @@ async function createMercadoPagoPayment(
 
   if (!response.ok) {
     console.error("MP Error:", JSON.stringify(data));
-    if (data.message?.includes("access_token")) {
-      throw new Error("Access Token do Mercado Pago inválido ou expirado. Gere um novo token no painel do Mercado Pago → Credenciais.");
-    }
-    throw new Error(data.message || data.cause?.[0]?.description || `Erro HTTP ${response.status} no Mercado Pago`);
+    throw new Error(data.message || data.cause?.[0]?.description || `Erro Mercado Pago (${response.status})`);
   }
 
   const result: any = {
@@ -407,15 +400,10 @@ function mapMPStatus(status: string): string {
 // ===================== PAGBANK =====================
 
 async function createPagBankPayment(
-  order: any,
-  method: string,
-  token: string,
-  environment: string
+  order: any, method: string, token: string, environment: string, 
+  cardToken?: string, installments?: number, payerCpf?: string
 ) {
-  const baseUrl =
-    environment === "production"
-      ? "https://api.pagseguro.com"
-      : "https://sandbox.api.pagseguro.com";
+  const baseUrl = environment === "production" ? "https://api.pagseguro.com" : "https://sandbox.api.pagseguro.com";
 
   const orderData: any = {
     reference_id: order.id,
@@ -423,35 +411,14 @@ async function createPagBankPayment(
       name: order.customer_name || "Cliente",
       email: order.customer_email || "cliente@email.com",
       tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, ""),
-      phones: order.customer_phone
-        ? [
-            {
-              country: "55",
-              area: order.customer_phone.replace(/\D/g, "").slice(0, 2),
-              number: order.customer_phone.replace(/\D/g, "").slice(2),
-              type: "MOBILE",
-            },
-          ]
-        : [],
+      phones: order.customer_phone ? [{ country: "55", area: order.customer_phone.replace(/\D/g, "").slice(0, 2), number: order.customer_phone.replace(/\D/g, "").slice(2), type: "MOBILE" }] : [],
     },
-    items: [
-      {
-        reference_id: order.id,
-        name: `Pedido #${order.id.slice(0, 8)}`,
-        quantity: 1,
-        unit_amount: Math.round(Number(order.total) * 100),
-      },
-    ],
+    items: [{ reference_id: order.id, name: `Pedido #${order.id.slice(0, 8)}`, quantity: 1, unit_amount: Math.round(Number(order.total) * 100) }],
     charges: [] as any[],
   };
 
   if (method === "pix") {
-    orderData.qr_codes = [
-      {
-        amount: { value: Math.round(Number(order.total) * 100) },
-        expiration_date: new Date(Date.now() + 3600 * 1000).toISOString(),
-      },
-    ];
+    orderData.qr_codes = [{ amount: { value: Math.round(Number(order.total) * 100) }, expiration_date: new Date(Date.now() + 3600 * 1000).toISOString() }];
   } else if (method === "boleto") {
     orderData.charges.push({
       reference_id: crypto.randomUUID(),
@@ -480,8 +447,7 @@ async function createPagBankPayment(
       },
     });
   } else if (method === "credit_card") {
-    if (!cardToken) throw new Error("Token do cartão ou dados criptografados são obrigatórios para PagBank");
-    
+    if (!cardToken) throw new Error("Token do cartão obrigatório para PagBank");
     orderData.charges.push({
       reference_id: crypto.randomUUID(),
       description: `Pedido #${order.id.slice(0, 8)}`,
@@ -491,21 +457,14 @@ async function createPagBankPayment(
         installments: installments || 1,
         capture: true,
         card: { encrypted: cardToken },
-        holder: {
-          name: order.customer_name || "Cliente",
-          tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, ""),
-        },
+        holder: { name: order.customer_name || "Cliente", tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, "") },
       },
     });
   }
 
   const response = await fetch(`${baseUrl}/orders`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(orderData),
   });
 
@@ -513,17 +472,10 @@ async function createPagBankPayment(
 
   if (!response.ok) {
     console.error("PagBank Error:", JSON.stringify(data));
-    if (response.status === 401) {
-      throw new Error("Token do PagBank inválido ou expirado. Gere um novo token no painel do PagBank.");
-    }
-    throw new Error(data.error_messages?.[0]?.description || `Erro HTTP ${response.status} no PagBank`);
+    throw new Error(data.error_messages?.[0]?.description || `Erro PagBank (${response.status})`);
   }
 
-  const result: any = {
-    gateway_payment_id: data.id,
-    status: "pending",
-    raw: data,
-  };
+  const result: any = { gateway_payment_id: data.id, status: "pending", raw: data };
 
   if (method === "pix" && data.qr_codes?.[0]) {
     const qr = data.qr_codes[0];
@@ -534,8 +486,7 @@ async function createPagBankPayment(
 
   if (method === "boleto" && data.charges?.[0]) {
     const charge = data.charges[0];
-    const boletoLink = charge.links?.find((l: any) => l.rel === "BOLETO.PDF");
-    result.boleto_url = boletoLink?.href;
+    result.boleto_url = charge.links?.find((l: any) => l.rel === "BOLETO.PDF")?.href;
     result.boleto_barcode = charge.payment_method?.boleto?.barcode;
     result.boleto_expiration = charge.payment_method?.boleto?.due_date;
   }
@@ -552,22 +503,9 @@ async function createPagBankPayment(
 
 // ===================== AMPLOPAY =====================
 
-async function createAmplopayPayment(
-  order: any,
-  method: string,
-  secretKey: string,
-  publicKey: string | null,
-  environment: string
-) {
+async function createAmplopayPayment(order: any, method: string, secretKey: string, publicKey: string | null, environment: string) {
   const BASE_URL = "https://app.amplopay.com/api/v1";
-
-  const clientData = {
-    name: order.customer_name || "Cliente",
-    email: order.customer_email || "cliente@email.com",
-    phone: order.customer_phone || "(00) 0 0000-0000",
-    document: "00000000000",
-  };
-
+  const clientData = { name: order.customer_name || "Cliente", email: order.customer_email || "cliente@email.com", phone: order.customer_phone || "(00) 0 0000-0000", document: "00000000000" };
   const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=amplopay`;
   const identifier = `order_${order.id}_${Date.now()}`;
 
@@ -576,73 +514,23 @@ async function createAmplopayPayment(
 
   if (method === "pix") {
     endpoint = `${BASE_URL}/gateway/pix/receive`;
-    requestBody = {
-      identifier,
-      amount: Number(order.total),
-      product: {
-        id: order.id,
-        name: `Pedido #${order.id.slice(0, 8)}`,
-        quantity: 1,
-        price: Number(order.total),
-      },
-      client: clientData,
-      callbackUrl,
-    };
+    requestBody = { identifier, amount: Number(order.total), product: { id: order.id, name: `Pedido #${order.id.slice(0, 8)}`, quantity: 1, price: Number(order.total) }, client: clientData, callbackUrl };
   } else if (method === "boleto") {
     endpoint = `${BASE_URL}/gateway/boleto/receive`;
-    requestBody = {
-      identifier,
-      amount: Number(order.total),
-      product: {
-        id: order.id,
-        name: `Pedido #${order.id.slice(0, 8)}`,
-        quantity: 1,
-        price: Number(order.total),
-      },
-      dueDate: new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0],
-      client: clientData,
-      callbackUrl,
-    };
+    requestBody = { identifier, amount: Number(order.total), product: { id: order.id, name: `Pedido #${order.id.slice(0, 8)}`, quantity: 1, price: Number(order.total) }, dueDate: new Date(Date.now() + 3 * 86400 * 1000).toISOString().split("T")[0], client: clientData, callbackUrl };
   } else {
-    throw new Error("Amplopay suporta apenas PIX e Boleto. Cartão de crédito não disponível.");
+    throw new Error("Amplopay suporta apenas PIX e Boleto.");
   }
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "x-secret-key": secretKey,
-  };
+  const headers: Record<string, string> = { "Content-Type": "application/json", "x-secret-key": secretKey };
   if (publicKey) headers["x-public-key"] = publicKey;
 
-  console.log("Amplopay request:", endpoint);
+  const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(requestBody) });
+  const data = await response.json();
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  if (!response.ok) throw new Error(data.message || data.error || `Erro Amplopay (${response.status})`);
 
-  const responseText = await response.text();
-  console.log("Amplopay response:", response.status, responseText);
-
-  let data: any;
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    throw new Error(`Resposta inválida do Amplopay (HTTP ${response.status}): ${responseText.slice(0, 200)}`);
-  }
-
-  if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("Chaves do Amplopay inválidas. Verifique as chaves pública e secreta no painel da Amplopay.");
-    }
-    throw new Error(data.message || data.error || `Erro HTTP ${response.status} no Amplopay`);
-  }
-
-  const result: any = {
-    gateway_payment_id: data.transactionId || data.id || identifier,
-    status: "pending",
-    raw: data,
-  };
+  const result: any = { gateway_payment_id: data.transactionId || data.id || identifier, status: "pending", raw: data };
 
   if (method === "pix" && data.pix) {
     result.pix_qr_code = data.pix.code || data.pix.qrCode;
@@ -661,24 +549,12 @@ async function createAmplopayPayment(
 
 // ===================== RICH PUSH HELPER =====================
 
-async function sendRichPush(targetUserId: string, payload: {
-  title: string; body: string; url?: string; type?: string; data?: any;
-}) {
+async function sendRichPush(targetUserId: string, payload: { title: string; body: string; url?: string; type?: string; data?: any; }) {
   try {
-    const resp = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-internal`, {
+    await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-internal`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        target_user_id: targetUserId,
-        title: payload.title,
-        body: payload.body,
-        url: payload.url || "/admin",
-        type: payload.type || "general",
-        data: payload.data || {},
-        tag: payload.type || "default",
-      }),
+      body: JSON.stringify({ target_user_id: targetUserId, title: payload.title, body: payload.body, url: payload.url || "/admin", type: payload.type || "general", data: payload.data || {}, tag: payload.type || "default" }),
     });
-    if (!resp.ok) { const t = await resp.text(); console.error("sendRichPush failed:", t); }
-    else { await resp.text(); }
   } catch (e: any) { console.error("sendRichPush error:", e.message); }
 }
