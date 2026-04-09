@@ -4,7 +4,7 @@ import type { StoreHomeSection } from "@/hooks/useStoreHomeSections";
 import { SectionWrapper } from "../DynamicHomeSections";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Eye } from "lucide-react";
 
 interface Props {
   section: StoreHomeSection;
@@ -62,8 +62,14 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                 )}
               </div>
               <div className="p-3">
-                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
-                <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] flex-1">{product.name}</p>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full shrink-0">
+                    <Eye className="h-3 w-3" />
+                    <span>{product.views || 0}</span>
+                  </div>
+                </div>
+                <p className="text-lg font-bold" style={{ color: primaryColor }}>
                   {formatPrice(product.price)}
                 </p>
                 <Button
