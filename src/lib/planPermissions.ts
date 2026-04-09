@@ -65,7 +65,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   // STARTER
   gateway:              { label: "Gateway de Pagamento", description: "Aceitar pagamentos online", minPlan: "STARTER", category: "marketing" },
   coupons:              { label: "Cupons de Desconto", description: "Criar cupons e promoções", minPlan: "STARTER", category: "marketing" },
-  shipping_zones:       { label: "Zonas de Frete", description: "Configurar regiões de entrega", minPlan: "STARTER", category: "marketing" },
+  shipping_zones:       { label: "Zonas de Frete", description: "Configurar regiões de entrega", minPlan: "FREE", category: "basic" },
   product_reviews:      { label: "Avaliações", description: "Avaliações de clientes", minPlan: "STARTER", category: "marketing" },
   reviews:              { label: "Sistema de Reviews", description: "Reviews completos", minPlan: "STARTER", category: "marketing" },
   seo_basic:            { label: "SEO Básico", description: "Meta tags e títulos", minPlan: "STARTER", category: "marketing" },
@@ -84,7 +84,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   design_customization: { label: "Personalização Visual", description: "Cores, fontes e estilos", minPlan: "PRO", category: "design" },
   home_builder:         { label: "Editor da Home", description: "Montar a home por blocos", minPlan: "PRO", category: "design" },
   custom_home_sections: { label: "Seções Customizadas", description: "Criar seções personalizadas na home", minPlan: "PRO", category: "design" },
-  product_video:        { label: "Vídeos no Produto", description: "Adicionar vídeos aos produtos", minPlan: "PRO", category: "design" },
+  product_video:        { label: "Vídeos no Produto", description: "Adicionar vídeos aos produtos", minPlan: "PREMIUM", category: "design" },
   video_blocks:         { label: "Blocos de Vídeo", description: "Seções com vídeo na loja", minPlan: "PRO", category: "design" },
   product_faq:          { label: "FAQ do Produto", description: "Perguntas frequentes no produto", minPlan: "PRO", category: "marketing" },
   related_products:     { label: "Produtos Relacionados", description: "Sugestões automáticas", minPlan: "PRO", category: "marketing" },
