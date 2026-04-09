@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
 
     try {
       if (gateway === "mercadopago") {
-        result = await processMercadoPago(keys.secretKey, plan, method, tenantEmail, tenantName, document, card_token, installments, user_id);
+        result = await processMercadoPago(keys.secretKey, plan, method, tenantEmail, tenantName, document, card_token, installments, user_id, device_id, payment_method_id, issuer_id);
       } else if (gateway === "pagbank") {
         result = await processPagBank(keys.secretKey, cfg.pagbank_environment || "sandbox", plan, method, tenantEmail, tenantName, document, phone, card_token, user_id);
       } else if (gateway === "amplopay") {
