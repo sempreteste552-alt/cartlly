@@ -44,26 +44,36 @@ function FileUploadButton({
   userId: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     setLoading(true);
+    const total = files.length;
+    let done = 0;
+    setUploadProgress({ done: 0, total });
     try {
-      const url = await uploadFile(file, "highlights", userId);
-      const type = file.type.startsWith("video") ? "video" : "image";
-      onUploaded(url, type);
+      for (const file of Array.from(files)) {
+        const url = await uploadFile(file, "highlights", userId);
+        const type = file.type.startsWith("video") ? "video" : "image";
+        onUploaded(url, type);
+        done++;
+        setUploadProgress({ done, total });
+      }
+      if (total > 1) toast.success(`${total} mídias enviadas com sucesso!`);
     } catch (err: any) {
       toast.error("Erro no upload: " + err.message);
     } finally {
       setLoading(false);
+      setUploadProgress(null);
       if (ref.current) ref.current.value = "";
     }
   };
 
   return (
     <>
-      <input ref={ref} type="file" accept={accept} className="hidden" onChange={handleChange} />
+      <input ref={ref} type="file" accept={accept} multiple className="hidden" onChange={handleChange} />
       <Button
         type="button"
         variant="outline"
@@ -71,8 +81,17 @@ function FileUploadButton({
         onClick={() => ref.current?.click()}
         className="w-full"
       >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-        {label}
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            {uploadProgress ? `${uploadProgress.done}/${uploadProgress.total}` : "Enviando..."}
+          </>
+        ) : (
+          <>
+            <Upload className="h-4 w-4 mr-2" />
+            {label}
+          </>
+        )}
       </Button>
     </>
   );
