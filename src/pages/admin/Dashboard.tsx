@@ -487,16 +487,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem visualizações</p>}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Recent Orders */}
       <Card className="border-border shadow-sm">
