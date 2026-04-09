@@ -220,7 +220,7 @@ export default function LojaProduto() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
-        <div className="space-y-3">
+        <div className="space-y-3 pdp-reveal pdp-reveal-d1">
           <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
               <img
@@ -272,7 +272,7 @@ export default function LojaProduto() {
         </div>
 
         {/* Product info */}
-        <div className="space-y-4">
+        <div className="space-y-4 pdp-reveal pdp-reveal-d2">
           {(product as any).categories?.name && (
             <Badge variant="outline" style={{ borderColor: primaryColor, color: primaryColor }}>{(product as any).categories.name}</Badge>
           )}
