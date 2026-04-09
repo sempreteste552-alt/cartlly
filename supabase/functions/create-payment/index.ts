@@ -280,12 +280,13 @@ async function createMercadoPagoPayment(
 
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
 
-  const firstName = order.customer_name?.split(" ")[0] || "Cliente";
-  const lastName = order.customer_name?.split(" ").slice(1).join(" ") || "";
+  // Use payer info from request if available, fallback to order
+  const firstName = order.payer_first_name || order.customer_name?.split(" ")[0] || "Cliente";
+  const lastName = order.payer_last_name || order.customer_name?.split(" ").slice(1).join(" ") || "";
 
   const paymentData: any = {
     transaction_amount: Number(order.total),
-    description: `Pedido #${order.id.slice(0, 8)}`,
+    description: `Pedido #${order.id.slice(0, 8)} na ${order.store_name || "Loja"}`,
     external_reference: order.id,
     notification_url: webhookUrl,
     payer: {
