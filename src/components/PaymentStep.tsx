@@ -196,7 +196,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
       
       // Get Device ID for anti-fraud
-      const deviceId = mp.getDeviceId();
+      const deviceId = typeof mp.getDeviceId === 'function' 
+        ? mp.getDeviceId() 
+        : ((window as any).MP_DEVICE_SESSION_ID || (window as any).deviceId);
       
       const cardData = {
         cardNumber: cardNumber.replace(/\s/g, ""),
@@ -204,7 +206,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         cardExpirationMonth: expMonth,
         cardExpirationYear: fullYear,
         securityCode: cardCvv,
-        identificationType: "CPF",
+        identificationType: cardCpf.replace(/\D/g, "").length > 11 ? "CNPJ" : "CPF",
         identificationNumber: cardCpf.replace(/\D/g, ""),
       };
       
