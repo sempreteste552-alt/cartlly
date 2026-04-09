@@ -69,6 +69,20 @@ export default function LojaLayout() {
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
+  const { data: storePages } = useQuery({
+    queryKey: ["store_pages_public", settings?.user_id],
+    enabled: !!settings?.user_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_pages")
+        .select("title, slug")
+        .eq("user_id", settings!.user_id)
+        .eq("published", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Dynamic PWA manifest with tenant context
   const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
