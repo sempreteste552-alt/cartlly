@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export function AdminNotificationsBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useAdminNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useAdminNotifications();
   const { isSupported, isSubscribed, subscribe, loading: pushLoading } = usePushNotifications();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
