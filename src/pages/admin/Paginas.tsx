@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,6 +68,20 @@ export default function Paginas() {
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as StorePage[];
+    },
+  });
+  
+  const { data: storeSettings } = useQuery({
+    queryKey: ["store_settings_admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("store_slug")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -261,6 +276,13 @@ export default function Paginas() {
                       {page.published ? "Despublicar" : "Publicar"}
                     </button>
                     <div className="flex gap-1">
+                      {storeSettings?.store_slug && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild title="Visualizar na Loja">
+                          <Link to={`/loja/${storeSettings.store_slug}/p/${page.slug}`} target="_blank">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(page)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>

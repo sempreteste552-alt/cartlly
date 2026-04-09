@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
@@ -67,6 +69,20 @@ export default function LojaLayout() {
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
+  const { data: storePages } = useQuery({
+    queryKey: ["store_pages_public", settings?.user_id],
+    enabled: !!settings?.user_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_pages")
+        .select("title, slug")
+        .eq("user_id", settings!.user_id)
+        .eq("published", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Dynamic PWA manifest with tenant context
   const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
@@ -555,6 +571,15 @@ export default function LojaLayout() {
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
                     <Truck className="h-3.5 w-3.5" /> Rastrear Pedido
                   </Link>
+                  {storePages?.map((page) => (
+                    <Link
+                      key={page.slug}
+                      to={`${basePath}/p/${page.slug}`}
+                      className="block hover:opacity-100 transition-opacity"
+                    >
+                      {page.title}
+                    </Link>
+                  ))}
                 </div>
               </div>
               <div>

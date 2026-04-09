@@ -28,6 +28,7 @@ import LojaProduto from "./pages/loja/LojaProduto";
 import LojaCheckout from "./pages/loja/LojaCheckout";
 import LojaRastreio from "./pages/loja/LojaRastreio";
 import LojaCupons from "./pages/loja/LojaCupons";
+import LojaPagina from "./pages/loja/LojaPagina";
 import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
@@ -133,6 +134,7 @@ const App = () => (
                 <Route path="rastreio" element={<LojaRastreio />} />
                 <Route path="rastreio/:orderId" element={<LojaRastreio />} />
                 <Route path="cupons" element={<LojaCupons />} />
+                <Route path="p/:pageSlug" element={<LojaPagina />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
