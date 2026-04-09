@@ -9,6 +9,7 @@ interface ReceiptData {
   orderId: string;
   date: string;
   storeName: string;
+  storeLogoUrl?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
