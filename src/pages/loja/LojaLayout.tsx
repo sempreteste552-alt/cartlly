@@ -44,6 +44,8 @@ export interface LojaContextType {
   storeUserId?: string;
   openCart: () => void;
   basePath: string;
+  globalCep: string;
+  setGlobalCep: (cep: string) => void;
 }
 
 import { createContext, useContext } from "react";
