@@ -680,6 +680,7 @@ export default function LojaLayout() {
             </div>
           </nav>
         </div>
+        </header>
 
         <main>
           <Outlet />
