@@ -7,6 +7,23 @@ interface Props {
   primaryColor: string;
 }
 
+/** Auto-marquee label for long highlight names */
+function HighlightName({ name }: { name: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflows(el.scrollWidth > 76);
+  }, [name]);
+
+  return (
+    <span className={`highlight-name-marquee text-xs font-medium text-foreground${overflows ? " is-overflowing" : ""}`}>
+      <span ref={ref}>{name}</span>
+    </span>
+  );
+}
+
 function getSeenKey(storeUserId?: string) {
   return `highlights_seen_${storeUserId || "default"}`;
 }
