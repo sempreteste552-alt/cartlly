@@ -512,7 +512,7 @@ Deno.serve(async (req) => {
         // Pick message
         let msg: { title: string; body: string };
 
-        if (lovableApiKey && (seqType === "product_view" || seqType === "cart_abandonment")) {
+        if (lovableApiKey && (seqType === "product_view" || seqType === "cart_abandonment" || seqType === "pending_order")) {
           try {
             msg = await generateAISequenceMessage(lovableApiKey, {
               customerName: customer.name,
@@ -660,6 +660,46 @@ Deno.serve(async (req) => {
           max_steps: PRODUCT_VIEW_SEQUENCE.length,
           next_push_at: nextPushAt,
           metadata: { sequence_type: "product_view" },
+        });
+        results.sequences_created++;
+      }
+    }
+
+    // ========== 4) CREATE PENDING ORDER SEQUENCES (Salva Pedidos) ==========
+    const orderCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: pendingOrders } = await supabase
+      .from("orders")
+      .select("id, customer_id, user_id, created_at")
+      .eq("status", "pendente")
+      .gt("created_at", orderCutoff)
+      .not("customer_id", "is", null)
+      .limit(50);
+
+    if (pendingOrders && pendingOrders.length > 0) {
+      const orderCustIds = pendingOrders.map((o: any) => o.customer_id);
+      const { data: activeOrderSeqs } = await supabase
+        .from("retargeting_sequences")
+        .select("customer_id")
+        .in("customer_id", orderCustIds)
+        .eq("status", "active")
+        .eq("metadata->>sequence_type", "pending_order");
+      const hasActiveOrderSeq = new Set((activeOrderSeqs || []).map((s: any) => s.customer_id));
+
+      for (const order of pendingOrders) {
+        if (hasActiveOrderSeq.has(order.customer_id)) continue;
+
+        const firstStepDelay = PENDING_ORDER_SEQUENCE[0].delayMinutes;
+        const nextPushAt = new Date(Date.now() + firstStepDelay * 60 * 1000).toISOString();
+
+        await supabase.from("retargeting_sequences").insert({
+          customer_id: order.customer_id,
+          store_user_id: order.user_id,
+          product_id: null,
+          status: "active",
+          current_step: 0,
+          max_steps: PENDING_ORDER_SEQUENCE.length,
+          next_push_at: nextPushAt,
+          metadata: { sequence_type: "pending_order", order_id: order.id },
         });
         results.sequences_created++;
       }
@@ -1086,9 +1126,14 @@ async function generateAISequenceMessage(
     aggressive: "Tom MUITO urgente e agressivo. Use CAPS em palavras-chave. CTAs fortes como COMPRE AGORA, ÚLTIMA CHANCE, É AGORA OU NUNCA. Máxima urgência!",
   }[ctx.intensity] || "Tom amigável.";
 
-  const typeGuide = ctx.sequenceType === "cart_abandonment"
-    ? `O cliente "${ctx.customerName}" ABANDONOU O CARRINHO na loja "${ctx.storeName}". Traga-o de volta para FINALIZAR A COMPRA.`
-    : `O cliente "${ctx.customerName}" visualizou o produto "${ctx.productName}" ${priceFormatted ? `(${priceFormatted})` : ""} na loja "${ctx.storeName}" mas NÃO COMPROU.`;
+  let typeGuide = "";
+  if (ctx.sequenceType === "cart_abandonment") {
+    typeGuide = `O cliente "${ctx.customerName}" ABANDONOU O CARRINHO na loja "${ctx.storeName}". Traga-o de volta para FINALIZAR A COMPRA.`;
+  } else if (ctx.sequenceType === "pending_order") {
+    typeGuide = `O cliente "${ctx.customerName}" SALVOU UM PEDIDO (status pendente) na loja "${ctx.storeName}". Lembre-o de FINALIZAR O PAGAMENTO (PIX ou Boleto).`;
+  } else {
+    typeGuide = `O cliente "${ctx.customerName}" visualizou o produto "${ctx.productName}" ${priceFormatted ? `(${priceFormatted})` : ""} na loja "${ctx.storeName}" mas NÃO COMPROU.`;
+  }
 
   const resp = await fetch("https://ai.lovable.dev/api/chat", {
     method: "POST",
