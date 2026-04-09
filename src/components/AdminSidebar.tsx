@@ -128,6 +128,7 @@ export function AdminSidebar() {
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink
                       to={item.url}
+                      id={item.title === "Loja" ? "sidebar-config" : undefined}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
