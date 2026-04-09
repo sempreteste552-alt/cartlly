@@ -1125,13 +1125,16 @@ export type Database = {
           gateway: string
           gateway_payment_id: string | null
           id: string
+          issuer_id: string | null
           method: string
           order_id: string
+          payment_method_id: string | null
           pix_expiration: string | null
           pix_qr_code: string | null
           pix_qr_code_base64: string | null
           raw_response: Json | null
           status: string
+          status_detail: string | null
           updated_at: string
           user_id: string
         }
@@ -1146,13 +1149,16 @@ export type Database = {
           gateway: string
           gateway_payment_id?: string | null
           id?: string
+          issuer_id?: string | null
           method: string
           order_id: string
+          payment_method_id?: string | null
           pix_expiration?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
           raw_response?: Json | null
           status?: string
+          status_detail?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1167,13 +1173,16 @@ export type Database = {
           gateway?: string
           gateway_payment_id?: string | null
           id?: string
+          issuer_id?: string | null
           method?: string
           order_id?: string
+          payment_method_id?: string | null
           pix_expiration?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
           raw_response?: Json | null
           status?: string
+          status_detail?: string | null
           updated_at?: string
           user_id?: string
         }
