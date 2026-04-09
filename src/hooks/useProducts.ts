@@ -95,8 +95,10 @@ export function useDeleteProduct() {
 export function useUploadProductImage() {
   return useMutation({
     mutationFn: async (file: File) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
       const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
+      const fileName = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const contentType = file.type || "application/octet-stream";
       const { error } = await supabase.storage
         .from("product-images")
