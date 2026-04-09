@@ -19,6 +19,8 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import paymentMethodsImg from "@/assets/payment-methods.png";
+import securityBadgesImg from "@/assets/security-badges.png";
 
 export default function LojaProduto() {
   const { id } = useParams();
