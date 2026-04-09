@@ -2,13 +2,17 @@ import { useMutation } from "@tanstack/react-query";
 
 interface CreatePaymentParams {
   order_id: string;
-  method: "pix" | "credit_card" | "boleto";
+  method: "pix" | "credit_card" | "boleto" | "debit_card";
   store_user_id: string;
   card_token?: string;
+  card_type?: "credit" | "debit";
   installments?: number;
   payer_cpf?: string;
   payer_first_name?: string;
   payer_last_name?: string;
+  device_id?: string;
+  payment_method_id?: string;
+  issuer_id?: string;
 }
 
 export function useCreatePayment() {

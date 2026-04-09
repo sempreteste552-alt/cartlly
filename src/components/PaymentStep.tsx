@@ -235,9 +235,16 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       const mp = new window.MercadoPago(publicKey, { locale: "pt-BR" });
       
       // Get Device ID for anti-fraud
-      const deviceId = typeof mp.getDeviceId === 'function' 
-        ? mp.getDeviceId() 
-        : ((window as any).MP_DEVICE_SESSION_ID || (window as any).deviceId);
+      let deviceId = "";
+      try {
+        if (typeof mp.getDeviceId === 'function') {
+          deviceId = mp.getDeviceId();
+        } else {
+          deviceId = (window as any).MP_DEVICE_SESSION_ID || (window as any).deviceId || "";
+        }
+      } catch (e) {
+        console.warn("Could not get MP Device ID:", e);
+      }
       
       const cardData = {
         cardNumber: cardNumber.replace(/\s/g, ""),
@@ -370,7 +377,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         toast.success("Pagamento aprovado!");
         onSuccess(method, method === "credit_card" ? cardCpf : payerCpf);
       } else if (result.paymentResult?.status === "rejected" || result.payment?.status === "rejected") {
-        toast.error("Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.");
+        const detail = result.paymentResult?.status_detail || result.payment?.status_detail;
+        let message = "Pagamento recusado pela operadora. Verifique os dados ou tente outro cartão.";
+        
+        if (detail === "cc_rejected_high_risk") {
+          message = "Pagamento recusado por segurança (Risco Alto). Tente outro cartão ou use PIX.";
+        } else if (detail === "cc_rejected_insufficient_amount") {
+          message = "Saldo insuficiente no cartão.";
+        } else if (detail === "cc_rejected_bad_filled_other") {
+          message = "Dados do cartão incorretos. Verifique o número, validade e CVV.";
+        } else if (detail === "cc_rejected_call_for_authorize") {
+          message = "Pagamento requer autorização da operadora. Ligue para seu banco ou use outro método.";
+        }
+        
+        toast.error(message, { duration: 5000 });
         setPaymentData(null); // Clear to allow retry
       } else {
         // Pending status (PIX/Boleto)
