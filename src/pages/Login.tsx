@@ -128,7 +128,23 @@ export default function Login() {
       // If we're here, we're on the admin login page.
       // We don't sign out automatically anymore, we let ProtectedRoute handle the authorization check.
       // This allows merchants who also have is_customer=true to access their panel.
-      navigate("/admin", { replace: true });
+      
+      // Before navigating to /admin, check if we need onboarding
+      const checkOnboarding = async () => {
+        const { data: store } = await supabase
+          .from("store_settings")
+          .select("store_slug")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        if (!store?.store_slug) {
+          navigate("/setup-store", { replace: true });
+        } else {
+          navigate("/admin", { replace: true });
+        }
+      };
+      
+      checkOnboarding();
     }
   }, [user, navigate]);
 
