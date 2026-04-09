@@ -19,7 +19,8 @@ export type FeatureKey =
   | "mega_menu" | "custom_fonts" | "video_blocks" | "conversion_widgets"
   | "advanced_product_cards" | "custom_home_sections" | "premium_banners"
   | "push_customers"
-  | "enterprise_permissions";
+  | "enterprise_permissions"
+  | "verified_badge";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
