@@ -23,12 +23,18 @@ export function FeatureTutorialCard({
 }: FeatureTutorialCardProps) {
   const [dismissed, setDismissed] = useState(false);
   const storageKey = `tutorial_dismissed_${id}`;
+  const viewsKey = `tutorial_views_${id}`;
 
   useEffect(() => {
-    if (localStorage.getItem(storageKey)) {
+    const isDismissed = localStorage.getItem(storageKey) === "true";
+    const views = parseInt(localStorage.getItem(viewsKey) || "0");
+    
+    if (isDismissed || views >= 2) {
       setDismissed(true);
+    } else {
+      localStorage.setItem(viewsKey, (views + 1).toString());
     }
-  }, [storageKey]);
+  }, [id, storageKey, viewsKey]);
 
   const handleDismiss = () => {
     localStorage.setItem(storageKey, "true");
