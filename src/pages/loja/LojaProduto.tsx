@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
@@ -46,6 +46,43 @@ export default function LojaProduto() {
   const [customerName, setCustomerName] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
   const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
+  const [showStickyCart, setShowStickyCart] = useState(false);
+
+  useEffect(() => {
+    if (!productPageConfig?.enable_sticky_add_to_cart) return;
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setShowStickyCart(scrollPosition > 600);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [productPageConfig?.enable_sticky_add_to_cart]);
+
+  // Track recently viewed
+  useEffect(() => {
+    if (id && productPageConfig?.enable_recently_viewed) {
+      const viewed = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+      const filtered = viewed.filter((pid: string) => pid !== id);
+      const newViewed = [id, ...filtered].slice(0, 10);
+      localStorage.setItem("recently_viewed", JSON.stringify(newViewed));
+    }
+  }, [id, productPageConfig?.enable_recently_viewed]);
+
+  const recentlyViewedProducts = useMemo(() => {
+    if (!productPageConfig?.enable_recently_viewed || !products) return [];
+    const viewedIds = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+    return products.filter((p) => viewedIds.includes(p.id) && p.id !== id).slice(0, 8);
+  }, [id, products, productPageConfig?.enable_recently_viewed]);
+
+  const bestSellersInCategory = useMemo(() => {
+    if (!productPageConfig?.enable_category_best_sellers || !product || !products) return [];
+    return products
+      .filter((p) => p.category_id === product.category_id && p.id !== product.id)
+      .sort((a, b) => (b as any).sales_count - (a as any).sales_count)
+      .slice(0, 8);
+  }, [product, products, productPageConfig?.enable_category_best_sellers]);
 
   const handleProductClick = useCallback((e: React.MouseEvent, productId: string) => {
     e.preventDefault();
@@ -346,8 +383,83 @@ export default function LojaProduto() {
                 <h4 className="text-sm font-bold">Dúvidas Frequentes</h4>
               </div>
               <p className="text-xs text-slate-500 italic">Consulte nossa central de atendimento para mais detalhes.</p>
+        </div>
+      )}
+
+      {/* Recently Viewed */}
+      {productPageConfig?.enable_recently_viewed && recentlyViewedProducts.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Vistos Recentemente</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+            {recentlyViewedProducts.map((p) => (
+              <Link
+                key={p.id}
+                to={`${basePath}/produto/${p.id}`}
+                className="block group"
+              >
+                <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-100 group-hover:border-primary transition-colors mb-2">
+                  <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                </div>
+                <p className="text-xs font-medium line-clamp-1">{p.name}</p>
+                <p className="text-xs font-bold" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category Best Sellers */}
+      {productPageConfig?.enable_category_best_sellers && bestSellersInCategory.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Mais Vendidos da Categoria</h2>
+          <Carousel
+            opts={{ align: "start" }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-3">
+              {bestSellersInCategory.map((p) => (
+                <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                  <Link to={`${basePath}/produto/${p.id}`} className="group block">
+                    <Card className="overflow-hidden border-gray-200">
+                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-medium line-clamp-2">{p.name}</p>
+                        <p className="text-sm font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
+                      </div>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      )}
+
+      {/* Sticky Cart Bar */}
+      {productPageConfig?.enable_sticky_add_to_cart && showStickyCart && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 shadow-lg animate-in fade-in slide-in-from-bottom-full duration-300 md:hidden lg:flex items-center justify-center">
+          <div className="max-w-7xl w-full flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 hidden md:flex">
+              <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded object-cover" />
+              <div>
+                <p className="text-sm font-bold line-clamp-1">{product.name}</p>
+                <p className="text-xs text-gray-500">{formatPrice(effectivePrice)}</p>
+              </div>
             </div>
-          )}
+            <div className="flex-1 md:max-w-xs">
+              <Button
+                className="w-full h-11"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+                onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" /> Comprar Agora
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
           {product.description && (
             <>
