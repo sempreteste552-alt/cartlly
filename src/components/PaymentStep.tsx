@@ -407,7 +407,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   }
 
   // Show credit card result (approved)
-  if (paymentData && selectedMethod === "credit_card") {
+  if (paymentData && selectedMethod === "credit_card" && (paymentData.paymentResult?.status === "approved" || paymentData.payment?.status === "approved" || paymentStatus === "approved")) {
     return (
       <Card>
         <CardHeader>
