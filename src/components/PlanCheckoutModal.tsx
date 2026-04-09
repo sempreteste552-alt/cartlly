@@ -287,51 +287,51 @@ export default function PlanCheckoutModal({
 
           {/* ==================== STEP: FORM ==================== */}
           {step === "form" && (
-            <div className="space-y-5">
+            <div className="space-y-4">
 
               {/* Payment method */}
-              <div className="space-y-2.5">
-                <label className="text-sm font-semibold text-foreground">Forma de pagamento</label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Forma de pagamento</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   {pixAvailable && (
                     <button
                       onClick={() => setSelectedMethod("PIX")}
-                      className={`relative flex items-center gap-3 rounded-xl border-2 p-3.5 transition-all duration-200 ${
+                      className={`relative flex items-center gap-3 rounded-xl border-2 p-3 sm:p-3.5 transition-all duration-200 ${
                         selectedMethod === "PIX"
                           ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
                           : "border-border/60 hover:border-border hover:bg-muted/30"
                       }`}
                     >
                       {selectedMethod === "PIX" && (
-                        <div className="absolute top-2.5 right-2.5">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-3.5 w-3.5 text-primary" />
                         </div>
                       )}
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                      <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg shrink-0 ${
                         selectedMethod === "PIX" ? "bg-primary/10" : "bg-muted"
                       }`}>
-                        <QrCode className={`h-5 w-5 ${selectedMethod === "PIX" ? "text-primary" : "text-muted-foreground"}`} />
+                        <QrCode className={`h-4.5 w-4.5 sm:h-5 sm:w-5 ${selectedMethod === "PIX" ? "text-primary" : "text-muted-foreground"}`} />
                       </div>
-                      <div className="text-left">
-                        <p className={`text-sm font-semibold ${selectedMethod === "PIX" ? "text-primary" : "text-foreground"}`}>PIX</p>
-                        <p className="text-[10px] text-muted-foreground">Aprovação imediata</p>
+                      <div className="text-left overflow-hidden">
+                        <p className={`text-sm font-semibold truncate ${selectedMethod === "PIX" ? "text-primary" : "text-foreground"}`}>PIX</p>
+                        <p className="text-[10px] text-muted-foreground truncate">Aprovação imediata</p>
                       </div>
                     </button>
                   )}
 
                   <button
                     disabled
-                    className="relative flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 p-3.5 opacity-50 cursor-not-allowed"
+                    className="relative flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 p-3 sm:p-3.5 opacity-50 cursor-not-allowed"
                   >
-                    <div className="absolute top-2.5 right-2.5">
-                      <Lock className="h-3.5 w-3.5 text-muted-foreground/40" />
+                    <div className="absolute top-2 right-2">
+                      <Lock className="h-3 w-3 text-muted-foreground/40" />
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/50">
-                      <CreditCard className="h-5 w-5 text-muted-foreground/50" />
+                    <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-muted/50 shrink-0">
+                      <CreditCard className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-muted-foreground/50" />
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-muted-foreground">Cartão</p>
-                      <p className="text-[10px] text-muted-foreground/70">Em breve</p>
+                    <div className="text-left overflow-hidden">
+                      <p className="text-sm font-medium text-muted-foreground truncate">Cartão</p>
+                      <p className="text-[10px] text-muted-foreground/70 truncate">Em breve</p>
                     </div>
                   </button>
                 </div>
