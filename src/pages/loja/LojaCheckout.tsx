@@ -44,6 +44,14 @@ export default function LojaCheckout() {
   const [savedDiscountAmount, setSavedDiscountAmount] = useState<number>(0);
   const [savedShippingCost, setSavedShippingCost] = useState<number>(0);
   const [savedPayerCpf, setSavedPayerCpf] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Set<string>>(new Set());
+  const { globalCep } = useLojaContext();
+
+  useEffect(() => {
+    if (globalCep && !cep) {
+      setCep(globalCep);
+    }
+  }, [globalCep]);
   const validateCoupon = useValidateCoupon();
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
 
