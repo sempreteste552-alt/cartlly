@@ -357,7 +357,7 @@ async function createMercadoPagoPayment(
   };
 
   if (deviceId) {
-    headers["X-Meli-Session-Id"] = device_id || deviceId;
+    headers["X-Meli-Session-Id"] = deviceId;
   }
 
   console.log("MP Payload:", JSON.stringify(paymentData));
