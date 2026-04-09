@@ -89,7 +89,7 @@ export default function Pedidos() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border">
+        <Card id="orders-table" className="border-border">
           <Table>
             <TableHeader>
               <TableRow>
