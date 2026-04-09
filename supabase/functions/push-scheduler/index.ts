@@ -47,9 +47,10 @@ async function shouldSkipAntiSpam(
   freqConfig: { softDailyLimit: number; cooldownMinutes: number },
   triggerType?: string
 ): Promise<{ skip: boolean; reason?: string }> {
-  // Specific limit: 3 per day for cart, product_view, wishlist as requested
+  // Specific limit: use freqConfig or default to 5 for high priority types
+  const typeLimit = freqConfig.softDailyLimit || 5;
   if (triggerType === "abandoned_cart" || triggerType === "product_view" || triggerType === "wishlist_reminder") {
-    if (triggerCount >= 3) {
+    if (triggerCount >= typeLimit) {
       return { skip: true, reason: "type_daily_limit" };
     }
   }
@@ -262,16 +263,25 @@ const WISHLIST_SEQUENCE: SequenceStep[] = [
 ];
 
 const HOURLY_ENGAGEMENT_TEMPLATES = [
-  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} seja incrível! Que tal conferir as novidades na {store}? 🛍️" },
-  { title: "🌈 Uma ótima {day} pra você!", body: "{name}, temos ofertas especiais esperando por você na {store}! ✨" },
-  { title: "✨ Momento de brilhar!", body: "Oi {name}! Que tal um mimo hoje na {store}? Você merece! 💜" },
+  // Morning (8h - 12h)
+  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} comece maravilhosa! Já viu as novidades na {store}? 🛍️", hourStart: 8, hourEnd: 12 },
+  { title: "☕ Café e {store}!", body: "Nada melhor que um café e uma espiadinha nas ofertas da {store}. Aproveite! ✨", hourStart: 8, hourEnd: 11 },
+  
+  // Afternoon (12h - 18h)
+  { title: "🌈 Boa tarde, {name}!", body: "Passando para desejar uma ótima {day}. Que tal um mimo na {store} hoje? 💜", hourStart: 12, hourEnd: 18 },
+  { title: "🍕 Pausa do almoço?", body: "{name}, aproveite sua pausa para conferir o que chegou na {store}! 🌟", hourStart: 12, hourEnd: 14 },
+  
+  // Evening (18h - 23h)
+  { title: "🌙 Boa noite, {name}!", body: "Finalize sua {day} com chave de ouro na {store}. Você merece! ✨", hourStart: 18, hourEnd: 23 },
+  { title: "🧸 Hora de relaxar!", body: "{name}, relaxe e veja as promoções que separamos para você na {store} 💤🛍️", hourStart: 20, hourEnd: 23 },
+  
+  // Weekend
+  { title: "🎉 Final de semana chegou!", body: "{name}, aproveite o sábado para garantir seus favoritos na {store}! 🎈", dayOfWeek: [6] },
+  { title: "🏖️ Domingo de ofertas!", body: "Oi {name}! Que tal renovar seus itens na {store} hoje? Bom descanso! ☀️", dayOfWeek: [0] },
+  
+  // General
+  { title: "✨ Momento de brilhar!", body: "Oi {name}! Que tal um presente hoje na {store}? Você merece tudo de bom! 💜" },
   { title: "💫 Novidades chegando!", body: "{name}, a {store} está cheia de coisas lindas hoje. Vem ver! 🌟" },
-  { title: "🎁 Um presente pra sua {day}!", body: "Oi {name}! Confira o que separamos para você na {store} hoje 🎀" },
-  { title: "🔥 {name}, no pique!", body: "Aproveite sua {day} para levar o que você mais gosta na {store}! ⚡" },
-  { title: "🍀 Sorte do dia: {store}!", body: "{name}, achamos que hoje é seu dia de sorte! Confira as ofertas 🌈" },
-  { title: "☕ Pausa para a {store}!", body: "Oi {name}! Que tal uma pausa na sua {day} para ver o que chegou na {store}? ☕🛍️" },
-  { title: "🌟 {name}, você é especial!", body: "Passando para desejar uma ótima {day} e te convidar para a {store}! ✨" },
-  { title: "🛍️ Desejos da {day}!", body: "{name}, o que está na sua lista de desejos hoje na {store}? Vem conferir! 💭" },
 ];
 
 const INACTIVITY_SEQUENCE: SequenceStep[] = [
@@ -369,6 +379,12 @@ Deno.serve(async (req) => {
     }
     const defaultFreq = FREQUENCY_PRESETS.medium;
 
+    // ========== LOAD STORE SETTINGS (Global Map) ==========
+    const { data: allStores } = await supabase
+      .from("store_settings")
+      .select("user_id, store_name, store_slug");
+    const storeMap = new Map((allStores || []).map((s: any) => [s.user_id, s]));
+
     // ========== LOAD DAILY COUNTS FOR ALL CUSTOMERS ==========
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -377,7 +393,7 @@ Deno.serve(async (req) => {
       .select("customer_id, trigger_type")
       .eq("status", "sent")
       .gte("sent_at", today.toISOString())
-      .limit(2000);
+      .limit(10000); // Increased limit for counts
     
     // triggerCountsByCustomer: customer_id -> trigger_type -> count
     const triggerCountsByCustomer = new Map<string, Map<string, number>>();
@@ -416,11 +432,8 @@ Deno.serve(async (req) => {
       const productMap = new Map((products || []).map((p: any) => [p.id, p]));
 
       const storeIds = [...new Set(activeSeqs.map((s: any) => s.store_user_id))];
-      const { data: stores } = await supabase
-        .from("store_settings")
-        .select("user_id, store_name, store_slug")
-        .in("user_id", storeIds);
-      const storeMap = new Map((stores || []).map((s: any) => [s.user_id, s]));
+      // storeMap is now global
+
 
       // Check if customers purchased the product (stop sequence)
       const { data: recentOrders } = await supabase
@@ -941,7 +954,7 @@ Deno.serve(async (req) => {
         .from("customers")
         .select("id, name, auth_user_id, store_user_id")
         .in("auth_user_id", pushUserIds)
-        .limit(20);
+        .limit(200); // Increased limit to reach more customers per run
 
       if (customersWithPush && customersWithPush.length > 0) {
         const { data: recentEngagements } = await supabase
@@ -954,6 +967,9 @@ Deno.serve(async (req) => {
         const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
         const dayName = dayNames[new Date().getDay()];
 
+        const hour = new Date().getHours();
+        const dayOfWeek = new Date().getDay();
+
         for (const customer of customersWithPush) {
           if (recentlyEngaged.has(customer.id)) continue;
 
@@ -962,8 +978,17 @@ Deno.serve(async (req) => {
           
           if (spamCheck.skip) continue;
 
-          const msgIdx = Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length);
-          const template = HOURLY_ENGAGEMENT_TEMPLATES[msgIdx];
+          // Filter templates by time and day
+          const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+            if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+            if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+            return true;
+          });
+
+          const template = validTemplates.length > 0 
+            ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+            : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+
           const store = storeMap.get(customer.store_user_id);
           const storeName = store?.store_name || "nossa loja";
           
