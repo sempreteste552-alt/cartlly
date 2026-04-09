@@ -34,13 +34,25 @@ export default function LojaProduto() {
 
   const product = products?.find((p) => p.id === id);
 
-  const allImages = useMemo(() => {
+  const { allImages, allVideos } = useMemo(() => {
     const images: string[] = [];
-    if (product?.image_url) images.push(product.image_url);
+    const videos: string[] = [];
+    if (product?.image_url) {
+      if (product.image_url.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i)) {
+        videos.push(product.image_url);
+      } else {
+        images.push(product.image_url);
+      }
+    }
     productImages?.forEach((img: any) => {
-      if (!images.includes(img.image_url)) images.push(img.image_url);
+      const url = img.image_url;
+      if (url?.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i)) {
+        if (!videos.includes(url)) videos.push(url);
+      } else {
+        if (!images.includes(url)) images.push(url);
+      }
     });
-    return images;
+    return { allImages: images, allVideos: videos };
   }, [product, productImages]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
