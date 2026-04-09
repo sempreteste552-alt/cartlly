@@ -69,6 +69,20 @@ export default function Paginas() {
       return data as StorePage[];
     },
   });
+  
+  const { data: storeSettings } = useQuery({
+    queryKey: ["store_settings_admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("slug")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const createPage = useMutation({
     mutationFn: async (payload: Partial<StorePage>) => {
