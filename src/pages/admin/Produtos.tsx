@@ -48,7 +48,20 @@ export default function Produtos() {
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
 
-  const limits = getPlanLimits(ctx);
+  // Auto-open product editor when navigating from dashboard low-stock alert
+  useEffect(() => {
+    const state = location.state as { editProductId?: string } | null;
+    if (state?.editProductId && products) {
+      const product = products.find((p) => p.id === state.editProductId);
+      if (product) {
+        setEditingProduct(product);
+        setFormOpen(true);
+        // Clear state to prevent re-opening on refresh
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [location.state, products, navigate, location.pathname]);
+
   const canCreate = canCreateProduct(ctx);
   const productLimitMsg = getProductLimitReason(ctx);
   const aiAvailable = canAccess("ai_content", ctx);
