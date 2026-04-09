@@ -383,9 +383,10 @@ export default function LojaLayout() {
       >
         {/* PWA Install Banner — very top */}
         <PWAInstallBanner 
-          storeName={settings?.store_name}
-          logoUrl={settings?.logo_url}
+          storeName={storeInstallName}
+          logoUrl={storeIconUrl}
           primaryColor={settings?.primary_color}
+          storeUserId={settings?.user_id}
         />
 
         {/* Push notification permission prompt — auto-shows on first visit */}
