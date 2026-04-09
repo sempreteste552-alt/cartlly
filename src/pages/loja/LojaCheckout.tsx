@@ -126,8 +126,21 @@ export default function LojaCheckout() {
       setName(customer.name || "");
       setEmail(customer.email || "");
       setPhone(customer.phone || "");
-      const fullAddress = [customer.address, customer.city, customer.state, customer.cep].filter(Boolean).join(", ");
-      if (fullAddress) setAddress(fullAddress);
+      setCpf(customer.cpf || "");
+      setCep(customer.cep || "");
+      setCity(customer.city || "");
+      setState(customer.state || "");
+      if (customer.address) {
+        // If address has parts separated by comma, try to parse (simple attempt)
+        const parts = customer.address.split(", ");
+        if (parts.length >= 3) {
+          setStreet(parts[0]);
+          setNumber(parts[1]);
+          setNeighborhood(parts[2]);
+        } else {
+          setStreet(customer.address);
+        }
+      }
     }
   }, [customer]);
 
