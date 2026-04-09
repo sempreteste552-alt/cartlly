@@ -19,6 +19,8 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import paymentMethodsImg from "@/assets/payment-methods.png";
+import securityBadgesImg from "@/assets/security-badges.png";
 
 export default function LojaProduto() {
   const { id } = useParams();
@@ -396,17 +398,9 @@ export default function LojaProduto() {
           <Separator />
 
           {productPageConfig?.enable_trust_badges && (
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Truck, label: "Entrega rápida" },
-                { icon: ShieldCheck, label: "Compra segura" },
-                { icon: RotateCcw, label: "Troca fácil" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
-                  <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
-                  <p className="text-xs mt-1 text-gray-600">{label}</p>
-                </div>
-              ))}
+            <div className="flex flex-col items-center gap-3 py-3">
+              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-14 w-auto max-w-full object-contain" />
+              <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-12 w-auto max-w-full object-contain" />
             </div>
           )}
 

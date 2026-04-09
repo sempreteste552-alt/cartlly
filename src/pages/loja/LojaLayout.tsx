@@ -25,10 +25,8 @@ import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotif
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { toast } from "sonner";
-import siteSeguro from "@/assets/site-seguro.webp";
-import compraSegura from "@/assets/compra-segura.webp";
-import paymentCards from "@/assets/payment-cards.webp";
-import pixLogo from "@/assets/pix-logo.webp";
+import paymentMethodsImg from "@/assets/payment-methods.png";
+import securityBadgesImg from "@/assets/security-badges.png";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
 import iconInstagram from "@/assets/icon-instagram.png";
 import iconTiktok from "@/assets/icon-tiktok.png";
@@ -767,14 +765,10 @@ export default function LojaLayout() {
               </div>
             </div>
             <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
-            {marketingConfig?.trust_badges_enabled && (
-              <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
-                <img src={siteSeguro} alt="Site Seguro" className="h-8 brightness-0 invert opacity-70" />
-                <img src={compraSegura} alt="Compra Segura" className="h-8 brightness-0 invert opacity-70" />
-                <img src={paymentCards} alt="Bandeiras aceitas" className="h-5 brightness-0 invert opacity-60" />
-                <img src={pixLogo} alt="PIX" className="h-5 brightness-0 invert opacity-60" />
-              </div>
-            )}
+            <div className="flex flex-col items-center gap-3 mb-4">
+              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-12 w-auto max-w-[90%] object-contain brightness-0 invert opacity-80" />
+              <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-10 w-auto max-w-[70%] object-contain brightness-0 invert opacity-80" />
+            </div>
             <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>
