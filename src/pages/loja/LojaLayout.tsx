@@ -729,7 +729,8 @@ export default function LojaLayout() {
               );
             })}
             
-            {/* Global CEP Input in Mobile Menu */}
+            {/* Global CEP Input in Mobile Menu - only if store has shipping */}
+            {hasShippingZones && (
             <div 
               className="px-3 py-4 border-t border-border mt-2 space-y-2"
               style={{
@@ -740,7 +741,7 @@ export default function LojaLayout() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
-                <span className="text-sm font-semibold">Onde você está?</span>
+                <span className="text-sm font-semibold">Calcular frete</span>
               </div>
               {globalCity && (
                 <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
@@ -763,8 +764,9 @@ export default function LojaLayout() {
                   <LocateFixed className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Toque em <LocateFixed className="h-3 w-3 inline" /> para detectar automaticamente ou digite seu CEP.</p>
+              <p className="text-[10px] text-muted-foreground">Informe seu CEP para calcular o frete, ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar.</p>
             </div>
+            )}
 
             {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
