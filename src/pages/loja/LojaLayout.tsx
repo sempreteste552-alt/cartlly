@@ -462,6 +462,8 @@ export default function LojaLayout() {
               { icon: Package, label: "Produtos", to: basePath },
               { icon: Ticket, label: "Cupons", to: `${basePath}/cupons` },
               { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
+              ...(user ? [{ icon: User, label: "Minha Conta", to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: "Entrar", to: "#", onClick: () => setAuthModalOpen(true) }]),
+              ...(user ? [{ icon: LogOut, label: "Sair", to: "#", onClick: () => signOut() }] : []),
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
             ].map((item: any, i) => {
               const content = (
@@ -645,16 +647,14 @@ export default function LojaLayout() {
             <div className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-muted-foreground">
               <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} isMobileNav />
             </div>
-            {!isAdminPreview && (
-              <button
-                onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
-                className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-                style={{ color: user ? primaryColor : undefined }}
-              >
-                <User className="h-5 w-5" />
-                <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
-              </button>
-            )}
+            <button
+              onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              style={{ color: user ? primaryColor : undefined }}
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? "Preview" : "Conta") : "Entrar"}</span>
+            </button>
           </div>
         </nav>
 
