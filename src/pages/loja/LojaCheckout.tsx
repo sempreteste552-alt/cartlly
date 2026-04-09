@@ -965,7 +965,7 @@ export default function LojaCheckout() {
           {hasGateway && settings?.sell_via_whatsapp && settings?.store_whatsapp && (
             <Button
               variant="outline"
-              className="w-full border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-green-50 h-12 text-base"
+              className="w-full border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10 h-12 text-base"
               onClick={() => handleSubmit(true)}
               disabled={loading}
             >

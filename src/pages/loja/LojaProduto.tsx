@@ -370,7 +370,7 @@ export default function LojaProduto() {
             {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
               <Button
                 variant="outline"
-                className="border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-green-50 h-12"
+                className="border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10 h-12"
                 onClick={() => setWhatsappDialogOpen(true)}
               >
                 <MessageCircle className="mr-2 h-5 w-5" /> WhatsApp
