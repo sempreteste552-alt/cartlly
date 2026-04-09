@@ -18,6 +18,7 @@ interface PaymentRequest {
   payer_last_name?: string;
   device_id?: string;
   payment_method_id?: string;
+  issuer_id?: string;
 }
 
 Deno.serve(async (req) => {
