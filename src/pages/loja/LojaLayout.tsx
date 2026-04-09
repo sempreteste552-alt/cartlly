@@ -711,7 +711,7 @@ export default function LojaLayout() {
         {settings?.user_id && (
           <>
             <CustomerAuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} storeUserId={settings.user_id} />
-            <CustomerProfileModal open={profileModalOpen} onOpenChange={setProfileModalOpen} storeUserId={settings.user_id} />
+            <CustomerProfileModal open={profileModalOpen} onOpenChange={setProfileModalOpen} storeUserId={settings.user_id} basePath={basePath} />
           </>
         )}
       </div>
