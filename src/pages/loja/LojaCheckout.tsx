@@ -308,6 +308,31 @@ export default function LojaCheckout() {
     }
   };
 
+  if (phase === "success") {
+    const receiptDate = paymentDate || new Date();
+    const formattedDate = new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    }).format(receiptDate);
+
+    const handleDownloadReceipt = () => {
+      generateReceiptPdf({
+        orderId: orderId || "",
+        date: formattedDate,
+        storeName: settings?.store_name || "Loja",
+        customerName: name,
+        customerEmail: email,
+        customerPhone: phone,
+        customerAddress: address,
+        items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
+        subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
+        discount: savedDiscountAmount,
+        shipping: savedShippingCost,
+        total: savedFinalTotal,
+        paymentMethod: getMethodLabel(paymentMethod),
+      });
+    };
+
     return (
       <div className="max-w-lg mx-auto px-4 py-10 space-y-8 animate-in fade-in duration-700">
         {/* Success Header */}
