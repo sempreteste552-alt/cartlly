@@ -206,7 +206,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         cardExpirationMonth: expMonth,
         cardExpirationYear: fullYear,
         securityCode: cardCvv,
-        identificationType: "CPF",
+        identificationType: cardCpf.replace(/\D/g, "").length > 11 ? "CNPJ" : "CPF",
         identificationNumber: cardCpf.replace(/\D/g, ""),
       };
       
