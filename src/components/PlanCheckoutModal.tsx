@@ -509,22 +509,22 @@ export default function PlanCheckoutModal({
 
           {/* ==================== STEP: SUCCESS ==================== */}
           {step === "success" && (
-            <div className="py-6 space-y-6">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="h-20 w-20 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/10">
-                  <CheckCircle2 className="h-11 w-11 text-green-500" />
+            <div className="py-2 sm:py-4 space-y-4 sm:space-y-6">
+              <div className="flex flex-col items-center gap-3 sm:gap-4 text-center">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/10">
+                  <CheckCircle2 className="h-9 w-9 sm:h-11 sm:w-11 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold text-foreground">Pagamento Aprovado! 🎉</h3>
-                  <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">Pagamento Aprovado! 🎉</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
                     Seu plano <strong className="text-foreground">{planName}</strong> foi ativado com sucesso. Todos os recursos premium já estão disponíveis.
                   </p>
                 </div>
               </div>
 
               {/* Receipt */}
-              <div className="rounded-xl bg-muted/30 border border-border/40 p-5 space-y-3 text-sm">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Comprovante</p>
+              <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-5 space-y-2 sm:space-y-3 text-[13px] sm:text-sm">
+                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wide">Comprovante</p>
                 <div className="space-y-2">
                   {[
                     ["Plano", planName],
