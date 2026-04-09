@@ -230,24 +230,24 @@ Deno.serve(async (req) => {
 
           if (resp.status === 201 || resp.status === 200) {
             sent++;
-            await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
+            await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
           } else {
             const text = await resp.text();
             if (shouldDeleteSubscription(resp.status, text)) {
               await supabase.from("push_subscriptions").delete().eq("id", sub.id);
               removed++;
-              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
             } else {
               console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
               failures.push(`${sub.id}: ${resp.status}`);
-              await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
             }
           }
         }
       } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
         failures.push(`${sub.id}: ${e.message}`);
-        await logPush(supabase, target_user_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
+        await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
       }
     }
 
