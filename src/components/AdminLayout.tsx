@@ -15,6 +15,8 @@ import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Crown, Clock, HelpCircle } from "lucide-react";
@@ -26,6 +28,8 @@ export function AdminLayout() {
   const { data: settings } = useStoreSettings();
   const { user } = useAuth();
   const { features } = usePlanFeatures();
+  const { ctx } = useTenantContext();
+  const aiAvailable = canAccess("ai_tools", ctx);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
@@ -163,7 +167,7 @@ export function AdminLayout() {
           </main>
         </div>
         <WhatsAppSupportBubble />
-        {features.ai_tools && <AIChatWidget />}
+        {aiAvailable && <AIChatWidget />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>

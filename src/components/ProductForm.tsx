@@ -11,7 +11,8 @@ import { useUploadProductImage, type Product } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
 import { useProductImages } from "@/hooks/useProductImages";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 
 interface ProductFormProps {
   open: boolean;
@@ -45,7 +46,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const additionalFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
-  const { features } = usePlanFeatures();
+  const { ctx } = useTenantContext();
+  const aiAvailable = canAccess("ai_tools", ctx);
 
   // Load existing additional images when editing
   const { data: existingImages } = useProductImages(initialData?.id);
@@ -141,7 +143,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           </div>
 
           {/* AI Tools - only for plans with AI */}
-          {features.ai_tools && (
+          {aiAvailable && (
             <AIProductTools
               name={name}
               description={description}
