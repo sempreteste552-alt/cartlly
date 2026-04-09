@@ -7,6 +7,23 @@ interface Props {
   primaryColor: string;
 }
 
+/** Auto-marquee label for long highlight names */
+function HighlightName({ name }: { name: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [overflows, setOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflows(el.scrollWidth > 76);
+  }, [name]);
+
+  return (
+    <span className={`highlight-name-marquee text-xs font-medium text-foreground${overflows ? " is-overflowing" : ""}`}>
+      <span ref={ref}>{name}</span>
+    </span>
+  );
+}
+
 function getSeenKey(storeUserId?: string) {
   return `highlights_seen_${storeUserId || "default"}`;
 }
@@ -47,6 +64,23 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        @keyframes highlight-marquee {
+          0%, 15% { transform: translateX(0); }
+          50%, 65% { transform: translateX(calc(-100% + 76px)); }
+          85%, 100% { transform: translateX(0); }
+        }
+        .highlight-name-marquee {
+          display: block;
+          max-width: 76px;
+          overflow: hidden;
+        }
+        .highlight-name-marquee span {
+          display: inline-block;
+          white-space: nowrap;
+        }
+        .highlight-name-marquee.is-overflowing span {
+          animation: highlight-marquee 4s ease-in-out infinite;
+        }
       `}</style>
       <div className="flex gap-4 overflow-x-auto pb-2 px-1 scrollbar-hide">
         {highlights.map((h) => {
@@ -83,7 +117,7 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
                   )}
                 </div>
               </div>
-              <span className="text-xs font-medium text-foreground truncate max-w-[76px]">{h.name}</span>
+              <HighlightName name={h.name} />
             </button>
           );
         })}
