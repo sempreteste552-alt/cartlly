@@ -18,6 +18,7 @@ interface PaymentRequest {
   payer_last_name?: string;
   device_id?: string;
   payment_method_id?: string;
+  issuer_id?: string;
 }
 
 Deno.serve(async (req) => {
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
     // ==================== PAYMENT PROCESSING ====================
     const { 
       order_id, method, card_token, card_type, installments, store_user_id, 
-      payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id 
+      payer_cpf, payer_first_name, payer_last_name, device_id, payment_method_id, issuer_id 
     } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
@@ -169,7 +170,8 @@ Deno.serve(async (req) => {
       if (gateway === "mercadopago") {
         paymentResult = await createMercadoPagoPayment(
           order, method, secretKey, environment, card_token, installments, 
-          payer_cpf, card_type, payer_first_name, payer_last_name, device_id, payment_method_id
+          payer_cpf, card_type, payer_first_name, payer_last_name, device_id, 
+          payment_method_id, issuer_id
         );
       } else if (gateway === "pagbank") {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
@@ -204,6 +206,9 @@ Deno.serve(async (req) => {
         boleto_expiration: paymentResult.boleto_expiration || null,
         card_last_four: paymentResult.card_last_four || null,
         card_brand: paymentResult.card_brand || null,
+        status_detail: paymentResult.status_detail || null,
+        issuer_id: paymentResult.issuer_id || null,
+        payment_method_id: paymentResult.payment_method_id || null,
         raw_response: paymentResult.raw,
       })
       .select()
@@ -284,7 +289,8 @@ async function createMercadoPagoPayment(
   payerFirstName?: string,
   payerLastName?: string,
   deviceId?: string,
-  paymentMethodId?: string
+  paymentMethodId?: string,
+  issuerId?: string
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
@@ -292,10 +298,10 @@ async function createMercadoPagoPayment(
   const firstName = (payerFirstName || order.payer_first_name || order.customer_name?.split(" ")[0] || "Cliente").trim();
   let lastName = (payerLastName || order.payer_last_name || order.customer_name?.split(" ").slice(1).join(" ") || "").trim();
 
-  if (!lastName) lastName = firstName;
+  if (!lastName || lastName === firstName) lastName = "de Oliveira"; // Default last name if missing for MP requirements
 
   const paymentData: any = {
-    transaction_amount: Number(order.total),
+    transaction_amount: Number(Number(order.total).toFixed(2)),
     description: `Pedido #${order.id.slice(0, 8)} na ${order.store_name || "Loja"}`,
     external_reference: order.id,
     notification_url: webhookUrl,
@@ -321,16 +327,26 @@ async function createMercadoPagoPayment(
     paymentData.token = cardToken;
     paymentData.installments = (method === "debit_card" || cardType === "debit") ? 1 : (installments || 1);
     if (paymentMethodId) paymentData.payment_method_id = paymentMethodId;
+    if (issuerId) paymentData.issuer_id = Number(issuerId);
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
+    
     // Boleto requires full address in Brazil
+    // Attempt to extract address from order or use valid fallbacks
+    const zipCode = (order.shipping_cep || order.customer_cep || "01000000").replace(/\D/g, "");
+    const streetName = order.shipping_street || order.customer_address || "Rua Principal";
+    const streetNumber = order.shipping_number || "100";
+    const neighborhood = order.shipping_neighborhood || "Centro";
+    const city = order.shipping_city || "São Paulo";
+    const federalUnit = order.shipping_state || "SP";
+
     paymentData.payer.address = {
-      zip_code: (order.shipping_cep || order.customer_cep || "01000000").replace(/\D/g, ""),
-      street_name: order.shipping_street || order.customer_address || "Rua",
-      street_number: order.shipping_number || "S/N",
-      neighborhood: order.shipping_neighborhood || "Centro",
-      city: order.shipping_city || "São Paulo",
-      federal_unit: order.shipping_state || "SP",
+      zip_code: zipCode.length === 8 ? zipCode : "01000000",
+      street_name: streetName,
+      street_number: streetNumber,
+      neighborhood: neighborhood,
+      city: city,
+      federal_unit: federalUnit,
     };
   }
 
@@ -341,8 +357,10 @@ async function createMercadoPagoPayment(
   };
 
   if (deviceId) {
-    headers["X-Meli-Session-Id"] = deviceId;
+    headers["X-Meli-Session-Id"] = device_id || deviceId;
   }
+
+  console.log("MP Payload:", JSON.stringify(paymentData));
 
   const response = await fetch(`${baseUrl}/payments`, {
     method: "POST",
@@ -353,13 +371,16 @@ async function createMercadoPagoPayment(
   const data = await response.json();
 
   if (!response.ok) {
-    console.error("MP Error:", JSON.stringify(data));
-    throw new Error(data.message || data.cause?.[0]?.description || `Erro Mercado Pago (${response.status})`);
+    console.error("MP API Error:", JSON.stringify(data));
+    const errorMessage = data.message || data.cause?.[0]?.description || `Erro Mercado Pago (${response.status})`;
+    const errorDetail = data.cause?.[0]?.code || "internal_error";
+    throw new Error(`${errorMessage} (Ref: ${errorDetail})`);
   }
 
   const result: any = {
     gateway_payment_id: String(data.id),
     status: mapMPStatus(data.status),
+    status_detail: data.status_detail,
     raw: data,
   };
 

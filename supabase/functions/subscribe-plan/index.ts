@@ -234,7 +234,8 @@ async function activateSubscription(supabase: any, userId: string, planId: strin
 async function processMercadoPago(
   accessToken: string, plan: any, method: string,
   email: string, name: string, document: string,
-  cardToken?: string, installments?: number, userId?: string
+  cardToken?: string, installments?: number, userId?: string,
+  deviceId?: string, paymentMethodId?: string, issuerId?: string
 ) {
   const paymentData: any = {
     transaction_amount: Number(plan.price),
@@ -254,17 +255,34 @@ async function processMercadoPago(
     if (!cardToken) throw new Error("Token do cartão é obrigatório. Use o SDK do Mercado Pago para gerar o token.");
     paymentData.token = cardToken;
     paymentData.installments = installments || 1;
+    if (paymentMethodId) paymentData.payment_method_id = paymentMethodId;
+    if (issuerId) paymentData.issuer_id = Number(issuerId);
   } else if (method === "BOLETO") {
     paymentData.payment_method_id = "bolbradesco";
+    // For Boleto, MP requires an address. Since this is a SaaS subscription, we'll use a standard fallback or tenant profile data if available.
+    paymentData.payer.address = {
+      zip_code: "01000000",
+      street_name: "Rua",
+      street_number: "100",
+      neighborhood: "Centro",
+      city: "São Paulo",
+      federal_unit: "SP",
+    };
+  }
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+    "X-Idempotency-Key": `plan-${plan.id}-${userId}-${Date.now()}`,
+  };
+
+  if (deviceId) {
+    headers["X-Meli-Session-Id"] = deviceId;
   }
 
   const res = await fetch("https://api.mercadopago.com/v1/payments", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-      "X-Idempotency-Key": `plan-${plan.id}-${userId}-${Date.now()}`,
-    },
+    headers,
     body: JSON.stringify(paymentData),
   });
 

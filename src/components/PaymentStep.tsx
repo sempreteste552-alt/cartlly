@@ -85,6 +85,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
   const [saveCard, setSaveCard] = useState(false);
   const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [mpIssuerId, setMpIssuerId] = useState<string>("");
+  const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
+  const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
 
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState(initialCpf || "");
@@ -167,6 +170,42 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   }, [paymentData, selectedMethod, paymentStatus]);
 
+  // Handle Mercado Pago BIN check
+  useEffect(() => {
+    const bin = cardNumber.replace(/\s/g, "").slice(0, 6);
+    if (bin.length === 6 && settings?.payment_gateway === "mercadopago") {
+      const fetchMPDetails = async () => {
+        try {
+          if (!window.MercadoPago) return;
+          const mp = new window.MercadoPago(settings.gateway_public_key, { locale: "pt-BR" });
+          
+          const methods = await mp.getPaymentMethods({ bin });
+          if (methods && methods.length > 0) {
+            const method = methods[0];
+            setMpPaymentMethodId(method.id);
+            
+            const issuers = await mp.getIssuers({ paymentMethodId: method.id, bin });
+            if (issuers && issuers.length > 0) {
+              setMpIssuerId(issuers[0].id);
+            }
+            
+            const installments = await mp.getInstallments({ 
+              amount: String(total), 
+              bin, 
+              paymentTypeId: "credit_card" 
+            });
+            if (installments && installments.length > 0) {
+              setMpInstallmentsOptions(installments[0].payer_costs || []);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching MP details by BIN:", e);
+        }
+      };
+      fetchMPDetails();
+    }
+  }, [cardNumber, settings?.payment_gateway, settings?.gateway_public_key, total]);
+
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão", desc: "Crédito ou Débito", icon: CreditCard, enabled: settings?.payment_credit_card },
@@ -208,12 +247,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         securityCode: cardCvv,
         identificationType: cardCpf.replace(/\D/g, "").length > 11 ? "CNPJ" : "CPF",
         identificationNumber: cardCpf.replace(/\D/g, ""),
-      };
+      } as any;
+      
+      if (mpIssuerId) cardData.issuerId = mpIssuerId;
+      if (mpPaymentMethodId) cardData.paymentMethodId = mpPaymentMethodId;
       
       const tokenResponse = await mp.createCardToken(cardData);
       if (!tokenResponse?.id) throw new Error("Não foi possível gerar o token do cartão Mercado Pago.");
       
-      return { token: tokenResponse.id, deviceId };
+      return { 
+        token: tokenResponse.id, 
+        deviceId,
+        issuer_id: mpIssuerId,
+        payment_method_id: mpPaymentMethodId
+      };
     } else if (gateway === "pagbank") {
       if (!window.PagSeguro) throw new Error("SDK do PagBank não carregado.");
       
@@ -293,6 +340,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             const cardResult = await generateCardToken(settings.payment_gateway);
             params.card_token = cardResult.token;
             params.device_id = cardResult.deviceId;
+            params.issuer_id = cardResult.issuer_id;
+            params.payment_method_id = cardResult.payment_method_id;
+            params.installments = Number(cardInstallments);
+            params.card_type = cardType;
           } catch (tokenErr: any) {
             toast.error(tokenErr.message || "Erro ao processar dados do cartão");
             setTokenizing(false);
@@ -566,11 +617,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <Select value={cardInstallments} onValueChange={setCardInstallments}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
-                    </SelectItem>
-                  ))}
+                  {mpInstallmentsOptions.length > 0 ? (
+                    mpInstallmentsOptions.map((opt: any) => (
+                      <SelectItem key={opt.installments} value={String(opt.installments)}>
+                        {opt.recommended_message}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
