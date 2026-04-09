@@ -36,9 +36,9 @@ Deno.serve(async (req) => {
       return json({ sent: 0, total_customers: 0, customers_with_push: 0, removed: 0, message: "Nenhum cliente encontrado" });
     }
 
-    // Get all unique customer auth_user_ids (include store owner if registered as customer)
+    // Get all unique customer auth_user_ids, EXCLUDING the store owner (admin)
     const customerUserIds = [...new Set(
-      customers.map((c: any) => c.auth_user_id).filter((id: string) => !!id)
+      customers.map((c: any) => c.auth_user_id).filter((id: string) => !!id && id !== user.id)
     )];
 
     if (customerUserIds.length === 0) {
