@@ -101,6 +101,12 @@ export function ProductImageSlideshow({
     setFailedImages((prev) => (prev.includes(src) ? prev : [...prev, src]));
   };
 
+  // Ken Burns slow zoom cycle
+  const [zoomKey, setZoomKey] = useState(0);
+  useEffect(() => {
+    setZoomKey((k) => k + 1);
+  }, [currentIndex]);
+
   if (visibleImages.length === 0) {
     return (
       <div className={`flex h-full w-full items-center justify-center bg-muted/30 ${className}`}>
@@ -108,12 +114,6 @@ export function ProductImageSlideshow({
       </div>
     );
   }
-
-  // Ken Burns slow zoom cycle
-  const [zoomKey, setZoomKey] = useState(0);
-  useEffect(() => {
-    setZoomKey((k) => k + 1);
-  }, [currentIndex]);
 
   return (
     <div className="flex h-full w-full flex-col gap-2">
