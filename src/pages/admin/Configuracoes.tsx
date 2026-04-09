@@ -294,6 +294,7 @@ function GeneralSettingsTab() {
       welcome_coupon_min_order: welcomeCouponMinOrder ? Number(welcomeCouponMinOrder) : null,
       welcome_coupon_expires_days: welcomeCouponExpiresDays,
       banner_mobile_format: bannerMobileFormat,
+      is_verified: isVerified,
     } as any);
   };
 
