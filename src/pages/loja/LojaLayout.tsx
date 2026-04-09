@@ -61,11 +61,42 @@ export default function LojaLayout() {
   const cart = useCart(slug);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [globalCep, setGlobalCep] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Auto-recognize location by IP
+  useEffect(() => {
+    const savedCep = localStorage.getItem("global_cep");
+    if (savedCep) {
+      setGlobalCep(savedCep);
+      return;
+    }
+
+    const recognizeLocation = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        if (data && data.postal) {
+          const cleanCep = data.postal.replace(/\D/g, "");
+          if (cleanCep.length === 8) {
+            setGlobalCep(cleanCep);
+            localStorage.setItem("global_cep", cleanCep);
+            toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error recognizing location:", error);
+      }
+    };
+    
+    // Small delay to let other things load first
+    const timer = setTimeout(recognizeLocation, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
