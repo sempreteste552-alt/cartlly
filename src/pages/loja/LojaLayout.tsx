@@ -493,7 +493,7 @@ export default function LojaLayout() {
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
-            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
+            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={true} />
 
             {/* Social icons in header - all devices */}
             <div className="flex items-center gap-1.5">
