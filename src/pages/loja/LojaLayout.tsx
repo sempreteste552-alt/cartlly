@@ -68,11 +68,26 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auto-recognize location by IP
+  // Lookup city from CEP via ViaCEP
+  const lookupCepCity = async (cepVal: string) => {
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
+      const data = await res.json();
+      if (data && !data.erro && data.localidade) {
+        setGlobalCity(`${data.localidade} - ${data.uf}`);
+        localStorage.setItem("global_city", `${data.localidade} - ${data.uf}`);
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Auto-detect location by IP or use saved CEP
   useEffect(() => {
     const savedCep = localStorage.getItem("global_cep");
+    const savedCity = localStorage.getItem("global_city");
     if (savedCep) {
       setGlobalCep(savedCep);
+      if (savedCity) setGlobalCity(savedCity);
+      else lookupCepCity(savedCep);
       return;
     }
 
@@ -85,6 +100,11 @@ export default function LojaLayout() {
           if (cleanCep.length === 8) {
             setGlobalCep(cleanCep);
             localStorage.setItem("global_cep", cleanCep);
+            const cityName = data.city ? `${data.city} - ${data.region_code || ""}` : "";
+            if (cityName) {
+              setGlobalCity(cityName);
+              localStorage.setItem("global_city", cityName);
+            }
             toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
           }
         }
@@ -93,10 +113,45 @@ export default function LojaLayout() {
       }
     };
     
-    // Small delay to let other things load first
     const timer = setTimeout(recognizeLocation, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleGlobalCepChange = (val: string) => {
+    const clean = val.replace(/\D/g, "").slice(0, 8);
+    setGlobalCep(clean);
+    if (clean.length === 8) {
+      localStorage.setItem("global_cep", clean);
+      lookupCepCity(clean);
+    } else {
+      setGlobalCity("");
+    }
+  };
+
+  const detectMyLocation = async () => {
+    try {
+      toast.info("📍 Detectando sua localização...");
+      const response = await fetch("https://ipapi.co/json/");
+      const data = await response.json();
+      if (data && data.postal) {
+        const cleanCep = data.postal.replace(/\D/g, "");
+        if (cleanCep.length === 8) {
+          setGlobalCep(cleanCep);
+          localStorage.setItem("global_cep", cleanCep);
+          const cityName = data.city ? `${data.city} - ${data.region_code || ""}` : "";
+          if (cityName) {
+            setGlobalCity(cityName);
+            localStorage.setItem("global_city", cityName);
+          }
+          toast.success(`📍 ${data.city || "Localização detectada"}`);
+        }
+      } else {
+        toast.error("Não foi possível detectar sua localização");
+      }
+    } catch {
+      toast.error("Erro ao detectar localização");
+    }
+  };
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
