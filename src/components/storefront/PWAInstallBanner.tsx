@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Download, Share, Plus, MoreVertical, Bell, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureCurrentPushSubscription } from "@/lib/pushSubscription";
+import { toast } from "sonner";
 
 type Platform = "ios" | "android" | "desktop" | null;
 
@@ -22,9 +25,47 @@ interface PWAInstallBannerProps {
   storeName?: string;
   logoUrl?: string;
   primaryColor?: string;
+  storeUserId?: string;
 }
 
-export function PWAInstallBanner({ storeName, logoUrl, primaryColor }: PWAInstallBannerProps) {
+/**
+ * After a successful install, automatically request push permission
+ * and persist the subscription so the customer receives notifications.
+ */
+async function autoEnablePushAfterInstall(storeUserId?: string) {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    if (Notification.permission === "denied") return;
+
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await ensureCurrentPushSubscription(registration);
+    const json = subscription.toJSON();
+    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from("push_subscriptions").upsert(
+      {
+        user_id: user.id,
+        endpoint: json.endpoint,
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+        store_user_id: storeUserId || null,
+      },
+      { onConflict: "user_id,endpoint" }
+    );
+
+    toast.success("🔔 Notificações ativadas automaticamente!");
+  } catch (err) {
+    console.warn("Auto push after install failed:", err);
+  }
+}
+
+export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId }: PWAInstallBannerProps) {
   const [show, setShow] = useState(false);
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -45,6 +86,15 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor }: PWAInstal
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
+  // Listen for app installed event to auto-enable push
+  useEffect(() => {
+    const onInstalled = () => {
+      autoEnablePushAfterInstall(storeUserId);
+    };
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
+  }, [storeUserId]);
+
   const dismiss = () => {
     setShow(false);
     sessionStorage.setItem("pwa-banner-dismissed", "1");
@@ -54,7 +104,10 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor }: PWAInstal
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
-      if (result.outcome === "accepted") dismiss();
+      if (result.outcome === "accepted") {
+        dismiss();
+        // Push will be auto-enabled via the appinstalled event
+      }
       setDeferredPrompt(null);
     } else {
       setShowInstructions(true);
