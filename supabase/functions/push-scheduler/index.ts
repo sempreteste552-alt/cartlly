@@ -362,7 +362,9 @@ Deno.serve(async (req) => {
     const results = {
       product_view: { processed: 0, sent: 0, skipped: 0 },
       cart_abandonment: { processed: 0, sent: 0, skipped: 0 },
+      wishlist_reminder: { processed: 0, sent: 0, skipped: 0 },
       inactivity: { processed: 0, sent: 0, skipped: 0 },
+      hourly_engagement: { processed: 0, sent: 0, skipped: 0 },
       promo_campaign: { processed: 0, sent: 0, skipped: 0 },
       sequences_created: 0,
       sequences_advanced: 0,
@@ -388,15 +390,20 @@ Deno.serve(async (req) => {
     today.setHours(0, 0, 0, 0);
     const { data: todayExecsAll } = await supabase
       .from("automation_executions")
-      .select("customer_id")
+      .select("customer_id, trigger_type")
       .eq("status", "sent")
       .gte("sent_at", today.toISOString())
-      .limit(1000);
+      .limit(2000);
     
-    const globalDailyCounts = new Map<string, number>();
+    // triggerCountsByCustomer: customer_id -> trigger_type -> count
+    const triggerCountsByCustomer = new Map<string, Map<string, number>>();
     (todayExecsAll || []).forEach((e: any) => {
       if (e.customer_id) {
-        globalDailyCounts.set(e.customer_id, (globalDailyCounts.get(e.customer_id) || 0) + 1);
+        if (!triggerCountsByCustomer.has(e.customer_id)) {
+          triggerCountsByCustomer.set(e.customer_id, new Map());
+        }
+        const counts = triggerCountsByCustomer.get(e.customer_id)!;
+        counts.set(e.trigger_type, (counts.get(e.trigger_type) || 0) + 1);
       }
     });
 
