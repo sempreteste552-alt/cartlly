@@ -28,6 +28,12 @@ export const OnboardingTutorial = () => {
       doneBtnText: "Próximo Passo",
       nextBtnText: "Próximo",
       prevBtnText: "Anterior",
+      allowClose: true,
+      onDestroyed: () => {
+        // If the tutorial is destroyed (closed/finished), we should consider if it was finished or just closed
+        // But for simplicity, if it's closed, we stop the auto-progression in this session
+        sessionStorage.removeItem("onboarding_tutorial_active");
+      },
     };
 
     if (currentPath === "/admin") {
