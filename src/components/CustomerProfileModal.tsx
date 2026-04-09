@@ -193,9 +193,19 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
                         </div>
                       ))}
                     </div>
-                    <div className="flex justify-between font-medium text-sm pt-1">
-                      <span>Total</span>
-                      <span>{formatPrice(order.total)}</span>
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="font-semibold text-sm">Total: {formatPrice(order.total)}</p>
+                      {basePath && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs font-medium text-primary hover:bg-primary/5"
+                          asChild
+                          onClick={() => onOpenChange(false)}
+                        >
+                          <Link to={`${basePath}/rastreio/${order.id}`}>Ver Pedido</Link>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))
