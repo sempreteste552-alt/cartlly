@@ -340,27 +340,6 @@ export function AIChatWidget() {
     }
   };
 
-  if (aiLocked) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50 w-72 rounded-2xl border border-border bg-card p-4 shadow-2xl">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Lock className="h-5 w-5 text-primary" />
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">Assistente IA bloqueado</p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Sem IA você responde mais devagar, analisa pior e vende abaixo do que poderia. Desbloqueie agora para usar automação e inteligência a seu favor.
-            </p>
-            <Button size="sm" className="gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
-              <Sparkles className="h-3.5 w-3.5" /> Desbloquear IA
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (!open) {
     return (
       <Button
@@ -395,9 +374,11 @@ export function AIChatWidget() {
             </div>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
-              <Settings2 className="h-4 w-4" />
-            </Button>
+            {!aiLocked && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setOpen(false)}>
               <Minimize2 className="h-4 w-4" />
             </Button>
@@ -409,7 +390,24 @@ export function AIChatWidget() {
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30">
-          {messages.length === 0 && (
+          {aiLocked ? (
+            <div className="flex h-full min-h-[360px] items-center justify-center">
+              <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-6 w-6 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-base font-semibold text-foreground">Assistente IA bloqueado</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Sem IA você responde no braço, demora para agir e deixa venda escapar. No <strong>Premium</strong> isso vira atendimento rápido, análise esperta e ação automática.
+                  </p>
+                </div>
+                <Button size="sm" className="mt-4 gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
+                  <Sparkles className="h-3.5 w-3.5" /> Fazer upgrade para liberar
+                </Button>
+              </div>
+            </div>
+          ) : messages.length === 0 && (
             <div className="space-y-4">
               <div className="flex flex-col items-center text-center space-y-2 py-4">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -435,7 +433,7 @@ export function AIChatWidget() {
             </div>
           )}
 
-          {messages.map((msg, i) => (
+          {!aiLocked && messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
@@ -460,7 +458,7 @@ export function AIChatWidget() {
               </div>
             </div>
           ))}
-          {isLoading && (
+          {!aiLocked && isLoading && (
             <div className="flex justify-start">
               <div className="flex gap-3 max-w-[85%]">
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -475,6 +473,7 @@ export function AIChatWidget() {
         </div>
 
         {/* Footer with Input */}
+        {!aiLocked && (
         <div className="p-4 bg-card border-t border-border">
           {pendingImages.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
@@ -521,6 +520,7 @@ export function AIChatWidget() {
             </Button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Settings Dialog */}
