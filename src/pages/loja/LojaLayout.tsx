@@ -626,6 +626,50 @@ export default function LojaLayout() {
                 </div>
               );
             })}
+            
+            {/* Global CEP Input in Mobile Menu */}
+            <div 
+              className="px-3 py-4 border-t border-border mt-2 space-y-2"
+              style={{
+                opacity: mobileMenu ? 1 : 0,
+                transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
+                transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 400ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 400ms",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
+                <span className="text-sm font-semibold">Onde você está?</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Seu CEP (00000-000)"
+                  className="bg-secondary border-border font-mono h-11"
+                  value={globalCep}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
+                    setGlobalCep(val);
+                    if (val.length === 8) {
+                      localStorage.setItem("global_cep", val);
+                      toast.success("Localização atualizada!");
+                    }
+                  }}
+                  inputMode="numeric"
+                  maxLength={8}
+                />
+                <Button 
+                  variant="outline" 
+                  className="h-11 aspect-square p-0"
+                  onClick={() => {
+                    if (globalCep.length === 8) toast.success("Localização salva!");
+                    else toast.error("Digite um CEP válido");
+                  }}
+                >
+                  <LocateFixed className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Isso ajuda a calcular prazos e frete automaticamente.</p>
+            </div>
+
             {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
               <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
