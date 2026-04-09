@@ -449,7 +449,7 @@ export default function LojaCheckout() {
           </Button>
           {orderId && (
             <Button variant="outline" className="w-full" onClick={() => navigate(`../rastreio/${orderId}`)}>
-              <Package className="mr-2 h-4 w-4" /> Rastrear Pedido
+              <Package className="mr-2 h-4 w-4" /> Ver Pedido
             </Button>
           )}
         </div>
