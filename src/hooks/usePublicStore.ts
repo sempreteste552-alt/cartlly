@@ -144,3 +144,19 @@ export function useBestSellingProducts(storeUserId?: string) {
     },
   });
 }
+
+export function usePublicProductPageConfig(storeUserId?: string) {
+  return useQuery({
+    queryKey: ["public_product_page_config", storeUserId],
+    enabled: !!storeUserId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_product_page_config")
+        .select("*")
+        .eq("user_id", storeUserId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}

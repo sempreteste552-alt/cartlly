@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
@@ -22,7 +22,7 @@ import { toast } from "sonner";
 export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
@@ -46,6 +46,43 @@ export default function LojaProduto() {
   const [customerName, setCustomerName] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
   const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
+  const [showStickyCart, setShowStickyCart] = useState(false);
+
+  useEffect(() => {
+    if (!productPageConfig?.enable_sticky_add_to_cart) return;
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setShowStickyCart(scrollPosition > 600);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [productPageConfig?.enable_sticky_add_to_cart]);
+
+  // Track recently viewed
+  useEffect(() => {
+    if (id && productPageConfig?.enable_recently_viewed) {
+      const viewed = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+      const filtered = viewed.filter((pid: string) => pid !== id);
+      const newViewed = [id, ...filtered].slice(0, 10);
+      localStorage.setItem("recently_viewed", JSON.stringify(newViewed));
+    }
+  }, [id, productPageConfig?.enable_recently_viewed]);
+
+  const recentlyViewedProducts = useMemo(() => {
+    if (!productPageConfig?.enable_recently_viewed || !products) return [];
+    const viewedIds = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+    return products.filter((p) => viewedIds.includes(p.id) && p.id !== id).slice(0, 8);
+  }, [id, products, productPageConfig?.enable_recently_viewed]);
+
+  const bestSellersInCategory = useMemo(() => {
+    if (!productPageConfig?.enable_category_best_sellers || !product || !products) return [];
+    return products
+      .filter((p) => p.category_id === product.category_id && p.id !== product.id)
+      .sort((a, b) => (b as any).sales_count - (a as any).sales_count)
+      .slice(0, 8);
+  }, [product, products, productPageConfig?.enable_category_best_sellers]);
 
   const handleProductClick = useCallback((e: React.MouseEvent, productId: string) => {
     e.preventDefault();
@@ -86,6 +123,16 @@ export default function LojaProduto() {
       .filter((p) => p.id !== product.id && p.category_id === product.category_id)
       .slice(0, 8);
   }, [product, products]);
+
+  const buyTogetherProduct = useMemo(() => {
+    if (!productPageConfig?.enable_buy_together || !products || products.length < 2) return null;
+    return products.find((p) => p.id !== product.id && p.category_id === product.category_id);
+  }, [product, products, productPageConfig?.enable_buy_together]);
+
+  const bundlePrice = useMemo(() => {
+    if (!buyTogetherProduct) return 0;
+    return (effectivePrice + buyTogetherProduct.price) * 0.95; // 5% discount
+  }, [effectivePrice, buyTogetherProduct]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -131,13 +178,24 @@ export default function LojaProduto() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
         <div className="space-y-3">
-          <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
-              <img
-                src={allImages[selectedImageIndex] || allImages[0]}
-                alt={product.name}
-                className="w-full h-full object-contain transition-opacity duration-300"
-              />
+              allImages[selectedImageIndex]?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                <video
+                  src={allImages[selectedImageIndex]}
+                  controls
+                  className="w-full h-full object-contain"
+                  autoPlay
+                  muted
+                  loop
+                />
+              ) : (
+                <img
+                  src={allImages[selectedImageIndex] || allImages[0]}
+                  alt={product.name}
+                  className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
+                />
+              )
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Package className="h-24 w-24 text-gray-200" />
@@ -153,7 +211,13 @@ export default function LojaProduto() {
                   className="shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors"
                   style={{ borderColor: selectedImageIndex === i ? primaryColor : "#e5e7eb" }}
                 >
-                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  {img.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                    <div className="w-full h-full bg-black flex items-center justify-center">
+                      <Video className="h-6 w-6 text-white" />
+                    </div>
+                  ) : (
+                    <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  )}
                 </button>
               ))}
             </div>
@@ -222,6 +286,13 @@ export default function LojaProduto() {
             <Badge style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>📦 Sob encomenda</Badge>
           ) : (
             <Badge variant="destructive">Esgotado</Badge>
+          )}
+          
+          {productPageConfig?.enable_stock_urgency && product.stock > 0 && product.stock <= (productPageConfig?.stock_urgency_threshold || 5) && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 animate-pulse">
+              <AlertTriangle className="h-4 w-4" />
+              <p className="text-sm font-bold">Corra! Restam apenas {product.stock} unidades em estoque!</p>
+            </div>
           )}
 
           <div className="flex gap-3">
@@ -300,18 +371,122 @@ export default function LojaProduto() {
 
           <Separator />
 
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { icon: Truck, label: "Entrega rápida" },
-              { icon: ShieldCheck, label: "Compra segura" },
-              { icon: RotateCcw, label: "Troca fácil" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
-                <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
-                <p className="text-xs mt-1 text-gray-600">{label}</p>
+          {productPageConfig?.enable_trust_badges && (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Truck, label: "Entrega rápida" },
+                { icon: ShieldCheck, label: "Compra segura" },
+                { icon: RotateCcw, label: "Troca fácil" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
+                  <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
+                  <p className="text-xs mt-1 text-gray-600">{label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {productPageConfig?.enable_delivery_estimation && (
+            <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
+              <Truck className="h-4 w-4" />
+              <p className="text-sm">Prazo estimado de entrega: <span className="font-bold">{productPageConfig.delivery_estimation_text || "3-7 dias úteis"}</span></p>
+            </div>
+          )}
+
+          {productPageConfig?.enable_size_guide && productPageConfig.size_guide_content && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Ruler className="h-4 w-4" />
+                <h4 className="text-sm font-bold">Guia de Tamanhos</h4>
               </div>
+              <p className="text-sm text-slate-600 whitespace-pre-wrap">{productPageConfig.size_guide_content}</p>
+            </div>
+          )}
+
+          {productPageConfig?.enable_faq && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <HelpCircle className="h-4 w-4" />
+                <h4 className="text-sm font-bold">Dúvidas Frequentes</h4>
+              </div>
+              <p className="text-xs text-slate-500 italic">Consulte nossa central de atendimento para mais detalhes.</p>
+        </div>
+      )}
+
+      {/* Recently Viewed */}
+      {productPageConfig?.enable_recently_viewed && recentlyViewedProducts.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Vistos Recentemente</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+            {recentlyViewedProducts.map((p) => (
+              <Link
+                key={p.id}
+                to={`${basePath}/produto/${p.id}`}
+                className="block group"
+              >
+                <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-100 group-hover:border-primary transition-colors mb-2">
+                  <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                </div>
+                <p className="text-xs font-medium line-clamp-1">{p.name}</p>
+                <p className="text-xs font-bold" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
+              </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Category Best Sellers */}
+      {productPageConfig?.enable_category_best_sellers && bestSellersInCategory.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Mais Vendidos da Categoria</h2>
+          <Carousel
+            opts={{ align: "start" }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-3">
+              {bestSellersInCategory.map((p) => (
+                <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                  <Link to={`${basePath}/produto/${p.id}`} className="group block">
+                    <Card className="overflow-hidden border-gray-200">
+                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-sm font-medium line-clamp-2">{p.name}</p>
+                        <p className="text-sm font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(p.price)}</p>
+                      </div>
+                    </Card>
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+      )}
+
+      {/* Sticky Cart Bar */}
+      {productPageConfig?.enable_sticky_add_to_cart && showStickyCart && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 shadow-lg animate-in fade-in slide-in-from-bottom-full duration-300 md:hidden lg:flex items-center justify-center">
+          <div className="max-w-7xl w-full flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 hidden md:flex">
+              <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded object-cover" />
+              <div>
+                <p className="text-sm font-bold line-clamp-1">{product.name}</p>
+                <p className="text-xs text-gray-500">{formatPrice(effectivePrice)}</p>
+              </div>
+            </div>
+            <div className="flex-1 md:max-w-xs">
+              <Button
+                className="w-full h-11"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+                onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" /> Comprar Agora
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
           {product.description && (
             <>
@@ -322,13 +497,51 @@ export default function LojaProduto() {
               </div>
             </>
           )}
+
+          {productPageConfig?.enable_buy_together && buyTogetherProduct && (
+            <div className="mt-6 p-4 border border-primary/20 rounded-xl bg-primary/5 space-y-4">
+              <h3 className="font-bold flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                Compre Junto e Ganhe 5% OFF
+              </h3>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
+                  </div>
+                  <span className="text-xl font-bold text-gray-400">+</span>
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-white">
+                    <img src={buyTogetherProduct.image_url} alt={buyTogetherProduct.name} className="w-full h-full object-contain" />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 line-through">{formatPrice(effectivePrice + buyTogetherProduct.price)}</p>
+                  <p className="text-xl font-black text-primary">{formatPrice(bundlePrice)}</p>
+                </div>
+              </div>
+              <Button 
+                className="w-full h-11" 
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+                onClick={() => {
+                  cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url });
+                  cart.addItem({ id: buyTogetherProduct.id, name: buyTogetherProduct.name, price: buyTogetherProduct.price, image_url: buyTogetherProduct.image_url });
+                  cartNotif.show("Combo Adicionado!", product.image_url);
+                  openCart();
+                }}
+              >
+                Adicionar Ambos ao Carrinho
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
-      <ProductReviews productId={product.id} />
+      {productPageConfig?.enable_reviews && (
+        <ProductReviews productId={product.id} />
+      )}
 
       {/* Similar Products Carousel */}
-      {similarProducts.length > 0 && (
+      {productPageConfig?.enable_related_products !== false && similarProducts.length > 0 && (
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Produtos Similares</h2>
           <Carousel
