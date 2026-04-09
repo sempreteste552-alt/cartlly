@@ -42,50 +42,68 @@ async function shouldSkipAntiSpam(
   supabase: any,
   customerId: string,
   productId: string | null,
-  dailyCount: number,
+  triggerCount: number,
   priority: Priority,
-  freqConfig: { softDailyLimit: number; cooldownMinutes: number }
+  freqConfig: { softDailyLimit: number; cooldownMinutes: number },
+  triggerType?: string
 ): Promise<{ skip: boolean; reason?: string }> {
-  // Check soft daily limit (high priority can bypass)
-  if (dailyCount >= freqConfig.softDailyLimit && !PRIORITY_CONFIG[priority].bypassSoftLimit) {
-    return { skip: true, reason: "soft_daily_limit" };
+  // Specific limit: 3 per day for cart, product_view, wishlist as requested
+  if (triggerType === "abandoned_cart" || triggerType === "product_view" || triggerType === "wishlist_reminder") {
+    if (triggerCount >= 3) {
+      return { skip: true, reason: "type_daily_limit" };
+    }
   }
-  // Hard ceiling even for high priority
-  if (dailyCount >= 25) {
+
+  // Hard ceiling for any single type
+  if (triggerCount >= 25) {
     return { skip: true, reason: "hard_daily_ceiling" };
   }
 
   // Check cooldown: last push must be > cooldownMinutes ago
-  const cooldown = Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
+  // Hourly engagement has its own 60min cooldown
+  const cooldown = triggerType === "hourly_engagement" 
+    ? 60 
+    : Math.max(PRIORITY_CONFIG[priority].minCooldownMinutes, freqConfig.cooldownMinutes);
+    
   const cooldownCutoff = new Date(Date.now() - cooldown * 60 * 1000).toISOString();
-  const { data: recentPush } = await supabase
+  
+  let recentQuery = supabase
     .from("automation_executions")
     .select("id")
     .eq("customer_id", customerId)
     .eq("status", "sent")
-    .gte("sent_at", cooldownCutoff)
-    .limit(1);
+    .gte("sent_at", cooldownCutoff);
+
+  // If hourly engagement, only check against other hourly engagements
+  if (triggerType === "hourly_engagement") {
+    recentQuery = recentQuery.eq("trigger_type", "hourly_engagement");
+  }
+
+  const { data: recentPush } = await recentQuery.limit(1);
+
   if (recentPush && recentPush.length > 0) {
     return { skip: true, reason: "cooldown" };
   }
 
-  // Anti-spam: skip if user ignored last 3 pushes (sent but never clicked)
+  // Anti-spam: skip if user ignored last 5 pushes (more lenient for hourly)
+  const ignoredLimit = triggerType === "hourly_engagement" ? 10 : 3;
   const { data: lastPushes } = await supabase
     .from("automation_executions")
     .select("clicked_at")
     .eq("customer_id", customerId)
     .eq("status", "sent")
     .order("sent_at", { ascending: false })
-    .limit(3);
-  if (lastPushes && lastPushes.length >= 3) {
+    .limit(ignoredLimit);
+
+  if (lastPushes && lastPushes.length >= ignoredLimit) {
     const allIgnored = lastPushes.every((p: any) => !p.clicked_at);
     if (allIgnored) {
-      return { skip: true, reason: "ignored_3_consecutive" };
+      return { skip: true, reason: "ignored_consecutive" };
     }
   }
 
   // Anti-spam: don't repeat same product within 1 hour
-  if (productId) {
+  if (productId && triggerType !== "hourly_engagement") {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recentProduct } = await supabase
       .from("automation_executions")
@@ -159,22 +177,6 @@ const PRODUCT_VIEW_SEQUENCE: SequenceStep[] = [
       { title: "🌡️ Clima quente para {product}", body: "{name}, todo mundo quer o {product} da {store} hoje! Não perca 🔥" },
     ],
   },
-  {
-    delayMinutes: 60, // +60 minutes (115m total)
-    intensity: "aggressive",
-    templates: [
-      { title: "🚨 ÚLTIMA CHANCE: {product}!", body: "{name}, é agora ou nunca! O {product} da {store} vai esgotar! COMPRE JÁ 🔥" },
-      { title: "⛔ {product}: AGORA OU NUNCA!", body: "ATENÇÃO {name}! O {product} da {store} está nas últimas. NÃO PERCA! ⚡" },
-      { title: "💣 SÓ AGORA: {product}!", body: "{name}, essa é sua ÚLTIMA OPORTUNIDADE de levar o {product} na {store}! 🏃" },
-      { title: "🔴 ESGOTANDO: {product}!", body: "{name}! O {product} da {store} vai acabar agora! É sua chance. CORRA! 💨" },
-      { title: "⏳ TEMPO ESGOTADO: {product}", body: "{name}, o {product} da {store} não vai esperar. GARANTA AGORA! 🚨" },
-      { title: "🆘 ÚLTIMA CHAMADA: {product}", body: "URGENTE {name}! O {product} da {store} está quase esgotado. COMPRE AGORA! 🔥" },
-      { title: "💀 FIM DE ESTOQUE: {product}", body: "{name}, estoque do {product} na {store} está no fim! VÁ AGORA 🏃💨" },
-      { title: "🔥 URGÊNCIA: {product}!", body: "{name}! Poucos minutos para garantir o {product} na {store}. NÃO DEIXE ESCAPAR! ⚡" },
-      { title: "⚡ GARANTA SEU {product}!", body: "{name}, o {product} da {store} vai sumir do estoque! GARANTA AGORA! 🚨" },
-      { title: "🎯 DECISÃO: {product}", body: "{name}, última chance real de levar o {product} da {store}! VÁ AGORA! 💥" },
-    ],
-  },
 ];
 
 const CART_ABANDONMENT_SEQUENCE: SequenceStep[] = [
@@ -226,6 +228,50 @@ const CART_ABANDONMENT_SEQUENCE: SequenceStep[] = [
       { title: "🎯 DECISÃO FINAL!", body: "{name}, é sua ÚLTIMA CHANCE na {store}! Finalize ou perca tudo! COMPRE AGORA 💥" },
     ],
   },
+];
+
+const WISHLIST_SEQUENCE: SequenceStep[] = [
+  {
+    delayMinutes: 30, // 30m after favoriting
+    intensity: "soft",
+    templates: [
+      { title: "❤️ No seu radar: {product}", body: "{name}, o {product} que você favoritou na {store} ainda está aqui! ✨" },
+      { title: "⭐ Uma escolha brilhante!", body: "Oi {name}! O {product} nos seus favoritos combina muito com você. Confira na {store}! 🛍️" },
+      { title: "💭 Lembra do {product}?", body: "{name}, o {product} que você favoritou na {store} está te esperando! 💜" },
+      { title: "✨ Favoritado pra você!", body: "Oi {name}, guardamos o {product} nos seus favoritos na {store}. Que tal levá-lo agora? 😊" },
+    ],
+  },
+  {
+    delayMinutes: 180, // 3 hours (total)
+    intensity: "medium",
+    templates: [
+      { title: "🎁 {product}: Tratamento VIP!", body: "{name}, seu favorito {product} está com alta procura na {store}. Garanta o seu! 🔥" },
+      { title: "⚡ Não perca seu favorito!", body: "Oi {name}! O {product} da sua lista de desejos na {store} está voando! 🏃" },
+      { title: "🔥 Favorito em destaque!", body: "{name}, o {product} que você amou na {store} é sucesso absoluto! Garanta o seu. 💫" },
+    ],
+  },
+  {
+    delayMinutes: 720, // 12 hours (total)
+    intensity: "aggressive",
+    templates: [
+      { title: "🚨 Última chance: {product}!", body: "{name}, o {product} nos seus favoritos na {store} está quase esgotado! Compre agora ⚡" },
+      { title: "⚠️ Favorito em risco!", body: "Atenção {name}! O {product} da sua lista na {store} pode acabar a qualquer momento! 💨" },
+      { title: "🛑 AGORA OU NUNCA: {product}", body: "{name}, o estoque do seu favorito {product} na {store} está no fim! CORRA! 🔥" },
+    ],
+  },
+];
+
+const HOURLY_ENGAGEMENT_TEMPLATES = [
+  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} seja incrível! Que tal conferir as novidades na {store}? 🛍️" },
+  { title: "🌈 Uma ótima {day} pra você!", body: "{name}, temos ofertas especiais esperando por você na {store}! ✨" },
+  { title: "✨ Momento de brilhar!", body: "Oi {name}! Que tal um mimo hoje na {store}? Você merece! 💜" },
+  { title: "💫 Novidades chegando!", body: "{name}, a {store} está cheia de coisas lindas hoje. Vem ver! 🌟" },
+  { title: "🎁 Um presente pra sua {day}!", body: "Oi {name}! Confira o que separamos para você na {store} hoje 🎀" },
+  { title: "🔥 {name}, no pique!", body: "Aproveite sua {day} para levar o que você mais gosta na {store}! ⚡" },
+  { title: "🍀 Sorte do dia: {store}!", body: "{name}, achamos que hoje é seu dia de sorte! Confira as ofertas 🌈" },
+  { title: "☕ Pausa para a {store}!", body: "Oi {name}! Que tal uma pausa na sua {day} para ver o que chegou na {store}? ☕🛍️" },
+  { title: "🌟 {name}, você é especial!", body: "Passando para desejar uma ótima {day} e te convidar para a {store}! ✨" },
+  { title: "🛍️ Desejos da {day}!", body: "{name}, o que está na sua lista de desejos hoje na {store}? Vem conferir! 💭" },
 ];
 
 const INACTIVITY_SEQUENCE: SequenceStep[] = [
@@ -300,7 +346,9 @@ Deno.serve(async (req) => {
     const results = {
       product_view: { processed: 0, sent: 0, skipped: 0 },
       cart_abandonment: { processed: 0, sent: 0, skipped: 0 },
+      wishlist_reminder: { processed: 0, sent: 0, skipped: 0 },
       inactivity: { processed: 0, sent: 0, skipped: 0 },
+      hourly_engagement: { processed: 0, sent: 0, skipped: 0 },
       promo_campaign: { processed: 0, sent: 0, skipped: 0 },
       sequences_created: 0,
       sequences_advanced: 0,
@@ -326,15 +374,20 @@ Deno.serve(async (req) => {
     today.setHours(0, 0, 0, 0);
     const { data: todayExecsAll } = await supabase
       .from("automation_executions")
-      .select("customer_id")
+      .select("customer_id, trigger_type")
       .eq("status", "sent")
       .gte("sent_at", today.toISOString())
-      .limit(1000);
+      .limit(2000);
     
-    const globalDailyCounts = new Map<string, number>();
+    // triggerCountsByCustomer: customer_id -> trigger_type -> count
+    const triggerCountsByCustomer = new Map<string, Map<string, number>>();
     (todayExecsAll || []).forEach((e: any) => {
       if (e.customer_id) {
-        globalDailyCounts.set(e.customer_id, (globalDailyCounts.get(e.customer_id) || 0) + 1);
+        if (!triggerCountsByCustomer.has(e.customer_id)) {
+          triggerCountsByCustomer.set(e.customer_id, new Map());
+        }
+        const counts = triggerCountsByCustomer.get(e.customer_id)!;
+        counts.set(e.trigger_type, (counts.get(e.trigger_type) || 0) + 1);
       }
     });
 
@@ -395,6 +448,10 @@ Deno.serve(async (req) => {
           sequenceDef = CART_ABANDONMENT_SEQUENCE;
           triggerType = "abandoned_cart";
           priority = "high";
+        } else if (seqType === "wishlist") {
+          sequenceDef = WISHLIST_SEQUENCE;
+          triggerType = "wishlist_reminder";
+          priority = "high";
         } else if (seqType === "inactivity") {
           sequenceDef = INACTIVITY_SEQUENCE;
           triggerType = "inactivity";
@@ -406,13 +463,15 @@ Deno.serve(async (req) => {
         }
 
         // Smart rate limiting via anti-spam
-        const dailyCount = globalDailyCounts.get(seq.customer_id) || 0;
+        const userCounts = triggerCountsByCustomer.get(seq.customer_id);
+        const triggerCount = userCounts?.get(triggerType) || 0;
+        
         const freqConfig = storeFreqMap.get(seq.store_user_id) || defaultFreq;
-        const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, dailyCount, priority, freqConfig);
+        const spamCheck = await shouldSkipAntiSpam(supabase, seq.customer_id, seq.product_id, triggerCount, priority, freqConfig, triggerType);
         
         if (spamCheck.skip) {
           // Reschedule with short delays
-          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 15 : 25;
+          const rescheduleMinutes = spamCheck.reason === "cooldown" ? 30 : 60;
           const nextTime = new Date(Date.now() + rescheduleMinutes * 60 * 1000).toISOString();
           await supabase.from("retargeting_sequences").update({ next_push_at: nextTime }).eq("id", seq.id);
           results.anti_spam_blocked++;
@@ -491,7 +550,9 @@ Deno.serve(async (req) => {
 
           // Update daily count in memory
           if (wasSent) {
-            globalDailyCounts.set(seq.customer_id, (globalDailyCounts.get(seq.customer_id) || 0) + 1);
+            const counts = triggerCountsByCustomer.get(seq.customer_id) || new Map();
+            counts.set(triggerType, (counts.get(triggerType) || 0) + 1);
+            triggerCountsByCustomer.set(seq.customer_id, counts);
           }
 
           // Advance sequence
@@ -522,6 +583,9 @@ Deno.serve(async (req) => {
           } else if (seqType === "cart_abandonment") {
             results.cart_abandonment.processed++;
             wasSent ? results.cart_abandonment.sent++ : results.cart_abandonment.skipped++;
+          } else if (seqType === "wishlist") {
+            results.wishlist_reminder.processed++;
+            wasSent ? results.wishlist_reminder.sent++ : results.wishlist_reminder.skipped++;
           } else {
             results.inactivity.processed++;
             wasSent ? results.inactivity.sent++ : results.inactivity.skipped++;
@@ -622,6 +686,45 @@ Deno.serve(async (req) => {
           max_steps: CART_ABANDONMENT_SEQUENCE.length,
           next_push_at: nextPushAt,
           metadata: { sequence_type: "cart_abandonment", cart_id: cart.id },
+        });
+        results.sequences_created++;
+      }
+    }
+    // ========== 3.1) CREATE WISHLIST SEQUENCES ==========
+    const wishlistCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: recentWishlist } = await supabase
+      .from("customer_wishlist")
+      .select("customer_id, product_id, store_user_id, created_at")
+      .gte("created_at", wishlistCutoff)
+      .limit(50);
+
+    if (recentWishlist && recentWishlist.length > 0) {
+      const wishCustIds = [...new Set(recentWishlist.map((w: any) => w.customer_id))];
+      const { data: activeWishSeqs } = await supabase
+        .from("retargeting_sequences")
+        .select("customer_id, product_id")
+        .in("customer_id", wishCustIds)
+        .eq("status", "active")
+        .eq("metadata->>sequence_type", "wishlist");
+      
+      const hasActiveWish = new Set((activeWishSeqs || []).map((s: any) => `${s.customer_id}:${s.product_id}`));
+
+      for (const wish of recentWishlist) {
+        const key = `${wish.customer_id}:${wish.product_id}`;
+        if (hasActiveWish.has(key)) continue;
+
+        const firstStepDelay = WISHLIST_SEQUENCE[0].delayMinutes;
+        const nextPushAt = new Date(Date.now() + firstStepDelay * 60 * 1000).toISOString();
+
+        await supabase.from("retargeting_sequences").insert({
+          customer_id: wish.customer_id,
+          store_user_id: wish.store_user_id,
+          product_id: wish.product_id,
+          status: "active",
+          current_step: 0,
+          max_steps: WISHLIST_SEQUENCE.length,
+          next_push_at: nextPushAt,
+          metadata: { sequence_type: "wishlist" },
         });
         results.sequences_created++;
       }
@@ -749,8 +852,10 @@ Deno.serve(async (req) => {
         const freqConfig = storeFreqMap.get(rule.user_id) || defaultFreq;
 
         for (const customer of eligibleCustomers) {
-          const dailyCount = globalDailyCounts.get(customer.id) || 0;
-          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, product.id, dailyCount, "low", freqConfig);
+          const userCounts = triggerCountsByCustomer.get(customer.id);
+          const triggerCount = userCounts?.get("promo_campaign") || 0;
+          
+          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, product.id, triggerCount, "low", freqConfig, "promo_campaign");
           
           if (spamCheck.skip) {
             results.promo_campaign.skipped++;
@@ -794,7 +899,9 @@ Deno.serve(async (req) => {
 
             if (pushData.sent > 0) {
               campaignSent++;
-              globalDailyCounts.set(customer.id, dailyCount + 1);
+              const counts = triggerCountsByCustomer.get(customer.id) || new Map();
+              counts.set("promo_campaign", (counts.get("promo_campaign") || 0) + 1);
+              triggerCountsByCustomer.set(customer.id, counts);
             }
 
             results.promo_campaign.processed++;
@@ -816,6 +923,78 @@ Deno.serve(async (req) => {
             status: campaignSent > 0 ? "sent" : "skipped",
             related_product_id: product.id,
           });
+        }
+      }
+    }
+
+    // ========== 6) HOURLY ENGAGEMENT (Every hour, 24/7) ==========
+    const oneHourAgoEng = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    // Get all customers who have push enabled
+    const { data: allPushSubs } = await supabase
+      .from("push_subscriptions")
+      .select("user_id");
+    
+    if (allPushSubs && allPushSubs.length > 0) {
+      const pushUserIds = allPushSubs.map((s: any) => s.user_id);
+      const { data: customersWithPush } = await supabase
+        .from("customers")
+        .select("id, name, auth_user_id, store_user_id")
+        .in("auth_user_id", pushUserIds)
+        .limit(20);
+
+      if (customersWithPush && customersWithPush.length > 0) {
+        const { data: recentEngagements } = await supabase
+          .from("automation_executions")
+          .select("customer_id")
+          .eq("trigger_type", "hourly_engagement")
+          .gte("sent_at", oneHourAgoEng);
+        
+        const recentlyEngaged = new Set((recentEngagements || []).map((e: any) => e.customer_id));
+        const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+        const dayName = dayNames[new Date().getDay()];
+
+        for (const customer of customersWithPush) {
+          if (recentlyEngaged.has(customer.id)) continue;
+
+          const freqConfig = storeFreqMap.get(customer.store_user_id) || defaultFreq;
+          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, null, 0, "low", freqConfig, "hourly_engagement");
+          
+          if (spamCheck.skip) continue;
+
+          const msgIdx = Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length);
+          const template = HOURLY_ENGAGEMENT_TEMPLATES[msgIdx];
+          const store = storeMap.get(customer.store_user_id);
+          const storeName = store?.store_name || "nossa loja";
+          
+          const title = template.title.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+          const body = template.body.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+
+          try {
+            const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                target_user_id: customer.auth_user_id,
+                title, body, url: "/", type: "hourly_engagement",
+                store_user_id: customer.store_user_id,
+              }),
+            });
+            const pushData = await pushResp.json();
+
+            if (pushData.sent > 0) {
+              await supabase.from("automation_executions").insert({
+                user_id: customer.store_user_id,
+                customer_id: customer.id,
+                trigger_type: "hourly_engagement",
+                channel: "push",
+                message_text: `${title} — ${body}`,
+                status: "sent",
+              });
+              results.hourly_engagement.sent++;
+            }
+            results.hourly_engagement.processed++;
+          } catch (e) { console.error("Hourly push error:", e); }
         }
       }
     }
