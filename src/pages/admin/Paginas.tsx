@@ -275,14 +275,13 @@ export default function Paginas() {
                       {page.published ? "Despublicar" : "Publicar"}
                     </button>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                        const storeSlug = window.location.pathname.split("/")[2] || "sua-loja"; // This is a bit of a hack, let's find a better way to get the slug
-                        // Actually, I can use a more reliable way if I had the tenant info here.
-                        // But for now, let's just add a link to the page.
-                        window.open(`/loja/preview/p/${page.slug}`, "_blank");
-                      }} title="Visualizar">
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
+                      {storeSettings?.slug && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild title="Visualizar na Loja">
+                          <Link to={`/loja/${storeSettings.slug}/p/${page.slug}`} target="_blank">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(page)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
