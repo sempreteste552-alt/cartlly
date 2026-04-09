@@ -660,6 +660,7 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
+          initialCpf={cpf}
           onSuccess={(method, cpf) => {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
