@@ -15,6 +15,8 @@ import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Crown, Clock, HelpCircle } from "lucide-react";
