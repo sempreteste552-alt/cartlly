@@ -84,10 +84,12 @@ export function ProductImageSlideshow({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!showArrows) return; // Don't intercept touches in card mode
     setTouchStart(e.touches[0].clientX);
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!showArrows) return; // Don't intercept touches in card mode
     if (touchStart === null) return;
     const diff = touchStart - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) {

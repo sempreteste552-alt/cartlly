@@ -199,14 +199,28 @@ export default function LojaProduto() {
           <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
         </div>
       )}
-    <div className="max-w-7xl mx-auto px-4 py-6" style={{ animation: "fadeSlideIn 0.4s ease-out" }}>
-      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4">
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <style>{`
+        @keyframes pdp-fade-up {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .pdp-reveal {
+          animation: pdp-fade-up 0.5s ease-out both;
+        }
+        .pdp-reveal-d1 { animation-delay: 0.05s; }
+        .pdp-reveal-d2 { animation-delay: 0.15s; }
+        .pdp-reveal-d3 { animation-delay: 0.25s; }
+        .pdp-reveal-d4 { animation-delay: 0.35s; }
+        .pdp-reveal-d5 { animation-delay: 0.45s; }
+      `}</style>
+      <Link to={basePath} className="inline-flex items-center text-sm text-gray-500 hover:text-black mb-4 pdp-reveal">
         <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
-        <div className="space-y-3">
+        <div className="space-y-3 pdp-reveal pdp-reveal-d1">
           <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
               <img
@@ -258,7 +272,7 @@ export default function LojaProduto() {
         </div>
 
         {/* Product info */}
-        <div className="space-y-4">
+        <div className="space-y-4 pdp-reveal pdp-reveal-d2">
           {(product as any).categories?.name && (
             <Badge variant="outline" style={{ borderColor: primaryColor, color: primaryColor }}>{(product as any).categories.name}</Badge>
           )}
@@ -414,7 +428,7 @@ export default function LojaProduto() {
           <Separator />
 
           {productPageConfig?.enable_trust_badges && (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div className="flex flex-col items-center gap-4 py-4 pdp-reveal pdp-reveal-d3">
               <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
               <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
               <div className="bg-muted/50 rounded-xl p-3 border border-border">
@@ -452,7 +466,7 @@ export default function LojaProduto() {
 
       {/* Recently Viewed */}
       {productPageConfig?.enable_recently_viewed && recentlyViewedProducts.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-12 pdp-reveal pdp-reveal-d4">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Vistos Recentemente</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {recentlyViewedProducts.map((p) => (
@@ -474,7 +488,7 @@ export default function LojaProduto() {
 
       {/* Category Best Sellers */}
       {productPageConfig?.enable_category_best_sellers && bestSellersInCategory.length > 0 && (
-        <div className="mt-12">
+        <div className="mt-12 pdp-reveal pdp-reveal-d5">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Mais Vendidos da Categoria</h2>
           <Carousel
             opts={{ align: "start" }}
