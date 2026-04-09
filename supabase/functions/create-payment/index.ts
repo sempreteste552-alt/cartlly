@@ -374,6 +374,12 @@ async function createMercadoPagoPayment(
     console.error("MP API Error:", JSON.stringify(data));
     const errorMessage = data.message || data.cause?.[0]?.description || `Erro Mercado Pago (${response.status})`;
     const errorDetail = data.cause?.[0]?.code || "internal_error";
+    
+    // Log more specific error for high-risk rejections
+    if (data.status === "rejected" && data.status_detail === "cc_rejected_high_risk") {
+      console.warn(`Payment rejected due to high risk. Order ID: ${order.id}`);
+    }
+    
     throw new Error(`${errorMessage} (Ref: ${errorDetail})`);
   }
 
