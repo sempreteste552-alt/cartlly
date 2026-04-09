@@ -765,9 +765,14 @@ export default function LojaLayout() {
               </div>
             </div>
             <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
-            <div className="flex flex-col items-center gap-3 mb-4">
-              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="h-12 w-auto max-w-[90%] object-contain brightness-0 invert opacity-80" />
-              <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="h-10 w-auto max-w-[70%] object-contain brightness-0 invert opacity-80" />
+            <div className="flex flex-col items-center gap-6 mb-6 px-4">
+              <div className="text-center">
+                <p className="text-sm font-semibold mb-3 opacity-70">Formas de pagamento</p>
+                <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-md mx-auto object-contain" />
+              </div>
+              <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-sm mx-auto object-contain" />
+              </div>
             </div>
             <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
