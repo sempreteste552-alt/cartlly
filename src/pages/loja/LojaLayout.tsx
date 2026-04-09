@@ -768,6 +768,12 @@ export default function LojaLayout() {
             </div>
             )}
 
+            {/* Theme toggle in mobile menu */}
+            <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
+              <ThemeToggle scope={storeThemeScope} applyToRoot={true} />
+              <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
+            </div>
+
             {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
               <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
