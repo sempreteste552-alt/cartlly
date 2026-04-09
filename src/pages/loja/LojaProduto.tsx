@@ -564,11 +564,11 @@ export default function LojaProduto() {
               </h3>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2 flex-1">
-                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-white">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-card">
                     <img src={product.image_url} alt={product.name} className="w-full h-full object-contain" />
                   </div>
                   <span className="text-xl font-bold text-muted-foreground">+</span>
-                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-white">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden border border-border shrink-0 bg-card">
                     <img src={buyTogetherProduct.image_url} alt={buyTogetherProduct.name} className="w-full h-full object-contain" />
                   </div>
                 </div>
