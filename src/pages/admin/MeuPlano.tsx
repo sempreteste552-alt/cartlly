@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -32,6 +33,19 @@ export default function MeuPlano() {
   const queryClient = useQueryClient();
 
   const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-open checkout when navigated with ?upgrade=PRO etc.
+  useEffect(() => {
+    const upgradeTo = searchParams.get("upgrade")?.toUpperCase();
+    if (upgradeTo && allPlans?.length) {
+      const target = allPlans.find((p: any) => (p.name as string).toUpperCase() === upgradeTo);
+      if (target && !checkoutDialog) {
+        setCheckoutDialog({ planId: target.id, planName: target.name, price: Number(target.price) });
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, allPlans]);
 
   const { data: gatewayInfo } = useQuery({
     queryKey: ["plan_gateway_info"],
