@@ -401,7 +401,7 @@ async function createPagBankPayment(
     customer: {
       name: order.customer_name || "Cliente",
       email: order.customer_email || "cliente@email.com",
-      tax_id: "00000000000",
+      tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, ""),
       phones: order.customer_phone
         ? [
             {
@@ -443,34 +443,36 @@ async function createPagBankPayment(
           instruction_lines: { line_1: "Pagamento pedido", line_2: "" },
           holder: {
             name: order.customer_name || "Cliente",
-            tax_id: "00000000000",
+            tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, ""),
             email: order.customer_email || "cliente@email.com",
             address: {
-              street: "Rua",
-              number: "0",
-              locality: "Centro",
-              city: "São Paulo",
-              region_code: "SP",
+              street: order.shipping_street || "Rua",
+              number: order.shipping_number || "0",
+              locality: order.shipping_neighborhood || "Centro",
+              city: order.shipping_city || "São Paulo",
+              region_code: order.shipping_state || "SP",
               country: "BRA",
-              postal_code: "01000000",
+              postal_code: (order.shipping_cep || "01000000").replace(/\D/g, ""),
             },
           },
         },
       },
     });
   } else if (method === "credit_card") {
+    if (!cardToken) throw new Error("Token do cartão ou dados criptografados são obrigatórios para PagBank");
+    
     orderData.charges.push({
       reference_id: crypto.randomUUID(),
       description: `Pedido #${order.id.slice(0, 8)}`,
       amount: { value: Math.round(Number(order.total) * 100), currency: "BRL" },
       payment_method: {
         type: "CREDIT_CARD",
-        installments: 1,
+        installments: installments || 1,
         capture: true,
-        card: { encrypted: "placeholder" },
+        card: { encrypted: cardToken },
         holder: {
           name: order.customer_name || "Cliente",
-          tax_id: "00000000000",
+          tax_id: (payerCpf || order.customer_cpf || "00000000000").replace(/\D/g, ""),
         },
       },
     });
