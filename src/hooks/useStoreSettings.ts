@@ -61,11 +61,13 @@ export function useUpdateStoreSettings() {
 export function useUploadStoreLogo() {
   return useMutation({
     mutationFn: async (file: File) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
       const ext = file.name.split(".").pop();
-      const fileName = `logo-${crypto.randomUUID()}.${ext}`;
+      const fileName = `${user.id}/logo-${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage
         .from("store-assets")
-        .upload(fileName, file, { contentType: file.type });
+        .upload(fileName, file, { contentType: file.type, upsert: true });
       if (error) throw error;
       const { data: urlData } = supabase.storage
         .from("store-assets")
