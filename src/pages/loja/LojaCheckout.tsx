@@ -298,9 +298,9 @@ export default function LojaCheckout() {
     
     try {
       await navigator.clipboard.writeText(caption);
-      toast.success("Legenda educada copiada! Agora você pode colar no seu Instagram 📸", {
-        description: "A legenda foi copiada para sua área de transferência.",
-        duration: 5000,
+      toast.success("Legenda pronta para o Instagram! 📸", {
+        description: "A legenda foi copiada, agora você pode postar.",
+        duration: 3000,
       });
       
       // If store has Instagram, try to open it
