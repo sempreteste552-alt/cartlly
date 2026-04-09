@@ -22,7 +22,7 @@ import { toast } from "sonner";
 export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
   const { data: products } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
@@ -131,12 +131,12 @@ export default function LojaProduto() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
         <div className="space-y-3">
-          <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
             {allImages.length > 0 ? (
               <img
                 src={allImages[selectedImageIndex] || allImages[0]}
                 alt={product.name}
-                className="w-full h-full object-contain transition-opacity duration-300"
+                className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -223,6 +223,13 @@ export default function LojaProduto() {
           ) : (
             <Badge variant="destructive">Esgotado</Badge>
           )}
+          
+          {productPageConfig?.enable_stock_urgency && product.stock > 0 && product.stock <= (productPageConfig?.stock_urgency_threshold || 5) && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 animate-pulse">
+              <AlertTriangle className="h-4 w-4" />
+              <p className="text-sm font-bold">Corra! Restam apenas {product.stock} unidades em estoque!</p>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button
@@ -300,18 +307,47 @@ export default function LojaProduto() {
 
           <Separator />
 
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { icon: Truck, label: "Entrega rápida" },
-              { icon: ShieldCheck, label: "Compra segura" },
-              { icon: RotateCcw, label: "Troca fácil" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
-                <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
-                <p className="text-xs mt-1 text-gray-600">{label}</p>
+          {productPageConfig?.enable_trust_badges && (
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Truck, label: "Entrega rápida" },
+                { icon: ShieldCheck, label: "Compra segura" },
+                { icon: RotateCcw, label: "Troca fácil" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="text-center p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}10` }}>
+                  <Icon className="h-5 w-5 mx-auto" style={{ color: primaryColor }} />
+                  <p className="text-xs mt-1 text-gray-600">{label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {productPageConfig?.enable_delivery_estimation && (
+            <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
+              <Truck className="h-4 w-4" />
+              <p className="text-sm">Prazo estimado de entrega: <span className="font-bold">{productPageConfig.delivery_estimation_text || "3-7 dias úteis"}</span></p>
+            </div>
+          )}
+
+          {productPageConfig?.enable_size_guide && productPageConfig.size_guide_content && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Ruler className="h-4 w-4" />
+                <h4 className="text-sm font-bold">Guia de Tamanhos</h4>
               </div>
-            ))}
-          </div>
+              <p className="text-sm text-slate-600 whitespace-pre-wrap">{productPageConfig.size_guide_content}</p>
+            </div>
+          )}
+
+          {productPageConfig?.enable_faq && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <HelpCircle className="h-4 w-4" />
+                <h4 className="text-sm font-bold">Dúvidas Frequentes</h4>
+              </div>
+              <p className="text-xs text-slate-500 italic">Consulte nossa central de atendimento para mais detalhes.</p>
+            </div>
+          )}
 
           {product.description && (
             <>
@@ -325,10 +361,12 @@ export default function LojaProduto() {
         </div>
       </div>
 
-      <ProductReviews productId={product.id} />
+      {productPageConfig?.enable_reviews && (
+        <ProductReviews productId={product.id} />
+      )}
 
       {/* Similar Products Carousel */}
-      {similarProducts.length > 0 && (
+      {productPageConfig?.enable_related_products !== false && similarProducts.length > 0 && (
         <div className="mt-12">
           <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Produtos Similares</h2>
           <Carousel
