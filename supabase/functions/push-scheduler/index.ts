@@ -177,21 +177,6 @@ const PRODUCT_VIEW_SEQUENCE: SequenceStep[] = [
       { title: "🌡️ Clima quente para {product}", body: "{name}, todo mundo quer o {product} da {store} hoje! Não perca 🔥" },
     ],
   },
-  {
-    delayMinutes: 60, // +60 minutes (115m total)
-    intensity: "aggressive",
-    templates: [
-      { title: "🚨 ÚLTIMA CHANCE: {product}!", body: "{name}, é agora ou nunca! O {product} da {store} vai esgotar! COMPRE JÁ 🔥" },
-      { title: "⛔ {product}: AGORA OU NUNCA!", body: "ATENÇÃO {name}! O {product} da {store} está nas últimas. NÃO PERCA! ⚡" },
-      { title: "💣 SÓ AGORA: {product}!", body: "{name}, essa é sua ÚLTIMA OPORTUNIDADE de levar o {product} na {store}! 🏃" },
-      { title: "🔴 ESGOTANDO: {product}!", body: "{name}! O {product} da {store} vai acabar agora! É sua chance. CORRA! 💨" },
-      { title: "⏳ TEMPO ESGOTADO: {product}", body: "{name}, o {product} da {store} não vai esperar. GARANTA AGORA! 🚨" },
-      { title: "🆘 ÚLTIMA CHAMADA: {product}", body: "URGENTE {name}! O {product} da {store} está quase esgotado. COMPRE AGORA! 🔥" },
-      { title: "💀 FIM DE ESTOQUE: {product}", body: "{name}, estoque do {product} na {store} está no fim! VÁ AGORA 🏃💨" },
-      { title: "🔥 URGÊNCIA: {product}!", body: "{name}! Poucos minutos para garantir o {product} na {store}. NÃO DEIXE ESCAPAR! ⚡" },
-      { title: "⚡ GARANTA SEU {product}!", body: "{name}, o {product} da {store} vai sumir do estoque! GARANTA AGORA! 🚨" },
-      { title: "🎯 DECISÃO: {product}", body: "{name}, última chance real de levar o {product} da {store}! VÁ AGORA! 💥" },
-    ],
   },
 ];
 
