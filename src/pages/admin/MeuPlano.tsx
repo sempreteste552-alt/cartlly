@@ -257,7 +257,7 @@ export default function MeuPlano() {
             const enabledCount = Object.values(planFeatures).filter(v => v === true).length;
 
             return (
-              <Card key={plan.id} className={`relative overflow-hidden transition-all duration-300 ${isCurrent ? "ring-2 ring-primary shadow-lg scale-[1.02]" : "hover:shadow-md"}`}>
+              <Card key={plan.id} className={`relative overflow-hidden transition-all duration-300 ${isCurrent ? "ring-2 ring-primary shadow-lg scale-[1.02] z-10" : "hover:shadow-md"} flex flex-col h-full`}>
                 {slug !== "FREE" && (
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${info?.gradient || "from-slate-400 to-slate-500"}`} />
                 )}
@@ -267,14 +267,14 @@ export default function MeuPlano() {
                 {slug === "PRO" && !isCurrent && (
                   <Badge className="absolute top-3 right-3 bg-blue-500 text-white text-[10px]">Popular</Badge>
                 )}
-                <CardContent className="p-5">
+                <CardContent className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${info?.gradient || "from-slate-400 to-slate-500"} shadow-sm`}>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${info?.gradient || "from-slate-400 to-slate-500"} shadow-sm shrink-0`}>
                       <PlanIcon className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground">{info?.label || plan.name}</h3>
-                      <p className="text-xs text-muted-foreground">{info?.description}</p>
+                      <h3 className="font-bold text-foreground leading-tight">{info?.label || plan.name}</h3>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">{info?.description}</p>
                     </div>
                   </div>
 
@@ -285,17 +285,17 @@ export default function MeuPlano() {
                     </p>
                   </div>
 
-                  <div className="space-y-1.5 mb-4 text-sm">
+                  <div className="space-y-1.5 mb-6 text-sm flex-1">
                     <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{plan.max_products >= 99999 ? "Produtos ilimitados" : `Até ${plan.max_products} produtos`}</span></div>
                     <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{plan.max_orders_month >= 99999 ? "Pedidos ilimitados" : `Até ${plan.max_orders_month} pedidos/mês`}</span></div>
-                    <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{enabledCount} recursos</span></div>
+                    <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{enabledCount} recursos premium</span></div>
                   </div>
 
                   {isCurrent ? (
-                    <Button variant="outline" className="w-full" disabled><Check className="h-4 w-4 mr-1" /> Plano Atual</Button>
+                    <Button variant="outline" className="w-full mt-auto" disabled><Check className="h-4 w-4 mr-1" /> Plano Atual</Button>
                   ) : (
                     <Button
-                      className={`w-full ${slug !== "FREE" ? `bg-gradient-to-r ${info?.gradient} hover:opacity-90 text-white` : ""}`}
+                      className={`w-full mt-auto ${slug !== "FREE" ? `bg-gradient-to-r ${info?.gradient} hover:opacity-90 text-white` : ""}`}
                       variant={slug === "FREE" ? "outline" : "default"}
                       onClick={() => handlePlanAction(plan)}
                       disabled={!!pendingRequest}

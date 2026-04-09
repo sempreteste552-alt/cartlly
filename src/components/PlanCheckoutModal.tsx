@@ -251,147 +251,148 @@ export default function PlanCheckoutModal({
   /* ================================================================ */
   return (
     <Dialog open={open} onOpenChange={(o) => { if (step !== "loading") onOpenChange(o); }}>
-      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden border-border/50 shadow-2xl [&>button]:hidden rounded-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg p-0 gap-0 overflow-hidden border-border/50 shadow-2xl [&>button]:hidden rounded-2xl flex flex-col max-h-[96vh] sm:max-h-[90vh]">
 
         {/* ── Premium Header ── */}
-        <div className={`relative bg-gradient-to-br ${gradient} px-6 py-6 text-white`}>
+        <div className={`relative bg-gradient-to-br ${gradient} px-5 py-4 sm:px-6 sm:py-5 text-white shrink-0`}>
           <button
             onClick={() => { if (step !== "loading") onOpenChange(false); }}
-            className="absolute right-4 top-4 rounded-full p-1.5 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
+            className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-1.5 bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm z-10"
           >
             <X className="h-4 w-4 text-white/90" />
           </button>
 
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg">
-              <PlanIcon className="h-7 w-7 text-white" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg shrink-0">
+              <PlanIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium text-white/70 uppercase tracking-wider">Checkout seguro</p>
-              <h2 className="text-xl font-bold">Plano {planName}</h2>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl font-extrabold">{formatPrice(planPrice)}</span>
-                <span className="text-sm text-white/70">/mês</span>
+              <p className="text-[10px] sm:text-xs font-medium text-white/70 uppercase tracking-wider">Checkout seguro</p>
+              <h2 className="text-lg sm:text-xl font-bold leading-tight">Plano {planName}</h2>
+              <div className="flex items-baseline gap-1 mt-0">
+                <span className="text-xl sm:text-2xl font-extrabold">{formatPrice(planPrice)}</span>
+                <span className="text-xs sm:text-sm text-white/70">/mês</span>
               </div>
             </div>
           </div>
 
           {/* Trust badges with real images */}
-          <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-white/15">
-            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-14 w-auto object-contain drop-shadow-lg" />
-            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/15">
+            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-10 sm:h-14 w-auto object-contain drop-shadow-lg" />
+            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-7 sm:h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
           </div>
         </div>
 
-        <div className="px-6 py-6">
+        <div className="px-5 py-5 sm:px-6 sm:py-6 overflow-y-auto flex-1 custom-scrollbar">
 
           {/* ==================== STEP: FORM ==================== */}
           {step === "form" && (
-            <div className="space-y-5">
+            <div className="space-y-4">
 
               {/* Payment method */}
-              <div className="space-y-2.5">
-                <label className="text-sm font-semibold text-foreground">Forma de pagamento</label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Forma de pagamento</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   {pixAvailable && (
                     <button
                       onClick={() => setSelectedMethod("PIX")}
-                      className={`relative flex items-center gap-3 rounded-xl border-2 p-3.5 transition-all duration-200 ${
+                      className={`relative flex items-center gap-3 rounded-xl border-2 p-3 sm:p-3.5 transition-all duration-200 ${
                         selectedMethod === "PIX"
                           ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
                           : "border-border/60 hover:border-border hover:bg-muted/30"
                       }`}
                     >
                       {selectedMethod === "PIX" && (
-                        <div className="absolute top-2.5 right-2.5">
-                          <Check className="h-4 w-4 text-primary" />
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-3.5 w-3.5 text-primary" />
                         </div>
                       )}
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                      <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg shrink-0 ${
                         selectedMethod === "PIX" ? "bg-primary/10" : "bg-muted"
                       }`}>
-                        <QrCode className={`h-5 w-5 ${selectedMethod === "PIX" ? "text-primary" : "text-muted-foreground"}`} />
+                        <QrCode className={`h-4.5 w-4.5 sm:h-5 sm:w-5 ${selectedMethod === "PIX" ? "text-primary" : "text-muted-foreground"}`} />
                       </div>
-                      <div className="text-left">
-                        <p className={`text-sm font-semibold ${selectedMethod === "PIX" ? "text-primary" : "text-foreground"}`}>PIX</p>
-                        <p className="text-[10px] text-muted-foreground">Aprovação imediata</p>
+                      <div className="text-left overflow-hidden">
+                        <p className={`text-sm font-semibold truncate ${selectedMethod === "PIX" ? "text-primary" : "text-foreground"}`}>PIX</p>
+                        <p className="text-[10px] text-muted-foreground truncate">Aprovação imediata</p>
                       </div>
                     </button>
                   )}
 
                   <button
                     disabled
-                    className="relative flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 p-3.5 opacity-50 cursor-not-allowed"
+                    className="relative flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 p-3 sm:p-3.5 opacity-50 cursor-not-allowed"
                   >
-                    <div className="absolute top-2.5 right-2.5">
-                      <Lock className="h-3.5 w-3.5 text-muted-foreground/40" />
+                    <div className="absolute top-2 right-2">
+                      <Lock className="h-3 w-3 text-muted-foreground/40" />
                     </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/50">
-                      <CreditCard className="h-5 w-5 text-muted-foreground/50" />
+                    <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-muted/50 shrink-0">
+                      <CreditCard className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-muted-foreground/50" />
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-muted-foreground">Cartão</p>
-                      <p className="text-[10px] text-muted-foreground/70">Em breve</p>
+                    <div className="text-left overflow-hidden">
+                      <p className="text-sm font-medium text-muted-foreground truncate">Cartão</p>
+                      <p className="text-[10px] text-muted-foreground/70 truncate">Em breve</p>
                     </div>
                   </button>
                 </div>
               </div>
 
               {/* Billing info */}
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-foreground">Dados do pagador</label>
+              <div className="space-y-2.5">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Dados do pagador</label>
 
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                   <Input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Nome completo"
-                    className="h-11 pl-10 text-sm"
+                    className="h-10 pl-9 text-sm"
                     autoComplete="name"
                   />
                 </div>
 
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="E-mail"
-                    type="email"
-                    className="h-11 pl-10 text-sm"
-                    autoComplete="email"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                    <Input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="E-mail"
+                      type="email"
+                      className="h-10 pl-9 text-sm"
+                      autoComplete="email"
+                    />
+                  </div>
 
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCpf(e.target.value))}
-                    placeholder="CPF — 000.000.000-00"
-                    maxLength={14}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    className="h-11 pl-10 font-mono text-sm tracking-wider"
-                  />
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                    <Input
+                      value={cpf}
+                      onChange={(e) => setCpf(formatCpf(e.target.value))}
+                      placeholder="CPF — 000.000.000-00"
+                      maxLength={14}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      className="h-10 pl-9 font-mono text-sm tracking-wider"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Order summary */}
-              <div className="rounded-xl bg-muted/30 border border-border/40 p-4 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Resumo</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Plano {planName}</span>
+              <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-4 space-y-1.5">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-muted-foreground font-medium">Plano {planName}</span>
                   <span className="font-semibold text-foreground">{formatPrice(planPrice)}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Ciclo</span>
-                  <span className="text-muted-foreground">Mensal</span>
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-muted-foreground font-medium">Ciclo de faturamento</span>
+                  <span className="text-muted-foreground font-medium">Mensal</span>
                 </div>
-                <div className="border-t border-border/30 pt-2 flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground">Total hoje</span>
-                  <span className="text-xl font-extrabold text-foreground">{formatPrice(planPrice)}</span>
+                <div className="border-t border-border/30 pt-1.5 mt-1 flex items-center justify-between">
+                  <span className="text-sm font-bold text-foreground">Total à pagar</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-foreground">{formatPrice(planPrice)}</span>
                 </div>
               </div>
 
@@ -450,22 +451,22 @@ export default function PlanCheckoutModal({
               </div>
 
               {/* QR Code */}
-              <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-white rounded-2xl shadow-lg border border-border/20">
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-3 sm:p-4 bg-white rounded-xl sm:rounded-2xl shadow-lg border border-border/20">
                   {pixQrBase64 ? (
                     <img
                       src={pixQrBase64.startsWith("data:") ? pixQrBase64 : `data:image/png;base64,${pixQrBase64}`}
                       alt="QR Code PIX"
-                      className="w-56 h-56 rounded-xl"
+                      className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg sm:rounded-xl"
                     />
                   ) : (
-                    <div className="w-56 h-56 rounded-xl bg-muted flex items-center justify-center">
-                      <QrCode className="h-24 w-24 text-muted-foreground/20" />
+                    <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center">
+                      <QrCode className="h-20 w-20 sm:h-24 sm:w-24 text-muted-foreground/20" />
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground text-center font-medium">
-                  Escaneie o QR Code com o app do seu banco
+                <p className="text-xs sm:text-sm text-muted-foreground text-center font-medium max-w-[240px]">
+                  Escaneie o QR Code com o app do seu banco ou copie o código abaixo
                 </p>
               </div>
 
@@ -508,22 +509,22 @@ export default function PlanCheckoutModal({
 
           {/* ==================== STEP: SUCCESS ==================== */}
           {step === "success" && (
-            <div className="py-6 space-y-6">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="h-20 w-20 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/10">
-                  <CheckCircle2 className="h-11 w-11 text-green-500" />
+            <div className="py-2 sm:py-4 space-y-4 sm:space-y-6">
+              <div className="flex flex-col items-center gap-3 sm:gap-4 text-center">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-green-500/10 flex items-center justify-center ring-4 ring-green-500/10">
+                  <CheckCircle2 className="h-9 w-9 sm:h-11 sm:w-11 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-extrabold text-foreground">Pagamento Aprovado! 🎉</h3>
-                  <p className="text-sm text-muted-foreground mt-1.5 max-w-xs mx-auto">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">Pagamento Aprovado! 🎉</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
                     Seu plano <strong className="text-foreground">{planName}</strong> foi ativado com sucesso. Todos os recursos premium já estão disponíveis.
                   </p>
                 </div>
               </div>
 
               {/* Receipt */}
-              <div className="rounded-xl bg-muted/30 border border-border/40 p-5 space-y-3 text-sm">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Comprovante</p>
+              <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-5 space-y-2 sm:space-y-3 text-[13px] sm:text-sm">
+                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wide">Comprovante</p>
                 <div className="space-y-2">
                   {[
                     ["Plano", planName],
