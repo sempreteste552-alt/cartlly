@@ -1335,6 +1335,7 @@ export type Database = {
           stock: number
           updated_at: string
           user_id: string
+          views: number
         }
         Insert: {
           category_id?: string | null
@@ -1350,6 +1351,7 @@ export type Database = {
           stock?: number
           updated_at?: string
           user_id: string
+          views?: number
         }
         Update: {
           category_id?: string | null
@@ -1365,6 +1367,7 @@ export type Database = {
           stock?: number
           updated_at?: string
           user_id?: string
+          views?: number
         }
         Relationships: [
           {
@@ -2921,6 +2924,10 @@ export type Database = {
       increment_coupon_usage: {
         Args: { _coupon_code: string; _store_user_id: string }
         Returns: boolean
+      }
+      increment_product_views: {
+        Args: { product_id: string }
+        Returns: undefined
       }
       move_to_dlq: {
         Args: {
