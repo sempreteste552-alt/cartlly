@@ -387,7 +387,9 @@ export default function LojaCheckout() {
                 <div className="space-y-1 text-right">
                   <p className="text-[10px] uppercase font-bold text-zinc-400">Pagador</p>
                   <p className="font-semibold">{name || "Cliente"}</p>
-                  <p className="text-xs text-zinc-500 truncate">{email || "—"}</p>
+                  <p className="text-xs text-zinc-500">
+                    {savedPayerCpf ? `CPF: ***.***.***-${savedPayerCpf.replace(/\D/g, "").slice(-2)}` : email || "—"}
+                  </p>
                 </div>
               </div>
 
