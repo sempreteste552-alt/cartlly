@@ -28,6 +28,7 @@ import LojaProduto from "./pages/loja/LojaProduto";
 import LojaCheckout from "./pages/loja/LojaCheckout";
 import LojaRastreio from "./pages/loja/LojaRastreio";
 import LojaCupons from "./pages/loja/LojaCupons";
+import LojaPagina from "./pages/loja/LojaPagina";
 import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
