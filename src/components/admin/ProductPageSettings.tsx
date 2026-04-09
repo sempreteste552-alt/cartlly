@@ -53,6 +53,7 @@ function FeatureToggle({ icon, label, description, checked, onCheckedChange, bad
 export default function ProductPageSettings() {
   const { data: config, isLoading } = useStoreProductPageConfig();
   const updateConfig = useUpdateStoreProductPageConfig();
+  const { ctx } = useTenantContext();
 
   const [videoGallery, setVideoGallery] = useState(false);
   const [imageZoom, setImageZoom] = useState(true);

@@ -18,6 +18,7 @@ export default function MarketingConversionSettings() {
   const { data: config, isLoading } = useStoreMarketingConfig();
   const updateConfig = useUpdateStoreMarketingConfig();
   const { isLocked } = usePlanFeatures();
+  const { ctx } = useTenantContext();
 
   const [announcementEnabled, setAnnouncementEnabled] = useState(false);
   const [announcementText, setAnnouncementText] = useState("");
