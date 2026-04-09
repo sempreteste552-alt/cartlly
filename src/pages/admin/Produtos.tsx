@@ -279,7 +279,7 @@ export default function Produtos() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border">
+        <Card id="products-table" className="border-border">
           <Table>
             <TableHeader>
               <TableRow>
