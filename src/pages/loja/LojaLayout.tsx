@@ -61,17 +61,33 @@ export default function LojaLayout() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [globalCep, setGlobalCep] = useState("");
+  const [globalCity, setGlobalCity] = useState("");
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auto-recognize location by IP
+  // Lookup city from CEP via ViaCEP
+  const lookupCepCity = async (cepVal: string) => {
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
+      const data = await res.json();
+      if (data && !data.erro && data.localidade) {
+        setGlobalCity(`${data.localidade} - ${data.uf}`);
+        localStorage.setItem("global_city", `${data.localidade} - ${data.uf}`);
+      }
+    } catch { /* ignore */ }
+  };
+
+  // Auto-detect location by IP or use saved CEP
   useEffect(() => {
     const savedCep = localStorage.getItem("global_cep");
+    const savedCity = localStorage.getItem("global_city");
     if (savedCep) {
       setGlobalCep(savedCep);
+      if (savedCity) setGlobalCity(savedCity);
+      else lookupCepCity(savedCep);
       return;
     }
 
@@ -84,6 +100,11 @@ export default function LojaLayout() {
           if (cleanCep.length === 8) {
             setGlobalCep(cleanCep);
             localStorage.setItem("global_cep", cleanCep);
+            const cityName = data.city ? `${data.city} - ${data.region_code || ""}` : "";
+            if (cityName) {
+              setGlobalCity(cityName);
+              localStorage.setItem("global_city", cityName);
+            }
             toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
           }
         }
@@ -92,10 +113,45 @@ export default function LojaLayout() {
       }
     };
     
-    // Small delay to let other things load first
     const timer = setTimeout(recognizeLocation, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleGlobalCepChange = (val: string) => {
+    const clean = val.replace(/\D/g, "").slice(0, 8);
+    setGlobalCep(clean);
+    if (clean.length === 8) {
+      localStorage.setItem("global_cep", clean);
+      lookupCepCity(clean);
+    } else {
+      setGlobalCity("");
+    }
+  };
+
+  const detectMyLocation = async () => {
+    try {
+      toast.info("📍 Detectando sua localização...");
+      const response = await fetch("https://ipapi.co/json/");
+      const data = await response.json();
+      if (data && data.postal) {
+        const cleanCep = data.postal.replace(/\D/g, "");
+        if (cleanCep.length === 8) {
+          setGlobalCep(cleanCep);
+          localStorage.setItem("global_cep", cleanCep);
+          const cityName = data.city ? `${data.city} - ${data.region_code || ""}` : "";
+          if (cityName) {
+            setGlobalCity(cityName);
+            localStorage.setItem("global_city", cityName);
+          }
+          toast.success(`📍 ${data.city || "Localização detectada"}`);
+        }
+      } else {
+        toast.error("Não foi possível detectar sua localização");
+      }
+    } catch {
+      toast.error("Erro ao detectar localização");
+    }
+  };
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
@@ -416,19 +472,20 @@ export default function LojaLayout() {
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
               </div>
-              <div className="relative w-40">
+              <div className="relative w-48 group">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
                 <Input
-                  placeholder="Seu CEP"
+                  placeholder={globalCity || "Seu CEP"}
                   className="pl-9 bg-secondary border-border rounded-full font-mono text-xs"
-                  value={globalCep}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
-                    setGlobalCep(val);
-                    if (val.length === 8) localStorage.setItem("global_cep", val);
-                  }}
+                  value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                  onChange={(e) => handleGlobalCepChange(e.target.value)}
                   style={{ "--tw-ring-color": primaryColor } as any}
                 />
+                {globalCity && (
+                  <span className="absolute -bottom-5 left-3 text-[10px] text-muted-foreground whitespace-nowrap">
+                    📍 {globalCity}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -683,34 +740,28 @@ export default function LojaLayout() {
                 <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
                 <span className="text-sm font-semibold">Onde você está?</span>
               </div>
+              {globalCity && (
+                <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
+              )}
               <div className="flex gap-2">
                 <Input
                   placeholder="Seu CEP (00000-000)"
                   className="bg-secondary border-border font-mono h-11"
-                  value={globalCep}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "").slice(0, 8);
-                    setGlobalCep(val);
-                    if (val.length === 8) {
-                      localStorage.setItem("global_cep", val);
-                      toast.success("Localização atualizada!");
-                    }
-                  }}
+                  value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                  onChange={(e) => handleGlobalCepChange(e.target.value)}
                   inputMode="numeric"
-                  maxLength={8}
+                  maxLength={9}
                 />
                 <Button 
                   variant="outline" 
                   className="h-11 aspect-square p-0"
-                  onClick={() => {
-                    if (globalCep.length === 8) toast.success("Localização salva!");
-                    else toast.error("Digite um CEP válido");
-                  }}
+                  onClick={detectMyLocation}
+                  title="Detectar minha localização"
                 >
                   <LocateFixed className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Isso ajuda a calcular prazos e frete automaticamente.</p>
+              <p className="text-[10px] text-muted-foreground">Toque em <LocateFixed className="h-3 w-3 inline" /> para detectar automaticamente ou digite seu CEP.</p>
             </div>
 
             {/* Push notification opt-in inside mobile menu */}
