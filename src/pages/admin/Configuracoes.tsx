@@ -758,6 +758,8 @@ function GeneralSettingsTab() {
 
 
 export default function Configuracoes() {
+  const { ctx } = useTenantContext();
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
