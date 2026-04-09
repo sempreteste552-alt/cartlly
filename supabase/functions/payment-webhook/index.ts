@@ -119,7 +119,14 @@ async function handleMercadoPago(req: Request, supabase: any) {
 
     // Update order status based on payment
     if (newStatus === "approved") {
-      await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+      console.log(`Updating order ${payment.order_id} to processando...`);
+      const { error: orderUpdateErr } = await supabase.from("orders").update({ status: "processando" }).eq("id", payment.order_id);
+      if (orderUpdateErr) {
+        console.error("Error updating order status:", orderUpdateErr);
+      } else {
+        console.log(`Order ${payment.order_id} updated to processando successfully.`);
+      }
+
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
 
       // 🔔 Push: Payment approved
