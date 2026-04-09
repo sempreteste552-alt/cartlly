@@ -575,7 +575,10 @@ export default function LojaLayout() {
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
-                <h3 className="font-bold text-lg mb-3">{storeName}</h3>
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-1.5">
+                  {storeName}
+                  <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                </h3>
                 {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
               </div>
               <div>
