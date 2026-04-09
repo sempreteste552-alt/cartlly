@@ -32,19 +32,7 @@ const QUICK_ACTIONS = [
   { label: "🎟️ Criar cupom", prompt: "Crie um cupom de desconto de 10% com código PROMO10 para minha loja" },
 ];
 
-const AI_SETTINGS_KEY = "ai_chat_settings";
-
-function loadAISettings() {
-  try {
-    const raw = localStorage.getItem(AI_SETTINGS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return { name: "Assistente IA", avatarUrl: "" };
-}
-
-function saveAISettings(settings: { name: string; avatarUrl: string }) {
-  localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(settings));
-}
+const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "" };
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -157,7 +145,7 @@ export function AIChatWidget() {
       paymentPix: (settings as any)?.payment_pix || false,
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
-      aiName: aiSettings.name,
+      aiName: aiName,
     };
   }, [products, categories, coupons, orders, settings, aiSettings.name]);
 
@@ -258,12 +246,19 @@ export function AIChatWidget() {
     }
   };
 
-  const saveSettings = () => {
-    const newSettings = { name: tempName.trim() || "Assistente IA", avatarUrl: tempAvatar.trim() };
-    setAiSettings(newSettings);
-    saveAISettings(newSettings);
-    setSettingsOpen(false);
-    toast.success("Configurações da IA salvas!");
+  const saveSettings = async () => {
+    if (!settings?.id) return;
+    
+    try {
+      await updateSettings.mutateAsync({
+        id: settings.id,
+        ai_name: tempName.trim() || "Assistente IA",
+        ai_avatar_url: tempAvatar.trim()
+      } as any);
+      setSettingsOpen(false);
+    } catch (error) {
+      console.error("Error saving AI settings:", error);
+    }
   };
 
   if (aiLocked) {
@@ -428,7 +423,7 @@ export function AIChatWidget() {
     );
   }
 
-  const aiInitials = aiSettings.name.slice(0, 2).toUpperCase();
+  const aiInitials = aiName.slice(0, 2).toUpperCase();
 
   return (
     <>
@@ -445,12 +440,12 @@ export function AIChatWidget() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-semibold">{aiSettings.name}</p>
+              <p className="text-sm font-semibold">{aiName}</p>
               <p className="text-xs opacity-80">Gerencia sua loja com IA</p>
             </div>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiSettings.name); setTempAvatar(aiSettings.avatarUrl); setSettingsOpen(true); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
               <Settings2 className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setMessages([])}>
