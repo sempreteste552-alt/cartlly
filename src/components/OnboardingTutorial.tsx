@@ -6,14 +6,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 export const OnboardingTutorial = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
-    const tutorialCompleted = localStorage.getItem("onboarding_tutorial_completed");
-    if (tutorialCompleted || hasRun) return;
+    const isTutorialMode = sessionStorage.getItem("onboarding_tutorial_active");
+    if (!isTutorialMode) return;
 
-    // Start on Dashboard
-    if (location.pathname === "/admin") {
+    const currentPath = location.pathname;
+
+    if (currentPath === "/admin") {
       const driverObj = driver({
         showProgress: true,
         animate: true,
@@ -50,25 +50,34 @@ export const OnboardingTutorial = () => {
           },
         ],
         onDestroyed: () => {
-          // If we are at the last step of dashboard, maybe navigate?
-          // For now, let's just use the "done" button to go to next section
+          // If the user closed manually, don't auto-navigate?
+          // But if they clicked "Done" (which is actually just closing it in driver.js)
         },
-        onDeselected: (element, step, { config, state }) => {
-          if (step.element === "#sidebar-products" && state.activeStep === 2) {
-             // This is the last step of dashboard
-             // We can't easily trigger navigation from here with driver.js without complex state
-          }
+        onCloseClick: () => {
+          sessionStorage.removeItem("onboarding_tutorial_active");
+        },
+        onDestroyStarted: () => {
+           // This is a hacky way to know if we should navigate
+           // But driver.js doesn't tell us *how* it was destroyed
         }
       });
 
-      // Override the "Done" button behavior for the last step
-      // But driver.js doesn't easily expose the button click
-      // So let's use a simpler approach: multiple tutorials based on route
-      
+      // Simple hack: listen for the "done" button (last step button)
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Próximo Passo") {
+           doneBtn.addEventListener("click", () => {
+             navigate("/admin/produtos");
+           }, { once: true });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
       driverObj.drive();
+      return () => observer.disconnect();
     }
 
-    if (location.pathname === "/admin/produtos") {
+    if (currentPath === "/admin/produtos") {
        const driverObj = driver({
         showProgress: true,
         animate: true,
@@ -104,11 +113,26 @@ export const OnboardingTutorial = () => {
             },
           },
         ],
+        onCloseClick: () => {
+          sessionStorage.removeItem("onboarding_tutorial_active");
+        }
       });
+
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Próximo Passo") {
+           doneBtn.addEventListener("click", () => {
+             navigate("/admin/pedidos");
+           }, { once: true });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
       driverObj.drive();
+      return () => observer.disconnect();
     }
 
-    if (location.pathname === "/admin/pedidos") {
+    if (currentPath === "/admin/pedidos") {
        const driverObj = driver({
         showProgress: true,
         animate: true,
@@ -135,16 +159,32 @@ export const OnboardingTutorial = () => {
             },
           },
         ],
+        onCloseClick: () => {
+          sessionStorage.removeItem("onboarding_tutorial_active");
+        }
       });
+
+      const observer = new MutationObserver(() => {
+        const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
+        if (doneBtn && doneBtn.textContent === "Concluir") {
+           doneBtn.addEventListener("click", () => {
+             sessionStorage.removeItem("onboarding_tutorial_active");
+             localStorage.setItem("onboarding_tutorial_completed", "true");
+           }, { once: true });
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
       driverObj.drive();
+      return () => observer.disconnect();
     }
 
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
   return null;
 };
 
 export const startTutorial = () => {
-  localStorage.removeItem("onboarding_tutorial_completed");
-  window.location.href = "/admin"; // Restart from dashboard
+  sessionStorage.setItem("onboarding_tutorial_active", "true");
+  window.location.href = "/admin"; // Force reload to start from dashboard
 };
