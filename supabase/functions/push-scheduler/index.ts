@@ -246,6 +246,50 @@ const CART_ABANDONMENT_SEQUENCE: SequenceStep[] = [
   },
 ];
 
+const WISHLIST_SEQUENCE: SequenceStep[] = [
+  {
+    delayMinutes: 30, // 30m after favoriting
+    intensity: "soft",
+    templates: [
+      { title: "❤️ No seu radar: {product}", body: "{name}, o {product} que você favoritou na {store} ainda está aqui! ✨" },
+      { title: "⭐ Uma escolha brilhante!", body: "Oi {name}! O {product} nos seus favoritos combina muito com você. Confira na {store}! 🛍️" },
+      { title: "💭 Lembra do {product}?", body: "{name}, o {product} que você favoritou na {store} está te esperando! 💜" },
+      { title: "✨ Favoritado pra você!", body: "Oi {name}, guardamos o {product} nos seus favoritos na {store}. Que tal levá-lo agora? 😊" },
+    ],
+  },
+  {
+    delayMinutes: 180, // 3 hours (total)
+    intensity: "medium",
+    templates: [
+      { title: "🎁 {product}: Tratamento VIP!", body: "{name}, seu favorito {product} está com alta procura na {store}. Garanta o seu! 🔥" },
+      { title: "⚡ Não perca seu favorito!", body: "Oi {name}! O {product} da sua lista de desejos na {store} está voando! 🏃" },
+      { title: "🔥 Favorito em destaque!", body: "{name}, o {product} que você amou na {store} é sucesso absoluto! Garanta o seu. 💫" },
+    ],
+  },
+  {
+    delayMinutes: 720, // 12 hours (total)
+    intensity: "aggressive",
+    templates: [
+      { title: "🚨 Última chance: {product}!", body: "{name}, o {product} nos seus favoritos na {store} está quase esgotado! Compre agora ⚡" },
+      { title: "⚠️ Favorito em risco!", body: "Atenção {name}! O {product} da sua lista na {store} pode acabar a qualquer momento! 💨" },
+      { title: "🛑 AGORA OU NUNCA: {product}", body: "{name}, o estoque do seu favorito {product} na {store} está no fim! CORRA! 🔥" },
+    ],
+  },
+];
+
+const HOURLY_ENGAGEMENT_TEMPLATES = [
+  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} seja incrível! Que tal conferir as novidades na {store}? 🛍️" },
+  { title: "🌈 Uma ótima {day} pra você!", body: "{name}, temos ofertas especiais esperando por você na {store}! ✨" },
+  { title: "✨ Momento de brilhar!", body: "Oi {name}! Que tal um mimo hoje na {store}? Você merece! 💜" },
+  { title: "💫 Novidades chegando!", body: "{name}, a {store} está cheia de coisas lindas hoje. Vem ver! 🌟" },
+  { title: "🎁 Um presente pra sua {day}!", body: "Oi {name}! Confira o que separamos para você na {store} hoje 🎀" },
+  { title: "🔥 {name}, no pique!", body: "Aproveite sua {day} para levar o que você mais gosta na {store}! ⚡" },
+  { title: "🍀 Sorte do dia: {store}!", body: "{name}, achamos que hoje é seu dia de sorte! Confira as ofertas 🌈" },
+  { title: "☕ Pausa para a {store}!", body: "Oi {name}! Que tal uma pausa na sua {day} para ver o que chegou na {store}? ☕🛍️" },
+  { title: "🌟 {name}, você é especial!", body: "Passando para desejar uma ótima {day} e te convidar para a {store}! ✨" },
+  { title: "🛍️ Desejos da {day}!", body: "{name}, o que está na sua lista de desejos hoje na {store}? Vem conferir! 💭" },
+];
+
 const INACTIVITY_SEQUENCE: SequenceStep[] = [
   {
     delayMinutes: 120,
