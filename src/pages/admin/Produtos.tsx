@@ -180,6 +180,7 @@ export default function Produtos() {
             Categorias
           </Button>
           <Button
+            id="new-product-btn"
             onClick={() => {
               if (!canCreate) {
                 toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
