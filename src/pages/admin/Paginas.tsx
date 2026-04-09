@@ -276,9 +276,9 @@ export default function Paginas() {
                       {page.published ? "Despublicar" : "Publicar"}
                     </button>
                     <div className="flex gap-1">
-                      {storeSettings?.slug && (
+                      {storeSettings?.store_slug && (
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" asChild title="Visualizar na Loja">
-                          <Link to={`/loja/${storeSettings.slug}/p/${page.slug}`} target="_blank">
+                          <Link to={`/loja/${storeSettings.store_slug}/p/${page.slug}`} target="_blank">
                             <Eye className="h-3.5 w-3.5" />
                           </Link>
                         </Button>
