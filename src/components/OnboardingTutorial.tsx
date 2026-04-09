@@ -8,8 +8,15 @@ export const OnboardingTutorial = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isTutorialMode = sessionStorage.getItem("onboarding_tutorial_active");
-    if (!isTutorialMode) return;
+    const tutorialCompleted = localStorage.getItem("onboarding_tutorial_completed");
+    const tutorialActive = sessionStorage.getItem("onboarding_tutorial_active");
+
+    // Automatically activate tutorial for new users on their first visit to dashboard
+    if (!tutorialCompleted && !tutorialActive && location.pathname === "/admin") {
+      sessionStorage.setItem("onboarding_tutorial_active", "true");
+    }
+
+    if (!sessionStorage.getItem("onboarding_tutorial_active")) return;
 
     const currentPath = location.pathname;
 
