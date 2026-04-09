@@ -448,7 +448,29 @@ export default function Dashboard() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-xs text-muted-foreground">{p.views || 0} visualizações</p>
-                        </div>
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Search className="h-4 w-4 text-purple-500" /> Top 5 Termos Pesquisados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topSearches && topSearches.length > 0 ? (
+              <div className="space-y-2">
+                {topSearches.map((s, i) => (
+                  <div key={s.term} className="flex items-center justify-between rounded-lg border border-border/50 p-2.5 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500/10 text-xs font-bold text-purple-500">{i + 1}</span>
+                      <p className="text-sm font-medium capitalize">{s.term}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px]">{s.count} buscas</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-sm text-muted-foreground text-center py-4">Sem buscas recentes</p>}
+          </CardContent>
+        </Card>
+      </div>
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
