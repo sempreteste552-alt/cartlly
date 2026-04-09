@@ -431,8 +431,14 @@ export default function LojaCheckout() {
               </div>
             </div>
 
-            <div className="text-center pt-4 opacity-50">
-              <p className="text-[9px] text-zinc-400 uppercase tracking-widest">
+            <div className="text-center pt-8 border-t border-dashed border-zinc-100 dark:border-zinc-900 space-y-2">
+              <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
+                Autenticação Eletrônica
+              </p>
+              <p className="font-mono text-[8px] text-zinc-400 break-all px-4">
+                {(orderId?.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32)}
+              </p>
+              <p className="text-[9px] text-zinc-400 uppercase tracking-widest pt-2 opacity-50">
                 Comprovante gerado eletronicamente
               </p>
             </div>
