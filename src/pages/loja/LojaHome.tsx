@@ -144,7 +144,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -164,6 +164,7 @@ export default function LojaHome() {
               wishlist={wishlist}
               basePath={basePath}
               onAddToCart={cartNotif.show}
+              maxInstallments={(settings as any)?.max_installments || 12}
             />
           ))
         )}
@@ -198,6 +199,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   wishlist: any;
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
+  maxInstallments: number;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
 
@@ -223,7 +225,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart, maxInstallments }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -237,6 +239,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   wishlist: ReturnType<typeof import("@/hooks/useWishlist").useWishlist>;
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
+  maxInstallments: number;
 }) {
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
 
@@ -303,14 +306,11 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
-                {(() => {
-                  const maxInst = (settings as any)?.max_installments || 12;
-                  return maxInst > 1 ? (
-                    <p className="text-[10px] text-muted-foreground">ou {maxInst}x de {formatPrice(product.price / maxInst)}</p>
-                  ) : (
-                    <p className="text-[10px] text-muted-foreground">à vista</p>
-                  );
-                })()}
+                {maxInstallments > 1 ? (
+                  <p className="text-[10px] text-muted-foreground">ou {maxInstallments}x de {formatPrice(product.price / maxInstallments)}</p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">à vista</p>
+                )}
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
                 ) : (product as any).made_to_order ? (

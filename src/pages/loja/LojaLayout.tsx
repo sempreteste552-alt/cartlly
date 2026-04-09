@@ -464,9 +464,39 @@ export default function LojaLayout() {
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+            {/* Social icons in header - all devices */}
+            <div className="flex items-center gap-1.5">
+              {settings?.instagram_url && (
+                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={iconInstagram} alt="Instagram" className="h-5 w-5 rounded" />
+                </a>
+              )}
+              {settings?.facebook_url && (
+                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={iconFacebook} alt="Facebook" className="h-5 w-5 rounded" />
+                </a>
+              )}
+              {settings?.tiktok_url && (
+                <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={iconTiktok} alt="TikTok" className="h-5 w-5 rounded" />
+                </a>
+              )}
+              {(settings as any)?.youtube_url && (
+                <a href={(settings as any).youtube_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={iconYoutube} alt="YouTube" className="h-5 w-5 rounded" />
+                </a>
+              )}
+              {settings?.store_whatsapp && (
+                <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={whatsappIcon} alt="WhatsApp" className="h-5 w-5 rounded" />
+                </a>
+              )}
+            </div>
+
+            {/* Account icon - all devices */}
+            <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
               {user ? (
-                isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <LogOut className="h-5 w-5" />
+                isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <User className="h-5 w-5" />
               ) : (
                 <User className="h-5 w-5" />
               )}
