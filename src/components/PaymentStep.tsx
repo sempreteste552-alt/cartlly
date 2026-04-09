@@ -116,7 +116,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         .eq("id", orderId)
         .single();
       
-      if (data && ["processando", "enviado", "entregue"].includes(data.status)) {
+      if (data && ["processando", "pago", "aprovado", "approved", "enviado", "entregue"].includes(data.status?.toLowerCase())) {
         onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
       }
     };
