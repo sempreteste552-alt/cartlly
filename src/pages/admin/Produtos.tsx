@@ -37,6 +37,7 @@ export default function Produtos() {
   const deleteCategory = useDeleteCategory();
   const { ctx } = useTenantContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
