@@ -12,7 +12,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { AIProductTools } from "@/components/AIProductTools";
 import { useProductImages } from "@/hooks/useProductImages";
 import { useTenantContext } from "@/hooks/useTenantContext";
-import { canAccess } from "@/lib/planPermissions";
+import { canAccess, getMaxProductImages } from "@/lib/planPermissions";
 
 interface ProductFormProps {
   open: boolean;
