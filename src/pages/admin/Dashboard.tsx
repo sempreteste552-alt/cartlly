@@ -27,6 +27,9 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const { ctx } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
+  const hasStarterAnalytics = canAccess("coupons", ctx);
+  const hasProAnalytics = canAccess("restock_alerts", ctx);
+  const hasPremiumAnalytics = canAccess("analytics_advanced", ctx);
 
   const { data: allOrderItems } = useQuery({
     queryKey: ["all_order_items", user?.id],
@@ -200,13 +203,19 @@ export default function Dashboard() {
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500" },
-          { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500" },
+          ...(hasStarterAnalytics ? [
+            { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500" },
+          ] : []),
           ...(hasGateway ? [
             { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500" },
             { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500" },
           ] : []),
-          { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500" },
-          { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground" },
+          ...(hasStarterAnalytics ? [
+            { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `${metrics.recurringCustomers} recorrentes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500" },
+          ] : []),
+          ...(hasProAnalytics ? [
+            { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground" },
+          ] : []),
         ].map((s) => (
           <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow`}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -258,7 +267,7 @@ export default function Dashboard() {
       )}
 
       {/* Low stock - clickable cards */}
-      {(metrics.lowStock.length > 0 || metrics.outOfStock.length > 0) && (
+      {hasProAnalytics && (metrics.lowStock.length > 0 || metrics.outOfStock.length > 0) && (
         <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -335,6 +344,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {hasPremiumAnalytics && (
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pedidos por Dia</CardTitle></CardHeader>
           <CardContent>
@@ -350,7 +360,9 @@ export default function Dashboard() {
             ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
           </CardContent>
         </Card>
+        )}
 
+        {hasPremiumAnalytics && (
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
           <CardContent>
@@ -381,7 +393,9 @@ export default function Dashboard() {
             ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
           </CardContent>
         </Card>
+        )}
 
+        {hasStarterAnalytics && (
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cupons</CardTitle></CardHeader>
           <CardContent>
@@ -406,9 +420,11 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* Insights Section */}
+      {hasPremiumAnalytics && (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Top Mais Vendidos */}
         <Card className="border-border shadow-sm">
@@ -495,6 +511,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* Recent Orders */}
       <Card className="border-border shadow-sm">

@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -69,10 +70,10 @@ export function AIChatWidget() {
   const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isLocked } = usePlanFeatures();
+  const { ctx } = useTenantContext();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const aiLocked = isLocked("ai_tools");
+  const aiLocked = !canAccess("ai_tools", ctx);
 
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
@@ -351,7 +352,7 @@ export function AIChatWidget() {
             <p className="text-xs leading-relaxed text-muted-foreground">
               Sem IA você responde mais devagar, analisa pior e vende abaixo do que poderia. Desbloqueie agora para usar automação e inteligência a seu favor.
             </p>
-            <Button size="sm" className="gap-2" onClick={() => window.location.assign("/admin/plano")}>
+            <Button size="sm" className="gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
               <Sparkles className="h-3.5 w-3.5" /> Desbloquear IA
             </Button>
           </div>
