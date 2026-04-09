@@ -170,7 +170,8 @@ Deno.serve(async (req) => {
       if (gateway === "mercadopago") {
         paymentResult = await createMercadoPagoPayment(
           order, method, secretKey, environment, card_token, installments, 
-          payer_cpf, card_type, payer_first_name, payer_last_name, device_id, payment_method_id
+          payer_cpf, card_type, payer_first_name, payer_last_name, device_id, 
+          payment_method_id, issuer_id
         );
       } else if (gateway === "pagbank") {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
