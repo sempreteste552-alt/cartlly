@@ -830,14 +830,28 @@ Deno.serve(async (req) => {
 
 // ========== HELPERS ==========
 
-function pickRandomMessage(
+function pickVariedMessage(
   templates: { title: string; body: string }[],
   name: string,
   product: string,
-  store: string
+  store: string,
+  stepIndex: number,
+  customerId: string,
+  productId: string | null
 ): { title: string; body: string } {
-  const idx = Math.floor(Math.random() * templates.length);
+  // Use a hash of customerId + productId + stepIndex to ensure stability for this specific notification
+  // while differentiating it from others.
+  const hashStr = `${customerId}-${productId || "noprod"}-${stepIndex}`;
+  let hashVal = 0;
+  for (let i = 0; i < hashStr.length; i++) {
+    hashVal = ((hashVal << 5) - hashVal) + hashStr.charCodeAt(i);
+    hashVal |= 0;
+  }
+  
+  // Pick template using the stable hash + some randomness for freshness
+  const idx = Math.abs(hashVal) % templates.length;
   const t = templates[idx];
+  
   return {
     title: t.title.replace(/\{product\}/g, product).replace(/\{name\}/g, name).replace(/\{store\}/g, store).slice(0, 50),
     body: t.body.replace(/\{product\}/g, product).replace(/\{name\}/g, name).replace(/\{store\}/g, store).slice(0, 130),
