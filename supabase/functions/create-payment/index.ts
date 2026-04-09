@@ -8,8 +8,9 @@ const corsHeaders = {
 
 interface PaymentRequest {
   order_id: string;
-  method: "pix" | "credit_card" | "boleto";
+  method: "pix" | "credit_card" | "boleto" | "debit_card";
   card_token?: string;
+  card_type?: "credit" | "debit";
   installments?: number;
   store_user_id: string;
   payer_cpf?: string;
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PAYMENT PROCESSING ====================
-    const { order_id, method, card_token, installments, store_user_id, payer_cpf } = body as PaymentRequest;
+    const { order_id, method, card_token, card_type, installments, store_user_id, payer_cpf, payer_first_name, payer_last_name } = body as PaymentRequest;
 
     if (!order_id || !method || !store_user_id) {
       return json({ error: "Campos obrigatórios: order_id, method, store_user_id" }, 400);
@@ -162,7 +163,7 @@ Deno.serve(async (req) => {
 
     try {
       if (gateway === "mercadopago") {
-        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
+        paymentResult = await createMercadoPagoPayment(order, method, secretKey, environment, card_token, installments, payer_cpf, card_type, payer_first_name, payer_last_name);
       } else if (gateway === "pagbank") {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment);
       } else if (gateway === "amplopay") {
@@ -274,15 +275,23 @@ async function createMercadoPagoPayment(
   environment: string,
   cardToken?: string,
   installments?: number,
-  payerCpf?: string
+  payerCpf?: string,
+  cardType?: "credit" | "debit",
+  payerFirstName?: string,
+  payerLastName?: string
 ) {
   const baseUrl = "https://api.mercadopago.com/v1";
 
   const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=mercadopago`;
 
   // Use payer info from request if available, fallback to order
-  const firstName = order.payer_first_name || order.customer_name?.split(" ")[0] || "Cliente";
-  const lastName = order.payer_last_name || order.customer_name?.split(" ").slice(1).join(" ") || "";
+  const firstName = (payerFirstName || order.payer_first_name || order.customer_name?.split(" ")[0] || "Cliente").trim();
+  let lastName = (payerLastName || order.payer_last_name || order.customer_name?.split(" ").slice(1).join(" ") || "").trim();
+
+  // Mercado Pago requires a last name. If only one word was provided, use a placeholder or repeat first name
+  if (!lastName) {
+    lastName = firstName;
+  }
 
   const paymentData: any = {
     transaction_amount: Number(order.total),
@@ -306,10 +315,10 @@ async function createMercadoPagoPayment(
 
   if (method === "pix") {
     paymentData.payment_method_id = "pix";
-  } else if (method === "credit_card") {
-    if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão de crédito");
+  } else if (method === "credit_card" || method === "debit_card") {
+    if (!cardToken) throw new Error("Token do cartão é obrigatório para pagamento com cartão");
     paymentData.token = cardToken;
-    paymentData.installments = installments || 1;
+    paymentData.installments = (method === "debit_card" || cardType === "debit") ? 1 : (installments || 1);
   } else if (method === "boleto") {
     paymentData.payment_method_id = "bolbradesco";
     // Boleto requires payer address
@@ -362,7 +371,7 @@ async function createMercadoPagoPayment(
     result.boleto_expiration = data.date_of_expiration;
   }
 
-  if (method === "credit_card" && data.card) {
+  if ((method === "credit_card" || method === "debit_card") && data.card) {
     result.card_last_four = data.card.last_four_digits;
     result.card_brand = data.payment_method_id;
   }
