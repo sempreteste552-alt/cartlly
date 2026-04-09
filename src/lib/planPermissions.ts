@@ -187,6 +187,15 @@ export function getProductLimitReason(ctx: TenantContext): string | null {
   return `Você atingiu o limite de ${ctx.maxProducts} produtos do plano ${ctx.planSlug}. Faça upgrade para cadastrar mais.`;
 }
 
+/** Get max additional images allowed by plan */
+export function getMaxProductImages(ctx: TenantContext): number {
+  if (ctx.isTrial && !ctx.isTrialExpired) return 10;
+  const level = planLevel(ctx.planSlug);
+  if (level >= planLevel("PRO")) return 10;
+  if (level >= planLevel("STARTER")) return 4;
+  return 0; // FREE = only main image
+}
+
 /** Check if tenant is in an active (operational) state */
 export function isTenantActive(ctx: TenantContext): boolean {
   if (ctx.isTrial && !ctx.isTrialExpired) return true;
