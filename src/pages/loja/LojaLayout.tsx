@@ -205,6 +205,12 @@ export default function LojaLayout() {
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
 
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
+  
+  // In dark mode, override header/footer colors to dark-appropriate values
+  const effectiveHeaderBg = isDarkMode ? "hsl(0 0% 0%)" : headerBgColor;
+  const effectiveHeaderText = isDarkMode ? "hsl(0 0% 98%)" : headerTextColor;
+  const effectiveFooterBg = isDarkMode ? "hsl(0 0% 3%)" : footerBgColor;
+  const effectiveFooterText = isDarkMode ? "hsl(0 0% 90%)" : footerTextColor;
 
   useEffect(() => {
     if (slug) {
