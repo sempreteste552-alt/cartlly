@@ -125,7 +125,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId, selectedMethod, cardCpf, payerCpf]);
+  }, [orderId, selectedMethod, cardCpf, payerCpf, onSuccess]);
 
   // Poll payment status for PIX/Boleto
   useEffect(() => {
