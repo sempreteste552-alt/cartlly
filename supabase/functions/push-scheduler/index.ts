@@ -871,8 +871,10 @@ Deno.serve(async (req) => {
         const freqConfig = storeFreqMap.get(rule.user_id) || defaultFreq;
 
         for (const customer of eligibleCustomers) {
-          const dailyCount = globalDailyCounts.get(customer.id) || 0;
-          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, product.id, dailyCount, "low", freqConfig);
+          const userCounts = triggerCountsByCustomer.get(customer.id);
+          const triggerCount = userCounts?.get("promo_campaign") || 0;
+          
+          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, product.id, triggerCount, "low", freqConfig, "promo_campaign");
           
           if (spamCheck.skip) {
             results.promo_campaign.skipped++;
@@ -916,7 +918,9 @@ Deno.serve(async (req) => {
 
             if (pushData.sent > 0) {
               campaignSent++;
-              globalDailyCounts.set(customer.id, dailyCount + 1);
+              const counts = triggerCountsByCustomer.get(customer.id) || new Map();
+              counts.set("promo_campaign", (counts.get("promo_campaign") || 0) + 1);
+              triggerCountsByCustomer.set(customer.id, counts);
             }
 
             results.promo_campaign.processed++;
