@@ -37,6 +37,9 @@ Deno.serve(async (req) => {
     if (triggerType === "new_coupon") {
       return await handleNewCoupon(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
+    if (triggerType === "product_view") {
+      return await handleProductView(supabase, supabaseUrl, lovableApiKey, requestBody);
+    }
 
     // === ABANDONED CART RECOVERY ===
     // Fetch the store's abandoned_cart rule to get timing settings
@@ -117,7 +120,7 @@ Deno.serve(async (req) => {
     for (const cart of carts) {
       try {
         const customer = customerMap.get(cart.customer_id);
-        if (!customer?.auth_user_id || !customer?.store_user_id) { skipped++; continue; }
+        if (!customer?.store_user_id) { skipped++; continue; }
 
         const rule = ruleMap.get(cart.user_id);
         if (!rule) { skipped++; continue; }
@@ -179,6 +182,7 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             target_user_id: customer.auth_user_id,
+            customer_id: cart.customer_id,
             title, body,
             url: "/",
             type: "abandoned_cart",
@@ -711,6 +715,98 @@ async function handleNewCoupon(supabase: any, supabaseUrl: string, lovableApiKey
   return json({ processed: pushUserIds.length, sent });
 }
 
+// === PRODUCT VIEW RECOVERY ===
+async function handleProductView(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, body: any) {
+  const { store_user_id, customer_id, product_id } = body;
+  if (!store_user_id || !customer_id) return json({ error: "Missing store_user_id or customer_id" }, 400);
+
+  // Check if rule enabled
+  const { data: rule } = await supabase
+    .from("automation_rules")
+    .select("enabled")
+    .eq("user_id", store_user_id)
+    .eq("trigger_type", "product_view")
+    .eq("enabled", true)
+    .maybeSingle();
+
+  // If no rule or disabled, we still send if it was manually triggered or as a default behavior
+  // But check cooldown to avoid spamming
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data: existingExec } = await supabase
+    .from("automation_executions")
+    .select("id")
+    .eq("customer_id", customer_id)
+    .eq("trigger_type", "product_view")
+    .gte("sent_at", todayStart.toISOString())
+    .limit(1);
+
+  if (existingExec && existingExec.length > 0) {
+    return json({ processed: 0, message: "Already sent for this product view today" });
+  }
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id, name, auth_user_id")
+    .eq("id", customer_id)
+    .single();
+
+  if (!customer) return json({ processed: 0, message: "Customer not found" });
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, price")
+    .eq("id", product_id)
+    .single();
+
+  const storeMap = await getStoreMap(supabase, [store_user_id]);
+  const storeName = storeMap.get(store_user_id)?.store_name || "nossa loja";
+  const productName = product?.name || "um produto";
+
+  let title = `👀 Você deu uma olhadinha...`;
+  let msgBody = `Oi ${customer.name}! Notamos que você gostou de "${productName}" na ${storeName}. Aproveite para garantir o seu!`;
+
+  if (lovableApiKey) {
+    try {
+      const aiMsg = await generateAIMessage(lovableApiKey, {
+        type: "product_view",
+        customerName: customer.name,
+        storeName,
+        productName,
+        dayOfWeek: new Date().getDay(),
+        hour: new Date().getHours(),
+      });
+      if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+    } catch (e) { console.error("AI product view error:", e); }
+  }
+
+  const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      target_user_id: customer.auth_user_id,
+      customer_id: customer_id,
+      title, body: msgBody,
+      url: "/",
+      type: "product_view",
+      store_user_id: store_user_id,
+    }),
+  });
+  const pushData = await pushResp.json();
+
+  await supabase.from("automation_executions").insert({
+    user_id: store_user_id,
+    customer_id: customer_id,
+    trigger_type: "product_view",
+    channel: "push",
+    message_text: `${title} — ${msgBody}`,
+    ai_generated: !!lovableApiKey,
+    status: pushData.sent > 0 ? "sent" : "failed",
+  });
+
+  return json({ processed: 1, sent: pushData.sent > 0 ? 1 : 0 });
+}
+
 // === HELPERS ===
 
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
@@ -892,8 +988,27 @@ REGRAS OBRIGATÓRIAS:
 ${dateInstructions}`;
 
     userPrompt = `Loja: ${ctx.storeName}
+    Produto: ${ctx.productName}
+    Preço: ${ctx.productPrice || "não informado"}
+    Dia: ${dayName}
+    Saudação: ${greetings}`;
+
+  } else if (ctx.type === "product_view") {
+    systemPrompt = `Você é uma assistente de marketing MUITO atenta e gentil da loja "${ctx.storeName}".
+Gere uma notificação push para um cliente que visualizou um produto.
+
+REGRAS OBRIGATÓRIAS:
+- Responda APENAS com JSON: {"title": "...", "body": "..."}
+- title: máximo 50 caracteres, comece com 1 emoji de atenção (👀 ✨ 🛍️ 💫 💝 etc)
+- body: máximo 130 caracteres, mencione o nome do cliente, o produto e a loja "${ctx.storeName}"
+- Tom: amigável, sutil, convidativo, sem ser invasivo
+- Use saudação: "${greetings}" (é ${dayName})
+- Seed: ${seed}
+${dateInstructions}`;
+
+    userPrompt = `Cliente: ${ctx.customerName}
 Produto: ${ctx.productName}
-Preço: ${ctx.productPrice || "não informado"}
+Loja: ${ctx.storeName}
 Dia: ${dayName}
 Saudação: ${greetings}`;
 
