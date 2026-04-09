@@ -66,10 +66,10 @@ export function AdminNotificationsBell() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative shrink-0">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative shrink-0 hover:bg-primary/5 rounded-full transition-all active:scale-95 group">
+          <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center animate-pulse">
+            <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[9px] font-black flex items-center justify-center border-2 border-background shadow-sm ring-1 ring-primary/20">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
