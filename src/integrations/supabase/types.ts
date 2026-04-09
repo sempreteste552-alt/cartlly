@@ -992,6 +992,7 @@ export type Database = {
           coupon_code: string | null
           created_at: string
           customer_address: string | null
+          customer_cpf: string | null
           customer_email: string | null
           customer_name: string
           customer_phone: string | null
@@ -999,8 +1000,14 @@ export type Database = {
           id: string
           notes: string | null
           shipping_cep: string | null
+          shipping_city: string | null
+          shipping_complement: string | null
           shipping_cost: number
           shipping_method: string | null
+          shipping_neighborhood: string | null
+          shipping_number: string | null
+          shipping_state: string | null
+          shipping_street: string | null
           status: string
           total: number
           tracking_token: string | null
@@ -1012,6 +1019,7 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_cpf?: string | null
           customer_email?: string | null
           customer_name: string
           customer_phone?: string | null
@@ -1019,8 +1027,14 @@ export type Database = {
           id?: string
           notes?: string | null
           shipping_cep?: string | null
+          shipping_city?: string | null
+          shipping_complement?: string | null
           shipping_cost?: number
           shipping_method?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
           status?: string
           total?: number
           tracking_token?: string | null
@@ -1032,6 +1046,7 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_cpf?: string | null
           customer_email?: string | null
           customer_name?: string
           customer_phone?: string | null
@@ -1039,8 +1054,14 @@ export type Database = {
           id?: string
           notes?: string | null
           shipping_cep?: string | null
+          shipping_city?: string | null
+          shipping_complement?: string | null
           shipping_cost?: number
           shipping_method?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
           status?: string
           total?: number
           tracking_token?: string | null

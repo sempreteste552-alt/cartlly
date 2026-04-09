@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -24,6 +24,7 @@ import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 import paymentCards from "@/assets/payment-cards.webp";
 import pixLogo from "@/assets/pix-logo.webp";
+import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
@@ -48,8 +49,46 @@ export default function LojaCheckout() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [complement, setComplement] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const handleCepBlur = async () => {
+    const cleanCep = cep.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      setCepLoading(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        const data = await response.json();
+        if (data.erro) {
+          toast.error("CEP não encontrado");
+        } else {
+          setStreet(data.logradouro);
+          setNeighborhood(data.bairro);
+          setCity(data.localidade);
+          setState(data.uf);
+          toast.success("Endereço preenchido automaticamente");
+        }
+      } catch (error) {
+        toast.error("Erro ao buscar CEP");
+      } finally {
+        setCepLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fullAddress = [street, number, neighborhood, city, state, cep].filter(Boolean).join(", ");
+    setAddress(fullAddress);
+  }, [street, number, neighborhood, city, state, cep]);
 
   // Review state
   const [reviewRatings, setReviewRatings] = useState<Record<string, number>>({});
@@ -87,8 +126,21 @@ export default function LojaCheckout() {
       setName(customer.name || "");
       setEmail(customer.email || "");
       setPhone(customer.phone || "");
-      const fullAddress = [customer.address, customer.city, customer.state, customer.cep].filter(Boolean).join(", ");
-      if (fullAddress) setAddress(fullAddress);
+      setCpf(customer.cpf || "");
+      setCep(customer.cep || "");
+      setCity(customer.city || "");
+      setState(customer.state || "");
+      if (customer.address) {
+        // If address has parts separated by comma, try to parse (simple attempt)
+        const parts = customer.address.split(", ");
+        if (parts.length >= 3) {
+          setStreet(parts[0]);
+          setNumber(parts[1]);
+          setNeighborhood(parts[2]);
+        } else {
+          setStreet(customer.address);
+        }
+      }
     }
   }, [customer]);
 
@@ -149,12 +201,19 @@ export default function LojaCheckout() {
         customer_name: name.trim(),
         customer_email: email.trim() || null,
         customer_phone: phone.trim(),
+        customer_cpf: cpf.replace(/\D/g, ""),
         customer_address: address.trim() || null,
+        shipping_street: street.trim(),
+        shipping_number: number.trim(),
+        shipping_neighborhood: neighborhood.trim(),
+        shipping_city: city.trim(),
+        shipping_state: state.trim(),
+        shipping_complement: complement.trim() || null,
+        shipping_cep: cep.replace(/\D/g, ""),
         notes: notes.trim() || null,
         total: finalTotal,
         shipping_cost: shippingCost,
         shipping_method: selectedShipping?.method || null,
-        shipping_cep: null,
         whatsapp_order: false,
         status: "pendente",
         coupon_code: appliedCoupon?.code || null,
@@ -200,9 +259,16 @@ export default function LojaCheckout() {
   }, [user, authLoading, pendingPayment]);
 
   const handleSubmit = async (viaWhatsApp = false) => {
-    if (!name.trim()) return toast.error("Informe seu nome");
+    if (!name.trim()) return toast.error("Informe seu nome completo");
     if (!phone.trim()) return toast.error("Informe seu telefone");
-    if (cart.items.length === 0) return toast.error("Carrinho vazio");
+    if (!cpf.trim() || !validateCPF(cpf)) return toast.error("CPF inválido ou não informado");
+    if (!cep.trim() || cep.replace(/\D/g, "").length !== 8) return toast.error("CEP obrigatório e deve ter 8 dígitos");
+    if (!street.trim()) return toast.error("Informe o nome da rua");
+    if (!number.trim()) return toast.error("Informe o número do endereço");
+    if (!neighborhood.trim()) return toast.error("Informe o bairro");
+    if (!city.trim()) return toast.error("Informe a cidade");
+    if (!state.trim()) return toast.error("Informe o estado");
+    if (cart.items.length === 0) return toast.error("Seu carrinho está vazio");
 
     // Require customer login before payment (not for WhatsApp)
     if (!viaWhatsApp && authLoading) {
@@ -594,6 +660,7 @@ export default function LojaCheckout() {
           storeUserId={settings?.user_id}
           total={finalTotal}
           settings={settings}
+          initialCpf={cpf}
           onSuccess={(method, cpf) => {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
@@ -706,31 +773,80 @@ export default function LojaCheckout() {
           </CardContent>
         </Card>
 
-        {/* Customer info */}
         <Card>
           <CardHeader><CardTitle className="text-base">Seus Dados</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Nome *</Label>
+                <Label>Nome Completo *</Label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" maxLength={100} />
+              </div>
+              <div className="space-y-2">
+                <Label>CPF *</Label>
+                <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
               </div>
               <div className="space-y-2">
                 <Label>Telefone *</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" maxLength={20} />
               </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" maxLength={255} />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" maxLength={255} />
+
+            <Separator />
+            <CardTitle className="text-sm font-semibold">Endereço de Entrega</CardTitle>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>CEP *</Label>
+                <div className="relative">
+                  <Input 
+                    value={cep} 
+                    onChange={(e) => setCep(formatCEP(e.target.value))} 
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000" 
+                    maxLength={9} 
+                  />
+                  {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Rua/Logradouro *</Label>
+                <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Ex: Rua das Flores" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Endereço de Entrega</Label>
-              <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número, bairro, cidade, CEP" maxLength={500} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Número *</Label>
+                <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº" />
+              </div>
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Complemento</Label>
+                <Input value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apt, Sala, fundos (opcional)" />
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Bairro *</Label>
+                <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Seu bairro" />
+              </div>
+              <div className="space-y-2">
+                <Label>Cidade *</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado (UF) *</Label>
+                <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} placeholder="UF" maxLength={2} />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação sobre o pedido?" maxLength={500} />
+              <Label>Observações do Pedido</Label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação para a entrega?" maxLength={500} />
             </div>
           </CardContent>
         </Card>
