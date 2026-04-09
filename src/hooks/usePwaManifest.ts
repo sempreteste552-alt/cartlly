@@ -1,12 +1,8 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { applyRuntimePwaManifest, PwaManifestOptions } from "@/lib/runtimePwaManifest";
 
-/**
- * Hook that applies a dynamic PWA manifest based on the current
- * tenant/route context. Re-applies whenever options change.
- */
 export function usePwaManifest(options: PwaManifestOptions) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyRuntimePwaManifest(options);
   }, [
     options.name,
@@ -14,6 +10,7 @@ export function usePwaManifest(options: PwaManifestOptions) {
     options.themeColor,
     options.backgroundColor,
     options.iconUrl,
+    options.iconVersion,
     options.startUrl,
     options.scope,
   ]);
