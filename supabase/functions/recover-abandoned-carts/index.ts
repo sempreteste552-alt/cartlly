@@ -359,7 +359,18 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
     const hour = new Date().getHours();
 
     let title = `✨ Novidades na ${storeName}!`;
-    let body = `Confira as ofertas especiais de hoje! Temos novidades esperando por você.`;
+    let body = `Temos ofertas incríveis preparadas para você hoje na ${storeName}. Venha conferir!`;
+
+    const fallbackMessages = [
+      { title: `🎁 Presente para você na ${storeName}`, body: `Preparamos uma seleção exclusiva de produtos que você vai amar. Confira!` },
+      { title: `✨ Brilhe com a ${storeName}`, body: `Novidades fresquinhas acabaram de chegar. Não perca as ofertas de hoje!` },
+      { title: `🛍️ Sua sacola te espera`, body: `Que tal dar uma olhadinha no que temos de novo na ${storeName} hoje?` },
+      { title: `🔥 Tendências na ${storeName}`, body: `Veja o que está fazendo sucesso na nossa loja agora mesmo!` }
+    ];
+    
+    const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+    title = randomFallback.title;
+    body = randomFallback.body;
 
     if (lovableApiKey) {
       try {
