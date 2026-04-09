@@ -111,6 +111,14 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   }, [paymentData?.payment?.id, selectedMethod]);
 
+  // Auto-redirect for credit card if it's already approved but we are showing the intermediate screen
+  useEffect(() => {
+    if (paymentData && selectedMethod === "credit_card" && !paymentStatus) {
+      const timer = setTimeout(() => onSuccess("credit_card"), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentData, selectedMethod, paymentStatus]);
+
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão de Crédito", desc: "Parcelamento disponível", icon: CreditCard, enabled: settings?.payment_credit_card },
@@ -226,7 +234,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       const result = await createPayment.mutateAsync(params);
       setPaymentData(result);
 
-      if (result.paymentResult?.status === "approved") {
+      if (result.paymentResult?.status === "approved" || result.paymentResult?.status === "paid" || result.payment?.status === "approved" || result.payment?.status === "paid") {
         toast.success("Pagamento aprovado!");
         onSuccess(method);
       }
@@ -369,7 +377,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <p className="text-sm text-muted-foreground">
             {paymentData.payment?.card_brand?.toUpperCase()} ****{paymentData.payment?.card_last_four}
           </p>
-          <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => onSuccess("credit_card")}>Concluir</Button>
+            <p className="text-[10px] text-muted-foreground animate-pulse">Você será redirecionado automaticamente em 3 segundos...</p>
+          </div>
         </CardContent>
       </Card>
     );

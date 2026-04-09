@@ -56,11 +56,23 @@ export default function LojaCheckout() {
   // Confetti on success
   useEffect(() => {
     if (phase === "success") {
-      const duration = 2000;
+      const duration = 3000;
       const end = Date.now() + duration;
       const frame = () => {
-        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
-        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+        confetti({ 
+          particleCount: 5, 
+          angle: 60, 
+          spread: 70, 
+          origin: { x: 0, y: 0.6 },
+          colors: ["#6d28d9", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
+        });
+        confetti({ 
+          particleCount: 5, 
+          angle: 120, 
+          spread: 70, 
+          origin: { x: 1, y: 0.6 },
+          colors: ["#6d28d9", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
+        });
         if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();
@@ -537,7 +549,8 @@ export default function LojaCheckout() {
             setSavedFinalTotal(finalTotal);
             setSavedDiscountAmount(discountAmount);
             setSavedShippingCost(shippingCost);
-            setOrderItems([...cart.items]);
+            // We don't overwrite orderItems here as it was already set in handleSubmit
+            // This prevents race conditions with cart.clearCart()
             setPaymentMethod(method || "gateway");
             setPaymentDate(new Date());
             cart.clearCart();
