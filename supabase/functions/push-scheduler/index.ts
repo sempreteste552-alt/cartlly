@@ -177,7 +177,6 @@ const PRODUCT_VIEW_SEQUENCE: SequenceStep[] = [
       { title: "🌡️ Clima quente para {product}", body: "{name}, todo mundo quer o {product} da {store} hoje! Não perca 🔥" },
     ],
   },
-  },
 ];
 
 const CART_ABANDONMENT_SEQUENCE: SequenceStep[] = [
