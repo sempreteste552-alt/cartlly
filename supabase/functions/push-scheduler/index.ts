@@ -946,6 +946,78 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ========== 6) HOURLY ENGAGEMENT (Every hour, 24/7) ==========
+    const oneHourAgoEng = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    // Get all customers who have push enabled
+    const { data: allPushSubs } = await supabase
+      .from("push_subscriptions")
+      .select("user_id");
+    
+    if (allPushSubs && allPushSubs.length > 0) {
+      const pushUserIds = allPushSubs.map((s: any) => s.user_id);
+      const { data: customersWithPush } = await supabase
+        .from("customers")
+        .select("id, name, auth_user_id, store_user_id")
+        .in("auth_user_id", pushUserIds)
+        .limit(20);
+
+      if (customersWithPush && customersWithPush.length > 0) {
+        const { data: recentEngagements } = await supabase
+          .from("automation_executions")
+          .select("customer_id")
+          .eq("trigger_type", "hourly_engagement")
+          .gte("sent_at", oneHourAgoEng);
+        
+        const recentlyEngaged = new Set((recentEngagements || []).map((e: any) => e.customer_id));
+        const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+        const dayName = dayNames[new Date().getDay()];
+
+        for (const customer of customersWithPush) {
+          if (recentlyEngaged.has(customer.id)) continue;
+
+          const freqConfig = storeFreqMap.get(customer.store_user_id) || defaultFreq;
+          const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, null, 0, "low", freqConfig, "hourly_engagement");
+          
+          if (spamCheck.skip) continue;
+
+          const msgIdx = Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length);
+          const template = HOURLY_ENGAGEMENT_TEMPLATES[msgIdx];
+          const store = storeMap.get(customer.store_user_id);
+          const storeName = store?.store_name || "nossa loja";
+          
+          const title = template.title.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+          const body = template.body.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
+
+          try {
+            const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                target_user_id: customer.auth_user_id,
+                title, body, url: "/", type: "hourly_engagement",
+                store_user_id: customer.store_user_id,
+              }),
+            });
+            const pushData = await pushResp.json();
+
+            if (pushData.sent > 0) {
+              await supabase.from("automation_executions").insert({
+                user_id: customer.store_user_id,
+                customer_id: customer.id,
+                trigger_type: "hourly_engagement",
+                channel: "push",
+                message_text: `${title} — ${body}`,
+                status: "sent",
+              });
+              results.hourly_engagement.sent++;
+            }
+            results.hourly_engagement.processed++;
+          } catch (e) { console.error("Hourly push error:", e); }
+        }
+      }
+    }
+
     console.log("[push-scheduler] Results:", JSON.stringify(results));
     return json({ success: true, ...results });
   } catch (error: any) {
