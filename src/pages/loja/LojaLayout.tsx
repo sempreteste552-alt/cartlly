@@ -358,11 +358,13 @@ export default function LojaLayout() {
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-            {!isAdminPreview && (
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-                {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+              {user ? (
+                isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <LogOut className="h-5 w-5" />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+            </Button>
 
             <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
               <SheetTrigger asChild>
