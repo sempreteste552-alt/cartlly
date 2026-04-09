@@ -338,60 +338,61 @@ export default function PlanCheckoutModal({
               </div>
 
               {/* Billing info */}
-              <div className="space-y-3">
-                <label className="text-sm font-semibold text-foreground">Dados do pagador</label>
+              <div className="space-y-2.5">
+                <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Dados do pagador</label>
 
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                   <Input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Nome completo"
-                    className="h-11 pl-10 text-sm"
+                    className="h-10 pl-9 text-sm"
                     autoComplete="name"
                   />
                 </div>
 
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="E-mail"
-                    type="email"
-                    className="h-11 pl-10 text-sm"
-                    autoComplete="email"
-                  />
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                    <Input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="E-mail"
+                      type="email"
+                      className="h-10 pl-9 text-sm"
+                      autoComplete="email"
+                    />
+                  </div>
 
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCpf(e.target.value))}
-                    placeholder="CPF — 000.000.000-00"
-                    maxLength={14}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    className="h-11 pl-10 font-mono text-sm tracking-wider"
-                  />
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                    <Input
+                      value={cpf}
+                      onChange={(e) => setCpf(formatCpf(e.target.value))}
+                      placeholder="CPF — 000.000.000-00"
+                      maxLength={14}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      className="h-10 pl-9 font-mono text-sm tracking-wider"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Order summary */}
-              <div className="rounded-xl bg-muted/30 border border-border/40 p-4 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Resumo</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Plano {planName}</span>
+              <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-4 space-y-1.5">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-muted-foreground font-medium">Plano {planName}</span>
                   <span className="font-semibold text-foreground">{formatPrice(planPrice)}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Ciclo</span>
-                  <span className="text-muted-foreground">Mensal</span>
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-muted-foreground font-medium">Ciclo de faturamento</span>
+                  <span className="text-muted-foreground font-medium">Mensal</span>
                 </div>
-                <div className="border-t border-border/30 pt-2 flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground">Total hoje</span>
-                  <span className="text-xl font-extrabold text-foreground">{formatPrice(planPrice)}</span>
+                <div className="border-t border-border/30 pt-1.5 mt-1 flex items-center justify-between">
+                  <span className="text-sm font-bold text-foreground">Total à pagar</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-foreground">{formatPrice(planPrice)}</span>
                 </div>
               </div>
 
