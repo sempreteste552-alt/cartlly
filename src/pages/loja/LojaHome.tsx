@@ -306,14 +306,11 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   </div>
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
-                {(() => {
-                  const maxInst = (settings as any)?.max_installments || 12;
-                  return maxInst > 1 ? (
-                    <p className="text-[10px] text-muted-foreground">ou {maxInst}x de {formatPrice(product.price / maxInst)}</p>
-                  ) : (
-                    <p className="text-[10px] text-muted-foreground">à vista</p>
-                  );
-                })()}
+                {maxInstallments > 1 ? (
+                  <p className="text-[10px] text-muted-foreground">ou {maxInstallments}x de {formatPrice(product.price / maxInstallments)}</p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">à vista</p>
+                )}
                 {product.stock > 0 ? (
                   <p className="text-xs text-green-600 mt-1">Em estoque</p>
                 ) : (product as any).made_to_order ? (
