@@ -27,6 +27,7 @@ import MarketingConversionSettings from "@/components/admin/MarketingConversionS
 import ProductPageSettings from "@/components/admin/ProductPageSettings";
 import RestockAlertManager from "@/components/admin/RestockAlertManager";
 import PushNotificationSettings from "@/components/admin/PushNotificationSettings";
+import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 
 function AccountEmailChanger() {
   const [newEmail, setNewEmail] = useState("");
@@ -797,6 +798,17 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-6">
+          <FeatureTutorialCard
+            id="appearance_settings"
+            title="Personalização de Aparência"
+            description="Ajuste os detalhes visuais para criar uma experiência única para seus clientes."
+            steps={[
+              "Escolha fontes para títulos e textos",
+              "Ajuste bordas e sombras dos cards",
+              "Defina colunas para celular e computador",
+              "Estilize o cabeçalho e rodapé"
+            ]}
+          />
           <StoreAppearanceSettings />
         </TabsContent>
 
@@ -807,10 +819,32 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="product" className="mt-6">
+          <FeatureTutorialCard
+            id="product_page_tutorial"
+            title="Página de Produto"
+            description="Configure como os detalhes e fotos do seu produto são exibidos."
+            steps={[
+              "Defina o layout da galeria de fotos",
+              "Configure o botão de compra",
+              "Ative ou desative visualizações",
+              "Personalize o status de estoque"
+            ]}
+          />
           <ProductPageSettings />
         </TabsContent>
 
         <TabsContent value="marketing" className="mt-6">
+          <FeatureTutorialCard
+            id="marketing_tutorial"
+            title="Marketing e Conversão"
+            description="Ferramentas para aumentar suas vendas e rastrear resultados."
+            steps={[
+              "Configure Google e Facebook Pixels",
+              "Otimize sua loja para o Google (SEO)",
+              "Crie estratégias de cupons",
+              "Ative selos de confiança"
+            ]}
+          />
           <MarketingConversionSettings />
         </TabsContent>
 

@@ -26,6 +26,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -157,6 +158,17 @@ export default function Produtos() {
 
   return (
     <div className="space-y-6">
+      <FeatureTutorialCard
+        id="products_ai_tutorial"
+        title="Catálogo Inteligente com IA"
+        description="Adicione produtos em segundos apenas colando um link ou descrevendo o item. Nossa IA preenche nome, descrição, preço e busca as imagens para você."
+        steps={[
+          "Importe produtos colando links (Instagram, Shopee, etc)",
+          "Gere descrições persuasivas automaticamente",
+          "Organize em categorias com sugestões inteligentes",
+          "Remova o fundo das imagens com um clique (Pro)"
+        ]}
+      />
       <div id="products-header" className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
