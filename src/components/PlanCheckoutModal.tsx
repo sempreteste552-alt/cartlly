@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
-import seloSeguroImg from "@/assets/selo-seguro.png";
-import pixLogoImg from "@/assets/pix-logo.png";
+import paymentMethodsImg from "@/assets/payment-methods.png";
+import securityBadgesImg from "@/assets/security-badges.png";
+import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -277,9 +278,12 @@ export default function PlanCheckoutModal({
           </div>
 
           {/* Trust badges with real images */}
-          <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/15">
-            <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-10 sm:h-14 w-auto object-contain drop-shadow-lg" />
-            <img src={pixLogoImg} alt="PIX - Banco Central" className="h-7 sm:h-10 w-auto object-contain drop-shadow-lg brightness-0 invert" />
+          <div className="flex flex-col items-center gap-3 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-white/15">
+            <div className="flex items-center justify-center gap-4">
+              <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-8 sm:h-10 w-auto object-contain drop-shadow-lg" />
+              <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="h-8 sm:h-10 w-auto object-contain drop-shadow-lg" />
+            </div>
+            <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-5 sm:h-7 w-auto object-contain drop-shadow-lg opacity-80" />
           </div>
         </div>
 
@@ -407,8 +411,11 @@ export default function PlanCheckoutModal({
               </Button>
 
               <div className="flex items-center justify-center gap-4 mt-2">
-                <img src={seloSeguroImg} alt="Compra 100% Segura" className="h-12 w-auto object-contain" />
-                <img src={pixLogoImg} alt="PIX - Banco Central" className="h-8 w-auto object-contain" />
+                <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-10 w-auto object-contain" />
+                <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="h-10 w-auto object-contain" />
+              </div>
+              <div className="flex items-center justify-center mt-2">
+                <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-6 w-auto object-contain opacity-70" />
               </div>
             </div>
           )}
