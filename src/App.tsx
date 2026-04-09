@@ -8,6 +8,7 @@ import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/AdminLayout";
 import Login from "./pages/Login";
+import Index from "./pages/Index";
 import ContaEmAnalise from "./pages/ContaEmAnalise";
 import Dashboard from "./pages/admin/Dashboard";
 import Produtos from "./pages/admin/Produtos";
@@ -86,7 +87,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
+              <Route path="/" element={<Index />} />
+              <Route path="/loja-layout-test" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
                 <Route index element={<LojaHome />} />
                 <Route path="produto/:id" element={<LojaProduto />} />
                 <Route path="checkout" element={<LojaCheckout />} />
