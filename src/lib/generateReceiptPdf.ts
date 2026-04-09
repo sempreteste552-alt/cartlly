@@ -28,7 +28,7 @@ const formatPrice = (price: number) =>
 export function generateReceiptPdf(data: ReceiptData): void {
   const cleanCpf = data.customerCpf?.replace(/\D/g, "") || "";
   const maskedCpf = cleanCpf.length === 11 
-    ? `***.***.***-${cleanCpf.slice(-2)}` 
+    ? `***.***.${cleanCpf.slice(7, 9)}-${cleanCpf.slice(9)}` 
     : data.customerCpf || "—";
     
   const authenticationCode = (data.orderId.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32);
