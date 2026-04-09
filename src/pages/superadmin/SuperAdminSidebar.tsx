@@ -102,6 +102,7 @@ export function SuperAdminSidebar() {
                       end={item.url === "/superadmin"}
                       className="hover:bg-sidebar-accent/50"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={handleMenuClick}
                     >
                       <div className="relative">
                         <item.icon className="h-4 w-4" />
