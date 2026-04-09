@@ -290,12 +290,13 @@ export default function LojaLayout() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {isAdminPreview ? (
-                <span className="flex items-center gap-1 text-yellow-200 font-medium">
-                  👁️ Modo Preview
-                </span>
-              ) : user ? (
+              {user ? (
                 <div className="flex items-center gap-2">
+                  {isAdminPreview && (
+                    <span className="flex items-center gap-1 text-yellow-200 font-medium mr-1">
+                      👁️ Preview
+                    </span>
+                  )}
                   <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-1 hover:opacity-80">
                     <User className="h-3 w-3" /> {customer?.name?.split(" ")[0] || "Conta"}
                   </button>
@@ -357,11 +358,13 @@ export default function LojaLayout() {
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-            {!isAdminPreview && (
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
-                {user ? <LogOut className="h-5 w-5" /> : <User className="h-5 w-5" />}
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}>
+              {user ? (
+                isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <LogOut className="h-5 w-5" />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
+            </Button>
 
             <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
               <SheetTrigger asChild>
@@ -459,6 +462,8 @@ export default function LojaLayout() {
               { icon: Package, label: "Produtos", to: basePath },
               { icon: Ticket, label: "Cupons", to: `${basePath}/cupons` },
               { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
+              ...(user ? [{ icon: User, label: "Minha Conta", to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: "Entrar", to: "#", onClick: () => setAuthModalOpen(true) }]),
+              ...(user ? [{ icon: LogOut, label: "Sair", to: "#", onClick: () => signOut() }] : []),
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
             ].map((item: any, i) => {
               const content = (
@@ -497,7 +502,11 @@ export default function LojaLayout() {
                     transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
                   }}
                 >
-                  {item.external ? (
+                  {item.onClick ? (
+                    <button className={className} onClick={() => { setMobileMenu(false); item.onClick(); }} style={{ color: headerTextColor, width: '100%', textAlign: 'left' }}>
+                      {content}
+                    </button>
+                  ) : item.external ? (
                     <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
                       {content}
                     </a>
@@ -642,16 +651,14 @@ export default function LojaLayout() {
             <div className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-muted-foreground">
               <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} isMobileNav />
             </div>
-            {!isAdminPreview && (
-              <button
-                onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
-                className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
-                style={{ color: user ? primaryColor : undefined }}
-              >
-                <User className="h-5 w-5" />
-                <span className="text-[10px] mt-0.5 font-medium">{user ? "Conta" : "Entrar"}</span>
-              </button>
-            )}
+            <button
+              onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)}
+              className="flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              style={{ color: user ? primaryColor : undefined }}
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? "Preview" : "Conta") : "Entrar"}</span>
+            </button>
           </div>
         </nav>
 
