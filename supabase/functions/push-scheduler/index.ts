@@ -29,8 +29,11 @@ const FREQUENCY_PRESETS: Record<string, { softDailyLimit: number; cooldownMinute
 };
 
 function getFrequencyConfig(maxSendsPerDay: number | null) {
-  if (!maxSendsPerDay || maxSendsPerDay <= 4) return FREQUENCY_PRESETS.low;
-  if (maxSendsPerDay <= 7) return FREQUENCY_PRESETS.medium;
+  if (!maxSendsPerDay) return FREQUENCY_PRESETS.medium;
+  if (maxSendsPerDay <= 3) return { softDailyLimit: maxSendsPerDay, cooldownMinutes: 60 };
+  if (maxSendsPerDay <= 5) return { softDailyLimit: maxSendsPerDay, cooldownMinutes: 30 };
+  if (maxSendsPerDay <= 8) return FREQUENCY_PRESETS.low;
+  if (maxSendsPerDay <= 12) return FREQUENCY_PRESETS.medium;
   return FREQUENCY_PRESETS.aggressive;
 }
 
