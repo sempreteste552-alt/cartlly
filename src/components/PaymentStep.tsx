@@ -170,6 +170,42 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   }, [paymentData, selectedMethod, paymentStatus]);
 
+  // Handle Mercado Pago BIN check
+  useEffect(() => {
+    const bin = cardNumber.replace(/\s/g, "").slice(0, 6);
+    if (bin.length === 6 && settings?.payment_gateway === "mercadopago") {
+      const fetchMPDetails = async () => {
+        try {
+          if (!window.MercadoPago) return;
+          const mp = new window.MercadoPago(settings.gateway_public_key, { locale: "pt-BR" });
+          
+          const methods = await mp.getPaymentMethods({ bin });
+          if (methods && methods.length > 0) {
+            const method = methods[0];
+            setMpPaymentMethodId(method.id);
+            
+            const issuers = await mp.getIssuers({ paymentMethodId: method.id, bin });
+            if (issuers && issuers.length > 0) {
+              setMpIssuerId(issuers[0].id);
+            }
+            
+            const installments = await mp.getInstallments({ 
+              amount: String(total), 
+              bin, 
+              paymentTypeId: "credit_card" 
+            });
+            if (installments && installments.length > 0) {
+              setMpInstallmentsOptions(installments[0].payer_costs || []);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching MP details by BIN:", e);
+        }
+      };
+      fetchMPDetails();
+    }
+  }, [cardNumber, settings?.payment_gateway, settings?.gateway_public_key, total]);
+
   const availableMethods = [
     { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
     { id: "credit_card" as const, label: "Cartão", desc: "Crédito ou Débito", icon: CreditCard, enabled: settings?.payment_credit_card },
