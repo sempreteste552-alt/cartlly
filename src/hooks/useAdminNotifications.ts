@@ -71,9 +71,39 @@ export function useAdminNotifications() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const deleteNotification = async (id: string) => {
+    const { error } = await supabase.from("admin_notifications").delete().eq("id", id);
+    if (!error) {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      toast.success("Notificação removida");
+    } else {
+      toast.error("Erro ao remover notificação");
+    }
+  };
+
+  const clearAll = async () => {
+    if (!user) return;
+    const { error } = await supabase.from("admin_notifications").delete().eq("target_user_id", user.id);
+    if (!error) {
+      setNotifications([]);
+      toast.success("Todas as notificações foram removidas");
+    } else {
+      toast.error("Erro ao limpar notificações");
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return { notifications, loading, unreadCount, markAsRead, markAllAsRead, refresh: loadNotifications };
+  return { 
+    notifications, 
+    loading, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification,
+    clearAll,
+    refresh: loadNotifications 
+  };
 }
 
 export function getNotificationEmoji(type: string): string {
