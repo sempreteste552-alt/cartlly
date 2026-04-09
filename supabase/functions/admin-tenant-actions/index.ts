@@ -157,6 +157,19 @@ Deno.serve(async (req) => {
         }), { headers: corsHeaders });
       }
 
+      case "update_user": {
+        if (!targetUserId) {
+          return new Response(JSON.stringify({ error: "Missing targetUserId" }), { status: 400, headers: corsHeaders });
+        }
+        const updates: Record<string, any> = {};
+        if (body.newEmail) updates.email = body.newEmail;
+        if (body.newPassword) updates.password = body.newPassword;
+        if (body.emailConfirm !== undefined) updates.email_confirm = body.emailConfirm;
+        const { error: updateError } = await adminClient.auth.admin.updateUserById(targetUserId, updates);
+        if (updateError) throw updateError;
+        return new Response(JSON.stringify({ success: true, message: "User updated" }), { headers: corsHeaders });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: corsHeaders });
     }
