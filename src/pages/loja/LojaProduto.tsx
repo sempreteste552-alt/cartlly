@@ -13,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function LojaProduto() {
   const { id } = useParams();
@@ -69,6 +70,20 @@ export default function LojaProduto() {
       localStorage.setItem("recently_viewed", JSON.stringify(newViewed));
     }
   }, [id, productPageConfig?.enable_recently_viewed]);
+
+  // Increment view count
+  useEffect(() => {
+    if (id) {
+      const incrementViews = async () => {
+        try {
+          await supabase.rpc("increment_product_views", { product_id: id });
+        } catch (error) {
+          console.error("Error incrementing views:", error);
+        }
+      };
+      incrementViews();
+    }
+  }, [id]);
 
   const recentlyViewedProducts = useMemo(() => {
     if (!productPageConfig?.enable_recently_viewed || !products) return [];
@@ -242,11 +257,20 @@ export default function LojaProduto() {
             </div>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-3xl font-bold" style={{ color: primaryColor }}>{formatPrice(effectivePrice)}</p>
-            <p className="text-sm text-green-600">
-              ou 12x de {formatPrice(effectivePrice / 12)} sem juros
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="space-y-1">
+              <p className="text-3xl font-bold" style={{ color: primaryColor }}>{formatPrice(effectivePrice)}</p>
+              <p className="text-sm text-green-600">
+                ou 12x de {formatPrice(effectivePrice / 12)} sem juros
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm animate-pulse" title="Visualizações reais deste produto">
+              <Eye className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-600">
+                {product.views || 0} visualizações
+              </span>
+            </div>
           </div>
 
           {/* Variant selectors */}
