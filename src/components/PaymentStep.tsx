@@ -617,11 +617,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               <Select value={cardInstallments} onValueChange={setCardInstallments}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
-                    </SelectItem>
-                  ))}
+                  {mpInstallmentsOptions.length > 0 ? (
+                    mpInstallmentsOptions.map((opt: any) => (
+                      <SelectItem key={opt.installments} value={String(opt.installments)}>
+                        {opt.recommended_message}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    Array.from({ length: (settings as any)?.max_installments || 12 }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n}x de {formatPrice(total / n)} {n === 1 ? "à vista" : ""}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
