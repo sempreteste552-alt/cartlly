@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Video, ZoomIn, ShoppingCart, Star, HelpCircle, Ruler, Package, ShoppingBag, Eye, TrendingUp, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 import { useStoreProductPageConfig, useUpdateStoreProductPageConfig } from "@/hooks/useStoreProductPageConfig";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
+import { LockedFeature } from "@/components/LockedFeature";
 
 interface FeatureToggleProps {
   icon: React.ReactNode;
@@ -119,6 +122,7 @@ export default function ProductPageSettings() {
   return (
     <div className="space-y-6">
       {/* Galeria e Mídia */}
+      <LockedFeature isLocked={!canAccess("image_zoom", ctx)} featureName="Galeria e Mídia">
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Galeria e Mídia</CardTitle>
@@ -129,8 +133,10 @@ export default function ProductPageSettings() {
           <FeatureToggle icon={<ZoomIn className="h-4 w-4" />} label="Zoom na Imagem" description="Zoom ao passar o mouse sobre a imagem" checked={imageZoom} onCheckedChange={setImageZoom} />
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Ações de Compra */}
+      <LockedFeature isLocked={!canAccess("sticky_cart", ctx)} featureName="Ações de Compra">
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Ações de Compra</CardTitle>
@@ -141,8 +147,10 @@ export default function ProductPageSettings() {
           <FeatureToggle icon={<ShoppingBag className="h-4 w-4" />} label="Compre Junto" description="Sugere produtos para comprar junto com desconto" checked={buyTogether} onCheckedChange={setBuyTogether} badge="PREMIUM" badgeColor="bg-gradient-to-r from-amber-500 to-orange-500 text-white" />
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Social Proof */}
+      <LockedFeature isLocked={!canAccess("reviews", ctx)} featureName="Prova Social">
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Prova Social</CardTitle>
@@ -160,8 +168,10 @@ export default function ProductPageSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Informações Extras */}
+      <LockedFeature isLocked={!canAccess("product_faq", ctx)} featureName="Informações Extras">
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Informações Extras</CardTitle>
@@ -185,8 +195,10 @@ export default function ProductPageSettings() {
           )}
         </CardContent>
       </Card>
+      </LockedFeature>
 
       {/* Produtos Relacionados */}
+      <LockedFeature isLocked={!canAccess("related_products", ctx)} featureName="Recomendações">
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Recomendações</CardTitle>
@@ -198,6 +210,7 @@ export default function ProductPageSettings() {
           <FeatureToggle icon={<TrendingUp className="h-4 w-4" />} label="Mais Vendidos da Categoria" description="Top vendas da categoria atual" checked={categoryBestSellers} onCheckedChange={setCategoryBestSellers} badge="PREMIUM" badgeColor="bg-gradient-to-r from-amber-500 to-orange-500 text-white" />
         </CardContent>
       </Card>
+      </LockedFeature>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={updateConfig.isPending} size="lg">
