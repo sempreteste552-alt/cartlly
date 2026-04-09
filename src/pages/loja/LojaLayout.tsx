@@ -367,12 +367,12 @@ export default function LojaLayout() {
 
   const storeName = settings?.store_name || "Loja";
   const primaryColor = settings?.primary_color || "#6d28d9";
-  const headerBgColor = settings?.header_bg_color || "#ffffff";
-  const headerTextColor = settings?.header_text_color || "#000000";
-  const footerBgColor = settings?.footer_bg_color || "#000000";
-  const footerTextColor = settings?.footer_text_color || "#ffffff";
-  const buttonColor = settings?.button_color || "#000000";
-  const buttonTextColor = settings?.button_text_color || "#ffffff";
+  const headerBgColor = isDarkMode ? "#000000" : (settings?.header_bg_color || "#ffffff");
+  const headerTextColor = isDarkMode ? "#fafafa" : (settings?.header_text_color || "#000000");
+  const footerBgColor = isDarkMode ? "#080808" : (settings?.footer_bg_color || "#000000");
+  const footerTextColor = isDarkMode ? "#e5e5e5" : (settings?.footer_text_color || "#ffffff");
+  const buttonColor = isDarkMode ? primaryColor : (settings?.button_color || "#000000");
+  const buttonTextColor = isDarkMode ? "#ffffff" : (settings?.button_text_color || "#ffffff");
 
   // Bottom nav items for mobile
   const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
