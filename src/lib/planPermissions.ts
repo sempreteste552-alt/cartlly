@@ -20,7 +20,25 @@ export type FeatureKey =
   | "advanced_product_cards" | "custom_home_sections" | "premium_banners"
   | "push_customers"
   | "enterprise_permissions"
-  | "verified_badge";
+  | "verified_badge"
+  | "store_pages"
+  | "automation"
+  | "appearance_settings"
+  | "highlights_stories"
+  | "restock_alerts"
+  | "image_zoom"
+  | "sticky_cart"
+  | "buy_together"
+  | "stock_urgency"
+  | "size_guide"
+  | "recently_viewed"
+  | "category_best_sellers"
+  | "announcement_bar"
+  | "popup_coupon"
+  | "free_shipping_bar"
+  | "trust_badges"
+  | "countdown_timer"
+  | "delivery_estimation";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
@@ -51,6 +69,11 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   product_reviews:      { label: "Avaliações", description: "Avaliações de clientes", minPlan: "STARTER", category: "marketing" },
   reviews:              { label: "Sistema de Reviews", description: "Reviews completos", minPlan: "STARTER", category: "marketing" },
   seo_basic:            { label: "SEO Básico", description: "Meta tags e títulos", minPlan: "STARTER", category: "marketing" },
+  store_pages:          { label: "Páginas Personalizadas", description: "Criar páginas como Sobre, FAQ, Política", minPlan: "STARTER", category: "basic" },
+  announcement_bar:     { label: "Barra de Anúncio", description: "Banner fixo no topo da loja", minPlan: "STARTER", category: "marketing" },
+  trust_badges:         { label: "Selos de Confiança", description: "Selos de segurança e garantia", minPlan: "STARTER", category: "marketing" },
+  image_zoom:           { label: "Zoom na Imagem", description: "Zoom ao passar o mouse na imagem do produto", minPlan: "STARTER", category: "design" },
+  delivery_estimation:  { label: "Estimativa de Entrega", description: "Prazo estimado de entrega no produto", minPlan: "STARTER", category: "marketing" },
 
   // PRO
   banners:              { label: "Banners da Loja", description: "Banners promocionais", minPlan: "PRO", category: "design" },
@@ -71,6 +94,16 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   mega_menu:            { label: "Mega Menu", description: "Menu de navegação avançado", minPlan: "PRO", category: "design" },
   conversion_widgets:   { label: "Widgets de Conversão", description: "Selos, contagem regressiva, urgência", minPlan: "PRO", category: "marketing" },
   push_customers:       { label: "Push para Clientes", description: "Enviar notificações push para clientes da loja", minPlan: "PRO", category: "marketing" },
+  appearance_settings:  { label: "Personalização de Aparência", description: "Tipografia, cards e estilos visuais", minPlan: "PRO", category: "design" },
+  highlights_stories:   { label: "Destaques (Stories)", description: "Stories no estilo Instagram", minPlan: "PRO", category: "design" },
+  restock_alerts:       { label: "Alerta de Reposição", description: "Card de reposição com push interno", minPlan: "PRO", category: "marketing" },
+  sticky_cart:          { label: "Botão Fixo de Compra", description: "Botão de compra fixo ao rolar", minPlan: "PRO", category: "marketing" },
+  stock_urgency:        { label: "Urgência de Estoque", description: "Alerta de últimas unidades", minPlan: "PRO", category: "marketing" },
+  size_guide:           { label: "Guia de Tamanhos", description: "Tabela de medidas", minPlan: "PRO", category: "marketing" },
+  recently_viewed:      { label: "Vistos Recentemente", description: "Produtos visualizados pelo cliente", minPlan: "PRO", category: "marketing" },
+  countdown_timer:      { label: "Contagem Regressiva", description: "Timer para promoções temporárias", minPlan: "PRO", category: "marketing" },
+  free_shipping_bar:    { label: "Barra de Frete Grátis", description: "Barra de progresso de frete grátis", minPlan: "PRO", category: "marketing" },
+  automation:           { label: "Automação de Marketing", description: "Fluxos automáticos de mensagens", minPlan: "PRO", category: "marketing" },
 
   // PREMIUM
   seo_advanced:         { label: "SEO Avançado", description: "Schema, sitemap e otimizações", minPlan: "PREMIUM", category: "advanced" },
@@ -82,6 +115,9 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   ai_content:           { label: "IA de Conteúdo", description: "Gerar descrições e textos com IA", minPlan: "PREMIUM", category: "ai" },
   ai_store_builder:     { label: "IA Monta Loja", description: "Montar loja com inteligência artificial", minPlan: "PREMIUM", category: "ai" },
   ai_tools:             { label: "Ferramentas de IA", description: "Todas as ferramentas de IA", minPlan: "PREMIUM", category: "ai" },
+  buy_together:         { label: "Compre Junto", description: "Sugerir produtos para comprar junto", minPlan: "PREMIUM", category: "advanced" },
+  category_best_sellers:{ label: "Mais Vendidos da Categoria", description: "Top vendas por categoria", minPlan: "PREMIUM", category: "advanced" },
+  popup_coupon:         { label: "Popup de Cupom", description: "Popup com cupom para novos visitantes", minPlan: "PREMIUM", category: "marketing" },
   scripts_custom:       { label: "Scripts & Pixels", description: "Inserir scripts e pixels", minPlan: "PREMIUM", category: "enterprise" },
   integrations_advanced:{ label: "Integrações Avançadas", description: "APIs e integrações externas", minPlan: "PREMIUM", category: "enterprise" },
   enterprise_permissions:{ label: "Permissões Enterprise", description: "Controle granular de acessos", minPlan: "PREMIUM", category: "enterprise" },
