@@ -933,7 +933,7 @@ Deno.serve(async (req) => {
             if (personalizedProduct) selectedProduct = personalizedProduct;
           }
 
-          const msg = pickVariedMessage(PROMO_CAMPAIGN_TEMPLATES, customer.name, selectedProduct.name, storeName, dailyCount, customer.id, selectedProduct.id);
+          const msg = pickVariedMessage(PROMO_CAMPAIGN_TEMPLATES, customer.name, selectedProduct.name, storeName, triggerCount, customer.id, selectedProduct.id);
 
           try {
             const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
