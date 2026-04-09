@@ -100,7 +100,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         },
         (payload) => {
           const newStatus = payload.new.status;
-          if (["processando", "enviado", "entregue"].includes(newStatus)) {
+          if (["processando", "pago", "aprovado", "approved", "enviado", "entregue"].includes(newStatus?.toLowerCase())) {
             toast.success("💰 Pedido confirmado e aprovado!");
             onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
           }
