@@ -46,6 +46,29 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: topSearches } = useQuery({
+    queryKey: ["top_searches", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("search_logs")
+        .select("term")
+        .eq("user_id", user!.id);
+      
+      if (error) throw error;
+      
+      const counts: Record<string, number> = {};
+      data.forEach(log => {
+        counts[log.term] = (counts[log.term] || 0) + 1;
+      });
+      
+      return Object.entries(counts)
+        .map(([term, count]) => ({ term, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+    },
+    enabled: !!user,
+  });
+
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
