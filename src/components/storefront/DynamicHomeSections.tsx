@@ -174,7 +174,7 @@ export function SectionWrapper({
       {(section.title || section.subtitle) && (
         <div className="text-center mb-6">
           {section.title && (
-            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: primaryColor }}>
+            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: primaryColor, fontFamily: "var(--store-font-heading)" }}>
               {section.title}
             </h2>
           )}
