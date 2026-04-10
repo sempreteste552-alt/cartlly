@@ -165,7 +165,7 @@ function buildCatalogHtml(products: any[], storeName: string, showPrices: boolea
 </style>
 </head><body>
 <div class="header">
-  ${storeLogo ? `<img src="${storeLogo}" alt="${storeName}" style="max-height:80px;max-width:240px;object-fit:contain;margin:0 auto 8px;display:block;" />` : `<h1>${storeName}</h1>`}
+  ${storeLogo ? `<img src="${storeLogo}" alt="${storeName}" style="max-height:120px;max-width:320px;object-fit:contain;margin:0 auto 12px;display:block;" />` : `<h1>${storeName}</h1>`}
   <p>Catálogo de Produtos • ${new Date().toLocaleDateString("pt-BR")}</p>
 </div>
 <div class="grid">${items}</div>
