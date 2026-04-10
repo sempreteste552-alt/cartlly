@@ -70,10 +70,11 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const dismissKey = `pwa-banner-dismissed-${storeUserId || window.location.pathname}`;
 
   useEffect(() => {
     if (isStandalone()) return;
-    const dismissed = sessionStorage.getItem("pwa-banner-dismissed");
+    const dismissed = sessionStorage.getItem(dismissKey);
     if (dismissed) return;
     setPlatform(detectPlatform());
     setShow(true);
@@ -84,7 +85,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [dismissKey]);
 
   // Listen for app installed event to auto-enable push
   useEffect(() => {
@@ -97,7 +98,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   const dismiss = () => {
     setShow(false);
-    sessionStorage.setItem("pwa-banner-dismissed", "1");
+    sessionStorage.setItem(dismissKey, "1");
   };
 
   const handleInstall = async () => {

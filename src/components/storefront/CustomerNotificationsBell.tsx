@@ -50,7 +50,7 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
             <span className="text-[10px] mt-0.5 font-medium">Avisos</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0 mb-2" align="center" side="top" sideOffset={8}>
+        <PopoverContent className="w-80 p-0 mb-2 overflow-hidden touch-pan-y" align="center" side="top" sideOffset={8}>
           <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
         </PopoverContent>
       </Popover>
@@ -72,7 +72,7 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
+      <PopoverContent className="w-80 p-0 overflow-hidden touch-pan-y" align="end" sideOffset={8}>
         <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
       </PopoverContent>
     </Popover>
@@ -90,7 +90,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
           </Button>
         )}
       </div>
-      <ScrollArea className="max-h-72">
+      <ScrollArea className="max-h-72 touch-pan-y overscroll-contain">
         {notifications.length === 0 ? (
           <div className="p-6 text-center text-sm text-muted-foreground">
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -105,7 +105,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
               >
                 <div className="flex items-start gap-2">
                   <span className="text-lg shrink-0 mt-0.5">
-                    {n.message_type === "promo" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
+                    {n.message_type === "promo" || n.message_type === "promotion" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

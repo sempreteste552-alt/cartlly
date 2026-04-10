@@ -185,7 +185,46 @@ Deno.serve(async (req) => {
 
     const { data: subs } = await query;
 
+    const customerPushTypes = ["store_promotion", "abandoned_cart", "product_view", "inactivity", "new_product", "new_coupon", "review_thankyou", "order_status_update", "tenant_message"];
+    const shouldMirrorInAppNotification = !!(store_user_id && target_user_id && target_user_id !== store_user_id && customerPushTypes.includes(type || ""));
+
+    const mirrorInAppNotification = async () => {
+      try {
+        const { data: existing } = await supabase
+          .from("tenant_messages")
+          .select("id")
+          .eq("source_tenant_id", store_user_id)
+          .eq("target_user_id", target_user_id)
+          .eq("title", title)
+          .gte("created_at", new Date(Date.now() - 60000).toISOString())
+          .limit(1);
+
+        if (!existing || existing.length === 0) {
+          await supabase.from("tenant_messages").insert({
+            source_tenant_id: store_user_id,
+            target_user_id: target_user_id,
+            target_area: "public_store",
+            audience_type: "tenant_admin_to_one_customer",
+            title,
+            body: msgBody || null,
+            message_type: type === "store_promotion" ? "promotion" : "info",
+            status: "sent",
+            channel: sent > 0 ? "push" : "in_app",
+            sender_type: "tenant_admin",
+            sender_user_id: store_user_id,
+            is_global: false,
+            target_tenant_id: store_user_id,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to create in-app notification:", e);
+      }
+    };
+
     if (!subs || subs.length === 0) {
+      if (shouldMirrorInAppNotification) {
+        await mirrorInAppNotification();
+      }
       await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
       return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
@@ -251,43 +290,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Also create an in-app notification (tenant_messages) for customer-targeted pushes
-    // so the message appears in the bell even if push wasn't delivered
-    if (store_user_id && target_user_id && target_user_id !== store_user_id) {
-      const customerPushTypes = ["store_promotion", "abandoned_cart", "product_view", "inactivity", "new_product", "new_coupon", "review_thankyou", "order_status_update", "tenant_message"];
-      if (customerPushTypes.includes(type || "")) {
-        try {
-          // Check if a tenant_messages entry already exists for this (avoid duplicates from manual sends)
-          const { data: existing } = await supabase
-            .from("tenant_messages")
-            .select("id")
-            .eq("source_tenant_id", store_user_id)
-            .eq("target_user_id", target_user_id)
-            .eq("title", title)
-            .gte("created_at", new Date(Date.now() - 60000).toISOString()) // within last minute
-            .limit(1);
-
-          if (!existing || existing.length === 0) {
-            await supabase.from("tenant_messages").insert({
-              source_tenant_id: store_user_id,
-              target_user_id: target_user_id,
-              target_area: "public_store",
-              audience_type: "tenant_admin_to_one_customer",
-              title,
-              body: msgBody || null,
-              message_type: type === "store_promotion" ? "promotion" : "info",
-              status: "sent",
-              channel: "push",
-              sender_type: "tenant_admin",
-              sender_user_id: store_user_id,
-              is_global: false,
-              target_tenant_id: store_user_id,
-            });
-          }
-        } catch (e) {
-          console.error("Failed to create in-app notification:", e);
-        }
-      }
+    if (shouldMirrorInAppNotification) {
+      await mirrorInAppNotification();
     }
 
     return json({ sent, total: subs.length, removed, failures });

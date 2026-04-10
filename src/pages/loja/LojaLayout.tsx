@@ -393,7 +393,7 @@ export default function LojaLayout() {
         {/* Push notification permission prompt — auto-shows on first visit */}
         <PushPermissionPrompt
           storeName={settings?.store_name}
-          logoUrl={settings?.logo_url}
+          logoUrl={storeIconUrl}
           primaryColor={settings?.primary_color}
           storeUserId={settings?.user_id}
         />

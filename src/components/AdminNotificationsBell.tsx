@@ -75,7 +75,7 @@ export function AdminNotificationsBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[320px] sm:w-[400px] p-0 flex flex-col max-h-[85vh] overflow-hidden shadow-2xl border-primary/10" align="end" sideOffset={12}>
+      <PopoverContent className="w-[320px] sm:w-[400px] p-0 flex flex-col max-h-[85vh] overflow-hidden touch-pan-y shadow-2xl border-primary/10" align="end" sideOffset={12}>
         <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-2.5">
             <div className="bg-primary/10 p-1.5 rounded-lg">
@@ -156,7 +156,7 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 min-h-[300px] max-h-[550px]">
+        <ScrollArea className="flex-1 min-h-[300px] max-h-[550px] touch-pan-y overscroll-contain">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground/60 space-y-3">
               <div className="p-4 bg-muted rounded-full">

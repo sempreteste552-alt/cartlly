@@ -26,6 +26,7 @@ export function usePublicStoreSettings() {
       const { data, error } = await supabase
         .from("store_settings_public")
         .select("*")
+        .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
@@ -43,6 +44,8 @@ export function usePublicThemeConfig(storeUserId?: string) {
         .from("store_theme_config" as any)
         .select("*")
         .eq("user_id", storeUserId!)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data as any;
@@ -59,6 +62,8 @@ export function usePublicStoreBySlug(slug: string | undefined) {
         .from("store_settings_public")
         .select("*")
         .eq("store_slug", slug!)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -82,7 +87,10 @@ export function useResolvedPublicStore(slug?: string) {
         query = query.eq("custom_domain", hostname).eq("domain_status", "verified");
       }
 
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await query
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

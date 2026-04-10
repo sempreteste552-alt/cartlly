@@ -12,6 +12,7 @@ import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { TrialBanner } from "@/components/TrialBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
+import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 
 export function AdminLayout() {
   const { data: settings } = useStoreSettings();
+  const { data: themeConfig } = useStoreThemeConfig();
   const { user } = useAuth();
   const { features } = usePlanFeatures();
   const { ctx } = useTenantContext();
@@ -42,7 +44,8 @@ export function AdminLayout() {
     name: adminName,
     shortName: adminName.slice(0, 12),
     themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
-    iconUrl: (settings as any)?.favicon_url || (settings as any)?.logo_url || undefined,
+    iconUrl: themeConfig?.favicon_url || (settings as any)?.favicon_url || (settings as any)?.logo_url || undefined,
+    iconVersion: themeConfig?.updated_at || (settings as any)?.updated_at || undefined,
     startUrl: `${window.location.origin}/admin/`,
     scope: `${window.location.origin}/admin/`,
   });
