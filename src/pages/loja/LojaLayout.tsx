@@ -268,9 +268,6 @@ export default function LojaLayout() {
     };
   }, [isDarkMode]);
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
-
   useEffect(() => {
     if (settings || themeConfig) {
       const root = document.documentElement;
@@ -298,6 +295,8 @@ export default function LojaLayout() {
       };
     }
   }, [settings, themeConfig]);
+
+  const logoSize = (settings as any)?.logo_size || 40;
 
   if (!slug && !settingsBySlug && !isLoading) {
     return (
@@ -534,7 +533,7 @@ export default function LojaLayout() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{formatPrice(item.price)}</p>
+                          <p className="text-sm text-muted-foreground">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.price)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
                             <span className="text-sm w-6 text-center">{item.quantity}</span>
@@ -552,7 +551,7 @@ export default function LojaLayout() {
                   <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total</span>
-                      <span>{formatPrice(cart.total)}</span>
+                      <span>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}</span>
                     </div>
                     <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
                       Finalizar Compra
@@ -562,8 +561,8 @@ export default function LojaLayout() {
                         variant="outline"
                         className="w-full border-green-500 text-green-600 hover:bg-green-50"
                         onClick={() => {
-                          const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${formatPrice(i.price * i.quantity)}`).join("\n");
-                          const text = `Olá! Gostaria de fazer o pedido:\n\n${msg}\n\nTotal: ${formatPrice(cart.total)}`;
+                          const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(i.price * i.quantity)}`).join("\n");
+                          const text = `Olá! Gostaria de fazer o pedido:\n\n${msg}\n\nTotal: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}`;
                           window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
                         }}
                       >
