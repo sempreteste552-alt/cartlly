@@ -188,11 +188,19 @@ export default function Dashboard() {
     return Object.entries(counts).map(([status, count]) => ({ name: labels[status] || status, value: count }));
   }, [orders]);
 
-  const recentOrders = useMemo(() => {
+  const couponStats = useMemo(() => {
+    if (!orders) return { total: 0, withCoupon: 0, totalDiscount: 0 };
+    const withCoupon = orders.filter((o) => o.coupon_code);
+    return { total: orders.length, withCoupon: withCoupon.length, totalDiscount: withCoupon.reduce((s, o) => s + Number(o.discount_amount), 0) };
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    if (statusFilter === "todos") return orders.slice(0, 10);
-    return orders.filter((o) => o.status === statusFilter).slice(0, 10);
+    if (statusFilter === "todos") return orders;
+    return orders.filter((o) => o.status === statusFilter);
   }, [orders, statusFilter]);
+
+  const recentOrders = filteredOrders.slice(0, 10);
 
   const paymentMetrics = useMemo(() => {
     const all = payments ?? [];
