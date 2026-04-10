@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserTracking } from "@/hooks/useUserTracking";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const queryClient = useQueryClient();
 
   // Initialize tracking hook
   useUserTracking(session?.user ?? null);
@@ -77,6 +79,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // On sign-out or user change, clear entire React Query cache to prevent
+        // stale tenant data from leaking to the next session
+        if (_event === "SIGNED_OUT") {
+          queryClient.clear();
+          // Clean up any lingering CSS variables from admin theme
+          document.documentElement.style.removeProperty("--primary");
+          document.documentElement.style.removeProperty("--ring");
+          document.documentElement.style.removeProperty("--sidebar-primary");
+          document.documentElement.style.removeProperty("--sidebar-ring");
+          document.documentElement.style.removeProperty("--accent-foreground");
+          document.documentElement.style.removeProperty("--store-primary");
+          document.documentElement.style.removeProperty("--store-secondary");
+          document.documentElement.style.removeProperty("--store-accent");
+          document.documentElement.style.removeProperty("--store-button-bg");
+          document.documentElement.style.removeProperty("--store-button-text");
+          document.documentElement.style.removeProperty("--store-bg-base");
+          document.documentElement.style.removeProperty("--store-text-base");
+          document.documentElement.classList.remove("dark");
+        }
         setSession(session);
 
         // After OAuth sign-in, inject referral_code into user metadata if present
