@@ -1153,7 +1153,7 @@ async function generateAISequenceMessage(
     typeGuide = `O cliente "${ctx.customerName}" visualizou o produto "${ctx.productName}" ${priceFormatted ? `(${priceFormatted})` : ""} na loja "${ctx.storeName}" mas NÃO COMPROU.`;
   }
 
-  const resp = await fetch("https://ai.lovable.dev/api/chat", {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
