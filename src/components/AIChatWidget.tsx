@@ -600,7 +600,7 @@ export function AIChatWidget() {
       }
 
       if (assistantSoFar) {
-        await processAIActions(assistantSoFar);
+        await processAIActions(assistantSoFar, messages.length + 1);
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Erro desconhecido";
