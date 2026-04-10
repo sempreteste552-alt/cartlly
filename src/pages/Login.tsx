@@ -75,6 +75,7 @@ export default function Login() {
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [storeCategory, setStoreCategory] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
