@@ -397,6 +397,7 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
+        id={`store-theme-${slug}`}
         className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
         style={
           (themeConfig?.theme_mode === 'dark' || storeDark)
