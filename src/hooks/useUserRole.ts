@@ -70,10 +70,22 @@ export function useAllTenants() {
         .from("products")
         .select("user_id");
 
-      // Get order counts
-      const { data: orders } = await supabase
+      // Get dashboard reset date
+      const { data: resetSetting } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "dashboard_reset_date")
+        .maybeSingle();
+      const resetDate = resetSetting?.value ? String(resetSetting.value).replace(/"/g, "") : null;
+
+      // Get order counts (filtered by reset date if set)
+      let ordersQuery = supabase
         .from("orders")
         .select("user_id, total, created_at");
+      if (resetDate) {
+        ordersQuery = ordersQuery.gte("created_at", resetDate);
+      }
+      const { data: orders } = await ordersQuery;
 
       const productCounts: Record<string, number> = {};
       products?.forEach((p: any) => {
