@@ -205,6 +205,7 @@ function GeneralSettingsTab() {
       setFooterBgColor((settings as any).footer_bg_color ?? "#000000");
       setFooterTextColor((settings as any).footer_text_color ?? "#ffffff");
       setMarqueeEnabled((settings as any).marquee_enabled ?? false);
+      setPromoBannerEnabled((settings as any).promo_banner_enabled ?? false);
       setMarqueeText((settings as any).marquee_text ?? "");
       setMarqueeSpeed((settings as any).marquee_speed ?? 50);
       setMarqueeBgColor((settings as any).marquee_bg_color ?? "#000000");
@@ -323,6 +324,7 @@ function GeneralSettingsTab() {
       is_verified: isVerified,
       favicon_url: faviconUrl || null,
       store_category: storeCategory.trim() || null,
+      promo_banner_enabled: promoBannerEnabled,
     } as any);
   };
 
