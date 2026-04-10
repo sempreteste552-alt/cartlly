@@ -553,12 +553,14 @@ export default function SuperAdminTenants() {
                     <div>
                       <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
                       <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 items-center">
-                        <span>{tenant.store?.store_name || "Sem loja"}</span>
+                        <span className="font-medium text-foreground/80">{tenant.store?.store_name || "Sem loja"}</span>
                         {tenant.store?.store_slug && <span className="opacity-60">/{tenant.store.store_slug}</span>}
-                        <span className="flex items-center gap-1 opacity-70">
-                          <Clock className="h-3 w-3" />
-                          Visto por último: {formatLastSeen(tenant.last_seen)}
-                        </span>
+                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full transition-colors ${tenant.is_online ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                          <Clock className={`h-3 w-3 ${tenant.is_online ? "animate-spin-slow" : ""}`} />
+                          <span className="font-medium">
+                            {tenant.is_online ? "Online agora" : `Visto há ${formatLastSeen(tenant.last_seen).replace("Há ", "")}`}
+                          </span>
+                        </div>
                       </div>
                       {tenant.subscription?.tenant_plans && (
                         <p className="text-xs text-primary font-medium mt-0.5">
