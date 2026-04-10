@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock
+  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
@@ -28,6 +28,7 @@ const mainItems = [
   { title: "Cupons", url: "/admin/cupons", icon: Ticket },
   { title: "Páginas", url: "/admin/paginas", icon: FileText },
   { title: "Automação", url: "/admin/automacao", icon: Zap },
+  { title: "Indicações", url: "/admin/indicacoes", icon: Gift },
 ];
 
 const configItemsBase = [

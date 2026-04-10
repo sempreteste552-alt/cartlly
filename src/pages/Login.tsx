@@ -81,6 +81,17 @@ export default function Login() {
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
+  // Capture referral code from URL (?ref=CODE)
+  const [refCode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      localStorage.setItem("referral_code", ref);
+      (supabase.rpc as any)("increment_referral_click", { _code: ref }).catch(() => {});
+    }
+    return ref || localStorage.getItem("referral_code") || null;
+  });
+
   // Per-device dark mode for login page
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
@@ -248,7 +259,8 @@ export default function Login() {
               display_name: displayName,
               store_name: storeName.trim(),
               store_slug: slug,
-              store_category: storeCategory
+              store_category: storeCategory,
+              referral_code: refCode || undefined,
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
@@ -272,6 +284,7 @@ export default function Login() {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
         // Store creation is now handled by database trigger handle_new_user_setup
+        localStorage.removeItem("referral_code");
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {

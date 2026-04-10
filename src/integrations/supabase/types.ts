@@ -1734,6 +1734,133 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          clicks: number
+          code: string
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          clicks?: number
+          code: string
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          clicks?: number
+          code?: string
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referral_discounts: {
+        Row: {
+          amount: number
+          applied: boolean
+          billing_cycle: string | null
+          created_at: string
+          id: string
+          referral_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount?: number
+          applied?: boolean
+          billing_cycle?: string | null
+          created_at?: string
+          id?: string
+          referral_id: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          applied?: boolean
+          billing_cycle?: string | null
+          created_at?: string
+          id?: string
+          referral_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_discounts_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          approved_at: string | null
+          cancelled_at: string | null
+          created_at: string
+          discount_amount: number
+          discount_applied: boolean
+          id: string
+          payment_status: string | null
+          referral_code: string
+          referred_email: string | null
+          referred_plan_id: string | null
+          referred_user_id: string | null
+          referrer_tenant_id: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          discount_amount?: number
+          discount_applied?: boolean
+          id?: string
+          payment_status?: string | null
+          referral_code: string
+          referred_email?: string | null
+          referred_plan_id?: string | null
+          referred_user_id?: string | null
+          referrer_tenant_id: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          discount_amount?: number
+          discount_applied?: boolean
+          id?: string
+          payment_status?: string | null
+          referral_code?: string
+          referred_email?: string | null
+          referred_plan_id?: string | null
+          referred_user_id?: string | null
+          referrer_tenant_id?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_plan_id_fkey"
+            columns: ["referred_plan_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retargeting_sequences: {
         Row: {
           created_at: string
@@ -3206,6 +3333,7 @@ export type Database = {
         Args: { product_id: string }
         Returns: undefined
       }
+      increment_referral_click: { Args: { _code: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3214,6 +3342,10 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      process_referral_approval: {
+        Args: { _referred_user_id: string }
+        Returns: undefined
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
