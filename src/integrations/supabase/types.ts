@@ -1504,6 +1504,7 @@ export type Database = {
       }
       products: {
         Row: {
+          badge: string | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -1520,6 +1521,7 @@ export type Database = {
           views: number
         }
         Insert: {
+          badge?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -1536,6 +1538,7 @@ export type Database = {
           views?: number
         }
         Update: {
+          badge?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
