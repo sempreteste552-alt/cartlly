@@ -51,7 +51,27 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0 mb-2 shadow-xl border-primary/10" align="center" side="top" sideOffset={8}>
-...
+          <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className={`relative shrink-0 ${className || ""}`} style={{ color: headerTextColor }}>
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span
+              className="absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white animate-pulse"
+              style={{ backgroundColor: "#ef4444" }}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
       <PopoverContent className="w-80 p-0 shadow-xl border-primary/10" align="end" sideOffset={8}>
         <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
       </PopoverContent>
