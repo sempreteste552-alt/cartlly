@@ -26,7 +26,7 @@ const mainItems = [
   { title: "Clientes", url: "/admin/clientes", icon: Users, isNew: false },
   { title: "Cérebro IA", url: "/admin/cerebro", icon: Bot, isNew: true },
   { title: "Cupons", url: "/admin/cupons", icon: Ticket, isNew: false },
-  { title: "Páginas", url: "/admin/paginas", icon: FileText, isNew: false },
+  { title: "Páginas", url: "/admin/paginas", icon: FileText, isNew: true },
   { title: "Automação", url: "/admin/automacao", icon: Zap, isNew: true },
   { title: "Indicações", url: "/admin/indicacoes", icon: Gift, isNew: false },
 ];
@@ -170,9 +170,14 @@ export function AdminSidebar() {
                     disabled={pushNotifs.loading}
                     className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
                   >
-                    <div className="flex items-center gap-2">
-                      {pushNotifs.isSubscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                      {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
+                     <div className="flex items-center gap-2 flex-1">
+                       {pushNotifs.isSubscribed ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                       {!collapsed && <span>{pushNotifs.isSubscribed ? "Desativar Push" : "Ativar Push"}</span>}
+                       {!collapsed && (
+                         <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                           Novo
+                         </span>
+                       )}
                     </div>
                     {!collapsed && !pushNotifs.isSubscribed && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches && (
                       <span className="text-[9px] text-primary font-medium leading-tight">
