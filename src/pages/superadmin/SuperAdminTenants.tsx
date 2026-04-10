@@ -550,15 +550,21 @@ export default function SuperAdminTenants() {
                     </div>
                     <div>
                       <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {tenant.store?.store_name || "Sem loja"} {tenant.store?.store_slug ? `• /${tenant.store.store_slug}` : ""}
-                      </p>
+                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 items-center">
+                        <span>{tenant.store?.store_name || "Sem loja"}</span>
+                        {tenant.store?.store_slug && <span className="opacity-60">/{tenant.store.store_slug}</span>}
+                        <span className="flex items-center gap-1 opacity-70">
+                          <Clock className="h-3 w-3" />
+                          Visto por último: {formatLastSeen(tenant.last_seen)}
+                        </span>
+                      </div>
                       {tenant.subscription?.tenant_plans && (
                         <p className="text-xs text-primary font-medium mt-0.5">
                           Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
                         </p>
                       )}
                     </div>
+
                   </div>
 
                   <div className="flex items-center gap-3">
