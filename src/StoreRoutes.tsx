@@ -13,7 +13,7 @@ export default function StoreRoutes() {
     <CustomerAuthProvider>
       <Routes>
         <Route element={<LojaLayout />}>
-          <index element={<LojaHome />} />
+          <Route index element={<LojaHome />} />
           <Route path="produto/:id" element={<LojaProduto />} />
           <Route path="checkout" element={<LojaCheckout />} />
           <Route path="rastreio" element={<LojaRastreio />} />
