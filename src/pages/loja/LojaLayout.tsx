@@ -403,7 +403,7 @@ export default function LojaLayout() {
         {marketingConfig && <CountdownBar config={marketingConfig} />}
 
         {/* Marketing: Announcement Bar */}
-        {marketingConfig && <AnnouncementBar config={marketingConfig} />}
+        {marketingConfig && <AnnouncementBar config={marketingConfig} basePath={basePath} />}
 
         {/* Marquee ticker */}
         {settings?.marquee_enabled && settings?.marquee_text && (
