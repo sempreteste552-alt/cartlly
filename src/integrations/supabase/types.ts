@@ -3070,6 +3070,16 @@ export type Database = {
       }
     }
     Functions: {
+      can_send_notification: {
+        Args: {
+          p_cooldown_minutes?: number
+          p_message: string
+          p_target_user_id: string
+          p_title: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       create_default_segments: {
         Args: { _user_id: string }
         Returns: undefined
@@ -3093,6 +3103,7 @@ export type Database = {
           total_sold: number
         }[]
       }
+      get_store_rich_insights: { Args: { p_user_id: string }; Returns: Json }
       get_store_sales_stats: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
