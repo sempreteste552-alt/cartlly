@@ -36,6 +36,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [whatsappRedirect, setWhatsappRedirect] = useState<{ phone: string; summary: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { customer } = useCustomerAuth();
