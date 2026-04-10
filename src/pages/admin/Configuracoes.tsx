@@ -216,6 +216,7 @@ function GeneralSettingsTab() {
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
       setFaviconUrl((settings as any).favicon_url ?? "");
       setIsVerified((settings as any).is_verified ?? false);
+      setStoreCategory((settings as any).store_category ?? "");
     }
   }, [settings]);
 
