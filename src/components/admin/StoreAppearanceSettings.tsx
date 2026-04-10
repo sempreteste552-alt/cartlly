@@ -18,7 +18,10 @@ import { toast } from "sonner";
 const FONT_OPTIONS = [
   "Inter", "Poppins", "Roboto", "Open Sans", "Montserrat", "Playfair Display",
   "Lora", "Raleway", "Nunito", "Oswald", "Merriweather", "DM Sans",
-  "Space Grotesk", "Plus Jakarta Sans", "Outfit",
+  "Space Grotesk", "Plus Jakarta Sans", "Outfit", "Cinzel", "Cormorant Garamond", 
+  "Lato", "Cardo", "EB Garamond", "Spectral", "Prata", "DM Serif Display",
+  "Great Vibes", "Sacramento", "Marck Script", "Dancing Script", "Bitter",
+  "Josefin Sans", "Quicksand", "Libre Baskerville", "PT Serif", "Volkhov"
 ];
 
 const SHADOW_OPTIONS = [
