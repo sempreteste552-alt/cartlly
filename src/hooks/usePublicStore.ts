@@ -95,13 +95,29 @@ export function useResolvedPublicStore(slug?: string) {
         // First try the new store_domains table
         const { data: domainData, error: domainError } = await supabase
           .from("store_domains")
-          .select("store_id, is_primary")
+          .select("store_id, is_primary, hostname")
           .eq("hostname", hostname)
           .maybeSingle();
 
         if (domainError) throw domainError;
 
         if (domainData) {
+          // Check for redirection if not primary
+          if (!domainData.is_primary) {
+            const { data: primaryDomain } = await supabase
+              .from("store_domains")
+              .select("hostname")
+              .eq("store_id", domainData.store_id)
+              .eq("is_primary", true)
+              .maybeSingle();
+            
+            if (primaryDomain && primaryDomain.hostname !== hostname) {
+              // Perform client-side redirect
+              window.location.replace(`https://${primaryDomain.hostname}${window.location.pathname}${window.location.search}`);
+              return null;
+            }
+          }
+
           const { data: storeData, error: storeError } = await supabase
             .from("store_settings_public")
             .select("*")
