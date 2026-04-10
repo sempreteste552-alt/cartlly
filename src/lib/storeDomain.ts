@@ -14,7 +14,11 @@ export function isPlatformHost(hostname?: string | null) {
     host === "localhost" ||
     host === "127.0.0.1" ||
     host.endsWith(".lovable.app") ||
-    host.endsWith(".lovableproject.com")
+    host.endsWith(".lovableproject.com") ||
+    host === "cartlly.com" ||
+    host === "www.cartlly.com" ||
+    host === "cartlly.com.br" ||
+    host === "www.cartlly.com.br"
   );
 }
 
