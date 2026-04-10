@@ -366,14 +366,16 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     cpf?: string;
   }) => {
     if (!user) throw new Error("Não autenticado");
+    if (!customer?.id) throw new Error("Perfil de cliente não encontrado");
+
     const { data, error } = await supabase
       .from("customers")
       .update({ ...updates, updated_at: new Date().toISOString() } as any)
-      .eq("auth_user_id", user.id)
+      .eq("id", customer.id)
       .select()
-      .single();
+      .maybeSingle();
     if (error) throw error;
-    setCustomer(data);
+    if (data) setCustomer(data);
     return data;
   };
 

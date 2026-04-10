@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Package, User, LogOut, Heart } from "lucide-react";
+import { Loader2, Package, User, LogOut, Heart, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
   const [state, setState] = useState("");
   const [cep, setCep] = useState("");
   const [cpf, setCpf] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
 
   useEffect(() => {
     if (customer) {
@@ -46,6 +47,25 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
       setCpf(customer.cpf || "");
     }
   }, [customer]);
+
+  const lookupCep = useCallback(async (rawCep: string) => {
+    const cleanCep = rawCep.replace(/\D/g, "");
+    if (cleanCep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await resp.json();
+      if (!data.erro) {
+        if (data.logradouro) setAddress(data.logradouro + (data.bairro ? `, ${data.bairro}` : ""));
+        if (data.localidade) setCity(data.localidade);
+        if (data.uf) setState(data.uf);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setCepLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (tab === "orders" && open) {
@@ -139,16 +159,29 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    CEP
+                    {cepLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                  </Label>
+                  <Input
+                    value={cep}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setCep(v);
+                      const clean = v.replace(/\D/g, "");
+                      if (clean.length === 8) lookupCep(v);
+                    }}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Cidade</Label>
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
                 </div>
                 <div className="space-y-2">
                   <Label>Estado</Label>
                   <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="UF" maxLength={2} />
-                </div>
-                <div className="space-y-2">
-                  <Label>CEP</Label>
-                  <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
                 </div>
               </div>
               <div className="flex gap-2">
