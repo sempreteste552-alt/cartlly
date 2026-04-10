@@ -76,8 +76,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
+
+        // After OAuth sign-in, inject referral_code into user metadata if present
+        if (_event === "SIGNED_IN" && session?.user) {
+          try {
+            const ctxStr = localStorage.getItem("auth_context");
+            if (ctxStr) {
+              const ctx = JSON.parse(ctxStr);
+              if (ctx.referral_code) {
+                const existingRef = session.user.user_metadata?.referral_code;
+                if (!existingRef) {
+                  await supabase.auth.updateUser({
+                    data: { referral_code: ctx.referral_code },
+                  });
+                }
+                localStorage.removeItem("referral_code");
+              }
+            }
+          } catch { /* ignore */ }
+        }
       }
     );
 
