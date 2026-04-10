@@ -534,29 +534,29 @@ export default function Login() {
         </div>
         <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
 
-        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
-          <CardHeader className="text-center space-y-4 pt-8">
-            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-24 w-auto drop-shadow-lg" />
-            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-32 object-contain" />
-            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10 max-h-[90vh] overflow-y-auto">
+          <CardHeader className="text-center space-y-2 pt-4 pb-2">
+            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-14 w-auto drop-shadow-lg" />
+            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-16 object-contain" />
+            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
 
             {!isForgotPassword && (
-              <div className="h-8 flex items-center justify-center">
-                <p className="text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              <div className="h-6 flex items-center justify-center">
+                <p className="text-xs font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                   {isRegister ? registerText : loginText}
-                  <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse align-middle" />
+                  <span className="inline-block w-0.5 h-3 bg-blue-500 ml-0.5 animate-pulse align-middle" />
                 </p>
               </div>
             )}
 
             {isForgotPassword && (
-              <CardDescription>Informe seu e-mail para receber o link de redefinição</CardDescription>
+              <CardDescription className="text-xs">Informe seu e-mail para receber o link de redefinição</CardDescription>
             )}
           </CardHeader>
 
-          <CardContent className="pb-8">
+          <CardContent className="pb-4 pt-0">
             {/* Alert Card */}
             {alertCard && (
               <div className={`mb-4 rounded-lg border p-3 ${
@@ -597,24 +597,24 @@ export default function Login() {
                 )}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
-                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="storeCategory">Nicho da Loja</Label>
                   <Select value={storeCategory} onValueChange={setStoreCategory}>
-                    <SelectTrigger id="storeCategory" className="h-11 border-border/50 focus:border-blue-500 transition-colors">
+                    <SelectTrigger id="storeCategory" className="h-9 border-border/50 focus:border-blue-500 transition-colors">
                       <SelectValue placeholder="Selecione o nicho da sua loja" />
                     </SelectTrigger>
                     <SelectContent>
@@ -663,20 +663,20 @@ export default function Login() {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder={signupCouponConfig.auto_show && signupCouponConfig.code ? signupCouponConfig.code : "Insira seu cupom"}
-                    className="h-11 border-border/50 focus:border-green-500 transition-colors font-mono"
+                    className="h-9 border-border/50 focus:border-green-500 transition-colors font-mono"
                   />
                   <p className="text-xs text-muted-foreground">Se tiver um cupom, insira aqui. Caso contrário, deixe em branco.</p>
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
               </div>
               {!isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -734,7 +734,7 @@ export default function Login() {
               )}
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
+                className="w-full h-9 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
                 disabled={loading || (isRegister && !acceptedTerms) || (!isForgotPassword && !isVerified)}
               >
                 {loading ? "Carregando..." : isForgotPassword ? "Enviar Link" : isRegister ? "Criar Conta" : "Entrar"}
