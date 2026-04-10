@@ -201,9 +201,34 @@ export default function SuperAdminConfig() {
               onChange={e => updateField("promo_banner_link", e.target.value)}
             />
           </div>
+          <Separator />
+          <h4 className="font-semibold text-sm">Cores do Gradiente</h4>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Cor 1 (início)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_1} onChange={e => updateField("promo_banner_color_1", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_1} onChange={e => updateField("promo_banner_color_1", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor 2 (meio)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_2} onChange={e => updateField("promo_banner_color_2", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_2} onChange={e => updateField("promo_banner_color_2", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor 3 (fim)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_3} onChange={e => updateField("promo_banner_color_3", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_3} onChange={e => updateField("promo_banner_color_3", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+          </div>
           {config.promo_banner_enabled && (
             <div className="rounded-lg overflow-hidden border border-border">
-              <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
+              <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: `linear-gradient(135deg, ${config.promo_banner_color_1} 0%, ${config.promo_banner_color_2} 50%, ${config.promo_banner_color_3} 100%)` }}>
                 {config.promo_banner_text || "🚀 Crie sua própria loja online agora mesmo!"} — <span className="underline">Saiba mais</span>
               </div>
             </div>
