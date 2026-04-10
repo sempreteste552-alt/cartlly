@@ -70,6 +70,7 @@ function cleanContent(content: string): string {
     .replace(/\[ACTION_PUSH\][\s\S]*?\[\/ACTION_PUSH\]/g, "")
     .replace(/\[ACTION_COUPON\][\s\S]*?\[\/ACTION_COUPON\]/g, "")
     .replace(/\[ACTION_SUBSCRIBE\][\s\S]*?\[\/ACTION_SUBSCRIBE\]/g, "")
+    .replace(/\[ACTION_UPDATE_PRODUCT\][\s\S]*?\[\/ACTION_UPDATE_PRODUCT\]/g, "")
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
 }
@@ -347,10 +348,8 @@ export function AIChatWidget() {
         const payload = JSON.parse(subscribeMatch[1].trim());
         const doc = (payload.document || "").replace(/\D/g, "");
         if (doc.length >= 11) {
-          // CPF/CNPJ already provided by AI — generate QR code directly
           await handleSubscribe(payload.plan_id, payload.plan_name, doc);
         } else {
-          // Fallback: ask for CPF via dialog
           setPendingSubscribe({ plan_id: payload.plan_id, plan_name: payload.plan_name });
           setCpfValue("");
           setCpfDialogOpen(true);
@@ -359,7 +358,49 @@ export function AIChatWidget() {
         console.error("Subscribe action error:", e);
       }
     }
-  }, [user, queryClient]);
+
+    const updateProductMatch = content.match(/\[ACTION_UPDATE_PRODUCT\]([\s\S]*?)\[\/ACTION_UPDATE_PRODUCT\]/);
+    if (updateProductMatch && user) {
+      try {
+        const payload = JSON.parse(updateProductMatch[1].trim());
+        const shortId = payload.product_id;
+        const fullProduct = (products || []).find((p: any) => p.id?.startsWith(shortId));
+        if (!fullProduct) {
+          toast.error("Produto não encontrado: " + shortId);
+        } else {
+          const allowedFields = ["price", "stock", "name", "description", "published"];
+          const updates: Record<string, any> = {};
+          for (const key of allowedFields) {
+            if (payload.updates?.[key] !== undefined) {
+              updates[key] = payload.updates[key];
+            }
+          }
+          if (Object.keys(updates).length > 0) {
+            const { error } = await supabase
+              .from("products")
+              .update(updates)
+              .eq("id", fullProduct.id)
+              .eq("user_id", user.id);
+            if (error) {
+              toast.error("Erro ao atualizar produto: " + error.message);
+            } else {
+              const changedFields = Object.keys(updates).map(k => {
+                if (k === "price") return `Preço → R$${updates[k]}`;
+                if (k === "stock") return `Estoque → ${updates[k]}`;
+                if (k === "name") return `Nome → ${updates[k]}`;
+                if (k === "published") return updates[k] ? "Publicado" : "Despublicado";
+                return `${k} atualizado`;
+              }).join(", ");
+              toast.success(`✅ Produto atualizado: ${changedFields}`);
+              queryClient.invalidateQueries({ queryKey: ["products"] });
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Update product action error:", e);
+      }
+    }
+  }, [user, queryClient, products]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
