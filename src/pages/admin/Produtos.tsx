@@ -380,7 +380,6 @@ export default function Produtos() {
           </Table>
           </div>
         </Card>
-      )
       )}
 
       {/* Create / Edit forms */}
