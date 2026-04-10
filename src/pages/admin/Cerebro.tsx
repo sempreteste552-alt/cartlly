@@ -137,6 +137,7 @@ export default function Cerebro() {
   const processAIActions = (content: string, msgIndex: number) => {
     const actions: any[] = [];
     
+    // 1. Agendar Tarefa
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
     let match;
     while ((match = taskRegex.exec(content)) !== null) {
@@ -146,11 +147,41 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
+    // 2. Criar Cupom
     const couponRegex = /\[ACTION_CREATE_COUPON\]([\s\S]*?)\[\/ACTION_CREATE_COUPON\]/g;
     while ((match = couponRegex.exec(content)) !== null) {
       try {
         const payload = JSON.parse(match[1]);
         actions.push({ type: "create_coupon", label: `🎟️ Criar Cupom: ${payload.code} (${payload.discount_type === 'percentage' ? payload.discount_value + '%' : 'R$' + payload.discount_value})`, payload });
+      } catch (e) {}
+    }
+
+    // 3. Atualizar Configurações da Loja (Letreiro, etc)
+    const storeSettingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
+    while ((match = storeSettingsRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        const fields = Object.keys(payload).join(", ");
+        actions.push({ type: "update_store_settings", label: `⚙️ Atualizar Loja: ${fields}`, payload });
+      } catch (e) {}
+    }
+
+    // 4. Atualizar Marketing (Faixa, Frete Grátis, Countdown)
+    const marketingRegex = /\[ACTION_UPDATE_MARKETING_CONFIG\]([\s\S]*?)\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g;
+    while ((match = marketingRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        const fields = Object.keys(payload).join(", ");
+        actions.push({ type: "update_marketing_config", label: `📢 Atualizar Marketing: ${fields}`, payload });
+      } catch (e) {}
+    }
+
+    // 5. Atualizar Estoque
+    const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
+    while ((match = stockRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "update_stock", label: `📦 Atualizar Estoque: ${payload.product_name} → ${payload.new_stock}`, payload });
       } catch (e) {}
     }
 
