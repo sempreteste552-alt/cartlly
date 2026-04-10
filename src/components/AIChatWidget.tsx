@@ -251,6 +251,12 @@ export function AIChatWidget() {
       paymentPix: (settings as any)?.payment_pix || false,
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
+      marketing: {
+        announcement_bar_enabled: marketingConfig?.announcement_bar_enabled || false,
+        announcement_bar_text: marketingConfig?.announcement_bar_text || "",
+        announcement_bar_bg_color: marketingConfig?.announcement_bar_bg_color || "#000000",
+        announcement_bar_text_color: marketingConfig?.announcement_bar_text_color || "#ffffff",
+      },
       aiName: aiName,
       aiTone: aiTone,
       plans: (plans || []).filter((p: any) => p.price > 0).map((p: any) => ({
