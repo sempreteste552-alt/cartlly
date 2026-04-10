@@ -33,7 +33,8 @@ serve(async (req) => {
        { data: storeBanners },
        { data: homeSections },
        { data: stagnantProducts },
-       { data: recentOrderItems }
+       { data: recentOrderItems },
+       { data: marketingConfig }
     ] = await Promise.all([
       supabase.from("store_settings").select("*").eq("user_id", user.id).single(),
       supabase.from("tenant_ai_brain_config").select("*").eq("user_id", user.id).single(),
@@ -45,7 +46,8 @@ serve(async (req) => {
       supabase.from("store_banners").select("title, description").eq("user_id", user.id).limit(5),
       supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10),
       supabase.from("products").select("name, stock, views, price, id").eq("user_id", user.id).order("views", { ascending: true }).limit(10),
-      supabase.from("order_items").select("product_id, quantity").limit(100)
+      supabase.from("order_items").select("product_id, quantity").limit(100),
+      supabase.from("store_marketing_config").select("*").eq("user_id", user.id).single()
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
@@ -62,6 +64,7 @@ NICHO DA LOJA: ${niche}
 
 CONTEXTO DA LOJA:
 - Configurações: ${JSON.stringify(storeSettings || {})}
+- Marketing: ${JSON.stringify(marketingConfig || {})}
 - Páginas: ${JSON.stringify(storePages || [])}
 - Banners: ${JSON.stringify(storeBanners || [])}
 - Seções da Home: ${JSON.stringify(homeSections || [])}
@@ -99,20 +102,33 @@ Você pode realizar ações inserindo blocos JSON no final da sua resposta:
   "remind_at": "ISO_TIMESTAMP"
 }[/ACTION_SCHEDULE_REMINDER]
 
-3. ATUALIZAR CONFIGURAÇÕES DA LOJA:
+3. ATUALIZAR CONFIGURAÇÕES DA LOJA (Gerais):
 [ACTION_UPDATE_STORE_SETTINGS]{ "store_description": "...", "marquee_text": "...", "store_name": "..." }[/ACTION_UPDATE_STORE_SETTINGS]
 
-4. ATUALIZAR PÁGINA:
+4. ATUALIZAR FERRAMENTAS DE MARKETING (Faixa Promocional, Frete Grátis, Countdown):
+[ACTION_UPDATE_MARKETING_CONFIG]{ 
+  "announcement_bar_enabled": true, 
+  "announcement_bar_text": "Frete Grátis!", 
+  "announcement_bar_bg_color": "#000000",
+  "announcement_bar_text_color": "#ffffff",
+  "announcement_bar_search_enabled": true,
+  "free_shipping_bar_enabled": true,
+  "free_shipping_threshold": 200
+}[/ACTION_UPDATE_MARKETING_CONFIG]
+
+5. ATUALIZAR PÁGINA:
 [ACTION_UPDATE_PAGE]{ "slug": "sobre-nos", "content": "..." }[/ACTION_UPDATE_PAGE]
 
-5. ATUALIZAR ESTOQUE DE PRODUTO:
+6. ATUALIZAR ESTOQUE DE PRODUTO:
 [ACTION_UPDATE_STOCK]{ "product_name": "...", "new_stock": 10 }[/ACTION_UPDATE_STOCK]
 
-6. GERAR CONTEÚDO PARA PRODUTO (SEO, Descrição ou Selo):
+7. GERAR CONTEÚDO PARA PRODUTO (SEO, Descrição ou Selo):
 [ACTION_GENERATE_PRODUCT_CONTENT]{ "product_name": "...", "type": "description|seo|badge" }[/ACTION_GENERATE_PRODUCT_CONTENT]
 
 REGRAS:
 - Responda sempre em Português do Brasil.
+- Se o usuário pedir para adicionar uma "faixa", "banner de aviso" ou "topo", use ACTION_UPDATE_MARKETING_CONFIG.
+- Se o usuário pedir para "buscar" na faixa, ative "announcement_bar_search_enabled": true.
 - Use as ações JSON apenas quando necessário e no final da resposta.
 - Se o usuário pedir para ser "agressivo", confirme que ativou o modo de alta conversão e sugira frases fortes.`;
 
