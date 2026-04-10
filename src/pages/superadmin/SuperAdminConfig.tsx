@@ -21,6 +21,8 @@ interface PlatformConfig {
   default_plan_id: string;
   support_whatsapp_number: string;
   promo_banner_enabled: boolean;
+  promo_banner_text: string;
+  promo_banner_link: string;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -45,6 +47,8 @@ const defaultConfig: PlatformConfig = {
   default_plan_id: "",
   support_whatsapp_number: "",
   promo_banner_enabled: false,
+  promo_banner_text: "",
+  promo_banner_link: "",
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
@@ -166,16 +170,38 @@ export default function SuperAdminConfig() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Ativa um banner no topo de todas as lojas com o CTA "Crie sua loja" apontando para <strong>usecartlly.vercel.app</strong>. 
-            Cada tenant também pode ativar/desativar individualmente nas suas configurações.
+            Ativa um banner no topo de todas as lojas (exceto PREMIUM). Cada tenant também pode ativar/desativar individualmente.
           </p>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
               <Label>Banner Global Ativo</Label>
-              <p className="text-xs text-muted-foreground">Exibe o banner em todas as lojas da plataforma</p>
+              <p className="text-xs text-muted-foreground">Exibe o banner em todas as lojas não-premium</p>
             </div>
             <Switch checked={config.promo_banner_enabled} onCheckedChange={v => updateField("promo_banner_enabled", v)} />
           </div>
+          <div className="space-y-2">
+            <Label>Texto do Banner (deixe vazio para usar padrão)</Label>
+            <Input
+              placeholder="🚀 Crie sua própria loja online agora mesmo!"
+              value={config.promo_banner_text}
+              onChange={e => updateField("promo_banner_text", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Link do Botão "Saiba mais"</Label>
+            <Input
+              placeholder="https://usecartlly.vercel.app/"
+              value={config.promo_banner_link}
+              onChange={e => updateField("promo_banner_link", e.target.value)}
+            />
+          </div>
+          {config.promo_banner_enabled && (
+            <div className="rounded-lg overflow-hidden border border-border">
+              <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
+                {config.promo_banner_text || "🚀 Crie sua própria loja online agora mesmo!"} — <span className="underline">Saiba mais</span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
