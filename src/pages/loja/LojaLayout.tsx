@@ -991,6 +991,17 @@ export default function LojaLayout() {
           </a>
         )}
 
+        {/* AI Chat for Premium stores */}
+        {settings?.user_id && (settings as any).is_premium_plan && (
+          <StorefrontAIChat
+            storeUserId={settings.user_id}
+            storeName={settings.store_name || "Loja"}
+            aiName={(settings as any).ai_name}
+            aiAvatarUrl={(settings as any).ai_avatar_url}
+            primaryColor={settings.primary_color}
+          />
+        )}
+
         {/* Auth modals */}
         {settings?.user_id && (
           <>
