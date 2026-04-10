@@ -119,7 +119,11 @@ export default function DomainConnector({
       if (data?.status === "active") {
         toast.success(`🎉 Domínio ${domain.hostname} verificado e online!`);
       } else if (data?.status === "pending_ssl") {
-        toast.info("DNS verificado ✅ O SSL está sendo provisionado.");
+        toast.info(
+          data?.sslError 
+            ? `DNS verificado ✅ Mas o SSL ainda está sendo provisionado: ${data.sslError}`
+            : "DNS verificado ✅ O SSL está sendo provisionado."
+        );
       } else {
         toast.info("Configuração incompleta. Verifique os registros DNS.");
       }
@@ -354,9 +358,9 @@ export default function DomainConnector({
                             <tr>
                               <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono">TXT</Badge></td>
                               <td className="py-2 px-3 font-medium">_lovable</td>
-                              <td className="py-2 px-3 text-primary truncate max-w-[150px]">{`lovable_verify=${settingsId}`}</td>
+                              <td className="py-2 px-3 text-primary truncate max-w-[150px]">{domain.verification_token || `lovable_verify=${settingsId}`}</td>
                               <td className="py-2 px-3 text-right">
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(`lovable_verify=${settingsId}`, `${domain.id}-txt`)}>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(domain.verification_token || `lovable_verify=${settingsId}`, `${domain.id}-txt`)}>
                                   {copied === `${domain.id}-txt` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                 </Button>
                               </td>
