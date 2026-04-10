@@ -2434,6 +2434,7 @@ export type Database = {
           payment_gateway: string | null
           payment_pix: boolean
           primary_color: string
+          promo_banner_enabled: boolean
           secondary_color: string
           sell_via_whatsapp: boolean
           shipping_base_cost: number
@@ -2509,6 +2510,7 @@ export type Database = {
           payment_gateway?: string | null
           payment_pix?: boolean
           primary_color?: string
+          promo_banner_enabled?: boolean
           secondary_color?: string
           sell_via_whatsapp?: boolean
           shipping_base_cost?: number
@@ -2584,6 +2586,7 @@ export type Database = {
           payment_gateway?: string | null
           payment_pix?: boolean
           primary_color?: string
+          promo_banner_enabled?: boolean
           secondary_color?: string
           sell_via_whatsapp?: boolean
           shipping_base_cost?: number
