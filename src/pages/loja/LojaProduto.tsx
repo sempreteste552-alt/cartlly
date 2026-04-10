@@ -62,6 +62,7 @@ export default function LojaProduto() {
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
   const [showStickyCart, setShowStickyCart] = useState(false);
 
