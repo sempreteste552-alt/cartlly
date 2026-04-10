@@ -138,7 +138,7 @@ export default function MeuPlano() {
       </div>
 
       {/* Referral Card - TOP */}
-      <Card className="border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/indicacoes")}>
+      <Card className="referral-glow-card border-0 cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-r from-primary/5 to-accent/5" onClick={() => navigate("/admin/indicacoes")}>
         <CardContent className="p-5 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
             <Gift className="h-6 w-6 text-primary" />

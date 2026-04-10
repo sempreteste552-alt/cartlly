@@ -102,22 +102,30 @@ export function AdminSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/admin"}
-                      id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainItems.map((item) => {
+                const isReferral = item.url === "/admin/indicacoes";
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/admin"}
+                        id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                        className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg ${isReferral ? "sidebar-referral-item text-primary font-semibold" : ""}`}
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {item.title}
+                            {isReferral && <span className="referral-dot" />}
+                          </span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
