@@ -1570,6 +1570,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_online: boolean | null
+          last_seen: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1579,6 +1581,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1588,6 +1592,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
           status?: string
           updated_at?: string
           user_id?: string
