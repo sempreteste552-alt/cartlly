@@ -534,29 +534,29 @@ export default function Login() {
         </div>
         <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
 
-        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
-          <CardHeader className="text-center space-y-4 pt-8">
-            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-24 w-auto drop-shadow-lg" />
-            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-32 object-contain" />
-            <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10 max-h-[90vh] overflow-y-auto">
+          <CardHeader className="text-center space-y-2 pt-4 pb-2">
+            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-14 w-auto drop-shadow-lg" />
+            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-16 object-contain" />
+            <CardTitle className="text-xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
 
             {!isForgotPassword && (
-              <div className="h-8 flex items-center justify-center">
-                <p className="text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+              <div className="h-6 flex items-center justify-center">
+                <p className="text-xs font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                   {isRegister ? registerText : loginText}
-                  <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse align-middle" />
+                  <span className="inline-block w-0.5 h-3 bg-blue-500 ml-0.5 animate-pulse align-middle" />
                 </p>
               </div>
             )}
 
             {isForgotPassword && (
-              <CardDescription>Informe seu e-mail para receber o link de redefinição</CardDescription>
+              <CardDescription className="text-xs">Informe seu e-mail para receber o link de redefinição</CardDescription>
             )}
           </CardHeader>
 
-          <CardContent className="pb-8">
+          <CardContent className="pb-4 pt-0">
             {/* Alert Card */}
             {alertCard && (
               <div className={`mb-4 rounded-lg border p-3 ${
@@ -597,7 +597,7 @@ export default function Login() {
                 )}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
