@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Info, AlertTriangle, Megaphone, X, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 const iconMap: Record<string, React.ElementType> = {
   info: Info,
@@ -11,6 +12,7 @@ const iconMap: Record<string, React.ElementType> = {
 
 export function AdminAnnouncementBanner() {
   const [dismissed, setDismissed] = useState<string[]>([]);
+  useRealtimeSync("admin_announcements", [["admin_announcements_active"]]);
 
   const { data: announcements } = useQuery({
     queryKey: ["admin_announcements_active"],

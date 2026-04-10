@@ -30,6 +30,7 @@ export interface StoreThemeConfig {
 
 export function useStoreThemeConfig() {
   const { user } = useAuth();
+  useRealtimeSync("store_theme_config", [["store_theme_config", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
   return useQuery({
     queryKey: ["store_theme_config", user?.id],
     enabled: !!user,
