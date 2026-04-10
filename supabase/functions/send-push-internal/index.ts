@@ -88,8 +88,21 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
 
   const rawPrivate = b64urlDecode(vapidPrivateKey.trim());
   const rawPublic = b64urlDecode(vapidPublicKey.trim());
-  const xBytes = padTo(rawPublic.slice(1, 33), 32);
-  const yBytes = padTo(rawPublic.slice(33, 65), 32);
+
+  // Handle both 65-byte (0x04 prefix) and 64-byte public keys
+  let xBytes: Uint8Array;
+  let yBytes: Uint8Array;
+
+  if (rawPublic.length === 65 && rawPublic[0] === 0x04) {
+    xBytes = rawPublic.slice(1, 33);
+    yBytes = rawPublic.slice(33, 65);
+  } else if (rawPublic.length === 64) {
+    xBytes = rawPublic.slice(0, 32);
+    yBytes = rawPublic.slice(32, 64);
+  } else {
+    throw new Error(`Invalid VAPID public key length: ${rawPublic.length} bytes (expected 64 or 65)`);
+  }
+
   const dBytes = padTo(rawPrivate, 32);
 
   const key = await crypto.subtle.importKey(
