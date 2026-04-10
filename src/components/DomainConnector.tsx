@@ -227,11 +227,14 @@ export default function DomainConnector({
 
       if (data?.status === "verified") {
         setStep("done");
-        toast.success("Domínio verificado com sucesso! ✅");
+        setAutoPolling(false);
+        toast.success("🎉 Domínio verificado com sucesso! Certificado SSL ativo.");
       } else if (data?.status === "pending") {
         setStep("instructions");
         if (data?.dnsComplete) {
-          toast.success("DNS configurado corretamente! ✅ Aguardando certificado SSL... Tente novamente em alguns minutos.");
+          toast.success("DNS configurado corretamente! ✅ Verificação automática de SSL ativada...");
+          setAutoPolling(true);
+          setPollCount(0);
         } else if (data?.aRecord && !data?.txtRecord) {
           toast.info("Registro A encontrado ✅ — Falta o registro TXT (_lovable). Adicione-o e tente novamente.");
         } else if (!data?.aRecord && data?.txtRecord) {
