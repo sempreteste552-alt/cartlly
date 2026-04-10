@@ -91,7 +91,8 @@ function normalizeDomain(domain: string): string {
     .toLowerCase()
     .replace(/^https?:\/\//, "")
     .replace(/\/.*$/, "")
-    .replace(/\.$/, "");
+    .replace(/\.$/, "")
+    .replace(/["']/g, ""); // Remove accidental quotes
 }
 
 function isValidDomain(domain: string): boolean {
@@ -558,7 +559,7 @@ export default function DomainConnector({
                   <li>Acesse o <strong>painel de DNS</strong> do seu provedor de domínio (Hostinger, GoDaddy, Cloudflare, Registro.br, etc.)</li>
                   <li>Adicione um registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">@</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
                   <li>Adicione outro registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">www</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
-                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId || "..."}</code></li>
+                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId || "..."}</code> (Se o seu provedor adicionar aspas automaticamente, não tem problema)</li>
                   <li>Aguarde a propagação DNS (pode levar de 5 minutos a 72 horas)</li>
                   <li>Clique em <strong>"Verificar Conexão"</strong> acima</li>
                 </ol>
@@ -577,6 +578,7 @@ export default function DomainConnector({
                 <ul className="list-disc list-inside space-y-1">
                   <li><strong>Registro A não detectado:</strong> Verifique se não há outro registro A conflitante para @ ou www</li>
                   <li><strong>TXT não detectado:</strong> Certifique-se de que o nome é <code className="bg-muted px-1 rounded">_lovable</code> (com underscore)</li>
+                  <li><strong>Aspas (") no TXT:</strong> Alguns provedores (como GoDaddy/Hostinger) adicionam aspas automaticamente. <strong>Não se preocupe</strong>, nosso sistema identifica o valor mesmo com aspas.</li>
                   <li><strong>Demora na propagação:</strong> Use <a href="https://dnschecker.org" target="_blank" rel="noopener noreferrer" className="text-primary underline">dnschecker.org</a> para verificar</li>
                 </ul>
               </div>
