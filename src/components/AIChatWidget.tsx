@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -12,7 +12,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,13 @@ import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 
 type MsgContent = string | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
 type Msg = { role: "user" | "assistant"; content: MsgContent };
+
+interface PixQrData {
+  qrCode: string;
+  qrCodeBase64?: string;
+  planName: string;
+  transactionId?: string;
+}
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
@@ -31,6 +38,7 @@ const QUICK_ACTIONS = [
   { label: "🏷️ Estratégia de cupons", prompt: "Crie uma estratégia de cupons para aumentar conversão e ticket médio" },
   { label: "📢 Enviar promoção push", prompt: "Gere um texto de promoção e envie como notificação push para meus clientes" },
   { label: "🎟️ Criar cupom", prompt: "Crie um cupom de desconto de 10% com código PROMO10 para minha loja" },
+  { label: "⬆️ Trocar de plano", prompt: "Quero fazer upgrade do meu plano. Quais planos estão disponíveis?" },
 ];
 
 const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "" };
@@ -44,19 +52,69 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-// Extract text from MsgContent
 function getTextContent(content: MsgContent): string {
   if (typeof content === "string") return content;
   return content.filter((p) => p.type === "text").map((p) => (p as any).text).join("");
 }
 
-// Strip action blocks from visible text
 function cleanContent(content: string): string {
   return content
     .replace(/\[ACTION_PUSH\][\s\S]*?\[\/ACTION_PUSH\]/g, "")
     .replace(/\[ACTION_COUPON\][\s\S]*?\[\/ACTION_COUPON\]/g, "")
+    .replace(/\[ACTION_SUBSCRIBE\][\s\S]*?\[\/ACTION_SUBSCRIBE\]/g, "")
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
+}
+
+const formatCpf = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 14);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  if (d.length <= 11) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+};
+
+function PixQrCard({ data, onCopy }: { data: PixQrData; onCopy: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(data.qrCode);
+    setCopied(true);
+    onCopy();
+    setTimeout(() => setCopied(false), 3000);
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 space-y-3 my-2">
+      <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+        <QrCode className="h-4 w-4" />
+        PIX — {data.planName}
+      </div>
+      {data.qrCodeBase64 && (
+        <div className="flex justify-center">
+          <img
+            src={data.qrCodeBase64.startsWith("data:") ? data.qrCodeBase64 : `data:image/png;base64,${data.qrCodeBase64}`}
+            alt="QR Code PIX"
+            className="h-48 w-48 rounded-lg border border-border"
+          />
+        </div>
+      )}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground text-center">Escaneie o QR Code ou copie o código:</p>
+        <div className="flex gap-2">
+          <Input
+            readOnly
+            value={data.qrCode}
+            className="text-xs font-mono"
+          />
+          <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
+            {copied ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function AIChatWidget() {
@@ -66,6 +124,11 @@ export function AIChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [pixData, setPixData] = useState<PixQrData | null>(null);
+  const [cpfDialogOpen, setCpfDialogOpen] = useState(false);
+  const [cpfValue, setCpfValue] = useState("");
+  const [pendingSubscribe, setPendingSubscribe] = useState<{ plan_id: string; plan_name: string } | null>(null);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,13 +145,25 @@ export function AIChatWidget() {
   const { data: settings } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
 
+  // Fetch available plans
+  const { data: plans } = useQuery({
+    queryKey: ["tenant_plans_chat"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tenant_plans")
+        .select("id, name, price, max_products, max_orders_month, features")
+        .eq("active", true)
+        .order("price", { ascending: true });
+      return data || [];
+    },
+  });
+
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
   const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
 
   const [tempName, setTempName] = useState(aiName);
   const [tempAvatar, setTempAvatar] = useState(aiAvatarUrl);
 
-  // Sync temp state when settings are loaded/updated
   useEffect(() => {
     if (settings) {
       setTempName((settings as any).ai_name || AI_SETTINGS_DEFAULT.name);
@@ -100,7 +175,7 @@ export function AIChatWidget() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, pixData]);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -153,8 +228,62 @@ export function AIChatWidget() {
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
       aiName: aiName,
+      plans: (plans || []).filter((p: any) => p.price > 0).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+      })),
+      currentPlanName: ctx.planSlug,
+      subscriptionStatus: ctx.subscriptionStatus,
+      isTrial: ctx.isTrial,
+      trialDaysLeft: ctx.trialDaysLeft,
     };
-  }, [products, categories, coupons, orders, settings, aiName]);
+  }, [products, categories, coupons, orders, settings, aiName, plans, ctx]);
+
+  const handleSubscribe = async (planId: string, planName: string, document: string) => {
+    if (!user) return;
+    setSubscribeLoading(true);
+    try {
+      const resp = await supabase.functions.invoke("amplopay-subscribe", {
+        body: {
+          user_id: user.id,
+          plan_id: planId,
+          payment_method: "PIX",
+          document: document.replace(/\D/g, ""),
+        },
+      });
+
+      if (resp.error) {
+        toast.error("Erro ao gerar cobrança: " + resp.error.message);
+        setMessages(prev => [...prev, { role: "assistant", content: `❌ Erro ao gerar QR Code: ${resp.error?.message}` }]);
+        return;
+      }
+
+      const data = resp.data;
+      if (data?.pix?.qrCode) {
+        const pix: PixQrData = {
+          qrCode: data.pix.qrCode,
+          qrCodeBase64: data.pix.qrCodeBase64 || data.pix.image,
+          planName: planName,
+          transactionId: data.transaction_id,
+        };
+        setPixData(pix);
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: `✅ **QR Code PIX gerado com sucesso!**\n\nPlano: **${planName}**\n\nEscaneie o QR Code abaixo ou copie o código PIX para efetuar o pagamento. Após a confirmação, seu plano será ativado automaticamente! 🎉`,
+        }]);
+        toast.success("QR Code PIX gerado! Escaneie para pagar.");
+      } else {
+        toast.error("Erro: resposta do gateway sem QR Code");
+        setMessages(prev => [...prev, { role: "assistant", content: "❌ Não foi possível gerar o QR Code. Tente novamente ou acesse a página de planos." }]);
+      }
+    } catch (e) {
+      console.error("Subscribe error:", e);
+      toast.error("Erro ao processar assinatura");
+    } finally {
+      setSubscribeLoading(false);
+    }
+  };
 
   const processAIActions = useCallback(async (content: string) => {
     const pushMatch = content.match(/\[ACTION_PUSH\]([\s\S]*?)\[\/ACTION_PUSH\]/);
@@ -196,6 +325,18 @@ export function AIChatWidget() {
         }
       } catch (e) {
         console.error("Coupon action error:", e);
+      }
+    }
+
+    const subscribeMatch = content.match(/\[ACTION_SUBSCRIBE\]([\s\S]*?)\[\/ACTION_SUBSCRIBE\]/);
+    if (subscribeMatch && user) {
+      try {
+        const payload = JSON.parse(subscribeMatch[1].trim());
+        setPendingSubscribe({ plan_id: payload.plan_id, plan_name: payload.plan_name });
+        setCpfValue("");
+        setCpfDialogOpen(true);
+      } catch (e) {
+        console.error("Subscribe action error:", e);
       }
     }
   }, [user, queryClient]);
@@ -247,6 +388,7 @@ export function AIChatWidget() {
 
     const images = [...pendingImages];
     setPendingImages([]);
+    setPixData(null);
 
     let userContent: MsgContent;
     if (images.length > 0) {
@@ -382,7 +524,7 @@ export function AIChatWidget() {
             <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setOpen(false)}>
               <Minimize2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setMessages([]); setOpen(false); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setMessages([]); setPixData(null); setOpen(false); }}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -446,7 +588,6 @@ export function AIChatWidget() {
                     </ReactMarkdown>
                   </div>
 
-                  {/* Show uploaded images in user messages */}
                   {msg.role === "user" && typeof msg.content !== "string" && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {msg.content.filter(p => p.type === "image_url").map((img: any, idx) => (
@@ -458,14 +599,28 @@ export function AIChatWidget() {
               </div>
             </div>
           ))}
-          {!aiLocked && isLoading && (
+
+          {/* PIX QR Code inline */}
+          {!aiLocked && pixData && (
+            <div className="flex justify-start">
+              <div className="flex gap-3 max-w-[85%]">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <QrCode className="h-4 w-4" />
+                </div>
+                <PixQrCard data={pixData} onCopy={() => toast.success("Código PIX copiado!")} />
+              </div>
+            </div>
+          )}
+
+          {!aiLocked && (isLoading || subscribeLoading) && (
             <div className="flex justify-start">
               <div className="flex gap-3 max-w-[85%]">
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4" />
                 </div>
-                <div className="bg-card border border-border rounded-2xl px-4 py-2.5 flex items-center shadow-sm">
+                <div className="bg-card border border-border rounded-2xl px-4 py-2.5 flex items-center gap-2 shadow-sm">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  {subscribeLoading && <span className="text-xs text-muted-foreground">Gerando QR Code...</span>}
                 </div>
               </div>
             </div>
@@ -515,13 +670,55 @@ export function AIChatWidget() {
               onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
               className="flex-1"
             />
-            <Button onClick={() => sendMessage(input)} disabled={isLoading} className="shrink-0 h-10 w-10" size="icon">
+            <Button onClick={() => sendMessage(input)} disabled={isLoading || subscribeLoading} className="shrink-0 h-10 w-10" size="icon">
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </div>
         </div>
         )}
       </div>
+
+      {/* CPF Dialog for subscription */}
+      <Dialog open={cpfDialogOpen} onOpenChange={setCpfDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              Gerar PIX — {pendingSubscribe?.plan_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Informe seu CPF ou CNPJ para gerar o QR Code PIX de pagamento:
+            </p>
+            <div className="space-y-2">
+              <Label>CPF / CNPJ</Label>
+              <Input
+                value={cpfValue}
+                onChange={(e) => setCpfValue(formatCpf(e.target.value))}
+                placeholder="000.000.000-00"
+                maxLength={18}
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={cpfValue.replace(/\D/g, "").length < 11 || subscribeLoading}
+              onClick={async () => {
+                if (!pendingSubscribe) return;
+                setCpfDialogOpen(false);
+                await handleSubscribe(pendingSubscribe.plan_id, pendingSubscribe.plan_name, cpfValue);
+                setPendingSubscribe(null);
+              }}
+            >
+              {subscribeLoading ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...</>
+              ) : (
+                <><QrCode className="mr-2 h-4 w-4" /> Gerar QR Code PIX</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
