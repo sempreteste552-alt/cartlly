@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Timer } from "lucide-react";
+import { X, Timer, Search } from "lucide-react";
 import type { StoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 // ── Countdown Bar ──
 export function CountdownBar({ config }: { config: StoreMarketingConfig }) {
@@ -59,23 +61,51 @@ export function CountdownBar({ config }: { config: StoreMarketingConfig }) {
 }
 
 // ── Announcement Bar ──
-export function AnnouncementBar({ config }: { config: StoreMarketingConfig }) {
+export function AnnouncementBar({ config, basePath }: { config: StoreMarketingConfig; basePath?: string }) {
   const [dismissed, setDismissed] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   if (!config.announcement_bar_enabled || !config.announcement_bar_text || dismissed) return null;
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim() && basePath) {
+      // In many stores, search just filters the home or goes to search page
+      // Here we simulate the LojaLayout search behavior
+      window.dispatchEvent(new CustomEvent('loja_search', { detail: searchTerm }));
+      navigate(basePath);
+    }
+  };
+
   return (
     <div
-      className="relative text-center py-2 px-8 text-sm font-medium"
+      className="relative py-2 px-8 text-sm font-medium"
       style={{ backgroundColor: config.announcement_bar_bg_color, color: config.announcement_bar_text_color }}
     >
-      {config.announcement_bar_link ? (
-        <a href={config.announcement_bar_link} className="hover:underline">
-          {config.announcement_bar_text}
-        </a>
-      ) : (
-        config.announcement_bar_text
-      )}
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3">
+        {config.announcement_bar_link ? (
+          <a href={config.announcement_bar_link} className="hover:underline">
+            {config.announcement_bar_text}
+          </a>
+        ) : (
+          <span>{config.announcement_bar_text}</span>
+        )}
+
+        {(config as any).announcement_bar_search_enabled && (
+          <form onSubmit={handleSearch} className="relative w-full sm:w-64 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 opacity-60" />
+            <Input
+              placeholder="Buscar..."
+              className="h-8 pl-8 pr-3 text-xs bg-white/10 border-white/20 placeholder:text-white/60 focus-visible:ring-offset-0"
+              style={{ color: config.announcement_bar_text_color }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </form>
+        )}
+      </div>
+
       <button onClick={() => setDismissed(true)} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100">
         <X className="h-3.5 w-3.5" />
       </button>
