@@ -977,7 +977,18 @@ export default function LojaLayout() {
           </div>
         </nav>
 
-        {/* Floating WhatsApp Button - positioned above bottom nav on mobile */}
+        {/* AI Chat for Premium stores - above WhatsApp */}
+        {settings?.user_id && (settings as any).is_premium_plan && (
+          <StorefrontAIChat
+            storeUserId={settings.user_id}
+            storeName={settings.store_name || "Loja"}
+            aiName={(settings as any).ai_name}
+            aiAvatarUrl={(settings as any).ai_avatar_url}
+            primaryColor={settings.primary_color}
+          />
+        )}
+
+        {/* Floating WhatsApp Button - positioned below AI chat on mobile */}
         {settings?.store_whatsapp && (
           <a
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
@@ -989,17 +1000,6 @@ export default function LojaLayout() {
           >
             <img src={whatsappIcon} alt="WhatsApp" className="h-14 w-14 rounded-full drop-shadow-md" />
           </a>
-        )}
-
-        {/* AI Chat for Premium stores */}
-        {settings?.user_id && (settings as any).is_premium_plan && (
-          <StorefrontAIChat
-            storeUserId={settings.user_id}
-            storeName={settings.store_name || "Loja"}
-            aiName={(settings as any).ai_name}
-            aiAvatarUrl={(settings as any).ai_avatar_url}
-            primaryColor={settings.primary_color}
-          />
         )}
 
         {/* Auth modals */}
