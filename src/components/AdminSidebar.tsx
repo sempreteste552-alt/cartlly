@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { CSSProperties } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift, Shield, Award, DollarSign
+  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
@@ -33,6 +33,8 @@ const mainItems = [
   { title: "Políticas", url: "/admin/politicas", icon: Shield, isNew: false },
   { title: "Fidelidade", url: "/admin/fidelidade", icon: Award, isNew: true },
   { title: "Lucro Real", url: "/admin/lucro", icon: DollarSign, isNew: true },
+  { title: "Analytics Funil", url: "/admin/analytics", icon: BarChart3, isNew: true },
+  { title: "WhatsApp IA", url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
 ];
 
 const configItemsBase = [

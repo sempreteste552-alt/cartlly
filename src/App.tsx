@@ -29,6 +29,8 @@ import Indicacoes from "./pages/admin/Indicacoes";
 import Politicas from "./pages/admin/Politicas";
 import Fidelidade from "./pages/admin/Fidelidade";
 import Lucro from "./pages/admin/Lucro";
+import Analytics from "./pages/admin/Analytics";
+import WhatsAppIA from "./pages/admin/WhatsAppIA";
 import LojaPolitica from "./pages/loja/LojaPolitica";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
@@ -155,6 +157,8 @@ const App = () => {
                     <Route path="politicas" element={<Politicas />} />
                     <Route path="fidelidade" element={<Fidelidade />} />
                     <Route path="lucro" element={<Lucro />} />
+                    <Route path="analytics" element={<Analytics />} />
+                    <Route path="whatsapp-ia" element={<WhatsAppIA />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
