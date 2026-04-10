@@ -274,7 +274,16 @@ Deno.serve(async (req) => {
     }
 
     const dnsVerified = aRecordFound && txtRecordFound;
-    const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
+    
+    // SSL check via Cloudflare or direct HTTPS
+    let cloudflareStatus = null;
+    if (dnsVerified && CLOUDFLARE_API_TOKEN && CLOUDFLARE_ZONE_ID) {
+      cloudflareStatus = await manageCloudflareHostname(requestedDomain, settingsId);
+    }
+
+    const directSsl = dnsVerified ? await checkHttps(requestedDomain) : false;
+    const sslReady = cloudflareStatus?.sslStatus === "active" || directSsl;
+    
     const newStatus = sslReady
       ? "verified"
       : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
@@ -288,6 +297,8 @@ Deno.serve(async (req) => {
       pointsToPlatform: aRecordFound,
       provider: detectedProvider,
       checkedAt: new Date().toISOString(),
+      cloudflare: cloudflareStatus,
+      usingCloudflare: !!CLOUDFLARE_API_TOKEN,
     };
 
     // Check previous status to detect transition to verified
