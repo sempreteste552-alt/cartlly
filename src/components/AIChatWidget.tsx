@@ -143,7 +143,6 @@ export function AIChatWidget() {
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [pendingActions, setPendingActions] = useState<Record<number, any[]>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
