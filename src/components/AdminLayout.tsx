@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
