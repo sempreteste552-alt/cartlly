@@ -154,8 +154,14 @@ export default function Cerebro() {
     }
 
     // Page update
-...
-
+    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
+    let pageMatch;
+    while ((pageMatch = pageRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(pageMatch[1]);
+        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
+      } catch (e) { console.error("Page parse error:", e); }
+    }
 
     // Update Stock
     const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
@@ -215,6 +221,13 @@ export default function Cerebro() {
         }).eq("user_id", user.id);
         if (error) throw error;
         toast.success("✅ Configurações atualizadas!");
+      } else if (action.type === "update_marketing") {
+        const { error } = await supabase.from("store_marketing_config").update({
+          ...action.payload,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Marketing da loja atualizado!");
       } else if (action.type === "update_page") {
         const { error } = await supabase.from("store_pages").update({
           content: action.payload.content,
