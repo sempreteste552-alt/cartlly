@@ -34,7 +34,8 @@ serve(async (req) => {
        { data: homeSections },
        { data: stagnantProducts },
        { data: recentOrderItems },
-       { data: marketingConfig }
+       { data: marketingConfig },
+       { data: deliveryLogs }
     ] = await Promise.all([
       supabase.from("store_settings").select("*").eq("user_id", user.id).single(),
       supabase.from("tenant_ai_brain_config").select("*").eq("user_id", user.id).single(),
@@ -47,7 +48,8 @@ serve(async (req) => {
       supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10),
       supabase.from("products").select("name, stock, views, price, id").eq("user_id", user.id).order("views", { ascending: true }).limit(10),
       supabase.from("order_items").select("product_id, quantity").limit(100),
-      supabase.from("store_marketing_config").select("*").eq("user_id", user.id).single()
+      supabase.from("store_marketing_config").select("*").eq("user_id", user.id).single(),
+      supabase.from("message_delivery_logs").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10)
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
@@ -76,6 +78,7 @@ STATUS ATUAL:
 - Vendas Hoje: ${JSON.stringify(salesStats || "N/A")}
 - Produtos Parados (menos visualizações/vendas): ${JSON.stringify(stagnantProducts || [])}
 - Amostragem de Itens Vendidos: ${JSON.stringify(recentOrderItems || [])}
+- Histórico de Entrega de Mensagens/Push: ${JSON.stringify(deliveryLogs || [])}
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
