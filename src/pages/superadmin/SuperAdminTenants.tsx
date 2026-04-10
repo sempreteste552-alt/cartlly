@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
@@ -577,13 +577,21 @@ export default function SuperAdminTenants() {
                             {tenant.is_online ? "Online agora" : `Visto há ${formatLastSeen(tenant.last_seen).replace("Há ", "")}`}
                           </span>
                         </div>
+                        </div>
+                        {tenant.referral_origin && (
+                          <div className="flex items-center gap-1 text-xs mt-0.5">
+                            <Gift className="h-3 w-3 text-primary" />
+                            <span className="text-primary/80 font-medium">
+                              Indicado por código <span className="font-mono font-bold">{tenant.referral_origin.referral_code}</span>
+                            </span>
+                          </div>
+                        )}
+                        {tenant.subscription?.tenant_plans && (
+                          <p className="text-xs text-primary font-medium mt-0.5">
+                            Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
+                          </p>
+                        )}
                       </div>
-                      {tenant.subscription?.tenant_plans && (
-                        <p className="text-xs text-primary font-medium mt-0.5">
-                          Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
-                        </p>
-                      )}
-                    </div>
 
                   </div>
 

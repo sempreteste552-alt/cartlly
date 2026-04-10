@@ -94,6 +94,17 @@ export function useAllTenants() {
         .eq("role", "super_admin");
       const superAdminIds = new Set(superAdminRoles?.map((r: any) => r.user_id) || []);
 
+      // Get referral origin data (who referred each tenant)
+      const { data: referrals } = await supabase
+        .from("referrals" as any)
+        .select("referred_user_id, referrer_tenant_id, referral_code, status, created_at")
+        .not("referred_user_id", "is", null);
+
+      const referralMap: Record<string, { referrer_tenant_id: string; referral_code: string; status: string; created_at: string }> = {};
+      (referrals || []).forEach((r: any) => {
+        if (r.referred_user_id) referralMap[r.referred_user_id] = r;
+      });
+
       return profiles
         ?.filter((p: any) => !superAdminIds.has(p.user_id))
         .map((p: any) => ({
@@ -102,6 +113,7 @@ export function useAllTenants() {
           subscription: subs?.find((s: any) => s.user_id === p.user_id),
           productCount: productCounts[p.user_id] || 0,
           orders: orderData[p.user_id] || { count: 0, revenue: 0 },
+          referral_origin: referralMap[p.user_id] || null,
         })) ?? [];
     },
   });
