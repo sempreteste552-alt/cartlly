@@ -1473,6 +1473,8 @@ async function generateAISequenceMessage(
     totalSteps: number;
     intensity: string;
     sequenceType: string;
+    niche?: StoreNiche;
+    gender?: Gender;
   }
 ): Promise<{ title: string; body: string }> {
   const hour = new Date().getHours();
@@ -1485,6 +1487,26 @@ async function generateAISequenceMessage(
     medium: "Tom de urgência moderada. Mencione estoque baixo ou alta demanda. Crie FOMO sutil.",
     aggressive: "Tom MUITO urgente e agressivo. Use CAPS em palavras-chave. CTAs fortes como COMPRE AGORA, ÚLTIMA CHANCE, É AGORA OU NUNCA. Máxima urgência!",
   }[ctx.intensity] || "Tom amigável.";
+
+  // Niche-specific tone guidance
+  const nicheGuide: Record<string, string> = {
+    moda: "Loja de MODA/ROUPAS. Use termos como 'look', 'estilo', 'tendência', 'coleção'. Linguagem fashion e moderna.",
+    acessorios: "Loja de ACESSÓRIOS/JOIAS. Use termos como 'brilho', 'elegância', 'sofisticação', 'charme'. Linguagem refinada.",
+    beleza: "Loja de BELEZA/COSMÉTICOS. Use termos como 'autocuidado', 'glow', 'skincare', 'beleza natural'. Linguagem de wellness.",
+    tech: "Loja de TECNOLOGIA. Use termos como 'upgrade', 'performance', 'inovação', 'smart'. Linguagem tech e objetiva.",
+    casa: "Loja de CASA/DECORAÇÃO. Use termos como 'lar', 'aconchego', 'ambiente', 'decoração'. Linguagem acolhedora.",
+    fitness: "Loja de FITNESS/ESPORTE. Use termos como 'treino', 'superação', 'performance', 'energia'. Linguagem motivacional.",
+    food: "Loja de ALIMENTAÇÃO. Use termos como 'sabor', 'delícia', 'gourmet', 'prazer'. Linguagem sensorial.",
+    kids: "Loja INFANTIL. Use termos como 'fofura', 'diversão', 'alegria', 'carinho'. Linguagem doce e maternal.",
+    pet: "Loja PET. Use termos como 'bichinho', 'amor pet', 'companheiro', 'patinha'. Linguagem afetiva.",
+  };
+
+  // Gender-specific tone guidance
+  const genderGuide = ctx.gender === "female"
+    ? "A cliente é MULHER. Use tom doce, empoderador e acolhedor. Emojis como 💕🌸✨💜🌷💃. Linguagem mais delicada e carinhosa."
+    : ctx.gender === "male"
+    ? "O cliente é HOMEM. Use tom direto, suave e prático. Emojis como 🔥💪😎🎯⚡. Linguagem mais objetiva sem ser fria."
+    : "Gênero neutro. Use tom universal e inclusivo.";
 
   let typeGuide = "";
   if (ctx.sequenceType === "cart_abandonment") {
@@ -1509,6 +1531,9 @@ async function generateAISequenceMessage(
           content: `Você é uma especialista em marketing de conversão da loja "${ctx.storeName}".
 ${typeGuide}
 
+${ctx.niche && ctx.niche !== "geral" ? `NICHO DA LOJA: ${nicheGuide[ctx.niche] || ""}` : ""}
+${genderGuide}
+
 Esta é a mensagem ${ctx.step} de ${ctx.totalSteps} de uma SEQUÊNCIA de retargeting.
 ${intensityGuide}
 
@@ -1520,6 +1545,7 @@ REGRAS RÍGIDAS:
 ${ctx.productName ? `- Mencione o produto "${ctx.productName}"` : ""}
 - Saudação: "${greetings}"
 - NUNCA repita mensagens. Seed: ${seed}
+- Adapte a linguagem ao NICHO da loja e ao GÊNERO do cliente
 - ${ctx.intensity === "aggressive" ? "Use CTAs FORTES: COMPRE AGORA, GARANTA JÁ, É AGORA, CORRA, VÁ AGORA" : ""}`,
         },
         {
