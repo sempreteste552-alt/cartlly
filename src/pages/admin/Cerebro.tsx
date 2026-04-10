@@ -251,6 +251,21 @@ export default function Cerebro() {
         if (error) throw error;
         toast.success("✅ Estoque atualizado!");
         queryClient.invalidateQueries({ queryKey: ["products"] });
+      } else if (action.type === "update_page") {
+        const { error } = await supabase.from("store_pages").update({ content: action.payload.content }).eq("user_id", user.id).eq("slug", action.payload.slug);
+        if (error) throw error;
+        toast.success("✅ Conteúdo da página atualizado!");
+        queryClient.invalidateQueries({ queryKey: ["store_pages"] });
+      } else if (action.type === "schedule_reminder") {
+        const { error } = await supabase.from("admin_notifications").insert({
+          target_user_id: user.id,
+          title: action.payload.title,
+          message: action.payload.description,
+          type: "ai_suggestion",
+          scheduled_at: action.payload.remind_at
+        });
+        if (error) throw error;
+        toast.success("✅ Lembrete agendado!");
       }
 
       setPendingActions(prev => {
