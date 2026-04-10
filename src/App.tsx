@@ -140,7 +140,7 @@ const App = () => {
                     <Route path="cerebro" element={<Cerebro />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
-                  <Route path="/loja" element={<Navigate to="/login" replace />} />
+                  <Route path="/loja" element={<Navigate to="/" replace />} />
                   <Route path="/loja/:slug" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
                     <Route index element={<LojaHome />} />
                     <Route path="produto/:id" element={<LojaProduto />} />
