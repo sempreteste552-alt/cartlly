@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
 import { useProductImages } from "@/hooks/useProductImages";
@@ -26,7 +27,7 @@ export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
-  const { data: products } = usePublicProducts(storeUserId);
+  const { data: products, isLoading: productsLoading } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
@@ -181,6 +182,15 @@ export default function LojaProduto() {
   const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
   const buttonTextColor = settings?.button_text_color || "#ffffff";
+
+  if (productsLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        <Loader2 className="h-10 w-10 mx-auto animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground mt-4">Carregando produto...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
