@@ -304,6 +304,7 @@ Deno.serve(async (req) => {
         !CLOUDFLARE_API_TOKEN && "CLOUDFLARE_API_TOKEN",
         !CLOUDFLARE_ZONE_ID && "CLOUDFLARE_ZONE_ID"
       ].filter(Boolean),
+    };
 
     // Check previous status to detect transition to verified
     const previousStatus = settings.custom_domain === requestedDomain
