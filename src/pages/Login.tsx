@@ -64,7 +64,7 @@ function useTypewriter(phrases: string[], speed = 60, pause = 2500) {
 }
 
 export default function Login() {
-  const { user } = useAuth();
+  const { user, maintenanceMode } = useAuth();
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -80,6 +80,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
+
+  const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
+  const showMaintenance = maintenanceMode && !isSuperAdmin;
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
