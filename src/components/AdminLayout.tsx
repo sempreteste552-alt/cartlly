@@ -27,14 +27,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 
 export function AdminLayout() {
-  const { data: settings } = useStoreSettings();
-  const { data: themeConfig } = useStoreThemeConfig();
+  const { data: settings, isLoading: settingsLoading } = useStoreSettings();
+  const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
   const { user } = useAuth();
-  const { features } = usePlanFeatures();
-  const { ctx } = useTenantContext();
+  const { features, isLoading: featuresLoading } = usePlanFeatures();
+  const { ctx, isLoading: ctxLoading } = useTenantContext();
   const aiAvailable = canAccess("ai_tools", ctx);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+
+  // Block rendering until all tenant-specific data is resolved
+  const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
 
   // Dynamic PWA manifest for admin context
   const adminName = (settings as any)?.store_name
@@ -126,6 +129,16 @@ export function AdminLayout() {
       };
     }
   }, [settings]);
+
+  // Show neutral loading state until tenant data is fully resolved
+  // This prevents flash of wrong theme/permissions from another tenant
+  if (!tenantReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>

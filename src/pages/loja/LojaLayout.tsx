@@ -296,31 +296,32 @@ export default function LojaLayout() {
 
   useEffect(() => {
     if (settings || themeConfig) {
-      // Use a scoped container instead of :root to prevent theme leaking between tenants
+      // CRITICAL: Only use the scoped container — never fall back to documentElement
+      // This prevents theme leaking between tenants
       const container = document.getElementById(`store-theme-${slug}`);
-      const root = container || document.documentElement;
+      if (!container) return;
       
       const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
       const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
       const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
       const text = themeConfig?.text_color || "#000000";
 
-      root.style.setProperty("--store-primary", primary);
-      root.style.setProperty("--store-secondary", secondary);
-      root.style.setProperty("--store-accent", settings?.accent_color || "#8b5cf6");
-      root.style.setProperty("--store-button-bg", settings?.button_color || "#000000");
-      root.style.setProperty("--store-button-text", settings?.button_text_color || "#ffffff");
-      root.style.setProperty("--store-bg-base", bg);
-      root.style.setProperty("--store-text-base", text);
+      container.style.setProperty("--store-primary", primary);
+      container.style.setProperty("--store-secondary", secondary);
+      container.style.setProperty("--store-accent", settings?.accent_color || "#8b5cf6");
+      container.style.setProperty("--store-button-bg", settings?.button_color || "#000000");
+      container.style.setProperty("--store-button-text", settings?.button_text_color || "#ffffff");
+      container.style.setProperty("--store-bg-base", bg);
+      container.style.setProperty("--store-text-base", text);
       
       return () => {
-        root.style.removeProperty("--store-primary");
-        root.style.removeProperty("--store-secondary");
-        root.style.removeProperty("--store-accent");
-        root.style.removeProperty("--store-button-bg");
-        root.style.removeProperty("--store-button-text");
-        root.style.removeProperty("--store-bg-base");
-        root.style.removeProperty("--store-text-base");
+        container.style.removeProperty("--store-primary");
+        container.style.removeProperty("--store-secondary");
+        container.style.removeProperty("--store-accent");
+        container.style.removeProperty("--store-button-bg");
+        container.style.removeProperty("--store-button-text");
+        container.style.removeProperty("--store-bg-base");
+        container.style.removeProperty("--store-text-base");
       };
     }
   }, [settings, themeConfig, slug]);
