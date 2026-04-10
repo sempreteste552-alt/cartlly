@@ -42,6 +42,7 @@ import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
 import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import SuperAdminIndicacoes from "./pages/superadmin/SuperAdminIndicacoes";
+import SuperAdminBanners from "./pages/superadmin/SuperAdminBanners";
 import ResetPassword from "./pages/ResetPassword";
 import Termos from "./pages/Termos";
 import Privacidade from "./pages/Privacidade";
@@ -128,6 +129,7 @@ const App = () => {
                     <Route path="notificacoes" element={<SuperAdminNotificacoes />} />
                     <Route path="audit-logs" element={<SuperAdminAuditLogs />} />
                     <Route path="indicacoes" element={<SuperAdminIndicacoes />} />
+                    <Route path="banners" element={<SuperAdminBanners />} />
                     <Route path="config" element={<SuperAdminConfig />} />
                   </Route>
                   {/* Tenant Admin */}

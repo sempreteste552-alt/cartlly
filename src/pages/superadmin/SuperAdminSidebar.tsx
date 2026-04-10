@@ -54,6 +54,7 @@ export function SuperAdminSidebar() {
     { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell, badge: badges.notificacoes },
     { title: "Logs de Auditoria", url: "/superadmin/audit-logs", icon: ClipboardList, badge: 0 },
     { title: "Indicações", url: "/superadmin/indicacoes", icon: Gift, badge: 0 },
+    { title: "Banners Admin", url: "/superadmin/banners", icon: Bell, badge: 0 },
     { title: "Configurações", url: "/superadmin/config", icon: Settings, badge: 0 },
   ];
 
