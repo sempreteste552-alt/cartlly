@@ -2669,6 +2669,7 @@ export type Database = {
           created_at: string
           custom_instructions: string | null
           id: string
+          niche: string | null
           personality: string | null
           store_knowledge: Json | null
           updated_at: string
@@ -2679,6 +2680,7 @@ export type Database = {
           created_at?: string
           custom_instructions?: string | null
           id?: string
+          niche?: string | null
           personality?: string | null
           store_knowledge?: Json | null
           updated_at?: string
@@ -2689,6 +2691,7 @@ export type Database = {
           created_at?: string
           custom_instructions?: string | null
           id?: string
+          niche?: string | null
           personality?: string | null
           store_knowledge?: Json | null
           updated_at?: string
@@ -3104,6 +3107,12 @@ export type Database = {
       }
       get_store_rich_insights: { Args: { p_user_id: string }; Returns: Json }
       get_store_sales_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_super_admin_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

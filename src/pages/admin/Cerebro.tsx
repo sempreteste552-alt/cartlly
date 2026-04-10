@@ -53,6 +53,20 @@ export default function Cerebro() {
     enabled: !!user,
   });
 
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", user!.id)
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // === MUTATIONS ===
 
   const sendMessage = useMutation({
@@ -107,7 +121,14 @@ export default function Cerebro() {
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="h-6 w-6 text-primary" /> Cérebro da Loja
           </h1>
-          <p className="text-muted-foreground text-sm">Sua IA estratégica para gestão, alertas e automação de vendas.</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-muted-foreground text-sm">Sua IA estratégica para gestão, alertas e automação de vendas.</p>
+            {aiConfig?.niche && (
+              <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20 text-primary">
+                Nicho: {aiConfig.niche}
+              </Badge>
+            )}
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => clearChat.mutate()} disabled={chatHistory.length === 0}>
           <Trash2 className="h-4 w-4 mr-2" /> Limpar Histórico
@@ -137,7 +158,7 @@ export default function Cerebro() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center max-w-sm mx-auto">
-                      {["Como foram as vendas hoje?", "Agende um lembrete de carrinho para amanhã", "Tem algum erro de pagamento?"].map(s => (
+                      {["Como foram as vendas hoje?", "Agende um lembrete de carrinho para amanhã", "Meu nicho é Moda Feminina", "Preciso de ajuda com pagamentos"].map(s => (
                         <Button key={s} variant="outline" size="sm" className="text-[11px]" onClick={() => sendMessage.mutate(s)}>
                           {s}
                         </Button>

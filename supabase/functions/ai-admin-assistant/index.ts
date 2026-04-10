@@ -39,10 +39,13 @@ serve(async (req) => {
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
+    const niche = aiConfig?.niche || "Não definido";
     
     // 2. Build System Prompt (Amiga CEO Mode)
     const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". 
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
+
+NICHO DA LOJA: ${niche}
 
 STATUS ATUAL DA LOJA:
 - Pedidos Recentes: ${JSON.stringify(recentOrders || [])}
@@ -60,7 +63,7 @@ CAPACIDADES ESPECIAIS (AÇÕES):
 Você pode realizar ações inserindo blocos JSON específicos no final da sua resposta (invisíveis para o usuário final no frontend, mas processados pelo sistema):
 
 1. AGENDAR TAREFA:
-Use para lembretes ou ações futuras (ex: mandar mensagem amanhã).
+Use para lembretes ou ações futuras.
 [ACTION_SCHEDULE_TASK]{
   "task_type": "send_push",
   "scheduled_at": "ISO_TIMESTAMP",
@@ -68,14 +71,22 @@ Use para lembretes ou ações futuras (ex: mandar mensagem amanhã).
   "ai_instruction": "instrução original aqui"
 }[/ACTION_SCHEDULE_TASK]
 
-2. ENVIAR ALERTA IMEDIATO:
-Use para notificações urgentes ao dono.
+2. ENVIAR ALERTA IMEDIATO AO DONO:
 [ACTION_SEND_ADMIN_ALERT]{ "type": "urgency", "message": "..." }[/ACTION_SEND_ADMIN_ALERT]
+
+3. ATUALIZAR NICHO:
+Se o usuário disser qual é o nicho dele, use isto para salvar.
+[ACTION_UPDATE_NICHE]{ "niche": "..." }[/ACTION_UPDATE_NICHE]
+
+4. NOTIFICAR SUPER ADMIN (SUPORTE/AJUDA):
+Se o usuário pedir ajuda, suporte ou algo que precise de intervenção do sistema, use isto.
+[ACTION_NOTIFY_SUPER_ADMIN]{ "title": "Suporte solicitado", "message": "O usuário pediu ajuda: ..." }[/ACTION_NOTIFY_SUPER_ADMIN]
 
 REGRAS:
 - Se o usuário pedir para "lembrar" ou "agendar" algo, use obrigatoriamente [ACTION_SCHEDULE_TASK].
-- Se identificar um erro crítico de pagamento, avise imediatamente.
-- Analise o estoque e sugira estratégias de "queima" ou "reposição".
+- Se o usuário falar sobre o nicho dele, salve usando [ACTION_UPDATE_NICHE].
+- Se o usuário precisar de suporte ou ajuda extra, use [ACTION_NOTIFY_SUPER_ADMIN].
+- Analise o estoque e sugira estratégias.
 - Responda sempre em Português do Brasil.`;
 
     // 3. Call LLM
@@ -99,7 +110,50 @@ REGRAS:
     const aiResult = await response.json();
     const assistantMessage = aiResult.choices[0].message.content;
 
-    // 4. Post-process Actions (Extract and Execute)
+    // 4. Post-process Actions
+    
+    // --- Update Niche ---
+    const nicheRegex = /\[ACTION_UPDATE_NICHE\]([\s\S]*?)\[\/ACTION_UPDATE_NICHE\]/g;
+    let nicheMatch;
+    while ((nicheMatch = nicheRegex.exec(assistantMessage)) !== null) {
+      try {
+        const nicheData = JSON.parse(nicheMatch[1]);
+        await supabase.from("tenant_ai_brain_config").upsert({
+          user_id: user.id,
+          niche: nicheData.niche,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+      } catch (e) {
+        console.error("Error updating niche:", e);
+      }
+    }
+
+    // --- Notify Super Admin ---
+    const superAdminRegex = /\[ACTION_NOTIFY_SUPER_ADMIN\]([\s\S]*?)\[\/ACTION_NOTIFY_SUPER_ADMIN\]/g;
+    let saMatch;
+    while ((saMatch = superAdminRegex.exec(assistantMessage)) !== null) {
+      try {
+        const saData = JSON.parse(saMatch[1]);
+        const { data: saIds } = await supabase.rpc('get_super_admin_ids');
+        if (saIds) {
+          for (const sa of saIds) {
+            await supabase.functions.invoke("send-push-internal", {
+              body: {
+                target_user_id: sa.user_id,
+                title: saData.title,
+                body: saData.message,
+                type: "support_request",
+                store_user_id: user.id
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error notifying super admin:", e);
+      }
+    }
+
+    // --- Schedule Task ---
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
     let match;
     while ((match = taskRegex.exec(assistantMessage)) !== null) {
