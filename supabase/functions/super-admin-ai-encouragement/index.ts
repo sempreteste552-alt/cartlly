@@ -21,6 +21,7 @@ serve(async (req) => {
     const { data: tenants } = await supabase
       .from("profiles")
       .select("id, user_id, display_name")
+      // Filter out super admins if any
       .not("user_id", "in", `(${saUserIds.join(",")})`);
 
     if (!tenants) throw new Error("No tenants found");
@@ -39,8 +40,11 @@ serve(async (req) => {
       const totalSales = sales?.reduce((acc, s) => acc + (s.total_amount || 0), 0) || 0;
       const count = sales?.length || 0;
 
-      // 3. If "scaling" (at least 1 sale or some threshold)
-      if (count > 0) {
+      // 3. Selective Encouragement: Threshold or probability
+      // Only for tenants with > 2 sales OR 10% chance if they have at least 1 sale
+      const shouldSend = count > 2 || (count > 0 && Math.random() < 0.1);
+
+      if (shouldSend) {
         // Use AI to generate an encouraging message
         const systemPrompt = `Você é a IA do Super Admin. Sua missão é encorajar os donos de lojas (tenants) que estão tendo sucesso.
 Seja breve, amigável e use um tom de "parabéns" e "estamos orgulhosos". 
@@ -67,10 +71,10 @@ Não seja invasivo, apenas um "mimo" para eles se sentirem valorizados.`;
         const aiResult = await aiResponse.json();
         const msg = aiResult.choices[0].message.content;
 
-        // 4. Send push and in-app message
         // Find a super admin to be the "sender"
         const senderId = saUserIds[0];
 
+        // Send push
         await supabase.functions.invoke("send-push-internal", {
           body: {
             target_user_id: tenant.user_id,
@@ -94,7 +98,8 @@ Não seja invasivo, apenas um "mimo" para eles se sentirem valorizados.`;
           channel: "push",
           sender_type: "super_admin",
           sender_user_id: senderId,
-          is_global: false
+          is_global: false,
+          target_tenant_id: tenant.user_id
         });
 
         processed.push({ tenant: tenant.user_id, message: msg });
