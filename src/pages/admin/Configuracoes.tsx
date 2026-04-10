@@ -14,7 +14,7 @@ import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners } from "@/hooks/useStoreBanners";
+import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
