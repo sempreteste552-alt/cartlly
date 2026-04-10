@@ -311,6 +311,7 @@ Deno.serve(async (req) => {
         aRecord: aRecordFound,
         txtRecord: txtRecordFound,
         sslReady,
+        sslError,
         dnsComplete,
         domain: requestedDomain,
         provider: detectedProvider,
