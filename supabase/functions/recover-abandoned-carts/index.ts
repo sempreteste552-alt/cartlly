@@ -132,15 +132,6 @@ Deno.serve(async (req) => {
         const waitMs = (rule.wait_minutes || 20) * 60 * 1000;
         if (Date.now() - new Date(cart.abandoned_at).getTime() < waitMs) { skipped++; continue; }
 
-        // Check cooldown
-        const cooldownMs = (rule.cooldown_minutes || 60) * 60 * 1000;
-        if (cart.last_reminder_at && (Date.now() - new Date(cart.last_reminder_at).getTime()) < cooldownMs) { skipped++; continue; }
-
-        // Check max sends per day for this customer
-        const maxSends = rule.max_sends_per_day || 5;
-        const custTodayCount = todayCountByCustomer.get(cart.customer_id) || 0;
-        if (custTodayCount >= maxSends) { skipped++; continue; }
-
         const store = storeMap.get(cart.user_id);
         const storeName = store?.store_name || "nossa loja";
         const items = Array.isArray(cart.items) ? cart.items : [];
@@ -154,13 +145,10 @@ Deno.serve(async (req) => {
 
         const abandonedCartFallbacks = [
           { title: "🛒 Seus itens estão te esperando!", body: `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!` },
-          { title: "🛍️ Não esqueça seu carrinho!", body: `${customer.name}, temos novidades sobre os itens que você viu na ${storeName}.` },
-          { title: "✨ Que tal finalizar seu pedido?", body: `Oi ${customer.name}! Os produtos na ${storeName} estão acabando. Garanta os seus!` },
-          { title: "💖 Preparamos tudo com carinho", body: `Só falta você finalizar a compra na ${storeName}. Vamos nessa?` }
+          { title: "🛍️ Não esqueça seu carrinho!", body: `${customer.name}, temos novidades sobre os itens que você viu na ${storeName}.` }
         ];
-        const randomACFallback = abandonedCartFallbacks[Math.floor(Math.random() * abandonedCartFallbacks.length)];
-        let title = randomACFallback.title;
-        let body = randomACFallback.body;
+        let title = abandonedCartFallbacks[0].title;
+        let body = abandonedCartFallbacks[0].body;
 
         if (lovableApiKey) {
           try {
@@ -179,14 +167,24 @@ Deno.serve(async (req) => {
               ...discountCtx,
             });
             if (aiMsg) {
-              // Dedup: check if same message already sent today
-              const dedupKey = `${cart.customer_id}:${aiMsg.title} — ${aiMsg.body}`.slice(0, 60 + cart.customer_id.length + 1);
-              if (!todayMessages.has(dedupKey.slice(0, `${cart.customer_id}:`.length + 60))) {
-                title = aiMsg.title;
-                body = aiMsg.body;
-              }
+              title = aiMsg.title;
+              body = aiMsg.body;
             }
           } catch (e) { console.error("AI error:", e); }
+        }
+
+        // GLOBAL DEDUPLICATION & COOLDOWN (5 MINS MINIMUM)
+        const { data: canSend } = await supabase.rpc("can_send_message", {
+          p_target_id: cart.customer_id,
+          p_title: title,
+          p_body: body,
+          p_cooldown_minutes: 5
+        });
+
+        if (!canSend) {
+          console.log(`[recover-abandoned-carts] Skipping ${cart.customer_id} due to cooldown or duplicate`);
+          skipped++;
+          continue;
         }
 
         const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {

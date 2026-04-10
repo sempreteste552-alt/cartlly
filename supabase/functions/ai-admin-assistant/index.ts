@@ -35,14 +35,13 @@ serve(async (req) => {
       supabase.from("orders").select("id, status, total_amount, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("payments").select("id, order_id, status, amount, created_at").eq("user_id", user.id).eq("status", "failed").order("created_at", { ascending: false }).limit(5),
       supabase.from("products").select("name, stock").eq("user_id", user.id).lt("stock", 5).limit(10),
-      supabase.rpc("get_store_sales_stats", { p_user_id: user.id }) // Assuming this RPC exists or I can calculate it
+      supabase.rpc("get_store_sales_stats", { p_user_id: user.id })
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
-    const aiName = aiConfig?.ai_name || "Gerente IA";
     
-    // 2. Build System Prompt
-    const systemPrompt = `Você é o "${aiName}", o cérebro estratégico e braço direito do dono da loja "${storeName}". 
+    // 2. Build System Prompt (Amiga CEO Mode)
+    const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". 
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
 STATUS ATUAL DA LOJA:
@@ -52,9 +51,10 @@ STATUS ATUAL DA LOJA:
 - Vendas Hoje: ${JSON.stringify(salesStats || "N/A")}
 
 INSTRUÇÕES DE PERSONALIDADE:
-- Seja proativo, analítico e focado em resultados (vendas e eficiência).
-- Use um tom ${aiConfig?.personality || 'profissional'} e direto.
-- Antecipe problemas (ex: se o estoque está baixo, sugira reposição ou promoção).
+- Seja proativa, analítica e focada em resultados (vendas e eficiência).
+- Use um tom de "amiga CEO" — direta ao ponto, inteligente, encorajadora e extremamente ágil.
+- Antecipe problemas e sugira ações lucrativas (ex: "esse produto vende pouco, vamos criar uma promoção?").
+- O contexto customizado do seu "cérebro" é: ${aiConfig?.custom_instructions || 'Nenhum'}.
 
 CAPACIDADES ESPECIAIS (AÇÕES):
 Você pode realizar ações inserindo blocos JSON específicos no final da sua resposta (invisíveis para o usuário final no frontend, mas processados pelo sistema):
@@ -76,8 +76,7 @@ REGRAS:
 - Se o usuário pedir para "lembrar" ou "agendar" algo, use obrigatoriamente [ACTION_SCHEDULE_TASK].
 - Se identificar um erro crítico de pagamento, avise imediatamente.
 - Analise o estoque e sugira estratégias de "queima" ou "reposição".
-- Responda sempre em Português do Brasil.
-- O contexto customizado do seu "cérebro" é: ${aiConfig?.custom_instructions || 'Nenhum'}.`;
+- Responda sempre em Português do Brasil.`;
 
     // 3. Call LLM
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -129,7 +128,7 @@ REGRAS:
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI admin assistant error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
