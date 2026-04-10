@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
     if (store_user_id) {
       query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
       // Only block pure promotional pushes to the store owner (allow behavior-based like product_view, abandoned_cart, etc.)
-      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer"];
+      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight"];
       if (target_user_id === store_user_id && !behaviorTypes.includes(type || "")) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store promo push to store owner" });
       }
