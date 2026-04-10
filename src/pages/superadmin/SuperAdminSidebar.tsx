@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   FileText,
   ClipboardList,
+  Gift,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -52,6 +53,7 @@ export function SuperAdminSidebar() {
     { title: "Planos", url: "/superadmin/planos", icon: CreditCard, badge: 0 },
     { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell, badge: badges.notificacoes },
     { title: "Logs de Auditoria", url: "/superadmin/audit-logs", icon: ClipboardList, badge: 0 },
+    { title: "Indicações", url: "/superadmin/indicacoes", icon: Gift, badge: 0 },
     { title: "Configurações", url: "/superadmin/config", icon: Settings, badge: 0 },
   ];
 
