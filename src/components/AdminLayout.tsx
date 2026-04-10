@@ -10,6 +10,7 @@ import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { AdminPendingOrdersAlert } from "@/components/admin/AdminPendingOrdersAlert";
 import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { TrialBanner } from "@/components/TrialBanner";
+import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
@@ -129,6 +130,7 @@ export function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          <GlobalMaintenanceBanner />
           {/* Push notification install banner */}
           <AdminPushBanner />
           <AdminPendingOrdersAlert />

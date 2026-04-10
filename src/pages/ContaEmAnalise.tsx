@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LogOut, Ban, ShieldOff } from "lucide-react";
+import { LogOut, Ban, ShieldOff, Wrench, MessageCircle } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ContaEmAnalise() {
@@ -35,11 +35,39 @@ export default function ContaEmAnalise() {
     },
   });
 
+  const { data: platformSettings } = useQuery({
+    queryKey: ["platform_settings_conta_analise"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("platform_settings")
+        .select("*");
+      
+      const settings: any = {};
+      data?.forEach(row => {
+        settings[row.key] = (row.value as any)?.value;
+      });
+      return settings;
+    },
+  });
+
   const isBlocked = profile?.status === "blocked";
   const isAdminBlocked = (storeSettings as any)?.admin_blocked === true;
   const isRejected = profile?.status === "rejected";
+  const isMaintenance = platformSettings?.maintenance_mode === true;
 
   const getContent = () => {
+    if (isMaintenance) {
+      return {
+        icon: <Wrench className="h-10 w-10 text-primary" />,
+        iconBg: "bg-primary/10",
+        title: "Modo Manutenção",
+        description: "A plataforma está em manutenção para melhorias.",
+        detail: "Voltaremos em breve! Se precisar de ajuda imediata, use o suporte abaixo.",
+        badge: "🛠️ Status: Manutenção global",
+        badgeBorder: "border-primary/30 bg-primary/5",
+        badgeText: "text-primary",
+      };
+    }
     if (isBlocked) {
       return {
         icon: <Ban className="h-10 w-10 text-destructive" />,
@@ -118,10 +146,22 @@ export default function ContaEmAnalise() {
             </p>
           </div>
 
-          <Button variant="outline" onClick={signOut} className="mt-4">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex flex-col w-full gap-3 mt-4">
+            {platformSettings?.support_whatsapp_number && (
+              <Button 
+                className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold"
+                onClick={() => window.open(`https://wa.me/${platformSettings.support_whatsapp_number}?text=Olá,%20preciso%20de%20ajuda%20com%20minha%20conta%20no%20Cartlly`, "_blank")}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Suporte via WhatsApp
+              </Button>
+            )}
+            
+            <Button variant="outline" onClick={signOut} className="w-full">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair da Conta
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
