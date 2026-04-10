@@ -74,6 +74,7 @@ function cleanContent(content: string): string {
     .replace(/\[ACTION_SUBSCRIBE\][\s\S]*?\[\/ACTION_SUBSCRIBE\]/g, "")
     .replace(/\[ACTION_UPDATE_PRODUCT\][\s\S]*?\[\/ACTION_UPDATE_PRODUCT\]/g, "")
     .replace(/\[ACTION_UPDATE_SETTINGS\][\s\S]*?\[\/ACTION_UPDATE_SETTINGS\]/g, "")
+    .replace(/\[ACTION_MARKETING\][\s\S]*?\[\/ACTION_MARKETING\]/g, "")
     .replace(/\[ACTION_REMINDER\][\s\S]*?\[\/ACTION_REMINDER\]/g, "")
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
