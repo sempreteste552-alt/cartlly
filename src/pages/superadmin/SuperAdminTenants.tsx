@@ -525,6 +525,7 @@ export default function SuperAdminTenants() {
         <div className="flex gap-2 flex-wrap">
           {[
             { key: "all", label: "Todos" },
+            { key: "online", label: `Online (${tenants?.filter(t => t.is_online).length || 0})` },
             { key: "active", label: "Ativos" },
             { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
             { key: "blocked", label: "Bloqueados" },
