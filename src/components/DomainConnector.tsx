@@ -119,6 +119,9 @@ export default function DomainConnector({
   const [checking, setChecking] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [verifyResult, setVerifyResult] = useState<any>(savedVerifyDetails || null);
+  const [autoPolling, setAutoPolling] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progressValue =
     step === "input" ? 15 :
@@ -126,6 +129,50 @@ export default function DomainConnector({
     step === "instructions" ? 55 :
     step === "verifying" ? 80 :
     100;
+
+  // Auto-poll SSL when DNS is complete
+  const silentVerify = useCallback(async () => {
+    if (!settingsId || !domain) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-domain", {
+        body: { settingsId, domain: normalizeDomain(domain) },
+      });
+      if (error) return;
+      setVerifyResult(data);
+      await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+
+      if (data?.status === "verified") {
+        setAutoPolling(false);
+        setStep("done");
+        toast.success("🎉 Domínio verificado e online! Certificado SSL ativo.");
+      } else {
+        setPollCount((c) => c + 1);
+      }
+    } catch {
+      // silent fail
+    }
+  }, [settingsId, domain, queryClient]);
+
+  useEffect(() => {
+    if (!autoPolling) return;
+    // Poll every 30s, max 20 attempts (10 minutes)
+    if (pollCount >= 20) {
+      setAutoPolling(false);
+      toast.info("Verificação automática pausada. Clique em 'Verificar' manualmente.");
+      return;
+    }
+    pollTimerRef.current = setTimeout(silentVerify, 30000);
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, [autoPolling, pollCount, silentVerify]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, []);
 
   const handleProceed = async () => {
     const cleanDomain = normalizeDomain(domain);
