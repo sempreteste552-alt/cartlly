@@ -16,7 +16,6 @@ export function useReferralCode() {
         .maybeSingle();
       if (error) throw error;
       if (!data) {
-        // Auto-create if missing
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
         const { data: created, error: createErr } = await supabase
           .from("referral_codes" as any)
@@ -75,11 +74,12 @@ export function useReferralStats() {
   const approved = referrals?.filter((r: any) => ['payment_approved', 'active'].includes(r.status)).length || 0;
   const activeDiscounts = referrals?.filter((r: any) => r.discount_applied && r.status !== 'cancelled').length || 0;
   const totalDiscount = discounts?.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) || 0;
+  const flagged = referrals?.filter((r: any) => r.flagged).length || 0;
 
-  return { clicks, registered, approved, activeDiscounts, totalDiscount };
+  return { clicks, registered, approved, activeDiscounts, totalDiscount, flagged };
 }
 
-// Super admin: all referrals
+// Super admin hooks
 export function useAllReferrals() {
   return useQuery({
     queryKey: ["all_referrals_admin"],
@@ -105,5 +105,60 @@ export function useAllReferralCodes() {
       if (error) throw error;
       return (data || []) as any[];
     },
+  });
+}
+
+export function useAllReferralDiscounts() {
+  return useQuery({
+    queryKey: ["all_referral_discounts_admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("referral_discounts" as any)
+        .select("*, referrals:referral_id(referred_email, referrer_tenant_id, status)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+}
+
+export function useFlagReferral() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, flagged, reason }: { id: string; flagged: boolean; reason?: string }) => {
+      const updates: any = { flagged, flagged_reason: reason || null };
+      if (flagged) {
+        updates.discount_applied = false;
+        updates.status = 'flagged';
+      }
+      const { error } = await supabase
+        .from("referrals" as any)
+        .update(updates)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all_referrals_admin"] });
+      toast.success("Indicação atualizada");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useInvalidateDiscount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ discountId }: { discountId: string }) => {
+      const { error } = await supabase
+        .from("referral_discounts" as any)
+        .update({ applied: false, amount: 0 } as any)
+        .eq("id", discountId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all_referral_discounts_admin"] });
+      toast.success("Desconto invalidado");
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 }
