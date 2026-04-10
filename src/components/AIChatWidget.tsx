@@ -450,34 +450,6 @@ export function AIChatWidget() {
     }
   };
 
-    const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
-    if (reminderMatch && user) {
-      try {
-        const payload = JSON.parse(reminderMatch[1].trim());
-        const { error } = await supabase.from("store_ai_reminders").insert({
-          user_id: user.id,
-          title: payload.title,
-          description: payload.body,
-          remind_at: payload.scheduled_at,
-          status: "pending"
-        });
-
-        if (!error) {
-          // Also schedule in generic task runner
-          await supabase.from("ai_scheduled_tasks").insert({
-            user_id: user.id,
-            task_type: "admin_reminder",
-            scheduled_at: payload.scheduled_at,
-            payload: { title: payload.title, body: payload.body },
-            status: "pending"
-          });
-          toast.success(`✅ Lembrete agendado para ${new Date(payload.scheduled_at).toLocaleString()}`);
-        }
-      } catch (e) {
-        console.error("Reminder action error:", e);
-      }
-    }
-  }, [user, queryClient, products, settings]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
