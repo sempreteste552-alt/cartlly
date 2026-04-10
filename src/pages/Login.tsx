@@ -26,10 +26,10 @@ const LOGIN_PHRASES = [
 ];
 
 const REGISTER_PHRASES = [
-  "Seja bem-vindo à Cartly! 🎉",
-  "Você está prestes a faturar muito! 💎",
-  "Monte sua loja em minutos! ⚡",
-  "O futuro do seu negócio começa aqui! 🌟",
+  "Crie seu ecossistema digital 🎉",
+  "Tudo o que você precisa em um só lugar 💎",
+  "Comece seu negócio hoje! ⚡",
+  "O futuro do seu empreendimento começa aqui! 🌟",
 ];
 
 function useTypewriter(phrases: string[], speed = 60, pause = 2500) {
