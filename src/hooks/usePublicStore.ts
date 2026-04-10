@@ -79,20 +79,68 @@ export function useResolvedPublicStore(slug?: string) {
     queryKey: ["public_store_settings_resolved", slug, hostname],
     enabled: !!slug || shouldResolveByDomain,
     queryFn: async () => {
-      let query = supabase.from("store_settings_public").select("*");
-
+      // 1. Resolve by slug (explicit)
       if (slug) {
-        query = query.eq("store_slug", slug);
-      } else {
-        query = query.eq("custom_domain", hostname).eq("domain_status", "verified");
+        const { data, error } = await supabase
+          .from("store_settings_public")
+          .select("*")
+          .eq("store_slug", slug)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
       }
 
-      const { data, error } = await query
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      // 2. Resolve by custom domain (store_domains table)
+      if (shouldResolveByDomain) {
+        // First try the new store_domains table
+        const { data: domainData, error: domainError } = await supabase
+          .from("store_domains")
+          .select("store_id, is_primary, hostname")
+          .eq("hostname", hostname)
+          .maybeSingle();
+
+        if (domainError) throw domainError;
+
+        if (domainData) {
+          // Check for redirection if not primary
+          if (!domainData.is_primary) {
+            const { data: primaryDomain } = await supabase
+              .from("store_domains")
+              .select("hostname")
+              .eq("store_id", domainData.store_id)
+              .eq("is_primary", true)
+              .maybeSingle();
+            
+            if (primaryDomain && primaryDomain.hostname !== hostname) {
+              // Perform client-side redirect
+              window.location.replace(`https://${primaryDomain.hostname}${window.location.pathname}${window.location.search}`);
+              return null;
+            }
+          }
+
+          const { data: storeData, error: storeError } = await supabase
+            .from("store_settings_public")
+            .select("*")
+            .eq("id", domainData.store_id)
+            .maybeSingle();
+          
+          if (storeError) throw storeError;
+          return storeData;
+        }
+
+        // Fallback to legacy custom_domain in store_settings (for backward compatibility)
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("store_settings_public")
+          .select("*")
+          .eq("custom_domain", hostname)
+          .eq("domain_status", "verified")
+          .maybeSingle();
+
+        if (legacyError) throw legacyError;
+        return legacyData;
+      }
+
+      return null;
     },
   });
 }

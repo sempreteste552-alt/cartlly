@@ -42,7 +42,7 @@ export function buildStoreUrl({
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
 
-  if (domain && domainStatus === "verified" && sslReady) {
+  if (domain && domainStatus === "verified") {
     return `https://${domain}${normalizedPath}`;
   }
 

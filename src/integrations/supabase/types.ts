@@ -1800,6 +1800,48 @@ export type Database = {
         }
         Relationships: []
       }
+      store_domains: {
+        Row: {
+          created_at: string
+          hostname: string
+          id: string
+          is_primary: boolean | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          hostname: string
+          id?: string
+          is_primary?: boolean | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          hostname?: string
+          id?: string
+          is_primary?: boolean | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_highlight_items: {
         Row: {
           created_at: string
