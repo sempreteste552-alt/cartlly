@@ -318,13 +318,13 @@ export default function LojaLayout() {
     );
   }
 
-  if (slug && !settings) {
+  if (!settings && !isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">A loja "{slug}" não existe ou foi removida.</p>
+          <p className="text-muted-foreground">A loja procurada não existe ou foi removida.</p>
         </div>
       </div>
     );
