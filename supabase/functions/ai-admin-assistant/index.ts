@@ -28,10 +28,12 @@ serve(async (req) => {
       { data: recentOrders },
       { data: failedPayments },
       { data: lowStockProducts },
-      { data: salesStats },
-      { data: storePages },
-      { data: storeBanners },
-      { data: homeSections }
+       { data: salesStats },
+       { data: storePages },
+       { data: storeBanners },
+       { data: homeSections },
+       { data: stagnantProducts },
+       { data: recentOrderItems }
     ] = await Promise.all([
       supabase.from("store_settings").select("*").eq("user_id", user.id).single(),
       supabase.from("tenant_ai_brain_config").select("*").eq("user_id", user.id).single(),
@@ -41,7 +43,9 @@ serve(async (req) => {
       supabase.rpc("get_store_sales_stats", { p_user_id: user.id }),
       supabase.from("store_pages").select("title, slug, content").eq("user_id", user.id).limit(5),
       supabase.from("store_banners").select("title, description").eq("user_id", user.id).limit(5),
-      supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10)
+      supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10),
+      supabase.from("products").select("name, stock, views, price, id").eq("user_id", user.id).order("views", { ascending: true }).limit(10),
+      supabase.from("order_items").select("product_id, quantity").limit(100)
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
@@ -67,6 +71,9 @@ STATUS ATUAL:
 - Pagamentos Falhos: ${JSON.stringify(failedPayments || [])}
 - Produtos com Baixo Estoque: ${JSON.stringify(lowStockProducts || [])}
 - Vendas Hoje: ${JSON.stringify(salesStats || "N/A")}
+- Produtos Parados (menos visualizações): ${JSON.stringify(stagnantProducts || [])}
+- Amostragem de Itens Vendidos: ${JSON.stringify(recentOrderItems || [])}
+
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
