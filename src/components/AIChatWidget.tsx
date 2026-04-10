@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2 } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
+import { useStoreMarketingConfig, useUpdateStoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
