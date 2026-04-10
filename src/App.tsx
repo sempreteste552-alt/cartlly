@@ -24,6 +24,7 @@ import MeuPlano from "./pages/admin/MeuPlano";
 import Paginas from "./pages/admin/Paginas";
 import Automacao from "./pages/admin/Automacao";
 import SetupStore from "./pages/admin/SetupStore";
+import Cerebro from "./pages/admin/Cerebro";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
