@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Sparkles, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Sparkles, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PromoBannerProps {
@@ -11,9 +10,6 @@ const DEFAULT_TEXT = "🚀 Crie sua própria loja online agora mesmo!";
 const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
-  const [dismissed, setDismissed] = useState(false);
-
-  // Public-safe banner config for storefront visitors
   const { data: globalConfig } = useQuery({
     queryKey: ["platform_promo_banner_config_public"],
     queryFn: async () => {
@@ -27,11 +23,13 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
         enabled: map.promo_banner_enabled === true,
         text: (map.promo_banner_text as string) || null,
         link: (map.promo_banner_link as string) || null,
+        bg_color_1: (map.promo_banner_color_1 as string) || null,
+        bg_color_2: (map.promo_banner_color_2 as string) || null,
+        bg_color_3: (map.promo_banner_color_3 as string) || null,
       };
     },
   });
 
-  // Public-safe per-store banner status for storefront visitors
   const { data: storefrontStatus } = useQuery({
     queryKey: ["storefront_banner_status", storeUserId],
     enabled: !!storeUserId,
@@ -44,46 +42,32 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     },
   });
 
-  useEffect(() => {
-    const key = `promo_banner_dismissed_${storeUserId || "global"}`;
-    if (sessionStorage.getItem(key)) setDismissed(true);
-  }, [storeUserId]);
-
-  const handleDismiss = () => {
-    const key = `promo_banner_dismissed_${storeUserId || "global"}`;
-    sessionStorage.setItem(key, "1");
-    setDismissed(true);
-  };
-
   const tenantOverride = storefrontStatus?.promo_banner_enabled as boolean | null | undefined;
   const isPremium = storefrontStatus?.is_premium === true;
 
-  // promo_banner_enabled defaults to false in store_settings, so treat false as "no override" (null-like)
-  // Only an explicit true from super admin counts as tenant override
-  // Show for all non-premium tenants when global is enabled
   let shouldShow = false;
   if (tenantOverride === true) {
-    // Super admin explicitly enabled for this tenant
     shouldShow = true;
   } else if (globalConfig?.enabled === true && !isPremium) {
-    // Global banner is on and tenant is not premium — show it
     shouldShow = true;
   }
 
-  if (!shouldShow || dismissed) return null;
+  if (!shouldShow) return null;
 
   const bannerText = globalConfig?.text || DEFAULT_TEXT;
   const bannerLink = globalConfig?.link || DEFAULT_LINK;
 
+  const c1 = globalConfig?.bg_color_1 || "#1a1a2e";
+  const c2 = globalConfig?.bg_color_2 || "#533483";
+  const c3 = globalConfig?.bg_color_3 || "#e94560";
+  const bgGradient = `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
+
   return (
-    <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
-      {/* Glow effects */}
+    <div className="relative overflow-hidden" style={{ background: bgGradient }}>
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-20 bg-blue-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "0.5s" }} />
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
-      {/* Shimmer sweep */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-0 -left-full w-full h-full"
@@ -109,17 +93,10 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
           href={bannerLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-xs font-bold text-white border border-white/20 transition-all hover:scale-105 shadow-lg shadow-purple-500/20"
+          className="shrink-0 inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-xs font-bold text-white border border-white/20 transition-all hover:scale-105 shadow-lg"
         >
           Saiba mais <ExternalLink className="h-3 w-3" />
         </a>
-        <button
-          onClick={handleDismiss}
-          className="shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors ml-1 text-white/70 hover:text-white"
-          aria-label="Fechar banner"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
       </div>
     </div>
   );

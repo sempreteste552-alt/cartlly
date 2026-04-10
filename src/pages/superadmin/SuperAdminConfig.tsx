@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone, Megaphone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone, Megaphone, Bell, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PlatformConfig {
   platform_name: string;
@@ -23,6 +26,9 @@ interface PlatformConfig {
   promo_banner_enabled: boolean;
   promo_banner_text: string;
   promo_banner_link: string;
+  promo_banner_color_1: string;
+  promo_banner_color_2: string;
+  promo_banner_color_3: string;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -49,6 +55,9 @@ const defaultConfig: PlatformConfig = {
   promo_banner_enabled: false,
   promo_banner_text: "",
   promo_banner_link: "",
+  promo_banner_color_1: "#1a1a2e",
+  promo_banner_color_2: "#533483",
+  promo_banner_color_3: "#e94560",
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
@@ -195,9 +204,34 @@ export default function SuperAdminConfig() {
               onChange={e => updateField("promo_banner_link", e.target.value)}
             />
           </div>
+          <Separator />
+          <h4 className="font-semibold text-sm">Cores do Gradiente</h4>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Cor 1 (início)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_1} onChange={e => updateField("promo_banner_color_1", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_1} onChange={e => updateField("promo_banner_color_1", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor 2 (meio)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_2} onChange={e => updateField("promo_banner_color_2", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_2} onChange={e => updateField("promo_banner_color_2", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cor 3 (fim)</Label>
+              <div className="flex gap-2 items-center">
+                <input type="color" value={config.promo_banner_color_3} onChange={e => updateField("promo_banner_color_3", e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+                <Input value={config.promo_banner_color_3} onChange={e => updateField("promo_banner_color_3", e.target.value)} className="flex-1" />
+              </div>
+            </div>
+          </div>
           {config.promo_banner_enabled && (
             <div className="rounded-lg overflow-hidden border border-border">
-              <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
+              <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: `linear-gradient(135deg, ${config.promo_banner_color_1} 0%, ${config.promo_banner_color_2} 50%, ${config.promo_banner_color_3} 100%)` }}>
                 {config.promo_banner_text || "🚀 Crie sua própria loja online agora mesmo!"} — <span className="underline">Saiba mais</span>
               </div>
             </div>
@@ -379,6 +413,166 @@ export default function SuperAdminConfig() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Admin Announcement Banners */}
+      <AdminAnnouncementsSection />
     </div>
+  );
+}
+
+function AdminAnnouncementsSection() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [bannerType, setBannerType] = useState("info");
+  const [bgColor, setBgColor] = useState("#1a1a2e");
+  const [textColor, setTextColor] = useState("#ffffff");
+
+  const { data: announcements, isLoading } = useQuery({
+    queryKey: ["admin_announcements_all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createMut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("admin_announcements").insert({
+        title,
+        body: body || null,
+        banner_type: bannerType,
+        bg_color: bgColor,
+        text_color: textColor,
+        created_by: user!.id,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_all"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_active"] });
+      toast.success("Banner criado!");
+      setTitle("");
+      setBody("");
+    },
+    onError: (e) => toast.error("Erro: " + e.message),
+  });
+
+  const toggleMut = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.from("admin_announcements").update({ active } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_all"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_active"] });
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("admin_announcements").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_all"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_announcements_active"] });
+      toast.success("Banner removido!");
+    },
+  });
+
+  return (
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Bell className="h-5 w-5 text-primary" /> Banners para Painel dos Tenants
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Crie banners de avisos, promoções ou alertas que aparecerão no topo do painel administrativo de todos os tenants.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Título *</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Manutenção programada..." />
+          </div>
+          <div className="space-y-2">
+            <Label>Tipo</Label>
+            <Select value={bannerType} onValueChange={setBannerType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="info">ℹ️ Informação</SelectItem>
+                <SelectItem value="warning">⚠️ Alerta</SelectItem>
+                <SelectItem value="promo">📣 Promoção</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Descrição (opcional)</Label>
+          <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Detalhes adicionais..." rows={2} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Cor de Fundo</Label>
+            <div className="flex gap-2 items-center">
+              <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+              <Input value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="flex-1" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Cor do Texto</Label>
+            <div className="flex gap-2 items-center">
+              <input type="color" value={textColor} onChange={(e) => setTextColor(e.target.value)} className="h-9 w-12 rounded border border-border cursor-pointer" />
+              <Input value={textColor} onChange={(e) => setTextColor(e.target.value)} className="flex-1" />
+            </div>
+          </div>
+        </div>
+
+        {title && (
+          <div className="rounded-lg overflow-hidden border border-border">
+            <div className="py-2.5 px-4 text-sm font-medium flex items-center gap-2" style={{ backgroundColor: bgColor, color: textColor }}>
+              {bannerType === "warning" ? "⚠️" : bannerType === "promo" ? "📣" : "ℹ️"} {title}{body ? ` — ${body}` : ""}
+            </div>
+          </div>
+        )}
+
+        <Button onClick={() => createMut.mutate()} disabled={!title || createMut.isPending}>
+          <Plus className="h-4 w-4 mr-2" /> Criar Banner
+        </Button>
+
+        <Separator />
+
+        <h4 className="font-semibold text-sm">Banners Ativos</h4>
+        {isLoading ? (
+          <Skeleton className="h-20" />
+        ) : !announcements?.length ? (
+          <p className="text-sm text-muted-foreground">Nenhum banner criado.</p>
+        ) : (
+          <div className="space-y-2">
+            {announcements.map((ann: any) => (
+              <div key={ann.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <div className="w-4 h-4 rounded" style={{ backgroundColor: ann.bg_color }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{ann.title}</p>
+                  {ann.body && <p className="text-xs text-muted-foreground truncate">{ann.body}</p>}
+                </div>
+                <Switch checked={ann.active} onCheckedChange={(v) => toggleMut.mutate({ id: ann.id, active: v })} />
+                <Button variant="ghost" size="icon" onClick={() => deleteMut.mutate(ann.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
