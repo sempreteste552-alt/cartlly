@@ -35,7 +35,7 @@ export function CatalogPdfGenerator() {
       }
 
       // Build HTML catalog for print
-      const html = buildCatalogHtml(filtered, storeName, showPrices);
+      const html = buildCatalogHtml(filtered, storeName, showPrices, storeLogo);
       const printWindow = window.open("", "_blank");
       if (printWindow) {
         printWindow.document.write(html);
@@ -97,7 +97,7 @@ export function CatalogPdfGenerator() {
   );
 }
 
-function buildCatalogHtml(products: any[], storeName: string, showPrices: boolean) {
+function buildCatalogHtml(products: any[], storeName: string, showPrices: boolean, storeLogo?: string) {
   const items = products
     .map(
       (p) => `
@@ -134,7 +134,8 @@ function buildCatalogHtml(products: any[], storeName: string, showPrices: boolea
 </style>
 </head><body>
 <div class="header">
-  <h1>🛍️ ${storeName}</h1>
+  ${storeLogo ? `<img src="${storeLogo}" alt="${storeName}" style="max-height:60px;max-width:200px;object-fit:contain;margin:0 auto 10px;" />` : `<div style="font-size:28px;">🛍️</div>`}
+  <h1>${storeName}</h1>
   <p>Catálogo de Produtos • ${new Date().toLocaleDateString("pt-BR")}</p>
 </div>
 <div class="grid">${items}</div>
