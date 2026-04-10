@@ -25,8 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useUserTracking(session?.user ?? null);
 
   useEffect(() => {
-    // Initial maintenance check
-    const checkMaintenance = async () => {
+    // Initial maintenance check & session setup
+    const initializeAuth = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
@@ -48,39 +48,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setSession(currentSession);
+        
+        // Setup inactivity timer if session exists
+        if (currentSession && localStorage.getItem("stay_connected") !== "true") {
+          const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
+          let inactivityTimer: ReturnType<typeof setTimeout>;
+
+          const resetTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+              supabase.auth.signOut();
+            }, INACTIVITY_TIMEOUT);
+          };
+
+          const events = ["mousedown", "keydown", "scroll", "touchstart"];
+          events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+          resetTimer();
+        }
+
         setLoading(false);
       } catch (err) {
-        console.error("Error checking maintenance:", err);
+        console.error("Auth initialization error:", err);
         setLoading(false);
       }
     };
 
-    checkMaintenance();
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        // Only update if we are not in maintenance mode (or if it's super admin)
-        // If maintenance check is still running, this might fire first.
         setSession(session);
       }
     );
-
-      if (session && localStorage.getItem("stay_connected") !== "true") {
-        const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
-        let inactivityTimer: ReturnType<typeof setTimeout>;
-
-        const resetTimer = () => {
-          clearTimeout(inactivityTimer);
-          inactivityTimer = setTimeout(() => {
-            supabase.auth.signOut();
-          }, INACTIVITY_TIMEOUT);
-        };
-
-        const events = ["mousedown", "keydown", "scroll", "touchstart"];
-        events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
-        resetTimer();
-      }
-    });
 
     const maintenanceChannel = supabase
       .channel("platform-settings-changes")
@@ -101,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             toast.error("O sistema entrou em manutenção. Você será desconectado.");
             setTimeout(() => {
               supabase.auth.signOut();
-            }, 1000); // Reduced delay for faster response
+            }, 1000);
           }
         }
       )
