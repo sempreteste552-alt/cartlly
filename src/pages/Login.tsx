@@ -141,6 +141,31 @@ export default function Login() {
     return "Forte";
   };
 
+  // Fetch signup coupon config from platform_settings
+  useEffect(() => {
+    const fetchCouponConfig = async () => {
+      try {
+        const keys = ["signup_coupon_enabled", "signup_coupon_code", "signup_coupon_discount_type", "signup_coupon_discount_value", "signup_coupon_auto_show", "signup_coupon_text"];
+        const { data } = await supabase.from("platform_settings").select("key, value").in("key", keys);
+        if (data && data.length > 0) {
+          const map: Record<string, any> = {};
+          data.forEach((r: any) => { map[r.key] = r.value?.value; });
+          if (map.signup_coupon_enabled) {
+            setSignupCouponConfig({
+              enabled: true,
+              code: map.signup_coupon_code || "",
+              discount_type: map.signup_coupon_discount_type || "percentage",
+              discount_value: map.signup_coupon_discount_value || 10,
+              auto_show: !!map.signup_coupon_auto_show,
+              text: map.signup_coupon_text || "🎉 Use o cupom abaixo e ganhe desconto!",
+            });
+          }
+        }
+      } catch { /* ignore */ }
+    };
+    fetchCouponConfig();
+  }, []);
+
   // Reset any leaked tenant/store theme colors and apply login dark mode
   useEffect(() => {
     const root = document.documentElement;
