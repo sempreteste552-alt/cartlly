@@ -20,15 +20,15 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { normalizeDomain } from "@/lib/storeDomain";
 
 const mainItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Produtos", url: "/admin/produtos", icon: Package },
-  { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart },
-  { title: "Clientes", url: "/admin/clientes", icon: Users },
-  { title: "Cérebro IA", url: "/admin/cerebro", icon: Bot },
-  { title: "Cupons", url: "/admin/cupons", icon: Ticket },
-  { title: "Páginas", url: "/admin/paginas", icon: FileText },
-  { title: "Automação", url: "/admin/automacao", icon: Zap },
-  { title: "Indicações", url: "/admin/indicacoes", icon: Gift },
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, isNew: false },
+  { title: "Produtos", url: "/admin/produtos", icon: Package, isNew: false },
+  { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart, isNew: false },
+  { title: "Clientes", url: "/admin/clientes", icon: Users, isNew: false },
+  { title: "Cérebro IA", url: "/admin/cerebro", icon: Bot, isNew: true },
+  { title: "Cupons", url: "/admin/cupons", icon: Ticket, isNew: false },
+  { title: "Páginas", url: "/admin/paginas", icon: FileText, isNew: false },
+  { title: "Automação", url: "/admin/automacao", icon: Zap, isNew: true },
+  { title: "Indicações", url: "/admin/indicacoes", icon: Gift, isNew: false },
 ];
 
 const configItemsBase = [
