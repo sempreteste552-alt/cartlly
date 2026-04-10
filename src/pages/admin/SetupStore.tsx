@@ -54,6 +54,11 @@ export default function SetupStore() {
         setLoading(false);
         return;
       }
+      if (!storeCategory) {
+        toast.error("Escolha o nicho da sua loja.");
+        setLoading(false);
+        return;
+      }
 
       // Check if slug is taken
       const { data: existingSlug } = await supabase
