@@ -324,6 +324,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                 <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Alerta de Estoque</span>
+                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
               </div>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {metrics.outOfStock.map((p) => (
