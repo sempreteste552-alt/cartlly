@@ -53,6 +53,20 @@ export default function Cerebro() {
     enabled: !!user,
   });
 
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", user!.id)
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // === MUTATIONS ===
 
   const sendMessage = useMutation({
