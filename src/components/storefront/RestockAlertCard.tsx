@@ -178,6 +178,11 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
                   {formatPrice(product?.price || 0)}
                 </p>
               </div>
+              {product?.badge && (
+                <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm backdrop-blur-md animate-bounce" style={{ backgroundColor: alertAccentColor, color: alertTextColor }}>
+                  {product.badge}
+                </div>
+              )}
             </div>
           </div>
 
