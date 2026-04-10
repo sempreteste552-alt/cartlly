@@ -168,14 +168,17 @@ export function AIChatWidget() {
 
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
   const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
+  const aiTone = (settings as any)?.ai_chat_tone || AI_SETTINGS_DEFAULT.tone;
 
   const [tempName, setTempName] = useState(aiName);
   const [tempAvatar, setTempAvatar] = useState(aiAvatarUrl);
+  const [tempTone, setTempTone] = useState(aiTone);
 
   useEffect(() => {
     if (settings) {
       setTempName((settings as any).ai_name || AI_SETTINGS_DEFAULT.name);
       setTempAvatar((settings as any).ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl);
+      setTempTone((settings as any).ai_chat_tone || AI_SETTINGS_DEFAULT.tone);
     }
   }, [settings]);
 
