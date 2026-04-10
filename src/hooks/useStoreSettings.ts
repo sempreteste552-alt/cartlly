@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 export type StoreSettings = Tables<"store_settings">;
@@ -9,6 +10,7 @@ export type StoreSettingsUpdate = TablesUpdate<"store_settings">;
 
 export function useStoreSettings() {
   const { user } = useAuth();
+  useRealtimeSync("store_settings", [["store_settings", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
   return useQuery({
     queryKey: ["store_settings", user?.id],
     queryFn: async () => {

@@ -2,12 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Category = Tables<"categories">;
 
 export function useCategories() {
   const { user } = useAuth();
+  useRealtimeSync("categories", [["categories", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
   return useQuery({
     queryKey: ["categories", user?.id],
     queryFn: async () => {

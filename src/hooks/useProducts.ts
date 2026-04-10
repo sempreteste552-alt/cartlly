@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export type Product = Tables<"products"> & { categories?: { name: string } | null };
 export type ProductInsert = TablesInsert<"products">;
@@ -10,6 +11,7 @@ export type ProductUpdate = TablesUpdate<"products">;
 
 export function useProducts() {
   const { user } = useAuth();
+  useRealtimeSync("products", [["products", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
 
   return useQuery({
     queryKey: ["products", user?.id],

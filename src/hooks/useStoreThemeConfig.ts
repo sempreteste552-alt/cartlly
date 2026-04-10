@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export interface StoreThemeConfig {
   id: string;
@@ -29,6 +30,7 @@ export interface StoreThemeConfig {
 
 export function useStoreThemeConfig() {
   const { user } = useAuth();
+  useRealtimeSync("store_theme_config", [["store_theme_config", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
   return useQuery({
     queryKey: ["store_theme_config", user?.id],
     enabled: !!user,
