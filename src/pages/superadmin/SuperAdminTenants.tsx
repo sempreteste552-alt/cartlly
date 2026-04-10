@@ -70,6 +70,7 @@ export default function SuperAdminTenants() {
       t.display_name?.toLowerCase().includes(search.toLowerCase()) ||
       t.store?.store_name?.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" ||
+      (filter === "online" && t.is_online) ||
       (filter === "pending" && t.status === "pending") ||
       (filter === "approved" && t.status === "approved") ||
       (filter === "active" && (t.status === "active" || t.subscription?.status === "active")) ||
