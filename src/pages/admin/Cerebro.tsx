@@ -138,7 +138,7 @@ export default function Cerebro() {
                     </div>
                     <div className="flex flex-wrap gap-2 justify-center max-w-sm mx-auto">
                       {["Como foram as vendas hoje?", "Agende um lembrete de carrinho para amanhã", "Tem algum erro de pagamento?"].map(s => (
-                        <Button key={s} variant="outline" size="xs" className="text-[11px]" onClick={() => sendMessage.mutate(s)}>
+                        <Button key={s} variant="outline" size="sm" className="text-[11px]" onClick={() => sendMessage.mutate(s)}>
                           {s}
                         </Button>
                       ))}
