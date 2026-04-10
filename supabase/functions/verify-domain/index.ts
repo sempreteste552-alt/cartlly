@@ -97,6 +97,69 @@ async function checkHttps(domain: string) {
   return false;
 }
 
+async function manageCloudflareHostname(domain: string, settingsId: string) {
+  if (!CLOUDFLARE_API_TOKEN || !CLOUDFLARE_ZONE_ID) return null;
+
+  try {
+    // 1. Check if hostname already exists
+    const listRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/custom_hostnames?hostname=${domain}`,
+      {
+        headers: {
+          "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const listData = await listRes.json();
+    
+    if (listData?.result?.length > 0) {
+      const existing = listData.result[0];
+      return { 
+        id: existing.id, 
+        sslStatus: existing.ssl?.status, 
+        sslMethod: existing.ssl?.method,
+        sslType: existing.ssl?.type,
+        ownershipStatus: existing.ownership_status 
+      };
+    }
+
+    // 2. Add custom hostname if not exists
+    const createRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/custom_hostnames`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          hostname: domain,
+          ssl: {
+            method: "txt", // or "http"
+            type: "dv",
+          },
+        }),
+      }
+    );
+    const createData = await createRes.json();
+    
+    if (createData?.success) {
+      return { 
+        id: createData.result.id, 
+        sslStatus: createData.result.ssl?.status,
+        ownershipStatus: createData.result.ownership_status 
+      };
+    }
+    
+    console.error("Cloudflare Error:", createData?.errors);
+    return null;
+  } catch (error) {
+    console.error("Cloudflare exception:", error);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
