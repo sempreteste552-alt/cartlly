@@ -577,13 +577,21 @@ export default function SuperAdminTenants() {
                             {tenant.is_online ? "Online agora" : `Visto há ${formatLastSeen(tenant.last_seen).replace("Há ", "")}`}
                           </span>
                         </div>
+                        </div>
+                        {tenant.referral_origin && (
+                          <div className="flex items-center gap-1 text-xs mt-0.5">
+                            <Gift className="h-3 w-3 text-primary" />
+                            <span className="text-primary/80 font-medium">
+                              Indicado por código <span className="font-mono font-bold">{tenant.referral_origin.referral_code}</span>
+                            </span>
+                          </div>
+                        )}
+                        {tenant.subscription?.tenant_plans && (
+                          <p className="text-xs text-primary font-medium mt-0.5">
+                            Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
+                          </p>
+                        )}
                       </div>
-                      {tenant.subscription?.tenant_plans && (
-                        <p className="text-xs text-primary font-medium mt-0.5">
-                          Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
-                        </p>
-                      )}
-                    </div>
 
                   </div>
 
