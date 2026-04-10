@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 interface PromoBannerProps {
   storeUserId?: string;
@@ -10,6 +11,9 @@ const DEFAULT_TEXT = "🚀 Crie sua própria loja online agora mesmo!";
 const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
+  // Realtime: auto-refresh when platform_settings change
+  useRealtimeSync("platform_settings", [["platform_promo_banner_config_public"]]);
+
   const { data: globalConfig } = useQuery({
     queryKey: ["platform_promo_banner_config_public"],
     queryFn: async () => {
@@ -62,6 +66,9 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const c3 = globalConfig?.bg_color_3 || "#e94560";
   const bgGradient = `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
 
+  // Split text into characters for jumping animation
+  const chars = bannerText.split("");
+
   return (
     <div className="relative overflow-hidden" style={{ background: bgGradient }}>
       <div className="absolute inset-0 pointer-events-none">
@@ -82,12 +89,28 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
           0% { transform: translateX(0); }
           100% { transform: translateX(200%); }
         }
+        @keyframes slow-jump {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .jumping-letter {
+          display: inline-block;
+          animation: slow-jump 2.5s ease-in-out infinite;
+        }
       `}</style>
 
       <div className="relative max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-center">
         <Sparkles className="h-4 w-4 shrink-0 text-yellow-300 animate-pulse" />
         <p className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg">
-          {bannerText}
+          {chars.map((char, i) => (
+            <span
+              key={i}
+              className="jumping-letter"
+              style={{ animationDelay: `${i * 0.06}s` }}
+            >
+              {char === " " ? "\u00A0" : char}
+            </span>
+          ))}
         </p>
         <a
           href={bannerLink}
