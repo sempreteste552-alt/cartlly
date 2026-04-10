@@ -775,7 +775,7 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
 
   const { data: customer } = await supabase
     .from("customers")
-    .select("id, name, auth_user_id")
+    .select("id, name, auth_user_id, gender")
     .eq("id", customer_id)
     .single();
 
@@ -788,7 +788,9 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
     .single();
 
   const storeMap = await getStoreMap(supabase, [store_user_id]);
-  const storeName = storeMap.get(store_user_id)?.store_name || "nossa loja";
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+  const storeCategory = store?.category || "loja";
   const productName = product?.name || "um produto";
 
   const productViewFallbacks = [
@@ -806,7 +808,9 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
       const aiMsg = await generateAIMessage(lovableApiKey, {
         type: "product_view",
         customerName: customer.name,
+        customerGender: customer.gender,
         storeName,
+        storeCategory,
         productName,
         dayOfWeek: new Date().getDay(),
         hour: new Date().getHours(),
