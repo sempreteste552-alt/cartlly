@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useUserTracking } from "@/hooks/useUserTracking";
+import { toast } from "sonner";
+
+const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
 interface AuthContextType {
   session: Session | null;
@@ -15,6 +18,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Initialize tracking hook
+  useUserTracking(session?.user ?? null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -48,8 +54,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Real-time maintenance mode monitoring
+    const maintenanceChannel = supabase
+      .channel("platform-settings-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "platform_settings",
+          filter: "key=eq.maintenance_mode",
+        },
+        (payload) => {
+          const isMaintenance = (payload.new as any)?.value?.value === true;
+          const userEmail = session?.user?.email;
+          
+          if (isMaintenance && userEmail && userEmail !== SUPER_ADMIN_EMAIL) {
+            toast.error("O sistema entrou em manutenção. Você será desconectado.");
+            setTimeout(() => {
+              supabase.auth.signOut();
+            }, 3000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(maintenanceChannel);
+    };
+  }, [session?.user?.email]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -67,3 +101,4 @@ export function useAuth() {
   if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }
+

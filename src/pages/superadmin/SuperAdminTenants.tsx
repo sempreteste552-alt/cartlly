@@ -49,6 +49,20 @@ export default function SuperAdminTenants() {
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+  const formatLastSeen = (date: string | null) => {
+    if (!date) return "Nunca";
+    const lastSeen = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - lastSeen.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Agora";
+    if (diffMins < 60) return `Há ${diffMins}m`;
+    if (diffMins < 1440) return `Há ${Math.floor(diffMins / 60)}h`;
+    return lastSeen.toLocaleDateString("pt-BR");
+  };
+
+
   const pendingCount = tenants?.filter(t => t.status === "pending").length || 0;
 
   const filtered = tenants?.filter((t) => {
@@ -338,9 +352,20 @@ export default function SuperAdminTenants() {
     const status = tenant.status;
     const storeBlocked = tenant.store?.store_blocked;
     const adminBlocked = tenant.store?.admin_blocked;
+    const isOnline = tenant.is_online;
     
     const badges = [];
     
+    // Online Badge
+    if (isOnline) {
+      badges.push(
+        <Badge key="online" variant="default" className="bg-green-500 hover:bg-green-600 animate-pulse">
+          <span className="h-1.5 w-1.5 rounded-full bg-white mr-1.5" />
+          Online
+        </Badge>
+      );
+    }
+
     if (status === "pending") badges.push(<Badge key="pending" variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/30"><Clock className="mr-1 h-3 w-3" />Pendente</Badge>);
     else if (status === "rejected") badges.push(<Badge key="rejected" variant="destructive"><XCircle className="mr-1 h-3 w-3" />Desativado</Badge>);
     else if (status === "blocked") badges.push(<Badge key="blocked" variant="destructive"><Ban className="mr-1 h-3 w-3" />Bloqueado</Badge>);
@@ -373,6 +398,7 @@ export default function SuperAdminTenants() {
     
     return <div className="flex items-center gap-1 flex-wrap">{badges}</div>;
   };
+
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
@@ -524,15 +550,21 @@ export default function SuperAdminTenants() {
                     </div>
                     <div>
                       <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {tenant.store?.store_name || "Sem loja"} {tenant.store?.store_slug ? `• /${tenant.store.store_slug}` : ""}
-                      </p>
+                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 items-center">
+                        <span>{tenant.store?.store_name || "Sem loja"}</span>
+                        {tenant.store?.store_slug && <span className="opacity-60">/{tenant.store.store_slug}</span>}
+                        <span className="flex items-center gap-1 opacity-70">
+                          <Clock className="h-3 w-3" />
+                          Visto por último: {formatLastSeen(tenant.last_seen)}
+                        </span>
+                      </div>
                       {tenant.subscription?.tenant_plans && (
                         <p className="text-xs text-primary font-medium mt-0.5">
                           Plano: {(tenant.subscription.tenant_plans as any)?.name || "—"}
                         </p>
                       )}
                     </div>
+
                   </div>
 
                   <div className="flex items-center gap-3">
