@@ -1028,22 +1028,13 @@ ${specialDate}
       ? `\n- INCLUA O CUPOM DE DESCONTO "${ctx.code}" (${ctx.percentage}% OFF) na mensagem! Exemplo: "Use o cupom ${ctx.code} e ganhe ${ctx.percentage}% de desconto!"`
       : "";
 
-    systemPrompt = `Você é uma assistente de marketing MUITO criativa e educada da loja "${ctx.storeName}".
+    systemPrompt = `${baseInstructions}
 Gere uma notificação push ÚNICA para recuperar um carrinho abandonado. 
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE a cada vez (use emojis variados como 🛍️ 💫 🌟 ✨ 💝 🎁 💜 🔥 🫶 💐 🌸 🎀 etc)
-- body: máximo 130 caracteres, mencione o nome do cliente e o nome da loja "${ctx.storeName}"
-- Use saudação adequada: "${greetings}" (é ${dayName})
-- Tom: amigável, educado, gentil, sem pressão
-- NUNCA repita a mesma mensagem. Use frases COMPLETAMENTE DIFERENTES a cada envio
-- Seed de variação (use para criar mensagem única): ${seed}
-- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar${discountLine}
+${discountLine}
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Produtos: ${ctx.itemNames}
 Valor: R$ ${ctx.totalValue}
 Itens: ${ctx.itemCount}
@@ -1054,21 +1045,13 @@ Datas especiais: ${specialDate}
 ${ctx.hasDiscount ? `CUPOM: ${ctx.code} (${ctx.percentage}% OFF)` : "Sem desconto"}`;
 
   } else if (ctx.type === "new_customer") {
-    systemPrompt = `Você é uma assistente de marketing MUITO alegre e educada da loja "${ctx.storeName}".
+    systemPrompt = `${baseInstructions}
 Gere uma notificação push de BOAS-VINDAS para um novo cliente.
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji alegre e festivo (🎉 🥳 🎊 🌟 💫 ✨ 🫶 💜 🎀 🌸 etc)
-- body: máximo 130 caracteres, MENCIONE O NOME DO CLIENTE e o nome da loja "${ctx.storeName}"
-- Use saudação: "${greetings}" (é ${dayName})
-- Tom: MUITO alegre, acolhedor, caloroso, faça o cliente se sentir especial
-- NUNCA repita a mesma mensagem
-- Seed de variação: ${seed}
+Sua missão é dar o maior abraço digital possível! 
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}
 Datas especiais: ${specialDate}`;
