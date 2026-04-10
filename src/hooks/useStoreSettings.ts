@@ -16,6 +16,8 @@ export function useStoreSettings() {
         .from("store_settings")
         .select("*")
         .eq("user_id", user!.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       // Auto-create if not exists (fallback if trigger fails)
