@@ -493,7 +493,7 @@ export function AIChatWidget() {
     return (
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all"
         size="icon"
       >
         <Sparkles className="h-6 w-6" />
