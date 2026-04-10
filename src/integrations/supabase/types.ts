@@ -1803,10 +1803,14 @@ export type Database = {
         Row: {
           approved_at: string | null
           cancelled_at: string | null
+          clicked_at: string | null
           created_at: string
           discount_amount: number
           discount_applied: boolean
+          flagged: boolean
+          flagged_reason: string | null
           id: string
+          ip_address: string | null
           payment_status: string | null
           referral_code: string
           referred_email: string | null
@@ -1814,16 +1818,22 @@ export type Database = {
           referred_user_id: string | null
           referrer_tenant_id: string
           status: string
+          subscribed_at: string | null
           subscription_id: string | null
           updated_at: string
+          user_agent: string | null
         }
         Insert: {
           approved_at?: string | null
           cancelled_at?: string | null
+          clicked_at?: string | null
           created_at?: string
           discount_amount?: number
           discount_applied?: boolean
+          flagged?: boolean
+          flagged_reason?: string | null
           id?: string
+          ip_address?: string | null
           payment_status?: string | null
           referral_code: string
           referred_email?: string | null
@@ -1831,16 +1841,22 @@ export type Database = {
           referred_user_id?: string | null
           referrer_tenant_id: string
           status?: string
+          subscribed_at?: string | null
           subscription_id?: string | null
           updated_at?: string
+          user_agent?: string | null
         }
         Update: {
           approved_at?: string | null
           cancelled_at?: string | null
+          clicked_at?: string | null
           created_at?: string
           discount_amount?: number
           discount_applied?: boolean
+          flagged?: boolean
+          flagged_reason?: string | null
           id?: string
+          ip_address?: string | null
           payment_status?: string | null
           referral_code?: string
           referred_email?: string | null
@@ -1848,8 +1864,10 @@ export type Database = {
           referred_user_id?: string | null
           referrer_tenant_id?: string
           status?: string
+          subscribed_at?: string | null
           subscription_id?: string | null
           updated_at?: string
+          user_agent?: string | null
         }
         Relationships: [
           {
@@ -3333,7 +3351,12 @@ export type Database = {
         Args: { product_id: string }
         Returns: undefined
       }
-      increment_referral_click: { Args: { _code: string }; Returns: boolean }
+      increment_referral_click:
+        | { Args: { _code: string }; Returns: boolean }
+        | {
+            Args: { _code: string; _ip?: string; _ua?: string }
+            Returns: boolean
+          }
       move_to_dlq: {
         Args: {
           dlq_name: string
