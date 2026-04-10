@@ -198,3 +198,65 @@ export function useInvalidateDiscount() {
     onError: (e: any) => toast.error(e.message),
   });
 }
+
+/**
+ * Super admin: Override a referral's payment status.
+ * Can mark as "not_counted" so the referral doesn't generate discount for the referrer.
+ */
+export function useOverrideReferralPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, paymentStatus, discountApplied }: { id: string; paymentStatus: string; discountApplied: boolean }) => {
+      const updates: any = {
+        payment_status: paymentStatus,
+        discount_applied: discountApplied,
+      };
+      // If marking as not counted, also zero out discount
+      if (paymentStatus === "not_counted") {
+        updates.discount_amount = 0;
+        updates.discount_applied = false;
+      }
+      const { error } = await supabase
+        .from("referrals" as any)
+        .update(updates)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all_referrals_admin"] });
+      qc.invalidateQueries({ queryKey: ["all_referral_discounts_admin"] });
+      toast.success("Pagamento da indicação atualizado");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+/**
+ * Super admin: Bulk override — mark N referrals of a tenant as not_counted.
+ * E.g. tenant has 3 paid referrals, admin wants only 1 to count.
+ */
+export function useBulkOverrideReferrals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ referralIds, paymentStatus }: { referralIds: string[]; paymentStatus: string }) => {
+      for (const id of referralIds) {
+        const updates: any = { payment_status: paymentStatus };
+        if (paymentStatus === "not_counted") {
+          updates.discount_applied = false;
+          updates.discount_amount = 0;
+        }
+        const { error } = await supabase
+          .from("referrals" as any)
+          .update(updates)
+          .eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["all_referrals_admin"] });
+      qc.invalidateQueries({ queryKey: ["all_referral_discounts_admin"] });
+      toast.success("Indicações atualizadas em massa");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
