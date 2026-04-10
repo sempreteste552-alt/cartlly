@@ -2931,21 +2931,6 @@ export type Database = {
       }
     }
     Views: {
-      platform_banner_config_public: {
-        Row: {
-          key: string | null
-          value: Json | null
-        }
-        Insert: {
-          key?: string | null
-          value?: Json | null
-        }
-        Update: {
-          key?: string | null
-          value?: Json | null
-        }
-        Relationships: []
-      }
       product_reviews_public: {
         Row: {
           comment: string | null
@@ -3143,24 +3128,6 @@ export type Database = {
         }
         Relationships: []
       }
-      storefront_banner_status: {
-        Row: {
-          is_premium: boolean | null
-          promo_banner_enabled: boolean | null
-          user_id: string | null
-        }
-        Insert: {
-          is_premium?: never
-          promo_banner_enabled?: boolean | null
-          user_id?: string | null
-        }
-        Update: {
-          is_premium?: never
-          promo_banner_enabled?: boolean | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       can_send_message: {
@@ -3197,8 +3164,23 @@ export type Database = {
         }[]
       }
       get_dashboard_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_platform_banner_config_public: {
+        Args: never
+        Returns: {
+          key: string
+          value: Json
+        }[]
+      }
       get_store_rich_insights: { Args: { p_user_id: string }; Returns: Json }
       get_store_sales_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_storefront_banner_status: {
+        Args: { _user_id: string }
+        Returns: {
+          is_premium: boolean
+          promo_banner_enabled: boolean
+          user_id: string
+        }[]
+      }
       get_super_admin_ids: {
         Args: never
         Returns: {
