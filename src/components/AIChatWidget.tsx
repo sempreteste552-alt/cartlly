@@ -445,6 +445,12 @@ export function AIChatWidget() {
         if (error) throw error;
         toast.success("✅ Configurações atualizadas!");
         queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+      } else if (action.type === "marketing") {
+        if (!marketingConfig?.id) throw new Error("Configuração de marketing não encontrada");
+        await updateMarketing.mutateAsync({
+          id: marketingConfig.id,
+          ...action.payload
+        });
       } else if (action.type === "reminder") {
         const { error } = await supabase.from("ai_scheduled_tasks").insert({
           user_id: user.id,
