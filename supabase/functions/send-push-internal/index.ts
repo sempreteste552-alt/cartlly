@@ -165,6 +165,46 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // === DEDUPLICATION: 5-min cooldown + no repeated message ===
+    const effectiveTarget = target_user_id || customer_id;
+    if (effectiveTarget) {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      // Check for any push sent to this target in the last 5 minutes
+      const { data: recentPushes } = await supabase
+        .from("push_logs")
+        .select("title, body, created_at")
+        .or(`user_id.eq.${effectiveTarget},customer_id.eq.${effectiveTarget}`)
+        .gte("created_at", fiveMinAgo)
+        .in("status", ["sent"])
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (recentPushes && recentPushes.length > 0) {
+        // Block if any push was sent in the last 5 minutes (cooldown)
+        console.log(`[DEDUP] Cooldown active for ${effectiveTarget}, last push at ${recentPushes[0].created_at}`);
+        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "cooldown_blocked", "5-min cooldown active");
+        return json({ sent: 0, total: 0, removed: 0, message: "Cooldown: push sent less than 5 minutes ago" });
+      }
+
+      // Check for exact same message in the last 24 hours
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: duplicates } = await supabase
+        .from("push_logs")
+        .select("id")
+        .or(`user_id.eq.${effectiveTarget},customer_id.eq.${effectiveTarget}`)
+        .eq("title", title)
+        .eq("body", msgBody || "")
+        .gte("created_at", twentyFourHoursAgo)
+        .in("status", ["sent"])
+        .limit(1);
+
+      if (duplicates && duplicates.length > 0) {
+        console.log(`[DEDUP] Duplicate message blocked for ${effectiveTarget}: "${title}"`);
+        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "duplicate_blocked", "Same message sent in last 24h");
+        return json({ sent: 0, total: 0, removed: 0, message: "Duplicate: same message already sent in 24h" });
+      }
+    }
+
     let query = supabase
       .from("push_subscriptions")
       .select("*");
@@ -172,7 +212,6 @@ Deno.serve(async (req) => {
     if (target_user_id) {
       query = query.eq("user_id", target_user_id);
     } else if (customer_id) {
-      // Lookup subscription by customer_id if no auth user id provided
       const { data: customerTokens } = await supabase
         .from("customer_push_tokens")
         .select("token")
@@ -186,10 +225,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Tenant isolation: if store_user_id provided, include matching OR null (legacy)
+    // Tenant isolation
     if (store_user_id) {
       query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
-      // Only block pure promotional pushes to the store owner (allow behavior-based like product_view, abandoned_cart, etc.)
       const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight"];
       if (target_user_id === store_user_id && !behaviorTypes.includes(type || "")) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store promo push to store owner" });

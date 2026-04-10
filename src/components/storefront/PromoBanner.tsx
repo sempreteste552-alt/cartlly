@@ -58,16 +58,16 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const tenantOverride = storefrontStatus?.promo_banner_enabled as boolean | null | undefined;
   const isPremium = storefrontStatus?.is_premium === true;
 
-  // If super admin explicitly set per-tenant override to false, hide it
-  // If per-tenant override is true, show regardless of plan
-  // Otherwise follow global: show for all non-premium when global is on
+  // promo_banner_enabled defaults to false in store_settings, so treat false as "no override" (null-like)
+  // Only an explicit true from super admin counts as tenant override
+  // Show for all non-premium tenants when global is enabled
   let shouldShow = false;
   if (tenantOverride === true) {
+    // Super admin explicitly enabled for this tenant
     shouldShow = true;
-  } else if (tenantOverride === false) {
-    shouldShow = false;
-  } else {
-    shouldShow = globalConfig?.enabled === true && !isPremium;
+  } else if (globalConfig?.enabled === true && !isPremium) {
+    // Global banner is on and tenant is not premium — show it
+    shouldShow = true;
   }
 
   if (!shouldShow || dismissed) return null;

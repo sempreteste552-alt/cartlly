@@ -296,7 +296,10 @@ export default function LojaLayout() {
 
   useEffect(() => {
     if (settings || themeConfig) {
-      const root = document.documentElement;
+      // Use a scoped container instead of :root to prevent theme leaking between tenants
+      const container = document.getElementById(`store-theme-${slug}`);
+      const root = container || document.documentElement;
+      
       const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
       const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
       const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
@@ -320,7 +323,7 @@ export default function LojaLayout() {
         root.style.removeProperty("--store-text-base");
       };
     }
-  }, [settings, themeConfig]);
+  }, [settings, themeConfig, slug]);
 
   const logoSize = (settings as any)?.logo_size || 40;
 
@@ -394,6 +397,7 @@ export default function LojaLayout() {
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
+        id={`store-theme-${slug}`}
         className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
         style={
           (themeConfig?.theme_mode === 'dark' || storeDark)
