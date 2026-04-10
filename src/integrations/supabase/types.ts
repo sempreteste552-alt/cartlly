@@ -2457,6 +2457,36 @@ export type Database = {
         }
         Relationships: []
       }
+      store_policies: {
+        Row: {
+          cookie_policy: string
+          created_at: string
+          id: string
+          privacy_policy: string
+          terms_of_service: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cookie_policy?: string
+          created_at?: string
+          id?: string
+          privacy_policy?: string
+          terms_of_service?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cookie_policy?: string
+          created_at?: string
+          id?: string
+          privacy_policy?: string
+          terms_of_service?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_product_page_config: {
         Row: {
           created_at: string
