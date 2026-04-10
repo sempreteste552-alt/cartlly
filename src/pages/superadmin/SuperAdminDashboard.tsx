@@ -216,6 +216,46 @@ export default function SuperAdminDashboard() {
         </Card>
       </div>
 
+      {/* AI Actions */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-bold">Ações de Inteligência Artificial</CardTitle>
+                <CardDescription className="text-xs">IA Gerencial para suporte e engajamento de tenants</CardDescription>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={async () => {
+                const loadingToast = toast.loading("Processando encorajamentos de IA...");
+                try {
+                  const { data, error } = await supabase.functions.invoke("super-admin-ai-encouragement");
+                  if (error) throw error;
+                  toast.success(`Sucesso! ${data.processed.length} tenants incentivados.`, { id: loadingToast });
+                } catch (e: any) {
+                  toast.error("Erro ao processar: " + e.message, { id: loadingToast });
+                }
+              }}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              Enviar Incentivos IA
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pb-4 pt-0">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Esta ação analisa as vendas das últimas 24h de todos os tenants e envia uma mensagem personalizada 
+            de encorajamento via push e notificação interna para aqueles que estão escalando.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Smart alerts */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Trial expiring soon */}
