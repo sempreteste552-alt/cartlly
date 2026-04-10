@@ -8,9 +8,9 @@ export function ActiveCouponsBanner({ storeUserId, primaryColor }: { storeUserId
   const [expanded, setExpanded] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const { data: coupons } = usePublicCoupons(storeUserId);
+  const { data: coupons, isLoading } = usePublicCoupons(storeUserId);
 
-  if (!coupons || coupons.length === 0) return null;
+  if (isLoading || !coupons || coupons.length === 0) return null;
 
   const color = primaryColor || "#6d28d9";
 
