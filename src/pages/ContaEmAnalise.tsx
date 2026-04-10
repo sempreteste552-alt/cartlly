@@ -146,10 +146,22 @@ export default function ContaEmAnalise() {
             </p>
           </div>
 
-          <Button variant="outline" onClick={signOut} className="mt-4">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex flex-col w-full gap-3 mt-4">
+            {platformSettings?.support_whatsapp_number && (
+              <Button 
+                className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold"
+                onClick={() => window.open(`https://wa.me/${platformSettings.support_whatsapp_number}?text=Olá,%20preciso%20de%20ajuda%20com%20minha%20conta%20no%20Cartlly`, "_blank")}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Suporte via WhatsApp
+              </Button>
+            )}
+            
+            <Button variant="outline" onClick={signOut} className="w-full">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair da Conta
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
