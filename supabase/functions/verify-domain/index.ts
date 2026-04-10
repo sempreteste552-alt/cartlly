@@ -152,7 +152,13 @@ Deno.serve(async (req) => {
     }
 
     const verificationToken = domainRecord?.verification_token || settingsId;
-    const expectedTxt = verificationToken.includes("lovable_verify=") ? verificationToken : `lovable_verify=${verificationToken}`;
+    const possibleTxts = [
+      verificationToken.includes("lovable_verify=") ? verificationToken : `lovable_verify=${verificationToken}`,
+      `lovable_verify=${settingsId}`,
+      verificationToken,
+      settingsId,
+    ];
+
 
     let aRecordFound = false;
     let txtRecordFound = false;
@@ -208,9 +214,10 @@ Deno.serve(async (req) => {
         const txtData = await resolveDns(host, "TXT");
         const records = (txtData.Answer || []).map((r: any) => String(r.data || "").replace(/["']/g, "").trim());
         checkedTxtHosts.push({ host, records });
-        if (records.some((record) => record === expectedTxt)) {
+        if (records.some((record) => possibleTxts.some(p => record.includes(p) || p.includes(record)))) {
           txtRecordFound = true;
         }
+
       } catch (e) {
         console.error(`TXT record check error for ${host}:`, e);
       }
@@ -309,7 +316,7 @@ Deno.serve(async (req) => {
         nameservers,
         checkedAHosts,
         checkedTxtHosts,
-        expectedTxt,
+        expectedTxt: possibleTxts[0],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
