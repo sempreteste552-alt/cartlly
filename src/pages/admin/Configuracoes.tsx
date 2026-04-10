@@ -416,7 +416,30 @@ function GeneralSettingsTab() {
         </Card>
       </LockedFeature>
 
-      {/* Store Info */}
+      {/* Promo Banner */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-pink-500" /><CardTitle className="text-lg">Banner Promocional</CardTitle></div>
+          <CardDescription>Banner "Crie sua loja" exibido no topo para visitantes</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Ativar Banner Promocional</Label>
+              <p className="text-xs text-muted-foreground">Exibe um banner no topo da sua loja convidando visitantes a criar a própria loja</p>
+            </div>
+            <Switch checked={promoBannerEnabled} onCheckedChange={setPromoBannerEnabled} />
+          </div>
+          {promoBannerEnabled && (
+            <div className="rounded-lg overflow-hidden border border-border">
+              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white text-center py-2.5 px-4 text-sm font-medium">
+                🚀 Crie sua própria loja online agora mesmo! Planos a partir de <span className="font-bold text-yellow-200">R$ 49,90/mês</span> — <span className="underline">Saiba mais</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="border-border">
         <CardHeader>
           <div className="flex items-center gap-2"><Store className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Informações da Loja</CardTitle></div>
