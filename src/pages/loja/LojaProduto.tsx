@@ -372,12 +372,12 @@ export default function LojaProduto() {
 
           <div className="flex gap-3">
             <Button
-              className="flex-1 h-12 text-base"
+              className="flex-1 h-12 text-sm sm:text-base px-2 whitespace-nowrap"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               disabled={product.stock <= 0 && !(product as any).made_to_order}
               onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
             >
-              <ShoppingCart className="mr-2 h-5 w-5" /> Adicionar ao Carrinho
+              <ShoppingCart className="mr-2 h-5 w-5 shrink-0" /> <span className="truncate">Adicionar ao Carrinho</span>
             </Button>
             {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
               <Button
