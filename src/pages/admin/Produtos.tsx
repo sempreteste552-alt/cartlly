@@ -27,6 +27,7 @@ import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } fro
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
+import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -425,6 +426,9 @@ export default function Produtos() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Catalog PDF Generator */}
+      <CatalogPdfGenerator />
 
       {/* AI Catalog Import */}
       <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />

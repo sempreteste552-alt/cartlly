@@ -27,6 +27,8 @@ import SetupStore from "./pages/admin/SetupStore";
 import Cerebro from "./pages/admin/Cerebro";
 import Indicacoes from "./pages/admin/Indicacoes";
 import Politicas from "./pages/admin/Politicas";
+import Fidelidade from "./pages/admin/Fidelidade";
+import Lucro from "./pages/admin/Lucro";
 import LojaPolitica from "./pages/loja/LojaPolitica";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
@@ -151,6 +153,8 @@ const App = () => {
                     <Route path="cerebro" element={<Cerebro />} />
                     <Route path="indicacoes" element={<Indicacoes />} />
                     <Route path="politicas" element={<Politicas />} />
+                    <Route path="fidelidade" element={<Fidelidade />} />
+                    <Route path="lucro" element={<Lucro />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
