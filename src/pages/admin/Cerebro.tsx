@@ -137,6 +137,7 @@ export default function Cerebro() {
   const processAIActions = (content: string, msgIndex: number) => {
     const actions: any[] = [];
     
+    // 1. Agendar Tarefa
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
     let match;
     while ((match = taskRegex.exec(content)) !== null) {
@@ -146,11 +147,59 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
+    // 2. Criar Cupom
     const couponRegex = /\[ACTION_CREATE_COUPON\]([\s\S]*?)\[\/ACTION_CREATE_COUPON\]/g;
     while ((match = couponRegex.exec(content)) !== null) {
       try {
         const payload = JSON.parse(match[1]);
         actions.push({ type: "create_coupon", label: `🎟️ Criar Cupom: ${payload.code} (${payload.discount_type === 'percentage' ? payload.discount_value + '%' : 'R$' + payload.discount_value})`, payload });
+      } catch (e) {}
+    }
+
+    // 3. Atualizar Configurações da Loja (Letreiro, etc)
+    const storeSettingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
+    while ((match = storeSettingsRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        const fields = Object.keys(payload).join(", ");
+        actions.push({ type: "update_store_settings", label: `⚙️ Atualizar Loja: ${fields}`, payload });
+      } catch (e) {}
+    }
+
+    // 4. Atualizar Marketing (Faixa, Frete Grátis, Countdown)
+    const marketingRegex = /\[ACTION_UPDATE_MARKETING_CONFIG\]([\s\S]*?)\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g;
+    while ((match = marketingRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        const fields = Object.keys(payload).join(", ");
+        actions.push({ type: "update_marketing_config", label: `📢 Atualizar Marketing: ${fields}`, payload });
+      } catch (e) {}
+    }
+
+    // 5. Atualizar Estoque
+    const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
+    while ((match = stockRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "update_stock", label: `📦 Atualizar Estoque: ${payload.product_name} → ${payload.new_stock}`, payload });
+      } catch (e) {}
+    }
+
+    // 6. Atualizar Página
+    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
+    while ((match = pageRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
+      } catch (e) {}
+    }
+
+    // 7. Lembrete Pessoal
+    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
+    while ((match = reminderRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "schedule_reminder", label: `🔔 Lembrete: ${payload.title}`, payload });
       } catch (e) {}
     }
 
@@ -186,6 +235,38 @@ export default function Cerebro() {
         });
         if (error) throw error;
         toast.success("✅ Cupom criado com sucesso!");
+      } else if (action.type === "update_store_settings") {
+        const { error } = await supabase.from("store_settings").update(action.payload).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações da loja atualizadas!");
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+        queryClient.invalidateQueries({ queryKey: ["public_store_settings"] });
+      } else if (action.type === "update_marketing_config") {
+        const { error } = await supabase.from("store_marketing_config").update(action.payload).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações de marketing atualizadas!");
+        queryClient.invalidateQueries({ queryKey: ["store_marketing_config"] });
+      } else if (action.type === "update_stock") {
+        const { error } = await supabase.from("products").update({ stock: action.payload.new_stock }).eq("user_id", user.id).eq("name", action.payload.product_name);
+        if (error) throw error;
+        toast.success("✅ Estoque atualizado!");
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      } else if (action.type === "update_page") {
+        const { error } = await supabase.from("store_pages").update({ content: action.payload.content }).eq("user_id", user.id).eq("slug", action.payload.slug);
+        if (error) throw error;
+        toast.success("✅ Conteúdo da página atualizado!");
+        queryClient.invalidateQueries({ queryKey: ["store_pages"] });
+      } else if (action.type === "schedule_reminder") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: "reminder",
+          scheduled_at: action.payload.remind_at,
+          payload: { title: action.payload.title, description: action.payload.description },
+          ai_instruction: action.payload.title,
+          status: "pending"
+        });
+        if (error) throw error;
+        toast.success("✅ Lembrete agendado!");
       }
 
       setPendingActions(prev => {

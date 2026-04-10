@@ -31,7 +31,7 @@ serve(async (req) => {
     const aiTone = storeContext?.aiTone || "educada";
 
     const toneMap: Record<string, string> = {
-      educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais.",
+      educada: "Seja always educada, gentil e paciente. Use expressões cordiais.",
       profissional: "Mantenha um tom profissional, direto e eficiente.",
       divertida: "Seja divertida, use emojis e tom descontraído.",
       formal: "Use linguagem formal e respeitosa. Trate por 'senhor(a)'.",
@@ -98,21 +98,23 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
 6. Atualizar Marketing/Promoções (Faixa de Anúncio, Pop-up de Cupom, Contador Regressivo, Frete Grátis):
 [ACTION_MARKETING]{"announcement_bar_enabled": true, "announcement_bar_text": "Texto", "announcement_bar_bg_color": "#000", "announcement_bar_text_color": "#fff", "announcement_bar_link": "/url", "popup_coupon_enabled": false, "countdown_enabled": false, "free_shipping_bar_enabled": false, "free_shipping_threshold": 100} [/ACTION_MARKETING]
-(Você pode atualizar qualquer campo da tabela store_marketing_config aqui: announcement_bar_enabled, announcement_bar_text, announcement_bar_bg_color, announcement_bar_text_color, announcement_bar_link, popup_coupon_enabled, popup_coupon_code, popup_coupon_title, popup_coupon_description, popup_coupon_image_url, popup_coupon_delay_seconds, countdown_enabled, countdown_end_date, countdown_text, countdown_bg_color, countdown_text_color, free_shipping_bar_enabled, free_shipping_threshold, free_shipping_bar_color, trust_badges_enabled)
 
 7. Agendar Lembrete para o Dono:
 [ACTION_REMINDER]{"title": "Lembrete", "body": "Descrição do que lembrar", "scheduled_at": "ISO_TIMESTAMP"}[/ACTION_REMINDER]
 
 REGRAS CRÍTICAS:
 - NUNCA responda com JSON puro. SEMPRE responda em português do Brasil com texto formatado em Markdown.
-- Se o dono pedir para ser "agressivo", confirme que ativou o modo de alta conversão e sugira frases fortes. Use [ACTION_UPDATE_SETTINGS] para aplicar essas frases se ele aprovar.
-- Se o dono pedir para "lembrar de algo tal dia/hora", use [ACTION_REMINDER].
+- SEMPRE que o usuário pedir para mudar algo (nome, descrição, cores, letreiro, faixa, abrir/fechar loja, etc.), você DEVE incluir o bloco de ação correspondente.
+- Se o usuário pedir para ativar o "letreiro" ou "marquee", use [ACTION_UPDATE_SETTINGS]{"marquee_enabled": true, "marquee_text": "...", "marquee_speed": 50}.
+- Se o usuário pedir para "abrir" ou "fechar" a loja, use [ACTION_UPDATE_SETTINGS]{"store_open": true/false}.
 - Os blocos de ação são INVISÍVEIS para o usuário — o sistema os processa automaticamente.
-- NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_...].`;
+- NUNCA use blocos de código (###) para as ações. Use APENAS os marcadores [ACTION_...].
+- Se o dono pedir para "lembrar de algo tal dia/hora", use [ACTION_REMINDER].
+- Se o dono pedir para ser "agressivo", confirme que ativou o modo de alta conversão e sugira frases fortes. Use [ACTION_UPDATE_SETTINGS] para aplicar essas frases se ele aprovar.
+- SEMPRE coloque os blocos de ação no final da resposta.`;
 
-    // Check if any message contains images (multimodal)
     const hasImages = messages.some((m: any) => Array.isArray(m.content) && m.content.some((p: any) => p.type === "image_url"));
-    const model = hasImages ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash";
+    const model = "google/gemini-2.5-flash";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -131,13 +133,7 @@ REGRAS CRÍTICAS:
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
       throw new Error(`AI gateway error [${response.status}]`);
     }
 
