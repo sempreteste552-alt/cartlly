@@ -772,7 +772,7 @@ export default function LojaLayout() {
               );
             })}
             
-            {hasShippingZones && (
+            {true && (
             <div 
               className="px-3 py-4 border-t border-border mt-2 space-y-2"
               style={{
@@ -822,7 +822,7 @@ export default function LojaLayout() {
         </div>
         </header>
 
-        {hasShippingZones && (
+        {true && (
           <div className="border-b border-border bg-secondary/50">
             <div className="max-w-7xl mx-auto px-4">
               <button
