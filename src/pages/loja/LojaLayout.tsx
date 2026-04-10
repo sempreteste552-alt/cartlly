@@ -935,6 +935,11 @@ export default function LojaLayout() {
                 <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-sm mx-auto object-contain" />
               </div>
             </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs opacity-50">
+              <Link to={`${basePath}/legal/politica-de-privacidade`} className="hover:opacity-100 transition-opacity underline">Política de Privacidade</Link>
+              <Link to={`${basePath}/legal/termos-de-uso`} className="hover:opacity-100 transition-opacity underline">Termos de Uso</Link>
+              <Link to={`${basePath}/legal/cookies`} className="hover:opacity-100 transition-opacity underline">Política de Cookies</Link>
+            </div>
             <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
           </div>
         </footer>
