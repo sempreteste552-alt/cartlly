@@ -239,6 +239,7 @@ export function AIChatWidget() {
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
       aiName: aiName,
+      aiTone: aiTone,
       plans: (plans || []).filter((p: any) => p.price > 0).map((p: any) => ({
         id: p.id,
         name: p.name,
