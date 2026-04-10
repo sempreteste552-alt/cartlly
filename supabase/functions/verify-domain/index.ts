@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
     for (const host of txtHosts) {
       try {
         const txtData = await resolveDns(host, "TXT");
-        const records = (txtData.Answer || []).map((r: any) => String(r.data || "").replace(/"/g, "").trim());
+        const records = (txtData.Answer || []).map((r: any) => String(r.data || "").replace(/["']/g, "").trim());
         checkedTxtHosts.push({ host, records });
         if (records.some((record) => record === expectedTxt)) {
           txtRecordFound = true;
