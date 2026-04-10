@@ -115,7 +115,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banner
                       videoRefs.current[index] = element;
                     }}
                     src={banner.image_url}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     muted
                     playsInline
                     preload="metadata"
@@ -129,7 +129,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banner
                   <img
                     src={banner.image_url}
                     alt="Banner"
-                    className={`w-full h-full object-cover ${active ? "animate-ken-burns" : ""}`}
+                    className={`w-full h-full object-contain ${active ? "animate-ken-burns" : ""}`}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                 </MaybeLink>
