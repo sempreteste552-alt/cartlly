@@ -450,6 +450,23 @@ export function AIChatWidget() {
   const sendMessage = async (text: string) => {
     if ((!text.trim() && pendingImages.length === 0) || isLoading) return;
 
+    // Detect CEO mode activation command
+    const lowerText = text.toLowerCase().trim();
+    if (lowerText.includes("ative modo ceo") || lowerText.includes("ativar modo ceo") || lowerText.includes("cérebro ceo") || lowerText.includes("cerebro ceo")) {
+      if (settings?.id && updateSettings) {
+        try {
+          await updateSettings.mutateAsync({
+            id: settings.id,
+            ai_chat_tone: "ceo_profissional",
+          } as any);
+          toast.success("🧠 Modo CEO Profissional ativado!");
+          queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+        } catch (err) {
+          console.error("Error activating CEO mode:", err);
+        }
+      }
+    }
+
     const images = [...pendingImages];
     setPendingImages([]);
     setPixData(null);
