@@ -844,14 +844,14 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
   const { data: stores } = await supabase
     .from("store_settings")
-    .select("user_id, store_name, store_slug")
+    .select("user_id, store_name, store_slug, store_category")
     .in("user_id", storeUserIds);
   return new Map((stores || []).map((s: any) => {
     // Use store_name if set, otherwise derive from slug (capitalize first letter)
     const slug = s.store_slug || "";
     const nameFromSlug = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "";
     const resolvedName = s.store_name?.trim() || nameFromSlug || "nossa loja";
-    return [s.user_id, { ...s, store_name: resolvedName }];
+    return [s.user_id, { ...s, store_name: resolvedName, category: s.store_category }];
   }));
 }
 
