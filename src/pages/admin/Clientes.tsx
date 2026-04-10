@@ -248,7 +248,17 @@ export default function Clientes() {
                               <MapPin className="h-3.5 w-3.5" /> {customer.city}, {customer.state}
                             </span>
                           )}
+                          {customer.gender && (
+                            <Badge variant="outline" className="text-[10px] py-0 h-5">
+                              {customer.gender}
+                            </Badge>
+                          )}
                         </div>
+                        {customer.routine_notes && (
+                          <p className="text-xs text-primary/70 mt-1 italic line-clamp-1">
+                            " {customer.routine_notes} "
+                          </p>
+                        )}
                       </div>
                     </div>
 
