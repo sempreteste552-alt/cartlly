@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export function useCoupons() {
   const { user } = useAuth();
+  useRealtimeSync("coupons", [["coupons", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
   return useQuery({
     queryKey: ["coupons", user?.id],
     enabled: !!user,
