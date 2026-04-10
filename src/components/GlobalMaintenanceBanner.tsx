@@ -87,7 +87,18 @@ export function GlobalMaintenanceBanner() {
         {styles.icon}
         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
           <span className="font-bold text-sm whitespace-nowrap">{globalNotification.title}:</span>
-          <span className="text-sm opacity-90">{globalNotification.message}</span>
+          <span className="text-sm opacity-95">{globalNotification.message}</span>
+          
+          {platformSettings?.support_whatsapp_number && (
+            <a 
+              href={`https://wa.me/${platformSettings.support_whatsapp_number}?text=Olá,%20vi%20o%20aviso:%20${encodeURIComponent(globalNotification.title)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 ml-2 px-2 py-0.5 bg-white/20 hover:bg-white/30 rounded-full text-[11px] font-semibold transition-colors border border-white/30"
+            >
+              Suporte WhatsApp
+            </a>
+          )}
         </div>
       </div>
       <Button 
@@ -99,5 +110,6 @@ export function GlobalMaintenanceBanner() {
         <X className="h-4 w-4" />
       </Button>
     </div>
+  );
   );
 }
