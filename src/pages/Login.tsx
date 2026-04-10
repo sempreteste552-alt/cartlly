@@ -64,7 +64,7 @@ function useTypewriter(phrases: string[], speed = 60, pause = 2500) {
 }
 
 export default function Login() {
-  const { user } = useAuth();
+  const { user, maintenanceMode } = useAuth();
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -80,6 +80,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
+
+  const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
+  const showMaintenance = maintenanceMode && !isSuperAdmin;
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
@@ -296,6 +299,47 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Maintenance mode screen
+  if (showMaintenance) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
+        <div className="pointer-events-none fixed inset-0">
+          <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        </div>
+        <Card className="relative w-full max-w-md border-0 shadow-2xl rounded-2xl bg-card z-10">
+          <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
+            <img src={cartlyLogo} alt="Cartly" className="h-24 w-auto drop-shadow-lg" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <ShieldCheck className="h-10 w-10 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                Sistema em Manutenção
+              </h1>
+              <p className="text-muted-foreground leading-relaxed">
+                Estamos realizando melhorias programadas em nossa infraestrutura para oferecer uma experiência ainda melhor.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                O acesso ao painel administrativo e a criação de novas lojas estão temporariamente suspensos. Suas lojas continuam funcionando normalmente (exceto se houver aviso específico).
+              </p>
+            </div>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 w-full">
+              <p className="text-sm text-primary font-medium">🛠️ Previsão de retorno: Em breve</p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => window.location.reload()}
+            >
+              Recarregar Página
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Email verification success screen
   if (showEmailSent) {

@@ -56,7 +56,7 @@ export default function LojaLayout() {
   const { slug } = useParams();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
-  const { data: settingsBySlug, isLoading: slugLoading } = useResolvedPublicStore(slug);
+  const { data: settingsBySlug, isLoading: slugLoading, refetch: refetchSettings } = useResolvedPublicStore(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -75,6 +75,31 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const basePath = slug ? `/loja/${slug}` : "/loja";
+
+  // Real-time store status monitoring
+  useEffect(() => {
+    if (!settingsBySlug?.id) return;
+
+    const channel = supabase
+      .channel(`store-status-${settingsBySlug.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "store_settings",
+          filter: `id=eq.${settingsBySlug.id}`,
+        },
+        () => {
+          refetchSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [settingsBySlug?.id, refetchSettings]);
 
   const lookupCepCity = async (cepVal: string) => {
     try {
