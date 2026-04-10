@@ -287,9 +287,29 @@ export default function Cerebro() {
                         ? 'bg-primary text-primary-foreground rounded-tr-none' 
                         : 'bg-card border shadow-sm rounded-tl-none'
                     }`}>
-                      {msg.content.split(/\[ACTION_.*?\]/).map((part, index) => (
-                        <span key={index}>{part}</span>
-                      ))}
+                        {msg.content.split(/\[ACTION_.*?\]/).map((part, index) => (
+                          <span key={index}>{part}</span>
+                        ))}
+                        
+                        {pendingActions[i] && pendingActions[i].length > 0 && (
+                          <div className="mt-3 space-y-2 pt-2 border-t border-border/50">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ações Sugeridas pela IA:</p>
+                            {pendingActions[i].map((action, aidx) => (
+                              <div key={aidx} className="flex flex-col gap-1.5 bg-muted/50 p-2 rounded-lg border border-border/50">
+                                <span className="text-[11px] font-medium leading-tight text-foreground">{action.label}</span>
+                                <Button 
+                                  size="sm" 
+                                  className="h-7 w-full text-[10px]" 
+                                  variant={action.confirmed ? "secondary" : "default"}
+                                  disabled={action.confirmed}
+                                  onClick={() => confirmAction(i, aidx)}
+                                >
+                                  {action.confirmed ? "✅ Confirmado e Executado" : "Confirmar e Executar"}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
                 ))}
