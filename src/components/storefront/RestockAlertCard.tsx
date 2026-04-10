@@ -32,9 +32,17 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
   const alertCardBgColor = alert?.card_bg_color || "#ffffff";
   const alertAccentColor = alert?.accent_color || primaryColor;
 
-  const restockProducts = allProducts?.filter((p) =>
-    alert?.product_ids?.includes(p.id)
-  ) ?? [];
+  const restockProducts = allProducts?.filter((p) => {
+    const isManual = alert?.product_ids?.includes(p.id);
+    
+    // Auto-include products updated in the last 7 days (restock/new)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const updatedDate = p.updated_at ? new Date(p.updated_at) : null;
+    const isRecent = updatedDate && updatedDate > sevenDaysAgo && p.stock > 0;
+    
+    return isManual || isRecent;
+  }) ?? [];
 
   useEffect(() => {
     if (alert && restockProducts.length > 0) {
