@@ -202,6 +202,7 @@ export default function LojaLayout() {
   const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
 
   usePwaManifest({
+    id: slug ? `cartlly-store-${slug}` : storeStartUrl,
     name: storeInstallName,
     shortName: storeInstallName?.slice(0, 12) || undefined,
     themeColor: settings?.primary_color || undefined,
