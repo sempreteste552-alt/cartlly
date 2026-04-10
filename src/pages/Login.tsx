@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
@@ -81,6 +81,16 @@ export default function Login() {
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
+  // Per-device dark mode for login page
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("theme_login");
+      if (stored) return stored === "dark";
+      return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+    }
+    return false;
+  });
+
   const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
   const showMaintenance = maintenanceMode && !isSuperAdmin;
 
@@ -111,16 +121,21 @@ export default function Login() {
     return "Forte";
   };
 
-  // Reset any leaked tenant/store theme colors from CSS custom properties
+  // Reset any leaked tenant/store theme colors and apply login dark mode
   useEffect(() => {
     const root = document.documentElement;
     const propsToReset = ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring", "--accent-foreground",
       "--store-primary", "--store-secondary", "--store-accent", "--store-button-bg", "--store-button-text", "--store-bg-base", "--store-text-base"];
     propsToReset.forEach(prop => root.style.removeProperty(prop));
-    // Also remove dark class if it was set by a store
-    root.classList.remove("dark");
-    return () => {};
-  }, []);
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    return () => {
+      root.classList.remove("dark");
+    };
+  }, [dark]);
 
   useEffect(() => {
     if (user) {
@@ -426,6 +441,21 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
+      {/* Theme toggle - persists per device */}
+      <button
+        onClick={() => {
+          setDark((d) => {
+            const next = !d;
+            localStorage.setItem("theme_login", next ? "dark" : "light");
+            return next;
+          });
+        }}
+        className="fixed top-4 right-4 z-50 p-2 rounded-full bg-card border border-border shadow-lg hover:bg-accent transition-colors"
+        title={dark ? "Modo claro" : "Modo escuro"}
+      >
+        {dark ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
+      </button>
+
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
