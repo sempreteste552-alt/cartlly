@@ -101,15 +101,27 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   };
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-      if (result.outcome === "accepted") {
-        dismiss();
-        // Push will be auto-enabled via the appinstalled event
+    if (platform === "android" || platform === "desktop") {
+      if (deferredPrompt) {
+        // Native install prompt available — trigger it
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if (result.outcome === "accepted") {
+          dismiss();
+          // Push will be auto-enabled via the appinstalled event
+        }
+        setDeferredPrompt(null);
+      } else {
+        // No deferred prompt yet — request push permission first, then show instructions
+        try {
+          if ("Notification" in window && Notification.permission === "default") {
+            await Notification.requestPermission();
+          }
+        } catch {}
+        setShowInstructions(true);
       }
-      setDeferredPrompt(null);
     } else {
+      // iOS — always show instructions (no native prompt support)
       setShowInstructions(true);
     }
   };
