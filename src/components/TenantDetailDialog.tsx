@@ -468,7 +468,8 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                     <Button variant="outline" size="sm" onClick={() => {
                       const cd = (storeSettings as any)?.custom_domain;
                       const ds = (storeSettings as any)?.domain_status;
-                      const url = (cd && ds === "verified") ? `https://${cd.replace(/^https?:\/\//, "")}` : `/loja/${storeSettings.store_slug}`;
+                      const sslReady = Boolean((storeSettings as any)?.domain_verify_details?.sslReady);
+                      const url = (cd && ds === "verified" && sslReady) ? `https://${cd.replace(/^https?:\/\//, "")}` : `/loja/${storeSettings.store_slug}`;
                       window.open(url, "_blank");
                     }}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja

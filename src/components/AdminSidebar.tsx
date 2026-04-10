@@ -50,8 +50,9 @@ export function AdminSidebar() {
   const storeSlug = (settings as any)?.store_slug;
   const customDomain = (settings as any)?.custom_domain;
   const domainStatus = (settings as any)?.domain_status;
+  const sslReady = Boolean((settings as any)?.domain_verify_details?.sslReady);
   const sanitizedCustomDomain = normalizeDomain(customDomain);
-  const storeUrl = (sanitizedCustomDomain && domainStatus === "verified")
+  const storeUrl = (sanitizedCustomDomain && domainStatus === "verified" && sslReady)
     ? `https://${sanitizedCustomDomain}`
     : (storeSlug ? `/loja/${storeSlug}` : "/loja");
 

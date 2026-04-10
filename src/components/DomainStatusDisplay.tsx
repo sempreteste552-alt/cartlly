@@ -15,6 +15,7 @@ interface DomainStatusDisplayProps {
 
 export default function DomainStatusDisplay({ domain, status, lastCheck, settingsId, storeSlug }: DomainStatusDisplayProps) {
   const [checking, setChecking] = useState(false);
+  const [sslReady, setSslReady] = useState(status === "verified");
 
   const handleVerify = async () => {
     if (!settingsId) return;
@@ -25,8 +26,13 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
         body: { settingsId, domain },
       });
       if (error) throw error;
+      setSslReady(Boolean(data?.sslReady));
       if (data?.status === "verified") {
-        toast.success("Domínio verificado com sucesso! ✅");
+        if (data?.sslReady) {
+          toast.success("Domínio verificado com sucesso! ✅");
+        } else {
+          toast.info("DNS verificado. O SSL ainda está sendo provisionado.");
+        }
       } else if (data?.status === "pending") {
         toast.info("DNS ainda não propagado. Tente novamente em algumas horas.");
       } else {
@@ -44,7 +50,7 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
   const statusConfig = {
     none: { label: "Não configurado", color: "secondary" as const, icon: Clock, description: "Configure os registros DNS abaixo para ativar." },
     pending: { label: "Pendente", color: "secondary" as const, icon: Clock, description: "Aguardando verificação DNS. Pode levar até 72h." },
-    verified: { label: "Aprovado", color: "default" as const, icon: CheckCircle2, description: "Domínio verificado e ativo!" },
+    verified: { label: sslReady ? "Aprovado" : "SSL pendente", color: sslReady ? "default" as const : "secondary" as const, icon: sslReady ? CheckCircle2 : Clock, description: sslReady ? "Domínio verificado e ativo!" : "DNS verificado, mas o SSL ainda não está ativo." },
     failed: { label: "Falhou", color: "destructive" as const, icon: XCircle, description: "Falha na verificação. Verifique seus registros DNS." },
   };
 
@@ -56,7 +62,7 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
       {/* Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <StatusIcon className={`h-5 w-5 ${status === "verified" ? "text-green-500" : status === "failed" ? "text-destructive" : "text-muted-foreground"}`} />
+          <StatusIcon className={`h-5 w-5 ${status === "verified" && sslReady ? "text-green-500" : status === "failed" ? "text-destructive" : "text-muted-foreground"}`} />
           <div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium text-foreground">Status do Domínio</p>
@@ -121,7 +127,7 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
           {checking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
           Verificar Domínio
         </Button>
-        {status === "verified" && (
+        {status === "verified" && sslReady && (
           <Button variant="default" size="sm" asChild>
             <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
