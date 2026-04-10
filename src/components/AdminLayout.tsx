@@ -14,7 +14,7 @@ import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -110,6 +110,7 @@ export function AdminLayout() {
   const adminPrimary = (settings as any)?.admin_primary_color || "#6d28d9";
   const adminAccent = (settings as any)?.admin_accent_color || adminPrimary;
   const adminThemeScope = user?.id ? `admin-${user.id}` : "admin";
+  const { dark: adminDark } = useThemeScope(adminThemeScope);
   const adminThemeStyle = {
     "--primary": toHSL(adminPrimary),
     "--ring": toHSL(adminPrimary),
@@ -133,7 +134,12 @@ export function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div id="admin-layout-root" style={adminThemeStyle} className="min-h-screen flex w-full bg-background">
+      <div
+        id="admin-layout-root"
+        data-tenant={user?.id}
+        style={adminThemeStyle}
+        className={`min-h-screen flex w-full bg-background ${adminDark ? "dark" : ""}`}
+      >
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
           <GlobalMaintenanceBanner />
@@ -154,7 +160,7 @@ export function AdminLayout() {
                   {trialDaysLeft}d restantes
                 </Badge>
               )}
-              <ThemeToggle scope={adminThemeScope} />
+              <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

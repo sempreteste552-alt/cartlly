@@ -284,15 +284,19 @@ export default function LojaLayout() {
   }, [searchTerm, settings?.user_id]);
 
   useLayoutEffect(() => {
+    const container = document.getElementById(`store-theme-${slug}`);
+    if (!container) return;
+
     if (isDarkMode) {
-      document.documentElement.classList.add("dark");
+      container.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark");
+      container.classList.remove("dark");
     }
+
     return () => {
-      document.documentElement.classList.remove("dark");
+      container.classList.remove("dark");
     };
-  }, [isDarkMode]);
+  }, [isDarkMode, slug]);
 
   useEffect(() => {
     if (settings || themeConfig) {
@@ -399,7 +403,8 @@ export default function LojaLayout() {
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
         id={`store-theme-${slug}`}
-        className="min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground"
+        data-tenant={settings?.user_id}
+        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground ${isDarkMode ? "dark" : ""}`}
         style={
           (themeConfig?.theme_mode === 'dark' || storeDark)
             ? undefined
@@ -501,7 +506,7 @@ export default function LojaLayout() {
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
-            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={true} />
+            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             <div className="flex items-center gap-1.5">
               {settings?.instagram_url && (
@@ -772,7 +777,7 @@ export default function LojaLayout() {
             )}
 
             <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
-              <ThemeToggle scope={storeThemeScope} applyToRoot={true} />
+              <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
               <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
             </div>
 
