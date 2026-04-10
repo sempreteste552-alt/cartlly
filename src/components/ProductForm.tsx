@@ -29,6 +29,7 @@ interface ProductFormProps {
     badge?: string | null;
     additionalImages?: string[];
     cost_price?: number;
+    min_stock_alert?: number;
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
@@ -46,6 +47,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [badge, setBadge] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [minStockAlert, setMinStockAlert] = useState("5");
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       setCategoryId(initialData.category_id ?? "");
       setBadge((initialData as any)?.badge ?? "");
       setCostPrice((initialData as any)?.cost_price?.toString() ?? "");
+      setMinStockAlert((initialData as any)?.min_stock_alert?.toString() ?? "5");
     }
   }, [initialData]);
 
@@ -156,13 +159,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       badge: badge.trim() || null,
       additionalImages: [...additionalImages, ...additionalVideos],
       cost_price: parseFloat(costPrice) || 0,
+      min_stock_alert: parseInt(minStockAlert) || 5,
     });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setBadge(""); setCostPrice(""); setAdditionalImages([]); setAdditionalVideos([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setBadge(""); setCostPrice(""); setMinStockAlert("5"); setAdditionalImages([]); setAdditionalVideos([]);
     }
     onOpenChange(isOpen);
   };
@@ -229,6 +233,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             <div className="space-y-2">
               <Label htmlFor="stock">Estoque *</Label>
               <Input id="stock" type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} required placeholder="0" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="min_stock_alert">Alerta estoque mínimo</Label>
+              <Input id="min_stock_alert" type="number" min="0" value={minStockAlert} onChange={(e) => setMinStockAlert(e.target.value)} placeholder="5" />
+              <p className="text-xs text-muted-foreground">Notifica quando o estoque atingir essa quantidade</p>
             </div>
           </div>
 

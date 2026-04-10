@@ -58,12 +58,21 @@ DADOS DA LOJA:
 - WhatsApp: ${storeContext?.storeWhatsapp || "Não configurado"}
 - Produtos cadastrados: ${storeContext?.totalProducts || 0}
 - Pedidos totais: ${storeContext?.totalOrders || 0}
-- Receita total: R$ ${storeContext?.totalRevenue?.toFixed(2) || "0.00"}
+- Pedidos aprovados: ${storeContext?.approvedOrders || 0}
+- Pedidos cancelados/recusados: ${storeContext?.cancelledOrders || 0}
+- Pedidos pendentes: ${storeContext?.pendingOrders || 0}
+- Faturamento APROVADO (só pedidos válidos): R$ ${storeContext?.totalRevenue?.toFixed(2) || "0.00"}
+- Ticket médio (aprovados): R$ ${storeContext?.avgTicket?.toFixed(2) || "0.00"}
 - Categorias: ${storeContext?.categories?.join(", ") || "Nenhuma"}
 - Cupons ativos: ${storeContext?.activeCoupons || 0}
 - Venda via WhatsApp: ${storeContext?.sellViaWhatsapp ? "Sim" : "Não"}
 - PIX: ${storeContext?.paymentPix ? "Sim" : "Não"}
 - Cartão: ${storeContext?.paymentCreditCard ? "Sim" : "Não"}
+
+IMPORTANTE SOBRE MÉTRICAS:
+- "Faturamento" e "Receita" = APENAS pedidos aprovados (não inclui cancelados, recusados ou expirados)
+- "Ticket médio" = Faturamento aprovado / Número de pedidos aprovados
+- Nunca misture pedidos cancelados/recusados com faturamento real
 - Frete: ${storeContext?.shippingEnabled ? "Ativo" : "Inativo"}
 
 PRODUTOS (use exatamente estes nomes e IDs curtos quando editar):
