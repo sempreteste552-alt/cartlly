@@ -83,9 +83,15 @@ export default function Cerebro() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
       queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      
+      // Check for actions in the new message
+      if (data?.content) {
+        processAIActions(data.content, chatHistory.length + 1);
+      }
+      
       setInput("");
     },
     onError: (err: any) => {
