@@ -91,12 +91,13 @@ export default function Login() {
     const ref = params.get("ref");
     if (ref) {
       localStorage.setItem("referral_code", ref);
-      // Pass IP placeholder (actual IP resolved server-side) and user agent
-      (supabase.rpc as any)("increment_referral_click", { 
-        _code: ref, 
-        _ip: null, // IP should be captured server-side for accuracy
-        _ua: navigator.userAgent || null 
-      }).catch(() => {});
+      try {
+        supabase.rpc("increment_referral_click" as any, { 
+          _code: ref, 
+          _ip: null,
+          _ua: navigator.userAgent || null 
+        }).then(() => {}).catch(() => {});
+      } catch { /* ignore */ }
     }
     return ref || localStorage.getItem("referral_code") || null;
   });
