@@ -16,7 +16,7 @@ serve(async (req) => {
 
     // Build rich context from all admin data
     const productsInfo = (storeContext?.products || []).slice(0, 50)
-      .map((p: any) => `• ${p.name} — R$${p.price} | Estoque: ${p.stock} | ${p.published ? "Publicado" : "Rascunho"}${p.category ? ` | Cat: ${p.category}` : ""}`)
+      .map((p: any) => `• ${p.name} — R$${p.price} | Estoque: ${p.stock} | 👁 ${p.views || 0} visualizações | ${p.published ? "Publicado" : "Rascunho"}${p.category ? ` | Cat: ${p.category}` : ""}`)
       .join("\n");
 
     const ordersInfo = (storeContext?.recentOrders || []).slice(0, 20)
