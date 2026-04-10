@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Bell, Check, CheckCheck, Send, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import { useAdminNotifications, getNotificationEmoji } from "@/hooks/useAdminNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
