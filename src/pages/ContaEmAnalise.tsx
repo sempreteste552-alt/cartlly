@@ -10,6 +10,7 @@ import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ContaEmAnalise() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["profile_block_status", user?.id],
