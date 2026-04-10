@@ -181,3 +181,73 @@ html {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Rotating border glow for referral card */
+@keyframes rotate-border {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.referral-glow-card {
+  position: relative;
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: referral-pulse 2.5s ease-in-out infinite;
+}
+
+.referral-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius) + 2px);
+  background: conic-gradient(
+    from var(--angle),
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.1) 25%,
+    hsl(var(--primary) / 0.6) 50%,
+    hsl(var(--primary) / 0.1) 75%,
+    hsl(var(--primary)) 100%
+  );
+  z-index: -1;
+  animation: rotate-border 3s linear infinite;
+}
+
+.referral-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: calc(var(--radius) - 1px);
+  background: hsl(var(--card));
+  z-index: -1;
+}
+
+@keyframes referral-pulse {
+  0%, 100% { box-shadow: 0 0 8px hsl(var(--primary) / 0.2); }
+  50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 40px hsl(var(--primary) / 0.1); }
+}
+
+/* Sidebar referral sparkle */
+@keyframes sidebar-sparkle {
+  0%, 100% { text-shadow: 0 0 4px hsl(var(--primary) / 0.3); }
+  50% { text-shadow: 0 0 10px hsl(var(--primary) / 0.6), 0 0 20px hsl(var(--primary) / 0.2); }
+}
+
+.sidebar-referral-item {
+  animation: sidebar-sparkle 2s ease-in-out infinite;
+}
+
+.sidebar-referral-item .referral-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  animation: referral-pulse 1.5s ease-in-out infinite;
+  display: inline-block;
+}
