@@ -22,9 +22,10 @@ export function useUserRole() {
   });
 
   const isSuperAdmin = roles?.includes("super_admin") || user?.email === SUPER_ADMIN_EMAIL;
-  const isTenant = !isSuperAdmin;
+  const isCustomer = user?.user_metadata?.is_customer === true;
+  const isTenant = !isSuperAdmin && !isCustomer && !!user;
 
-  return { isSuperAdmin, isTenant, roles, isLoading };
+  return { isSuperAdmin, isTenant, isCustomer, roles, isLoading };
 }
 
 export function useAllTenants() {
