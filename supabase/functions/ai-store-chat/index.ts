@@ -31,12 +31,26 @@ serve(async (req) => {
     // Fetch published products
     const { data: products } = await supabase
       .from("products")
-      .select("id, name, price, stock, description, image_url, category_id, published, made_to_order")
+      .select("id, name, price, stock, description, image_url, category_id, published, made_to_order, views")
       .eq("user_id", storeUserId)
       .eq("published", true)
       .eq("is_archived", false)
       .order("name")
       .limit(200);
+
+    // Fetch product variants for stock details
+    const productIds = (products || []).map((p: any) => p.id);
+    let variantsMap: Record<string, any[]> = {};
+    if (productIds.length > 0) {
+      const { data: variants } = await supabase
+        .from("product_variants")
+        .select("product_id, variant_type, variant_value, stock, price_modifier")
+        .in("product_id", productIds);
+      (variants || []).forEach((v: any) => {
+        if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
+        variantsMap[v.product_id].push(v);
+      });
+    }
 
     // Fetch categories
     const { data: categories } = await supabase
@@ -65,7 +79,16 @@ serve(async (req) => {
     const productList = (products || []).map((p: any) => {
       const cat = p.category_id ? categoryMap[p.category_id] : null;
       const availability = p.made_to_order ? "Sob encomenda" : (p.stock > 0 ? `${p.stock} em estoque` : "Esgotado");
-      return `• ${p.name} — R$${p.price.toFixed(2)} | ${availability}${cat ? ` | ${cat}` : ""}${p.description ? ` | ${p.description.slice(0, 100)}` : ""}`;
+      const viewsInfo = p.views > 0 ? ` | ${p.views} visualizações` : "";
+      const variants = variantsMap[p.id];
+      let variantInfo = "";
+      if (variants && variants.length > 0) {
+        variantInfo = " | Variantes: " + variants.map((v: any) => 
+          `${v.variant_type}:${v.variant_value}(${v.stock} un${v.price_modifier ? `, +R$${v.price_modifier}` : ""})`
+        ).join(", ");
+      }
+      return `• ${p.name} — R$${p.price.toFixed(2)} | ${availability}${viewsInfo}${cat ? ` | ${cat}` : ""}${p.description ? ` | ${p.description.slice(0, 100)}` : ""}${variantInfo}`;
+    }).join("\n");
     }).join("\n");
 
     const couponList = (coupons || []).filter((c: any) => {
