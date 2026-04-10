@@ -3140,6 +3140,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_ai_work_summary: { Args: { p_user_id: string }; Returns: Json }
       get_best_selling_products: {
         Args: { _limit?: number; _store_user_id: string }
         Returns: {
@@ -3147,6 +3148,7 @@ export type Database = {
           total_sold: number
         }[]
       }
+      get_dashboard_stats: { Args: { p_user_id: string }; Returns: Json }
       get_store_rich_insights: { Args: { p_user_id: string }; Returns: Json }
       get_store_sales_stats: { Args: { p_user_id: string }; Returns: Json }
       get_super_admin_ids: {
