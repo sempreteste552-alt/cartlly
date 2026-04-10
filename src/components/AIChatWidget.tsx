@@ -141,6 +141,7 @@ export function AIChatWidget() {
   const [cpfValue, setCpfValue] = useState("");
   const [pendingSubscribe, setPendingSubscribe] = useState<{ plan_id: string; plan_name: string } | null>(null);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [pendingActions, setPendingActions] = useState<Record<number, any[]>>({});
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -305,159 +306,150 @@ export function AIChatWidget() {
     }
   };
 
-  const processAIActions = useCallback(async (content: string) => {
+  const processAIActions = useCallback(async (content: string, msgIndex: number) => {
+    const actions: any[] = [];
+    
+    // --- Push ---
     const pushMatch = content.match(/\[ACTION_PUSH\]([\s\S]*?)\[\/ACTION_PUSH\]/);
-    if (pushMatch && user) {
+    if (pushMatch) {
       try {
         const payload = JSON.parse(pushMatch[1].trim());
-        const resp = await supabase.functions.invoke("send-push-customers", {
-          body: { title: payload.title, body: payload.body, store_user_id: user.id },
-        });
-        if (resp.error) {
-          toast.error("Erro ao enviar push: " + resp.error.message);
-        } else {
-          toast.success(`✅ Push enviado para ${resp.data?.sent || 0} clientes!`);
-        }
-      } catch (e) {
-        console.error("Push action error:", e);
-      }
+        actions.push({ type: "push", label: "📢 Enviar Push para Clientes", payload });
+      } catch (e) { console.error("Push parse error:", e); }
     }
 
+    // --- Coupon ---
     const couponMatch = content.match(/\[ACTION_COUPON\]([\s\S]*?)\[\/ACTION_COUPON\]/);
-    if (couponMatch && user) {
+    if (couponMatch) {
       try {
         const payload = JSON.parse(couponMatch[1].trim());
-        const { error } = await supabase.from("coupons").insert({
-          user_id: user.id,
-          code: payload.code?.toUpperCase() || "AI" + Date.now().toString(36).toUpperCase(),
-          discount_type: payload.discount_type || "percentage",
-          discount_value: payload.discount_value || 10,
-          active: true,
-          max_uses: payload.max_uses || null,
-          min_order_value: payload.min_order_value || 0,
-          expires_at: payload.expires_at || null,
-        });
-        if (error) {
-          toast.error("Erro ao criar cupom: " + error.message);
-        } else {
-          toast.success(`✅ Cupom ${payload.code || ""} criado com sucesso!`);
-          queryClient.invalidateQueries({ queryKey: ["coupons"] });
-        }
-      } catch (e) {
-        console.error("Coupon action error:", e);
-      }
+        actions.push({ type: "coupon", label: `🎟️ Criar Cupom ${payload.code || ""}`, payload });
+      } catch (e) { console.error("Coupon parse error:", e); }
     }
 
+    // --- Subscribe ---
     const subscribeMatch = content.match(/\[ACTION_SUBSCRIBE\]([\s\S]*?)\[\/ACTION_SUBSCRIBE\]/);
-    if (subscribeMatch && user) {
+    if (subscribeMatch) {
       try {
         const payload = JSON.parse(subscribeMatch[1].trim());
-        const doc = (payload.document || "").replace(/\D/g, "");
-        if (doc.length >= 11) {
-          await handleSubscribe(payload.plan_id, payload.plan_name, doc);
-        } else {
-          setPendingSubscribe({ plan_id: payload.plan_id, plan_name: payload.plan_name });
-          setCpfValue("");
-          setCpfDialogOpen(true);
-        }
-      } catch (e) {
-        console.error("Subscribe action error:", e);
-      }
+        actions.push({ type: "subscribe", label: `⬆️ Assinar ${payload.plan_name}`, payload });
+      } catch (e) { console.error("Subscribe parse error:", e); }
     }
 
+    // --- Update Product ---
     const updateProductMatch = content.match(/\[ACTION_UPDATE_PRODUCT\]([\s\S]*?)\[\/ACTION_UPDATE_PRODUCT\]/);
-    if (updateProductMatch && user) {
+    if (updateProductMatch) {
       try {
         const payload = JSON.parse(updateProductMatch[1].trim());
-        const shortId = payload.product_id;
-        const fullProduct = (products || []).find((p: any) => p.id?.startsWith(shortId));
-        if (!fullProduct) {
-          toast.error("Produto não encontrado: " + shortId);
-        } else {
-          const allowedFields = ["price", "stock", "name", "description", "published"];
-          const updates: Record<string, any> = {};
-          for (const key of allowedFields) {
-            if (payload.updates?.[key] !== undefined) {
-              updates[key] = payload.updates[key];
-            }
-          }
-          if (Object.keys(updates).length > 0) {
-            const { error } = await supabase
-              .from("products")
-              .update(updates)
-              .eq("id", fullProduct.id)
-              .eq("user_id", user.id);
-            if (error) {
-              toast.error("Erro ao atualizar produto: " + error.message);
-            } else {
-              const changedFields = Object.keys(updates).map(k => {
-                if (k === "price") return `Preço → R$${updates[k]}`;
-                if (k === "stock") return `Estoque → ${updates[k]}`;
-                if (k === "name") return `Nome → ${updates[k]}`;
-                if (k === "published") return updates[k] ? "Publicado" : "Despublicado";
-                return `${k} atualizado`;
-              }).join(", ");
-              toast.success(`✅ Produto atualizado: ${changedFields}`);
-              queryClient.invalidateQueries({ queryKey: ["products"] });
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Update product action error:", e);
-      }
+        actions.push({ type: "update_product", label: "📦 Atualizar Produto", payload });
+      } catch (e) { console.error("Update product parse error:", e); }
     }
 
+    // --- Update Settings ---
     const settingsMatch = content.match(/\[ACTION_UPDATE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_SETTINGS\]/);
-    if (settingsMatch && user && settings?.id) {
+    if (settingsMatch) {
       try {
         const payload = JSON.parse(settingsMatch[1].trim());
-        const { error } = await supabase
-          .from("store_settings")
-          .update({
-            ...payload,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", settings.id);
-        
-        if (error) {
-          toast.error("Erro ao atualizar configurações: " + error.message);
-        } else {
-          toast.success("✅ Configurações da loja atualizadas pela IA!");
-          queryClient.invalidateQueries({ queryKey: ["store_settings"] });
-        }
-      } catch (e) {
-        console.error("Update settings action error:", e);
-      }
+        actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações", payload });
+      } catch (e) { console.error("Update settings parse error:", e); }
     }
 
+    // --- Reminder ---
     const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
-    if (reminderMatch && user) {
+    if (reminderMatch) {
       try {
         const payload = JSON.parse(reminderMatch[1].trim());
-        const { error } = await supabase.from("store_ai_reminders").insert({
+        actions.push({ type: "reminder", label: "⏰ Agendar Lembrete", payload });
+      } catch (e) { console.error("Reminder parse error:", e); }
+    }
+
+    if (actions.length > 0) {
+      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+    }
+  }, [user, products, settings]);
+
+  const confirmAction = async (msgIndex: number, actionIndex: number) => {
+    const action = pendingActions[msgIndex]?.[actionIndex];
+    if (!action || !user) return;
+
+    try {
+      if (action.type === "push") {
+        const resp = await supabase.functions.invoke("send-push-customers", {
+          body: { title: action.payload.title, body: action.payload.body, store_user_id: user.id },
+        });
+        if (resp.error) throw resp.error;
+        toast.success(`✅ Push enviado para ${resp.data?.sent || 0} clientes!`);
+      } else if (action.type === "coupon") {
+        const { error } = await supabase.from("coupons").insert({
           user_id: user.id,
-          title: payload.title,
-          description: payload.body,
-          remind_at: payload.scheduled_at,
+          code: action.payload.code?.toUpperCase() || "AI" + Date.now().toString(36).toUpperCase(),
+          discount_type: action.payload.discount_type || "percentage",
+          discount_value: action.payload.discount_value || 10,
+          active: true,
+          max_uses: action.payload.max_uses || null,
+          min_order_value: action.payload.min_order_value || 0,
+          expires_at: action.payload.expires_at || null,
+        });
+        if (error) throw error;
+        toast.success(`✅ Cupom ${action.payload.code || ""} criado!`);
+        queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      } else if (action.type === "subscribe") {
+        const doc = (action.payload.document || "").replace(/\D/g, "");
+        if (doc.length >= 11) {
+          await handleSubscribe(action.payload.plan_id, action.payload.plan_name, doc);
+        } else {
+          setPendingSubscribe({ plan_id: action.payload.plan_id, plan_name: action.payload.plan_name });
+          setCpfValue(""); setCpfDialogOpen(true);
+        }
+      } else if (action.type === "update_product") {
+        const shortId = action.payload.product_id;
+        const fullProduct = (products || []).find((p: any) => p.id?.startsWith(shortId));
+        if (!fullProduct) throw new Error("Produto não encontrado");
+        
+        const allowedFields = ["price", "stock", "name", "description", "published"];
+        const updates: Record<string, any> = {};
+        for (const key of allowedFields) {
+          if (action.payload.updates?.[key] !== undefined) updates[key] = action.payload.updates[key];
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          const { error } = await supabase.from("products").update(updates).eq("id", fullProduct.id).eq("user_id", user.id);
+          if (error) throw error;
+          toast.success("✅ Produto atualizado!");
+          queryClient.invalidateQueries({ queryKey: ["products"] });
+        }
+      } else if (action.type === "update_settings" && settings?.id) {
+        const { error } = await supabase.from("store_settings").update({
+          ...action.payload,
+          updated_at: new Date().toISOString()
+        }).eq("id", settings.id);
+        if (error) throw error;
+        toast.success("✅ Configurações atualizadas!");
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+      } else if (action.type === "reminder") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: "admin_reminder",
+          scheduled_at: action.payload.scheduled_at,
+          payload: { title: action.payload.title, body: action.payload.body },
           status: "pending"
         });
-
-        if (!error) {
-          // Also schedule in generic task runner
-          await supabase.from("ai_scheduled_tasks").insert({
-            user_id: user.id,
-            task_type: "admin_reminder",
-            scheduled_at: payload.scheduled_at,
-            payload: { title: payload.title, body: payload.body },
-            status: "pending"
-          });
-          toast.success(`✅ Lembrete agendado para ${new Date(payload.scheduled_at).toLocaleString()}`);
-        }
-      } catch (e) {
-        console.error("Reminder action error:", e);
+        if (error) throw error;
+        toast.success("✅ Lembrete agendado!");
+        queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
       }
+
+      // Mark as confirmed
+      setPendingActions(prev => {
+        const newActions = [...(prev[msgIndex] || [])];
+        newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
+        return { ...prev, [msgIndex]: newActions };
+      });
+    } catch (e: any) {
+      toast.error("Erro ao executar: " + e.message);
     }
-  }, [user, queryClient, products, settings]);
+  };
+
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -608,7 +600,7 @@ export function AIChatWidget() {
       }
 
       if (assistantSoFar) {
-        await processAIActions(assistantSoFar);
+        await processAIActions(assistantSoFar, messages.length + 1);
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Erro desconhecido";
@@ -747,7 +739,26 @@ export function AIChatWidget() {
                       ))}
                     </div>
                   )}
-                </div>
+                  </div>
+
+                  {pendingActions[i] && pendingActions[i].length > 0 && (
+                    <div className="mt-3 space-y-2 pt-2 border-t border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ações Pendentes:</p>
+                      {pendingActions[i].map((action, aidx) => (
+                        <div key={aidx} className="flex flex-col gap-1.5 bg-muted/50 p-2 rounded-lg border border-border/50">
+                          <span className="text-[11px] font-medium leading-tight">{action.label}</span>
+                          <Button 
+                            size="sm" 
+                            className="h-7 w-full text-[10px]" 
+                            disabled={action.confirmed}
+                            onClick={() => confirmAction(i, aidx)}
+                          >
+                            {action.confirmed ? "Confirmado" : "Confirmar e Executar"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
           ))}

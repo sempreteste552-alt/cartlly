@@ -23,6 +23,7 @@ export default function Cerebro() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
+  const [pendingActions, setPendingActions] = useState<Record<number, any[]>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // === DATA QUERIES ===
@@ -82,9 +83,15 @@ export default function Cerebro() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
       queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      
+      // Check for actions in the new message
+      if (data?.content) {
+        processAIActions(data.content, chatHistory.length + 1);
+      }
+      
       setInput("");
     },
     onError: (err: any) => {
@@ -102,6 +109,109 @@ export default function Cerebro() {
       toast.success("Chat limpo!");
     }
   });
+
+  const processAIActions = (content: string, msgIndex: number) => {
+    const actions: any[] = [];
+    
+    // Schedule Task
+    const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
+    let taskMatch;
+    while ((taskMatch = taskRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(taskMatch[1]);
+        actions.push({ type: "schedule_task", label: `📅 Agendar Push: ${payload.payload?.title || "Sem título"}`, payload });
+      } catch (e) { console.error("Task parse error:", e); }
+    }
+
+    // Reminder
+    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
+    let reminderMatch;
+    while ((reminderMatch = reminderRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(reminderMatch[1]);
+        actions.push({ type: "reminder", label: `⏰ Agendar Lembrete: ${payload.title}`, payload });
+      } catch (e) { console.error("Reminder parse error:", e); }
+    }
+
+    // Store Settings
+    const settingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
+    let settingsMatch;
+    while ((settingsMatch = settingsRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(settingsMatch[1]);
+        actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações da Loja", payload });
+      } catch (e) { console.error("Settings parse error:", e); }
+    }
+
+    // Page update
+    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
+    let pageMatch;
+    while ((pageMatch = pageRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(pageMatch[1]);
+        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
+      } catch (e) { console.error("Page parse error:", e); }
+    }
+
+    if (actions.length > 0) {
+      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+    }
+  };
+
+  const confirmAction = async (msgIndex: number, actionIndex: number) => {
+    const action = pendingActions[msgIndex]?.[actionIndex];
+    if (!action || !user) return;
+
+    try {
+      if (action.type === "schedule_task") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: action.payload.task_type,
+          scheduled_at: action.payload.scheduled_at,
+          payload: action.payload.payload,
+          ai_instruction: action.payload.ai_instruction,
+          status: "pending"
+        });
+        if (error) throw error;
+        toast.success("✅ Tarefa agendada com sucesso!");
+      } else if (action.type === "reminder") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: "admin_reminder",
+          scheduled_at: action.payload.remind_at,
+          payload: { title: action.payload.title, body: action.payload.description },
+          status: "pending"
+        });
+        if (error) throw error;
+        toast.success("✅ Lembrete agendado!");
+      } else if (action.type === "update_settings") {
+        const { error } = await supabase.from("store_settings").update({
+          ...action.payload,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações atualizadas!");
+      } else if (action.type === "update_page") {
+        const { error } = await supabase.from("store_pages").update({
+          content: action.payload.content,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id).eq("slug", action.payload.slug);
+        if (error) throw error;
+        toast.success(`✅ Página ${action.payload.slug} atualizada!`);
+      }
+
+      // Mark as confirmed
+      setPendingActions(prev => {
+        const newActions = [...(prev[msgIndex] || [])];
+        newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
+        return { ...prev, [msgIndex]: newActions };
+      });
+      queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+    } catch (e: any) {
+      toast.error("Erro ao executar: " + e.message);
+    }
+  };
 
   // === EFFECTS ===
 
@@ -177,9 +287,29 @@ export default function Cerebro() {
                         ? 'bg-primary text-primary-foreground rounded-tr-none' 
                         : 'bg-card border shadow-sm rounded-tl-none'
                     }`}>
-                      {msg.content.split(/\[ACTION_.*?\]/).map((part, index) => (
-                        <span key={index}>{part}</span>
-                      ))}
+                        {msg.content.split(/\[ACTION_.*?\]/).map((part, index) => (
+                          <span key={index}>{part}</span>
+                        ))}
+                        
+                        {pendingActions[i] && pendingActions[i].length > 0 && (
+                          <div className="mt-3 space-y-2 pt-2 border-t border-border/50">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ações Sugeridas pela IA:</p>
+                            {pendingActions[i].map((action, aidx) => (
+                              <div key={aidx} className="flex flex-col gap-1.5 bg-muted/50 p-2 rounded-lg border border-border/50">
+                                <span className="text-[11px] font-medium leading-tight text-foreground">{action.label}</span>
+                                <Button 
+                                  size="sm" 
+                                  className="h-7 w-full text-[10px]" 
+                                  variant={action.confirmed ? "secondary" : "default"}
+                                  disabled={action.confirmed}
+                                  onClick={() => confirmAction(i, aidx)}
+                                >
+                                  {action.confirmed ? "✅ Confirmado e Executado" : "Confirmar e Executar"}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
                 ))}

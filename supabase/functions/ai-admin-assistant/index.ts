@@ -125,86 +125,15 @@ REGRAS:
     const aiResult = await response.json();
     const assistantMessage = aiResult.choices[0].message.content;
 
-    // 4. Post-process Actions
+    // 4. Post-process Actions (DISABLED for manual confirmation in frontend)
+    // The assistantMessage now only contains the action tags for the frontend to handle.
+    // We are no longer executing these actions here to allow user confirmation.
     
-    // --- Update Store Settings ---
-    const settingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
-    let settingsMatch;
-    while ((settingsMatch = settingsRegex.exec(assistantMessage)) !== null) {
-      try {
-        const updateData = JSON.parse(settingsMatch[1]);
-        await supabase.from("store_settings").update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id);
-      } catch (e) {
-        console.error("Error updating settings:", e);
-      }
-    }
-
-    // --- Schedule Reminder (For Admin) ---
-    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
-    let reminderMatch;
-    while ((reminderMatch = reminderRegex.exec(assistantMessage)) !== null) {
-      try {
-        const reminderData = JSON.parse(reminderMatch[1]);
-        await supabase.from("store_ai_reminders").insert({
-          user_id: user.id,
-          title: reminderData.title,
-          description: reminderData.description,
-          remind_at: reminderData.remind_at,
-          status: "pending"
-        });
-        
-        // Also add to ai_scheduled_tasks for processing
-        await supabase.from("ai_scheduled_tasks").insert({
-          user_id: user.id,
-          task_type: "admin_reminder",
-          scheduled_at: reminderData.remind_at,
-          payload: { 
-            title: reminderData.title, 
-            body: reminderData.description 
-          },
-          status: "pending"
-        });
-      } catch (e) {
-        console.error("Error scheduling reminder:", e);
-      }
-    }
-
-    // --- Update Page ---
-    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
-    let pageMatch;
-    while ((pageMatch = pageRegex.exec(assistantMessage)) !== null) {
-      try {
-        const pageData = JSON.parse(pageMatch[1]);
-        await supabase.from("store_pages").update({
-          content: pageData.content,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id).eq("slug", pageData.slug);
-      } catch (e) {
-        console.error("Error updating page:", e);
-      }
-    }
-
-    // --- (Keep existing actions from previous version) ---
-    const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
-    let match;
-    while ((match = taskRegex.exec(assistantMessage)) !== null) {
-      try {
-        const taskData = JSON.parse(match[1]);
-        await supabase.from("ai_scheduled_tasks").insert({
-          user_id: user.id,
-          task_type: taskData.task_type,
-          scheduled_at: taskData.scheduled_at,
-          payload: taskData.payload,
-          ai_instruction: taskData.ai_instruction,
-          status: "pending"
-        });
-      } catch (e) {
-        console.error("Error parsing/inserting task:", e);
-      }
-    }
+    // Store conversation
+    await supabase.from("admin_ai_chats").insert([
+      { user_id: user.id, role: "user", content: messages[messages.length - 1].content },
+      { user_id: user.id, role: "assistant", content: assistantMessage }
+    ]);
 
     // Store conversation
     await supabase.from("admin_ai_chats").insert([
