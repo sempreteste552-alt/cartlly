@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone } from "lucide-react";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
@@ -20,6 +20,7 @@ interface PlatformConfig {
   allow_new_registrations: boolean;
   default_plan_id: string;
   support_whatsapp_number: string;
+  promo_banner_enabled: boolean;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -43,6 +44,7 @@ const defaultConfig: PlatformConfig = {
   allow_new_registrations: true,
   default_plan_id: "",
   support_whatsapp_number: "",
+  promo_banner_enabled: false,
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
@@ -155,7 +157,28 @@ export default function SuperAdminConfig() {
         </CardContent>
       </Card>
 
-      {/* Support WhatsApp */}
+      {/* Promotional Banner */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Megaphone className="h-5 w-5 text-pink-500" /> Banner Promocional
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Ativa um banner no topo de todas as lojas com o CTA "Crie sua loja" apontando para <strong>usecartlly.vercel.app</strong>. 
+            Cada tenant também pode ativar/desativar individualmente nas suas configurações.
+          </p>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Banner Global Ativo</Label>
+              <p className="text-xs text-muted-foreground">Exibe o banner em todas as lojas da plataforma</p>
+            </div>
+            <Switch checked={config.promo_banner_enabled} onCheckedChange={v => updateField("promo_banner_enabled", v)} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">

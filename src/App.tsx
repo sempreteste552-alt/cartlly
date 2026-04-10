@@ -41,6 +41,8 @@ import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
 import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import ResetPassword from "./pages/ResetPassword";
+import Termos from "./pages/Termos";
+import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
 import { isPlatformHost } from "./lib/storeDomain";
 import StoreRoutes from "./StoreRoutes";
@@ -111,6 +113,8 @@ const App = () => {
                   </Route>
                   <Route path="/login" element={<Login />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/termos" element={<Termos />} />
+                  <Route path="/privacidade" element={<Privacidade />} />
                   <Route path="/setup-store" element={<ProtectedRoute><SetupStore /></ProtectedRoute>} />
                   <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
                   {/* Super Admin */}
