@@ -89,7 +89,6 @@ serve(async (req) => {
       }
       return `• ${p.name} — R$${p.price.toFixed(2)} | ${availability}${viewsInfo}${cat ? ` | ${cat}` : ""}${p.description ? ` | ${p.description.slice(0, 100)}` : ""}${variantInfo}`;
     }).join("\n");
-    }).join("\n");
 
     const couponList = (coupons || []).filter((c: any) => {
       if (c.max_uses && c.used_count >= c.max_uses) return false;
