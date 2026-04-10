@@ -1,11 +1,12 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DollarSign, TrendingUp, TrendingDown, Package, Loader2, AlertTriangle } from "lucide-react";
+import { DollarSign, Loader2, AlertTriangle } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
-import { useOrders } from "@/hooks/useOrders";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ["hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
@@ -13,7 +14,22 @@ const COLORS = ["hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(22
 export default function Lucro() {
   const { user } = useAuth();
   const { data: products, isLoading: loadingProducts } = useProducts();
-  const { data: orders, isLoading: loadingOrders } = useOrders();
+
+  // Fetch orders with items for profit calculation
+  const { data: ordersWithItems, isLoading: loadingOrders } = useQuery({
+    queryKey: ["orders_with_items_profit", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: orders, error } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return orders || [];
+    },
+  });
+
+  const orders = ordersWithItems;
 
   const analysis = useMemo(() => {
     if (!products || !orders) return null;
