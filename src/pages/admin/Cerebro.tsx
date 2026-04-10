@@ -185,6 +185,24 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
+    // 6. Atualizar Página
+    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
+    while ((match = pageRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
+      } catch (e) {}
+    }
+
+    // 7. Lembrete Pessoal
+    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
+    while ((match = reminderRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "schedule_reminder", label: `🔔 Lembrete: ${payload.title}`, payload });
+      } catch (e) {}
+    }
+
     if (actions.length > 0) setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
   };
 
