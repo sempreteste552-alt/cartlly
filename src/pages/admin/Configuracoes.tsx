@@ -157,9 +157,6 @@ function GeneralSettingsTab() {
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
-  const [promoBannerEnabled, setPromoBannerEnabled] = useState(false);
-  const [promoBannerText, setPromoBannerText] = useState("");
-  const [promoBannerLink, setPromoBannerLink] = useState("");
   const [marqueeText, setMarqueeText] = useState("");
   const [marqueeSpeed, setMarqueeSpeed] = useState(50);
   const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
@@ -207,9 +204,6 @@ function GeneralSettingsTab() {
       setFooterBgColor((settings as any).footer_bg_color ?? "#000000");
       setFooterTextColor((settings as any).footer_text_color ?? "#ffffff");
       setMarqueeEnabled((settings as any).marquee_enabled ?? false);
-      setPromoBannerEnabled((settings as any).promo_banner_enabled ?? false);
-      setPromoBannerText((settings as any).promo_banner_text ?? "");
-      setPromoBannerLink((settings as any).promo_banner_link ?? "");
       setMarqueeText((settings as any).marquee_text ?? "");
       setMarqueeSpeed((settings as any).marquee_speed ?? 50);
       setMarqueeBgColor((settings as any).marquee_bg_color ?? "#000000");
@@ -328,9 +322,6 @@ function GeneralSettingsTab() {
       is_verified: isVerified,
       favicon_url: faviconUrl || null,
       store_category: storeCategory.trim() || null,
-      promo_banner_enabled: promoBannerEnabled,
-      promo_banner_text: promoBannerText || null,
-      promo_banner_link: promoBannerLink || null,
     } as any);
   };
 
@@ -422,47 +413,6 @@ function GeneralSettingsTab() {
         </Card>
       </LockedFeature>
 
-      {/* Promo Banner */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-pink-500" /><CardTitle className="text-lg">Banner Promocional</CardTitle></div>
-          <CardDescription>Banner "Crie sua loja" exibido no topo para visitantes</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Ativar Banner Promocional</Label>
-              <p className="text-xs text-muted-foreground">Exibe um banner no topo da sua loja</p>
-            </div>
-            <Switch checked={promoBannerEnabled} onCheckedChange={setPromoBannerEnabled} />
-          </div>
-          {promoBannerEnabled && (
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label>Texto do Banner (deixe vazio para padrão)</Label>
-                <Input
-                  placeholder="🚀 Crie sua própria loja online agora mesmo!"
-                  value={promoBannerText}
-                  onChange={e => setPromoBannerText(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Link do Botão "Saiba mais"</Label>
-                <Input
-                  placeholder="https://usecartlly.vercel.app/"
-                  value={promoBannerLink}
-                  onChange={e => setPromoBannerLink(e.target.value)}
-                />
-              </div>
-              <div className="rounded-lg overflow-hidden border border-border">
-                <div className="text-white text-center py-3 px-4 text-sm font-semibold" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
-                  {promoBannerText || "🚀 Crie sua própria loja online agora mesmo!"} — <span className="underline">Saiba mais</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       <Card className="border-border">
         <CardHeader>
