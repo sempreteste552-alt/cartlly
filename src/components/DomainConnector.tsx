@@ -119,7 +119,11 @@ export default function DomainConnector({
       if (data?.status === "active") {
         toast.success(`🎉 Domínio ${domain.hostname} verificado e online!`);
       } else if (data?.status === "pending_ssl") {
-        toast.info("DNS verificado ✅ O SSL está sendo provisionado.");
+        toast.info(
+          data?.sslError 
+            ? `DNS verificado ✅ Mas o SSL ainda está sendo provisionado: ${data.sslError}`
+            : "DNS verificado ✅ O SSL está sendo provisionado."
+        );
       } else {
         toast.info("Configuração incompleta. Verifique os registros DNS.");
       }
