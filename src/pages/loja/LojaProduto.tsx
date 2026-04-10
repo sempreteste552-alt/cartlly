@@ -212,7 +212,7 @@ export default function LojaProduto() {
           <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
         </div>
       )}
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 py-6" style={{ fontFamily: "var(--store-font-body)" }}>
       <style>{`
         @keyframes pdp-fade-up {
           from { opacity: 0; transform: translateY(24px); }
@@ -294,7 +294,7 @@ export default function LojaProduto() {
           )}
 
           <div className="flex items-start justify-between gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{product.name}</h1>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title="Favoritar">
                 <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
