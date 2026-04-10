@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, productName, productDescription, productPrice, productCategory, imageUrl } = await req.json();
+    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -114,6 +114,27 @@ Forneça:
               estimated_price_max: { type: "number", description: "Estimated maximum price in BRL" },
             },
             required: ["suggested_name", "description", "suggested_category", "colors", "tags", "estimated_price_min", "estimated_price_max"],
+          },
+        },
+      };
+    } else if (action === "generate_restock_phrases") {
+      systemPrompt = `Você é um especialista em marketing de escassez e urgência para e-commerce. Gere frases curtas e persuasivas (badges) para produtos que voltaram ao estoque ou que estão vendendo muito.
+      Exemplos: "A queridinha voltou!", "Estoque renovado!", "Últimas peças!", "Sucesso de vendas!".
+      Gere 5 opções de frases curtas e impactantes.`;
+
+      userContent = [{ type: "text", text: `Produto: ${productName}\nCategoria: ${productCategory || "Geral"}` }];
+      toolName = "generate_restock_badges";
+      toolDef = {
+        type: "function",
+        function: {
+          name: toolName,
+          description: "Generate catchy restock/sales badges for the product",
+          parameters: {
+            type: "object",
+            properties: {
+              phrases: { type: "array", items: { type: "string" }, description: "5 catchy sales/restock phrases" },
+            },
+            required: ["phrases"],
           },
         },
       };

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AIEnhanceParams {
-  action: "generate_description" | "suggest_price" | "analyze_image";
+  action: "generate_description" | "suggest_price" | "analyze_image" | "generate_restock_phrases";
   productName?: string;
   productDescription?: string;
   productPrice?: number;
@@ -40,7 +40,12 @@ export interface ImageAnalysisResult {
   estimated_price_max: number;
 }
 
-export type AIResult = SEOResult | PriceResult | ImageAnalysisResult;
+export interface RestockPhrasesResult {
+  action: "generate_restock_phrases";
+  phrases: string[];
+}
+
+export type AIResult = SEOResult | PriceResult | ImageAnalysisResult | RestockPhrasesResult;
 
 export function useAIProductEnhance() {
   return useMutation({
