@@ -49,6 +49,7 @@ const AI_TONE_OPTIONS = [
   { value: "divertida", label: "🎉 Divertida", desc: "Descontraída com emojis e humor" },
   { value: "formal", label: "🎩 Formal", desc: "Elegante e respeitosa com 'senhor(a)'" },
   { value: "amigavel", label: "❤️ Amigável", desc: "Calorosa, próxima e empática" },
+  { value: "ceo_profissional", label: "🧠 Modo CEO", desc: "Estratégias de marketing e vendas agressivas" },
 ];
 
 function fileToDataUrl(file: File): Promise<string> {
@@ -448,6 +449,23 @@ export function AIChatWidget() {
 
   const sendMessage = async (text: string) => {
     if ((!text.trim() && pendingImages.length === 0) || isLoading) return;
+
+    // Detect CEO mode activation command
+    const lowerText = text.toLowerCase().trim();
+    if (lowerText.includes("ative modo ceo") || lowerText.includes("ativar modo ceo") || lowerText.includes("cérebro ceo") || lowerText.includes("cerebro ceo")) {
+      if (settings?.id && updateSettings) {
+        try {
+          await updateSettings.mutateAsync({
+            id: settings.id,
+            ai_chat_tone: "ceo_profissional",
+          } as any);
+          toast.success("🧠 Modo CEO Profissional ativado!");
+          queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+        } catch (err) {
+          console.error("Error activating CEO mode:", err);
+        }
+      }
+    }
 
     const images = [...pendingImages];
     setPendingImages([]);
