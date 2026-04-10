@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle, Power } from "lucide-react";
+import { Loader2, CreditCard, ShieldCheck, Zap, CheckCircle2, XCircle, AlertTriangle, Power, Eye, EyeOff } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
@@ -31,6 +31,8 @@ export default function Gateway() {
   const [paymentGateway, setPaymentGateway] = useState("");
   const [gatewayPublicKey, setGatewayPublicKey] = useState("");
   const [gatewaySecretKey, setGatewaySecretKey] = useState("");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [showPublicKey, setShowPublicKey] = useState(false);
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [maxInstallments, setMaxInstallments] = useState(12);
   const [gatewayActive, setGatewayActive] = useState(false);
@@ -197,12 +199,22 @@ export default function Gateway() {
 
               <div className="space-y-2">
                 <Label>{selectedGateway.publicKeyLabel}</Label>
-                <Input value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs" maxLength={500} />
+                <div className="relative">
+                  <Input type={showPublicKey ? "text" : "password"} value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs pr-10" maxLength={500} />
+                  <button type="button" onClick={() => setShowPublicKey(!showPublicKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Chave Secreta / Access Token</Label>
-                <Input type="password" value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs" maxLength={500} />
+                <div className="relative">
+                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs pr-10" maxLength={500} />
+                  <button type="button" onClick={() => setShowSecretKey(!showSecretKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-start gap-2 rounded-md bg-muted p-3">
