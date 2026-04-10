@@ -115,6 +115,9 @@ export function useAllTenants() {
           orders: orderData[p.user_id] || { count: 0, revenue: 0 },
           referral_origin: referralMap[p.user_id] || null,
         })) ?? [];
+    },
+  });
+}
 
 export function useAllPlans() {
   return useQuery({
