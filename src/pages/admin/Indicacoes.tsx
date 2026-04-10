@@ -26,8 +26,9 @@ export default function Indicacoes() {
   const stats = useReferralStats();
   const [copied, setCopied] = useState(false);
 
+  const PRODUCTION_ORIGIN = "https://cartlly.lovable.app";
   const referralLink = code?.code
-    ? `${window.location.origin}/login?ref=${code.code}`
+    ? `${PRODUCTION_ORIGIN}/login?ref=${code.code}`
     : "";
 
   const handleCopy = () => {
