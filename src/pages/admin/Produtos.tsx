@@ -378,7 +378,9 @@ export default function Produtos() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
+      )
       )}
 
       {/* Create / Edit forms */}
