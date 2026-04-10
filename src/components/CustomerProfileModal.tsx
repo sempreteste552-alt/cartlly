@@ -159,16 +159,29 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-1">
+                    CEP
+                    {cepLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                  </Label>
+                  <Input
+                    value={cep}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setCep(v);
+                      const clean = v.replace(/\D/g, "");
+                      if (clean.length === 8) lookupCep(v);
+                    }}
+                    placeholder="00000-000"
+                    maxLength={9}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Cidade</Label>
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
                 </div>
                 <div className="space-y-2">
                   <Label>Estado</Label>
                   <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="UF" maxLength={2} />
-                </div>
-                <div className="space-y-2">
-                  <Label>CEP</Label>
-                  <Input value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" />
                 </div>
               </div>
               <div className="flex gap-2">
