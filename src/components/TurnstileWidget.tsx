@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 
 // Public site key — safe to expose in client code
 // To use test mode, replace with: 1x00000000000000000000AA
-const TURNSTILE_SITE_KEY = "0x4AAAAAABfYx1234567890ab";
+const TURNSTILE_SITE_KEY = "0x4AAAAAAC5lzHd-Ni6ygAQJ";
 
 declare global {
   interface Window {
