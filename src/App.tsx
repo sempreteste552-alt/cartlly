@@ -137,6 +137,7 @@ const App = () => {
                     <Route path="plano" element={<MeuPlano />} />
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
+                    <Route path="cerebro" element={<Cerebro />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/login" replace />} />
