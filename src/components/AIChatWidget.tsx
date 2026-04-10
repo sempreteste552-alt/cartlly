@@ -536,7 +536,7 @@ export function AIChatWidget() {
           </div>
           <div className="flex gap-1">
             {!aiLocked && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setTempTone(aiTone); setSettingsOpen(true); }}>
                 <Settings2 className="h-4 w-4" />
               </Button>
             )}
