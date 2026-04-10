@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
+import { TurnstileWidget, validateTurnstileToken } from "@/components/TurnstileWidget";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
@@ -84,6 +85,7 @@ export default function Login() {
   } | null>(null);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Capture referral code from URL (?ref=CODE)
   const [refCode] = useState(() => {
@@ -242,6 +244,23 @@ export default function Login() {
 
     try {
       setAlertCard(null);
+
+      // Validate Turnstile captcha for login and register (not forgot password)
+      if (!isForgotPassword) {
+        if (!turnstileToken) {
+          setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
+          setLoading(false);
+          return;
+        }
+        const captchaValid = await validateTurnstileToken(turnstileToken);
+        if (!captchaValid) {
+          setTurnstileToken(null);
+          setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+          setLoading(false);
+          return;
+        }
+      }
+
       if (isForgotPassword) {
           const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
             redirectTo: getPasswordResetRedirectUrl(),
@@ -713,10 +732,20 @@ export default function Login() {
                   </label>
                 </div>
               )}
+              {!isForgotPassword && (
+                <div className="flex justify-center">
+                  <TurnstileWidget
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => setTurnstileToken(null)}
+                    theme={dark ? "dark" : "light"}
+                  />
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
-                disabled={loading || (isRegister && !acceptedTerms)}
+                disabled={loading || (isRegister && !acceptedTerms) || (!isForgotPassword && !turnstileToken)}
               >
                 {loading ? "Carregando..." : isForgotPassword ? "Enviar Link" : isRegister ? "Criar Conta" : "Entrar"}
               </Button>
