@@ -27,6 +27,7 @@ import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } fro
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
+import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
