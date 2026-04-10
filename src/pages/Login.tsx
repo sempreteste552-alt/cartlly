@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -74,6 +75,7 @@ export default function Login() {
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [storeCategory, setStoreCategory] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
@@ -169,6 +171,11 @@ export default function Login() {
           setLoading(false);
           return;
         }
+        if (!storeCategory) {
+          setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
+          setLoading(false);
+          return;
+        }
         const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
         if (!slug) {
           setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
@@ -202,7 +209,8 @@ export default function Login() {
             data: { 
               display_name: displayName,
               store_name: storeName.trim(),
-              store_slug: slug
+              store_slug: slug,
+              store_category: storeCategory
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
@@ -445,6 +453,27 @@ export default function Login() {
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
                   <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                </div>
+              )}
+              {isRegister && !isForgotPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="storeCategory">Nicho da Loja</Label>
+                  <Select value={storeCategory} onValueChange={setStoreCategory}>
+                    <SelectTrigger id="storeCategory" className="h-11 border-border/50 focus:border-blue-500 transition-colors">
+                      <SelectValue placeholder="Selecione o nicho da sua loja" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Doceria">🍰 Doceria</SelectItem>
+                      <SelectItem value="Moda">👗 Moda</SelectItem>
+                      <SelectItem value="Pet Shop">🐾 Pet Shop</SelectItem>
+                      <SelectItem value="Eletrônicos">📱 Eletrônicos</SelectItem>
+                      <SelectItem value="Alimentação">🍴 Alimentação</SelectItem>
+                      <SelectItem value="Beleza">💄 Beleza</SelectItem>
+                      <SelectItem value="Infantil">🧸 Infantil</SelectItem>
+                      <SelectItem value="Joalheria">💍 Joalheria</SelectItem>
+                      <SelectItem value="Outros">⚙️ Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               {isRegister && !isForgotPassword && (

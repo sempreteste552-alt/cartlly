@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import cartlyLogo from "@/assets/cartly-logo.png";
@@ -15,6 +16,7 @@ export default function SetupStore() {
   const [loading, setLoading] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
+  const [storeCategory, setStoreCategory] = useState("");
 
   useEffect(() => {
     // If user already has a slug or is super admin, they shouldn't be here
@@ -52,6 +54,11 @@ export default function SetupStore() {
         setLoading(false);
         return;
       }
+      if (!storeCategory) {
+        toast.error("Escolha o nicho da sua loja.");
+        setLoading(false);
+        return;
+      }
 
       // Check if slug is taken
       const { data: existingSlug } = await supabase
@@ -73,6 +80,7 @@ export default function SetupStore() {
           user_id: user.id,
           store_name: storeName.trim(),
           store_slug: slug,
+          store_category: storeCategory,
         }, { onConflict: 'user_id' });
 
       if (error) throw error;
@@ -126,6 +134,26 @@ export default function SetupStore() {
                   required 
                   className="h-11 border-border/50 focus:border-blue-500 transition-colors" 
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="storeCategory">Nicho da Loja</Label>
+                <Select value={storeCategory} onValueChange={setStoreCategory}>
+                  <SelectTrigger id="storeCategory" className="h-11 border-border/50 focus:border-blue-500 transition-colors">
+                    <SelectValue placeholder="Selecione o nicho da sua loja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Doceria">🍰 Doceria</SelectItem>
+                    <SelectItem value="Moda">👗 Moda</SelectItem>
+                    <SelectItem value="Pet Shop">🐾 Pet Shop</SelectItem>
+                    <SelectItem value="Eletrônicos">📱 Eletrônicos</SelectItem>
+                    <SelectItem value="Alimentação">🍴 Alimentação</SelectItem>
+                    <SelectItem value="Beleza">💄 Beleza</SelectItem>
+                    <SelectItem value="Infantil">🧸 Infantil</SelectItem>
+                    <SelectItem value="Joalheria">💍 Joalheria</SelectItem>
+                    <SelectItem value="Outros">⚙️ Outros</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

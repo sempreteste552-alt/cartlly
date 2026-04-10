@@ -111,6 +111,7 @@ export function AdminLayout() {
         root.style.setProperty("--sidebar-primary", toHSL(adminPrimary));
         root.style.setProperty("--sidebar-ring", toHSL(adminPrimary));
         root.style.setProperty("--accent-foreground", toHSL(adminPrimary));
+        localStorage.setItem("admin_primary_color", adminPrimary);
       } catch {}
 
       return () => {

@@ -228,6 +228,7 @@ export function AIChatWidget() {
       storeName: (settings as any)?.store_name || "",
       storeSlug: (settings as any)?.store_slug || "",
       storeWhatsapp: (settings as any)?.store_whatsapp || "",
+      storeCategory: (settings as any)?.store_category || "",
       totalProducts: products?.length || 0,
       totalOrders: orders?.length || 0,
       totalRevenue: orders?.reduce((sum, o: any) => sum + (o.total || 0), 0) || 0,
