@@ -36,8 +36,21 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const { data: maintenanceMode, isLoading: maintenanceLoading } = useQuery({
+    queryKey: ["platform_maintenance_mode"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .maybeSingle();
+      if (error) return false;
+      return (data?.value as any)?.value === true;
+    },
+  });
+
   const isNonSuperAdmin = !!user && user.email !== SUPER_ADMIN_EMAIL;
-  const isStillLoading = loading || (isNonSuperAdmin && (profileLoading || storeLoading));
+  const isStillLoading = loading || (isNonSuperAdmin && (profileLoading || storeLoading || maintenanceLoading));
 
   if (isStillLoading) {
     return (
