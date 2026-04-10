@@ -16,6 +16,7 @@ export default function SetupStore() {
   const [loading, setLoading] = useState(false);
   const [storeName, setStoreName] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
+  const [storeCategory, setStoreCategory] = useState("");
 
   useEffect(() => {
     // If user already has a slug or is super admin, they shouldn't be here
