@@ -690,6 +690,16 @@ Deno.serve(async (req) => {
         let msg: { title: string; body: string };
 
         if (lovableApiKey && (seqType === "product_view" || seqType === "cart_abandonment" || seqType === "pending_order")) {
+          // Detect niche and gender for AI personalization
+          if (!storeNicheCache.has(seq.store_user_id)) {
+            const storeProds = [];
+            for (const [, p] of productMap) storeProds.push(p);
+            const cats = storeCategoriesMap.get(seq.store_user_id) || [];
+            storeNicheCache.set(seq.store_user_id, detectStoreNiche(storeProds, cats));
+          }
+          const seqNiche = storeNicheCache.get(seq.store_user_id) || "geral";
+          const seqGender = detectGender(customer.name);
+
           try {
             msg = await generateAISequenceMessage(lovableApiKey, {
               customerName: customer.name,
@@ -700,6 +710,8 @@ Deno.serve(async (req) => {
               totalSteps: seq.max_steps,
               intensity: step.intensity,
               sequenceType: seqType,
+              niche: seqNiche,
+              gender: seqGender,
             });
           } catch {
             msg = pickVariedMessage(step.templates, customer.name, productName, storeName, stepIndex, seq.customer_id, seq.product_id);
