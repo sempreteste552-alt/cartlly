@@ -117,25 +117,60 @@ Deno.serve(async (req) => {
           },
         }, { onConflict: "customer_id,store_user_id" });
 
-      if (intentLevel === "high") {
+      // Update customer view stats for product_view events
+      if (lastProductId && eventTypes.includes("product_view")) {
         try {
-          // Trigger product view recovery via recover-abandoned-carts function
-          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/recover-abandoned-carts`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-            },
-            body: JSON.stringify({
-              trigger_type: "product_view",
-              customer_id: customerId,
-              store_user_id: storeUserId,
-              product_id: lastProductId,
-            }),
+          const { error: statsErr } = await supabase.rpc("increment_customer_view_count", {
+            p_customer_id: customerId,
+            p_product_id: lastProductId
           });
-          console.log(`[analyze-behavior] Triggered product_view recovery for ${customerId}`);
+          
+          if (statsErr) console.error(`[analyze-behavior] Stats error for ${customerId}:`, statsErr);
+          
+          // Check if view count reached 10
+          const { data: stats } = await supabase
+            .from("customer_view_stats")
+            .select("view_count")
+            .eq("customer_id", customerId)
+            .eq("product_id", lastProductId)
+            .maybeSingle();
+
+          if (stats && stats.view_count >= 10) {
+            intentLevel = "very_high";
+            // Trigger 10x view special discount
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/recover-abandoned-carts`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                trigger_type: "product_view_10x",
+                customer_id: customerId,
+                store_user_id: storeUserId,
+                product_id: lastProductId,
+              }),
+            });
+            console.log(`[analyze-behavior] Triggered product_view_10x for ${customerId}`);
+          } else if (intentLevel === "high") {
+            // Standard recovery
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/recover-abandoned-carts`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                trigger_type: "product_view",
+                customer_id: customerId,
+                store_user_id: storeUserId,
+                product_id: lastProductId,
+              }),
+            });
+            console.log(`[analyze-behavior] Triggered product_view recovery for ${customerId}`);
+          }
         } catch (err) {
-          console.error(`[analyze-behavior] Failed to trigger product_view for ${customerId}:`, err);
+          console.error(`[analyze-behavior] Failed to process views for ${customerId}:`, err);
         }
       }
 

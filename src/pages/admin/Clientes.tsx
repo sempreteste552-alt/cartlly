@@ -149,6 +149,8 @@ export default function Clientes() {
       phone: formData.get("phone"),
       city: formData.get("city"),
       state: formData.get("state"),
+      gender: formData.get("gender"),
+      routine_notes: formData.get("routine_notes"),
     };
     updateCustomerMutation.mutate(data);
   };
@@ -246,7 +248,17 @@ export default function Clientes() {
                               <MapPin className="h-3.5 w-3.5" /> {customer.city}, {customer.state}
                             </span>
                           )}
+                          {customer.gender && (
+                            <Badge variant="outline" className="text-[10px] py-0 h-5">
+                              {customer.gender}
+                            </Badge>
+                          )}
                         </div>
+                        {customer.routine_notes && (
+                          <p className="text-xs text-primary/70 mt-1 italic line-clamp-1">
+                            " {customer.routine_notes} "
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -313,9 +325,25 @@ export default function Clientes() {
                   <Label htmlFor="name">Nome Completo</Label>
                   <Input id="name" name="name" defaultValue={editingCustomer.name} required />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" name="phone" defaultValue={editingCustomer.phone} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input id="phone" name="phone" defaultValue={editingCustomer.phone} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gender">Gênero</Label>
+                    <Select name="gender" defaultValue={editingCustomer.gender}>
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Masculino">Masculino</SelectItem>
+                        <SelectItem value="Feminino">Feminino</SelectItem>
+                        <SelectItem value="Outro">Outro</SelectItem>
+                        <SelectItem value="Prefiro não dizer">Prefiro não dizer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -326,6 +354,15 @@ export default function Clientes() {
                     <Label htmlFor="state">Estado</Label>
                     <Input id="state" name="state" defaultValue={editingCustomer.state} maxLength={2} />
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="routine_notes">Notas de Rotina / IA (Hooks)</Label>
+                  <Input 
+                    id="routine_notes" 
+                    name="routine_notes" 
+                    defaultValue={editingCustomer.routine_notes} 
+                    placeholder="Ex: Gosta de comprar à noite, fã de chocolate amargo..."
+                  />
                 </div>
               </div>
               <DialogFooter>

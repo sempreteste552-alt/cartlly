@@ -169,6 +169,7 @@ function GeneralSettingsTab() {
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [isVerified, setIsVerified] = useState(false);
+  const [storeCategory, setStoreCategory] = useState("");
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
@@ -215,6 +216,7 @@ function GeneralSettingsTab() {
       setBannerMobileFormat((settings as any).banner_mobile_format ?? "landscape");
       setFaviconUrl((settings as any).favicon_url ?? "");
       setIsVerified((settings as any).is_verified ?? false);
+      setStoreCategory((settings as any).store_category ?? "");
     }
   }, [settings]);
 
@@ -319,6 +321,7 @@ function GeneralSettingsTab() {
       banner_mobile_format: bannerMobileFormat,
       is_verified: isVerified,
       favicon_url: faviconUrl || null,
+      store_category: storeCategory.trim() || null,
     } as any);
   };
 
@@ -424,6 +427,27 @@ function GeneralSettingsTab() {
           <div className="space-y-2">
             <Label>Descrição</Label>
             <Textarea value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} placeholder="Breve descrição da sua loja" maxLength={500} />
+          </div>
+          <div className="space-y-2">
+            <Label>Categoria da Loja / Nicho (IA)</Label>
+            <Select value={storeCategory} onValueChange={setStoreCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o nicho da sua loja" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Doceria / Confeitaria">Doceria / Confeitaria</SelectItem>
+                <SelectItem value="Moda / Roupas">Moda / Roupas</SelectItem>
+                <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
+                <SelectItem value="Saúde / Beleza">Saúde / Beleza</SelectItem>
+                <SelectItem value="Casa / Decoração">Casa / Decoração</SelectItem>
+                <SelectItem value="Pet Shop">Pet Shop</SelectItem>
+                <SelectItem value="Esportes">Esportes</SelectItem>
+                <SelectItem value="Brinquedos">Brinquedos</SelectItem>
+                <SelectItem value="Livraria">Livraria</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Isso ajuda a IA a adaptar o tom e as frases para o seu público</p>
           </div>
           <div className="space-y-2">
             <Label>Logo</Label>

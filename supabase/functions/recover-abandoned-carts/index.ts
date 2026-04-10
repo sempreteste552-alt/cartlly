@@ -40,6 +40,9 @@ Deno.serve(async (req) => {
     if (triggerType === "product_view") {
       return await handleProductView(supabase, supabaseUrl, lovableApiKey, requestBody);
     }
+    if (triggerType === "product_view_10x") {
+      return await handleProductView10x(supabase, supabaseUrl, lovableApiKey, requestBody);
+    }
 
     // === ABANDONED CART RECOVERY ===
     // Fetch the store's abandoned_cart rule to get timing settings
@@ -88,7 +91,7 @@ Deno.serve(async (req) => {
     const customerIds = [...new Set(carts.map(c => c.customer_id).filter(Boolean))];
     const { data: customers } = await supabase
       .from("customers")
-      .select("id, name, email, auth_user_id, store_user_id")
+      .select("id, name, email, auth_user_id, store_user_id, gender")
       .in("id", customerIds);
     const customerMap = new Map((customers || []).map(c => [c.id, c]));
 
@@ -164,7 +167,9 @@ Deno.serve(async (req) => {
             const aiMsg = await generateAIMessage(lovableApiKey, {
               type: "abandoned_cart",
               customerName: customer.name,
+              customerGender: customer.gender,
               storeName,
+              storeCategory: store?.category,
               itemNames,
               totalValue: Number(totalValue).toFixed(2),
               itemCount: items.length,
@@ -772,7 +777,7 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
 
   const { data: customer } = await supabase
     .from("customers")
-    .select("id, name, auth_user_id")
+    .select("id, name, auth_user_id, gender")
     .eq("id", customer_id)
     .single();
 
@@ -785,7 +790,9 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
     .single();
 
   const storeMap = await getStoreMap(supabase, [store_user_id]);
-  const storeName = storeMap.get(store_user_id)?.store_name || "nossa loja";
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+  const storeCategory = store?.category || "loja";
   const productName = product?.name || "um produto";
 
   const productViewFallbacks = [
@@ -803,7 +810,9 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
       const aiMsg = await generateAIMessage(lovableApiKey, {
         type: "product_view",
         customerName: customer.name,
+        customerGender: customer.gender,
         storeName,
+        storeCategory,
         productName,
         dayOfWeek: new Date().getDay(),
         hour: new Date().getHours(),
@@ -839,19 +848,90 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
   return json({ processed: 1, sent: pushData.sent > 0 ? 1 : 0 });
 }
 
+async function handleProductView10x(supabase: any, supabaseUrl: string, lovableApiKey: string | undefined, body: any) {
+  const { customer_id, product_id, store_user_id } = body;
+  if (!customer_id || !product_id || !store_user_id) return json({ error: "Missing fields" }, 400);
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data: existingExec } = await supabase
+    .from("automation_executions")
+    .select("id")
+    .eq("customer_id", customer_id)
+    .eq("trigger_type", "product_view_10x")
+    .gte("sent_at", todayStart.toISOString())
+    .limit(1);
+
+  if (existingExec && existingExec.length > 0) return json({ processed: 0, message: "Already sent 10x discount today" });
+
+  const { data: customer } = await supabase.from("customers").select("id, name, auth_user_id, gender").eq("id", customer_id).single();
+  const { data: product } = await supabase.from("products").select("name, price").eq("id", product_id).single();
+  const storeMap = await getStoreMap(supabase, [store_user_id]);
+  const store = storeMap.get(store_user_id);
+  const storeName = store?.store_name || "nossa loja";
+  const storeCategory = store?.category || "loja";
+  const productName = product?.name || "um produto";
+
+  let title = "🎁 Um presente especial pra você!";
+  let msgBody = `Oi ${customer?.name}! Notamos que você amou "${productName}". Que tal um desconto exclusivo para fechar o pedido?`;
+
+  if (lovableApiKey) {
+    try {
+      const aiMsg = await generateAIMessage(lovableApiKey, {
+        type: "product_view_10x",
+        customerName: customer?.name,
+        customerGender: customer?.gender,
+        storeName,
+        storeCategory,
+        productName,
+        dayOfWeek: new Date().getDay(),
+        hour: new Date().getHours(),
+        discountCode: "AMO10",
+        discountPercentage: 10
+      });
+      if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+    } catch (e) { console.error("AI 10x error:", e); }
+  }
+
+  const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      target_user_id: customer?.auth_user_id,
+      customer_id, title, body: msgBody,
+      url: `/product/${product_id}`,
+      type: "product_view_10x",
+      store_user_id,
+    }),
+  });
+  const pushData = await pushResp.json();
+
+  await supabase.from("automation_executions").insert({
+    user_id: store_user_id,
+    customer_id,
+    trigger_type: "product_view_10x",
+    channel: "push",
+    message_text: `${title} — ${msgBody}`,
+    ai_generated: !!lovableApiKey,
+    status: pushData.sent > 0 ? "sent" : "failed",
+  });
+
+  return json({ processed: 1, sent: pushData.sent > 0 ? 1 : 0 });
+}
+
 // === HELPERS ===
 
 async function getStoreMap(supabase: any, storeUserIds: string[]) {
   const { data: stores } = await supabase
     .from("store_settings")
-    .select("user_id, store_name, store_slug")
+    .select("user_id, store_name, store_slug, store_category")
     .in("user_id", storeUserIds);
   return new Map((stores || []).map((s: any) => {
     // Use store_name if set, otherwise derive from slug (capitalize first letter)
     const slug = s.store_slug || "";
     const nameFromSlug = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "";
     const resolvedName = s.store_name?.trim() || nameFromSlug || "nossa loja";
-    return [s.user_id, { ...s, store_name: resolvedName }];
+    return [s.user_id, { ...s, store_name: resolvedName, category: s.store_category }];
   }));
 }
 
@@ -921,37 +1001,42 @@ async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: str
   const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}-${Date.now()}`;
   const specialDate = getSpecialDateContext();
 
+  const genderInfo = ctx.customerGender ? `O cliente se identifica como ${ctx.customerGender}. Adapte a linguagem se necessário (ex: amigão/amiga).` : "Gênero não informado, use linguagem neutra.";
+  const storeContext = `Esta é uma ${ctx.storeCategory || "loja"}. Use termos técnicos ou gírias apropriadas para esse nicho.`;
+
   let systemPrompt = "";
   let userPrompt = "";
 
+  const baseInstructions = `
+- Você é uma IA INTELIGENTE e AMIGÁVEL da loja "${ctx.storeName}". 
+- ${storeContext}
+- Sua missão é ser mais que uma assistente, seja uma AMIGA do cliente. 
+- Use a rotina do cliente como gancho (ex: "descansando nesse ${dayName}?", "começando a semana?", "hora do café?").
+- Adapte sua fala: ${genderInfo}
+- REGRAS OBRIGATÓRIAS:
+  - Responda APENAS com JSON: {"title": "...", "body": "..."}
+  - title: máximo 50 caracteres, comece com 1 emoji temático.
+  - body: máximo 130 caracteres, mencione o nome do cliente e a loja "${ctx.storeName}".
+  - NUNCA repita a mesma mensagem.
+  - Seed: ${seed}`;
+
   const dateInstructions = `
-- CONTEXTO DE DATAS ESPECIAIS (USE para personalizar a mensagem!):
+- CONTEXTO DE DATAS ESPECIAIS:
 ${specialDate}
-- Se for feriado/data especial, INCORPORE na mensagem (ex: "Neste Natal...", "Aproveite a Black Friday...", "Feliz Sábado...")
-- Se for fim de semana, use tom mais descontraído e convidativo
-- Se for segunda-feira, use tom motivacional e energético`;
+- Incorpore a data na mensagem se for relevante.`;
 
   if (ctx.type === "abandoned_cart") {
     const discountLine = ctx.hasDiscount
       ? `\n- INCLUA O CUPOM DE DESCONTO "${ctx.code}" (${ctx.percentage}% OFF) na mensagem! Exemplo: "Use o cupom ${ctx.code} e ganhe ${ctx.percentage}% de desconto!"`
       : "";
 
-    systemPrompt = `Você é uma assistente de marketing MUITO criativa e educada da loja "${ctx.storeName}".
+    systemPrompt = `${baseInstructions}
 Gere uma notificação push ÚNICA para recuperar um carrinho abandonado. 
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE a cada vez (use emojis variados como 🛍️ 💫 🌟 ✨ 💝 🎁 💜 🔥 🫶 💐 🌸 🎀 etc)
-- body: máximo 130 caracteres, mencione o nome do cliente e o nome da loja "${ctx.storeName}"
-- Use saudação adequada: "${greetings}" (é ${dayName})
-- Tom: amigável, educado, gentil, sem pressão
-- NUNCA repita a mesma mensagem. Use frases COMPLETAMENTE DIFERENTES a cada envio
-- Seed de variação (use para criar mensagem única): ${seed}
-- Se for o 1º lembrete: tom suave. 2º: um pouco mais direto. 3º+: mencione que os itens podem acabar${discountLine}
+${discountLine}
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Produtos: ${ctx.itemNames}
 Valor: R$ ${ctx.totalValue}
 Itens: ${ctx.itemCount}
@@ -962,21 +1047,13 @@ Datas especiais: ${specialDate}
 ${ctx.hasDiscount ? `CUPOM: ${ctx.code} (${ctx.percentage}% OFF)` : "Sem desconto"}`;
 
   } else if (ctx.type === "new_customer") {
-    systemPrompt = `Você é uma assistente de marketing MUITO alegre e educada da loja "${ctx.storeName}".
+    systemPrompt = `${baseInstructions}
 Gere uma notificação push de BOAS-VINDAS para um novo cliente.
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji alegre e festivo (🎉 🥳 🎊 🌟 💫 ✨ 🫶 💜 🎀 🌸 etc)
-- body: máximo 130 caracteres, MENCIONE O NOME DO CLIENTE e o nome da loja "${ctx.storeName}"
-- Use saudação: "${greetings}" (é ${dayName})
-- Tom: MUITO alegre, acolhedor, caloroso, faça o cliente se sentir especial
-- NUNCA repita a mesma mensagem
-- Seed de variação: ${seed}
+Sua missão é dar o maior abraço digital possível! 
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}
 Datas especiais: ${specialDate}`;
@@ -1026,23 +1103,31 @@ ${dateInstructions}`;
     Saudação: ${greetings}`;
 
   } else if (ctx.type === "product_view") {
-    systemPrompt = `Você é uma assistente de marketing MUITO atenta e gentil da loja "${ctx.storeName}".
-Gere uma notificação push para um cliente que visualizou um produto.
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji de atenção (👀 ✨ 🛍️ 💫 💝 etc)
-- body: máximo 130 caracteres, mencione o nome do cliente, o produto e a loja "${ctx.storeName}"
-- Tom: amigável, sutil, convidativo, sem ser invasivo
-- Use saudação: "${greetings}" (é ${dayName})
-- Seed: ${seed}
+    systemPrompt = `${baseInstructions}
+Gere uma notificação push para um cliente que visualizou um produto. 
+Tente ser SUTIL, como se tivesse passando por perto.
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
 Produto: ${ctx.productName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}`;
+
+  } else if (ctx.type === "product_view_10x") {
+    systemPrompt = `${baseInstructions}
+O cliente visualizou o produto ${ctx.productName} MAIS DE 10 VEZES! Ele está apaixonado ou em dúvida. 
+OFEREÇA O CUPOM "${ctx.discountCode}" (${ctx.discountPercentage}% de desconto) agora mesmo!
+Seja EXTRA AMIGÁVEL, use tom de segredo ou presente de amigo.
+${dateInstructions}`;
+
+    userPrompt = `Cliente: ${ctx.customerName}
+Produto: ${ctx.productName}
+Cupom: ${ctx.discountCode} (${ctx.discountPercentage}% OFF)
+Loja: ${ctx.storeName} (${ctx.storeCategory})
+Dia: ${dayName}
+Saudação: ${greetings}`;
+
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
