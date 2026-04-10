@@ -107,17 +107,18 @@ export default function DomainConnector({
   storeSlug,
   onDomainChange,
   onSave,
+  savedVerifyDetails,
 }: DomainConnectorProps) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<"input" | "detecting" | "instructions" | "verifying" | "done">(
     domainStatus === "verified" ? "done" : currentDomain ? "instructions" : "input"
   );
   const [domain, setDomain] = useState(currentDomain);
-  const [provider, setProvider] = useState<string>("");
+  const [provider, setProvider] = useState<string>(savedVerifyDetails?.provider || "");
   const [nameservers, setNameservers] = useState<string[]>([]);
   const [checking, setChecking] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [verifyResult, setVerifyResult] = useState<any>(savedVerifyDetails || null);
 
   const progressValue =
     step === "input" ? 15 :
