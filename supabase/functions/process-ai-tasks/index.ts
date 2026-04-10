@@ -40,19 +40,44 @@ serve(async (req) => {
           const customerIds = customers?.map(c => c.auth_user_id).filter(Boolean);
           
           if (customerIds && customerIds.length > 0) {
-            // Get tokens
             const { data: tokens } = await supabase
               .from("push_subscriptions")
               .select("*")
               .in("user_id", customerIds);
 
             if (tokens && tokens.length > 0) {
-              // Invoke the existing send-push-notification or do it directly
-              // For simplicity in this brain, we'll mark it as sent if we found tokens
-              // In a real scenario, we'd loop and send via web-push
-              console.log(`Sending push for task ${task.id} to ${tokens.length} subscribers`);
+              // Send via send-push-notification internal logic (looping tokens)
+              for (const token of tokens) {
+                await supabase.functions.invoke("send-push-internal", {
+                  body: {
+                    target_user_id: token.user_id,
+                    title: task.payload.title,
+                    body: task.payload.body,
+                    type: "ceo_insight",
+                    store_user_id: task.user_id
+                  }
+                });
+              }
             }
           }
+        } else if (task.task_type === "admin_reminder") {
+          // Send push DIRECTLY TO THE OWNER (task.user_id)
+          await supabase.functions.invoke("send-push-internal", {
+            body: {
+              target_user_id: task.user_id,
+              title: task.payload.title,
+              body: task.payload.body,
+              type: "ceo_insight",
+              store_user_id: task.user_id
+            }
+          });
+          
+          // Also update the specific reminder table
+          await supabase.from("store_ai_reminders")
+            .update({ status: "sent" })
+            .eq("user_id", task.user_id)
+            .eq("title", task.payload.title)
+            .eq("status", "pending");
         }
 
         await supabase.from("ai_scheduled_tasks").update({ status: "completed" }).eq("id", task.id);
