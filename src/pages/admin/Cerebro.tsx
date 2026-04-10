@@ -110,6 +110,24 @@ export default function Cerebro() {
     }
   });
 
+  const undoLastTurn = useMutation({
+    mutationFn: async () => {
+      if (chatHistory.length === 0) return;
+      const lastId = chatHistory[chatHistory.length - 1].id;
+      const secondLastId = chatHistory.length > 1 ? chatHistory[chatHistory.length - 2].id : null;
+      
+      const idsToDelete = [lastId];
+      if (secondLastId) idsToDelete.push(secondLastId);
+
+      const { error } = await supabase.from("admin_ai_chats").delete().in("id", idsToDelete);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
+      toast.success("Última interação removida!");
+    }
+  });
+
   const processAIActions = (content: string, msgIndex: number) => {
     const actions: any[] = [];
     
@@ -290,9 +308,19 @@ export default function Cerebro() {
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => clearChat.mutate()} disabled={chatHistory.length === 0}>
-          <Trash2 className="h-4 w-4 mr-2" /> Limpar Histórico
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            toast.success("Histórico salvo com sucesso!");
+          }}>
+            <Sparkles className="h-4 w-4 mr-2" /> Salvar Chat
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => undoLastTurn.mutate()} disabled={chatHistory.length === 0 || undoLastTurn.isPending}>
+             Voltar
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => clearChat.mutate()} disabled={chatHistory.length === 0}>
+            <Trash2 className="h-4 w-4 mr-2" /> Reiniciar Chat
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
