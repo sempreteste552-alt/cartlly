@@ -1118,23 +1118,31 @@ ${dateInstructions}`;
     Saudação: ${greetings}`;
 
   } else if (ctx.type === "product_view") {
-    systemPrompt = `Você é uma assistente de marketing MUITO atenta e gentil da loja "${ctx.storeName}".
-Gere uma notificação push para um cliente que visualizou um produto.
-
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji de atenção (👀 ✨ 🛍️ 💫 💝 etc)
-- body: máximo 130 caracteres, mencione o nome do cliente, o produto e a loja "${ctx.storeName}"
-- Tom: amigável, sutil, convidativo, sem ser invasivo
-- Use saudação: "${greetings}" (é ${dayName})
-- Seed: ${seed}
+    systemPrompt = `${baseInstructions}
+Gere uma notificação push para um cliente que visualizou um produto. 
+Tente ser SUTIL, como se tivesse passando por perto.
 ${dateInstructions}`;
 
     userPrompt = `Cliente: ${ctx.customerName}
 Produto: ${ctx.productName}
-Loja: ${ctx.storeName}
+Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}`;
+
+  } else if (ctx.type === "product_view_10x") {
+    systemPrompt = `${baseInstructions}
+O cliente visualizou o produto ${ctx.productName} MAIS DE 10 VEZES! Ele está apaixonado ou em dúvida. 
+OFEREÇA O CUPOM "${ctx.discountCode}" (${ctx.discountPercentage}% de desconto) agora mesmo!
+Seja EXTRA AMIGÁVEL, use tom de segredo ou presente de amigo.
+${dateInstructions}`;
+
+    userPrompt = `Cliente: ${ctx.customerName}
+Produto: ${ctx.productName}
+Cupom: ${ctx.discountCode} (${ctx.discountPercentage}% OFF)
+Loja: ${ctx.storeName} (${ctx.storeCategory})
+Dia: ${dayName}
+Saudação: ${greetings}`;
+
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
