@@ -295,6 +295,7 @@ export default function Login() {
               store_slug: slug,
               store_category: storeCategory,
               referral_code: refCode || undefined,
+              signup_coupon: couponCode.trim() || undefined,
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
