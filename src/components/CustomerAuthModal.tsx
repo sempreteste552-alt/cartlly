@@ -303,11 +303,9 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                   Esqueceu sua senha?
                 </button>
               </div>
-              <div className="flex justify-center">
-                <SimpleVerification
-                  onVerify={(isValid) => setIsVerified(isValid)}
-                />
-              </div>
+              <SimpleVerification
+                onVerify={(isValid) => setIsVerified(isValid)}
+              />
               <Button type="submit" className="w-full" disabled={loading || !isVerified}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Entrar
@@ -355,11 +353,9 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                   </div>
                 )}
               </div>
-              <div className="flex justify-center">
-                <SimpleVerification
-                  onVerify={(isValid) => setIsVerified(isValid)}
-                />
-              </div>
+              <SimpleVerification
+                onVerify={(isValid) => setIsVerified(isValid)}
+              />
               <Button type="submit" className="w-full" disabled={loading || !isVerified}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Criar Conta

@@ -173,7 +173,7 @@ export function SimpleVerification({ onVerify, className = "" }: SimpleVerificat
               <span className="text-sm font-medium">Verificação concluída com sucesso</span>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 w-fit mx-auto">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, auto)", gap: "0.5rem", justifyContent: "center" }}>
               {grid.map((cell, i) => {
                 const isSelected = selected.has(i);
                 return (
