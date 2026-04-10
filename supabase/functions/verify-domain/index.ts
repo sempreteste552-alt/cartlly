@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { settingsId, domain } = await req.json();
+    const { settingsId, domain, domainId } = await req.json();
     const requestedDomain = sanitizeDomain(domain || "");
 
     if (!settingsId || !requestedDomain) {
@@ -127,6 +127,17 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // 1. Fetch domain info from store_domains
+    let domainRecord;
+    if (domainId) {
+      const { data } = await supabase.from("store_domains").select("*").eq("id", domainId).single();
+      domainRecord = data;
+    } else {
+      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", requestedDomain).single();
+      domainRecord = data;
+    }
+
+    // If no domain record found in store_domains, fallback to store_settings for legacy support
     const { data: settings, error: settingsError } = await supabase
       .from("store_settings")
       .select("id, custom_domain, user_id, domain_status")
@@ -140,7 +151,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const expectedTxt = `lovable_verify=${settingsId}`;
+    const verificationToken = domainRecord?.verification_token || settingsId;
+    const expectedTxt = verificationToken.includes("lovable_verify=") ? verificationToken : `lovable_verify=${verificationToken}`;
 
     let aRecordFound = false;
     let txtRecordFound = false;
@@ -206,9 +218,17 @@ Deno.serve(async (req) => {
 
     const dnsVerified = aRecordFound && txtRecordFound;
     const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
-    const newStatus = sslReady
-      ? "verified"
-      : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
+    
+    // Status mapping: active, pending_ssl, pending_verification, failed
+    let newStatus = "failed";
+    if (sslReady) {
+      newStatus = "active";
+    } else if (dnsVerified) {
+      newStatus = "pending_ssl";
+    } else if (aRecordFound || txtRecordFound) {
+      newStatus = "pending_verification";
+    }
+
     const dnsComplete = aRecordFound && txtRecordFound;
 
     const verifyDetails = {
@@ -221,15 +241,23 @@ Deno.serve(async (req) => {
       checkedAt: new Date().toISOString(),
     };
 
-    // Check previous status to detect transition to verified
-    const previousStatus = settings.custom_domain === requestedDomain
-      ? settings.domain_status
-      : null;
+    // Update store_domains if record exists
+    if (domainRecord) {
+      await supabase
+        .from("store_domains")
+        .update({
+          status: newStatus,
+          ssl_status: sslReady ? "active" : "pending",
+          last_verified_at: new Date().toISOString(),
+        })
+        .eq("id", domainRecord.id);
+    }
 
+    // Update store_settings (for backward compatibility and primary domain sync)
     const { error: updateError } = await supabase
       .from("store_settings")
       .update({
-        domain_status: newStatus,
+        domain_status: newStatus === "active" ? "verified" : (newStatus.startsWith("pending") ? "pending" : "failed"),
         domain_last_check: new Date().toISOString(),
         custom_domain: requestedDomain,
         domain_verify_details: verifyDetails,
@@ -240,8 +268,9 @@ Deno.serve(async (req) => {
       console.error("Update error:", updateError);
     }
 
-    // Send push + admin notification when domain becomes verified
-    if (newStatus === "verified" && previousStatus !== "verified" && settings.user_id) {
+    // Send notification if newly verified
+    const isNewlyVerified = newStatus === "active" && domainRecord?.status !== "active";
+    if (isNewlyVerified && settings.user_id) {
       try {
         await supabase.from("admin_notifications").insert({
           sender_user_id: settings.user_id,
@@ -252,7 +281,6 @@ Deno.serve(async (req) => {
         });
 
         // Trigger push notification
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
