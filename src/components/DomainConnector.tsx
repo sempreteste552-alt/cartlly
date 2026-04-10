@@ -181,10 +181,18 @@ export default function DomainConnector({
         toast.success("Domínio verificado com sucesso! ✅");
       } else if (data?.status === "pending") {
         setStep("instructions");
-        toast.info("DNS parcialmente configurado. Continue com os registros faltantes.");
+        if (data?.dnsComplete) {
+          toast.success("DNS configurado corretamente! ✅ Aguardando certificado SSL... Tente novamente em alguns minutos.");
+        } else if (data?.aRecord && !data?.txtRecord) {
+          toast.info("Registro A encontrado ✅ — Falta o registro TXT (_lovable). Adicione-o e tente novamente.");
+        } else if (!data?.aRecord && data?.txtRecord) {
+          toast.info("Registro TXT encontrado ✅ — Falta o registro A (@). Adicione-o e tente novamente.");
+        } else {
+          toast.info("DNS parcialmente configurado. Continue com os registros faltantes.");
+        }
       } else {
         setStep("instructions");
-        toast.error("DNS ainda não apontado corretamente. Verifique os registros mostrados.");
+        toast.error("Registros DNS não encontrados. Verifique se foram adicionados corretamente.");
       }
     } catch (err: any) {
       setStep("instructions");
