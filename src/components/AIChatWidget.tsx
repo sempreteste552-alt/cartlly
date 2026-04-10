@@ -49,6 +49,7 @@ const AI_TONE_OPTIONS = [
   { value: "divertida", label: "🎉 Divertida", desc: "Descontraída com emojis e humor" },
   { value: "formal", label: "🎩 Formal", desc: "Elegante e respeitosa com 'senhor(a)'" },
   { value: "amigavel", label: "❤️ Amigável", desc: "Calorosa, próxima e empática" },
+  { value: "ceo_profissional", label: "🧠 Modo CEO", desc: "Estratégias de marketing e vendas agressivas" },
 ];
 
 function fileToDataUrl(file: File): Promise<string> {
