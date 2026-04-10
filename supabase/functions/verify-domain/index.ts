@@ -154,6 +154,11 @@ Deno.serve(async (req) => {
       checkedAt: new Date().toISOString(),
     };
 
+    // Check previous status to detect transition to verified
+    const previousStatus = settings.custom_domain === requestedDomain
+      ? (await supabase.from("store_settings").select("domain_status").eq("id", settingsId).single()).data?.domain_status
+      : null;
+
     const { error: updateError } = await supabase
       .from("store_settings")
       .update({
@@ -166,6 +171,35 @@ Deno.serve(async (req) => {
 
     if (updateError) {
       console.error("Update error:", updateError);
+    }
+
+    // Send push + admin notification when domain becomes verified
+    if (newStatus === "verified" && previousStatus !== "verified" && settings.user_id) {
+      try {
+        await supabase.from("admin_notifications").insert({
+          sender_user_id: settings.user_id,
+          target_user_id: settings.user_id,
+          title: "🌐 Domínio Online!",
+          message: `Seu domínio ${requestedDomain} está verificado e ativo com SSL! Sua loja já está acessível em https://${requestedDomain}`,
+          type: "domain_verified",
+        });
+
+        // Trigger push notification
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            target_user_id: settings.user_id,
+            title: "🌐 Domínio Online!",
+            body: `${requestedDomain} está verificado com SSL ativo! Sua loja já está no ar.`,
+            url: "/admin/configuracoes",
+            type: "domain_verified",
+          }),
+        });
+      } catch (e) {
+        console.error("Notification error:", e);
+      }
     }
 
     return new Response(

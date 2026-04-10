@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,9 @@ export default function DomainConnector({
   const [checking, setChecking] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [verifyResult, setVerifyResult] = useState<any>(savedVerifyDetails || null);
+  const [autoPolling, setAutoPolling] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progressValue =
     step === "input" ? 15 :
@@ -126,6 +129,50 @@ export default function DomainConnector({
     step === "instructions" ? 55 :
     step === "verifying" ? 80 :
     100;
+
+  // Auto-poll SSL when DNS is complete
+  const silentVerify = useCallback(async () => {
+    if (!settingsId || !domain) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-domain", {
+        body: { settingsId, domain: normalizeDomain(domain) },
+      });
+      if (error) return;
+      setVerifyResult(data);
+      await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+
+      if (data?.status === "verified") {
+        setAutoPolling(false);
+        setStep("done");
+        toast.success("🎉 Domínio verificado e online! Certificado SSL ativo.");
+      } else {
+        setPollCount((c) => c + 1);
+      }
+    } catch {
+      // silent fail
+    }
+  }, [settingsId, domain, queryClient]);
+
+  useEffect(() => {
+    if (!autoPolling) return;
+    // Poll every 30s, max 20 attempts (10 minutes)
+    if (pollCount >= 20) {
+      setAutoPolling(false);
+      toast.info("Verificação automática pausada. Clique em 'Verificar' manualmente.");
+      return;
+    }
+    pollTimerRef.current = setTimeout(silentVerify, 30000);
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, [autoPolling, pollCount, silentVerify]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
+    };
+  }, []);
 
   const handleProceed = async () => {
     const cleanDomain = normalizeDomain(domain);
@@ -180,11 +227,14 @@ export default function DomainConnector({
 
       if (data?.status === "verified") {
         setStep("done");
-        toast.success("Domínio verificado com sucesso! ✅");
+        setAutoPolling(false);
+        toast.success("🎉 Domínio verificado com sucesso! Certificado SSL ativo.");
       } else if (data?.status === "pending") {
         setStep("instructions");
         if (data?.dnsComplete) {
-          toast.success("DNS configurado corretamente! ✅ Aguardando certificado SSL... Tente novamente em alguns minutos.");
+          toast.success("DNS configurado corretamente! ✅ Verificação automática de SSL ativada...");
+          setAutoPolling(true);
+          setPollCount(0);
         } else if (data?.aRecord && !data?.txtRecord) {
           toast.info("Registro A encontrado ✅ — Falta o registro TXT (_lovable). Adicione-o e tente novamente.");
         } else if (!data?.aRecord && data?.txtRecord) {
@@ -319,11 +369,27 @@ export default function DomainConnector({
                   )}
                 </div>
                 {verifyResult.dnsComplete && !verifyResult.sslReady && (
-                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2">
-                    <Clock className="h-4 w-4 text-primary shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      DNS correto! O certificado SSL está sendo provisionado. Aguarde alguns minutos e clique em <strong>Verificar</strong> novamente.
-                    </p>
+                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
+                    {autoPolling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 text-primary shrink-0 animate-spin" />
+                        <div>
+                          <p className="text-xs font-medium text-foreground">
+                            🔄 Verificação automática ativa ({pollCount}/20)
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Checando SSL a cada 30 segundos... Você será notificado quando estiver pronto.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-4 w-4 text-primary shrink-0" />
+                        <p className="text-xs text-muted-foreground">
+                          DNS correto! O certificado SSL está sendo provisionado. Clique em <strong>Verificar</strong> para ativar a verificação automática.
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
