@@ -28,6 +28,7 @@ interface ProductFormProps {
     made_to_order: boolean;
     badge?: string | null;
     additionalImages?: string[];
+    cost_price?: number;
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
@@ -43,6 +44,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [madeToOrder, setMadeToOrder] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [badge, setBadge] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -70,6 +72,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       setMadeToOrder((initialData as any)?.made_to_order ?? false);
       setCategoryId(initialData.category_id ?? "");
       setBadge((initialData as any)?.badge ?? "");
+      setCostPrice((initialData as any)?.cost_price?.toString() ?? "");
     }
   }, [initialData]);
 
@@ -152,13 +155,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       made_to_order: madeToOrder,
       badge: badge.trim() || null,
       additionalImages: [...additionalImages, ...additionalVideos],
+      cost_price: parseFloat(costPrice) || 0,
     });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setBadge(""); setAdditionalImages([]); setAdditionalVideos([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setBadge(""); setCostPrice(""); setAdditionalImages([]); setAdditionalVideos([]);
     }
     onOpenChange(isOpen);
   };
@@ -213,10 +217,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Preço (R$) *</Label>
               <Input id="price" type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} required placeholder="0,00" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cost_price">Custo (R$)</Label>
+              <Input id="cost_price" type="number" step="0.01" min="0" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} placeholder="0,00" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="stock">Estoque *</Label>
