@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export interface ProductVariant {
   id: string;
@@ -14,6 +15,7 @@ export interface ProductVariant {
 }
 
 export function useProductVariants(productId: string | undefined) {
+  useRealtimeSync("product_variants", [["product_variants", productId || ""]], productId ? `product_id=eq.${productId}` : undefined);
   return useQuery({
     queryKey: ["product_variants", productId],
     queryFn: async () => {

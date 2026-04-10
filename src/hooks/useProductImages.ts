@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export function useProductImages(productId: string | undefined) {
+  useRealtimeSync("product_images", [["product_images", productId || ""]], productId ? `product_id=eq.${productId}` : undefined);
   return useQuery({
     queryKey: ["product_images", productId],
     enabled: !!productId,

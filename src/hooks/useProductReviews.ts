@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 export interface ProductReview {
   id: string;
@@ -13,6 +14,7 @@ export interface ProductReview {
 }
 
 export function useProductReviews(productId: string | undefined) {
+  useRealtimeSync("product_reviews", [["product-reviews", productId || ""]], productId ? `product_id=eq.${productId}` : undefined);
   return useQuery({
     queryKey: ["product-reviews", productId],
     enabled: !!productId,
