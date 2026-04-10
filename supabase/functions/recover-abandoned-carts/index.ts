@@ -167,7 +167,9 @@ Deno.serve(async (req) => {
             const aiMsg = await generateAIMessage(lovableApiKey, {
               type: "abandoned_cart",
               customerName: customer.name,
+              customerGender: customer.gender,
               storeName,
+              storeCategory: store?.category,
               itemNames,
               totalValue: Number(totalValue).toFixed(2),
               itemCount: items.length,
