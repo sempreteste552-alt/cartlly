@@ -380,7 +380,8 @@ export function AIChatWidget() {
       await updateSettings.mutateAsync({
         id: settings.id,
         ai_name: tempName.trim() || "Assistente IA",
-        ai_avatar_url: tempAvatar.trim()
+        ai_avatar_url: tempAvatar.trim(),
+        ai_chat_tone: tempTone || "educada",
       } as any);
       setSettingsOpen(false);
     } catch (error) {
