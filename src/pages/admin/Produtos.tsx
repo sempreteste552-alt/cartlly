@@ -427,6 +427,9 @@ export default function Produtos() {
         </DialogContent>
       </Dialog>
 
+      {/* Catalog PDF Generator */}
+      <CatalogPdfGenerator />
+
       {/* AI Catalog Import */}
       <AICatalogImport open={aiImportOpen} onOpenChange={setAiImportOpen} />
 
