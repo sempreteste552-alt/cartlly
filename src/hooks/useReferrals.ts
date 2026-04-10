@@ -89,7 +89,28 @@ export function useAllReferrals() {
         .select("*, tenant_plans:referred_plan_id(name, price)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as any[];
+
+      // Enrich with store names for referrer and referred
+      const referrerIds = [...new Set((data || []).map((r: any) => r.referrer_tenant_id).filter(Boolean))];
+      const referredIds = [...new Set((data || []).map((r: any) => r.referred_user_id).filter(Boolean))];
+      const allIds = [...new Set([...referrerIds, ...referredIds])];
+
+      let storeMap: Record<string, { store_name: string; store_slug: string; store_category: string }> = {};
+      if (allIds.length > 0) {
+        const { data: stores } = await supabase
+          .from("store_settings")
+          .select("user_id, store_name, store_slug, store_category")
+          .in("user_id", allIds);
+        (stores || []).forEach((s: any) => {
+          storeMap[s.user_id] = { store_name: s.store_name, store_slug: s.store_slug, store_category: s.store_category };
+        });
+      }
+
+      return (data || []).map((r: any) => ({
+        ...r,
+        referrer_store: storeMap[r.referrer_tenant_id] || null,
+        referred_store: storeMap[r.referred_user_id] || null,
+      })) as any[];
     },
   });
 }
@@ -103,7 +124,22 @@ export function useAllReferralCodes() {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as any[];
+
+      // Enrich with store names
+      const tenantIds = [...new Set((data || []).map((c: any) => c.tenant_id).filter(Boolean))];
+      let storeMap: Record<string, string> = {};
+      if (tenantIds.length > 0) {
+        const { data: stores } = await supabase
+          .from("store_settings")
+          .select("user_id, store_name")
+          .in("user_id", tenantIds);
+        (stores || []).forEach((s: any) => { storeMap[s.user_id] = s.store_name || ""; });
+      }
+
+      return (data || []).map((c: any) => ({
+        ...c,
+        store_name: storeMap[c.tenant_id] || null,
+      })) as any[];
     },
   });
 }

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Users, CreditCard, Gift, Search, Filter, Flag, ShieldCheck, Ban, MousePointerClick, TrendingUp, Clock, MapPin, Globe, Calendar } from "lucide-react";
+import { AlertTriangle, Users, CreditCard, Gift, Search, Filter, Flag, ShieldCheck, Ban, MousePointerClick, TrendingUp, Clock, MapPin, Globe, Calendar, Store, UserCheck, ExternalLink } from "lucide-react";
 import { useAllReferrals, useAllReferralCodes, useAllReferralDiscounts, useFlagReferral, useInvalidateDiscount } from "@/hooks/useReferrals";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,7 +24,6 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
   flagged: { label: "Suspeito", variant: "destructive" },
 };
 
-// Simple IP-to-location cache
 const ipCache: Record<string, { city?: string; region?: string; country?: string } | null> = {};
 
 function useIpLocation(ip?: string | null) {
@@ -66,24 +65,6 @@ function IpLocationCell({ ip }: { ip?: string | null }) {
   );
 }
 
-// Fetch tenant display names for referrer IDs
-function useTenantNames(tenantIds: string[]) {
-  return useQuery({
-    queryKey: ["tenant_names_referrals", tenantIds.sort().join(",")],
-    enabled: tenantIds.length > 0,
-    staleTime: 60000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", tenantIds);
-      const map: Record<string, string> = {};
-      (data || []).forEach((p: any) => { map[p.user_id] = p.display_name || ""; });
-      return map;
-    },
-  });
-}
-
 export default function SuperAdminIndicacoes() {
   const { data: referrals, isLoading } = useAllReferrals();
   const { data: codes } = useAllReferralCodes();
@@ -96,17 +77,6 @@ export default function SuperAdminIndicacoes() {
   const [fraudFilter, setFraudFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
-  const [citySearch, setCitySearch] = useState("");
-
-  // Collect unique tenant IDs for name resolution
-  const tenantIds = useMemo(() => {
-    const ids = new Set<string>();
-    referrals?.forEach((r: any) => { if (r.referrer_tenant_id) ids.add(r.referrer_tenant_id); });
-    codes?.forEach((c: any) => { if (c.tenant_id) ids.add(c.tenant_id); });
-    return Array.from(ids);
-  }, [referrals, codes]);
-
-  const { data: tenantNames } = useTenantNames(tenantIds);
 
   // Stats
   const totalReferrals = referrals?.length || 0;
@@ -115,9 +85,21 @@ export default function SuperAdminIndicacoes() {
   const totalFlagged = referrals?.filter((r: any) => r.flagged).length || 0;
   const totalDiscountValue = discounts?.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) || 0;
   const totalClicks = codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
-
-  // Conversion rate
   const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
+
+  // Top referrers
+  const topReferrers = useMemo(() => {
+    if (!referrals) return [];
+    const map: Record<string, { count: number; storeName: string; storeSlug: string }> = {};
+    referrals.forEach((r: any) => {
+      const id = r.referrer_tenant_id;
+      if (!map[id]) {
+        map[id] = { count: 0, storeName: r.referrer_store?.store_name || id.substring(0, 8), storeSlug: r.referrer_store?.store_slug || "" };
+      }
+      map[id].count++;
+    });
+    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+  }, [referrals]);
 
   const filtered = useMemo(() => {
     let list = referrals || [];
@@ -138,17 +120,18 @@ export default function SuperAdminIndicacoes() {
       list = list.filter((r: any) =>
         r.referrer_tenant_id?.toLowerCase().includes(q) ||
         r.referral_code?.toLowerCase().includes(q) ||
-        (tenantNames?.[r.referrer_tenant_id] || "").toLowerCase().includes(q)
+        (r.referrer_store?.store_name || "").toLowerCase().includes(q) ||
+        (r.referred_store?.store_name || "").toLowerCase().includes(q)
       );
     }
     return list;
-  }, [referrals, statusFilter, paymentFilter, fraudFilter, emailSearch, tenantSearch, tenantNames]);
+  }, [referrals, statusFilter, paymentFilter, fraudFilter, emailSearch, tenantSearch]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Indicações — Visão Global</h1>
-        <p className="text-muted-foreground text-sm mt-1">Acompanhe, audite e gerencie todas as indicações do sistema com dados completos.</p>
+        <p className="text-muted-foreground text-sm mt-1">Acompanhe, audite e gerencie todas as indicações com dados completos de rastreio.</p>
       </div>
 
       {/* Stats */}
@@ -182,6 +165,30 @@ export default function SuperAdminIndicacoes() {
           <p className="text-2xl font-bold text-primary">R$ {totalDiscountValue.toFixed(2).replace(".", ",")}</p>
         </CardContent></Card>
       </div>
+
+      {/* Top Referrers */}
+      {topReferrers.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Store className="h-4 w-4" /> Top Indicadores</CardTitle>
+          </CardHeader>
+          <CardContent className="pb-4">
+            <div className="flex flex-wrap gap-3">
+              {topReferrers.map(([id, info]) => (
+                <div key={id} className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                    {info.count}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{info.storeName}</p>
+                    {info.storeSlug && <p className="text-[10px] text-muted-foreground">/{info.storeSlug}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="referrals">
         <TabsList>
@@ -234,7 +241,7 @@ export default function SuperAdminIndicacoes() {
                 </div>
                 <div className="relative min-w-[160px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Indicador (nome/código)..." value={tenantSearch} onChange={(e) => setTenantSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+                  <Input placeholder="Loja/código..." value={tenantSearch} onChange={(e) => setTenantSearch(e.target.value)} className="pl-9 h-9 text-sm" />
                 </div>
               </div>
             </CardContent>
@@ -251,37 +258,62 @@ export default function SuperAdminIndicacoes() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Indicador</TableHead>
+                        <TableHead>Indicador (Loja)</TableHead>
                         <TableHead>Indicado</TableHead>
+                        <TableHead>Loja do Indicado</TableHead>
                         <TableHead>Código</TableHead>
                         <TableHead>Data / Hora</TableHead>
-                        <TableHead>Plano</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Pagamento</TableHead>
-                        <TableHead>Desconto</TableHead>
                         <TableHead>Fraude</TableHead>
-                        <TableHead>IP / Localização</TableHead>
+                        <TableHead>IP / Local</TableHead>
                         <TableHead>Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filtered.map((r: any) => {
                         const st = statusLabels[r.status] || { label: r.status, variant: "outline" as const };
-                        const referrerName = tenantNames?.[r.referrer_tenant_id] || r.referrer_tenant_id?.substring(0, 8) + "...";
+                        const referrerName = r.referrer_store?.store_name || r.referrer_tenant_id?.substring(0, 8) + "...";
                         const createdAt = new Date(r.created_at);
                         const clickedAt = r.clicked_at ? new Date(r.clicked_at) : null;
+                        const subscribedAt = r.subscribed_at ? new Date(r.subscribed_at) : null;
 
                         return (
                           <TableRow key={r.id} className={r.flagged ? "bg-destructive/5" : ""}>
                             <TableCell>
-                              <div className="text-sm font-medium truncate max-w-[140px]" title={r.referrer_tenant_id}>
-                                {referrerName}
+                              <div className="space-y-0.5">
+                                <div className="text-sm font-medium flex items-center gap-1.5">
+                                  <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="truncate max-w-[130px]" title={referrerName}>{referrerName}</span>
+                                </div>
+                                {r.referrer_store?.store_slug && (
+                                  <span className="text-[10px] text-muted-foreground font-mono">/{r.referrer_store.store_slug}</span>
+                                )}
+                                {r.referrer_store?.store_category && (
+                                  <Badge variant="outline" className="text-[9px] px-1 py-0">{r.referrer_store.store_category}</Badge>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm font-medium">{r.referred_email || "—"}</div>
                               {r.referred_user_id && (
                                 <span className="text-[10px] font-mono text-muted-foreground">{r.referred_user_id.substring(0, 8)}...</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {r.referred_store ? (
+                                <div className="space-y-0.5">
+                                  <div className="text-sm font-medium flex items-center gap-1">
+                                    <UserCheck className="h-3 w-3 text-green-500" />
+                                    {r.referred_store.store_name}
+                                  </div>
+                                  <span className="text-[10px] text-muted-foreground font-mono">/{r.referred_store.store_slug}</span>
+                                  {r.referred_store.store_category && (
+                                    <Badge variant="outline" className="text-[9px] px-1 py-0">{r.referred_store.store_category}</Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground italic">Sem loja</span>
                               )}
                             </TableCell>
                             <TableCell className="text-xs font-mono font-bold">{r.referral_code}</TableCell>
@@ -300,17 +332,23 @@ export default function SuperAdminIndicacoes() {
                                     Clicou: {format(clickedAt, "dd/MM HH:mm")}
                                   </div>
                                 )}
+                                {subscribedAt && (
+                                  <div className="text-[10px] text-green-600">
+                                    Assinou: {format(subscribedAt, "dd/MM HH:mm")}
+                                  </div>
+                                )}
                               </div>
                             </TableCell>
-                            <TableCell className="text-sm">{(r.tenant_plans as any)?.name || "—"}</TableCell>
                             <TableCell><Badge variant={st.variant} className="text-xs">{st.label}</Badge></TableCell>
                             <TableCell>
                               <Badge variant={r.payment_status === "approved" ? "default" : "outline"} className="text-xs">
                                 {r.payment_status === "approved" ? "Aprovado" : r.payment_status === "refused" ? "Recusado" : "Pendente"}
                               </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm font-medium">
-                              {r.discount_amount > 0 ? `R$ ${Number(r.discount_amount).toFixed(2).replace(".", ",")}` : "—"}
+                              {r.discount_amount > 0 && (
+                                <div className="text-[10px] text-green-600 mt-0.5">
+                                  R$ {Number(r.discount_amount).toFixed(2).replace(".", ",")}
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell>
                               {r.flagged ? (
@@ -382,7 +420,7 @@ export default function SuperAdminIndicacoes() {
                       {discounts.map((d: any) => (
                         <TableRow key={d.id}>
                           <TableCell>
-                            <div className="text-sm">{tenantNames?.[d.tenant_id] || d.tenant_id?.substring(0, 8) + "..."}</div>
+                            <div className="text-sm">{d.tenant_id?.substring(0, 8)}...</div>
                           </TableCell>
                           <TableCell className="text-sm">{(d.referrals as any)?.referred_email || "—"}</TableCell>
                           <TableCell className="font-medium text-sm">R$ {Number(d.amount).toFixed(2).replace(".", ",")}</TableCell>
@@ -424,24 +462,33 @@ export default function SuperAdminIndicacoes() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Tenant</TableHead>
+                        <TableHead>Loja (Tenant)</TableHead>
                         <TableHead>Código</TableHead>
                         <TableHead>Cliques</TableHead>
+                        <TableHead>Indicados</TableHead>
                         <TableHead>Criado em</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {codes.map((c: any) => (
-                        <TableRow key={c.id}>
-                          <TableCell>
-                            <div className="text-sm">{tenantNames?.[c.tenant_id] || c.tenant_id?.substring(0, 8) + "..."}</div>
-                            <span className="text-[10px] font-mono text-muted-foreground">{c.tenant_id?.substring(0, 8)}...</span>
-                          </TableCell>
-                          <TableCell className="font-mono font-bold text-sm">{c.code}</TableCell>
-                          <TableCell className="text-sm">{c.clicks}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</TableCell>
-                        </TableRow>
-                      ))}
+                      {codes.map((c: any) => {
+                        const referralCount = referrals?.filter((r: any) => r.referral_code === c.code).length || 0;
+                        return (
+                          <TableRow key={c.id}>
+                            <TableCell>
+                              <div className="text-sm font-medium">{c.store_name || c.tenant_id?.substring(0, 8) + "..."}</div>
+                              <span className="text-[10px] font-mono text-muted-foreground">{c.tenant_id?.substring(0, 8)}...</span>
+                            </TableCell>
+                            <TableCell className="font-mono font-bold text-sm">{c.code}</TableCell>
+                            <TableCell className="text-sm">{c.clicks}</TableCell>
+                            <TableCell>
+                              <Badge variant={referralCount > 0 ? "default" : "outline"} className="text-xs">
+                                {referralCount}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
