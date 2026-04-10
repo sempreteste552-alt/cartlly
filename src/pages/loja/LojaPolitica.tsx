@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { useLoja } from "@/pages/loja/LojaLayout";
+import { useLojaContext } from "@/pages/loja/LojaLayout";
 import { usePublicStorePolicies } from "@/hooks/useStorePolicies";
 
 const POLICY_MAP: Record<string, { key: "privacy_policy" | "terms_of_service" | "cookie_policy"; title: string }> = {
@@ -12,8 +12,7 @@ const POLICY_MAP: Record<string, { key: "privacy_policy" | "terms_of_service" | 
 
 export default function LojaPolitica() {
   const { policySlug } = useParams<{ policySlug: string }>();
-  const { settings } = useLoja();
-  const { data: policies, isLoading } = usePublicStorePolicies(settings?.user_id);
+  const { settings } = useLojaContext();
 
   const meta = policySlug ? POLICY_MAP[policySlug] : null;
   const content = meta && policies ? (policies as any)[meta.key] : null;
