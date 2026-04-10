@@ -81,46 +81,37 @@ export default function Login() {
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
+  // Per-device dark mode for login page
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("theme_login");
+      if (stored) return stored === "dark";
+      return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+    }
+    return false;
+  });
+
   const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
   const showMaintenance = maintenanceMode && !isSuperAdmin;
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
 
-  const getPasswordStrength = (pass: string) => {
-    let score = 0;
-    if (!pass) return 0;
-    if (pass.length > 6) score += 25;
-    if (/[A-Z]/.test(pass)) score += 25;
-    if (/[0-9]/.test(pass)) score += 25;
-    if (/[^A-Za-z0-9]/.test(pass)) score += 25;
-    return score;
-  };
-
-  const passwordStrength = getPasswordStrength(password);
-  const getStrengthColor = (score: number) => {
-    if (score <= 25) return "bg-red-500";
-    if (score <= 50) return "bg-orange-500";
-    if (score <= 75) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-  const getStrengthLabel = (score: number) => {
-    if (score <= 25) return "Fraca";
-    if (score <= 50) return "Média";
-    if (score <= 75) return "Boa";
-    return "Forte";
-  };
-
-  // Reset any leaked tenant/store theme colors from CSS custom properties
+  // Reset any leaked tenant/store theme colors and apply login dark mode
   useEffect(() => {
     const root = document.documentElement;
     const propsToReset = ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring", "--accent-foreground",
       "--store-primary", "--store-secondary", "--store-accent", "--store-button-bg", "--store-button-text", "--store-bg-base", "--store-text-base"];
     propsToReset.forEach(prop => root.style.removeProperty(prop));
-    // Also remove dark class if it was set by a store
-    root.classList.remove("dark");
-    return () => {};
-  }, []);
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    return () => {
+      root.classList.remove("dark");
+    };
+  }, [dark]);
 
   useEffect(() => {
     if (user) {
