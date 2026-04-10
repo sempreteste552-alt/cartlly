@@ -686,12 +686,19 @@ function GeneralSettingsTab() {
                 <img src={faviconUrl} alt="Favicon" className="h-8 w-8 rounded object-contain" />
                 <span className="text-xs text-muted-foreground truncate flex-1">{faviconUrl.split("/").pop()}</span>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                  const oldUrl = faviconUrl;
                   setFaviconUrl("");
                   if (settings) {
+                    // Delete file from storage
+                    if (oldUrl) {
+                      const oldPath = oldUrl.split("/store-assets/")[1];
+                      if (oldPath) {
+                        await supabase.storage.from("store-assets").remove([decodeURIComponent(oldPath)]);
+                      }
+                    }
                     await supabase.from("store_settings").update({ favicon_url: null } as any).eq("id", settings.id);
+                    queryClient.invalidateQueries({ queryKey: ["store_settings"] });
                     toast.success("Favicon removido!");
-                    // Force refetch
-                    window.location.reload();
                   }
                 }}>
                   <Trash2 className="h-3 w-3" />
