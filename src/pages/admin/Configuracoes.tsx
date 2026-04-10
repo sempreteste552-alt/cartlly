@@ -14,7 +14,7 @@ import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners } from "@/hooks/useStoreBanners";
+import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners, useDeleteBanner } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -113,6 +113,7 @@ function GeneralSettingsTab() {
   const createBanner = useCreateBanner();
   const updateBannerLink = useUpdateBannerLink();
   const reorderBanners = useReorderBanners();
+  const deleteBanner = useDeleteBanner();
 
   const moveBanner = (index: number, direction: "up" | "down") => {
     if (!banners) return;
@@ -534,6 +535,18 @@ function GeneralSettingsTab() {
                     </div>
                     <p className="text-[10px] text-muted-foreground">Ao clicar no banner, redireciona para este link</p>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10"
+                    onClick={() => {
+                      if (confirm("Remover este banner?")) {
+                        deleteBanner.mutate(b.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}
