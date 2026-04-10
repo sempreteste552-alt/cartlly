@@ -12,6 +12,134 @@ function json(data: any, status = 200) {
   });
 }
 
+// ========== NICHE DETECTION ==========
+type StoreNiche = "moda" | "acessorios" | "beleza" | "tech" | "casa" | "fitness" | "food" | "kids" | "pet" | "geral";
+
+const NICHE_KEYWORDS: Record<StoreNiche, string[]> = {
+  moda: ["roupa", "camiseta", "vestido", "calça", "blusa", "saia", "jaqueta", "moletom", "shorts", "bermuda", "cropped", "moda", "fashion", "look", "outfit", "conjunto", "lingerie", "pijama", "biquini", "maiô"],
+  acessorios: ["brinco", "colar", "pulseira", "anel", "relógio", "óculos", "bolsa", "carteira", "cinto", "chapéu", "boné", "joia", "bijuteria", "acessório", "pingente", "cordão", "mochila"],
+  beleza: ["maquiagem", "batom", "base", "rímel", "skincare", "creme", "perfume", "shampoo", "condicionador", "esmalte", "hidratante", "protetor", "máscara", "sérum", "beleza", "cosmético"],
+  tech: ["celular", "fone", "cabo", "carregador", "capa", "película", "notebook", "mouse", "teclado", "monitor", "eletrônico", "smart", "bluetooth", "tech", "gadget"],
+  casa: ["decoração", "vela", "almofada", "quadro", "organizador", "tapete", "cortina", "luminária", "vaso", "cozinha", "utensílio", "casa", "jardim", "planta"],
+  fitness: ["treino", "academia", "legging", "top", "suplemento", "whey", "tênis", "esporte", "fitness", "yoga", "corrida", "gym"],
+  food: ["chocolate", "café", "doce", "bolo", "gourmet", "tempero", "receita", "comida", "alimento", "orgânico", "natural"],
+  kids: ["infantil", "bebê", "criança", "brinquedo", "fralda", "kids", "baby", "mamãe"],
+  pet: ["pet", "cachorro", "gato", "ração", "coleira", "brinquedo pet", "cama pet", "animal"],
+  geral: [],
+};
+
+function detectStoreNiche(products: any[], categories: string[]): StoreNiche {
+  const allText = [
+    ...products.map((p: any) => `${p.name || ""} ${p.description || ""}`),
+    ...categories,
+  ].join(" ").toLowerCase();
+
+  let bestNiche: StoreNiche = "geral";
+  let bestScore = 0;
+
+  for (const [niche, keywords] of Object.entries(NICHE_KEYWORDS)) {
+    if (niche === "geral") continue;
+    const score = keywords.reduce((acc, kw) => acc + (allText.includes(kw) ? 1 : 0), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestNiche = niche as StoreNiche;
+    }
+  }
+
+  return bestScore >= 2 ? bestNiche : "geral";
+}
+
+// ========== GENDER DETECTION (Brazilian names heuristic) ==========
+type Gender = "male" | "female" | "neutral";
+
+const FEMALE_SUFFIXES = ["a", "ia", "na", "ne", "da", "ina", "ane", "ice", "ete", "ise", "ene", "ile"];
+const MALE_SUFFIXES = ["o", "os", "son", "ton", "ro", "do", "go", "lo", "rdo", "ldo"];
+const FEMALE_NAMES = new Set(["ana", "maria", "julia", "amanda", "bruna", "camila", "carla", "clara", "daniela", "débora", "eduarda", "fernanda", "gabriela", "helena", "isabela", "jéssica", "juliana", "larissa", "letícia", "luana", "mariana", "nathalia", "patricia", "priscila", "raquel", "renata", "sabrina", "tatiana", "vanessa", "vitória", "beatriz", "alice", "laura", "luiza", "valentina", "manuela", "sofia", "giovanna", "cecília", "lorena", "bianca"]);
+const MALE_NAMES = new Set(["joão", "pedro", "lucas", "matheus", "rafael", "gabriel", "bruno", "carlos", "daniel", "diego", "eduardo", "felipe", "fernando", "guilherme", "gustavo", "henrique", "igor", "josé", "leonardo", "marcos", "miguel", "nicolas", "paulo", "ricardo", "rodrigo", "thiago", "vinicius", "anderson", "andre", "caio", "enzo", "arthur", "bernardo", "davi", "heitor", "theo", "samuel", "noah", "isaac"]);
+
+function detectGender(name: string): Gender {
+  if (!name) return "neutral";
+  const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (FEMALE_NAMES.has(first)) return "female";
+  if (MALE_NAMES.has(first)) return "male";
+  for (const s of FEMALE_SUFFIXES) { if (first.endsWith(s) && first.length > 3) return "female"; }
+  for (const s of MALE_SUFFIXES) { if (first.endsWith(s) && first.length > 3) return "male"; }
+  return "neutral";
+}
+
+// ========== NICHE + GENDER TEMPLATES ==========
+interface NicheTemplate { title: string; body: string; gender?: Gender; }
+
+const NICHE_TEMPLATES: Record<StoreNiche, NicheTemplate[]> = {
+  moda: [
+    { title: "👗 {product}: Seu estilo!", body: "{name}, o {product} da {store} é a peça que faltava no seu guarda-roupa! ✨", gender: "female" },
+    { title: "💃 Arrasa com o {product}!", body: "{name}, você vai arrasar com o {product}! Confira na {store} 💕", gender: "female" },
+    { title: "🌸 {product} pra você!", body: "{name}, esse {product} tem a sua cara! Disponível na {store} 🌷", gender: "female" },
+    { title: "👔 {product}: Estilo masculino", body: "{name}, o {product} da {store} é a escolha certa pra sua coleção! 🔥", gender: "male" },
+    { title: "🧥 Look top: {product}!", body: "{name}, eleve seu visual com o {product} da {store}! Confira 💪", gender: "male" },
+    { title: "😎 {product} com atitude!", body: "{name}, o {product} combina com seu estilo. Veja na {store}! 🎯", gender: "male" },
+    { title: "✨ {product}: Nova coleção!", body: "{name}, o {product} acabou de chegar na {store}! Vem conferir 🛍️" },
+    { title: "🎨 {product} em destaque!", body: "{name}, o {product} é tendência na {store}! Garanta o seu ⚡" },
+  ],
+  acessorios: [
+    { title: "💍 {product}: Brilho puro!", body: "{name}, o {product} da {store} vai completar seu look! Confira 💎", gender: "female" },
+    { title: "✨ {product} deslumbrante!", body: "{name}, ilumine seu dia com o {product} da {store}! 🌟💕", gender: "female" },
+    { title: "💫 {product}: Elegância!", body: "{name}, o {product} da {store} é pura sofisticação! Veja 💜", gender: "female" },
+    { title: "⌚ {product}: Estilo firme!", body: "{name}, o {product} da {store} é perfeito pro seu dia a dia! 🔥", gender: "male" },
+    { title: "🎩 {product} com classe!", body: "{name}, o {product} adiciona aquele toque especial! Confira na {store} 😎", gender: "male" },
+    { title: "💎 {product}: Acessório top!", body: "{name}, o {product} da {store} é a tendência do momento! ✨" },
+  ],
+  beleza: [
+    { title: "💄 {product}: Beleza real!", body: "{name}, o {product} da {store} vai realçar toda sua beleza! 🌸💕", gender: "female" },
+    { title: "🌹 {product}: Autocuidado!", body: "{name}, você merece o {product}! Cuide-se com a {store} 💆‍♀️", gender: "female" },
+    { title: "✨ {product}: Glow up!", body: "{name}, brilhe ainda mais com o {product} da {store}! 🌟", gender: "female" },
+    { title: "🧴 {product}: Cuidado pessoal", body: "{name}, o {product} da {store} é essencial pra sua rotina! 💪", gender: "male" },
+    { title: "💎 {product}: Premium!", body: "{name}, qualidade premium no {product} da {store}. Confira! ✨" },
+  ],
+  tech: [
+    { title: "🔌 {product}: Tech novo!", body: "{name}, o {product} da {store} é o upgrade que você precisa! ⚡" },
+    { title: "📱 {product} incrível!", body: "{name}, tecnologia de ponta: {product} na {store}! Confira 🚀" },
+    { title: "🎮 {product}: Performance!", body: "{name}, o {product} da {store} vai turbinar seu setup! 💻🔥" },
+  ],
+  casa: [
+    { title: "🏠 {product}: Seu lar!", body: "{name}, o {product} da {store} vai transformar sua casa! ✨🏡" },
+    { title: "🕯️ {product}: Aconchego!", body: "{name}, deixe tudo mais lindo com o {product} da {store}! 🌿" },
+  ],
+  fitness: [
+    { title: "💪 {product}: Treino top!", body: "{name}, o {product} da {store} é perfeito pra seu treino! 🔥🏋️" },
+    { title: "🏃 {product}: Performance!", body: "{name}, eleve sua performance com o {product} da {store}! ⚡" },
+  ],
+  food: [
+    { title: "🍫 {product}: Delícia!", body: "{name}, o {product} da {store} é irresistível! Experimente 😋🤤" },
+    { title: "☕ {product}: Sabor único!", body: "{name}, se presenteie com o {product} da {store}! Imperdível 🍰" },
+  ],
+  kids: [
+    { title: "🧸 {product}: Fofura!", body: "{name}, o {product} da {store} é perfeito pros pequenos! 👶💕" },
+    { title: "🎈 {product}: Diversão!", body: "{name}, a criançada vai amar o {product} da {store}! 🌈" },
+  ],
+  pet: [
+    { title: "🐾 {product}: Pro pet!", body: "{name}, o {product} da {store} é perfeito pro seu bichinho! 🐶💕" },
+    { title: "🦴 {product}: Pet feliz!", body: "{name}, seu pet merece o {product} da {store}! Confira 🐱✨" },
+  ],
+  geral: [
+    { title: "✨ {product}: Pra você!", body: "{name}, o {product} da {store} foi feito pra você! Confira 🛍️" },
+    { title: "🔥 {product} imperdível!", body: "{name}, não perca o {product} da {store}! Garanta agora ⚡" },
+  ],
+};
+
+function pickNicheTemplate(niche: StoreNiche, gender: Gender, name: string, product: string, store: string): { title: string; body: string } {
+  const templates = NICHE_TEMPLATES[niche] || NICHE_TEMPLATES.geral;
+  // Filter by gender preference
+  let filtered = templates.filter(t => !t.gender || t.gender === gender || gender === "neutral");
+  if (filtered.length === 0) filtered = templates.filter(t => !t.gender);
+  if (filtered.length === 0) filtered = templates;
+  const t = filtered[Math.floor(Math.random() * filtered.length)];
+  return {
+    title: t.title.replace(/\{product\}/g, product).replace(/\{name\}/g, name).replace(/\{store\}/g, store).slice(0, 50),
+    body: t.body.replace(/\{product\}/g, product).replace(/\{name\}/g, name).replace(/\{store\}/g, store).slice(0, 130),
+  };
+}
+
 // ========== PRIORITY SYSTEM ==========
 type Priority = "high" | "medium" | "low";
 
