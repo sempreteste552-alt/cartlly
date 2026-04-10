@@ -297,14 +297,14 @@ export default function LojaLayout() {
     }
   }, [settings, themeConfig]);
 
-  // Slug is required — no default store
-  if (!slug) {
+  // Slug or settingsBySlug required
+  if (!slug && !settingsBySlug && !isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
+          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico ou domínio.</p>
         </div>
       </div>
     );
