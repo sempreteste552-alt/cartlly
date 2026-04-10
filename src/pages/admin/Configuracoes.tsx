@@ -9,12 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck, ArrowUp, ArrowDown } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
-import { useStoreBanners, useCreateBanner, useDeleteBanner, useUpdateBannerLink, useReorderBanners } from "@/hooks/useStoreBanners";
+import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners } from "@/hooks/useStoreBanners";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -111,7 +111,6 @@ function GeneralSettingsTab() {
   const uploadLogo = useUploadStoreLogo();
   const { data: banners } = useStoreBanners();
   const createBanner = useCreateBanner();
-  const deleteBanner = useDeleteBanner();
   const updateBannerLink = useUpdateBannerLink();
   const reorderBanners = useReorderBanners();
 
@@ -535,9 +534,6 @@ function GeneralSettingsTab() {
                     </div>
                     <p className="text-[10px] text-muted-foreground">Ao clicar no banner, redireciona para este link</p>
                   </div>
-                  <Button variant="destructive" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteBanner.mutate(b.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
                 </div>
               </div>
             ))}
