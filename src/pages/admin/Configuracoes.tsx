@@ -221,15 +221,24 @@ function GeneralSettingsTab() {
     if (file.size > 512 * 1024) { toast.error("Favicon deve ter no máximo 512KB"); return; }
     setUploadingFavicon(true);
     try {
+      // Delete old favicon file if exists
+      if (faviconUrl) {
+        const oldPath = faviconUrl.split("/store-assets/")[1];
+        if (oldPath) {
+          await supabase.storage.from("store-assets").remove([decodeURIComponent(oldPath)]);
+        }
+      }
       const ext = file.name.split(".").pop();
-      const fileName = `${user!.id}/favicon.${ext}`;
+      const fileName = `${user!.id}/favicon-${crypto.randomUUID().slice(0, 8)}.${ext}`;
       const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type, upsert: true });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
-      setFaviconUrl(urlData.publicUrl);
-      // Auto-save favicon
+      const newUrl = urlData.publicUrl;
+      setFaviconUrl(newUrl);
+      // Auto-save favicon and invalidate cache
       if (settings) {
-        await supabase.from("store_settings").update({ favicon_url: urlData.publicUrl } as any).eq("id", settings.id);
+        await supabase.from("store_settings").update({ favicon_url: newUrl } as any).eq("id", settings.id);
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
         toast.success("Favicon salvo!");
       }
     } catch (err: any) {
