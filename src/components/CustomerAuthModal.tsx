@@ -356,7 +356,14 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                   </div>
                 )}
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <div className="flex justify-center">
+                <TurnstileWidget
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => setTurnstileToken(null)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Criar Conta
               </Button>
