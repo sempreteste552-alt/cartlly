@@ -225,14 +225,14 @@ export default function Cerebro() {
             </CardContent>
           </Card>
 
-          <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200">
+          <Card className="bg-amber-500/10 border-amber-500/20">
             <CardHeader className="py-3">
-              <CardTitle className="text-sm flex items-center gap-2 text-amber-600">
+              <CardTitle className="text-sm flex items-center gap-2 text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="h-4 w-4" /> Alertas Urgentes
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <p className="text-xs text-amber-700 dark:text-amber-400">
+              <p className="text-xs text-amber-800 dark:text-amber-300">
                 A IA está monitorando erros de pagamento e baixo estoque. Peça um resumo para ver os detalhes.
               </p>
             </CardContent>
