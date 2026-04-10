@@ -321,6 +321,7 @@ function GeneralSettingsTab() {
       banner_mobile_format: bannerMobileFormat,
       is_verified: isVerified,
       favicon_url: faviconUrl || null,
+      store_category: storeCategory.trim() || null,
     } as any);
   };
 
