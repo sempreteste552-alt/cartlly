@@ -120,6 +120,6 @@ export function usePlanFeatures() {
     features,
     subscription,
     isLoading,
-    isLocked: (feature: keyof Omit<PlanFeatures, "max_products" | "max_orders_month">) => !features[feature],
+    isLocked: (feature: keyof Omit<PlanFeatures, "max_products" | "max_orders_month">) => isLoading ? false : !features[feature],
   };
 }

@@ -37,6 +37,24 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     },
   });
 
+  // Check if tenant is PREMIUM (premium hides banner by default)
+  const { data: tenantPlan } = useQuery({
+    queryKey: ["tenant_plan_for_banner", storeUserId],
+    enabled: !!storeUserId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("tenant_subscriptions")
+        .select("tenant_plans(name)")
+        .eq("user_id", storeUserId!)
+        .in("status", ["active", "trial"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const planName = ((data?.tenant_plans as any)?.name as string)?.toUpperCase() || "FREE";
+      return planName === "ELITE" ? "PREMIUM" : planName;
+    },
+  });
+
   useEffect(() => {
     const key = `promo_banner_dismissed_${storeUserId || "global"}`;
     if (sessionStorage.getItem(key)) setDismissed(true);
@@ -48,15 +66,21 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     setDismissed(true);
   };
 
-  // Show if global is enabled OR tenant has it enabled individually
+  const isPremium = tenantPlan === "PREMIUM";
   const tenantEnabled = (tenantSetting as any)?.promo_banner_enabled;
-  const shouldShow = (globalEnabled || tenantEnabled === true) && !dismissed;
+
+  // Logic: Show for all non-premium by default when global is on.
+  // Premium tenants only see it if they explicitly enabled it.
+  // Any tenant can also force-enable it individually.
+  const shouldShow = !dismissed && (
+    (globalEnabled && !isPremium) ||
+    tenantEnabled === true
+  );
 
   if (!shouldShow) return null;
 
   return (
     <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white overflow-hidden">
-      {/* Animated background effect */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+')] animate-pulse" />
       </div>
@@ -64,9 +88,8 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
       <div className="relative max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-center">
         <Sparkles className="h-4 w-4 shrink-0 animate-pulse" />
         <p className="text-xs sm:text-sm font-medium">
-          <span className="hidden sm:inline">🚀 Crie sua própria loja online agora mesmo! Planos a partir de </span>
-          <span className="sm:hidden">🚀 Crie sua loja! A partir de </span>
-          <span className="font-bold text-yellow-200">R$ 49,90/mês</span>
+          <span className="hidden sm:inline">🚀 Crie sua própria loja online agora mesmo!</span>
+          <span className="sm:hidden">🚀 Crie sua loja online!</span>
         </p>
         <a
           href="https://usecartlly.vercel.app/"

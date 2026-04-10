@@ -84,7 +84,9 @@ export function AdminLayout() {
 
   useEffect(() => {
     if (settings) {
-      const root = document.documentElement;
+      const adminContainer = document.getElementById("admin-layout-root");
+      if (!adminContainer) return;
+      
       const adminPrimary = (settings as any).admin_primary_color || "#6d28d9";
 
       const toHSL = (hex: string) => {
@@ -107,27 +109,27 @@ export function AdminLayout() {
       };
 
       try {
-        root.style.setProperty("--primary", toHSL(adminPrimary));
-        root.style.setProperty("--ring", toHSL(adminPrimary));
-        root.style.setProperty("--sidebar-primary", toHSL(adminPrimary));
-        root.style.setProperty("--sidebar-ring", toHSL(adminPrimary));
-        root.style.setProperty("--accent-foreground", toHSL(adminPrimary));
-        localStorage.setItem("admin_primary_color", adminPrimary);
+        const hsl = toHSL(adminPrimary);
+        adminContainer.style.setProperty("--primary", hsl);
+        adminContainer.style.setProperty("--ring", hsl);
+        adminContainer.style.setProperty("--sidebar-primary", hsl);
+        adminContainer.style.setProperty("--sidebar-ring", hsl);
+        adminContainer.style.setProperty("--accent-foreground", hsl);
       } catch {}
 
       return () => {
-        root.style.removeProperty("--primary");
-        root.style.removeProperty("--ring");
-        root.style.removeProperty("--sidebar-primary");
-        root.style.removeProperty("--sidebar-ring");
-        root.style.removeProperty("--accent-foreground");
+        adminContainer.style.removeProperty("--primary");
+        adminContainer.style.removeProperty("--ring");
+        adminContainer.style.removeProperty("--sidebar-primary");
+        adminContainer.style.removeProperty("--sidebar-ring");
+        adminContainer.style.removeProperty("--accent-foreground");
       };
     }
   }, [settings]);
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div id="admin-layout-root" className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <GlobalMaintenanceBanner />
