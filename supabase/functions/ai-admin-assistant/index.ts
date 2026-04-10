@@ -142,12 +142,6 @@ REGRAS:
       { user_id: user.id, role: "assistant", content: assistantMessage }
     ]);
 
-    // Store conversation
-    await supabase.from("admin_ai_chats").insert([
-      { user_id: user.id, role: "user", content: messages[messages.length - 1].content },
-      { user_id: user.id, role: "assistant", content: assistantMessage }
-    ]);
-
     return new Response(JSON.stringify({ content: assistantMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
