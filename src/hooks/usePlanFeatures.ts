@@ -34,9 +34,9 @@ const FREE_DEFAULTS: PlanFeatures = {
   shipping_zones: false,
   banners: false,
   custom_domain: false,
-  whatsapp_sales: false,
+  whatsapp_sales: true,
   reviews: false,
-  max_products: 10,
+  max_products: 20,
   max_orders_month: 0,
 };
 

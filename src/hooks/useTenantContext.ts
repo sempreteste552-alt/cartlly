@@ -52,7 +52,7 @@ export function useTenantContext() {
       const ctx: TenantContext = {
         planSlug,
         planFeatures: mergedFeatures,
-        maxProducts: plan?.max_products ?? 10,
+        maxProducts: plan?.max_products ?? 20,
         maxOrdersMonth: plan?.max_orders_month ?? 50,
         currentProductCount: productCount ?? 0,
         subscriptionStatus: (sub?.status as SubscriptionStatus) ?? null,
@@ -68,7 +68,7 @@ export function useTenantContext() {
   const defaultCtx: TenantContext = {
     planSlug: "FREE",
     planFeatures: {},
-    maxProducts: 10,
+    maxProducts: 20,
     maxOrdersMonth: 50,
     currentProductCount: 0,
     subscriptionStatus: null,
