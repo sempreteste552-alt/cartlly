@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { LogOut, Ban, ShieldOff } from "lucide-react";
+import { LogOut, Ban, ShieldOff, Wrench, MessageCircle } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ContaEmAnalise() {
@@ -35,9 +35,25 @@ export default function ContaEmAnalise() {
     },
   });
 
+  const { data: platformSettings } = useQuery({
+    queryKey: ["platform_settings_conta_analise"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("platform_settings")
+        .select("*");
+      
+      const settings: any = {};
+      data?.forEach(row => {
+        settings[row.key] = (row.value as any)?.value;
+      });
+      return settings;
+    },
+  });
+
   const isBlocked = profile?.status === "blocked";
   const isAdminBlocked = (storeSettings as any)?.admin_blocked === true;
   const isRejected = profile?.status === "rejected";
+  const isMaintenance = platformSettings?.maintenance_mode === true;
 
   const getContent = () => {
     if (isBlocked) {
