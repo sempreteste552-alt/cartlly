@@ -601,20 +601,20 @@ export default function Login() {
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
-                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="storeCategory">Nicho da Loja</Label>
                   <Select value={storeCategory} onValueChange={setStoreCategory}>
-                    <SelectTrigger id="storeCategory" className="h-11 border-border/50 focus:border-blue-500 transition-colors">
+                    <SelectTrigger id="storeCategory" className="h-9 border-border/50 focus:border-blue-500 transition-colors">
                       <SelectValue placeholder="Selecione o nicho da sua loja" />
                     </SelectTrigger>
                     <SelectContent>
@@ -663,20 +663,20 @@ export default function Login() {
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder={signupCouponConfig.auto_show && signupCouponConfig.code ? signupCouponConfig.code : "Insira seu cupom"}
-                    className="h-11 border-border/50 focus:border-green-500 transition-colors font-mono"
+                    className="h-9 border-border/50 focus:border-green-500 transition-colors font-mono"
                   />
                   <p className="text-xs text-muted-foreground">Se tiver um cupom, insira aqui. Caso contrário, deixe em branco.</p>
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
               </div>
               {!isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
