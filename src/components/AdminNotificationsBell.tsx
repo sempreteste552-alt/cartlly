@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Bell, Check, CheckCheck, Send, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import { useAdminNotifications, getNotificationEmoji } from "@/hooks/useAdminNotifications";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -156,7 +156,7 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0 max-h-[500px]">
+        <div className="flex-1 overflow-y-auto min-h-0 max-h-[500px] overscroll-contain touch-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground/60 space-y-3">
               <div className="p-4 bg-muted rounded-full">
@@ -168,9 +168,9 @@ export function AdminNotificationsBell() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col">
+            <div className="flex flex-col divide-y divide-border/50">
               {notifications.map((n) => (
-                <div key={n.id} className="group relative border-b last:border-0 hover:bg-muted/30 transition-all duration-200">
+                <div key={n.id} className="group relative hover:bg-muted/30 transition-all duration-200">
                   <button
                     onClick={() => { if (!n.read) markAsRead(n.id); }}
                     className={`w-full text-left p-4.5 pl-6 pr-12 transition-colors relative ${!n.read ? "bg-primary/[0.03]" : "opacity-75"}`}
@@ -212,7 +212,7 @@ export function AdminNotificationsBell() {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
