@@ -49,6 +49,20 @@ export default function SuperAdminTenants() {
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
+  const formatLastSeen = (date: string | null) => {
+    if (!date) return "Nunca";
+    const lastSeen = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - lastSeen.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Agora";
+    if (diffMins < 60) return `Há ${diffMins}m`;
+    if (diffMins < 1440) return `Há ${Math.floor(diffMins / 60)}h`;
+    return lastSeen.toLocaleDateString("pt-BR");
+  };
+
+
   const pendingCount = tenants?.filter(t => t.status === "pending").length || 0;
 
   const filtered = tenants?.filter((t) => {
