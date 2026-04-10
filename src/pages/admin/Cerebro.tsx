@@ -234,6 +234,8 @@ export default function Cerebro() {
           active: true
         });
         if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["coupons"] });
+        queryClient.invalidateQueries({ queryKey: ["public_coupons"] });
         toast.success("✅ Cupom criado com sucesso!");
       } else if (action.type === "update_store_settings") {
         const { error } = await supabase.from("store_settings").update(action.payload).eq("user_id", user.id);
