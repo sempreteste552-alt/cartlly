@@ -23,6 +23,9 @@ interface PlatformConfig {
   promo_banner_enabled: boolean;
   promo_banner_text: string;
   promo_banner_link: string;
+  promo_banner_color_1: string;
+  promo_banner_color_2: string;
+  promo_banner_color_3: string;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -49,6 +52,9 @@ const defaultConfig: PlatformConfig = {
   promo_banner_enabled: false,
   promo_banner_text: "",
   promo_banner_link: "",
+  promo_banner_color_1: "#1a1a2e",
+  promo_banner_color_2: "#533483",
+  promo_banner_color_3: "#e94560",
   mercadopago_global_key: "",
   mercadopago_public_key: "",
   mercadopago_client_id: "",
