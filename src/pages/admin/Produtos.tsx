@@ -294,7 +294,8 @@ export default function Produtos() {
           </CardContent>
         </Card>
       ) : (
-        <Card id="products-table" className="border-border">
+        <Card id="products-table" className="border-border overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
