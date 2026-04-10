@@ -1013,10 +1013,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ========== 6) HOURLY ENGAGEMENT (Every hour, 24/7) ==========
+    // ========== 6) HOURLY ENGAGEMENT WITH PRODUCT DIVERSITY & VIP DISCOUNTS ==========
     const oneHourAgoEng = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    // Get all customers who have push enabled
     const { data: allPushSubs } = await supabase
       .from("push_subscriptions")
       .select("user_id");
@@ -1027,64 +1026,216 @@ Deno.serve(async (req) => {
         .from("customers")
         .select("id, name, auth_user_id, store_user_id")
         .in("auth_user_id", pushUserIds)
-        .limit(200); // Increased limit to reach more customers per run
+        .limit(200);
 
       if (customersWithPush && customersWithPush.length > 0) {
         const { data: recentEngagements } = await supabase
           .from("automation_executions")
-          .select("customer_id")
+          .select("customer_id, related_product_id")
           .eq("trigger_type", "hourly_engagement")
           .gte("sent_at", oneHourAgoEng);
         
         const recentlyEngaged = new Set((recentEngagements || []).map((e: any) => e.customer_id));
-        const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-        const now = new Date();
-        const dayName = dayNames[now.getDay()];
         
-        // Special dates context
+        // Track products already sent today to avoid repeating
+        const { data: todayEngagements } = await supabase
+          .from("automation_executions")
+          .select("customer_id, related_product_id")
+          .eq("trigger_type", "hourly_engagement")
+          .gte("sent_at", today.toISOString());
+        
+        const sentProductsByCustomer = new Map<string, Set<string>>();
+        (todayEngagements || []).forEach((e: any) => {
+          if (e.customer_id && e.related_product_id) {
+            if (!sentProductsByCustomer.has(e.customer_id)) sentProductsByCustomer.set(e.customer_id, new Set());
+            sentProductsByCustomer.get(e.customer_id)!.add(e.related_product_id);
+          }
+        });
+
+        const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+        const nowEng = new Date();
+        const dayName = dayNames[nowEng.getDay()];
+        const hour = nowEng.getHours();
+        const dayOfWeek = nowEng.getDay();
+
+        // Special dates
         const specialDates: Record<string, string> = {
-          "25/12": "Natal",
-          "01/01": "Ano Novo",
-          "12/06": "Dia dos Namorados",
-          "09/04": "Páscoa", // Example for today
+          "25/12": "Natal", "01/01": "Ano Novo", "12/06": "Dia dos Namorados",
+          "14/05": "Dia das Mães", "11/08": "Dia dos Pais", "12/10": "Dia das Crianças",
+          "29/11": "Black Friday", "25/11": "Black Friday se aproxima",
         };
-        const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+        const dateStr = `${nowEng.getDate().toString().padStart(2, '0')}/${(nowEng.getMonth() + 1).toString().padStart(2, '0')}`;
         const specialEvent = specialDates[dateStr];
 
+        // Load products per store (cached)
+        const storeProducts = new Map<string, any[]>();
+        const storeUserIdsEng = [...new Set(customersWithPush.map((c: any) => c.store_user_id))];
+        for (const sid of storeUserIdsEng) {
+          const { data: prods } = await supabase
+            .from("products")
+            .select("id, name, price, image_url, views, created_at")
+            .eq("user_id", sid)
+            .eq("published", true)
+            .gt("stock", 0)
+            .order("created_at", { ascending: false })
+            .limit(30);
+          storeProducts.set(sid, prods || []);
+        }
 
-        const hour = new Date().getHours();
-        const dayOfWeek = new Date().getDay();
+        // Load VIP data: customers with most orders & revenue
+        const { data: vipData } = await supabase
+          .from("orders")
+          .select("customer_email, user_id, total")
+          .eq("status", "entregue")
+          .limit(500);
+
+        // Build VIP scores: customer email → { totalSpent, orderCount, storeUserId }
+        const vipScores = new Map<string, { totalSpent: number; orderCount: number; storeUserId: string }>();
+        (vipData || []).forEach((o: any) => {
+          if (!o.customer_email) return;
+          const key = `${o.customer_email}:${o.user_id}`;
+          const existing = vipScores.get(key) || { totalSpent: 0, orderCount: 0, storeUserId: o.user_id };
+          existing.totalSpent += Number(o.total || 0);
+          existing.orderCount += 1;
+          vipScores.set(key, existing);
+        });
+
+        // Load active coupons per store to check if VIP coupon already exists
+        const { data: activeCoupons } = await supabase
+          .from("coupons")
+          .select("code, user_id")
+          .eq("active", true)
+          .in("user_id", storeUserIdsEng);
+        
+        const storeCouponCodes = new Map<string, Set<string>>();
+        (activeCoupons || []).forEach((c: any) => {
+          if (!storeCouponCodes.has(c.user_id)) storeCouponCodes.set(c.user_id, new Set());
+          storeCouponCodes.get(c.user_id)!.add(c.code);
+        });
+
+        // Load customer emails for VIP matching
+        const custIds = customersWithPush.map((c: any) => c.id);
+        const { data: custEmails } = await supabase
+          .from("customers")
+          .select("id, email")
+          .in("id", custIds);
+        const custEmailMap = new Map((custEmails || []).map((c: any) => [c.id, c.email]));
 
         for (const customer of customersWithPush) {
           if (recentlyEngaged.has(customer.id)) continue;
 
           const freqConfig = storeFreqMap.get(customer.store_user_id) || defaultFreq;
           const spamCheck = await shouldSkipAntiSpam(supabase, customer.id, null, 0, "low", freqConfig, "hourly_engagement");
-          
           if (spamCheck.skip) continue;
-
-          // Filter templates by time and day
-          const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
-            if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
-            if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
-            return true;
-          });
-
-          const template = validTemplates.length > 0 
-            ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
-            : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
 
           const store = storeMap.get(customer.store_user_id);
           const storeName = store?.store_name || "nossa loja";
-          
-          let title = template.title.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
-          let body = template.body.replace("{name}", customer.name || "amigo(a)").replace("{day}", dayName).replace("{store}", storeName);
-          
-          if (specialEvent) {
-            title = `🎁 Especial ${specialEvent}: ${title}`;
-            body = `Em clima de ${specialEvent}, ${body}`;
+          const products = storeProducts.get(customer.store_user_id) || [];
+          const alreadySentProducts = sentProductsByCustomer.get(customer.id) || new Set();
+
+          // Pick a DIFFERENT product each hour (not sent today)
+          const availableProducts = products.filter((p: any) => !alreadySentProducts.has(p.id));
+          const selectedProduct = availableProducts.length > 0
+            ? availableProducts[Math.floor(Math.random() * availableProducts.length)]
+            : products.length > 0
+              ? products[Math.floor(Math.random() * products.length)]
+              : null;
+
+          // Check if customer is VIP (3+ orders or R$300+ spent)
+          const custEmail = custEmailMap.get(customer.id);
+          const vipKey = custEmail ? `${custEmail}:${customer.store_user_id}` : null;
+          const vipInfo = vipKey ? vipScores.get(vipKey) : null;
+          const isVIP = vipInfo && (vipInfo.orderCount >= 3 || vipInfo.totalSpent >= 300);
+
+          let title = "";
+          let body = "";
+          let relatedProductId: string | null = null;
+
+          if (selectedProduct && isVIP && Math.random() < 0.3) {
+            // VIP smart discount: 5-15% based on loyalty (never too much to avoid losses)
+            const discountPercent = vipInfo!.orderCount >= 10 ? 15 : vipInfo!.orderCount >= 5 ? 10 : 5;
+            const vipCode = `VIP${discountPercent}${customer.name.slice(0, 3).toUpperCase()}`;
+
+            // Create coupon if not exists
+            const existingCodes = storeCouponCodes.get(customer.store_user_id) || new Set();
+            if (!existingCodes.has(vipCode)) {
+              const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(); // 48h
+              await supabase.from("coupons").insert({
+                code: vipCode,
+                user_id: customer.store_user_id,
+                discount_type: "percentage",
+                discount_value: discountPercent,
+                max_uses: 1,
+                min_order_value: Math.max(50, selectedProduct.price * 0.8), // Min order = 80% of product price
+                expires_at: expiresAt,
+                active: true,
+              });
+              existingCodes.add(vipCode);
+              storeCouponCodes.set(customer.store_user_id, existingCodes);
+            }
+
+            const tmpl = VIP_DISCOUNT_TEMPLATES[Math.floor(Math.random() * VIP_DISCOUNT_TEMPLATES.length)];
+            title = tmpl.title
+              .replace(/\{name\}/g, customer.name || "amigo(a)")
+              .replace(/\{product\}/g, selectedProduct.name)
+              .replace(/\{store\}/g, storeName)
+              .replace(/\{discount\}/g, `${discountPercent}%`)
+              .replace(/\{code\}/g, vipCode)
+              .slice(0, 50);
+            body = tmpl.body
+              .replace(/\{name\}/g, customer.name || "amigo(a)")
+              .replace(/\{product\}/g, selectedProduct.name)
+              .replace(/\{store\}/g, storeName)
+              .replace(/\{discount\}/g, `${discountPercent}%`)
+              .replace(/\{code\}/g, vipCode)
+              .slice(0, 130);
+            relatedProductId = selectedProduct.id;
+
+          } else if (selectedProduct) {
+            // Product-focused message
+            const priceTag = selectedProduct.price > 0 ? `R$${Number(selectedProduct.price).toFixed(2)}` : "";
+            const validTemplates = HOURLY_PRODUCT_TEMPLATES.filter((t: any) => {
+              if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+              if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+              return true;
+            });
+            const tmplList = validTemplates.length > 0 ? validTemplates : HOURLY_PRODUCT_TEMPLATES;
+            const tmpl = tmplList[Math.floor(Math.random() * tmplList.length)];
+            
+            title = tmpl.title
+              .replace(/\{name\}/g, customer.name || "amigo(a)")
+              .replace(/\{product\}/g, selectedProduct.name)
+              .replace(/\{store\}/g, storeName)
+              .replace(/\{day\}/g, dayName)
+              .replace(/\{priceTag\}/g, priceTag)
+              .slice(0, 50);
+            body = tmpl.body
+              .replace(/\{name\}/g, customer.name || "amigo(a)")
+              .replace(/\{product\}/g, selectedProduct.name)
+              .replace(/\{store\}/g, storeName)
+              .replace(/\{day\}/g, dayName)
+              .replace(/\{priceTag\}/g, priceTag)
+              .slice(0, 130);
+            relatedProductId = selectedProduct.id;
+
+          } else {
+            // Fallback: generic engagement
+            const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+              if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+              if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+              return true;
+            });
+            const tmpl = validTemplates.length > 0
+              ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+              : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+            
+            title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+            body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
           }
 
+          if (specialEvent) {
+            title = `🎁 ${specialEvent}: ${title}`.slice(0, 50);
+          }
 
           try {
             const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
@@ -1106,6 +1257,7 @@ Deno.serve(async (req) => {
                 channel: "push",
                 message_text: `${title} — ${body}`,
                 status: "sent",
+                related_product_id: relatedProductId,
               });
               results.hourly_engagement.sent++;
             }
