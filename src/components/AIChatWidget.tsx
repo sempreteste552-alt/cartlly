@@ -508,12 +508,12 @@ export function AIChatWidget() {
       <div className="fixed bottom-6 right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] h-[calc(100vh-6rem)] sm:h-[560px] max-h-[560px] flex flex-col rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 ring-2 ring-primary-foreground/30">
               {aiAvatarUrl ? (
-                <AvatarImage src={aiAvatarUrl} alt={aiName} />
+                <AvatarImage src={aiAvatarUrl} alt={aiName} className="object-cover" />
               ) : null}
-              <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xs">
+              <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xs font-bold">
                 {aiInitials}
               </AvatarFallback>
             </Avatar>
@@ -558,10 +558,15 @@ export function AIChatWidget() {
             </div>
           ) : messages.length === 0 && (
             <div className="space-y-4">
-              <div className="flex flex-col items-center text-center space-y-2 py-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Bot className="h-6 w-6 text-primary" />
-                </div>
+              <div className="flex flex-col items-center text-center space-y-3 py-4">
+                <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-md">
+                  {aiAvatarUrl ? (
+                    <AvatarImage src={aiAvatarUrl} alt={aiName} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+                    {aiInitials}
+                  </AvatarFallback>
+                </Avatar>
                 <h3 className="font-semibold">Olá! Como posso ajudar hoje?</h3>
                 <p className="text-sm text-muted-foreground px-4">
                   Eu sou seu assistente inteligente. Posso analisar suas vendas, sugerir produtos, criar cupons e muito mais.
@@ -585,8 +590,20 @@ export function AIChatWidget() {
           {!aiLocked && messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`flex gap-3 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                {msg.role === "user" ? (
+                  <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 bg-primary text-primary-foreground">
+                    <User className="h-4 w-4" />
+                  </div>
+                ) : (
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {aiAvatarUrl ? (
+                      <AvatarImage src={aiAvatarUrl} alt={aiName} className="object-cover" />
+                    ) : null}
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                      <Bot className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 </div>
                 <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
                   <div className="prose prose-sm dark:prose-invert break-words max-w-full">
