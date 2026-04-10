@@ -172,12 +172,23 @@ async function generateVapidAuthHeader(
   const payloadB64 = b64url(enc.encode(JSON.stringify(payload)));
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  const rawPrivate = b64urlDecode(vapidPrivateKey);
-  const rawPublic = b64urlDecode(vapidPublicKey);
+  const rawPrivate = b64urlDecode(vapidPrivateKey.trim());
+  const rawPublic = b64urlDecode(vapidPublicKey.trim());
 
-  // rawPublic is 65 bytes: 0x04 || x(32) || y(32)
-  const xBytes = padTo(rawPublic.slice(1, 33), 32);
-  const yBytes = padTo(rawPublic.slice(33, 65), 32);
+  // Handle both 65-byte (0x04 prefix) and 64-byte public keys
+  let xBytes: Uint8Array;
+  let yBytes: Uint8Array;
+
+  if (rawPublic.length === 65 && rawPublic[0] === 0x04) {
+    xBytes = rawPublic.slice(1, 33);
+    yBytes = rawPublic.slice(33, 65);
+  } else if (rawPublic.length === 64) {
+    xBytes = rawPublic.slice(0, 32);
+    yBytes = rawPublic.slice(32, 64);
+  } else {
+    throw new Error(`Invalid VAPID public key length: ${rawPublic.length} bytes (expected 64 or 65)`);
+  }
+
   const dBytes = padTo(rawPrivate, 32);
 
   const x = b64url(xBytes);
