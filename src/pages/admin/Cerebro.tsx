@@ -23,6 +23,7 @@ export default function Cerebro() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
+  const [pendingActions, setPendingActions] = useState<Record<number, any[]>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // === DATA QUERIES ===
