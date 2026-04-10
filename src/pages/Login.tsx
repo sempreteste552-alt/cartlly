@@ -300,71 +300,50 @@ export default function Login() {
     }
   };
 
-  // Email verification success screen
-  if (showEmailSent) {
+  // Maintenance mode screen
+  if (showMaintenance) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
         <div className="pointer-events-none fixed inset-0">
           <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
           <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         </div>
         <Card className="relative w-full max-w-md border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={cartlyLogo} alt="Cartly" className="h-16 w-auto" />
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
-              <Mail className="h-10 w-10 text-green-500" />
+            <img src={cartlyLogo} alt="Cartly" className="h-24 w-auto drop-shadow-lg" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Verifique seu E-mail
+                Sistema em Manutenção
               </h1>
               <p className="text-muted-foreground leading-relaxed">
-                Enviamos um link de verificação para <strong className="text-foreground">{email}</strong>
+                Estamos realizando melhorias programadas em nossa infraestrutura para oferecer uma experiência ainda melhor.
               </p>
               <p className="text-sm text-muted-foreground">
-                Clique no link do e-mail para ativar sua conta automaticamente. Após a verificação, você já pode fazer login.
+                O acesso ao painel administrativo e a criação de novas lojas estão temporariamente suspensos. Suas lojas continuam funcionando normalmente (exceto se houver aviso específico).
               </p>
             </div>
-            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 w-full">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                <p className="text-sm font-medium">Conta criada com sucesso! Verifique seu e-mail.</p>
-              </div>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 w-full">
+              <p className="text-sm text-primary font-medium">🛠️ Previsão de retorno: Em breve</p>
             </div>
-            <div className="space-y-2 w-full">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setShowEmailSent(false);
-                  setIsRegister(false);
-                }}
-              >
-                Voltar ao Login
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Não recebeu? Verifique a pasta de spam ou{" "}
-                <button
-                  onClick={async () => {
-                    try {
-                      const { error } = await supabase.auth.resend({ type: "signup", email });
-                      if (error) throw error;
-                      toast.success("E-mail reenviado!");
-                    } catch (err: any) {
-                      toast.error(err.message || "Erro ao reenviar");
-                    }
-                  }}
-                  className="text-blue-500 hover:underline font-medium"
-                >
-                  reenvie o e-mail
-                </button>
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => window.location.reload()}
+            >
+              Recarregar Página
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  // Email verification success screen
+  if (showEmailSent) {
+... keep existing code
 
   const getTitle = () => {
     if (isForgotPassword) return "Redefinir Senha";
