@@ -67,7 +67,7 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const bgGradient = `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
 
   // Split text into characters for jumping animation
-  const chars = bannerText.split("");
+  const chars = Array.from(bannerText);
 
   return (
     <div className="relative overflow-hidden" style={{ background: bgGradient }}>
