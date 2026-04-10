@@ -209,7 +209,8 @@ export default function Login() {
             data: { 
               display_name: displayName,
               store_name: storeName.trim(),
-              store_slug: slug
+              store_slug: slug,
+              store_category: storeCategory
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
