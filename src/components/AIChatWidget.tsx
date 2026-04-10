@@ -364,6 +364,15 @@ export function AIChatWidget() {
       } catch (e) { console.error("Update settings parse error:", e); }
     }
 
+    // --- Marketing ---
+    const marketingMatch = content.match(/\[ACTION_MARKETING\]([\s\S]*?)\[\/ACTION_MARKETING\]/);
+    if (marketingMatch) {
+      try {
+        const payload = JSON.parse(marketingMatch[1].trim());
+        actions.push({ type: "marketing", label: "📣 Atualizar Banner/Marketing", payload });
+      } catch (e) { console.error("Marketing parse error:", e); }
+    }
+
     // --- Reminder ---
     const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
     if (reminderMatch) {
