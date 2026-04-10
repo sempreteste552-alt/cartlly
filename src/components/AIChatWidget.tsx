@@ -253,6 +253,13 @@ export function AIChatWidget() {
       expires_at: c.expires_at?.slice(0, 10) || null,
     }));
 
+    // Calculate revenue breakdown by status
+    const approvedOrders = (orders || []).filter((o: any) => !['cancelado', 'recusado', 'expirado'].includes(o.status));
+    const cancelledOrders = (orders || []).filter((o: any) => o.status === 'cancelado');
+    const pendingOrders = (orders || []).filter((o: any) => o.status === 'pendente');
+    const approvedRevenue = approvedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
+    const avgTicket = approvedOrders.length > 0 ? approvedRevenue / approvedOrders.length : 0;
+
     return {
       storeName: (settings as any)?.store_name || "",
       storeDescription: (settings as any)?.store_description || "",
@@ -262,7 +269,11 @@ export function AIChatWidget() {
       storeCategory: (settings as any)?.store_category || "",
       totalProducts: products?.length || 0,
       totalOrders: orders?.length || 0,
-      totalRevenue: orders?.reduce((sum, o: any) => sum + (o.total || 0), 0) || 0,
+      approvedOrders: approvedOrders.length,
+      cancelledOrders: cancelledOrders.length,
+      pendingOrders: pendingOrders.length,
+      totalRevenue: approvedRevenue,
+      avgTicket: Math.round(avgTicket * 100) / 100,
       categories: categories?.map((c) => c.name) || [],
       activeCoupons: coupons?.filter((c: any) => c.active)?.length || 0,
       products: productList,
