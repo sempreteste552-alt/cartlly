@@ -62,6 +62,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_ai_chats: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -134,6 +161,48 @@ export type Database = {
           updated_at?: string
           user_id?: string
           variables?: string[] | null
+        }
+        Relationships: []
+      }
+      ai_scheduled_tasks: {
+        Row: {
+          ai_instruction: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          payload: Json
+          retry_count: number | null
+          scheduled_at: string
+          status: string
+          task_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_instruction?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json
+          retry_count?: number | null
+          scheduled_at: string
+          status?: string
+          task_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_instruction?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          payload?: Json
+          retry_count?: number | null
+          scheduled_at?: string
+          status?: string
+          task_type?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2591,6 +2660,39 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      tenant_ai_brain_config: {
+        Row: {
+          ai_name: string | null
+          created_at: string
+          custom_instructions: string | null
+          id: string
+          personality: string | null
+          store_knowledge: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_name?: string | null
+          created_at?: string
+          custom_instructions?: string | null
+          id?: string
+          personality?: string | null
+          store_knowledge?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_name?: string | null
+          created_at?: string
+          custom_instructions?: string | null
+          id?: string
+          personality?: string | null
+          store_knowledge?: Json | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
