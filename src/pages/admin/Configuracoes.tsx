@@ -157,6 +157,7 @@ function GeneralSettingsTab() {
   const [footerBgColor, setFooterBgColor] = useState("#000000");
   const [footerTextColor, setFooterTextColor] = useState("#ffffff");
   const [marqueeEnabled, setMarqueeEnabled] = useState(false);
+  const [promoBannerEnabled, setPromoBannerEnabled] = useState(false);
   const [marqueeText, setMarqueeText] = useState("");
   const [marqueeSpeed, setMarqueeSpeed] = useState(50);
   const [marqueeBgColor, setMarqueeBgColor] = useState("#000000");
