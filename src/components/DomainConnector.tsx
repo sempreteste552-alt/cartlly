@@ -369,11 +369,27 @@ export default function DomainConnector({
                   )}
                 </div>
                 {verifyResult.dnsComplete && !verifyResult.sslReady && (
-                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2">
-                    <Clock className="h-4 w-4 text-primary shrink-0" />
-                    <p className="text-xs text-muted-foreground">
-                      DNS correto! O certificado SSL está sendo provisionado. Aguarde alguns minutos e clique em <strong>Verificar</strong> novamente.
-                    </p>
+                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
+                    {autoPolling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 text-primary shrink-0 animate-spin" />
+                        <div>
+                          <p className="text-xs font-medium text-foreground">
+                            🔄 Verificação automática ativa ({pollCount}/20)
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Checando SSL a cada 30 segundos... Você será notificado quando estiver pronto.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-4 w-4 text-primary shrink-0" />
+                        <p className="text-xs text-muted-foreground">
+                          DNS correto! O certificado SSL está sendo provisionado. Clique em <strong>Verificar</strong> para ativar a verificação automática.
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
