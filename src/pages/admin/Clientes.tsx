@@ -149,6 +149,8 @@ export default function Clientes() {
       phone: formData.get("phone"),
       city: formData.get("city"),
       state: formData.get("state"),
+      gender: formData.get("gender"),
+      routine_notes: formData.get("routine_notes"),
     };
     updateCustomerMutation.mutate(data);
   };
