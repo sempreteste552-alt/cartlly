@@ -943,6 +943,10 @@ export function AIChatWidget() {
             </div>
           )}
 
+          {voiceRecorder.error && !voiceRecorder.isRecording && (
+            <p className="text-xs text-destructive mb-2 px-2">{voiceRecorder.error}</p>
+          )}
+
           {voiceRecorder.isRecording ? (
             /* WhatsApp-style recording bar */
             <div className="flex items-center gap-3 h-12 bg-destructive/10 rounded-full px-4 animate-in slide-in-from-right-4 duration-200">
