@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
     }
 
     const dnsVerified = aRecordFound && txtRecordFound;
-    const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
+    const { ready: sslReady, error: sslError } = dnsVerified ? await checkHttps(requestedDomain) : { ready: false, error: "DNS incomplete" };
     
     // Status mapping: active, pending_ssl, pending_verification, failed
     let newStatus = "failed";
