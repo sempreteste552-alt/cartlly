@@ -78,6 +78,7 @@ STATUS ATUAL:
 - Vendas Hoje: ${JSON.stringify(salesStats || "N/A")}
 - Produtos Parados (menos visualizações/vendas): ${JSON.stringify(stagnantProducts || [])}
 - Amostragem de Itens Vendidos: ${JSON.stringify(recentOrderItems || [])}
+- Histórico de Entrega de Mensagens/Push: ${JSON.stringify(deliveryLogs || [])}
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
