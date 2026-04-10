@@ -429,6 +429,27 @@ function GeneralSettingsTab() {
             <Textarea value={storeDescription} onChange={(e) => setStoreDescription(e.target.value)} placeholder="Breve descrição da sua loja" maxLength={500} />
           </div>
           <div className="space-y-2">
+            <Label>Categoria da Loja / Nicho (IA)</Label>
+            <Select value={storeCategory} onValueChange={setStoreCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o nicho da sua loja" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Doceria / Confeitaria">Doceria / Confeitaria</SelectItem>
+                <SelectItem value="Moda / Roupas">Moda / Roupas</SelectItem>
+                <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
+                <SelectItem value="Saúde / Beleza">Saúde / Beleza</SelectItem>
+                <SelectItem value="Casa / Decoração">Casa / Decoração</SelectItem>
+                <SelectItem value="Pet Shop">Pet Shop</SelectItem>
+                <SelectItem value="Esportes">Esportes</SelectItem>
+                <SelectItem value="Brinquedos">Brinquedos</SelectItem>
+                <SelectItem value="Livraria">Livraria</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Isso ajuda a IA a adaptar o tom e as frases para o seu público</p>
+          </div>
+          <div className="space-y-2">
             <Label>Logo</Label>
             <div className="flex items-center gap-4">
               {logoUrl ? (
