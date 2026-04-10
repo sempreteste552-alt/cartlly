@@ -212,7 +212,7 @@ export default function LojaProduto() {
           <div className="absolute inset-0" style={{ background: `radial-gradient(circle at center, ${primaryColor}10, transparent 70%)`, animation: "scaleUp 0.5s ease-out" }} />
         </div>
       )}
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 py-6" style={{ fontFamily: "var(--store-font-body)" }}>
       <style>{`
         @keyframes pdp-fade-up {
           from { opacity: 0; transform: translateY(24px); }
