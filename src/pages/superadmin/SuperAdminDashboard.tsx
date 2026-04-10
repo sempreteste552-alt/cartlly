@@ -138,8 +138,8 @@ export default function SuperAdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Super Admin</h1>
-        <p className="text-muted-foreground">Visão geral da plataforma em tempo real</p>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Dashboard Super Admin</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm">Visão geral da plataforma em tempo real</p>
       </div>
 
       {/* Primary KPIs */}
