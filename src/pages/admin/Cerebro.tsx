@@ -104,11 +104,111 @@ export default function Cerebro() {
       const { error } = await supabase.from("admin_ai_chats").delete().eq("user_id", user!.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
-      toast.success("Chat limpo!");
     }
   });
+
+  const processAIActions = (content: string, msgIndex: number) => {
+    const actions: any[] = [];
+    
+    // Schedule Task
+    const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
+    let taskMatch;
+    while ((taskMatch = taskRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(taskMatch[1]);
+        actions.push({ type: "schedule_task", label: `📅 Agendar Push: ${payload.payload?.title || "Sem título"}`, payload });
+      } catch (e) { console.error("Task parse error:", e); }
+    }
+
+    // Reminder
+    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
+    let reminderMatch;
+    while ((reminderMatch = reminderRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(reminderMatch[1]);
+        actions.push({ type: "reminder", label: `⏰ Agendar Lembrete: ${payload.title}`, payload });
+      } catch (e) { console.error("Reminder parse error:", e); }
+    }
+
+    // Store Settings
+    const settingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
+    let settingsMatch;
+    while ((settingsMatch = settingsRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(settingsMatch[1]);
+        actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações da Loja", payload });
+      } catch (e) { console.error("Settings parse error:", e); }
+    }
+
+    // Page update
+    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
+    let pageMatch;
+    while ((pageMatch = pageRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(pageMatch[1]);
+        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
+      } catch (e) { console.error("Page parse error:", e); }
+    }
+
+    if (actions.length > 0) {
+      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+    }
+  };
+
+  const confirmAction = async (msgIndex: number, actionIndex: number) => {
+    const action = pendingActions[msgIndex]?.[actionIndex];
+    if (!action || !user) return;
+
+    try {
+      if (action.type === "schedule_task") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: action.payload.task_type,
+          scheduled_at: action.payload.scheduled_at,
+          payload: action.payload.payload,
+          ai_instruction: action.payload.ai_instruction,
+          status: "pending"
+        });
+        if (error) throw error;
+        toast.success("✅ Tarefa agendada com sucesso!");
+      } else if (action.type === "reminder") {
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: "admin_reminder",
+          scheduled_at: action.payload.remind_at,
+          payload: { title: action.payload.title, body: action.payload.description },
+          status: "pending"
+        });
+        if (error) throw error;
+        toast.success("✅ Lembrete agendado!");
+      } else if (action.type === "update_settings") {
+        const { error } = await supabase.from("store_settings").update({
+          ...action.payload,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações atualizadas!");
+      } else if (action.type === "update_page") {
+        const { error } = await supabase.from("store_pages").update({
+          content: action.payload.content,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id).eq("slug", action.payload.slug);
+        if (error) throw error;
+        toast.success(`✅ Página ${action.payload.slug} atualizada!`);
+      }
+
+      // Mark as confirmed
+      setPendingActions(prev => {
+        const newActions = [...(prev[msgIndex] || [])];
+        newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
+        return { ...prev, [msgIndex]: newActions };
+      });
+      queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+    } catch (e: any) {
+      toast.error("Erro ao executar: " + e.message);
+    }
+  };
 
   // === EFFECTS ===
 
