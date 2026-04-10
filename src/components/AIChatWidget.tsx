@@ -915,8 +915,8 @@ export function AIChatWidget() {
 
         {/* Footer with Input */}
         {!aiLocked && (
-        <div className="p-4 bg-card border-t border-border">
-          {pendingImages.length > 0 && (
+        <div className="p-3 bg-card border-t border-border">
+          {pendingImages.length > 0 && !voiceRecorder.isRecording && (
             <div className="flex flex-wrap gap-2 mb-3">
               {pendingImages.map((img, idx) => (
                 <div key={idx} className="relative group">
@@ -931,46 +931,92 @@ export function AIChatWidget() {
               ))}
             </div>
           )}
-          <div className="flex gap-2">
-            <input 
-              type="file" 
-              accept="image/*" 
-              multiple 
-              className="hidden" 
-              ref={chatImageInputRef} 
-              onChange={handleChatImageUpload} 
-            />
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="shrink-0 h-10 w-10" 
-              onClick={() => chatImageInputRef.current?.click()}
-            >
-              <ImagePlus className="h-5 w-5" />
-            </Button>
-            {voiceRecorder.isSupported && (
-              <Button 
-                variant={voiceRecorder.isRecording ? "destructive" : "outline"}
-                size="icon" 
-                className="shrink-0 h-10 w-10" 
-                onClick={voiceRecorder.toggleRecording}
-                title={voiceRecorder.isRecording ? "Parar gravação" : "Gravar áudio"}
+
+          {voiceRecorder.isRecording ? (
+            /* WhatsApp-style recording bar */
+            <div className="flex items-center gap-3 h-12 bg-destructive/10 rounded-full px-4 animate-in slide-in-from-right-4 duration-200">
+              <button 
+                onClick={voiceRecorder.stopRecording}
+                className="shrink-0 h-8 w-8 rounded-full bg-destructive/20 flex items-center justify-center hover:bg-destructive/30 transition-colors"
               >
-                {voiceRecorder.isRecording ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </button>
+              
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="h-2 w-2 rounded-full bg-destructive animate-pulse shrink-0" />
+                <span className="text-sm font-mono font-medium text-destructive tabular-nums">
+                  {voiceRecorder.formattedTime}
+                </span>
+                {/* Animated waveform bars */}
+                <div className="flex items-center gap-[3px] flex-1 justify-center">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="w-[3px] rounded-full bg-destructive/60"
+                      style={{
+                        height: `${Math.random() * 16 + 4}px`,
+                        animation: `waveform 0.6s ease-in-out ${i * 0.05}s infinite alternate`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <button 
+                onClick={voiceRecorder.stopRecording}
+                className="shrink-0 h-10 w-10 rounded-full bg-primary flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+              >
+                <Send className="h-5 w-5 text-primary-foreground" />
+              </button>
+            </div>
+          ) : (
+            /* Normal input bar */
+            <div className="flex gap-2">
+              <input 
+                type="file" 
+                accept="image/*" 
+                multiple 
+                className="hidden" 
+                ref={chatImageInputRef} 
+                onChange={handleChatImageUpload} 
+              />
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="shrink-0 h-10 w-10 rounded-full" 
+                onClick={() => chatImageInputRef.current?.click()}
+              >
+                <ImagePlus className="h-5 w-5" />
               </Button>
-            )}
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Digite sua mensagem..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-              className="flex-1"
-            />
-            <Button onClick={() => sendMessage(input)} disabled={isLoading || subscribeLoading} className="shrink-0 h-10 w-10" size="icon">
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5" />}
-            </Button>
-          </div>
+              <Input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Digite sua mensagem..."
+                onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                className="flex-1 rounded-full"
+              />
+              {input.trim() || pendingImages.length > 0 ? (
+                <Button onClick={() => sendMessage(input)} disabled={isLoading || subscribeLoading} className="shrink-0 h-10 w-10 rounded-full" size="icon">
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5" />}
+                </Button>
+              ) : voiceRecorder.isSupported ? (
+                <Button 
+                  variant="outline"
+                  size="icon" 
+                  className="shrink-0 h-10 w-10 rounded-full" 
+                  onClick={voiceRecorder.startRecording}
+                  title="Gravar áudio"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Button onClick={() => sendMessage(input)} disabled={isLoading || subscribeLoading} className="shrink-0 h-10 w-10 rounded-full" size="icon">
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-5 w-5" />}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
         )}
       </div>

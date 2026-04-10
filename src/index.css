@@ -251,3 +251,8 @@ html {
   animation: referral-pulse 1.5s ease-in-out infinite;
   display: inline-block;
 }
+
+@keyframes waveform {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1.2); }
+}
