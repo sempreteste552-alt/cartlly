@@ -1660,6 +1660,7 @@ export type Database = {
           image_url: string | null
           is_archived: boolean
           made_to_order: boolean
+          min_stock_alert: number
           name: string
           price: number
           published: boolean
@@ -1678,6 +1679,7 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean
           made_to_order?: boolean
+          min_stock_alert?: number
           name: string
           price?: number
           published?: boolean
@@ -1696,6 +1698,7 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean
           made_to_order?: boolean
+          min_stock_alert?: number
           name?: string
           price?: number
           published?: boolean
