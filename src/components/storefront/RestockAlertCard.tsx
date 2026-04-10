@@ -32,14 +32,28 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
   const alertCardBgColor = alert?.card_bg_color || "#ffffff";
   const alertAccentColor = alert?.accent_color || primaryColor;
 
-  const restockProducts = allProducts?.filter((p) =>
-    alert?.product_ids?.includes(p.id)
-  ) ?? [];
+  const restockProducts = allProducts?.filter((p) => {
+    const isManual = alert?.product_ids?.includes(p.id);
+    
+    // Auto-include products created or updated in the last 7 days (restock/new)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const updatedDate = p.updated_at ? new Date(p.updated_at) : null;
+    const createdAt = p.created_at ? new Date(p.created_at) : null;
+    
+    // Consider as news/restock if created or updated in the last 7 days and has stock
+    const isRecent = ((updatedDate && updatedDate > sevenDaysAgo) || (createdAt && createdAt > sevenDaysAgo)) && (p.stock || 0) > 0;
+    
+    return isManual || isRecent;
+  }) ?? [];
 
   useEffect(() => {
     if (alert && restockProducts.length > 0) {
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
+    } else if (restockProducts.length === 0) {
+      setVisible(false);
     }
   }, [alert, restockProducts.length]);
 
@@ -96,7 +110,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-5 w-5 animate-pulse" style={{ color: alertAccentColor }} />
               <h3 className="text-lg font-bold leading-tight" style={{ color: alertTextColor === '#ffffff' ? undefined : alertTextColor }}>
-                {alert?.title || "🔥 Produtos de volta!"}
+                {alert?.title || "🔥 Novidades e Reposição!"}
               </h3>
             </div>
             {alert?.subtitle && (
