@@ -1459,6 +1459,181 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ========== 7) LOW STOCK URGENCY: Alert customers who viewed/carted products that are selling out ==========
+    const LOW_STOCK_URGENCY_TEMPLATES = [
+      { title: "🚨 {product} quase esgotado!", body: "{name}, o {product} que você viu na {store} tem apenas {stock} unidade(s)! Garanta antes que acabe! ⚡" },
+      { title: "⚡ Corra! {product} acabando!", body: "{name}, restam só {stock} do {product} na {store}! Se venderam rápido, corra! 🏃" },
+      { title: "🔥 Últimas unidades: {product}!", body: "{name}, o {product} da {store} está nas últimas {stock} unidade(s)! Não fique sem! 💨" },
+      { title: "⏰ {product} vai acabar!", body: "Alerta {name}! O {product} que te interessou na {store} tem só {stock} restantes! 🔥" },
+      { title: "💨 Voando: {product}!", body: "{name}, o {product} da {store} está voando! Apenas {stock} restantes. Garanta o seu! ⚡" },
+      { title: "🛑 Não perca o {product}!", body: "{name}, outros clientes compraram o {product}. Restam {stock} na {store}! Corra! 🏃" },
+    ];
+
+    const CART_LOW_STOCK_TEMPLATES = [
+      { title: "🛒⚠️ Itens do carrinho acabando!", body: "{name}, o {product} no seu carrinho na {store} tem apenas {stock} unidade(s)! Finalize agora! 🏃" },
+      { title: "🚨 Carrinho em risco!", body: "{name}, o {product} que está no seu carrinho na {store} pode esgotar! Só {stock} restantes! ⚡" },
+      { title: "⏰ Corre pro carrinho!", body: "{name}, o {product} do seu carrinho na {store} está acabando ({stock} un.)! Finalize antes que acabe! 🔥" },
+      { title: "💨 Seu item vai acabar!", body: "{name}, o estoque do {product} no seu carrinho na {store} caiu para {stock}! Compre agora! 🏃" },
+    ];
+
+    try {
+      // Find products with low stock (using min_stock_alert or default threshold of 5)
+      const { data: lowStockProducts } = await supabase
+        .from("products")
+        .select("id, name, stock, min_stock_alert, user_id")
+        .eq("published", true)
+        .gt("stock", 0)
+        .lte("stock", 10) // Pre-filter: only products with stock <= 10
+        .limit(100);
+
+      if (lowStockProducts && lowStockProducts.length > 0) {
+        // Filter to truly low-stock products (stock <= min_stock_alert or stock <= 3)
+        const trulyLowStock = lowStockProducts.filter((p: any) => {
+          const threshold = Math.max(p.min_stock_alert || 5, 1);
+          return p.stock <= threshold;
+        });
+
+        if (trulyLowStock.length > 0) {
+          const lowStockProductIds = trulyLowStock.map((p: any) => p.id);
+          const lowStockProductMap = new Map(trulyLowStock.map((p: any) => [p.id, p]));
+
+          // 7a) Customers who VIEWED these low-stock products (last 7 days)
+          const sevenDaysAgoLS = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: viewStats } = await supabase
+            .from("customer_view_stats")
+            .select("customer_id, product_id")
+            .in("product_id", lowStockProductIds)
+            .gte("last_viewed_at", sevenDaysAgoLS)
+            .limit(200);
+
+          // 7b) Customers who have these products in ABANDONED CARTS
+          const { data: cartsWithLowStock } = await supabase
+            .from("abandoned_carts")
+            .select("id, customer_id, user_id, items")
+            .eq("recovered", false)
+            .not("customer_id", "is", null)
+            .limit(200);
+
+          // Build set of customer+product pairs to notify
+          const lowStockAlerts: { customerId: string; productId: string; source: "viewed" | "cart" }[] = [];
+
+          // From views
+          if (viewStats) {
+            for (const vs of viewStats) {
+              if (vs.customer_id && vs.product_id && lowStockProductMap.has(vs.product_id)) {
+                lowStockAlerts.push({ customerId: vs.customer_id, productId: vs.product_id, source: "viewed" });
+              }
+            }
+          }
+
+          // From carts
+          if (cartsWithLowStock) {
+            for (const cart of cartsWithLowStock) {
+              const items = Array.isArray(cart.items) ? cart.items : [];
+              for (const item of items) {
+                const pid = (item as any).product_id || (item as any).id;
+                if (pid && lowStockProductMap.has(pid) && cart.customer_id) {
+                  lowStockAlerts.push({ customerId: cart.customer_id, productId: pid, source: "cart" });
+                }
+              }
+            }
+          }
+
+          // Deduplicate by customer+product
+          const seenKeys = new Set<string>();
+          const uniqueAlerts = lowStockAlerts.filter(a => {
+            const key = `${a.customerId}:${a.productId}`;
+            if (seenKeys.has(key)) return false;
+            seenKeys.add(key);
+            return true;
+          });
+
+          if (uniqueAlerts.length > 0) {
+            // Load customer data
+            const alertCustIds = [...new Set(uniqueAlerts.map(a => a.customerId))];
+            const { data: alertCustomers } = await supabase
+              .from("customers")
+              .select("id, name, auth_user_id, store_user_id")
+              .in("id", alertCustIds);
+            const alertCustMap = new Map((alertCustomers || []).map((c: any) => [c.id, c]));
+
+            // Check for recent low_stock_urgency pushes (avoid spamming - 6h cooldown)
+            const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+            const { data: recentLSPushes } = await supabase
+              .from("automation_executions")
+              .select("customer_id, related_product_id")
+              .eq("trigger_type", "low_stock_urgency")
+              .gte("sent_at", sixHoursAgo);
+            const recentLSKeys = new Set((recentLSPushes || []).map((e: any) => `${e.customer_id}:${e.related_product_id}`));
+
+            let lsSent = 0;
+
+            for (const alert of uniqueAlerts) {
+              const key = `${alert.customerId}:${alert.productId}`;
+              if (recentLSKeys.has(key)) continue;
+
+              const customer = alertCustMap.get(alert.customerId);
+              if (!customer?.auth_user_id) continue;
+
+              const product = lowStockProductMap.get(alert.productId);
+              if (!product) continue;
+
+              const store = storeMap.get(customer.store_user_id);
+              const storeName = store?.store_name || "nossa loja";
+
+              const templates = alert.source === "cart" ? CART_LOW_STOCK_TEMPLATES : LOW_STOCK_URGENCY_TEMPLATES;
+              const tmpl = templates[Math.floor(Math.random() * templates.length)];
+              const title = tmpl.title
+                .replace(/\{product\}/g, product.name)
+                .replace(/\{name\}/g, customer.name)
+                .replace(/\{store\}/g, storeName)
+                .replace(/\{stock\}/g, String(product.stock))
+                .slice(0, 50);
+              const body = tmpl.body
+                .replace(/\{product\}/g, product.name)
+                .replace(/\{name\}/g, customer.name)
+                .replace(/\{store\}/g, storeName)
+                .replace(/\{stock\}/g, String(product.stock))
+                .slice(0, 130);
+
+              try {
+                const pushResp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    target_user_id: customer.auth_user_id,
+                    title, body, url: "/", type: "low_stock_urgency",
+                    store_user_id: customer.store_user_id,
+                  }),
+                });
+                const pushData = await pushResp.json();
+
+                await supabase.from("automation_executions").insert({
+                  user_id: customer.store_user_id,
+                  customer_id: alert.customerId,
+                  trigger_type: "low_stock_urgency",
+                  channel: "push",
+                  message_text: `[${alert.source}] ${title} — ${body}`,
+                  status: pushData.sent > 0 ? "sent" : "failed",
+                  related_product_id: alert.productId,
+                  ai_generated: false,
+                });
+
+                if (pushData.sent > 0) lsSent++;
+                recentLSKeys.add(key);
+              } catch (err: any) {
+                console.error("Low stock urgency push error:", err);
+              }
+            }
+
+            console.log(`[push-scheduler] Low stock urgency: ${uniqueAlerts.length} alerts, ${lsSent} sent`);
+          }
+        }
+      }
+    } catch (lsErr: any) {
+      console.error("[push-scheduler] Low stock urgency error:", lsErr);
+    }
+
     console.log("[push-scheduler] Results:", JSON.stringify(results));
     return json({ success: true, ...results });
   } catch (error: any) {
