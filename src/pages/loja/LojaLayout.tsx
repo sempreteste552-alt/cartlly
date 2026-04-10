@@ -480,6 +480,12 @@ export default function LojaLayout() {
           storeUserId={settings?.user_id}
         />
 
+        <PWAInstallPrompt
+          storeName={storeInstallName}
+          storeIcon={storeIconUrl}
+          dismissKey={`pwa_pro_${settings?.store_slug || "default"}`}
+        />
+
         <PushPermissionPrompt
           storeName={settings?.store_name}
           logoUrl={storeIconUrl}
