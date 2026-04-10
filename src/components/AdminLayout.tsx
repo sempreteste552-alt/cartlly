@@ -10,6 +10,7 @@ import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { AdminPendingOrdersAlert } from "@/components/admin/AdminPendingOrdersAlert";
 import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { TrialBanner } from "@/components/TrialBanner";
+import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
