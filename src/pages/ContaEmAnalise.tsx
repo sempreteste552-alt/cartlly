@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +10,7 @@ import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ContaEmAnalise() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["profile_block_status", user?.id],
@@ -48,12 +51,22 @@ export default function ContaEmAnalise() {
       });
       return settings;
     },
+    refetchInterval: 5000, // Re-check every 5s so status updates quickly
   });
 
   const isBlocked = profile?.status === "blocked";
   const isAdminBlocked = (storeSettings as any)?.admin_blocked === true;
   const isRejected = profile?.status === "rejected";
   const isMaintenance = platformSettings?.maintenance_mode === true;
+
+  // Auto-redirect away if the reason for being here no longer applies
+  useEffect(() => {
+    if (!profile && !storeSettings && !platformSettings) return; // still loading
+    const hasReason = isBlocked || isAdminBlocked || isRejected || isMaintenance;
+    if (!hasReason) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isBlocked, isAdminBlocked, isRejected, isMaintenance, profile, storeSettings, platformSettings, navigate]);
 
   const getContent = () => {
     if (isMaintenance) {

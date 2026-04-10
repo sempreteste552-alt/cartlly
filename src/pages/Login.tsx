@@ -111,6 +111,17 @@ export default function Login() {
     return "Forte";
   };
 
+  // Reset any leaked tenant/store theme colors from CSS custom properties
+  useEffect(() => {
+    const root = document.documentElement;
+    const propsToReset = ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring", "--accent-foreground",
+      "--store-primary", "--store-secondary", "--store-accent", "--store-button-bg", "--store-button-text", "--store-bg-base", "--store-text-base"];
+    propsToReset.forEach(prop => root.style.removeProperty(prop));
+    // Also remove dark class if it was set by a store
+    root.classList.remove("dark");
+    return () => {};
+  }, []);
+
   useEffect(() => {
     if (user) {
       // Check for super admin first
