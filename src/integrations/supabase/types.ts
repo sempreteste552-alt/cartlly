@@ -2137,6 +2137,7 @@ export type Database = {
           announcement_bar_bg_color: string
           announcement_bar_enabled: boolean
           announcement_bar_link: string | null
+          announcement_bar_search_enabled: boolean | null
           announcement_bar_text: string | null
           announcement_bar_text_color: string
           countdown_bg_color: string
@@ -2164,6 +2165,7 @@ export type Database = {
           announcement_bar_bg_color?: string
           announcement_bar_enabled?: boolean
           announcement_bar_link?: string | null
+          announcement_bar_search_enabled?: boolean | null
           announcement_bar_text?: string | null
           announcement_bar_text_color?: string
           countdown_bg_color?: string
@@ -2191,6 +2193,7 @@ export type Database = {
           announcement_bar_bg_color?: string
           announcement_bar_enabled?: boolean
           announcement_bar_link?: string | null
+          announcement_bar_search_enabled?: boolean | null
           announcement_bar_text?: string | null
           announcement_bar_text_color?: string
           countdown_bg_color?: string
