@@ -19,17 +19,17 @@ import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordRese
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
 const LOGIN_PHRASES = [
-  "Bem-vindo de volta à sua loja! 🏪",
-  "Seus clientes estão esperando... 🚀",
-  "Hora de faturar! 💰",
-  "Sua loja, seu sucesso! ✨",
+  "Bem-vindo ao Painel Administrativo 🔐",
+  "Gerencie suas vendas com inteligência 📊",
+  "Sua plataforma, suas regras! ✨",
+  "Fature mais com a Cartly 💰",
 ];
 
 const REGISTER_PHRASES = [
-  "Seja bem-vindo à Cartly! 🎉",
-  "Você está prestes a faturar muito! 💎",
-  "Monte sua loja em minutos! ⚡",
-  "O futuro do seu negócio começa aqui! 🌟",
+  "Crie seu ecossistema digital 🎉",
+  "Tudo o que você precisa em um só lugar 💎",
+  "Comece seu negócio hoje! ⚡",
+  "O futuro do seu empreendimento começa aqui! 🌟",
 ];
 
 function useTypewriter(phrases: string[], speed = 60, pause = 2500) {
@@ -116,24 +116,33 @@ export default function Login() {
         return;
       }
 
-      // Check for admin OAuth context — if auth_context says store_customer, don't redirect to admin
-      const authContextStr = localStorage.getItem("auth_context");
-      if (authContextStr) {
-        try {
-          const ctx = JSON.parse(authContextStr);
-          if (ctx.type === "store_customer" && ctx.redirect_back) {
-            // This is a store customer who landed on /login after OAuth — redirect back to store
-            window.location.href = ctx.redirect_back;
-            return;
-          }
-        } catch { /* ignore */ }
+      // Check if it's a store customer — avoid redirecting to admin panel or setup-store
+      const isCustomer = user.user_metadata?.is_customer === true;
+      if (isCustomer) {
+        // If they are on /login, and they are a customer, send them back to where they came from
+        const authContextStr = localStorage.getItem("auth_context");
+        if (authContextStr) {
+          try {
+            const ctx = JSON.parse(authContextStr);
+            if (ctx.type === "store_customer" && ctx.redirect_back) {
+              window.location.href = ctx.redirect_back;
+              return;
+            }
+          } catch { /* ignore */ }
+        }
+        
+        // If no context, redirect to their last visited store or home
+        const lastStore = localStorage.getItem("last_visited_store");
+        if (lastStore) {
+          navigate(`/loja/${lastStore}`, { replace: true });
+        } else {
+          // If no store found, stay on home but don't show onboarding
+          navigate("/", { replace: true });
+        }
+        return;
       }
 
-      // If we're here, we're on the admin login page.
-      // We don't sign out automatically anymore, we let ProtectedRoute handle the authorization check.
-      // This allows merchants who also have is_customer=true to access their panel.
-      
-      // Before navigating to /admin, check if we need onboarding
+      // If we're here, we're a potential merchant/tenant
       const checkOnboarding = async () => {
         const { data: store } = await supabase
           .from("store_settings")
