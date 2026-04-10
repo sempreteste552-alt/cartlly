@@ -151,9 +151,11 @@ export function AIChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const pendingVoiceRef = useRef<string | null>(null);
   const voiceRecorder = useVoiceRecorder({
     onTranscript: (text) => {
-      setInput(prev => prev ? prev + " " + text : text);
+      pendingVoiceRef.current = text;
+      setInput(text);
     },
   });
   const { ctx } = useTenantContext();
