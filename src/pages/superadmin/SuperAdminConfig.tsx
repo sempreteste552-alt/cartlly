@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone } from "lucide-react";
+import { Settings, Globe, Mail, CreditCard, Shield, Save, Loader2, Phone, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
@@ -20,6 +20,7 @@ interface PlatformConfig {
   allow_new_registrations: boolean;
   default_plan_id: string;
   support_whatsapp_number: string;
+  promo_banner_enabled: boolean;
   mercadopago_global_key: string;
   mercadopago_public_key: string;
   mercadopago_client_id: string;
@@ -33,6 +34,30 @@ interface PlatformConfig {
   mp_webhook_secret: string;
   gateway_test_mode: boolean;
 }
+
+const defaultConfig: PlatformConfig = {
+  platform_name: "Cartlly",
+  platform_email: "",
+  default_trial_days: 7,
+  auto_confirm_emails: false,
+  maintenance_mode: false,
+  allow_new_registrations: true,
+  default_plan_id: "",
+  support_whatsapp_number: "",
+  promo_banner_enabled: false,
+  mercadopago_global_key: "",
+  mercadopago_public_key: "",
+  mercadopago_client_id: "",
+  mercadopago_client_secret: "",
+  pagbank_global_key: "",
+  amplopay_public_key: "",
+  amplopay_secret_key: "",
+  stripe_global_key: "",
+  stripe_webhook_secret: "",
+  stripe_publishable_key: "",
+  mp_webhook_secret: "",
+  gateway_test_mode: true,
+};
 
 const defaultConfig: PlatformConfig = {
   platform_name: "Cartlly",
