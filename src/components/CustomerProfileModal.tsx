@@ -34,6 +34,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
   const [state, setState] = useState("");
   const [cep, setCep] = useState("");
   const [cpf, setCpf] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
 
   useEffect(() => {
     if (customer) {
@@ -46,6 +47,25 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
       setCpf(customer.cpf || "");
     }
   }, [customer]);
+
+  const lookupCep = useCallback(async (rawCep: string) => {
+    const cleanCep = rawCep.replace(/\D/g, "");
+    if (cleanCep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await resp.json();
+      if (!data.erro) {
+        if (data.logradouro) setAddress(data.logradouro + (data.bairro ? `, ${data.bairro}` : ""));
+        if (data.localidade) setCity(data.localidade);
+        if (data.uf) setState(data.uf);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setCepLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (tab === "orders" && open) {
