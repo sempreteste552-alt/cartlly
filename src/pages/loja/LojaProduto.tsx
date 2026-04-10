@@ -234,7 +234,10 @@ export default function LojaProduto() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
         <div className="space-y-3 pdp-reveal pdp-reveal-d1">
-          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
+          <div 
+            onClick={() => productPageConfig?.enable_image_zoom && setIsZoomed(true)}
+            className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}
+          >
             {allImages.length > 0 ? (
               <img
                 src={allImages[selectedImageIndex] || allImages[0]}
