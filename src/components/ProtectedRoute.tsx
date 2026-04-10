@@ -108,6 +108,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
+  // Check maintenance mode
+  if (maintenanceMode === true) {
+    return <Navigate to="/conta-em-analise" replace />;
+  }
+
   // Check admin panel blocked
   if ((storeSettings as any)?.admin_blocked === true) {
     return <Navigate to="/conta-em-analise" replace />;
