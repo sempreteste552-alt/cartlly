@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
@@ -85,50 +85,41 @@ export function AdminLayout() {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (settings) {
-      const adminContainer = document.getElementById("admin-layout-root");
-      if (!adminContainer) return;
-      
-      const adminPrimary = (settings as any).admin_primary_color || "#6d28d9";
+  const toHSL = (hex: string) => {
+    const safeHex = hex.startsWith("#") ? hex : "#6d28d9";
+    const r = parseInt(safeHex.slice(1, 3), 16) / 255;
+    const g = parseInt(safeHex.slice(3, 5), 16) / 255;
+    const b = parseInt(safeHex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
 
-      const toHSL = (hex: string) => {
-        const r = parseInt(hex.slice(1, 3), 16) / 255;
-        const g = parseInt(hex.slice(3, 5), 16) / 255;
-        const b = parseInt(hex.slice(5, 7), 16) / 255;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h = 0, s = 0;
-        const l = (max + min) / 2;
-        if (max !== min) {
-          const d = max - min;
-          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-          switch (max) {
-            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-            case g: h = ((b - r) / d + 2) / 6; break;
-            case b: h = ((r - g) / d + 4) / 6; break;
-          }
-        }
-        return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-      };
-
-      try {
-        const hsl = toHSL(adminPrimary);
-        adminContainer.style.setProperty("--primary", hsl);
-        adminContainer.style.setProperty("--ring", hsl);
-        adminContainer.style.setProperty("--sidebar-primary", hsl);
-        adminContainer.style.setProperty("--sidebar-ring", hsl);
-        adminContainer.style.setProperty("--accent-foreground", hsl);
-      } catch {}
-
-      return () => {
-        adminContainer.style.removeProperty("--primary");
-        adminContainer.style.removeProperty("--ring");
-        adminContainer.style.removeProperty("--sidebar-primary");
-        adminContainer.style.removeProperty("--sidebar-ring");
-        adminContainer.style.removeProperty("--accent-foreground");
-      };
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
     }
-  }, [settings]);
+
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
+  const adminPrimary = (settings as any)?.admin_primary_color || "#6d28d9";
+  const adminAccent = (settings as any)?.admin_accent_color || adminPrimary;
+  const adminThemeScope = user?.id ? `admin-${user.id}` : "admin";
+  const adminThemeStyle = {
+    "--primary": toHSL(adminPrimary),
+    "--ring": toHSL(adminPrimary),
+    "--sidebar-primary": toHSL(adminPrimary),
+    "--sidebar-ring": toHSL(adminPrimary),
+    "--accent-foreground": toHSL(adminPrimary),
+    "--sidebar-accent": toHSL(adminAccent),
+    "--accent": toHSL(adminAccent),
+    "--sidebar-accent-foreground": "0 0% 100%",
+  } as CSSProperties;
 
   // Show neutral loading state until tenant data is fully resolved
   // This prevents flash of wrong theme/permissions from another tenant
@@ -142,8 +133,8 @@ export function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div id="admin-layout-root" className="min-h-screen flex w-full bg-background">
-        <AdminSidebar />
+      <div id="admin-layout-root" style={adminThemeStyle} className="min-h-screen flex w-full bg-background">
+        <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
           <GlobalMaintenanceBanner />
           {/* Push notification install banner */}
@@ -163,7 +154,7 @@ export function AdminLayout() {
                   {trialDaysLeft}d restantes
                 </Badge>
               )}
-              <ThemeToggle scope="admin" />
+              <ThemeToggle scope={adminThemeScope} />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
