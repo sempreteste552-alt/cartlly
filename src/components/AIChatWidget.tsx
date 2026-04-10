@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2 } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useOrders } from "@/hooks/useOrders";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
+import { useStoreMarketingConfig, useUpdateStoreMarketingConfig } from "@/hooks/useStoreMarketingConfig";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 const QUICK_ACTIONS = [
   { label: "📊 Analisar vendas", prompt: "Analise meus dados de vendas e sugira ações para melhorar o faturamento" },
   { label: "🎯 Criar campanha", prompt: "Sugira uma campanha promocional para minha loja baseada nos produtos e histórico" },
+  { label: "📣 Adicionar Faixa Promocional", prompt: "Crie uma faixa promocional para o topo da minha loja. Pergunte-me sobre cores, texto e link se necessário." },
   { label: "💡 Ideias de produtos", prompt: "Sugira novos produtos que eu poderia adicionar à minha loja" },
   { label: "🏷️ Estratégia de cupons", prompt: "Crie uma estratégia de cupons para aumentar conversão e ticket médio" },
   { label: "📢 Enviar promoção push", prompt: "Gere um texto de promoção e envie como notificação push para meus clientes" },
@@ -73,6 +75,7 @@ function cleanContent(content: string): string {
     .replace(/\[ACTION_SUBSCRIBE\][\s\S]*?\[\/ACTION_SUBSCRIBE\]/g, "")
     .replace(/\[ACTION_UPDATE_PRODUCT\][\s\S]*?\[\/ACTION_UPDATE_PRODUCT\]/g, "")
     .replace(/\[ACTION_UPDATE_SETTINGS\][\s\S]*?\[\/ACTION_UPDATE_SETTINGS\]/g, "")
+    .replace(/\[ACTION_MARKETING\][\s\S]*?\[\/ACTION_MARKETING\]/g, "")
     .replace(/\[ACTION_REMINDER\][\s\S]*?\[\/ACTION_REMINDER\]/g, "")
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
@@ -156,7 +159,9 @@ export function AIChatWidget() {
   const { data: coupons } = useCoupons();
   const { data: orders } = useOrders();
   const { data: settings } = useStoreSettings();
+  const { data: marketingConfig } = useStoreMarketingConfig();
   const updateSettings = useUpdateStoreSettings();
+  const updateMarketing = useUpdateStoreMarketingConfig();
 
   // Fetch available plans
   const { data: plans } = useQuery({
@@ -247,6 +252,12 @@ export function AIChatWidget() {
       paymentPix: (settings as any)?.payment_pix || false,
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
+      marketing: {
+        announcement_bar_enabled: marketingConfig?.announcement_bar_enabled || false,
+        announcement_bar_text: marketingConfig?.announcement_bar_text || "",
+        announcement_bar_bg_color: marketingConfig?.announcement_bar_bg_color || "#000000",
+        announcement_bar_text_color: marketingConfig?.announcement_bar_text_color || "#ffffff",
+      },
       aiName: aiName,
       aiTone: aiTone,
       plans: (plans || []).filter((p: any) => p.price > 0).map((p: any) => ({
@@ -354,6 +365,15 @@ export function AIChatWidget() {
       } catch (e) { console.error("Update settings parse error:", e); }
     }
 
+    // --- Marketing ---
+    const marketingMatch = content.match(/\[ACTION_MARKETING\]([\s\S]*?)\[\/ACTION_MARKETING\]/);
+    if (marketingMatch) {
+      try {
+        const payload = JSON.parse(marketingMatch[1].trim());
+        actions.push({ type: "marketing", label: "📣 Atualizar Banner/Marketing", payload });
+      } catch (e) { console.error("Marketing parse error:", e); }
+    }
+
     // --- Reminder ---
     const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
     if (reminderMatch) {
@@ -426,6 +446,12 @@ export function AIChatWidget() {
         if (error) throw error;
         toast.success("✅ Configurações atualizadas!");
         queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+      } else if (action.type === "marketing") {
+        if (!marketingConfig?.id) throw new Error("Configuração de marketing não encontrada");
+        await updateMarketing.mutateAsync({
+          id: marketingConfig.id,
+          ...action.payload
+        });
       } else if (action.type === "reminder") {
         const { error } = await supabase.from("ai_scheduled_tasks").insert({
           user_id: user.id,
