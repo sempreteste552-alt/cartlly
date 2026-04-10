@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const customerIds = [...new Set(carts.map(c => c.customer_id).filter(Boolean))];
     const { data: customers } = await supabase
       .from("customers")
-      .select("id, name, email, auth_user_id, store_user_id")
+      .select("id, name, email, auth_user_id, store_user_id, gender")
       .in("id", customerIds);
     const customerMap = new Map((customers || []).map(c => [c.id, c]));
 
