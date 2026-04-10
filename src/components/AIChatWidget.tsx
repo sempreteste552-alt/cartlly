@@ -339,78 +339,83 @@ export function AIChatWidget() {
 
   const processAIActions = useCallback(async (content: string, msgIndex: number) => {
     const actions: any[] = [];
-    
-    // --- Push ---
-    const pushMatch = content.match(/\[ACTION_PUSH\]([\s\S]*?)\[\/ACTION_PUSH\]/);
-    if (pushMatch) {
-      try {
-        const payload = JSON.parse(pushMatch[1].trim());
-        actions.push({ type: "push", label: "📢 Enviar Push para Clientes", payload });
-      } catch (e) { console.error("Push parse error:", e); }
-    }
 
-    // --- Coupon ---
-    const couponMatch = content.match(/\[ACTION_COUPON\]([\s\S]*?)\[\/ACTION_COUPON\]/);
-    if (couponMatch) {
-      try {
-        const payload = JSON.parse(couponMatch[1].trim());
-        actions.push({ type: "coupon", label: `🎟️ Criar Cupom ${payload.code || ""}`, payload });
-      } catch (e) { console.error("Coupon parse error:", e); }
-    }
+    const extractActions = (
+      regex: RegExp,
+      mapPayload: (payload: any) => { type: string; label: string; payload: any }
+    ) => {
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(content)) !== null) {
+        try {
+          const payload = JSON.parse(match[1].trim());
+          actions.push(mapPayload(payload));
+        } catch (e) {
+          console.error("Action parse error:", e, match[0]);
+        }
+      }
+    };
 
-    // --- Subscribe ---
-    const subscribeMatch = content.match(/\[ACTION_SUBSCRIBE\]([\s\S]*?)\[\/ACTION_SUBSCRIBE\]/);
-    if (subscribeMatch) {
-      try {
-        const payload = JSON.parse(subscribeMatch[1].trim());
-        actions.push({ type: "subscribe", label: `⬆️ Assinar ${payload.plan_name}`, payload });
-      } catch (e) { console.error("Subscribe parse error:", e); }
-    }
+    extractActions(/\[ACTION_PUSH\]([\s\S]*?)\[\/ACTION_PUSH\]/g, (payload) => ({
+      type: "push",
+      label: `📢 Enviar Push${payload.title ? `: ${payload.title}` : " para Clientes"}`,
+      payload,
+    }));
 
-    // --- Update Product ---
-    const updateProductMatch = content.match(/\[ACTION_UPDATE_PRODUCT\]([\s\S]*?)\[\/ACTION_UPDATE_PRODUCT\]/);
-    if (updateProductMatch) {
-      try {
-        const payload = JSON.parse(updateProductMatch[1].trim());
-        actions.push({ type: "update_product", label: "📦 Atualizar Produto", payload });
-      } catch (e) { console.error("Update product parse error:", e); }
-    }
+    extractActions(/\[ACTION_COUPON\]([\s\S]*?)\[\/ACTION_COUPON\]/g, (payload) => ({
+      type: "coupon",
+      label: `🎟️ Criar Cupom ${payload.code || ""}`.trim(),
+      payload,
+    }));
 
-    // --- Update Settings ---
-    const settingsMatch = content.match(/\[ACTION_UPDATE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_SETTINGS\]/);
-    if (settingsMatch) {
-      try {
-        const payload = JSON.parse(settingsMatch[1].trim());
-        actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações", payload });
-      } catch (e) { console.error("Update settings parse error:", e); }
-    }
+    extractActions(/\[ACTION_SUBSCRIBE\]([\s\S]*?)\[\/ACTION_SUBSCRIBE\]/g, (payload) => ({
+      type: "subscribe",
+      label: `⬆️ Assinar ${payload.plan_name || "novo plano"}`,
+      payload,
+    }));
 
-    // --- Marketing ---
-    const marketingMatch = content.match(/\[ACTION_MARKETING\]([\s\S]*?)\[\/ACTION_MARKETING\]/);
-    if (marketingMatch) {
-      try {
-        const payload = JSON.parse(marketingMatch[1].trim());
-        actions.push({ type: "marketing", label: "📣 Atualizar Banner/Marketing", payload });
-      } catch (e) { console.error("Marketing parse error:", e); }
-    }
+    extractActions(/\[ACTION_UPDATE_PRODUCT\]([\s\S]*?)\[\/ACTION_UPDATE_PRODUCT\]/g, (payload) => {
+      const target = payload.product_name || payload.product_id || "produto";
+      const fields = Object.keys(payload.updates || {});
+      return {
+        type: "update_product",
+        label: `📦 Atualizar ${target}${fields.length ? ` (${fields.join(", ")})` : ""}`,
+        payload,
+      };
+    });
 
-    // --- Reminder ---
-    const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
-    if (reminderMatch) {
-      try {
-        const payload = JSON.parse(reminderMatch[1].trim());
-        actions.push({ type: "reminder", label: "⏰ Agendar Lembrete", payload });
-      } catch (e) { console.error("Reminder parse error:", e); }
-    }
+    extractActions(/\[ACTION_UPDATE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_SETTINGS\]/g, (payload) => ({
+      type: "update_settings",
+      label: `⚙️ Atualizar Loja${Object.keys(payload).length ? ` (${Object.keys(payload).join(", ")})` : ""}`,
+      payload,
+    }));
+
+    extractActions(/\[ACTION_MARKETING\]([\s\S]*?)\[\/ACTION_MARKETING\]/g, (payload) => ({
+      type: "marketing",
+      label: `📣 Atualizar Banner/Marketing${Object.keys(payload).length ? ` (${Object.keys(payload).join(", ")})` : ""}`,
+      payload,
+    }));
+
+    extractActions(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/g, (payload) => ({
+      type: "reminder",
+      label: `⏰ Agendar Lembrete${payload.title ? `: ${payload.title}` : ""}`,
+      payload,
+    }));
 
     if (actions.length > 0) {
-      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+      setPendingActions((prev) => ({ ...prev, [msgIndex]: actions }));
     }
-  }, [user, products, settings]);
+  }, []);
 
   const confirmAction = async (msgIndex: number, actionIndex: number) => {
     const action = pendingActions[msgIndex]?.[actionIndex];
     if (!action || !user) return;
+
+    const normalizeText = (value?: string | null) =>
+      (value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
 
     try {
       if (action.type === "push") {
@@ -439,54 +444,96 @@ export function AIChatWidget() {
           await handleSubscribe(action.payload.plan_id, action.payload.plan_name, doc);
         } else {
           setPendingSubscribe({ plan_id: action.payload.plan_id, plan_name: action.payload.plan_name });
-          setCpfValue(""); setCpfDialogOpen(true);
+          setCpfValue("");
+          setCpfDialogOpen(true);
         }
       } else if (action.type === "update_product") {
-        const shortId = action.payload.product_id;
-        const fullProduct = (products || []).find((p: any) => p.id?.startsWith(shortId));
-        if (!fullProduct) throw new Error("Produto não encontrado");
-        
+        const shortId = typeof action.payload.product_id === "string" ? action.payload.product_id.trim() : "";
+        const productName = typeof action.payload.product_name === "string" ? action.payload.product_name.trim() : "";
+
+        let fullProduct = shortId
+          ? (products || []).find((p: any) => p.id === shortId || p.id?.startsWith(shortId))
+          : null;
+
+        if (!fullProduct && productName) {
+          fullProduct = (products || []).find((p: any) => normalizeText(p.name) === normalizeText(productName));
+        }
+
+        if (!fullProduct && productName) {
+          fullProduct = (products || []).find((p: any) => {
+            const currentName = normalizeText(p.name);
+            const targetName = normalizeText(productName);
+            return currentName.includes(targetName) || targetName.includes(currentName);
+          });
+        }
+
+        if (!fullProduct) throw new Error("Produto não encontrado. Peça para a IA usar o nome exato do produto.");
+
         const allowedFields = ["price", "stock", "name", "description", "published"];
         const updates: Record<string, any> = {};
         for (const key of allowedFields) {
           if (action.payload.updates?.[key] !== undefined) updates[key] = action.payload.updates[key];
         }
-        
-        if (Object.keys(updates).length > 0) {
-          const { error } = await supabase.from("products").update(updates).eq("id", fullProduct.id).eq("user_id", user.id);
-          if (error) throw error;
-          toast.success("✅ Produto atualizado!");
-          queryClient.invalidateQueries({ queryKey: ["products"] });
+
+        if (Object.keys(updates).length === 0) {
+          throw new Error("Nenhum campo válido foi enviado para atualizar o produto.");
         }
-      } else if (action.type === "update_settings" && settings?.id) {
-        const { error } = await supabase.from("store_settings").update({
-          ...action.payload,
-          updated_at: new Date().toISOString()
-        }).eq("id", settings.id);
+
+        const { error } = await supabase
+          .from("products")
+          .update(updates)
+          .eq("id", fullProduct.id)
+          .eq("user_id", user.id);
+
         if (error) throw error;
+        toast.success(`✅ Produto ${fullProduct.name} atualizado!`);
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      } else if (action.type === "update_settings") {
+        if (settings?.id) {
+          const { error } = await supabase
+            .from("store_settings")
+            .update({ ...action.payload, updated_at: new Date().toISOString() })
+            .eq("id", settings.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from("store_settings").insert({
+            user_id: user.id,
+            ...action.payload,
+          });
+          if (error) throw error;
+        }
+
         toast.success("✅ Configurações atualizadas!");
         queryClient.invalidateQueries({ queryKey: ["store_settings"] });
       } else if (action.type === "marketing") {
-        if (!marketingConfig?.id) throw new Error("Configuração de marketing não encontrada");
-        await updateMarketing.mutateAsync({
-          id: marketingConfig.id,
-          ...action.payload
-        });
+        if (marketingConfig?.id) {
+          await updateMarketing.mutateAsync({
+            id: marketingConfig.id,
+            ...action.payload,
+          });
+        } else {
+          const { error } = await supabase.from("store_marketing_config" as any).insert({
+            user_id: user.id,
+            ...action.payload,
+          });
+          if (error) throw error;
+          toast.success("✅ Banner/marketing criado!");
+          queryClient.invalidateQueries({ queryKey: ["store_marketing_config"] });
+        }
       } else if (action.type === "reminder") {
         const { error } = await supabase.from("ai_scheduled_tasks").insert({
           user_id: user.id,
           task_type: "admin_reminder",
           scheduled_at: action.payload.scheduled_at,
           payload: { title: action.payload.title, body: action.payload.body },
-          status: "pending"
+          status: "pending",
         });
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
         queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
       }
 
-      // Mark as confirmed
-      setPendingActions(prev => {
+      setPendingActions((prev) => {
         const newActions = [...(prev[msgIndex] || [])];
         newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
         return { ...prev, [msgIndex]: newActions };
