@@ -19,9 +19,11 @@ export function usePublicProducts(storeUserId?: string) {
   });
 }
 
+// NOTE: This hook is legacy and should not be used for tenant-scoped data.
+// Use useResolvedPublicStore(slug) or usePublicStoreBySlug(slug) instead.
 export function usePublicStoreSettings() {
   return useQuery({
-    queryKey: ["public_store_settings"],
+    queryKey: ["public_store_settings_legacy"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_settings_public")
@@ -32,6 +34,7 @@ export function usePublicStoreSettings() {
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
   });
 }
 
