@@ -8,7 +8,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig, usePublicProductPageConfig } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
