@@ -8,6 +8,7 @@ const DEFAULT_ICONS = [
 ];
 
 export interface PwaManifestOptions {
+  id?: string;
   name?: string;
   shortName?: string;
   themeColor?: string;
@@ -68,6 +69,7 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   const currentPath = getCurrentPath();
   const startUrl = options.startUrl || currentPath;
   const scope = options.scope || currentPath;
+  const manifestId = options.id || startUrl;
   const appName = options.name || "Cartlly - Sua Loja Online";
   const shortName = options.shortName || appName.slice(0, 12) || "Cartlly";
   const resolvedIconUrl = options.iconUrl
@@ -90,7 +92,7 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
     background_color: options.backgroundColor || "#ffffff",
     display: "standalone" as const,
     orientation: "portrait" as const,
-    id: startUrl,
+    id: manifestId,
     start_url: startUrl,
     scope,
     icons,
