@@ -41,6 +41,8 @@ import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import { isPlatformHost } from "./lib/storeDomain";
+import StoreRoutes from "./StoreRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
