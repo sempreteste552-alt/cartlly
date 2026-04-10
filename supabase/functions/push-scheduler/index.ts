@@ -262,24 +262,57 @@ const WISHLIST_SEQUENCE: SequenceStep[] = [
   },
 ];
 
-const HOURLY_ENGAGEMENT_TEMPLATES = [
+// Product-focused hourly templates (use {product} and {price} placeholders)
+const HOURLY_PRODUCT_TEMPLATES = [
   // Morning (8h - 12h)
-  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} comece maravilhosa! Já viu as novidades na {store}? 🛍️", hourStart: 8, hourEnd: 12 },
-  { title: "☕ Café e {store}!", body: "Nada melhor que um café e uma espiadinha nas ofertas da {store}. Aproveite! ✨", hourStart: 8, hourEnd: 11 },
+  { title: "☀️ Bom dia! Olha o {product}!", body: "{name}, comece a {day} com o {product} na {store}! {priceTag} 🛍️", hourStart: 8, hourEnd: 12 },
+  { title: "☕ {product} + café = perfeição!", body: "{name}, o {product} combina com sua manhã! Confira na {store} ✨", hourStart: 8, hourEnd: 11 },
+  { title: "🌅 Novidade matinal: {product}", body: "Bom dia {name}! O {product} acabou de ganhar destaque na {store}! {priceTag} 💫", hourStart: 7, hourEnd: 10 },
+  { title: "🌤️ Que tal o {product}?", body: "{name}, o {product} é a escolha perfeita pra hoje! Veja na {store} {priceTag} ☀️", hourStart: 9, hourEnd: 12 },
   
   // Afternoon (12h - 18h)
-  { title: "🌈 Boa tarde, {name}!", body: "Passando para desejar uma ótima {day}. Que tal um mimo na {store} hoje? 💜", hourStart: 12, hourEnd: 18 },
-  { title: "🍕 Pausa do almoço?", body: "{name}, aproveite sua pausa para conferir o que chegou na {store}! 🌟", hourStart: 12, hourEnd: 14 },
+  { title: "🌈 {product} em destaque!", body: "{name}, o {product} está bombando na {store}! {priceTag} Confira agora 💜", hourStart: 12, hourEnd: 18 },
+  { title: "🍕 Pausa + {product}!", body: "{name}, na sua pausa, olha o {product} na {store}! {priceTag} 🌟", hourStart: 12, hourEnd: 14 },
+  { title: "🎯 Feito pra você: {product}", body: "{name}, selecionamos o {product} especialmente pra você! {priceTag} Na {store} ✨", hourStart: 14, hourEnd: 18 },
+  { title: "💎 Destaque: {product}!", body: "{name}, o {product} é favorito na {store}! {priceTag} Garanta o seu 🔥", hourStart: 13, hourEnd: 17 },
   
   // Evening (18h - 23h)
+  { title: "🌙 {product} te espera!", body: "{name}, feche o dia com o {product} na {store}! {priceTag} Você merece ✨", hourStart: 18, hourEnd: 23 },
+  { title: "🧸 Mimo noturno: {product}", body: "{name}, o {product} combina com sua noite! Confira na {store} {priceTag} 💤🛍️", hourStart: 20, hourEnd: 23 },
+  { title: "🌟 Últimos acessos: {product}", body: "{name}, antes de dormir, dê uma olhada no {product} da {store}! {priceTag} 😴✨", hourStart: 21, hourEnd: 23 },
+  
+  // Weekend product
+  { title: "🎉 Fim de semana + {product}!", body: "{name}, aproveite o sábado pra garantir o {product} na {store}! {priceTag} 🎈", dayOfWeek: [6] },
+  { title: "🏖️ Domingo de {product}!", body: "Oi {name}! Que tal levar o {product} da {store}? {priceTag} Bom descanso! ☀️", dayOfWeek: [0] },
+  
+  // General product
+  { title: "✨ {product} brilhando!", body: "{name}, o {product} é estrela na {store} hoje! {priceTag} Vem ver 💜" },
+  { title: "💫 Achamos algo pra você!", body: "{name}, o {product} combina com seu estilo! {priceTag} Na {store} 🌟" },
+  { title: "🔥 Top da {store}: {product}", body: "{name}, o {product} é um dos mais vendidos! {priceTag} Confira agora ⚡" },
+  { title: "🛒 {product} voando!", body: "{name}, o {product} está saindo rápido na {store}! {priceTag} Garanta 🏃" },
+  { title: "💝 Presente? {product}!", body: "{name}, o {product} é ótimo presente! {priceTag} Veja na {store} 🎁" },
+  { title: "🏷️ {product} imperdível!", body: "{name}, não perca o {product} na {store}! {priceTag} Corra! ⚡" },
+];
+
+// VIP-specific templates (with discount)
+const VIP_DISCOUNT_TEMPLATES = [
+  { title: "👑 VIP: {discount} no {product}!", body: "{name}, como cliente especial, use {code} e ganhe {discount} no {product}! Só na {store} 💎" },
+  { title: "🌟 Exclusivo pra você, {name}!", body: "Você é VIP na {store}! Use {code} e ganhe {discount} no {product}! Aproveite 💜" },
+  { title: "💎 Desconto VIP: {product}!", body: "{name}, cupom exclusivo {code} → {discount} OFF no {product}! Só pra VIPs da {store} 👑" },
+  { title: "🎁 Presente VIP: {discount}!", body: "{name}, como top cliente, use {code} no {product} e economize {discount}! {store} ama você 💝" },
+  { title: "👑 {name}, oferta exclusiva!", body: "Desconto VIP no {product}: use {code} e ganhe {discount}! Só pra você na {store} ✨" },
+];
+
+// Generic engagement (fallback when no products)
+const HOURLY_ENGAGEMENT_TEMPLATES = [
+  { title: "☀️ Bom dia, {name}!", body: "Que sua {day} comece maravilhosa! Já viu as novidades na {store}? 🛍️", hourStart: 8, hourEnd: 12 },
+  { title: "☕ Café e {store}!", body: "Nada melhor que um café e uma espiadinha nas ofertas da {store}. Aproveite! ✨", hourStart: 8, hourEnd: 11 },
+  { title: "🌈 Boa tarde, {name}!", body: "Passando para desejar uma ótima {day}. Que tal um mimo na {store} hoje? 💜", hourStart: 12, hourEnd: 18 },
+  { title: "🍕 Pausa do almoço?", body: "{name}, aproveite sua pausa para conferir o que chegou na {store}! 🌟", hourStart: 12, hourEnd: 14 },
   { title: "🌙 Boa noite, {name}!", body: "Finalize sua {day} com chave de ouro na {store}. Você merece! ✨", hourStart: 18, hourEnd: 23 },
   { title: "🧸 Hora de relaxar!", body: "{name}, relaxe e veja as promoções que separamos para você na {store} 💤🛍️", hourStart: 20, hourEnd: 23 },
-  
-  // Weekend
   { title: "🎉 Final de semana chegou!", body: "{name}, aproveite o sábado para garantir seus favoritos na {store}! 🎈", dayOfWeek: [6] },
   { title: "🏖️ Domingo de ofertas!", body: "Oi {name}! Que tal renovar seus itens na {store} hoje? Bom descanso! ☀️", dayOfWeek: [0] },
-  
-  // General
   { title: "✨ Momento de brilhar!", body: "Oi {name}! Que tal um presente hoje na {store}? Você merece tudo de bom! 💜" },
   { title: "💫 Novidades chegando!", body: "{name}, a {store} está cheia de coisas lindas hoje. Vem ver! 🌟" },
 ];
