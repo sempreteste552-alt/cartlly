@@ -54,6 +54,14 @@ ${ordersInfo || "Nenhum pedido"}
 CUPONS:
 ${couponsInfo || "Nenhum cupom"}
 
+PLANOS DISPONÍVEIS:
+${(storeContext?.plans || []).map((p: any) => `• ${p.name} — R$${p.price?.toFixed(2)}/mês | ID: ${p.id}`).join("\n") || "Nenhum plano configurado"}
+
+ASSINATURA ATUAL:
+- Plano: ${storeContext?.currentPlanName || "FREE"}
+- Status: ${storeContext?.subscriptionStatus || "Sem assinatura"}
+- Trial: ${storeContext?.isTrial ? `Sim (${storeContext?.trialDaysLeft} dias restantes)` : "Não"}
+
 SUAS CAPACIDADES DE AÇÃO:
 Quando o lojista pedir para executar uma ação, PRIMEIRO explique o que vai fazer em linguagem natural, depois inclua o bloco de ação INVISÍVEL no final da sua resposta. Os blocos são processados automaticamente e NÃO são mostrados ao lojista.
 
@@ -65,6 +73,9 @@ Para enviar push para clientes:
 Para criar cupom de desconto:
 [ACTION_COUPON]{"code": "CODIGO", "discount_type": "percentage", "discount_value": 10, "max_uses": 100, "min_order_value": 0, "expires_at": null}[/ACTION_COUPON]
 
+Para assinar/trocar plano (gerar QR Code PIX):
+[ACTION_SUBSCRIBE]{"plan_id": "UUID_DO_PLANO", "plan_name": "NOME_DO_PLANO"}[/ACTION_SUBSCRIBE]
+
 REGRAS CRÍTICAS:
 - NUNCA responda com JSON puro. SEMPRE responda em português do Brasil com texto formatado em Markdown.
 - Seja objetivo, profissional e prático nas sugestões.
@@ -72,10 +83,11 @@ REGRAS CRÍTICAS:
 - Formate respostas com **negrito**, listas, emojis e markdown rico.
 - Quando o lojista pedir para criar um cupom, CONFIRME os detalhes no texto E inclua o bloco [ACTION_COUPON] no final.
 - Quando o lojista pedir para enviar promoção/push, gere o texto, mostre ao lojista E inclua o bloco [ACTION_PUSH] no final.
+- Quando o lojista pedir para assinar um plano ou fazer upgrade: PERGUNTE o CPF/CNPJ se ainda não souber. Quando já tiver o CPF informado na conversa, inclua o bloco [ACTION_SUBSCRIBE] com o plan_id do plano desejado. O sistema vai pedir o CPF ao usuário e gerar o QR Code PIX automaticamente.
 - Os blocos de ação são INVISÍVEIS para o usuário — o sistema os processa automaticamente.
 - Para cupons, discount_type pode ser "percentage" ou "fixed".
 - O cupom criado ficará visível automaticamente na loja.
-- NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_PUSH] e [ACTION_COUPON].
+- NUNCA use blocos de código (\`\`\`) para as ações. Use APENAS os marcadores [ACTION_PUSH], [ACTION_COUPON] e [ACTION_SUBSCRIBE].
 - Após criar cupom, em 5 minutos uma notificação push será enviada automaticamente.
 
 ANÁLISE DE IMAGENS:
