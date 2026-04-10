@@ -90,7 +90,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
           </Button>
         )}
       </div>
-      <ScrollArea className="max-h-72 touch-pan-y overscroll-contain">
+      <ScrollArea className="h-72">
         {notifications.length === 0 ? (
           <div className="p-6 text-center text-sm text-muted-foreground">
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
