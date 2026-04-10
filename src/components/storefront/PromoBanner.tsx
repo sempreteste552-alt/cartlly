@@ -65,14 +65,33 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const c3 = globalConfig?.bg_color_3 || "#16213e";
 
   return (
-    <div
-      className="relative overflow-hidden border-b border-white/5"
-      style={{ background: `linear-gradient(90deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)` }}
-    >
-      {/* Subtle noise texture overlay */}
+    <div className="relative overflow-hidden border-b border-white/5">
+      {/* Animated gradient background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(270deg, ${c1}, ${c2}, ${c3}, ${c1})`,
+          backgroundSize: "600% 600%",
+          animation: "gradient-flow 12s ease infinite",
+        }}
+      />
+
+      {/* Subtle noise texture */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
       }} />
+
+      <style>{`
+        @keyframes gradient-flow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes float-btn {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
+        }
+      `}</style>
 
       <div className="relative max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
         <p className="text-[11px] sm:text-xs font-medium text-white/80 tracking-wide">
@@ -82,7 +101,8 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
           href={bannerLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200"
+          className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors duration-200"
+          style={{ animation: "float-btn 3s ease-in-out infinite" }}
         >
           Saiba mais <ExternalLink className="h-2.5 w-2.5" />
         </a>
