@@ -413,9 +413,6 @@ export default function SuperAdminConfig() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Admin Announcement Banners */}
-      <AdminAnnouncementsSection />
     </div>
   );
 }
