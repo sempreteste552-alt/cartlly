@@ -5,10 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Check, Package, ImagePlus, FileText, X } from "lucide-react";
+import { Loader2, Sparkles, Check, Package, ImagePlus, FileText, X, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useCategories";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { toast } from "sonner";
 
 interface AICatalogImportProps {
@@ -45,8 +46,14 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const [products, setProducts] = useState<ExtractedProduct[]>([]);
   const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<"input" | "review">("input");
-  const [inputMode, setInputMode] = useState<"text" | "image">("text");
+  const [inputMode, setInputMode] = useState<"text" | "image" | "audio">("text");
 
+  const voiceRecorder = useVoiceRecorder({
+    onTranscript: (text) => {
+      setCatalogText(prev => prev ? prev + " " + text : text);
+      toast.success("Texto transcrito com sucesso!");
+    },
+  });
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + imageFiles.length > 10) {
@@ -75,12 +82,13 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const handleAnalyze = async () => {
     if (inputMode === "text" && !catalogText.trim()) return toast.error("Cole o texto do catálogo");
     if (inputMode === "image" && imagePreviews.length === 0) return toast.error("Adicione ao menos uma imagem");
+    if (inputMode === "audio" && !catalogText.trim()) return toast.error("Grave seu catálogo por áudio primeiro");
     setAnalyzing(true);
 
     try {
       const body: any = { existingCategories: categories?.map((c) => c.name) ?? [] };
 
-      if (inputMode === "text") {
+      if (inputMode === "text" || inputMode === "audio") {
         body.catalogText = catalogText.trim();
       } else {
         body.catalogImages = imagePreviews;
@@ -202,16 +210,19 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
         {step === "input" ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Cole um texto ou envie imagens do seu catálogo. A IA irá escanear e extrair os produtos com variantes (cor, tamanho, etc.) automaticamente.
+              Cole um texto, envie imagens ou dite por áudio o seu catálogo. A IA irá escanear e extrair os produtos com variantes (cor, tamanho, etc.) automaticamente.
             </p>
 
-            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "text" | "image")}>
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "text" | "image" | "audio")}>
               <TabsList className="w-full">
                 <TabsTrigger value="text" className="flex-1 gap-2">
                   <FileText className="h-4 w-4" /> Texto
                 </TabsTrigger>
                 <TabsTrigger value="image" className="flex-1 gap-2">
                   <ImagePlus className="h-4 w-4" /> Imagem
+                </TabsTrigger>
+                <TabsTrigger value="audio" className="flex-1 gap-2">
+                  <Mic className="h-4 w-4" /> Áudio
                 </TabsTrigger>
               </TabsList>
 
@@ -270,13 +281,97 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                   </Button>
                 )}
               </TabsContent>
+
+              <TabsContent value="audio" className="space-y-4 mt-4">
+                <Label>Dite seu catálogo</Label>
+                <p className="text-xs text-muted-foreground">
+                  Fale os produtos, preços e detalhes. A IA irá transcrever e extrair os produtos automaticamente.
+                </p>
+
+                {voiceRecorder.error && (
+                  <div className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                    {voiceRecorder.error}
+                  </div>
+                )}
+
+                <div className="flex flex-col items-center gap-4 py-6">
+                  {voiceRecorder.isRecording ? (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <div className="h-3 w-3 rounded-full bg-destructive animate-pulse" />
+                        <span className="text-lg font-mono font-medium text-destructive tabular-nums">
+                          {voiceRecorder.formattedTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-[3px]">
+                        {Array.from({ length: 24 }).map((_, i) => (
+                          <div 
+                            key={i} 
+                            className="w-[3px] rounded-full bg-destructive/60"
+                            style={{
+                              height: `${Math.random() * 20 + 4}px`,
+                              animation: `waveform 0.6s ease-in-out ${i * 0.05}s infinite alternate`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        size="lg"
+                        className="rounded-full h-14 w-14"
+                        onClick={voiceRecorder.stopRecording}
+                      >
+                        <MicOff className="h-6 w-6" />
+                      </Button>
+                      <p className="text-xs text-muted-foreground">Toque para parar a gravação</p>
+                    </>
+                  ) : (
+                    <>
+                      {voiceRecorder.isSupported ? (
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="rounded-full h-20 w-20 border-dashed border-2"
+                          onClick={voiceRecorder.startRecording}
+                        >
+                          <Mic className="h-8 w-8" />
+                        </Button>
+                      ) : (
+                        <div className="text-sm text-muted-foreground text-center">
+                          Seu navegador não suporta gravação de áudio.<br />
+                          Use o Google Chrome para esta funcionalidade.
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {voiceRecorder.isSupported 
+                          ? "Toque no microfone e dite seus produtos" 
+                          : ""
+                        }
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {catalogText.trim() && (
+                  <div className="space-y-2">
+                    <Label>Texto transcrito</Label>
+                    <Textarea
+                      value={catalogText}
+                      onChange={(e) => setCatalogText(e.target.value)}
+                      rows={6}
+                      placeholder="O texto transcrito aparecerá aqui..."
+                    />
+                    <p className="text-xs text-muted-foreground">{catalogText.length} caracteres</p>
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button
                 onClick={handleAnalyze}
-                disabled={analyzing || (inputMode === "text" ? !catalogText.trim() : imagePreviews.length === 0)}
+                disabled={analyzing || (inputMode === "text" || inputMode === "audio" ? !catalogText.trim() : imagePreviews.length === 0)}
               >
                 {analyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 {analyzing ? "Escaneando..." : "Analisar com IA"}

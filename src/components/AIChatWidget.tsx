@@ -151,9 +151,11 @@ export function AIChatWidget() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const pendingVoiceRef = useRef<string | null>(null);
   const voiceRecorder = useVoiceRecorder({
     onTranscript: (text) => {
-      setInput(prev => prev ? prev + " " + text : text);
+      pendingVoiceRef.current = text;
+      setInput(text);
     },
   });
   const { ctx } = useTenantContext();
@@ -715,6 +717,15 @@ export function AIChatWidget() {
     }
   };
 
+  // Auto-send voice transcript
+  useEffect(() => {
+    if (pendingVoiceRef.current && !voiceRecorder.isRecording && !voiceRecorder.isTranscribing && !isLoading) {
+      const text = pendingVoiceRef.current;
+      pendingVoiceRef.current = null;
+      sendMessage(text);
+    }
+  }, [voiceRecorder.isRecording, voiceRecorder.isTranscribing, isLoading]);
+
   if (!open) {
     return (
       <Button
@@ -930,6 +941,10 @@ export function AIChatWidget() {
                 </div>
               ))}
             </div>
+          )}
+
+          {voiceRecorder.error && !voiceRecorder.isRecording && (
+            <p className="text-xs text-destructive mb-2 px-2">{voiceRecorder.error}</p>
           )}
 
           {voiceRecorder.isRecording ? (
