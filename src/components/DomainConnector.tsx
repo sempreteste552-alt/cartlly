@@ -22,6 +22,7 @@ interface DomainConnectorProps {
   storeSlug?: string;
   onDomainChange: (domain: string) => void;
   onSave: () => void;
+  savedVerifyDetails?: any;
 }
 
 const PROVIDER_MAP: Record<string, { name: string; logo: string; instructions: string[] }> = {
