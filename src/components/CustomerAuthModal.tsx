@@ -107,14 +107,9 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     }
     setLoading(true);
     try {
-      if (!turnstileToken) {
-        setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
-        setLoading(false);
-        return;
-      }
-      const captchaValid = true; // await validateTurnstileToken(turnstileToken);
+      // Verification is temporarily optional to avoid access issues while configuring Cloudflare
+      const captchaValid = true;
       if (!captchaValid) {
-        setTurnstileToken(null);
         setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
         setLoading(false);
         return;

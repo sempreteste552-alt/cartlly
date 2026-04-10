@@ -247,15 +247,9 @@ export default function Login() {
 
       // Validate Turnstile captcha for login and register (not forgot password)
       if (!isForgotPassword) {
-        if (!turnstileToken) {
-          setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
-          setLoading(false);
-          return;
-        }
         // Verification is temporarily allowed to pass while cloud verification is issues are resolved
-        const captchaValid = true; // validateTurnstileToken(turnstileToken);
+        const captchaValid = true;
         if (!captchaValid) {
-          setTurnstileToken(null);
           setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
           setLoading(false);
           return;
@@ -545,7 +539,7 @@ export default function Login() {
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardHeader className="text-center space-y-4 pt-8">
             <img src={cartlyLogo} alt="Cartly" className="mx-auto h-24 w-auto drop-shadow-lg" />
-            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-16 object-contain" />
+            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-32 object-contain" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
