@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
 import { useQuery } from "@tanstack/react-query";
@@ -63,14 +63,19 @@ export default function LojaLayout() {
   const [searchTerm, setSearchTerm] = useState("");
   const [globalCep, setGlobalCep] = useState("");
   const [globalCity, setGlobalCity] = useState("");
+  const [isCepDialogOpen, setIsCepDialogOpen] = useState(false);
+  const [tempCep, setTempCep] = useState("");
+  const [showLocationHeader, setShowLocationHeader] = useState(true);
+  const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
+  const lastScrollY = useRef(0);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const basePath = slug ? `/loja/${slug}` : "/loja";
 
-  // Lookup city from CEP via ViaCEP
   const lookupCepCity = async (cepVal: string) => {
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
@@ -82,7 +87,15 @@ export default function LojaLayout() {
     } catch { /* ignore */ }
   };
 
-  // Auto-detect location by IP or use saved CEP
+  useEffect(() => {
+    const handleLojaSearch = (e: any) => {
+      setSearchTerm(e.detail);
+      navigate(basePath);
+    };
+    window.addEventListener('loja_search', handleLojaSearch as any);
+    return () => window.removeEventListener('loja_search', handleLojaSearch as any);
+  }, [basePath, navigate]);
+
   useEffect(() => {
     const savedCep = localStorage.getItem("global_cep");
     const savedCity = localStorage.getItem("global_city");
@@ -118,15 +131,6 @@ export default function LojaLayout() {
     const timer = setTimeout(recognizeLocation, 2000);
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    const handleLojaSearch = (e: any) => {
-      setSearchTerm(e.detail);
-      navigate(basePath);
-    };
-    window.addEventListener('loja_search', handleLojaSearch as any);
-    return () => window.removeEventListener('loja_search', handleLojaSearch as any);
-  }, [basePath, navigate]);
 
   const handleGlobalCepChange = (val: string) => {
     const clean = val.replace(/\D/g, "").slice(0, 8);
@@ -222,9 +226,7 @@ export default function LojaLayout() {
     scope: storeStartUrl,
   });
 
-  // Detect if current user is the store owner (admin previewing)
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
-
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
 
   useEffect(() => {
@@ -233,12 +235,10 @@ export default function LojaLayout() {
     }
   }, [slug]);
 
-  // Log search terms
   useEffect(() => {
     if (searchTerm.trim().length > 2 && settings?.user_id) {
       const timer = setTimeout(async () => {
         try {
-          // Check if this term was already logged recently to avoid duplicates
           const lastSearch = localStorage.getItem(`last_search_${settings.user_id}`);
           const currentSearch = searchTerm.trim().toLowerCase();
           
@@ -252,12 +252,11 @@ export default function LojaLayout() {
         } catch (error) {
           console.error("Error logging search:", error);
         }
-      }, 1500); // 1.5s debounce
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [searchTerm, settings?.user_id]);
 
-  // Use useLayoutEffect for instant dark class toggle (no flash/delay)
   useLayoutEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -272,15 +271,9 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const basePath = slug ? `/loja/${slug}` : "";
-  const logoSize = settings?.logo_size || 32;
-
-  // Apply store colors as CSS custom properties for the entire store
   useEffect(() => {
     if (settings || themeConfig) {
       const root = document.documentElement;
-      
-      // Use theme config if available, fallback to settings
       const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
       const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
       const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
@@ -306,7 +299,6 @@ export default function LojaLayout() {
     }
   }, [settings, themeConfig]);
 
-  // Slug or settingsBySlug required
   if (!slug && !settingsBySlug && !isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
@@ -339,7 +331,6 @@ export default function LojaLayout() {
     );
   }
 
-  // Store blocked by super admin
   if (settings && (settings as any).store_blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
@@ -372,12 +363,8 @@ export default function LojaLayout() {
   const footerTextColor = isDarkMode ? "#e5e5e5" : (settings?.footer_text_color || "#ffffff");
   const buttonColor = isDarkMode ? primaryColor : (settings?.button_color || "#000000");
   const buttonTextColor = isDarkMode ? "#ffffff" : (settings?.button_text_color || "#ffffff");
-
-  // Bottom nav items for mobile
   const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
   const isCheckout = location.pathname.includes("/checkout");
-  const isRastreio = location.pathname.includes("/rastreio");
-
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
@@ -392,7 +379,6 @@ export default function LojaLayout() {
               }
         }
       >
-        {/* PWA Install Banner — very top */}
         <PWAInstallBanner 
           storeName={storeInstallName}
           logoUrl={storeIconUrl}
@@ -400,7 +386,6 @@ export default function LojaLayout() {
           storeUserId={settings?.user_id}
         />
 
-        {/* Push notification permission prompt — auto-shows on first visit */}
         <PushPermissionPrompt
           storeName={settings?.store_name}
           logoUrl={storeIconUrl}
@@ -408,13 +393,9 @@ export default function LojaLayout() {
           storeUserId={settings?.user_id}
         />
 
-        {/* Marketing: Countdown Bar — top of everything */}
         {marketingConfig && <CountdownBar config={marketingConfig} />}
-
-        {/* Marketing: Announcement Bar */}
         {marketingConfig && <AnnouncementBar config={marketingConfig} basePath={basePath} />}
 
-        {/* Marquee ticker */}
         {settings?.marquee_enabled && settings?.marquee_text && (
           <StoreMarquee
             text={settings.marquee_text}
@@ -424,13 +405,9 @@ export default function LojaLayout() {
           />
         )}
 
-        {/* Marketing: Free Shipping Bar */}
         {marketingConfig && <FreeShippingBar config={marketingConfig} cartTotal={cart.total} />}
-
-        {/* Marketing: Popup Coupon */}
         {marketingConfig && <PopupCoupon config={marketingConfig} />}
 
-        {/* Top bar - phone & location only, hidden on mobile */}
         {(settings?.store_phone || settings?.store_location) && (
           <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
             <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6">
@@ -444,7 +421,6 @@ export default function LojaLayout() {
           </div>
         )}
 
-        {/* Header */}
         <header className="sticky top-0 z-50 border-b border-border shadow-sm transition-colors" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
@@ -490,12 +466,10 @@ export default function LojaLayout() {
               </div>
             </div>
 
-
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={true} />
 
-            {/* Social icons in header - all devices */}
             <div className="flex items-center gap-1.5">
               {settings?.instagram_url && (
                 <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
@@ -524,7 +498,6 @@ export default function LojaLayout() {
               )}
             </div>
 
-            {/* Account icon - all devices */}
             <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
               {user ? (
                 isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <User className="h-5 w-5" />
@@ -615,7 +588,6 @@ export default function LojaLayout() {
             </div>
           </div>
 
-          {/* Mobile Menu - inside sticky header */}
           {mobileMenu && (
             <div
               className="lg:hidden fixed inset-0 z-30 bg-black/30"
@@ -630,7 +602,6 @@ export default function LojaLayout() {
             style={{ backgroundColor: headerBgColor, color: headerTextColor }}
           >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {/* Social media icons row at top of menu */}
             {(settings?.instagram_url || settings?.facebook_url || settings?.tiktok_url || settings?.youtube_url || settings?.store_whatsapp) && (
               <div
                 className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
@@ -729,7 +700,6 @@ export default function LojaLayout() {
               );
             })}
             
-            {/* Global CEP Input in Mobile Menu - only if store has shipping */}
             {hasShippingZones && (
             <div 
               className="px-3 py-4 border-t border-border mt-2 space-y-2"
@@ -768,13 +738,11 @@ export default function LojaLayout() {
             </div>
             )}
 
-            {/* Theme toggle in mobile menu */}
             <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
               <ThemeToggle scope={storeThemeScope} applyToRoot={true} />
               <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
             </div>
 
-            {/* Push notification opt-in inside mobile menu */}
             <div className="px-3 py-2">
               <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
             </div>
@@ -782,7 +750,6 @@ export default function LojaLayout() {
         </div>
         </header>
 
-        {/* Location Bar - only when store has shipping zones configured */}
         {hasShippingZones && (
           <div className="border-b border-border bg-secondary/50">
             <div className="max-w-7xl mx-auto px-4">
@@ -836,7 +803,6 @@ export default function LojaLayout() {
           <Outlet />
         </main>
 
-        {/* Restock Alert Card */}
         <RestockAlertCard
           storeUserId={settings?.user_id}
           basePath={basePath}
@@ -845,7 +811,6 @@ export default function LojaLayout() {
           buttonTextColor={buttonTextColor}
         />
 
-        {/* Footer */}
         <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -935,7 +900,6 @@ export default function LojaLayout() {
           </div>
         </footer>
 
-        {/* Mobile Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-around h-14">
             <Link
@@ -986,7 +950,6 @@ export default function LojaLayout() {
           </div>
         </nav>
 
-        {/* AI Chat for Premium stores - above WhatsApp */}
         {settings?.user_id && (settings as any).is_premium_plan && (
           <StorefrontAIChat
             storeUserId={settings.user_id}
@@ -997,7 +960,6 @@ export default function LojaLayout() {
           />
         )}
 
-        {/* Floating WhatsApp Button - positioned below AI chat on mobile */}
         {settings?.store_whatsapp && (
           <a
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
@@ -1011,7 +973,6 @@ export default function LojaLayout() {
           </a>
         )}
 
-        {/* Auth modals */}
         {settings?.user_id && (
           <>
             <CustomerAuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} storeUserId={settings.user_id} />
