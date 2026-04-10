@@ -5,6 +5,7 @@ export function usePwaManifest(options: PwaManifestOptions) {
   useLayoutEffect(() => {
     applyRuntimePwaManifest(options);
   }, [
+    options.id,
     options.name,
     options.shortName,
     options.themeColor,

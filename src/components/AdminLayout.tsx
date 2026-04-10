@@ -38,10 +38,11 @@ export function AdminLayout() {
     ? `Admin ${(settings as any).store_name}`
     : "Painel Admin";
   usePwaManifest({
+    id: (settings as any)?.store_slug ? `cartlly-admin-${(settings as any).store_slug}` : `${window.location.origin}/admin/`,
     name: adminName,
     shortName: adminName.slice(0, 12),
     themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
-    iconUrl: (settings as any)?.logo_url || undefined,
+    iconUrl: (settings as any)?.favicon_url || (settings as any)?.logo_url || undefined,
     startUrl: `${window.location.origin}/admin/`,
     scope: `${window.location.origin}/admin/`,
   });
