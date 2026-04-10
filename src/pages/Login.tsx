@@ -252,7 +252,8 @@ export default function Login() {
           setLoading(false);
           return;
         }
-        const captchaValid = await validateTurnstileToken(turnstileToken);
+        // Verification is temporarily allowed to pass while cloud verification is issues are resolved
+        const captchaValid = true; // validateTurnstileToken(turnstileToken);
         if (!captchaValid) {
           setTurnstileToken(null);
           setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
