@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { Outlet } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
@@ -34,6 +35,7 @@ export function AdminLayout() {
   const { features, isLoading: featuresLoading } = usePlanFeatures();
   const { ctx, isLoading: ctxLoading } = useTenantContext();
   const aiAvailable = canAccess("ai_tools", ctx);
+  useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
