@@ -55,10 +55,12 @@ export default function SuperAdminTenants() {
     const now = new Date();
     const diffMs = now.getTime() - lastSeen.getTime();
     const diffMins = Math.floor(diffMs / 60000);
+    const diffSecs = Math.floor(diffMs / 1000);
     
-    if (diffMins < 1) return "Agora";
-    if (diffMins < 60) return `Há ${diffMins}m`;
-    if (diffMins < 1440) return `Há ${Math.floor(diffMins / 60)}h`;
+    if (diffSecs < 10) return "agora mesmo";
+    if (diffSecs < 60) return `há ${diffSecs}s`;
+    if (diffMins < 60) return `há ${diffMins}m`;
+    if (diffMins < 1440) return `há ${Math.floor(diffMins / 60)}h`;
     return lastSeen.toLocaleDateString("pt-BR");
   };
 
