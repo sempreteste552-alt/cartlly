@@ -110,8 +110,9 @@ export default function DomainConnector({
   savedVerifyDetails,
 }: DomainConnectorProps) {
   const queryClient = useQueryClient();
+  const initialSslReady = Boolean(savedVerifyDetails?.sslReady);
   const [step, setStep] = useState<"input" | "detecting" | "instructions" | "verifying" | "done">(
-    domainStatus === "verified" ? "done" : currentDomain ? "instructions" : "input"
+    domainStatus === "verified" && initialSslReady ? "done" : currentDomain ? "instructions" : "input"
   );
   const [domain, setDomain] = useState(currentDomain);
   const [provider, setProvider] = useState<string>(savedVerifyDetails?.provider || "");
