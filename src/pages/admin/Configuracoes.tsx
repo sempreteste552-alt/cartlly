@@ -673,7 +673,14 @@ function GeneralSettingsTab() {
               <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
                 <img src={faviconUrl} alt="Favicon" className="h-8 w-8 rounded object-contain" />
                 <span className="text-xs text-muted-foreground truncate flex-1">{faviconUrl.split("/").pop()}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setFaviconUrl(""); }}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                  setFaviconUrl("");
+                  if (settings) {
+                    await supabase.from("store_settings").update({ favicon_url: null } as any).eq("id", settings.id);
+                    queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+                    toast.success("Favicon removido!");
+                  }
+                }}>
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
