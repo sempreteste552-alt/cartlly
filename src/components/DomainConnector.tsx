@@ -91,7 +91,8 @@ function normalizeDomain(domain: string): string {
     .toLowerCase()
     .replace(/^https?:\/\//, "")
     .replace(/\/.*$/, "")
-    .replace(/\.$/, "");
+    .replace(/\.$/, "")
+    .replace(/["']/g, ""); // Remove accidental quotes
 }
 
 function isValidDomain(domain: string): boolean {
