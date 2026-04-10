@@ -315,9 +315,25 @@ export default function Clientes() {
                   <Label htmlFor="name">Nome Completo</Label>
                   <Input id="name" name="name" defaultValue={editingCustomer.name} required />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" name="phone" defaultValue={editingCustomer.phone} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input id="phone" name="phone" defaultValue={editingCustomer.phone} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gender">Gênero</Label>
+                    <Select name="gender" defaultValue={editingCustomer.gender}>
+                      <SelectTrigger id="gender">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Masculino">Masculino</SelectItem>
+                        <SelectItem value="Feminino">Feminino</SelectItem>
+                        <SelectItem value="Outro">Outro</SelectItem>
+                        <SelectItem value="Prefiro não dizer">Prefiro não dizer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -328,6 +344,15 @@ export default function Clientes() {
                     <Label htmlFor="state">Estado</Label>
                     <Input id="state" name="state" defaultValue={editingCustomer.state} maxLength={2} />
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="routine_notes">Notas de Rotina / IA (Hooks)</Label>
+                  <Input 
+                    id="routine_notes" 
+                    name="routine_notes" 
+                    defaultValue={editingCustomer.routine_notes} 
+                    placeholder="Ex: Gosta de comprar à noite, fã de chocolate amargo..."
+                  />
                 </div>
               </div>
               <DialogFooter>
