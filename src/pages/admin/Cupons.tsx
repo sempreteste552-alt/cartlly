@@ -131,20 +131,29 @@ export default function Cupons() {
     }
   };
 
-  const applySuggestion = (s: AISuggestion) => {
+  const applySuggestion = async (s: AISuggestion) => {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + s.validity_days);
 
-    setEditing(null);
-    setCode(s.code);
-    setDiscountType(s.discount_type);
-    setDiscountValue(String(s.discount_value));
-    setMinOrderValue(s.min_order_value ? String(s.min_order_value) : "");
-    setMaxUses(s.max_uses ? String(s.max_uses) : "");
-    setExpiresAt(expiryDate.toISOString().slice(0, 16));
-    setActive(true);
-    setFormOpen(true);
-    toast.success(`Campanha "${s.campaign_name}" aplicada! Revise e salve.`);
+    const payload = {
+      code: s.code.toUpperCase().trim(),
+      discount_type: s.discount_type,
+      discount_value: s.discount_value,
+      min_order_value: s.min_order_value || 0,
+      max_uses: s.max_uses || null,
+      expires_at: expiryDate.toISOString(),
+      active: true,
+    };
+
+    createCoupon.mutate(payload, {
+      onSuccess: () => {
+        toast.success(`Cupom "${s.code}" criado com sucesso!`);
+        setShowAiPanel(false);
+      },
+      onError: (err: any) => {
+        toast.error("Erro ao criar cupom: " + err.message);
+      }
+    });
   };
 
   const formatPrice = (v: number) =>
@@ -179,8 +188,8 @@ export default function Cupons() {
                         <h4 className="font-medium text-foreground">{s.campaign_name}</h4>
                         <Badge variant="outline" className="mt-1 font-mono">{s.code}</Badge>
                       </div>
-                      <Button size="sm" onClick={() => applySuggestion(s)}>
-                        <Wand2 className="mr-1 h-3 w-3" /> Usar
+                      <Button size="sm" onClick={() => applySuggestion(s)} disabled={createCoupon.isPending}>
+                        <Wand2 className="mr-1 h-3 w-3" /> Criar Agora
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">{s.reason}</p>

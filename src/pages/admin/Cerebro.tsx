@@ -136,7 +136,7 @@ export default function Cerebro() {
 
   const processAIActions = (content: string, msgIndex: number) => {
     const actions: any[] = [];
-    // ... logic for regex matches (truncated for brevity but I'll restore essential parts)
+    
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
     let match;
     while ((match = taskRegex.exec(content)) !== null) {
@@ -145,6 +145,15 @@ export default function Cerebro() {
         actions.push({ type: "schedule_task", label: `📅 Agendar Push: ${payload.payload?.title || "Sem título"}`, payload });
       } catch (e) {}
     }
+
+    const couponRegex = /\[ACTION_CREATE_COUPON\]([\s\S]*?)\[\/ACTION_CREATE_COUPON\]/g;
+    while ((match = couponRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "create_coupon", label: `🎟️ Criar Cupom: ${payload.code} (${payload.discount_type === 'percentage' ? payload.discount_value + '%' : 'R$' + payload.discount_value})`, payload });
+      } catch (e) {}
+    }
+
     if (actions.length > 0) setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
   };
 
@@ -162,13 +171,30 @@ export default function Cerebro() {
           status: "pending"
         });
         toast.success("✅ Tarefa agendada com sucesso!");
+      } else if (action.type === "create_coupon") {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + (action.payload.validity_days || 30));
+        
+        const { error } = await supabase.from("coupons").insert({
+          user_id: user.id,
+          code: action.payload.code.toUpperCase(),
+          discount_type: action.payload.discount_type,
+          discount_value: action.payload.discount_value,
+          min_order_value: action.payload.min_order_value || 0,
+          expires_at: expiresAt.toISOString(),
+          active: true
+        });
+        if (error) throw error;
+        toast.success("✅ Cupom criado com sucesso!");
       }
+
       setPendingActions(prev => {
         const newActions = [...(prev[msgIndex] || [])];
         newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
         return { ...prev, [msgIndex]: newActions };
       });
       queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["coupons"] });
     } catch (e: any) {
       toast.error("Erro ao executar: " + e.message);
     }
