@@ -1016,6 +1016,102 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_config: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          min_redemption: number
+          points_per_real: number
+          redemption_rate: number
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_redemption?: number
+          points_per_real?: number
+          redemption_rate?: number
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_redemption?: number
+          points_per_real?: number
+          redemption_rate?: number
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          lifetime_points: number
+          points_balance: number
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          description: string | null
+          id: string
+          order_id: string | null
+          points: number
+          store_user_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points: number
+          store_user_id: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          store_user_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       message_delivery_logs: {
         Row: {
           channel: string
@@ -1557,6 +1653,7 @@ export type Database = {
         Row: {
           badge: string | null
           category_id: string | null
+          cost_price: number | null
           created_at: string
           description: string | null
           id: string
@@ -1574,6 +1671,7 @@ export type Database = {
         Insert: {
           badge?: string | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1591,6 +1689,7 @@ export type Database = {
         Update: {
           badge?: string | null
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1976,6 +2075,45 @@ export type Database = {
           pushes_sent?: number
           status?: string
           stopped_reason?: string | null
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saved_customer_data: {
+        Row: {
+          card_brand: string | null
+          card_last_four: string | null
+          cpf: string | null
+          created_at: string
+          customer_id: string
+          default_address: string | null
+          default_cep: string | null
+          id: string
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          card_brand?: string | null
+          card_last_four?: string | null
+          cpf?: string | null
+          created_at?: string
+          customer_id: string
+          default_address?: string | null
+          default_cep?: string | null
+          id?: string
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          card_brand?: string | null
+          card_last_four?: string | null
+          cpf?: string | null
+          created_at?: string
+          customer_id?: string
+          default_address?: string | null
+          default_cep?: string | null
+          id?: string
           store_user_id?: string
           updated_at?: string
         }
@@ -3356,6 +3494,15 @@ export type Database = {
       }
     }
     Functions: {
+      award_loyalty_points: {
+        Args: {
+          p_customer_id: string
+          p_order_id: string
+          p_order_total: number
+          p_store_user_id: string
+        }
+        Returns: undefined
+      }
       can_send_message: {
         Args: {
           p_body: string
@@ -3458,6 +3605,14 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      redeem_loyalty_points: {
+        Args: {
+          p_customer_id: string
+          p_points: number
+          p_store_user_id: string
+        }
+        Returns: number
       }
     }
     Enums: {
