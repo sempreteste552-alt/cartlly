@@ -18,7 +18,7 @@ export function CatalogPdfGenerator() {
 
   const storeName = (settings as any)?.store_name || "Minha Loja";
   const storeSlug = (settings as any)?.store_slug;
-  const storeLogo = (settings as any)?.store_logo_url;
+  const storeLogo = (settings as any)?.logo_url;
 
   const generateCatalog = async () => {
     if (!products?.length) return toast.error("Nenhum produto cadastrado");
