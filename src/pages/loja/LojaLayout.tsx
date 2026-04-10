@@ -772,7 +772,6 @@ export default function LojaLayout() {
               );
             })}
             
-            {true && (
             <div 
               className="px-3 py-4 border-t border-border mt-2 space-y-2"
               style={{
@@ -808,7 +807,6 @@ export default function LojaLayout() {
               </div>
               <p className="text-[10px] text-muted-foreground">Informe seu CEP para calcular o frete, ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar.</p>
             </div>
-            )}
 
             <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
               <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
