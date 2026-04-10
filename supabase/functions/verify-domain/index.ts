@@ -5,11 +5,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Platform IPs for Lovable Ingress (used as fallback or for direct pointing)
 const PLATFORM_IPS = new Set([
   "185.158.133.1",
   "185.41.148.1",
   "185.41.148.2",
 ]);
+
+// Cloudflare API Configuration (for automatic SSL provisioning)
+const CLOUDFLARE_API_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN");
+const CLOUDFLARE_ZONE_ID = Deno.env.get("CLOUDFLARE_ZONE_ID");
+const CLOUDFLARE_FALLBACK_ORIGIN = Deno.env.get("CLOUDFLARE_FALLBACK_ORIGIN"); // e.g., origin.cartlly.com
 
 const PLATFORM_HOST_SUFFIXES = [".lovable.app", ".lovableproject.com"];
 
