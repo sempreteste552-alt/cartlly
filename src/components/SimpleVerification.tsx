@@ -173,7 +173,7 @@ export function SimpleVerification({ onVerify, className = "" }: SimpleVerificat
               <span className="text-sm font-medium">Verificação concluída com sucesso</span>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 max-w-[200px] mx-auto">
+            <div className="grid grid-cols-3 gap-1.5 max-w-[156px] mx-auto">
               {grid.map((cell, i) => {
                 const isSelected = selected.has(i);
                 return (
@@ -181,7 +181,7 @@ export function SimpleVerification({ onVerify, className = "" }: SimpleVerificat
                     key={i}
                     type="button"
                     onClick={() => handleSelect(i)}
-                    className={`aspect-square rounded-lg text-2xl flex items-center justify-center border-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
+                    className={`w-12 h-12 rounded-lg text-xl flex items-center justify-center border-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
                       isSelected
                         ? error
                           ? "border-destructive bg-destructive/10 scale-95"
