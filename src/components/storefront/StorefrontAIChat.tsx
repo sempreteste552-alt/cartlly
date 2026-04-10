@@ -170,6 +170,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
         const trackToken = order?.tracking_token || "";
         const orderId = order?.id?.slice(0, 8) || "";
+        setLastOrderId(order?.id || null);
 
         setMessages(prev => [...prev, {
           role: "assistant",
@@ -183,7 +184,87 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         setMessages(prev => [...prev, { role: "assistant", content: "❌ Erro ao processar o pedido. Tente novamente." }]);
       }
     }
-  }, [storeUserId, queryClient]);
+
+    // Payment Processing
+    const paymentMatch = content.match(/\[ACTION_PAYMENT\]([\s\S]*?)\[\/ACTION_PAYMENT\]/);
+    if (paymentMatch) {
+      try {
+        const payload = JSON.parse(paymentMatch[1].trim());
+        const orderId = payload.order_id || lastOrderId;
+        if (!orderId) {
+          setMessages(prev => [...prev, { role: "assistant", content: "❌ Nenhum pedido encontrado para processar o pagamento." }]);
+          return;
+        }
+
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/create-payment`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": anonKey,
+              "Authorization": `Bearer ${anonKey}`,
+            },
+            body: JSON.stringify({
+              order_id: orderId,
+              method: payload.method || "pix",
+              store_user_id: storeUserId,
+              payer_cpf: payload.payer_cpf || undefined,
+            }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Erro ao processar pagamento");
+
+        const payment = data.payment;
+        if (payload.method === "pix" && payment?.pix_qr_code) {
+          const qrBase64 = payment.pix_qr_code_base64;
+          const pixCode = payment.pix_qr_code;
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: `✅ **PIX gerado com sucesso!**\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n📋 **Código PIX (copie e cole):**\n\`\`\`\n${pixCode}\n\`\`\`\n\n⏰ O PIX expira em 30 minutos. Após o pagamento, seu pedido será processado automaticamente!`
+          }]);
+          toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+        } else if (payment?.status === "approved") {
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: "✅ **Pagamento aprovado!** Seu pedido está sendo processado. Obrigado! 🎉"
+          }]);
+          toast.success("Pagamento aprovado!");
+        } else if (payload.method === "boleto" && payment?.boleto_url) {
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: `📄 **Boleto gerado com sucesso!**\n\n[📥 Clique aqui para visualizar/baixar o boleto](${payment.boleto_url})\n\n⏰ O boleto vence em 3 dias úteis.`
+          }]);
+          toast.success("Boleto gerado!");
+        } else {
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: `💳 Pagamento processado! Status: **${payment?.status || "pendente"}**`
+          }]);
+        }
+      } catch (e) {
+        console.error("Payment error:", e);
+        const errorMsg = e instanceof Error ? e.message : "Erro ao processar pagamento";
+        setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
+      }
+    }
+
+    // WhatsApp Redirect
+    const whatsappMatch = content.match(/\[ACTION_WHATSAPP_REDIRECT\]([\s\S]*?)\[\/ACTION_WHATSAPP_REDIRECT\]/);
+    if (whatsappMatch) {
+      try {
+        const payload = JSON.parse(whatsappMatch[1].trim());
+        if (payload.phone && payload.summary) {
+          setWhatsappRedirect({ phone: payload.phone, summary: payload.summary });
+        }
+      } catch (e) {
+        console.error("WhatsApp redirect parse error:", e);
+      }
+    }
+  }, [storeUserId, queryClient, lastOrderId]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
