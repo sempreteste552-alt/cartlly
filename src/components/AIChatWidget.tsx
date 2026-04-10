@@ -717,6 +717,15 @@ export function AIChatWidget() {
     }
   };
 
+  // Auto-send voice transcript
+  useEffect(() => {
+    if (pendingVoiceRef.current && !voiceRecorder.isRecording && !voiceRecorder.isTranscribing && !isLoading) {
+      const text = pendingVoiceRef.current;
+      pendingVoiceRef.current = null;
+      sendMessage(text);
+    }
+  }, [voiceRecorder.isRecording, voiceRecorder.isTranscribing, isLoading]);
+
   if (!open) {
     return (
       <Button
