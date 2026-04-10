@@ -121,7 +121,14 @@ export default function Cerebro() {
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="h-6 w-6 text-primary" /> Cérebro da Loja
           </h1>
-          <p className="text-muted-foreground text-sm">Sua IA estratégica para gestão, alertas e automação de vendas.</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-muted-foreground text-sm">Sua IA estratégica para gestão, alertas e automação de vendas.</p>
+            {aiConfig?.niche && (
+              <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/20 text-primary">
+                Nicho: {aiConfig.niche}
+              </Badge>
+            )}
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => clearChat.mutate()} disabled={chatHistory.length === 0}>
           <Trash2 className="h-4 w-4 mr-2" /> Limpar Histórico
