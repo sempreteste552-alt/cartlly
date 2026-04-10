@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useBehaviorTracking } from "./useBehaviorTracking";
 
 export interface CartItem {
   id: string;
@@ -40,10 +41,11 @@ function saveCartToStorage(items: CartItem[], slug?: string) {
   } catch { /* quota exceeded */ }
 }
 
-export function useCart(slug?: string) {
+export function useCart(slug?: string, storeUserId?: string) {
   const [items, setItems] = useState<CartItem[]>(() => loadCartFromStorage(slug));
   const slugRef = useRef(slug);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const { trackEvent } = useBehaviorTracking(storeUserId);
 
   useEffect(() => {
     if (slugRef.current !== slug) {
@@ -77,11 +79,13 @@ export function useCart(slug?: string) {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-  }, []);
+    trackEvent("add_to_cart", product.id, { name: product.name, price: product.price });
+  }, [trackEvent]);
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
-  }, []);
+    trackEvent("remove_from_cart", id);
+  }, [trackEvent]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
