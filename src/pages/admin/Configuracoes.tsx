@@ -169,6 +169,7 @@ function GeneralSettingsTab() {
   const [bannerMobileFormat, setBannerMobileFormat] = useState("landscape");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [isVerified, setIsVerified] = useState(false);
+  const [storeCategory, setStoreCategory] = useState("");
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   useEffect(() => {
