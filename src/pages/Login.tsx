@@ -19,10 +19,10 @@ import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordRese
 const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
 const LOGIN_PHRASES = [
-  "Bem-vindo de volta à sua loja! 🏪",
-  "Seus clientes estão esperando... 🚀",
-  "Hora de faturar! 💰",
-  "Sua loja, seu sucesso! ✨",
+  "Bem-vindo ao Painel Administrativo 🔐",
+  "Gerencie suas vendas com inteligência 📊",
+  "Sua plataforma, suas regras! ✨",
+  "Fature mais com a Cartly 💰",
 ];
 
 const REGISTER_PHRASES = [
