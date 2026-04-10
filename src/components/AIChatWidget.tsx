@@ -158,7 +158,9 @@ export function AIChatWidget() {
   const { data: coupons } = useCoupons();
   const { data: orders } = useOrders();
   const { data: settings } = useStoreSettings();
+  const { data: marketingConfig } = useStoreMarketingConfig();
   const updateSettings = useUpdateStoreSettings();
+  const updateMarketing = useUpdateStoreMarketingConfig();
 
   // Fetch available plans
   const { data: plans } = useQuery({
