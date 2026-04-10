@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { PlanGate } from "@/components/PlanGate";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -115,7 +117,8 @@ export default function Cerebro() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
+    <PlanGate feature="ai_tools">
+      <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -220,29 +223,31 @@ export default function Cerebro() {
               <CardDescription className="text-xs">Ações que a IA realizará no futuro.</CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-3">
-              <div className="space-y-2">
-                {scheduledTasks.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4 italic">Nenhuma tarefa pendente.</p>
-                ) : (
-                  scheduledTasks.slice(0, 5).map(task => (
-                    <div key={task.id} className="p-2 rounded-lg border bg-card/50 text-xs space-y-1">
-                      <div className="flex justify-between items-start">
-                        <Badge variant="outline" className="text-[9px] uppercase">{task.task_type}</Badge>
-                        <span className="text-muted-foreground text-[10px]">
-                          {formatDistanceToNow(new Date(task.scheduled_at), { addSuffix: true, locale: ptBR })}
-                        </span>
+              <ScrollArea className="h-[300px] pr-4 -mr-4">
+                <div className="space-y-2">
+                  {scheduledTasks.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4 italic">Nenhuma tarefa pendente.</p>
+                  ) : (
+                    scheduledTasks.map(task => (
+                      <div key={task.id} className="p-2 rounded-lg border bg-card/50 text-xs space-y-1">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="text-[9px] uppercase">{task.task_type}</Badge>
+                          <span className="text-muted-foreground text-[10px]">
+                            {formatDistanceToNow(new Date(task.scheduled_at), { addSuffix: true, locale: ptBR })}
+                          </span>
+                        </div>
+                        <p className="line-clamp-2 text-muted-foreground leading-tight italic">"{task.ai_instruction}"</p>
+                        <div className="flex items-center gap-1">
+                          {task.status === 'pending' && <Clock className="h-3 w-3 text-amber-500" />}
+                          {task.status === 'completed' && <CheckCircle2 className="h-3 w-3 text-green-500" />}
+                          {task.status === 'failed' && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                          <span className="capitalize text-[10px]">{task.status}</span>
+                        </div>
                       </div>
-                      <p className="line-clamp-2 text-muted-foreground leading-tight italic">"{task.ai_instruction}"</p>
-                      <div className="flex items-center gap-1">
-                        {task.status === 'pending' && <Clock className="h-3 w-3 text-amber-500" />}
-                        {task.status === 'completed' && <CheckCircle2 className="h-3 w-3 text-green-500" />}
-                        {task.status === 'failed' && <AlertTriangle className="h-3 w-3 text-red-500" />}
-                        <span className="capitalize text-[10px]">{task.status}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
 
@@ -261,5 +266,6 @@ export default function Cerebro() {
         </div>
       </div>
     </div>
+    </PlanGate>
   );
 }
