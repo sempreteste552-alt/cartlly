@@ -28,8 +28,18 @@ serve(async (req) => {
       .join("\n");
 
     const aiName = storeContext?.aiName || "Assistente IA";
+    const aiTone = storeContext?.aiTone || "educada";
 
-    const systemPrompt = `Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce. Você tem acesso TOTAL aos dados da loja e pode EXECUTAR AÇÕES.
+    const toneMap: Record<string, string> = {
+      educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais.",
+      profissional: "Mantenha um tom profissional, direto e eficiente.",
+      divertida: "Seja divertida, use emojis e tom descontraído.",
+      formal: "Use linguagem formal e respeitosa. Trate por 'senhor(a)'.",
+      amigavel: "Seja como um amigo atencioso, caloroso e empático."
+    };
+
+    const systemPrompt = `Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
+${toneMap[aiTone] || toneMap.educada}
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}

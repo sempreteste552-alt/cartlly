@@ -2181,6 +2181,7 @@ export type Database = {
           admin_blocked: boolean
           admin_primary_color: string
           ai_avatar_url: string | null
+          ai_chat_tone: string
           ai_name: string | null
           banner_mobile_format: string
           button_color: string
@@ -2253,6 +2254,7 @@ export type Database = {
           admin_blocked?: boolean
           admin_primary_color?: string
           ai_avatar_url?: string | null
+          ai_chat_tone?: string
           ai_name?: string | null
           banner_mobile_format?: string
           button_color?: string
@@ -2325,6 +2327,7 @@ export type Database = {
           admin_blocked?: boolean
           admin_primary_color?: string
           ai_avatar_url?: string | null
+          ai_chat_tone?: string
           ai_name?: string | null
           banner_mobile_format?: string
           button_color?: string
@@ -2792,6 +2795,9 @@ export type Database = {
           admin_accent_color: string | null
           admin_blocked: boolean | null
           admin_primary_color: string | null
+          ai_avatar_url: string | null
+          ai_chat_tone: string | null
+          ai_name: string | null
           banner_mobile_format: string | null
           button_color: string | null
           button_text_color: string | null

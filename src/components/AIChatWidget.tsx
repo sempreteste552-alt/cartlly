@@ -41,7 +41,15 @@ const QUICK_ACTIONS = [
   { label: "⬆️ Trocar de plano", prompt: "Quero fazer upgrade do meu plano. Quais planos estão disponíveis?" },
 ];
 
-const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "" };
+const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "", tone: "educada" };
+
+const AI_TONE_OPTIONS = [
+  { value: "educada", label: "🤗 Educada", desc: "Gentil, paciente e acolhedora" },
+  { value: "profissional", label: "💼 Profissional", desc: "Direta, eficiente e empresarial" },
+  { value: "divertida", label: "🎉 Divertida", desc: "Descontraída com emojis e humor" },
+  { value: "formal", label: "🎩 Formal", desc: "Elegante e respeitosa com 'senhor(a)'" },
+  { value: "amigavel", label: "❤️ Amigável", desc: "Calorosa, próxima e empática" },
+];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -160,14 +168,17 @@ export function AIChatWidget() {
 
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
   const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
+  const aiTone = (settings as any)?.ai_chat_tone || AI_SETTINGS_DEFAULT.tone;
 
   const [tempName, setTempName] = useState(aiName);
   const [tempAvatar, setTempAvatar] = useState(aiAvatarUrl);
+  const [tempTone, setTempTone] = useState(aiTone);
 
   useEffect(() => {
     if (settings) {
       setTempName((settings as any).ai_name || AI_SETTINGS_DEFAULT.name);
       setTempAvatar((settings as any).ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl);
+      setTempTone((settings as any).ai_chat_tone || AI_SETTINGS_DEFAULT.tone);
     }
   }, [settings]);
 
@@ -228,6 +239,7 @@ export function AIChatWidget() {
       paymentCreditCard: (settings as any)?.payment_credit_card || false,
       shippingEnabled: (settings as any)?.shipping_enabled || false,
       aiName: aiName,
+      aiTone: aiTone,
       plans: (plans || []).filter((p: any) => p.price > 0).map((p: any) => ({
         id: p.id,
         name: p.name,
@@ -369,7 +381,8 @@ export function AIChatWidget() {
       await updateSettings.mutateAsync({
         id: settings.id,
         ai_name: tempName.trim() || "Assistente IA",
-        ai_avatar_url: tempAvatar.trim()
+        ai_avatar_url: tempAvatar.trim(),
+        ai_chat_tone: tempTone || "educada",
       } as any);
       setSettingsOpen(false);
     } catch (error) {
@@ -524,7 +537,7 @@ export function AIChatWidget() {
           </div>
           <div className="flex gap-1">
             {!aiLocked && (
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setSettingsOpen(true); }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20" onClick={() => { setTempName(aiName); setTempAvatar(aiAvatarUrl); setTempTone(aiTone); setSettingsOpen(true); }}>
                 <Settings2 className="h-4 w-4" />
               </Button>
             )}
@@ -780,7 +793,28 @@ export function AIChatWidget() {
               />
             </div>
 
-            <div className="pt-2">
+            <div className="space-y-2">
+              <Label>Tom da IA (na loja e no admin)</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {AI_TONE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTempTone(opt.value)}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      tempTone === opt.value 
+                        ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="text-base">{opt.label.split(" ")[0]}</span>
+                    <div>
+                      <p className="text-sm font-medium">{opt.label.split(" ").slice(1).join(" ")}</p>
+                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
               <Button onClick={saveSettings} className="w-full" disabled={updateSettings.isPending}>
                 {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações

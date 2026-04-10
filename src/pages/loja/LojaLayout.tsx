@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
@@ -988,6 +989,17 @@ export default function LojaLayout() {
           >
             <img src={whatsappIcon} alt="WhatsApp" className="h-14 w-14 rounded-full drop-shadow-md" />
           </a>
+        )}
+
+        {/* AI Chat for Premium stores */}
+        {settings?.user_id && (settings as any).is_premium_plan && (
+          <StorefrontAIChat
+            storeUserId={settings.user_id}
+            storeName={settings.store_name || "Loja"}
+            aiName={(settings as any).ai_name}
+            aiAvatarUrl={(settings as any).ai_avatar_url}
+            primaryColor={settings.primary_color}
+          />
         )}
 
         {/* Auth modals */}

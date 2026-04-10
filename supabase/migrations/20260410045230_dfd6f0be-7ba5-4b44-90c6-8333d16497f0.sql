@@ -1,0 +1,1 @@
+ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS ai_chat_tone text NOT NULL DEFAULT 'educada';
