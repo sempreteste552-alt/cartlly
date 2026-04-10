@@ -332,9 +332,16 @@ export function AIChatWidget() {
     if (subscribeMatch && user) {
       try {
         const payload = JSON.parse(subscribeMatch[1].trim());
-        setPendingSubscribe({ plan_id: payload.plan_id, plan_name: payload.plan_name });
-        setCpfValue("");
-        setCpfDialogOpen(true);
+        const doc = (payload.document || "").replace(/\D/g, "");
+        if (doc.length >= 11) {
+          // CPF/CNPJ already provided by AI — generate QR code directly
+          await handleSubscribe(payload.plan_id, payload.plan_name, doc);
+        } else {
+          // Fallback: ask for CPF via dialog
+          setPendingSubscribe({ plan_id: payload.plan_id, plan_name: payload.plan_name });
+          setCpfValue("");
+          setCpfDialogOpen(true);
+        }
       } catch (e) {
         console.error("Subscribe action error:", e);
       }
