@@ -50,7 +50,7 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
             <span className="text-[10px] mt-0.5 font-medium">Avisos</span>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0 mb-2 overflow-hidden touch-pan-y" align="center" side="top" sideOffset={8}>
+        <PopoverContent className="w-80 p-0 mb-2 shadow-xl border-primary/10" align="center" side="top" sideOffset={8}>
           <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
         </PopoverContent>
       </Popover>
@@ -72,7 +72,7 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 overflow-hidden touch-pan-y" align="end" sideOffset={8}>
+      <PopoverContent className="w-80 p-0 shadow-xl border-primary/10" align="end" sideOffset={8}>
         <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
       </PopoverContent>
     </Popover>
