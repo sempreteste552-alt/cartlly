@@ -142,16 +142,20 @@ export default function Cerebro() {
         actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações da Loja", payload });
       } catch (e) { console.error("Settings parse error:", e); }
     }
+    
+    // Marketing Config
+    const marketingRegex = /\[ACTION_UPDATE_MARKETING_CONFIG\]([\s\S]*?)\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g;
+    let marketingMatch;
+    while ((marketingMatch = marketingRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(marketingMatch[1]);
+        actions.push({ type: "update_marketing", label: "📣 Atualizar Ferramentas de Marketing", payload });
+      } catch (e) { console.error("Marketing config parse error:", e); }
+    }
 
     // Page update
-    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
-    let pageMatch;
-    while ((pageMatch = pageRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(pageMatch[1]);
-        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
-      } catch (e) { console.error("Page parse error:", e); }
-    }
+...
+
 
     // Update Stock
     const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
