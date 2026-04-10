@@ -1,17 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAllTenants, useAllPlans } from "@/hooks/useUserRole";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Users, DollarSign, AlertTriangle, Package, ShoppingCart, Clock,
   ArrowUpRight, CheckCircle2, ArrowUp, TrendingUp, Zap,
-  Crown, Ban, Timer, CreditCard, Percent, Shield, Bell,
+  Crown, Ban, Timer, CreditCard, Percent, Shield, Bell, Sparkles, Send
 } from "lucide-react";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
 
