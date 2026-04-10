@@ -156,7 +156,7 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 max-h-[500px] overscroll-contain">
+        <div className="flex-1 overflow-y-auto min-h-0 max-h-[500px] overscroll-contain touch-auto">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground/60 space-y-3">
               <div className="p-4 bg-muted rounded-full">
