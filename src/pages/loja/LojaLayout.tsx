@@ -119,6 +119,15 @@ export default function LojaLayout() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleLojaSearch = (e: any) => {
+      setSearchTerm(e.detail);
+      navigate(basePath);
+    };
+    window.addEventListener('loja_search', handleLojaSearch as any);
+    return () => window.removeEventListener('loja_search', handleLojaSearch as any);
+  }, [basePath, navigate]);
+
   const handleGlobalCepChange = (val: string) => {
     const clean = val.replace(/\D/g, "").slice(0, 8);
     setGlobalCep(clean);
