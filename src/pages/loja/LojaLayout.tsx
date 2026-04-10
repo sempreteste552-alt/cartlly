@@ -1031,7 +1031,13 @@ export default function LojaLayout() {
             <CustomerProfileModal open={profileModalOpen} onOpenChange={setProfileModalOpen} storeUserId={settings.user_id} basePath={basePath} />
           </>
         )}
-        <CookieConsent basePath={basePath} storeUserId={settings?.user_id} />
+        <CookieConsent
+          basePath={basePath}
+          storeUserId={settings?.user_id}
+          primaryColor={settings?.primary_color}
+          buttonColor={settings?.button_color}
+          buttonTextColor={settings?.button_text_color}
+        />
       </div>
     </LojaContext.Provider>
   );
