@@ -13,16 +13,16 @@ const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
-  // Check global platform settings (only super admin controls this)
+  // Public-safe banner config for storefront visitors
   const { data: globalConfig } = useQuery({
-    queryKey: ["platform_promo_banner_config"],
+    queryKey: ["platform_promo_banner_config_public"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("platform_settings")
-        .select("key, value")
-        .in("key", ["promo_banner_enabled", "promo_banner_text", "promo_banner_link"]);
+      const { data, error } = await supabase.rpc("get_platform_banner_config_public");
+      if (error) throw error;
       const map: Record<string, any> = {};
-      data?.forEach(r => { map[r.key] = (r.value as any)?.value; });
+      (data || []).forEach((r: any) => {
+        map[r.key] = r.value?.value;
+      });
       return {
         enabled: map.promo_banner_enabled === true,
         text: (map.promo_banner_text as string) || null,
@@ -31,35 +31,16 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     },
   });
 
-  // Check per-tenant override from super admin (promo_banner_enabled on store_settings)
-  const { data: tenantOverride } = useQuery({
-    queryKey: ["tenant_promo_banner_override", storeUserId],
+  // Public-safe per-store banner status for storefront visitors
+  const { data: storefrontStatus } = useQuery({
+    queryKey: ["storefront_banner_status", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("store_settings")
-        .select("promo_banner_enabled")
-        .eq("user_id", storeUserId!)
-        .maybeSingle();
-      return (data as any)?.promo_banner_enabled as boolean | null;
-    },
-  });
-
-  // Check if tenant is PREMIUM
-  const { data: tenantPlan } = useQuery({
-    queryKey: ["tenant_plan_for_banner", storeUserId],
-    enabled: !!storeUserId,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("tenant_subscriptions")
-        .select("tenant_plans(name)")
-        .eq("user_id", storeUserId!)
-        .in("status", ["active", "trial"])
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const planName = ((data?.tenant_plans as any)?.name as string)?.toUpperCase() || "FREE";
-      return planName === "ELITE" ? "PREMIUM" : planName;
+      const { data, error } = await supabase.rpc("get_storefront_banner_status", {
+        _user_id: storeUserId!,
+      });
+      if (error) throw error;
+      return Array.isArray(data) ? data[0] : data;
     },
   });
 
@@ -74,18 +55,18 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     setDismissed(true);
   };
 
-  const isPremium = tenantPlan === "PREMIUM";
+  const tenantOverride = storefrontStatus?.promo_banner_enabled as boolean | null | undefined;
+  const isPremium = storefrontStatus?.is_premium === true;
 
   // If super admin explicitly set per-tenant override to false, hide it
   // If per-tenant override is true, show regardless of plan
   // Otherwise follow global: show for all non-premium when global is on
   let shouldShow = false;
   if (tenantOverride === true) {
-    shouldShow = true; // Super admin force-enabled for this tenant
+    shouldShow = true;
   } else if (tenantOverride === false) {
-    shouldShow = false; // Super admin force-disabled for this tenant
+    shouldShow = false;
   } else {
-    // No per-tenant override: follow global, except premium
     shouldShow = globalConfig?.enabled === true && !isPremium;
   }
 
