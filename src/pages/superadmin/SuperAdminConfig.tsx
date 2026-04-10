@@ -38,6 +38,12 @@ interface PlatformConfig {
   stripe_publishable_key: string;
   mp_webhook_secret: string;
   gateway_test_mode: boolean;
+  signup_coupon_enabled: boolean;
+  signup_coupon_code: string;
+  signup_coupon_discount_type: string;
+  signup_coupon_discount_value: number;
+  signup_coupon_auto_show: boolean;
+  signup_coupon_text: string;
 }
 
 const defaultConfig: PlatformConfig = {
@@ -67,6 +73,12 @@ const defaultConfig: PlatformConfig = {
   stripe_publishable_key: "",
   mp_webhook_secret: "",
   gateway_test_mode: true,
+  signup_coupon_enabled: false,
+  signup_coupon_code: "",
+  signup_coupon_discount_type: "percentage",
+  signup_coupon_discount_value: 10,
+  signup_coupon_auto_show: false,
+  signup_coupon_text: "🎉 Use o cupom abaixo e ganhe desconto na sua primeira compra!",
 };
 
 export default function SuperAdminConfig() {
@@ -255,6 +267,88 @@ export default function SuperAdminConfig() {
             />
             <p className="text-xs text-muted-foreground">Formato: 55 + DDD + número. Ex: 5511999999999. Deixe vazio para desativar.</p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Signup Coupon */}
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Megaphone className="h-5 w-5 text-green-500" /> Cupom de Cadastro
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Configure um cupom de desconto que aparece para novos usuários durante o cadastro. Ideal para promoções e ocasiões especiais.
+          </p>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label>Cupom de Cadastro Ativo</Label>
+              <p className="text-xs text-muted-foreground">Permite que novos usuários usem cupom no cadastro</p>
+            </div>
+            <Switch checked={config.signup_coupon_enabled} onCheckedChange={v => updateField("signup_coupon_enabled", v)} />
+          </div>
+          {config.signup_coupon_enabled && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Código do Cupom</Label>
+                  <Input
+                    value={config.signup_coupon_code}
+                    onChange={e => updateField("signup_coupon_code", e.target.value.toUpperCase())}
+                    placeholder="BEMVINDO10"
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo de Desconto</Label>
+                  <Select value={config.signup_coupon_discount_type} onValueChange={v => updateField("signup_coupon_discount_type", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                      <SelectItem value="fixed">Valor fixo (R$)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Valor do Desconto</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={config.signup_coupon_discount_value}
+                  onChange={e => updateField("signup_coupon_discount_value", parseFloat(e.target.value) || 0)}
+                  className="max-w-32"
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <Label>Mostrar Automaticamente no Cadastro</Label>
+                  <p className="text-xs text-muted-foreground">O cupom aparecerá automaticamente na tela de cadastro</p>
+                </div>
+                <Switch checked={config.signup_coupon_auto_show} onCheckedChange={v => updateField("signup_coupon_auto_show", v)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Texto Promocional</Label>
+                <Input
+                  value={config.signup_coupon_text}
+                  onChange={e => updateField("signup_coupon_text", e.target.value)}
+                  placeholder="🎉 Use o cupom abaixo e ganhe desconto!"
+                />
+              </div>
+              {config.signup_coupon_auto_show && config.signup_coupon_code && (
+                <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium mb-2">{config.signup_coupon_text || "🎉 Use o cupom abaixo!"}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-lg text-green-700 dark:text-green-300 bg-green-500/10 px-3 py-1 rounded">{config.signup_coupon_code}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {config.signup_coupon_discount_type === "percentage" ? `${config.signup_coupon_discount_value}% OFF` : `R$ ${config.signup_coupon_discount_value.toFixed(2)} OFF`}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
