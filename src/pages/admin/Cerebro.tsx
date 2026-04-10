@@ -217,6 +217,22 @@ export default function Cerebro() {
         });
         if (error) throw error;
         toast.success("✅ Cupom criado com sucesso!");
+      } else if (action.type === "update_store_settings") {
+        const { error } = await supabase.from("store_settings").update(action.payload).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações da loja atualizadas!");
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+        queryClient.invalidateQueries({ queryKey: ["public_store_settings"] });
+      } else if (action.type === "update_marketing_config") {
+        const { error } = await supabase.from("store_marketing_config").update(action.payload).eq("user_id", user.id);
+        if (error) throw error;
+        toast.success("✅ Configurações de marketing atualizadas!");
+        queryClient.invalidateQueries({ queryKey: ["store_marketing_config"] });
+      } else if (action.type === "update_stock") {
+        const { error } = await supabase.from("products").update({ stock: action.payload.new_stock }).eq("user_id", user.id).eq("name", action.payload.product_name);
+        if (error) throw error;
+        toast.success("✅ Estoque atualizado!");
+        queryClient.invalidateQueries({ queryKey: ["products"] });
       }
 
       setPendingActions(prev => {
