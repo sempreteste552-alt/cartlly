@@ -627,6 +627,33 @@ export default function Login() {
                   <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
               )}
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && signupCouponConfig.auto_show && signupCouponConfig.code && (
+                <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Ticket className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <p className="text-sm text-green-600 dark:text-green-400 font-medium">{signupCouponConfig.text}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-base text-green-700 dark:text-green-300 bg-green-500/10 px-2 py-0.5 rounded">{signupCouponConfig.code}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {signupCouponConfig.discount_type === "percentage" ? `${signupCouponConfig.discount_value}% OFF` : `R$ ${signupCouponConfig.discount_value.toFixed(2)} OFF`}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && (
+                <div className="space-y-2">
+                  <Label htmlFor="couponCode">Cupom de Desconto (opcional)</Label>
+                  <Input
+                    id="couponCode"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder={signupCouponConfig.auto_show && signupCouponConfig.code ? signupCouponConfig.code : "Insira seu cupom"}
+                    className="h-11 border-border/50 focus:border-green-500 transition-colors font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">Se tiver um cupom, insira aqui. Caso contrário, deixe em branco.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-11 border-border/50 focus:border-blue-500 transition-colors" />
