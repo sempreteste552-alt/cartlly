@@ -276,15 +276,6 @@ function GeneralSettingsTab() {
   const handleSave = () => {
     if (!settings) return;
 
-    const nextCustomDomain = normalizeDomain(customDomain) || null;
-    const previousCustomDomain = normalizeDomain((settings as any)?.custom_domain);
-    const domainChanged = previousCustomDomain !== (nextCustomDomain ?? "");
-    const domainResetFields = domainChanged
-      ? nextCustomDomain
-        ? { domain_status: "pending", domain_last_check: null, domain_verify_details: null }
-        : { domain_status: "none", domain_last_check: null, domain_verify_details: null }
-      : {};
-
     updateSettings.mutate({
       id: settings.id,
       store_name: storeName.trim() || "Minha Loja",
@@ -293,8 +284,6 @@ function GeneralSettingsTab() {
       page_bg_color: pageBgColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
-      custom_domain: nextCustomDomain,
-      ...domainResetFields,
       store_address: storeAddress.trim() || null,
       store_phone: storePhone.trim() || null,
       store_whatsapp: storeWhatsapp.trim() || null,
@@ -681,7 +670,7 @@ function GeneralSettingsTab() {
       </Card>
 
       <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Personalizado">
-        <DomainConnector settingsId={settings?.id} currentDomain={customDomain} domainStatus={(settings as any)?.domain_status || "none"} lastCheck={(settings as any)?.domain_last_check} storeSlug={storeSlug} onDomainChange={setCustomDomain} onSave={handleSave} savedVerifyDetails={(settings as any)?.domain_verify_details} />
+        {settings?.id && <DomainConnector settingsId={settings.id} />}
 
         {/* Favicon Upload */}
         <Card className="border-border mt-4">
