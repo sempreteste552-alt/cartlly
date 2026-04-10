@@ -299,15 +299,31 @@ export default function DomainConnector({
 
             {/* Verify result badges */}
             {verifyResult && (
-              <div className="flex gap-2">
-                <Badge variant={verifyResult.aRecord ? "default" : "destructive"} className="text-xs">
-                  {verifyResult.aRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
-                  Registro A
-                </Badge>
-                <Badge variant={verifyResult.txtRecord ? "default" : "destructive"} className="text-xs">
-                  {verifyResult.txtRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
-                  Registro TXT
-                </Badge>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Badge variant={verifyResult.aRecord ? "default" : "destructive"} className="text-xs">
+                    {verifyResult.aRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
+                    Registro A
+                  </Badge>
+                  <Badge variant={verifyResult.txtRecord ? "default" : "destructive"} className="text-xs">
+                    {verifyResult.txtRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
+                    Registro TXT
+                  </Badge>
+                  {verifyResult.dnsComplete && (
+                    <Badge variant={verifyResult.sslReady ? "default" : "secondary"} className="text-xs">
+                      {verifyResult.sslReady ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <Clock className="mr-1 h-3 w-3" />}
+                      SSL
+                    </Badge>
+                  )}
+                </div>
+                {verifyResult.dnsComplete && !verifyResult.sslReady && (
+                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-2">
+                    <Clock className="h-4 w-4 text-primary shrink-0" />
+                    <p className="text-xs text-muted-foreground">
+                      DNS correto! O certificado SSL está sendo provisionado. Aguarde alguns minutos e clique em <strong>Verificar</strong> novamente.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
