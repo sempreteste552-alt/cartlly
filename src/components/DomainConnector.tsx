@@ -290,7 +290,7 @@ export default function DomainConnector({
     ],
   };
 
-  const verificationToken = settingsId?.slice(0, 12) || "...";
+  const verificationToken = settingsId || "...";
 
   return (
     <Card className="border-border">
@@ -558,7 +558,7 @@ export default function DomainConnector({
                   <li>Acesse o <strong>painel de DNS</strong> do seu provedor de domínio (Hostinger, GoDaddy, Cloudflare, Registro.br, etc.)</li>
                   <li>Adicione um registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">@</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
                   <li>Adicione outro registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">www</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
-                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId?.slice(0, 12) || "..."}</code></li>
+                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId || "..."}</code></li>
                   <li>Aguarde a propagação DNS (pode levar de 5 minutos a 72 horas)</li>
                   <li>Clique em <strong>"Verificar Conexão"</strong> acima</li>
                 </ol>

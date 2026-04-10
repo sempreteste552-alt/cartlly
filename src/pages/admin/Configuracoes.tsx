@@ -19,6 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
+import { normalizeDomain } from "@/lib/storeDomain";
 import { LockedFeature } from "@/components/LockedFeature";
 import { toast } from "sonner";
 import StoreAppearanceSettings from "@/components/admin/StoreAppearanceSettings";
@@ -274,6 +275,16 @@ function GeneralSettingsTab() {
 
   const handleSave = () => {
     if (!settings) return;
+
+    const nextCustomDomain = normalizeDomain(customDomain) || null;
+    const previousCustomDomain = normalizeDomain((settings as any)?.custom_domain);
+    const domainChanged = previousCustomDomain !== (nextCustomDomain ?? "");
+    const domainResetFields = domainChanged
+      ? nextCustomDomain
+        ? { domain_status: "pending", domain_last_check: null, domain_verify_details: null }
+        : { domain_status: "none", domain_last_check: null, domain_verify_details: null }
+      : {};
+
     updateSettings.mutate({
       id: settings.id,
       store_name: storeName.trim() || "Minha Loja",
@@ -282,7 +293,8 @@ function GeneralSettingsTab() {
       page_bg_color: pageBgColor,
       secondary_color: secondaryColor,
       accent_color: accentColor,
-      custom_domain: customDomain.trim() || null,
+      custom_domain: nextCustomDomain,
+      ...domainResetFields,
       store_address: storeAddress.trim() || null,
       store_phone: storePhone.trim() || null,
       store_whatsapp: storeWhatsapp.trim() || null,

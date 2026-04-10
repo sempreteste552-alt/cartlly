@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const expectedTxt = `lovable_verify=${settingsId.slice(0, 12)}`;
+    const expectedTxt = `lovable_verify=${settingsId}`;
 
     let aRecordFound = false;
     let txtRecordFound = false;
@@ -206,8 +206,9 @@ Deno.serve(async (req) => {
 
     const dnsVerified = aRecordFound && txtRecordFound;
     const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
-    // DNS complete = verified (SSL is provisioned by the platform after verification)
-    const newStatus = dnsVerified ? "verified" : (aRecordFound || txtRecordFound ? "pending" : "failed");
+    const newStatus = sslReady
+      ? "verified"
+      : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
     const dnsComplete = aRecordFound && txtRecordFound;
 
     const verifyDetails = {
