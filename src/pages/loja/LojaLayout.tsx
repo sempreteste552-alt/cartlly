@@ -263,7 +263,7 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const basePath = slug ? `/loja/${slug}` : "/loja";
+  const basePath = slug ? `/loja/${slug}` : "";
   const logoSize = settings?.logo_size || 32;
 
   // Apply store colors as CSS custom properties for the entire store
