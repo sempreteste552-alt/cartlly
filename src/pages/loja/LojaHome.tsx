@@ -215,6 +215,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
           style={{
             opacity: titleVisible ? 1 : 0,
             transform: titleVisible ? "translateY(0)" : "translateY(100%)",
+            fontFamily: "var(--store-font-heading)"
           }}
         >
           {catName}
