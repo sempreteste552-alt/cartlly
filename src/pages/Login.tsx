@@ -87,8 +87,7 @@ export default function Login() {
     const ref = params.get("ref");
     if (ref) {
       localStorage.setItem("referral_code", ref);
-      // Track the click
-      supabase.rpc("increment_referral_click", { _code: ref }).catch(() => {});
+      (supabase.rpc as any)("increment_referral_click", { _code: ref }).catch(() => {});
     }
     return ref || localStorage.getItem("referral_code") || null;
   });
