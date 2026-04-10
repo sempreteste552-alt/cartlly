@@ -171,6 +171,11 @@ export default function Login() {
           setLoading(false);
           return;
         }
+        if (!storeCategory) {
+          setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
+          setLoading(false);
+          return;
+        }
         const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
         if (!slug) {
           setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
