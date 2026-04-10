@@ -1513,7 +1513,7 @@ async function generateAISequenceMessage(
   }
 ): Promise<{ title: string; body: string }> {
   const hour = new Date().getHours();
-  const greetings = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const priceFormatted = ctx.productPrice ? `R$ ${Number(ctx.productPrice).toFixed(2)}` : "";
   const seed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
