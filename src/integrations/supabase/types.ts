@@ -98,6 +98,10 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          link_url: string | null
+          marquee: boolean
+          target_audience: string
+          target_tenant_ids: string[] | null
           text_color: string | null
           title: string
           updated_at: string
@@ -110,6 +114,10 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          link_url?: string | null
+          marquee?: boolean
+          target_audience?: string
+          target_tenant_ids?: string[] | null
           text_color?: string | null
           title: string
           updated_at?: string
@@ -122,6 +130,10 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          link_url?: string | null
+          marquee?: boolean
+          target_audience?: string
+          target_tenant_ids?: string[] | null
           text_color?: string | null
           title?: string
           updated_at?: string
