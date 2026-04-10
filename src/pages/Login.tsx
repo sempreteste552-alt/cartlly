@@ -678,8 +678,9 @@ export default function Login() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      // Mark this as an admin/tenant OAuth flow
-                      localStorage.setItem("auth_context", JSON.stringify({ type: "admin" }));
+                      // Mark this as an admin/tenant OAuth flow, include referral if present
+                      const savedRef = refCode || localStorage.getItem("referral_code") || undefined;
+                      localStorage.setItem("auth_context", JSON.stringify({ type: "admin", referral_code: savedRef }));
                       const { error } = await lovable.auth.signInWithOAuth("google", {
                         redirect_uri: window.location.origin,
                       });
@@ -708,7 +709,8 @@ export default function Login() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      localStorage.setItem("auth_context", JSON.stringify({ type: "admin" }));
+                      const savedRefApple = refCode || localStorage.getItem("referral_code") || undefined;
+                      localStorage.setItem("auth_context", JSON.stringify({ type: "admin", referral_code: savedRefApple }));
                       const { error } = await lovable.auth.signInWithOAuth("apple", {
                         redirect_uri: window.location.origin,
                       });
