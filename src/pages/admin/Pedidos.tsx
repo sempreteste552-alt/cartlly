@@ -55,19 +55,19 @@ export default function Pedidos() {
   }
 
   return (
-    <div className="space-y-6">
-      <div id="orders-header" className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div id="orders-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Pedidos</h1>
-          <p className="text-muted-foreground">Acompanhe e gerencie os pedidos da loja</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Pedidos</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe e gerencie os pedidos da loja</p>
         </div>
       </div>
 
       {/* Filter */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Status:</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs sm:text-sm text-muted-foreground">Status:</span>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-36 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -77,7 +77,7 @@ export default function Pedidos() {
             ))}
           </SelectContent>
         </Select>
-        <Badge variant="secondary" className="ml-2">{filteredOrders?.length ?? 0} pedidos</Badge>
+        <Badge variant="secondary" className="text-xs">{filteredOrders?.length ?? 0} pedidos</Badge>
       </div>
 
       {!filteredOrders?.length ? (
@@ -89,7 +89,8 @@ export default function Pedidos() {
           </CardContent>
         </Card>
       ) : (
-        <Card id="orders-table" className="border-border">
+        <Card id="orders-table" className="border-border overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -132,6 +133,7 @@ export default function Pedidos() {
               })}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
 
