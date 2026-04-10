@@ -24,6 +24,21 @@ export function GlobalMaintenanceBanner() {
     refetchInterval: 30000, // Check every 30 seconds
   });
 
+  const { data: platformSettings } = useQuery({
+    queryKey: ["platform_settings_banner"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("platform_settings")
+        .select("*");
+      
+      const settings: any = {};
+      data?.forEach(row => {
+        settings[row.key] = (row.value as any)?.value;
+      });
+      return settings;
+    },
+  });
+
   // Reset closed state if a new notification arrives
   useEffect(() => {
     if (globalNotification) {
