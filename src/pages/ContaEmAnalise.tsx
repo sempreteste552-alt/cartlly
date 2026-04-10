@@ -59,6 +59,15 @@ export default function ContaEmAnalise() {
   const isRejected = profile?.status === "rejected";
   const isMaintenance = platformSettings?.maintenance_mode === true;
 
+  // Auto-redirect away if the reason for being here no longer applies
+  useEffect(() => {
+    if (!profile && !storeSettings && !platformSettings) return; // still loading
+    const hasReason = isBlocked || isAdminBlocked || isRejected || isMaintenance;
+    if (!hasReason) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isBlocked, isAdminBlocked, isRejected, isMaintenance, profile, storeSettings, platformSettings, navigate]);
+
   const getContent = () => {
     if (isMaintenance) {
       return {
