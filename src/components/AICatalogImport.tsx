@@ -88,7 +88,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
     try {
       const body: any = { existingCategories: categories?.map((c) => c.name) ?? [] };
 
-      if (inputMode === "text") {
+      if (inputMode === "text" || inputMode === "audio") {
         body.catalogText = catalogText.trim();
       } else {
         body.catalogImages = imagePreviews;
