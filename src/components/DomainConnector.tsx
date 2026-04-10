@@ -122,6 +122,7 @@ export default function DomainConnector({
   const [autoPolling, setAutoPolling] = useState(false);
   const [pollCount, setPollCount] = useState(0);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSslReady = Boolean(verifyResult?.sslReady);
 
   const progressValue =
     step === "input" ? 15 :
@@ -141,10 +142,14 @@ export default function DomainConnector({
       setVerifyResult(data);
       await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
 
-      if (data?.status === "verified") {
+      if (data?.status === "verified" && data?.sslReady) {
         setAutoPolling(false);
         setStep("done");
         toast.success("🎉 Domínio verificado e online! Certificado SSL ativo.");
+      } else if (data?.status === "verified") {
+        setStep("instructions");
+        setAutoPolling(true);
+        setPollCount((c) => c + 1);
       } else {
         setPollCount((c) => c + 1);
       }
@@ -225,10 +230,15 @@ export default function DomainConnector({
       setVerifyResult(data);
       await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
 
-      if (data?.status === "verified") {
+      if (data?.status === "verified" && data?.sslReady) {
         setStep("done");
         setAutoPolling(false);
         toast.success("🎉 Domínio verificado com sucesso! Certificado SSL ativo.");
+      } else if (data?.status === "verified") {
+        setStep("instructions");
+        setAutoPolling(true);
+        setPollCount(0);
+        toast.info("DNS verificado ✅ O SSL ainda está sendo provisionado.");
       } else if (data?.status === "pending") {
         setStep("instructions");
         if (data?.dnsComplete) {
@@ -489,7 +499,7 @@ export default function DomainConnector({
               <div>
                 <p className="text-sm font-semibold text-green-700 dark:text-green-400">Domínio Conectado!</p>
                 <p className="text-xs text-green-600 dark:text-green-500">
-                  <strong>{domain}</strong> está verificado e ativo.
+                  <strong>{domain}</strong> está verificado e com SSL ativo.
                 </p>
               </div>
             </div>
@@ -514,6 +524,16 @@ export default function DomainConnector({
                 Alterar Domínio
               </Button>
             </div>
+          </div>
+        )}
+
+        {step !== "done" && verifyResult?.status === "verified" && !isSslReady && (
+          <div className="rounded-lg border border-border bg-muted/50 p-4">
+            <p className="text-sm font-medium text-foreground">DNS conectado, SSL pendente</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Seu domínio já foi reconhecido, mas ainda não está abrindo porque o certificado HTTPS não terminou de ativar.
+              Enquanto isso, a loja continua disponível em <strong>/loja/{storeSlug || "sua-loja"}</strong>.
+            </p>
           </div>
         )}
         {/* Tutorial */}
