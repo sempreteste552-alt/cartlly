@@ -78,7 +78,7 @@ export function useTenantContext() {
   };
 
   return {
-    ctx: isLoading ? { ...defaultCtx, planSlug: "STARTER" as PlanSlug } : (data?.ctx ?? defaultCtx),
+    ctx: data?.ctx ?? defaultCtx,
     subscription: data?.subscription,
     plan: data?.plan,
     isLoading,
