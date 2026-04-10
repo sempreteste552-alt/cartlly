@@ -137,6 +137,26 @@ export default function SetupStore() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="storeCategory">Nicho da Loja</Label>
+                <Select value={storeCategory} onValueChange={setStoreCategory}>
+                  <SelectTrigger id="storeCategory" className="h-11 border-border/50 focus:border-blue-500 transition-colors">
+                    <SelectValue placeholder="Selecione o nicho da sua loja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Doceria">🍰 Doceria</SelectItem>
+                    <SelectItem value="Moda">👗 Moda</SelectItem>
+                    <SelectItem value="Pet Shop">🐾 Pet Shop</SelectItem>
+                    <SelectItem value="Eletrônicos">📱 Eletrônicos</SelectItem>
+                    <SelectItem value="Alimentação">🍴 Alimentação</SelectItem>
+                    <SelectItem value="Beleza">💄 Beleza</SelectItem>
+                    <SelectItem value="Infantil">🧸 Infantil</SelectItem>
+                    <SelectItem value="Joalheria">💍 Joalheria</SelectItem>
+                    <SelectItem value="Outros">⚙️ Outros</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
                 <div className="flex items-center gap-0">
                   <span className="inline-flex h-11 items-center rounded-l-md border border-r-0 border-border/50 bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
