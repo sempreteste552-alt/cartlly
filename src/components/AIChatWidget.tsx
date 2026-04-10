@@ -209,6 +209,7 @@ export function AIChatWidget() {
       price: p.price,
       stock: p.stock,
       published: p.published,
+      views: p.views || 0,
       category: (p as any).categories?.name || null,
     }));
 
