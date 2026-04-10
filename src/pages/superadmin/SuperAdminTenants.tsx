@@ -55,10 +55,12 @@ export default function SuperAdminTenants() {
     const now = new Date();
     const diffMs = now.getTime() - lastSeen.getTime();
     const diffMins = Math.floor(diffMs / 60000);
+    const diffSecs = Math.floor(diffMs / 1000);
     
-    if (diffMins < 1) return "Agora";
-    if (diffMins < 60) return `Há ${diffMins}m`;
-    if (diffMins < 1440) return `Há ${Math.floor(diffMins / 60)}h`;
+    if (diffSecs < 10) return "agora mesmo";
+    if (diffSecs < 60) return `há ${diffSecs}s`;
+    if (diffMins < 60) return `há ${diffMins}m`;
+    if (diffMins < 1440) return `há ${Math.floor(diffMins / 60)}h`;
     return lastSeen.toLocaleDateString("pt-BR");
   };
 
@@ -70,6 +72,7 @@ export default function SuperAdminTenants() {
       t.display_name?.toLowerCase().includes(search.toLowerCase()) ||
       t.store?.store_name?.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" ||
+      (filter === "online" && t.is_online) ||
       (filter === "pending" && t.status === "pending") ||
       (filter === "approved" && t.status === "approved") ||
       (filter === "active" && (t.status === "active" || t.subscription?.status === "active")) ||
@@ -359,8 +362,11 @@ export default function SuperAdminTenants() {
     // Online Badge
     if (isOnline) {
       badges.push(
-        <Badge key="online" variant="default" className="bg-green-500 hover:bg-green-600 animate-pulse">
-          <span className="h-1.5 w-1.5 rounded-full bg-white mr-1.5" />
+        <Badge key="online" variant="default" className="bg-green-500 hover:bg-green-600 animate-pulse border-none shadow-[0_0_12px_rgba(34,197,94,0.7)]">
+          <span className="relative flex h-2 w-2 mr-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+          </span>
           Online
         </Badge>
       );
@@ -524,6 +530,7 @@ export default function SuperAdminTenants() {
         <div className="flex gap-2 flex-wrap">
           {[
             { key: "all", label: "Todos" },
+            { key: "online", label: `Online (${tenants?.filter(t => t.is_online).length || 0})` },
             { key: "active", label: "Ativos" },
             { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
             { key: "blocked", label: "Bloqueados" },
@@ -551,12 +558,14 @@ export default function SuperAdminTenants() {
                     <div>
                       <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
                       <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 items-center">
-                        <span>{tenant.store?.store_name || "Sem loja"}</span>
+                        <span className="font-medium text-foreground/80">{tenant.store?.store_name || "Sem loja"}</span>
                         {tenant.store?.store_slug && <span className="opacity-60">/{tenant.store.store_slug}</span>}
-                        <span className="flex items-center gap-1 opacity-70">
-                          <Clock className="h-3 w-3" />
-                          Visto por último: {formatLastSeen(tenant.last_seen)}
-                        </span>
+                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full transition-colors ${tenant.is_online ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                          <Clock className={`h-3 w-3 ${tenant.is_online ? "animate-spin-slow" : ""}`} />
+                          <span className="font-medium">
+                            {tenant.is_online ? "Online agora" : `Visto há ${formatLastSeen(tenant.last_seen).replace("Há ", "")}`}
+                          </span>
+                        </div>
                       </div>
                       {tenant.subscription?.tenant_plans && (
                         <p className="text-xs text-primary font-medium mt-0.5">
