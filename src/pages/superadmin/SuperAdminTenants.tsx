@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 
@@ -252,6 +252,17 @@ export default function SuperAdminTenants() {
     } as any);
     const tenant = tenants?.find(t => t.user_id === userId);
     logAudit(!currentBlocked ? "block_admin_panel" : "unblock_admin_panel", "admin_panel", userId, tenant?.display_name || "—");
+    queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+  };
+
+  // Toggle Promo Banner per tenant
+  const handleTogglePromoBanner = async (userId: string, currentEnabled: boolean) => {
+    const { error } = await supabase
+      .from("store_settings")
+      .update({ promo_banner_enabled: !currentEnabled } as any)
+      .eq("user_id", userId);
+    if (error) { toast.error("Erro: " + error.message); return; }
+    toast.success(`Banner promocional ${!currentEnabled ? "ativado" : "desativado"} para este tenant!`);
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
   };
 
@@ -639,6 +650,14 @@ export default function SuperAdminTenants() {
                             <><ShieldCheck className="mr-2 h-4 w-4 text-green-600" /> Desbloquear Painel</>
                           ) : (
                             <><ShieldOff className="mr-2 h-4 w-4 text-red-500" /> Bloquear Painel</>
+                          )}
+                        </DropdownMenuItem>
+                        {/* Toggle Promo Banner */}
+                        <DropdownMenuItem onClick={() => handleTogglePromoBanner(tenant.user_id, tenant.store?.promo_banner_enabled || false)}>
+                          {tenant.store?.promo_banner_enabled ? (
+                            <><Megaphone className="mr-2 h-4 w-4 text-orange-500" /> Desativar Banner Promo</>
+                          ) : (
+                            <><Megaphone className="mr-2 h-4 w-4 text-pink-500" /> Ativar Banner Promo</>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
