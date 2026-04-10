@@ -145,12 +145,22 @@ Deno.serve(async (req) => {
     const newStatus = sslReady ? "verified" : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
     const dnsComplete = aRecordFound && txtRecordFound;
 
+    const verifyDetails = {
+      aRecord: aRecordFound,
+      txtRecord: txtRecordFound,
+      sslReady,
+      dnsComplete,
+      provider: detectedProvider,
+      checkedAt: new Date().toISOString(),
+    };
+
     const { error: updateError } = await supabase
       .from("store_settings")
       .update({
         domain_status: newStatus,
         domain_last_check: new Date().toISOString(),
         custom_domain: requestedDomain,
+        domain_verify_details: verifyDetails,
       })
       .eq("id", settingsId);
 
