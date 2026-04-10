@@ -46,8 +46,14 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const [products, setProducts] = useState<ExtractedProduct[]>([]);
   const [importing, setImporting] = useState(false);
   const [step, setStep] = useState<"input" | "review">("input");
-  const [inputMode, setInputMode] = useState<"text" | "image">("text");
+  const [inputMode, setInputMode] = useState<"text" | "image" | "audio">("text");
 
+  const voiceRecorder = useVoiceRecorder({
+    onTranscript: (text) => {
+      setCatalogText(prev => prev ? prev + " " + text : text);
+      toast.success("Texto transcrito com sucesso!");
+    },
+  });
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + imageFiles.length > 10) {
