@@ -441,6 +441,21 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
+      {/* Theme toggle - persists per device */}
+      <button
+        onClick={() => {
+          setDark((d) => {
+            const next = !d;
+            localStorage.setItem("theme_login", next ? "dark" : "light");
+            return next;
+          });
+        }}
+        className="fixed top-4 right-4 z-50 p-2 rounded-full bg-card border border-border shadow-lg hover:bg-accent transition-colors"
+        title={dark ? "Modo claro" : "Modo escuro"}
+      >
+        {dark ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
+      </button>
+
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
