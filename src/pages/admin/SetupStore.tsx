@@ -80,6 +80,7 @@ export default function SetupStore() {
           user_id: user.id,
           store_name: storeName.trim(),
           store_slug: slug,
+          store_category: storeCategory,
         }, { onConflict: 'user_id' });
 
       if (error) throw error;
