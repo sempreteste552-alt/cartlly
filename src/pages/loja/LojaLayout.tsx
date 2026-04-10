@@ -415,12 +415,37 @@ export default function LojaLayout() {
         data-tenant={settings?.user_id}
         className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground ${isDarkMode ? "dark" : ""}`}
         style={
-          (themeConfig?.theme_mode === 'dark' || storeDark)
-            ? undefined
+          isDarkMode
+            ? {
+                "--card": "0 0% 5%",
+                "--card-foreground": "0 0% 98%",
+                "--background": "0 0% 0%",
+                "--foreground": "0 0% 98%",
+                "--popover": "0 0% 5%",
+                "--popover-foreground": "0 0% 98%",
+                "--muted": "0 0% 10%",
+                "--muted-foreground": "0 0% 65%",
+                "--border": "0 0% 14%",
+                "--input": "0 0% 14%",
+                "--secondary": "0 0% 10%",
+                "--secondary-foreground": "0 0% 98%",
+              } as React.CSSProperties
             : {
-                backgroundColor: themeConfig?.background_color || (settings as any).page_bg_color || undefined,
+                "--card": "0 0% 100%",
+                "--card-foreground": "224 30% 12%",
+                "--background": "220 20% 97%",
+                "--foreground": "224 30% 12%",
+                "--popover": "0 0% 100%",
+                "--popover-foreground": "224 30% 12%",
+                "--muted": "220 14% 96%",
+                "--muted-foreground": "220 9% 46%",
+                "--border": "220 13% 91%",
+                "--input": "220 13% 91%",
+                "--secondary": "220 14% 96%",
+                "--secondary-foreground": "224 30% 12%",
+                backgroundColor: themeConfig?.background_color || (settings as any)?.page_bg_color || undefined,
                 color: themeConfig?.text_color || undefined,
-              }
+              } as React.CSSProperties
         }
       >
         {/* Promotional banner */}
