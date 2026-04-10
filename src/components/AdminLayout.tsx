@@ -145,6 +145,7 @@ export function AdminLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <GlobalMaintenanceBanner />
           {/* Push notification install banner */}
+          <AdminAnnouncementBanner />
           <AdminPushBanner />
           <AdminPendingOrdersAlert />
           <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
