@@ -3128,6 +3128,14 @@ export type Database = {
         }
         Relationships: []
       }
+      storefront_banner_status: {
+        Row: {
+          is_premium: boolean | null
+          promo_banner_enabled: boolean | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_send_message: {
