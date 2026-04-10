@@ -50,6 +50,33 @@ export function CatalogPdfGenerator() {
     }
   };
 
+  const downloadCatalog = async () => {
+    if (!products?.length) return toast.error("Nenhum produto cadastrado");
+    setGenerating(true);
+    try {
+      const filtered = onlyPublished
+        ? products.filter((p) => p.published && !p.is_archived)
+        : products.filter((p) => !p.is_archived);
+      if (!filtered.length) {
+        toast.error("Nenhum produto encontrado com os filtros selecionados");
+        return;
+      }
+      const html = buildCatalogHtml(filtered, storeName, showPrices, storeLogo);
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `catalogo-${storeName.replace(/\s+/g, "-").toLowerCase()}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Catálogo baixado! Abra no navegador e salve como PDF.");
+    } catch {
+      toast.error("Erro ao baixar catálogo");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const shareWhatsApp = () => {
     if (!storeSlug) return toast.error("Configure o slug da loja primeiro");
     const url = `${window.location.origin}/loja/${storeSlug}`;
@@ -82,6 +109,10 @@ export function CatalogPdfGenerator() {
           <Button onClick={generateCatalog} disabled={generating}>
             {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
             Gerar Catálogo PDF
+          </Button>
+          <Button variant="outline" onClick={() => downloadCatalog()} disabled={generating}>
+            <Download className="h-4 w-4 mr-2" />
+            Baixar Catálogo
           </Button>
           <Button variant="outline" onClick={shareWhatsApp}>
             <MessageCircle className="h-4 w-4 mr-2" />
@@ -134,8 +165,7 @@ function buildCatalogHtml(products: any[], storeName: string, showPrices: boolea
 </style>
 </head><body>
 <div class="header">
-  ${storeLogo ? `<img src="${storeLogo}" alt="${storeName}" style="max-height:60px;max-width:200px;object-fit:contain;margin:0 auto 10px;" />` : `<div style="font-size:28px;">🛍️</div>`}
-  <h1>${storeName}</h1>
+  ${storeLogo ? `<img src="${storeLogo}" alt="${storeName}" style="max-height:80px;max-width:240px;object-fit:contain;margin:0 auto 8px;display:block;" />` : `<h1>${storeName}</h1>`}
   <p>Catálogo de Produtos • ${new Date().toLocaleDateString("pt-BR")}</p>
 </div>
 <div class="grid">${items}</div>
