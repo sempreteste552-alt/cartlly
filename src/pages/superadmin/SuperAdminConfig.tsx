@@ -59,29 +59,6 @@ const defaultConfig: PlatformConfig = {
   gateway_test_mode: true,
 };
 
-const defaultConfig: PlatformConfig = {
-  platform_name: "Cartlly",
-  platform_email: "",
-  default_trial_days: 7,
-  auto_confirm_emails: false,
-  maintenance_mode: false,
-  allow_new_registrations: true,
-  default_plan_id: "",
-  support_whatsapp_number: "",
-  mercadopago_global_key: "",
-  mercadopago_public_key: "",
-  mercadopago_client_id: "",
-  mercadopago_client_secret: "",
-  pagbank_global_key: "",
-  amplopay_public_key: "",
-  amplopay_secret_key: "",
-  stripe_global_key: "",
-  stripe_webhook_secret: "",
-  stripe_publishable_key: "",
-  mp_webhook_secret: "",
-  gateway_test_mode: true,
-};
-
 export default function SuperAdminConfig() {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
