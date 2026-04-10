@@ -72,6 +72,8 @@ function cleanContent(content: string): string {
     .replace(/\[ACTION_COUPON\][\s\S]*?\[\/ACTION_COUPON\]/g, "")
     .replace(/\[ACTION_SUBSCRIBE\][\s\S]*?\[\/ACTION_SUBSCRIBE\]/g, "")
     .replace(/\[ACTION_UPDATE_PRODUCT\][\s\S]*?\[\/ACTION_UPDATE_PRODUCT\]/g, "")
+    .replace(/\[ACTION_UPDATE_SETTINGS\][\s\S]*?\[\/ACTION_UPDATE_SETTINGS\]/g, "")
+    .replace(/\[ACTION_REMINDER\][\s\S]*?\[\/ACTION_REMINDER\]/g, "")
     .replace(/```action:\w+\s*\n[\s\S]*?```/g, "")
     .trim();
 }
@@ -227,6 +229,8 @@ export function AIChatWidget() {
 
     return {
       storeName: (settings as any)?.store_name || "",
+      storeDescription: (settings as any)?.store_description || "",
+      marqueeText: (settings as any)?.marquee_text || "",
       storeSlug: (settings as any)?.store_slug || "",
       storeWhatsapp: (settings as any)?.store_whatsapp || "",
       storeCategory: (settings as any)?.store_category || "",
@@ -402,7 +406,58 @@ export function AIChatWidget() {
         console.error("Update product action error:", e);
       }
     }
-  }, [user, queryClient, products]);
+
+    const settingsMatch = content.match(/\[ACTION_UPDATE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_SETTINGS\]/);
+    if (settingsMatch && user && settings?.id) {
+      try {
+        const payload = JSON.parse(settingsMatch[1].trim());
+        const { error } = await supabase
+          .from("store_settings")
+          .update({
+            ...payload,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", settings.id);
+        
+        if (error) {
+          toast.error("Erro ao atualizar configurações: " + error.message);
+        } else {
+          toast.success("✅ Configurações da loja atualizadas pela IA!");
+          queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+        }
+      } catch (e) {
+        console.error("Update settings action error:", e);
+      }
+    }
+
+    const reminderMatch = content.match(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/);
+    if (reminderMatch && user) {
+      try {
+        const payload = JSON.parse(reminderMatch[1].trim());
+        const { error } = await supabase.from("store_ai_reminders").insert({
+          user_id: user.id,
+          title: payload.title,
+          description: payload.body,
+          remind_at: payload.scheduled_at,
+          status: "pending"
+        });
+
+        if (!error) {
+          // Also schedule in generic task runner
+          await supabase.from("ai_scheduled_tasks").insert({
+            user_id: user.id,
+            task_type: "admin_reminder",
+            scheduled_at: payload.scheduled_at,
+            payload: { title: payload.title, body: payload.body },
+            status: "pending"
+          });
+          toast.success(`✅ Lembrete agendado para ${new Date(payload.scheduled_at).toLocaleString()}`);
+        }
+      } catch (e) {
+        console.error("Reminder action error:", e);
+      }
+    }
+  }, [user, queryClient, products, settings]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

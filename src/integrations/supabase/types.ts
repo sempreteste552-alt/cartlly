@@ -1881,6 +1881,39 @@ export type Database = {
         }
         Relationships: []
       }
+      store_ai_reminders: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          remind_at: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          remind_at: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          remind_at?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_banners: {
         Row: {
           active: boolean
@@ -2350,6 +2383,7 @@ export type Database = {
           admin_primary_color: string
           ai_avatar_url: string | null
           ai_chat_tone: string
+          ai_last_analysis_at: string | null
           ai_name: string | null
           banner_mobile_format: string
           button_color: string
@@ -2424,6 +2458,7 @@ export type Database = {
           admin_primary_color?: string
           ai_avatar_url?: string | null
           ai_chat_tone?: string
+          ai_last_analysis_at?: string | null
           ai_name?: string | null
           banner_mobile_format?: string
           button_color?: string
@@ -2498,6 +2533,7 @@ export type Database = {
           admin_primary_color?: string
           ai_avatar_url?: string | null
           ai_chat_tone?: string
+          ai_last_analysis_at?: string | null
           ai_name?: string | null
           banner_mobile_format?: string
           button_color?: string
