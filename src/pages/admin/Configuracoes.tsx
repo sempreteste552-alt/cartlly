@@ -435,16 +435,15 @@ function GeneralSettingsTab() {
                 <SelectValue placeholder="Selecione o nicho da sua loja" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Doceria / Confeitaria">Doceria / Confeitaria</SelectItem>
-                <SelectItem value="Moda / Roupas">Moda / Roupas</SelectItem>
-                <SelectItem value="Eletrônicos">Eletrônicos</SelectItem>
-                <SelectItem value="Saúde / Beleza">Saúde / Beleza</SelectItem>
-                <SelectItem value="Casa / Decoração">Casa / Decoração</SelectItem>
-                <SelectItem value="Pet Shop">Pet Shop</SelectItem>
-                <SelectItem value="Esportes">Esportes</SelectItem>
-                <SelectItem value="Brinquedos">Brinquedos</SelectItem>
-                <SelectItem value="Livraria">Livraria</SelectItem>
-                <SelectItem value="Outros">Outros</SelectItem>
+                <SelectItem value="Doceria">🍰 Doceria</SelectItem>
+                <SelectItem value="Moda">👗 Moda</SelectItem>
+                <SelectItem value="Pet Shop">🐾 Pet Shop</SelectItem>
+                <SelectItem value="Eletrônicos">📱 Eletrônicos</SelectItem>
+                <SelectItem value="Alimentação">🍴 Alimentação</SelectItem>
+                <SelectItem value="Beleza">💄 Beleza</SelectItem>
+                <SelectItem value="Infantil">🧸 Infantil</SelectItem>
+                <SelectItem value="Joalheria">💍 Joalheria</SelectItem>
+                <SelectItem value="Outros">⚙️ Outros</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Isso ajuda a IA a adaptar o tom e as frases para o seu público</p>
