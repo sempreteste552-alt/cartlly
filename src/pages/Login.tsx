@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
@@ -78,6 +78,10 @@ export default function Login() {
   const [storeCategory, setStoreCategory] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [signupCouponConfig, setSignupCouponConfig] = useState<{
+    enabled: boolean; code: string; discount_type: string; discount_value: number; auto_show: boolean; text: string;
+  } | null>(null);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
 
