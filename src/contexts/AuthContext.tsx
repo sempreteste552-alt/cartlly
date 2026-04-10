@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Initial maintenance check
     const checkMaintenance = async () => {
       try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
         const { data } = await supabase
           .from("platform_settings")
           .select("value")
@@ -38,13 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMaintenanceMode(isMaintenance);
 
         // If maintenance is on, and we have a session, check if we should kick them out immediately
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (isMaintenance && currentSession?.user?.email && currentSession.user.email !== SUPER_ADMIN_EMAIL) {
           await supabase.auth.signOut();
           setSession(null);
+          setLoading(false);
+          return;
         }
+
+        setSession(currentSession);
+        setLoading(false);
       } catch (err) {
         console.error("Error checking maintenance:", err);
+        setLoading(false);
       }
     };
 
@@ -52,14 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        // Only update if we are not in maintenance mode (or if it's super admin)
+        // If maintenance check is still running, this might fire first.
         setSession(session);
-        setLoading(false);
       }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
 
       if (session && localStorage.getItem("stay_connected") !== "true") {
         const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
