@@ -59,6 +59,14 @@ export default function LojaLayout() {
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading, refetch: refetchSettings } = useResolvedPublicStore(slug);
+
+  // Clean up any leaked dark class from admin/superadmin on <html>
+  useLayoutEffect(() => {
+    document.documentElement.classList.remove("dark");
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, []);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
   const [mobileMenu, setMobileMenu] = useState(false);
