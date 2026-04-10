@@ -153,6 +153,26 @@ export default function Cerebro() {
       } catch (e) { console.error("Page parse error:", e); }
     }
 
+    // Update Stock
+    const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
+    let stockMatch;
+    while ((stockMatch = stockRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(stockMatch[1]);
+        actions.push({ type: "update_stock", label: `📦 Atualizar Estoque: ${payload.product_name} para ${payload.new_stock}`, payload });
+      } catch (e) { console.error("Stock parse error:", e); }
+    }
+
+    // Generate Product Content
+    const productContentRegex = /\[ACTION_GENERATE_PRODUCT_CONTENT\]([\s\S]*?)\[\/ACTION_GENERATE_PRODUCT_CONTENT\]/g;
+    let productContentMatch;
+    while ((productContentMatch = productContentRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(productContentMatch[1]);
+        actions.push({ type: "generate_content", label: `✨ Gerar ${payload.type} para: ${payload.product_name}`, payload });
+      } catch (e) { console.error("Product content parse error:", e); }
+    }
+
     if (actions.length > 0) {
       setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
     }
@@ -198,6 +218,16 @@ export default function Cerebro() {
         }).eq("user_id", user.id).eq("slug", action.payload.slug);
         if (error) throw error;
         toast.success(`✅ Página ${action.payload.slug} atualizada!`);
+      } else if (action.type === "update_stock") {
+        const { error } = await supabase.from("products").update({
+          stock: action.payload.new_stock,
+          updated_at: new Date().toISOString()
+        }).eq("user_id", user.id).eq("name", action.payload.product_name);
+        if (error) throw error;
+        toast.success(`✅ Estoque de ${action.payload.product_name} atualizado!`);
+      } else if (action.type === "generate_content") {
+        // This is a suggestion, we could redirect to the product page or just confirm
+        toast.info("Acesse a página do produto para ver as sugestões da IA.");
       }
 
       // Mark as confirmed

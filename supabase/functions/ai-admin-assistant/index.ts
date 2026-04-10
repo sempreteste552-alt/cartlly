@@ -28,10 +28,12 @@ serve(async (req) => {
       { data: recentOrders },
       { data: failedPayments },
       { data: lowStockProducts },
-      { data: salesStats },
-      { data: storePages },
-      { data: storeBanners },
-      { data: homeSections }
+       { data: salesStats },
+       { data: storePages },
+       { data: storeBanners },
+       { data: homeSections },
+       { data: stagnantProducts },
+       { data: recentOrderItems }
     ] = await Promise.all([
       supabase.from("store_settings").select("*").eq("user_id", user.id).single(),
       supabase.from("tenant_ai_brain_config").select("*").eq("user_id", user.id).single(),
@@ -41,7 +43,9 @@ serve(async (req) => {
       supabase.rpc("get_store_sales_stats", { p_user_id: user.id }),
       supabase.from("store_pages").select("title, slug, content").eq("user_id", user.id).limit(5),
       supabase.from("store_banners").select("title, description").eq("user_id", user.id).limit(5),
-      supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10)
+      supabase.from("store_home_sections").select("title, subtitle, type").eq("user_id", user.id).limit(10),
+      supabase.from("products").select("name, stock, views, price, id").eq("user_id", user.id).order("views", { ascending: true }).limit(10),
+      supabase.from("order_items").select("product_id, quantity").limit(100)
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
@@ -67,11 +71,14 @@ STATUS ATUAL:
 - Pagamentos Falhos: ${JSON.stringify(failedPayments || [])}
 - Produtos com Baixo Estoque: ${JSON.stringify(lowStockProducts || [])}
 - Vendas Hoje: ${JSON.stringify(salesStats || "N/A")}
+- Produtos Parados (menos visualizações/vendas): ${JSON.stringify(stagnantProducts || [])}
+- Amostragem de Itens Vendidos: ${JSON.stringify(recentOrderItems || [])}
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
 - Use um tom de "amiga CEO" — direta ao ponto, inteligente, encorajadora e extremamente ágil.
 - Se o dono pedir "agressividade", crie frases de alto impacto para checkout, banners e descrição da loja que removam objeções e criem urgência.
+- Se houver produtos "parados" (muitas visualizações mas pouca venda, ou sem visualizações), sugira frases de impacto, selos de destaque ou melhoria no SEO/CTA.
 - O contexto customizado do seu "cérebro" é: ${aiConfig?.custom_instructions || 'Nenhum'}.
 
 CAPACIDADES ESPECIAIS (AÇÕES):
@@ -93,11 +100,16 @@ Você pode realizar ações inserindo blocos JSON no final da sua resposta:
 }[/ACTION_SCHEDULE_REMINDER]
 
 3. ATUALIZAR CONFIGURAÇÕES DA LOJA:
-Use para mudar nome, descrição, marquee_text, etc.
 [ACTION_UPDATE_STORE_SETTINGS]{ "store_description": "...", "marquee_text": "...", "store_name": "..." }[/ACTION_UPDATE_STORE_SETTINGS]
 
 4. ATUALIZAR PÁGINA:
 [ACTION_UPDATE_PAGE]{ "slug": "sobre-nos", "content": "..." }[/ACTION_UPDATE_PAGE]
+
+5. ATUALIZAR ESTOQUE DE PRODUTO:
+[ACTION_UPDATE_STOCK]{ "product_name": "...", "new_stock": 10 }[/ACTION_UPDATE_STOCK]
+
+6. GERAR CONTEÚDO PARA PRODUTO (SEO, Descrição ou Selo):
+[ACTION_GENERATE_PRODUCT_CONTENT]{ "product_name": "...", "type": "description|seo|badge" }[/ACTION_GENERATE_PRODUCT_CONTENT]
 
 REGRAS:
 - Responda sempre em Português do Brasil.
@@ -125,17 +137,7 @@ REGRAS:
     const aiResult = await response.json();
     const assistantMessage = aiResult.choices[0].message.content;
 
-    // 4. Post-process Actions (DISABLED for manual confirmation in frontend)
-    // The assistantMessage now only contains the action tags for the frontend to handle.
-    // We are no longer executing these actions here to allow user confirmation.
-    
-    // Store conversation
-    await supabase.from("admin_ai_chats").insert([
-      { user_id: user.id, role: "user", content: messages[messages.length - 1].content },
-      { user_id: user.id, role: "assistant", content: assistantMessage }
-    ]);
-
-    // Store conversation
+    // Store conversation once
     await supabase.from("admin_ai_chats").insert([
       { user_id: user.id, role: "user", content: messages[messages.length - 1].content },
       { user_id: user.id, role: "assistant", content: assistantMessage }

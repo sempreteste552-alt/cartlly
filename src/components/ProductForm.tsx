@@ -26,6 +26,7 @@ interface ProductFormProps {
     published: boolean;
     category_id: string | null;
     made_to_order: boolean;
+    badge?: string | null;
     additionalImages?: string[];
   }) => void;
   initialData?: Product | null;
@@ -41,6 +42,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [published, setPublished] = useState(false);
   const [madeToOrder, setMadeToOrder] = useState(false);
   const [categoryId, setCategoryId] = useState("");
+  const [badge, setBadge] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -67,6 +69,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       setPublished(initialData.published ?? false);
       setMadeToOrder((initialData as any)?.made_to_order ?? false);
       setCategoryId(initialData.category_id ?? "");
+      setBadge((initialData as any)?.badge ?? "");
     }
   }, [initialData]);
 
@@ -147,6 +150,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       published,
       category_id: categoryId || null,
       made_to_order: madeToOrder,
+      badge: badge.trim() || null,
       additionalImages: [...additionalImages, ...additionalVideos],
     });
   };
@@ -154,7 +158,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && !initialData) {
       setName(""); setDescription(""); setPrice(""); setStock("0");
-      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setAdditionalImages([]); setAdditionalVideos([]);
+      setImageUrl(""); setPublished(false); setMadeToOrder(false); setCategoryId(""); setBadge(""); setAdditionalImages([]); setAdditionalVideos([]);
     }
     onOpenChange(isOpen);
   };
@@ -185,8 +189,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             onApplyDescription={setDescription}
             onApplyName={setName}
             onApplyPrice={setPrice}
+            onApplyBadge={setBadge}
             locked={aiLocked}
           />
+
+          <div className="space-y-2">
+            <Label htmlFor="badge">Selo / Destaque (ex: A queridinha voltou!)</Label>
+            <Input id="badge" value={badge} onChange={(e) => setBadge(e.target.value)} maxLength={50} placeholder="Frase curta de impacto" />
+          </div>
 
           <div className="space-y-2">
             <Label>Categoria</Label>

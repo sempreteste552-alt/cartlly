@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight } from "lucide-react";
-import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult } from "@/hooks/useAIProductEnhance";
+import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult } from "@/hooks/useAIProductEnhance";
 
 interface AIProductToolsProps {
   name: string;
@@ -14,17 +14,19 @@ interface AIProductToolsProps {
   onApplyDescription: (desc: string) => void;
   onApplyName: (name: string) => void;
   onApplyPrice: (price: string) => void;
+  onApplyBadge?: (badge: string) => void;
   locked?: boolean;
 }
 
 export function AIProductTools({
   name, description, price, category, imageUrl,
-  onApplyDescription, onApplyName, onApplyPrice, locked = false,
+  onApplyDescription, onApplyName, onApplyPrice, onApplyBadge, locked = false,
 }: AIProductToolsProps) {
   const aiEnhance = useAIProductEnhance();
   const [seoResult, setSeoResult] = useState<SEOResult | null>(null);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [imageResult, setImageResult] = useState<ImageAnalysisResult | null>(null);
+  const [restockResult, setRestockResult] = useState<RestockPhrasesResult | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
 
   const handleGenerateSEO = async () => {
@@ -61,6 +63,17 @@ export function AIProductTools({
       imageUrl,
     });
     setImageResult(result as ImageAnalysisResult);
+    setActiveAction(null);
+  };
+
+  const handleGenerateRestock = async () => {
+    setActiveAction("restock");
+    const result = await aiEnhance.mutateAsync({
+      action: "generate_restock_phrases",
+      productName: name,
+      productCategory: category,
+    });
+    setRestockResult(result as RestockPhrasesResult);
     setActiveAction(null);
   };
 
@@ -101,6 +114,14 @@ export function AIProductTools({
         >
           {activeAction === "image" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="mr-1.5 h-3.5 w-3.5" />}
           Analisar Imagem
+        </Button>
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={handleGenerateRestock}
+          disabled={locked || isLoading || !name}
+        >
+          {activeAction === "restock" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
+          Gerar Frases de Destaque
         </Button>
       </div>
 
@@ -232,6 +253,31 @@ export function AIProductTools({
                 <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Restock Phrases Result */}
+      {restockResult && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-primary uppercase">Sugestões de Destaque</span>
+              <Button type="button" variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setRestockResult(null)}>Fechar</Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {restockResult.phrases.map((phrase, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onApplyBadge?.(phrase)}
+                  className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                >
+                  {phrase}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">Clique em uma frase para usar como selo/destaque do produto.</p>
           </CardContent>
         </Card>
       )}
