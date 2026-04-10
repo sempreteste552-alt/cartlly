@@ -54,7 +54,7 @@ export function AdminSidebar() {
   const sanitizedCustomDomain = normalizeDomain(customDomain);
   const storeUrl = (sanitizedCustomDomain && domainStatus === "verified" && sslReady)
     ? `https://${sanitizedCustomDomain}`
-    : (storeSlug ? `/loja/${storeSlug}` : "/loja");
+    : storeSlug ? `${window.location.origin}/loja/${storeSlug}` : "";
 
   const configItems = configItemsBase;
 
@@ -171,10 +171,11 @@ export function AdminSidebar() {
                 <SidebarMenuButton asChild>
                   <a
                     id="store-preview-btn"
-                    href={storeUrl}
+                    href={storeUrl || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:bg-sidebar-accent/60 transition-colors rounded-lg text-sidebar-primary"
+                    className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg text-sidebar-primary ${!storeUrl ? "pointer-events-none opacity-50" : ""}`}
+                    onClick={(e) => { if (!storeUrl) e.preventDefault(); }}
                   >
                     <ExternalLink className="h-4 w-4" />
                     {!collapsed && <span className="font-medium">Ver Loja</span>}
