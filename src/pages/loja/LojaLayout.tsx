@@ -25,6 +25,7 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { PromoBanner } from "@/components/storefront/PromoBanner";
 import { toast } from "sonner";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
@@ -403,6 +404,9 @@ export default function LojaLayout() {
               }
         }
       >
+        {/* Promotional banner */}
+        <PromoBanner storeUserId={settings?.user_id} />
+
         <PWAInstallBanner 
           storeName={storeInstallName}
           logoUrl={storeIconUrl}
