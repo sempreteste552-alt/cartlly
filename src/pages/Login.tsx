@@ -255,7 +255,6 @@ export default function Login() {
           return;
         }
       }
-      }
 
       if (isForgotPassword) {
           const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
