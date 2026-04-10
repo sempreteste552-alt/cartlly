@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye, Loader2 } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
@@ -26,7 +26,7 @@ export default function LojaProduto() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
-  const { data: products } = usePublicProducts(storeUserId);
+  const { data: products, isLoading: productsLoading } = usePublicProducts(storeUserId);
   const { data: productImages } = useProductImages(id);
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
@@ -181,6 +181,15 @@ export default function LojaProduto() {
   const primaryColor = settings?.primary_color || "#6d28d9";
   const buttonColor = settings?.button_color || "#000000";
   const buttonTextColor = settings?.button_text_color || "#ffffff";
+
+  if (productsLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        <Loader2 className="h-10 w-10 mx-auto animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground mt-4">Carregando produto...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

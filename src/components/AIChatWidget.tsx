@@ -857,6 +857,9 @@ export function AIChatWidget() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="pt-2 sticky bottom-0 bg-background pb-1">
               <Button onClick={saveSettings} className="w-full" disabled={updateSettings.isPending}>
                 {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações
