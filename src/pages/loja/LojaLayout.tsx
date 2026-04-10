@@ -296,7 +296,10 @@ export default function LojaLayout() {
 
   useEffect(() => {
     if (settings || themeConfig) {
-      const root = document.documentElement;
+      // Use a scoped container instead of :root to prevent theme leaking between tenants
+      const container = document.getElementById(`store-theme-${slug}`);
+      const root = container || document.documentElement;
+      
       const primary = themeConfig?.primary_color || settings?.primary_color || "#6d28d9";
       const secondary = themeConfig?.secondary_color || settings?.secondary_color || "#f5f3ff";
       const bg = themeConfig?.background_color || (settings as any).page_bg_color || "#ffffff";
@@ -320,7 +323,7 @@ export default function LojaLayout() {
         root.style.removeProperty("--store-text-base");
       };
     }
-  }, [settings, themeConfig]);
+  }, [settings, themeConfig, slug]);
 
   const logoSize = (settings as any)?.logo_size || 40;
 
