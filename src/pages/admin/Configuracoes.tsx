@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -828,6 +829,8 @@ function GeneralSettingsTab() {
 
 export default function Configuracoes() {
   const { ctx } = useTenantContext();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "general";
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -836,7 +839,7 @@ export default function Configuracoes() {
         <p className="text-muted-foreground">Personalize a aparência, funcionalidades e marketing da sua loja</p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5 h-auto">
           <TabsTrigger value="general" className="flex items-center gap-1.5 text-xs py-2">
             <Store className="h-4 w-4" />
