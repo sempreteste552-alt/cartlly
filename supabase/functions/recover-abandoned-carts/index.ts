@@ -999,15 +999,29 @@ async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: str
   const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}-${Date.now()}`;
   const specialDate = getSpecialDateContext();
 
+  const genderInfo = ctx.customerGender ? `O cliente se identifica como ${ctx.customerGender}. Adapte a linguagem se necessário (ex: amigão/amiga).` : "Gênero não informado, use linguagem neutra.";
+  const storeContext = `Esta é uma ${ctx.storeCategory || "loja"}. Use termos técnicos ou gírias apropriadas para esse nicho.`;
+
   let systemPrompt = "";
   let userPrompt = "";
 
+  const baseInstructions = `
+- Você é uma IA INTELIGENTE e AMIGÁVEL da loja "${ctx.storeName}". 
+- ${storeContext}
+- Sua missão é ser mais que uma assistente, seja uma AMIGA do cliente. 
+- Use a rotina do cliente como gancho (ex: "descansando nesse ${dayName}?", "começando a semana?", "hora do café?").
+- Adapte sua fala: ${genderInfo}
+- REGRAS OBRIGATÓRIAS:
+  - Responda APENAS com JSON: {"title": "...", "body": "..."}
+  - title: máximo 50 caracteres, comece com 1 emoji temático.
+  - body: máximo 130 caracteres, mencione o nome do cliente e a loja "${ctx.storeName}".
+  - NUNCA repita a mesma mensagem.
+  - Seed: ${seed}`;
+
   const dateInstructions = `
-- CONTEXTO DE DATAS ESPECIAIS (USE para personalizar a mensagem!):
+- CONTEXTO DE DATAS ESPECIAIS:
 ${specialDate}
-- Se for feriado/data especial, INCORPORE na mensagem (ex: "Neste Natal...", "Aproveite a Black Friday...", "Feliz Sábado...")
-- Se for fim de semana, use tom mais descontraído e convidativo
-- Se for segunda-feira, use tom motivacional e energético`;
+- Incorpore a data na mensagem se for relevante.`;
 
   if (ctx.type === "abandoned_cart") {
     const discountLine = ctx.hasDiscount
