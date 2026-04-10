@@ -35,6 +35,7 @@ export function AdminLayout() {
   const { features, isLoading: featuresLoading } = usePlanFeatures();
   const { ctx, isLoading: ctxLoading } = useTenantContext();
   const aiAvailable = canAccess("ai_tools", ctx);
+  useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
