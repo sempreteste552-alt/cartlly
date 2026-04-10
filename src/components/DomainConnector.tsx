@@ -380,37 +380,30 @@ export default function DomainConnector({
                     </Badge>
                   )}
                 </div>
-                  {verifyResult.dnsComplete && !verifyResult.sslReady && (
-                    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
-                      {autoPolling ? (
-                        <>
-                          <Loader2 className="h-4 w-4 text-primary shrink-0 animate-spin" />
-                          <div>
-                            <p className="text-xs font-medium text-foreground">
-                              🔄 Verificação automática ativa ({pollCount}/20)
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {verifyResult.usingCloudflare 
-                                ? "Provisionando SSL via Cloudflare... Isso pode levar alguns minutos."
-                                : "Checando SSL a cada 30 segundos... Você será notificado quando estiver pronto."}
-                            </p>
-                            {verifyResult.cloudflare && (
-                              <p className="text-[10px] mt-1 text-muted-foreground italic">
-                                Status Cloudflare: {verifyResult.cloudflare.sslStatus || "Pending"} / {verifyResult.cloudflare.ownershipStatus || "Pending Verification"}
-                              </p>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="h-4 w-4 text-primary shrink-0" />
-                          <p className="text-xs text-muted-foreground">
-                            DNS correto! {verifyResult.usingCloudflare ? "O certificado SSL está sendo provisionado automaticamente." : "O certificado SSL está sendo provisionado."} Clique em <strong>Verificar</strong> para ativar a verificação automática.
+                {verifyResult.dnsComplete && !verifyResult.sslReady && (
+                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
+                    {autoPolling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 text-primary shrink-0 animate-spin" />
+                        <div>
+                          <p className="text-xs font-medium text-foreground">
+                            🔄 Verificação automática ativa ({pollCount}/20)
                           </p>
-                        </>
-                      )}
-                    </div>
-                  )}
+                          <p className="text-xs text-muted-foreground">
+                            Checando SSL a cada 30 segundos... Você será notificado quando estiver pronto.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="h-4 w-4 text-primary shrink-0" />
+                        <p className="text-xs text-muted-foreground">
+                          DNS correto! O certificado SSL está sendo provisionado. Clique em <strong>Verificar</strong> para ativar a verificação automática.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
