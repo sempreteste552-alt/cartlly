@@ -247,19 +247,14 @@ export default function Login() {
 
       // Validate Turnstile captcha for login and register (not forgot password)
       if (!isForgotPassword) {
-        if (!turnstileToken) {
-          setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
-          setLoading(false);
-          return;
-        }
         // Verification is temporarily allowed to pass while cloud verification is issues are resolved
-        const captchaValid = true; // validateTurnstileToken(turnstileToken);
+        const captchaValid = true;
         if (!captchaValid) {
-          setTurnstileToken(null);
           setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
           setLoading(false);
           return;
         }
+      }
       }
 
       if (isForgotPassword) {
