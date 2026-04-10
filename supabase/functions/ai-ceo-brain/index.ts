@@ -98,12 +98,11 @@ FORMATO DE RESPOSTA (JSON):
 
         const { title, message } = content;
 
-        // 4. Rate Limit & Dedup Check (using our new RPC)
-        const { data: canSend, error: rateErr } = await supabase.rpc("can_send_notification", {
-          p_user_id: userId,
-          p_target_user_id: userId,
+        // 4. Rate Limit & Dedup Check (using our new generic RPC)
+        const { data: canSend, error: rateErr } = await supabase.rpc("can_send_message", {
+          p_target_id: userId,
           p_title: title,
-          p_message: message,
+          p_body: message,
           p_cooldown_minutes: 5 // User requested at least 5 minutes
         });
 
