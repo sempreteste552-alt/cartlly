@@ -24,271 +24,50 @@ export default function Cerebro() {
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");
   const [pendingActions, setPendingActions] = useState<Record<number, any[]>>({});
+  const [showAiSummary, setShowAiSummary] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // === DATA QUERIES ===
 
+  const { data: aiSummary } = useQuery({
+    queryKey: ["ai_work_summary", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_ai_work_summary", { p_user_id: user!.id });
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!user,
+  });
+
   const { data: chatHistory = [], isLoading: loadingChat } = useQuery({
-    queryKey: ["admin-ai-chats", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("admin_ai_chats")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data as any[];
-    },
-    enabled: !!user,
-  });
-
-  const { data: scheduledTasks = [] } = useQuery({
-    queryKey: ["ai-scheduled-tasks", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ai_scheduled_tasks")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("scheduled_at", { ascending: true });
-      if (error) throw error;
-      return data as any[];
-    },
-    enabled: !!user,
-  });
-
-  const { data: aiConfig } = useQuery({
-    queryKey: ["tenant-ai-brain-config", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tenant_ai_brain_config")
-        .select("*")
-        .eq("user_id", user!.id)
-        .single();
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  // === MUTATIONS ===
-
-  const sendMessage = useMutation({
-    mutationFn: async (content: string) => {
-      const messages = chatHistory.map(m => ({ role: m.role, content: m.content }));
-      messages.push({ role: "user", content });
-
-      const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
-        body: { messages },
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
-      queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
-      
-      // Check for actions in the new message
-      if (data?.content) {
-        processAIActions(data.content, chatHistory.length + 1);
-      }
-      
-      setInput("");
-    },
-    onError: (err: any) => {
-      toast.error("Erro ao falar com a IA: " + (err.message || "Erro desconhecido"));
-    }
-  });
-
-  const clearChat = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("admin_ai_chats").delete().eq("user_id", user!.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
-      toast.success("Chat limpo!");
-    }
-  });
-
-  const undoLastTurn = useMutation({
-    mutationFn: async () => {
-      if (chatHistory.length === 0) return;
-      const lastId = chatHistory[chatHistory.length - 1].id;
-      const secondLastId = chatHistory.length > 1 ? chatHistory[chatHistory.length - 2].id : null;
-      
-      const idsToDelete = [lastId];
-      if (secondLastId) idsToDelete.push(secondLastId);
-
-      const { error } = await supabase.from("admin_ai_chats").delete().in("id", idsToDelete);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
-      toast.success("Última interação removida!");
-    }
-  });
-
-  const processAIActions = (content: string, msgIndex: number) => {
-    const actions: any[] = [];
-    
-    // Schedule Task
-    const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
-    let taskMatch;
-    while ((taskMatch = taskRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(taskMatch[1]);
-        actions.push({ type: "schedule_task", label: `📅 Agendar Push: ${payload.payload?.title || "Sem título"}`, payload });
-      } catch (e) { console.error("Task parse error:", e); }
-    }
-
-    // Reminder
-    const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
-    let reminderMatch;
-    while ((reminderMatch = reminderRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(reminderMatch[1]);
-        actions.push({ type: "reminder", label: `⏰ Agendar Lembrete: ${payload.title}`, payload });
-      } catch (e) { console.error("Reminder parse error:", e); }
-    }
-
-    // Store Settings
-    const settingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
-    let settingsMatch;
-    while ((settingsMatch = settingsRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(settingsMatch[1]);
-        actions.push({ type: "update_settings", label: "⚙️ Atualizar Configurações da Loja", payload });
-      } catch (e) { console.error("Settings parse error:", e); }
-    }
-    
-    // Marketing Config
-    const marketingRegex = /\[ACTION_UPDATE_MARKETING_CONFIG\]([\s\S]*?)\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g;
-    let marketingMatch;
-    while ((marketingMatch = marketingRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(marketingMatch[1]);
-        actions.push({ type: "update_marketing", label: "📣 Atualizar Ferramentas de Marketing", payload });
-      } catch (e) { console.error("Marketing config parse error:", e); }
-    }
-
-    // Page update
-    const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
-    let pageMatch;
-    while ((pageMatch = pageRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(pageMatch[1]);
-        actions.push({ type: "update_page", label: `📄 Atualizar Página: ${payload.slug}`, payload });
-      } catch (e) { console.error("Page parse error:", e); }
-    }
-
-    // Update Stock
-    const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
-    let stockMatch;
-    while ((stockMatch = stockRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(stockMatch[1]);
-        actions.push({ type: "update_stock", label: `📦 Atualizar Estoque: ${payload.product_name} para ${payload.new_stock}`, payload });
-      } catch (e) { console.error("Stock parse error:", e); }
-    }
-
-    // Generate Product Content
-    const productContentRegex = /\[ACTION_GENERATE_PRODUCT_CONTENT\]([\s\S]*?)\[\/ACTION_GENERATE_PRODUCT_CONTENT\]/g;
-    let productContentMatch;
-    while ((productContentMatch = productContentRegex.exec(content)) !== null) {
-      try {
-        const payload = JSON.parse(productContentMatch[1]);
-        actions.push({ type: "generate_content", label: `✨ Gerar ${payload.type} para: ${payload.product_name}`, payload });
-      } catch (e) { console.error("Product content parse error:", e); }
-    }
-
-    if (actions.length > 0) {
-      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
-    }
-  };
-
-  const confirmAction = async (msgIndex: number, actionIndex: number) => {
-    const action = pendingActions[msgIndex]?.[actionIndex];
-    if (!action || !user) return;
-
-    try {
-      if (action.type === "schedule_task") {
-        const { error } = await supabase.from("ai_scheduled_tasks").insert({
-          user_id: user.id,
-          task_type: action.payload.task_type,
-          scheduled_at: action.payload.scheduled_at,
-          payload: action.payload.payload,
-          ai_instruction: action.payload.ai_instruction,
-          status: "pending"
-        });
-        if (error) throw error;
-        toast.success("✅ Tarefa agendada com sucesso!");
-      } else if (action.type === "reminder") {
-        const { error } = await supabase.from("ai_scheduled_tasks").insert({
-          user_id: user.id,
-          task_type: "admin_reminder",
-          scheduled_at: action.payload.remind_at,
-          payload: { title: action.payload.title, body: action.payload.description },
-          status: "pending"
-        });
-        if (error) throw error;
-        toast.success("✅ Lembrete agendado!");
-      } else if (action.type === "update_settings") {
-        const { error } = await supabase.from("store_settings").update({
-          ...action.payload,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id);
-        if (error) throw error;
-        toast.success("✅ Configurações atualizadas!");
-      } else if (action.type === "update_marketing") {
-        const { error } = await supabase.from("store_marketing_config").update({
-          ...action.payload,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id);
-        if (error) throw error;
-        toast.success("✅ Marketing da loja atualizado!");
-      } else if (action.type === "update_page") {
-        const { error } = await supabase.from("store_pages").update({
-          content: action.payload.content,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id).eq("slug", action.payload.slug);
-        if (error) throw error;
-        toast.success(`✅ Página ${action.payload.slug} atualizada!`);
-      } else if (action.type === "update_stock") {
-        const { error } = await supabase.from("products").update({
-          stock: action.payload.new_stock,
-          updated_at: new Date().toISOString()
-        }).eq("user_id", user.id).eq("name", action.payload.product_name);
-        if (error) throw error;
-        toast.success(`✅ Estoque de ${action.payload.product_name} atualizado!`);
-      } else if (action.type === "generate_content") {
-        // This is a suggestion, we could redirect to the product page or just confirm
-        toast.info("Acesse a página do produto para ver as sugestões da IA.");
-      }
-
-      // Mark as confirmed
-      setPendingActions(prev => {
-        const newActions = [...(prev[msgIndex] || [])];
-        newActions[actionIndex] = { ...newActions[actionIndex], confirmed: true };
-        return { ...prev, [msgIndex]: newActions };
-      });
-      queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
-    } catch (e: any) {
-      toast.error("Erro ao executar: " + e.message);
-    }
-  };
-
-  // === EFFECTS ===
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatHistory, sendMessage.isPending]);
-
+...
   const handleSend = () => {
     if (!input.trim() || sendMessage.isPending) return;
     sendMessage.mutate(input);
+  };
+
+  const sendAiWorkSummary = async () => {
+    if (!aiSummary || !user) return;
+    
+    const summaryText = `Resumo de Atividades IA (${aiSummary.period}):
+    - Interações: ${aiSummary.recent_chats}
+    - Tarefas Agendadas: ${aiSummary.pending_tasks}
+    - Tarefas Concluídas: ${aiSummary.completed_tasks}
+    - Insights CEO: ${aiSummary.recent_insights}`;
+
+    try {
+      const { error } = await supabase.from("admin_notifications").insert({
+        sender_user_id: user.id,
+        target_user_id: user.id,
+        title: "📊 Resumo de Trabalho da IA",
+        message: summaryText,
+        type: "ceo_insight"
+      });
+      if (error) throw error;
+      toast.success("Resumo enviado para suas notificações!");
+    } catch (e: any) {
+      toast.error("Erro ao enviar resumo: " + e.message);
+    }
   };
 
   return (
@@ -309,10 +88,13 @@ export default function Cerebro() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={sendAiWorkSummary} className="bg-primary/5 border-primary/20 hover:bg-primary/10">
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Mande o Resumo do Trabalho
+          </Button>
           <Button variant="outline" size="sm" onClick={() => {
             toast.success("Histórico salvo com sucesso!");
           }}>
-            <Sparkles className="h-4 w-4 mr-2" /> Salvar Chat
+            <Bot className="h-4 w-4 mr-2" /> Salvar Chat
           </Button>
           <Button variant="outline" size="sm" onClick={() => undoLastTurn.mutate()} disabled={chatHistory.length === 0 || undoLastTurn.isPending}>
              Voltar
