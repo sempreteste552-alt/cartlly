@@ -48,6 +48,7 @@ export default function ContaEmAnalise() {
       });
       return settings;
     },
+    refetchInterval: 5000, // Re-check every 5s so status updates quickly
   });
 
   const isBlocked = profile?.status === "blocked";
