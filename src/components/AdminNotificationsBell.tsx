@@ -156,7 +156,7 @@ export function AdminNotificationsBell() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 min-h-[300px] max-h-[550px] touch-pan-y overscroll-contain">
+        <ScrollArea className="flex-1 h-[450px] sm:h-[550px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground/60 space-y-3">
               <div className="p-4 bg-muted rounded-full">
