@@ -291,12 +291,23 @@ export default function Automacao() {
         { user_id: user!.id, name: "Lembrete de Wishlist", trigger_type: "wishlist_reminder", channel: "push", wait_minutes: 1440, cooldown_minutes: 4320, max_sends_per_day: 1, ai_generated: true, ai_tone: "friendly", enabled: false, message_template: "💜 Os produtos da sua lista de desejos estão disponíveis!" },
         { user_id: user!.id, name: "Novo Produto Adicionado", trigger_type: "new_product", channel: "push", wait_minutes: 10, cooldown_minutes: 0, max_sends_per_day: 10, ai_generated: true, ai_tone: "exciting", enabled: true, message_template: "🆕 Acabou de chegar: {product_name}! Confira!" },
       ];
-      const { error } = await supabase.from("automation_rules").insert(defaults);
-      if (error) throw error;
+      // Insert one by one to avoid partial failures
+      for (const rule of defaults) {
+        const { error } = await supabase.from("automation_rules").insert(rule);
+        if (error) {
+          console.error("Error creating rule:", rule.name, error);
+          // Skip duplicates, throw on other errors
+          if (!error.message?.includes("duplicate")) throw error;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["automation-rules"] });
-      toast.success("Regras padrão criadas!");
+      toast.success("Regras padrão criadas com sucesso! ✅");
+    },
+    onError: (err: any) => {
+      console.error("createDefaults error:", err);
+      toast.error("Erro ao criar regras: " + (err.message || "Erro desconhecido"));
     },
   });
 
