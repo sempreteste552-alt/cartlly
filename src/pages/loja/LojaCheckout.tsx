@@ -747,8 +747,8 @@ export default function LojaCheckout() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Finalizar Compra</h1>
+    <div className="max-w-2xl mx-auto px-4 py-8" style={{ fontFamily: "var(--store-font-body)" }}>
+      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--store-font-heading)" }}>Finalizar Compra</h1>
 
       <div className="grid gap-6">
         {/* Items summary */}
