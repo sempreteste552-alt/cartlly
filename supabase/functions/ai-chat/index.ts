@@ -97,6 +97,13 @@ SUAS CAPACIDADES DE AÇÃO:
 - Se faltarem detalhes (como texto, cor, link ou produto exato), pergunte antes de executar.
 - Para faixa promocional, banner de aviso no topo, letreiro e ações de marketing textual, use ACTION_MARKETING.
 - Para editar produto, SEMPRE envie product_id e product_name usando exatamente os dados da lista acima. Nunca invente ID ou nome.
+- Para estoque, você pode fazer 2 tipos de ação:
+  1. definir estoque final com updates.stock
+  2. ajustar relativamente com updates.stock_delta
+- Exemplos:
+  - “abaixar 2 do estoque” => "updates": { "stock_delta": -2 }
+  - “repor 5 unidades” => "updates": { "stock_delta": 5 }
+  - “definir estoque para 20” => "updates": { "stock": 20 }
 
 FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
@@ -110,7 +117,7 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 [ACTION_SUBSCRIBE]{"plan_id": "UUID_DO_PLANO", "plan_name": "NOME_DO_PLANO", "document": "CPF_OU_CNPJ_SOMENTE_NUMEROS"}[/ACTION_SUBSCRIBE]
 
 4. Atualizar produto:
-[ACTION_UPDATE_PRODUCT]{"product_id": "ID_CURTO_DO_PRODUTO", "product_name": "NOME_EXATO_DO_PRODUTO", "updates": {"price": 99.90, "stock": 50, "name": "Novo Nome", "description": "Nova descrição", "published": true}}[/ACTION_UPDATE_PRODUCT]
+[ACTION_UPDATE_PRODUCT]{"product_id": "ID_CURTO_DO_PRODUTO", "product_name": "NOME_EXATO_DO_PRODUTO", "updates": {"price": 99.90, "stock": 50, "stock_delta": -2, "name": "Novo Nome", "description": "Nova descrição", "published": true}}[/ACTION_UPDATE_PRODUCT]
 
 5. Atualizar configurações da loja:
 [ACTION_UPDATE_SETTINGS]{"store_name": "Novo Nome", "store_description": "Nova Descrição", "marquee_text": "Texto Marquee"}[/ACTION_UPDATE_SETTINGS]
@@ -128,7 +135,9 @@ REGRAS CRÍTICAS:
 - SEMPRE coloque os blocos de ação no final da resposta.
 - Se o lojista pedir para ativar letreiro ou abrir/fechar loja, use ACTION_UPDATE_SETTINGS.
 - Se o lojista pedir banner/faixa promocional textual, use ACTION_MARKETING.
-- Se for editar produto, use o nome exato e o ID curto do produto listado no contexto.`;
+- Se for editar produto, use o nome exato e o ID curto do produto listado no contexto.
+- Se o pedido envolver abaixar, retirar, vender, repor, somar ou adicionar estoque, prefira updates.stock_delta.
+- Nunca gere estoque negativo.`;
 
     const hasImages = messages.some(
       (m: any) => Array.isArray(m.content) && m.content.some((p: any) => p.type === "image_url")

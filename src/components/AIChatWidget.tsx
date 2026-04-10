@@ -387,9 +387,11 @@ export function AIChatWidget() {
     extractActions(/\[ACTION_UPDATE_PRODUCT\]([\s\S]*?)\[\/ACTION_UPDATE_PRODUCT\]/g, (payload) => {
       const target = payload.product_name || payload.product_id || "produto";
       const fields = Object.keys(payload.updates || {});
+      const stockDelta = payload.updates?.stock_delta;
+      const stockLabel = typeof stockDelta === "number" ? ` | ajuste estoque: ${stockDelta > 0 ? "+" : ""}${stockDelta}` : "";
       return {
         type: "update_product",
-        label: `📦 Atualizar ${target}${fields.length ? ` (${fields.join(", ")})` : ""}`,
+        label: `📦 Atualizar ${target}${fields.length ? ` (${fields.join(", ")})` : ""}${stockLabel}`,
         payload,
       };
     });
@@ -486,6 +488,11 @@ export function AIChatWidget() {
           if (action.payload.updates?.[key] !== undefined) updates[key] = action.payload.updates[key];
         }
 
+        const stockDelta = Number(action.payload.updates?.stock_delta);
+        if (!Number.isNaN(stockDelta) && action.payload.updates?.stock_delta !== undefined) {
+          updates.stock = Math.max(0, Number(fullProduct.stock || 0) + stockDelta);
+        }
+
         if (Object.keys(updates).length === 0) {
           throw new Error("Nenhum campo válido foi enviado para atualizar o produto.");
         }
@@ -494,11 +501,13 @@ export function AIChatWidget() {
           .from("products")
           .update(updates)
           .eq("id", fullProduct.id)
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .select("id, name, stock")
+          .single();
 
         if (error) throw error;
         toast.success(`✅ Produto ${fullProduct.name} atualizado!`);
-        queryClient.invalidateQueries({ queryKey: ["products"] });
+        await queryClient.invalidateQueries({ queryKey: ["products"] });
       } else if (action.type === "update_settings") {
         if (settings?.id) {
           const { error } = await supabase
