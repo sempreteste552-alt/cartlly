@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Loader2, Mail, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
-import { TurnstileWidget, validateTurnstileToken } from "@/components/TurnstileWidget";
+import { SimpleVerification } from "@/components/SimpleVerification";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { lovable } from "@/integrations/lovable/index";
@@ -29,7 +29,7 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
   const [showEmailConfirmCard, setShowEmailConfirmCard] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   const getPasswordStrength = (pass: string) => {
     let score = 0;
@@ -65,15 +65,15 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     clearAlerts();
     setLoading(true);
     try {
-      if (!turnstileToken) {
-        setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
+      if (!isVerified) {
+        setAlertCard({ type: "error", message: "Responda corretamente ao desafio de segurança." });
         setLoading(false);
         return;
       }
-      const captchaValid = true; // await validateTurnstileToken(turnstileToken);
+      const captchaValid = true;
       if (!captchaValid) {
-        setTurnstileToken(null);
-        setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+        setIsVerified(false);
+        setAlertCard({ type: "error", message: "Verificação falhou. Tente novamente." });
         setLoading(false);
         return;
       }
@@ -108,9 +108,15 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     setLoading(true);
     try {
       // Verification is temporarily optional to avoid access issues while configuring Cloudflare
+      if (!isVerified) {
+        setAlertCard({ type: "error", message: "Responda corretamente ao desafio de segurança." });
+        setLoading(false);
+        return;
+      }
       const captchaValid = true;
       if (!captchaValid) {
-        setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+        setIsVerified(false);
+        setAlertCard({ type: "error", message: "Verificação falhou. Tente novamente." });
         setLoading(false);
         return;
       }
@@ -298,13 +304,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                 </button>
               </div>
               <div className="flex justify-center">
-                <TurnstileWidget
-                  onVerify={(token) => setTurnstileToken(token)}
-                  onExpire={() => setTurnstileToken(null)}
-                  onError={() => setTurnstileToken(null)}
+                <SimpleVerification
+                  onVerify={(isValid) => setIsVerified(isValid)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
+              <Button type="submit" className="w-full" disabled={loading || !isVerified}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Entrar
               </Button>
@@ -352,13 +356,11 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
                 )}
               </div>
               <div className="flex justify-center">
-                <TurnstileWidget
-                  onVerify={(token) => setTurnstileToken(token)}
-                  onExpire={() => setTurnstileToken(null)}
-                  onError={() => setTurnstileToken(null)}
+                <SimpleVerification
+                  onVerify={(isValid) => setIsVerified(isValid)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading || !turnstileToken}>
+              <Button type="submit" className="w-full" disabled={loading || !isVerified}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Criar Conta
               </Button>
