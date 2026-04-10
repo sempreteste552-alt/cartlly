@@ -665,6 +665,19 @@ export default function LojaProduto() {
           </Carousel>
         </div>
       )}
+      <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+        <DialogContent className="max-w-[95vw] sm:max-w-screen-lg p-0 border-none bg-transparent shadow-none">
+          <div className="relative w-full h-full flex items-center justify-center overflow-hidden p-2">
+             <img 
+               src={allImages[selectedImageIndex] || allImages[0]} 
+               alt={product?.name || "Product"} 
+               className="max-w-full max-h-[90vh] object-contain rounded-lg"
+               onClick={() => setIsZoomed(false)}
+             />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {cartNotif.notification && (
         <CartNotification
           productName={cartNotif.notification.productName}
