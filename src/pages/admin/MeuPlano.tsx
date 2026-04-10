@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -13,6 +13,7 @@ import {
   Check, Crown, Zap, Clock, Loader2, Rocket,
   Lock, ArrowUpCircle, Package, CheckCircle2,
   BarChart3, Palette, ShoppingCart, Bot, Code, Shield,
+  Gift, Users, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import PlanCheckoutModal from "@/components/PlanCheckoutModal";
@@ -31,6 +32,7 @@ export default function MeuPlano() {
   const { ctx, subscription, plan: currentPlan } = useTenantContext();
   const { data: allPlans } = useAllPlans();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -324,6 +326,25 @@ export default function MeuPlano() {
           })}
         </div>
       </div>
+
+      {/* Referral Card */}
+      <Card className="border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/admin/indicacoes")}>
+        <CardContent className="p-5 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+            <Gift className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground text-sm sm:text-base">Indique e Ganhe Desconto</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Convide novos lojistas e ganhe desconto na sua mensalidade para cada indicado com pagamento aprovado.
+            </p>
+          </div>
+          <div className="flex items-center gap-1 text-primary shrink-0">
+            <Users className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Checkout Modal */}
       {checkoutDialog && user && (
