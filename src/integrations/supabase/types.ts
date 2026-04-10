@@ -3070,13 +3070,12 @@ export type Database = {
       }
     }
     Functions: {
-      can_send_notification: {
+      can_send_message: {
         Args: {
+          p_body: string
           p_cooldown_minutes?: number
-          p_message: string
-          p_target_user_id: string
+          p_target_id: string
           p_title: string
-          p_user_id: string
         }
         Returns: boolean
       }
