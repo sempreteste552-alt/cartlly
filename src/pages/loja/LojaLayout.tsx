@@ -961,7 +961,7 @@ export default function LojaLayout() {
                 <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-md mx-auto object-contain" />
               </div>
               <div className="bg-white/10 rounded-xl p-4 border border-white/20">
-                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-sm mx-auto object-contain" />
+                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-md mx-auto object-contain" />
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs opacity-50">

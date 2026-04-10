@@ -455,7 +455,7 @@ export default function LojaProduto() {
               <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
               <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
               <div className="bg-muted/50 rounded-xl p-3 border border-border">
-                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xs object-contain" />
+                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-sm object-contain" />
               </div>
             </div>
           )}
