@@ -1277,6 +1277,14 @@ Deno.serve(async (req) => {
           const products = storeProducts.get(customer.store_user_id) || [];
           const alreadySentProducts = sentProductsByCustomer.get(customer.id) || new Set();
 
+          // Detect store niche (cached)
+          if (!storeNicheCache.has(customer.store_user_id)) {
+            const cats = storeCategoriesMap.get(customer.store_user_id) || [];
+            storeNicheCache.set(customer.store_user_id, detectStoreNiche(products, cats));
+          }
+          const storeNiche = storeNicheCache.get(customer.store_user_id) || "geral";
+          const customerGender = detectGender(customer.name);
+
           // Pick a DIFFERENT product each hour (not sent today)
           const availableProducts = products.filter((p: any) => !alreadySentProducts.has(p.id));
           const selectedProduct = availableProducts.length > 0
@@ -1296,21 +1304,20 @@ Deno.serve(async (req) => {
           let relatedProductId: string | null = null;
 
           if (selectedProduct && isVIP && Math.random() < 0.3) {
-            // VIP smart discount: 5-15% based on loyalty (never too much to avoid losses)
+            // VIP smart discount: 5-15% based on loyalty
             const discountPercent = vipInfo!.orderCount >= 10 ? 15 : vipInfo!.orderCount >= 5 ? 10 : 5;
             const vipCode = `VIP${discountPercent}${customer.name.slice(0, 3).toUpperCase()}`;
 
-            // Create coupon if not exists
             const existingCodes = storeCouponCodes.get(customer.store_user_id) || new Set();
             if (!existingCodes.has(vipCode)) {
-              const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(); // 48h
+              const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
               await supabase.from("coupons").insert({
                 code: vipCode,
                 user_id: customer.store_user_id,
                 discount_type: "percentage",
                 discount_value: discountPercent,
                 max_uses: 1,
-                min_order_value: Math.max(50, selectedProduct.price * 0.8), // Min order = 80% of product price
+                min_order_value: Math.max(50, selectedProduct.price * 0.8),
                 expires_at: expiresAt,
                 active: true,
               });
@@ -1336,30 +1343,36 @@ Deno.serve(async (req) => {
             relatedProductId = selectedProduct.id;
 
           } else if (selectedProduct) {
-            // Product-focused message
-            const priceTag = selectedProduct.price > 0 ? `R$${Number(selectedProduct.price).toFixed(2)}` : "";
-            const validTemplates = HOURLY_PRODUCT_TEMPLATES.filter((t: any) => {
-              if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
-              if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
-              return true;
-            });
-            const tmplList = validTemplates.length > 0 ? validTemplates : HOURLY_PRODUCT_TEMPLATES;
-            const tmpl = tmplList[Math.floor(Math.random() * tmplList.length)];
-            
-            title = tmpl.title
-              .replace(/\{name\}/g, customer.name || "amigo(a)")
-              .replace(/\{product\}/g, selectedProduct.name)
-              .replace(/\{store\}/g, storeName)
-              .replace(/\{day\}/g, dayName)
-              .replace(/\{priceTag\}/g, priceTag)
-              .slice(0, 50);
-            body = tmpl.body
-              .replace(/\{name\}/g, customer.name || "amigo(a)")
-              .replace(/\{product\}/g, selectedProduct.name)
-              .replace(/\{store\}/g, storeName)
-              .replace(/\{day\}/g, dayName)
-              .replace(/\{priceTag\}/g, priceTag)
-              .slice(0, 130);
+            // Use niche+gender templates (40% chance) or product templates (60%)
+            if (storeNiche !== "geral" && Math.random() < 0.4) {
+              const nicheMsg = pickNicheTemplate(storeNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
+              title = nicheMsg.title;
+              body = nicheMsg.body;
+            } else {
+              const priceTag = selectedProduct.price > 0 ? `R$${Number(selectedProduct.price).toFixed(2)}` : "";
+              const validTemplates = HOURLY_PRODUCT_TEMPLATES.filter((t: any) => {
+                if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+                if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+                return true;
+              });
+              const tmplList = validTemplates.length > 0 ? validTemplates : HOURLY_PRODUCT_TEMPLATES;
+              const tmpl = tmplList[Math.floor(Math.random() * tmplList.length)];
+              
+              title = tmpl.title
+                .replace(/\{name\}/g, customer.name || "amigo(a)")
+                .replace(/\{product\}/g, selectedProduct.name)
+                .replace(/\{store\}/g, storeName)
+                .replace(/\{day\}/g, dayName)
+                .replace(/\{priceTag\}/g, priceTag)
+                .slice(0, 50);
+              body = tmpl.body
+                .replace(/\{name\}/g, customer.name || "amigo(a)")
+                .replace(/\{product\}/g, selectedProduct.name)
+                .replace(/\{store\}/g, storeName)
+                .replace(/\{day\}/g, dayName)
+                .replace(/\{priceTag\}/g, priceTag)
+                .slice(0, 130);
+            }
             relatedProductId = selectedProduct.id;
 
           } else {
