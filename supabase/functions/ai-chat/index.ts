@@ -95,7 +95,10 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 5. Atualizar configurações da loja (Nome, Descrição, Marquee):
 [ACTION_UPDATE_SETTINGS]{"store_name": "Novo Nome", "store_description": "Nova Descrição", "marquee_text": "Texto Marquee"}[/ACTION_UPDATE_SETTINGS]
 
-6. Agendar Lembrete para o Dono:
+6. Atualizar Marketing/Faixa Promocional (Banner de Anúncio):
+[ACTION_MARKETING]{"announcement_bar_enabled": true, "announcement_bar_text": "Frete Grátis acima de R$100!", "announcement_bar_bg_color": "#000000", "announcement_bar_text_color": "#ffffff", "announcement_bar_link": "/produtos"} [/ACTION_MARKETING]
+
+7. Agendar Lembrete para o Dono:
 [ACTION_REMINDER]{"title": "Lembrete", "body": "Descrição do que lembrar", "scheduled_at": "ISO_TIMESTAMP"}[/ACTION_REMINDER]
 
 REGRAS CRÍTICAS:
