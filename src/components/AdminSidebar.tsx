@@ -24,9 +24,10 @@ const mainItems = [
   { title: "Produtos", url: "/admin/produtos", icon: Package },
   { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart },
   { title: "Clientes", url: "/admin/clientes", icon: Users },
+  { title: "Cérebro IA", url: "/admin/cerebro", icon: Bot },
   { title: "Cupons", url: "/admin/cupons", icon: Ticket },
   { title: "Páginas", url: "/admin/paginas", icon: FileText },
-  { title: "Automação", url: "/admin/automacao", icon: Bot },
+  { title: "Automação", url: "/admin/automacao", icon: Zap },
 ];
 
 const configItemsBase = [
