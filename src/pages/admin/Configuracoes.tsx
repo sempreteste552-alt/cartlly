@@ -103,6 +103,7 @@ function AccountPasswordChanger() {
 
 function GeneralSettingsTab() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const uploadLogo = useUploadStoreLogo();
