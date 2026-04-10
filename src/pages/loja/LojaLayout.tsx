@@ -7,6 +7,7 @@ import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
+import { PWAInstallPrompt } from "@/components/storefront/PWAInstallPromptPro";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
