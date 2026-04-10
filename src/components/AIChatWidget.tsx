@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone, Trash2, RotateCcw, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -174,6 +174,17 @@ export function AIChatWidget() {
         .order("price", { ascending: true });
       return data || [];
     },
+  });
+
+  // Fetch AI Work Summary
+  const { data: aiSummary } = useQuery({
+    queryKey: ["ai_work_summary", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_ai_work_summary", { p_user_id: user!.id });
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!user,
   });
 
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
@@ -520,6 +531,67 @@ export function AIChatWidget() {
     e.target.value = "";
   };
 
+  const undoLastTurn = () => {
+    if (messages.length === 0) return;
+    setMessages(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      if (last.role === "assistant") {
+        return prev.slice(0, -2);
+      }
+      return prev.slice(0, -1);
+    });
+    toast.success("Última interação removida!");
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+    setPixData(null);
+    toast.success("Chat reiniciado!");
+  };
+
+  const sendAiWorkSummary = async () => {
+    if (!aiSummary || !user) {
+      toast.error("Resumo não disponível no momento.");
+      return;
+    }
+    const summaryText = `Resumo de Atividades IA (${aiSummary.period}):
+    - Interações: ${aiSummary.recent_chats}
+    - Tarefas Agendadas: ${aiSummary.pending_tasks}
+    - Tarefas Concluídas: ${aiSummary.completed_tasks}
+    - Insights CEO: ${aiSummary.recent_insights}`;
+
+    try {
+      const { error } = await supabase.from("admin_notifications").insert({
+        sender_user_id: user.id,
+        target_user_id: user.id,
+        title: "📊 Resumo de Trabalho da IA",
+        message: summaryText,
+        type: "ceo_insight"
+      });
+      if (error) throw error;
+      toast.success("Resumo enviado para suas notificações!");
+    } catch (e: any) {
+      toast.error("Erro ao enviar resumo: " + e.message);
+    }
+  };
+
+  const saveConversation = () => {
+    if (messages.length === 0) {
+      toast.error("Nenhuma conversa para salvar.");
+      return;
+    }
+    const content = messages.map(m => `${m.role === 'user' ? 'Você' : aiName}: ${getTextContent(m.content)}`).join('\n\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversa-ia-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Conversa baixada!");
+  };
+
   const sendMessage = async (text: string) => {
     if ((!text.trim() && pendingImages.length === 0) || isLoading) return;
 
@@ -683,6 +755,24 @@ export function AIChatWidget() {
             </Button>
           </div>
         </div>
+
+        {/* Toolbar */}
+        {!aiLocked && messages.length > 0 && (
+          <div className="flex items-center gap-1 px-3 py-1.5 border-b bg-card">
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] gap-1" onClick={sendAiWorkSummary} disabled={!aiSummary}>
+              <Sparkles className="h-3 w-3 text-primary" /> Resumo
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] gap-1" onClick={undoLastTurn}>
+              <RotateCcw className="h-3 w-3" /> Voltar
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] gap-1" onClick={clearChat}>
+              <Trash2 className="h-3 w-3" /> Reiniciar
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] gap-1" onClick={saveConversation}>
+              <FileText className="h-3 w-3" /> Salvar
+            </Button>
+          </div>
+        )}
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30">

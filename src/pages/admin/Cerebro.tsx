@@ -249,17 +249,6 @@ export default function Cerebro() {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={sendAiWorkSummary} className="bg-primary/5 border-primary/20 hover:bg-primary/10">
-            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Mande o Resumo do Trabalho
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => undoLastTurn.mutate()} disabled={chatHistory.length === 0 || undoLastTurn.isPending}>
-             Voltar
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => clearChat.mutate()} disabled={chatHistory.length === 0}>
-            <Trash2 className="h-4 w-4 mr-2" /> Reiniciar Chat
-          </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 overflow-hidden">
