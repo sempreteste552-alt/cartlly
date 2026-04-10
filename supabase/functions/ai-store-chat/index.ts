@@ -24,7 +24,7 @@ serve(async (req) => {
     // Fetch store settings
     const { data: storeSettings } = await supabase
       .from("store_settings")
-      .select("store_name, store_slug, store_whatsapp, ai_name, ai_avatar_url, ai_chat_tone, payment_pix, payment_credit_card, sell_via_whatsapp, shipping_enabled, store_cep")
+      .select("store_name, store_slug, store_whatsapp, ai_name, ai_avatar_url, ai_chat_tone, payment_pix, payment_credit_card, payment_boleto, payment_debit_card, payment_gateway, sell_via_whatsapp, shipping_enabled, store_cep")
       .eq("user_id", storeUserId)
       .single();
 
