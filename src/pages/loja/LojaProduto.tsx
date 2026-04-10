@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye, Loader2 } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export default function LojaProduto() {
   const { data: variants } = useProductVariants(id);
   const wishlist = useWishlist(storeUserId);
   const cartNotif = useCartNotification();
+  const { trackEvent } = useBehaviorTracking(storeUserId);
 
   const product = products?.find((p) => p.id === id);
 
@@ -85,19 +87,20 @@ export default function LojaProduto() {
     }
   }, [id, productPageConfig?.enable_recently_viewed]);
 
-  // Increment view count
+  // Increment view count and track behavior
   useEffect(() => {
     if (id) {
-      const incrementViews = async () => {
+      const trackView = async () => {
         try {
           await supabase.rpc("increment_product_views", { product_id: id });
+          await trackEvent("product_view", id, { name: product?.name });
         } catch (error) {
-          console.error("Error incrementing views:", error);
+          console.error("Error tracking view:", error);
         }
       };
-      incrementViews();
+      trackView();
     }
-  }, [id]);
+  }, [id, trackEvent, product?.name]);
 
   const recentlyViewedProducts = useMemo(() => {
     if (!productPageConfig?.enable_recently_viewed || !products) return [];

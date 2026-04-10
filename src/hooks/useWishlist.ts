@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "./useCustomerAuth";
 import { toast } from "sonner";
+import { useBehaviorTracking } from "./useBehaviorTracking";
 
 function getWishlistKey(customerId?: string) {
   return `wishlist_${customerId || "anon"}`;
@@ -27,6 +28,7 @@ export function useWishlist(storeUserId?: string) {
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(() => new Set(loadWishlistCache(customer?.id)));
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { trackEvent } = useBehaviorTracking(storeUserId);
 
   const loadWishlist = useCallback(async () => {
     if (!customer?.id) {
@@ -83,12 +85,14 @@ export function useWishlist(storeUserId?: string) {
           next.delete(productId);
           return next;
         });
+        await trackEvent("remove_from_wishlist", productId);
         toast.success("Removido dos favoritos");
       } else {
         await supabase
           .from("customer_wishlist" as any)
           .insert({ customer_id: customer.id, product_id: productId, store_user_id: storeUserId } as any);
         setWishlistIds((prev) => new Set(prev).add(productId));
+        await trackEvent("add_to_wishlist", productId);
         toast.success("Adicionado aos favoritos ❤️");
       }
     } catch {

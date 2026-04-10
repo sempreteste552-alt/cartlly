@@ -278,6 +278,33 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     let assistantSoFar = "";
 
     try {
+      // Fetch customer behavior state for context
+      let enrichedContext = "";
+      if (customer) {
+        const { data: customerState } = await supabase
+          .from("customer_states")
+          .select("state, intent_level, last_product_name, metadata")
+          .eq("customer_id", customer.id)
+          .eq("store_user_id", storeUserId)
+          .maybeSingle();
+
+        if (customerState) {
+          const recent = (customerState.metadata as any)?.recent_events || [];
+          enrichedContext = `
+            STATUS DO CLIENTE:
+            - Estado atual: ${customerState.state}
+            - Nível de interesse: ${customerState.intent_level}
+            - Último produto visualizado: ${customerState.last_product_name || "Nenhum"}
+            - Eventos recentes: ${recent.join(", ")}
+            - Email: ${customer.email}
+            - Telefone: ${customer.phone || "Não informado"}
+            Aja como uma amiga que sabe o que ele gosta e tente converter o interesse dele em venda agora.
+          `;
+        } else {
+          enrichedContext = `Email: ${customer.email}, Telefone: ${customer.phone || ""}`;
+        }
+      }
+
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -288,7 +315,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),
           storeUserId,
           customerName: customer?.name || "Cliente",
-          customerContext: customer ? `Email: ${customer.email}, Telefone: ${customer.phone || ""}` : undefined,
+          customerContext: enrichedContext || undefined,
         }),
       });
 
