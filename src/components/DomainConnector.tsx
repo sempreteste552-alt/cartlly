@@ -578,6 +578,7 @@ export default function DomainConnector({
                 <ul className="list-disc list-inside space-y-1">
                   <li><strong>Registro A não detectado:</strong> Verifique se não há outro registro A conflitante para @ ou www</li>
                   <li><strong>TXT não detectado:</strong> Certifique-se de que o nome é <code className="bg-muted px-1 rounded">_lovable</code> (com underscore)</li>
+                  <li><strong>Aspas (") no TXT:</strong> Alguns provedores (como GoDaddy/Hostinger) adicionam aspas automaticamente. <strong>Não se preocupe</strong>, nosso sistema identifica o valor mesmo com aspas.</li>
                   <li><strong>Demora na propagação:</strong> Use <a href="https://dnschecker.org" target="_blank" rel="noopener noreferrer" className="text-primary underline">dnschecker.org</a> para verificar</li>
                 </ul>
               </div>
