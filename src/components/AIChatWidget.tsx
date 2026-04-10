@@ -792,7 +792,28 @@ export function AIChatWidget() {
               />
             </div>
 
-            <div className="pt-2">
+            <div className="space-y-2">
+              <Label>Tom da IA (na loja e no admin)</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {AI_TONE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTempTone(opt.value)}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      tempTone === opt.value 
+                        ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="text-base">{opt.label.split(" ")[0]}</span>
+                    <div>
+                      <p className="text-sm font-medium">{opt.label.split(" ").slice(1).join(" ")}</p>
+                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
               <Button onClick={saveSettings} className="w-full" disabled={updateSettings.isPending}>
                 {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações
