@@ -739,7 +739,26 @@ export function AIChatWidget() {
                       ))}
                     </div>
                   )}
-                </div>
+                  </div>
+
+                  {pendingActions[idx] && pendingActions[idx].length > 0 && (
+                    <div className="mt-3 space-y-2 pt-2 border-t border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Ações Pendentes:</p>
+                      {pendingActions[idx].map((action, aidx) => (
+                        <div key={aidx} className="flex items-center justify-between gap-2 bg-muted/50 p-2 rounded-lg border border-border/50">
+                          <span className="text-xs font-medium truncate">{action.label}</span>
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-[10px] px-2" 
+                            disabled={action.confirmed}
+                            onClick={() => confirmAction(idx, aidx)}
+                          >
+                            {action.confirmed ? "Confirmado" : "Confirmar"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
           ))}
