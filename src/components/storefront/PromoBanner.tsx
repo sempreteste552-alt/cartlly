@@ -7,37 +7,45 @@ interface PromoBannerProps {
   storeUserId?: string;
 }
 
+const DEFAULT_TEXT = "🚀 Crie sua própria loja online agora mesmo!";
+const DEFAULT_LINK = "https://usecartlly.vercel.app/";
+
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
   // Check global platform setting
-  const { data: globalEnabled } = useQuery({
-    queryKey: ["platform_promo_banner"],
+  const { data: globalConfig } = useQuery({
+    queryKey: ["platform_promo_banner_config"],
     queryFn: async () => {
       const { data } = await supabase
         .from("platform_settings")
-        .select("value")
-        .eq("key", "promo_banner_enabled")
-        .maybeSingle();
-      return (data?.value as any)?.value === true;
+        .select("key, value")
+        .in("key", ["promo_banner_enabled", "promo_banner_text", "promo_banner_link"]);
+      const map: Record<string, any> = {};
+      data?.forEach(r => { map[r.key] = (r.value as any)?.value; });
+      return {
+        enabled: map.promo_banner_enabled === true,
+        text: (map.promo_banner_text as string) || null,
+        link: (map.promo_banner_link as string) || null,
+      };
     },
   });
 
   // Check per-tenant setting
   const { data: tenantSetting } = useQuery({
-    queryKey: ["tenant_promo_banner", storeUserId],
+    queryKey: ["tenant_promo_banner_full", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
       const { data } = await supabase
         .from("store_settings")
-        .select("promo_banner_enabled")
+        .select("promo_banner_enabled, promo_banner_text, promo_banner_link")
         .eq("user_id", storeUserId!)
         .maybeSingle();
       return data;
     },
   });
 
-  // Check if tenant is PREMIUM (premium hides banner by default)
+  // Check if tenant is PREMIUM
   const { data: tenantPlan } = useQuery({
     queryKey: ["tenant_plan_for_banner", storeUserId],
     enabled: !!storeUserId,
@@ -69,39 +77,58 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const isPremium = tenantPlan === "PREMIUM";
   const tenantEnabled = (tenantSetting as any)?.promo_banner_enabled;
 
-  // Logic: Show for all non-premium by default when global is on.
-  // Premium tenants only see it if they explicitly enabled it.
-  // Any tenant can also force-enable it individually.
   const shouldShow = !dismissed && (
-    (globalEnabled && !isPremium) ||
+    (globalConfig?.enabled && !isPremium) ||
     tenantEnabled === true
   );
 
   if (!shouldShow) return null;
 
+  // Resolve text and link: tenant override > global override > defaults
+  const bannerText = (tenantSetting as any)?.promo_banner_text || globalConfig?.text || DEFAULT_TEXT;
+  const bannerLink = (tenantSetting as any)?.promo_banner_link || globalConfig?.link || DEFAULT_LINK;
+
   return (
-    <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white overflow-hidden">
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+')] animate-pulse" />
+    <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
+      {/* Glow / shimmer effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-20 bg-blue-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "0.5s" }} />
       </div>
-      
-      <div className="relative max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-center">
-        <Sparkles className="h-4 w-4 shrink-0 animate-pulse" />
-        <p className="text-xs sm:text-sm font-medium">
-          <span className="hidden sm:inline">🚀 Crie sua própria loja online agora mesmo!</span>
-          <span className="sm:hidden">🚀 Crie sua loja online!</span>
+      {/* Shimmer sweep */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div 
+          className="absolute top-0 -left-full w-full h-full"
+          style={{
+            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
+            animation: "shimmer-sweep 3s ease-in-out infinite",
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes shimmer-sweep {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
+
+      <div className="relative max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-center">
+        <Sparkles className="h-4 w-4 shrink-0 text-yellow-300 animate-pulse" />
+        <p className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg">
+          {bannerText}
         </p>
         <a
-          href="https://usecartlly.vercel.app/"
+          href={bannerLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-xs font-semibold transition-all hover:scale-105"
+          className="shrink-0 inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-xs font-bold text-white border border-white/20 transition-all hover:scale-105 shadow-lg shadow-purple-500/20"
         >
           Saiba mais <ExternalLink className="h-3 w-3" />
         </a>
         <button
           onClick={handleDismiss}
-          className="shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors ml-1"
+          className="shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors ml-1 text-white/70 hover:text-white"
           aria-label="Fechar banner"
         >
           <X className="h-3.5 w-3.5" />
