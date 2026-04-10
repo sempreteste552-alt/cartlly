@@ -360,8 +360,8 @@ export default function SuperAdminTenants() {
     // Online Badge
     if (isOnline) {
       badges.push(
-        <Badge key="online" variant="default" className="bg-green-500 hover:bg-green-600 animate-pulse">
-          <span className="h-1.5 w-1.5 rounded-full bg-white mr-1.5" />
+        <Badge key="online" variant="default" className="bg-green-500 hover:bg-green-600 animate-pulse border-none shadow-[0_0_8px_rgba(34,197,94,0.6)]">
+          <span className="h-2 w-2 rounded-full bg-white mr-2 shadow-sm" />
           Online
         </Badge>
       );
