@@ -110,7 +110,7 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-5 w-5 animate-pulse" style={{ color: alertAccentColor }} />
               <h3 className="text-lg font-bold leading-tight" style={{ color: alertTextColor === '#ffffff' ? undefined : alertTextColor }}>
-                {alert?.title || "🔥 Produtos de volta!"}
+                {alert?.title || "🔥 Novidades e Reposição!"}
               </h3>
             </div>
             {alert?.subtitle && (
