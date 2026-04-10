@@ -85,6 +85,42 @@ export default function SetupStore() {
 
       if (error) throw error;
 
+      // Process referral code for OAuth signups
+      try {
+        const ctxStr = localStorage.getItem("auth_context");
+        const refCode = localStorage.getItem("referral_code") || (ctxStr ? JSON.parse(ctxStr)?.referral_code : null);
+        if (refCode) {
+          // Look up the referral code
+          const { data: refData } = await supabase
+            .from("referral_codes")
+            .select("tenant_id")
+            .eq("code", refCode)
+            .maybeSingle();
+
+          if (refData && refData.tenant_id !== user.id) {
+            // Check no existing referral for this user
+            const { data: existing } = await supabase
+              .from("referrals")
+              .select("id")
+              .eq("referred_user_id", user.id)
+              .maybeSingle();
+
+            if (!existing) {
+              await supabase.from("referrals").insert({
+                referrer_tenant_id: refData.tenant_id,
+                referred_user_id: user.id,
+                referred_email: user.email || "",
+                referral_code: refCode,
+                status: "registered",
+              });
+            }
+          }
+          localStorage.removeItem("referral_code");
+        }
+      } catch (refErr) {
+        console.warn("Referral processing error:", refErr);
+      }
+
       toast.success("Loja configurada com sucesso!");
       navigate("/admin");
     } catch (error: any) {
