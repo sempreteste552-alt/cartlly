@@ -56,6 +56,18 @@ export default function ContaEmAnalise() {
   const isMaintenance = platformSettings?.maintenance_mode === true;
 
   const getContent = () => {
+    if (isMaintenance) {
+      return {
+        icon: <Wrench className="h-10 w-10 text-primary" />,
+        iconBg: "bg-primary/10",
+        title: "Modo Manutenção",
+        description: "A plataforma está em manutenção para melhorias.",
+        detail: "Voltaremos em breve! Se precisar de ajuda imediata, use o suporte abaixo.",
+        badge: "🛠️ Status: Manutenção global",
+        badgeBorder: "border-primary/30 bg-primary/5",
+        badgeText: "text-primary",
+      };
+    }
     if (isBlocked) {
       return {
         icon: <Ban className="h-10 w-10 text-destructive" />,
