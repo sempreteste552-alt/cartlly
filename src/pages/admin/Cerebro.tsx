@@ -257,12 +257,13 @@ export default function Cerebro() {
         toast.success("✅ Conteúdo da página atualizado!");
         queryClient.invalidateQueries({ queryKey: ["store_pages"] });
       } else if (action.type === "schedule_reminder") {
-        const { error } = await supabase.from("admin_notifications").insert({
-          target_user_id: user.id,
-          title: action.payload.title,
-          message: action.payload.description,
-          type: "ai_suggestion",
-          scheduled_at: action.payload.remind_at
+        const { error } = await supabase.from("ai_scheduled_tasks").insert({
+          user_id: user.id,
+          task_type: "reminder",
+          scheduled_at: action.payload.remind_at,
+          payload: { title: action.payload.title, description: action.payload.description },
+          ai_instruction: action.payload.title,
+          status: "pending"
         });
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
