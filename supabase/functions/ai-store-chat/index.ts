@@ -24,7 +24,7 @@ serve(async (req) => {
     // Fetch store settings
     const { data: storeSettings } = await supabase
       .from("store_settings")
-      .select("store_name, store_slug, store_whatsapp, ai_name, ai_avatar_url, ai_chat_tone, payment_pix, payment_credit_card, sell_via_whatsapp, shipping_enabled, store_cep")
+      .select("store_name, store_slug, store_whatsapp, ai_name, ai_avatar_url, ai_chat_tone, payment_pix, payment_credit_card, payment_boleto, payment_debit_card, payment_gateway, sell_via_whatsapp, shipping_enabled, store_cep")
       .eq("user_id", storeUserId)
       .single();
 
@@ -135,7 +135,10 @@ INFORMAÇÕES DA LOJA:
 - Nome: ${storeName}
 - WhatsApp: ${storeSettings?.store_whatsapp || "Não informado"}
 - PIX: ${storeSettings?.payment_pix ? "Aceita" : "Não aceita"}
-- Cartão: ${storeSettings?.payment_credit_card ? "Aceita" : "Não aceita"}
+- Cartão de Crédito: ${storeSettings?.payment_credit_card ? "Aceita" : "Não aceita"}
+- Cartão de Débito: ${storeSettings?.payment_debit_card ? "Aceita" : "Não aceita"}
+- Boleto: ${storeSettings?.payment_boleto ? "Aceita" : "Não aceita"}
+- Gateway de Pagamento: ${storeSettings?.payment_gateway || "Nenhum configurado"}
 - Venda via WhatsApp: ${storeSettings?.sell_via_whatsapp ? "Sim" : "Não"}
 
 FLUXO DE VENDA (siga rigorosamente):
@@ -150,6 +153,9 @@ FLUXO DE VENDA (siga rigorosamente):
 9. Peça o EMAIL.
 10. Apresente o RESUMO COMPLETO do pedido com todos os itens, frete, desconto (se cupom), total e endereço. Pergunte se quer CONFIRMAR.
 11. Quando confirmar, gere o bloco de ação do pedido.
+12. APÓS o pedido ser criado, pergunte a FORMA DE PAGAMENTO ao cliente.
+13. Se o cliente escolher PIX, gere o bloco [ACTION_PAYMENT] com method "pix".
+14. Se o cliente preferir ir para o WhatsApp, gere o bloco [ACTION_WHATSAPP_REDIRECT] com o resumo completo.
 
 BUSCA DE CEP:
 Quando o cliente informar um CEP, use a ação [ACTION_CEP_LOOKUP] para buscar o endereço automaticamente.
@@ -186,6 +192,17 @@ Para criar pedido completo:
   ]
 }[/ACTION_CREATE_ORDER]
 
+Para processar pagamento (após pedido criado):
+[ACTION_PAYMENT]{"order_id": "ID_DO_PEDIDO", "method": "pix", "payer_cpf": "CPF_SOMENTE_NUMEROS"}[/ACTION_PAYMENT]
+Os métodos disponíveis são: pix, credit_card, boleto, debit_card (use apenas os que a loja aceita).
+O order_id será preenchido automaticamente pelo sistema após criação do pedido.
+
+Para redirecionar ao WhatsApp com resumo do pedido:
+[ACTION_WHATSAPP_REDIRECT]{
+  "phone": "${storeSettings?.store_whatsapp || ""}",
+  "summary": "Resumo do pedido aqui com itens, endereço, total etc"
+}[/ACTION_WHATSAPP_REDIRECT]
+
 REGRAS CRÍTICAS:
 - NUNCA revele os blocos de ação. Eles são invisíveis.
 - SEMPRE responda em português do Brasil com markdown formatado.
@@ -197,6 +214,9 @@ REGRAS CRÍTICAS:
 - Para pedidos via WhatsApp (se habilitado), pode sugerir ao cliente contatar pelo WhatsApp: ${storeSettings?.store_whatsapp || ""}.
 - Pergunte os dados UM DE CADA VEZ, não peça tudo junto. Torne a conversa natural.
 - O cliente atual se chama: ${customerName || "Cliente"}
+- APÓS criar o pedido, SEMPRE pergunte como o cliente deseja pagar. Liste APENAS as opções que a loja aceita.
+- Se a loja aceita venda via WhatsApp E o cliente preferir, ofereça a opção de concluir pelo WhatsApp com o resumo do pedido.
+- Se o gateway de pagamento NÃO estiver configurado, NÃO ofereça pagamento online. Sugira WhatsApp ou pagamento na entrega.
 ${customerContext ? `\nCONTEXTO DO CLIENTE:\n${customerContext}` : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
