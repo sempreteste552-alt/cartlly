@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,258 +11,175 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Globe, CheckCircle2, Clock, XCircle, Loader2, RefreshCw,
-  ExternalLink, ArrowRight, Server, Copy, Check, AlertTriangle, HelpCircle, Upload
+  ExternalLink, ArrowRight, Server, Copy, Check, AlertTriangle, HelpCircle, Trash2, ShieldCheck, Star
 } from "lucide-react";
+import { normalizeDomain } from "@/lib/storeDomain";
 
 interface DomainConnectorProps {
-  settingsId?: string;
-  currentDomain: string;
-  domainStatus: string;
-  lastCheck: string | null;
+  settingsId: string;
+  currentDomain?: string;
+  domainStatus?: string;
+  lastCheck?: string | null;
   storeSlug?: string;
-  onDomainChange: (domain: string) => void;
-  onSave: () => void;
+  onDomainChange?: (domain: string) => void;
+  onSave?: () => void;
   savedVerifyDetails?: any;
 }
 
-const PROVIDER_MAP: Record<string, { name: string; logo: string; instructions: string[] }> = {
-  hostinger: {
-    name: "Hostinger",
-    logo: "🟣",
-    instructions: [
-      "Acesse hPanel → Domínios → seu domínio",
-      "Clique em 'DNS / Nameservers'",
-      "Na aba 'Registros DNS', adicione os registros abaixo",
-    ],
-  },
-  godaddy: {
-    name: "GoDaddy",
-    logo: "🟢",
-    instructions: [
-      "Acesse Meus Produtos → Domínios → DNS",
-      "Clique em 'Gerenciar DNS'",
-      "Adicione os registros abaixo na seção de registros",
-    ],
-  },
-  cloudflare: {
-    name: "Cloudflare",
-    logo: "🟠",
-    instructions: [
-      "Acesse o Dashboard → selecione seu domínio",
-      "Vá em DNS → Records",
-      "Adicione os registros abaixo (desative o proxy/nuvem laranja para o registro A)",
-    ],
-  },
-  registrobr: {
-    name: "Registro.br",
-    logo: "🔵",
-    instructions: [
-      "Acesse registro.br → Meus domínios",
-      "Clique no domínio → 'Editar zona'",
-      "Adicione os registros abaixo",
-    ],
-  },
-  namecheap: {
-    name: "Namecheap",
-    logo: "🔴",
-    instructions: [
-      "Acesse Dashboard → Domain List → Manage",
-      "Clique em 'Advanced DNS'",
-      "Adicione os registros abaixo em 'HOST RECORDS'",
-    ],
-  },
-};
+const PLATFORM_IP = "185.158.133.1";
+const PLATFORM_EDGE = "edge.lovableproject.com";
 
-function detectProviderFromNS(nameservers: string[]): string {
-  const ns = nameservers.map((n) => n.toLowerCase());
-  for (const n of ns) {
-    if (n.includes("hostinger") || n.includes("dns-parking")) return "hostinger";
-    if (n.includes("godaddy") || n.includes("domaincontrol")) return "godaddy";
-    if (n.includes("cloudflare")) return "cloudflare";
-    if (n.includes("registro.br") || n.includes("dns.br")) return "registrobr";
-    if (n.includes("namecheap") || n.includes("registrar-servers")) return "namecheap";
-  }
-  return "other";
-}
-
-function normalizeDomain(domain: string): string {
-  return domain
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "")
-    .replace(/\.$/, "")
-    .replace(/["']/g, ""); // Remove accidental quotes
-}
-
-function isValidDomain(domain: string): boolean {
-  const cleaned = normalizeDomain(domain);
-  return /^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(cleaned);
+interface StoreDomain {
+  id: string;
+  store_id: string;
+  hostname: string;
+  verification_token: string;
+  is_primary: boolean;
+  status: 'pending_dns' | 'pending_verification' | 'pending_ssl' | 'active' | 'failed';
+  ssl_status: 'pending' | 'active' | 'failed';
+  created_at: string;
 }
 
 export default function DomainConnector({
   settingsId,
-  currentDomain,
-  domainStatus,
-  lastCheck,
-  storeSlug,
-  onDomainChange,
-  onSave,
-  savedVerifyDetails,
 }: DomainConnectorProps) {
   const queryClient = useQueryClient();
-  const initialSslReady = Boolean(savedVerifyDetails?.sslReady);
-  const [step, setStep] = useState<"input" | "detecting" | "instructions" | "verifying" | "done">(
-    domainStatus === "verified" && initialSslReady ? "done" : currentDomain ? "instructions" : "input"
-  );
-  const [domain, setDomain] = useState(currentDomain);
-  const [provider, setProvider] = useState<string>(savedVerifyDetails?.provider || "");
-  const [nameservers, setNameservers] = useState<string[]>([]);
-  const [checking, setChecking] = useState(false);
+  const [newDomain, setNewDomain] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [verifyResult, setVerifyResult] = useState<any>(savedVerifyDetails || null);
-  const [autoPolling, setAutoPolling] = useState(false);
-  const [pollCount, setPollCount] = useState(0);
-  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isSslReady = Boolean(verifyResult?.sslReady);
 
-  const progressValue =
-    step === "input" ? 15 :
-    step === "detecting" ? 35 :
-    step === "instructions" ? 55 :
-    step === "verifying" ? 80 :
-    100;
+  const { data: domains, isLoading, refetch } = useQuery({
+    queryKey: ["store_domains", settingsId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_domains")
+        .select("*")
+        .eq("store_id", settingsId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data as StoreDomain[];
+    },
+    enabled: !!settingsId,
+  });
 
-  // Auto-poll SSL when DNS is complete
-  const silentVerify = useCallback(async () => {
-    if (!settingsId || !domain) return;
+  const handleAddDomain = async () => {
+    const cleanDomain = normalizeDomain(newDomain);
+    if (!cleanDomain || !cleanDomain.includes(".")) {
+      toast.error("Informe um domínio válido (ex: minhaloja.com.br)");
+      return;
+    }
+
+    setIsAdding(true);
     try {
-      const { data, error } = await supabase.functions.invoke("verify-domain", {
-        body: { settingsId, domain: normalizeDomain(domain) },
-      });
-      if (error) return;
-      setVerifyResult(data);
-      await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+      // Check if domain exists already for any store
+      const { data: existing } = await supabase
+        .from("store_domains")
+        .select("id")
+        .eq("hostname", cleanDomain)
+        .maybeSingle();
 
-      if (data?.status === "verified" && data?.sslReady) {
-        setAutoPolling(false);
-        setStep("done");
-        toast.success("🎉 Domínio verificado e online! Certificado SSL ativo.");
-      } else if (data?.status === "verified") {
-        setStep("instructions");
-        setAutoPolling(true);
-        setPollCount((c) => c + 1);
-      } else {
-        setPollCount((c) => c + 1);
+      if (existing) {
+        toast.error("Este domínio já está vinculado a outra loja.");
+        return;
       }
-    } catch {
-      // silent fail
-    }
-  }, [settingsId, domain, queryClient]);
 
-  useEffect(() => {
-    if (!autoPolling) return;
-    // Poll every 30s, max 20 attempts (10 minutes)
-    if (pollCount >= 20) {
-      setAutoPolling(false);
-      toast.info("Verificação automática pausada. Clique em 'Verificar' manualmente.");
-      return;
-    }
-    pollTimerRef.current = setTimeout(silentVerify, 30000);
-    return () => {
-      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-    };
-  }, [autoPolling, pollCount, silentVerify]);
+      const { error } = await supabase.from("store_domains").insert({
+        store_id: settingsId,
+        hostname: cleanDomain,
+        is_primary: (domains?.length || 0) === 0, // First domain is primary by default
+      });
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-    };
-  }, []);
+      if (error) throw error;
 
-  const handleProceed = async () => {
-    const cleanDomain = normalizeDomain(domain);
-    if (!isValidDomain(cleanDomain)) {
-      toast.error("Formato de domínio inválido. Ex: minhaloja.com.br ou www.minhaloja.com.br");
-      return;
-    }
-
-    setDomain(cleanDomain);
-    onDomainChange(cleanDomain);
-    setStep("detecting");
-
-    try {
-      const providerLookupDomain = cleanDomain.replace(/^www\./, "");
-      const nsRes = await fetch(`https://dns.google/resolve?name=${providerLookupDomain}&type=NS`);
-      const nsData = await nsRes.json();
-      const nsList = nsData.Answer?.map((r: any) => r.data) || [];
-      setNameservers(nsList);
-      const detected = detectProviderFromNS(nsList);
-      setProvider(detected);
-      setStep("instructions");
-    } catch {
-      setProvider("other");
-      setStep("instructions");
+      toast.success("Domínio adicionado com sucesso!");
+      setNewDomain("");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao adicionar domínio");
+    } finally {
+      setIsAdding(false);
     }
   };
 
-  const handleVerify = async () => {
-    if (!settingsId) {
-      toast.error("Salve as configurações primeiro antes de verificar");
-      return;
-    }
-
-    const domainToVerify = normalizeDomain(domain);
-    if (!isValidDomain(domainToVerify)) {
-      toast.error("Informe um domínio válido antes de verificar");
-      return;
-    }
-
-    setStep("verifying");
-    setChecking(true);
+  const handleVerify = async (domain: StoreDomain) => {
+    setVerifyingId(domain.id);
     try {
       const { data, error } = await supabase.functions.invoke("verify-domain", {
-        body: { settingsId, domain: domainToVerify },
+        body: { 
+          settingsId, 
+          domain: domain.hostname,
+          domainId: domain.id
+        },
       });
+      
       if (error) throw error;
 
-      setDomain(data?.domain || domainToVerify);
-      onDomainChange(data?.domain || domainToVerify);
-      setVerifyResult(data);
-      await queryClient.invalidateQueries({ queryKey: ["store_settings"] });
-
-      if (data?.status === "verified" && data?.sslReady) {
-        setStep("done");
-        setAutoPolling(false);
-        toast.success("🎉 Domínio verificado com sucesso! Certificado SSL ativo.");
-      } else if (data?.status === "verified") {
-        setStep("instructions");
-        setAutoPolling(true);
-        setPollCount(0);
-        toast.info("DNS verificado ✅ O SSL ainda está sendo provisionado.");
-      } else if (data?.status === "pending") {
-        setStep("instructions");
-        if (data?.dnsComplete) {
-          toast.success("DNS configurado corretamente! ✅ Verificação automática de SSL ativada...");
-          setAutoPolling(true);
-          setPollCount(0);
-        } else if (data?.aRecord && !data?.txtRecord) {
-          toast.info("Registro A encontrado ✅ — Falta o registro TXT (_lovable). Adicione-o e tente novamente.");
-        } else if (!data?.aRecord && data?.txtRecord) {
-          toast.info("Registro TXT encontrado ✅ — Falta o registro A (@). Adicione-o e tente novamente.");
-        } else {
-          toast.info("DNS parcialmente configurado. Continue com os registros faltantes.");
-        }
+      if (data?.status === "active") {
+        toast.success(`🎉 Domínio ${domain.hostname} verificado e online!`);
+      } else if (data?.status === "pending_ssl") {
+        toast.info("DNS verificado ✅ O SSL está sendo provisionado.");
       } else {
-        setStep("instructions");
-        toast.error("Registros DNS não encontrados. Verifique se foram adicionados corretamente.");
+        toast.info("Configuração incompleta. Verifique os registros DNS.");
       }
+      
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
     } catch (err: any) {
-      setStep("instructions");
-      toast.error(err.message || "Erro ao verificar");
+      toast.error(err.message || "Erro ao verificar domínio");
     } finally {
-      setChecking(false);
+      setVerifyingId(null);
+    }
+  };
+
+  const handleSetPrimary = async (domain: StoreDomain) => {
+    try {
+      const { error } = await supabase
+        .from("store_domains")
+        .update({ is_primary: true })
+        .eq("id", domain.id);
+
+      if (error) throw error;
+
+      // Also update store_settings to keep custom_domain field in sync for backward compatibility
+      await supabase
+        .from("store_settings")
+        .update({ custom_domain: domain.hostname } as any)
+        .eq("id", settingsId);
+
+      toast.success("Domínio primário definido!");
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao definir primário");
+    }
+  };
+
+  const handleRemove = async (domain: StoreDomain) => {
+    if (!confirm(`Tem certeza que deseja remover o domínio ${domain.hostname}?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("store_domains")
+        .delete()
+        .eq("id", domain.id);
+
+      if (error) throw error;
+
+      // If it was primary, clear it in store_settings too
+      if (domain.is_primary) {
+        await supabase
+          .from("store_settings")
+          .update({ custom_domain: null } as any)
+          .eq("id", settingsId);
+      }
+
+      toast.success("Domínio removido.");
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao remover domínio");
     }
   };
 
@@ -273,324 +190,211 @@ export default function DomainConnector({
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const handleReset = () => {
-    setStep("input");
-    setDomain("");
-    setProvider("");
-    setVerifyResult(null);
-    onDomainChange("");
+  const getStatusBadge = (status: string, sslStatus?: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>;
+      case 'pending_ssl':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-700">Provisionando SSL</Badge>;
+      case 'pending_verification':
+        return <Badge variant="outline" className="text-amber-600 border-amber-600">Aguardando TXT</Badge>;
+      case 'pending_dns':
+        return <Badge variant="outline">Aguardando DNS</Badge>;
+      case 'failed':
+        return <Badge variant="destructive">Falhou</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
-
-  const providerInfo = PROVIDER_MAP[provider] || {
-    name: "Outro Provedor",
-    logo: "🌐",
-    instructions: [
-      "Acesse o painel de controle do seu provedor de domínio",
-      "Localize a seção de gerenciamento DNS",
-      "Adicione os registros abaixo",
-    ],
-  };
-
-  const verificationToken = settingsId || "...";
 
   return (
-    <Card className="border-border">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg">Domínio Personalizado</CardTitle>
+    <Card className="border-border shadow-sm overflow-hidden">
+      <CardHeader className="bg-muted/30 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            <div>
+              <CardTitle className="text-lg">Domínios Personalizados</CardTitle>
+              <CardDescription>Gerencie seus domínios e aponte para sua loja</CardDescription>
+            </div>
+          </div>
+          <ShieldCheck className="h-8 w-8 text-primary/20" />
         </div>
-        <CardDescription>Conecte seu domínio próprio à sua loja</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span className={step === "input" ? "text-primary font-medium" : ""}>1. Domínio</span>
-            <span className={step === "detecting" || step === "instructions" ? "text-primary font-medium" : ""}>2. Configuração</span>
-            <span className={step === "verifying" ? "text-primary font-medium" : ""}>3. Verificação</span>
-            <span className={step === "done" ? "text-primary font-medium" : ""}>4. Conectado</span>
+      <CardContent className="p-0">
+        <div className="p-4 bg-background border-b border-border">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                placeholder="ex: minhaloja.com.br"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                disabled={isAdding}
+                className="pr-10"
+              />
+              <Globe className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+            <Button onClick={handleAddDomain} disabled={isAdding || !newDomain.trim()}>
+              {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Adicionar"}
+            </Button>
           </div>
-          <Progress value={progressValue} className="h-2" />
+          <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-wider font-semibold">
+            Recomendamos usar seu domínio principal (ex: dominio.com.br)
+          </p>
         </div>
 
-        {/* Step 1: Domain Input */}
-        {step === "input" && (
-          <div className="space-y-3">
-            <Label>Digite seu domínio</Label>
-            <div className="flex gap-2">
-              <Input
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="minhaloja.com.br"
-                maxLength={255}
-              />
-              <Button onClick={handleProceed} disabled={!domain.trim()}>
-                Prosseguir <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Carregando seus domínios...</p>
+          </div>
+        ) : domains?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+            <div className="bg-muted rounded-full p-4 mb-4">
+              <Globe className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Ex: minhaloja.com.br ou loja.meusite.com
+            <h3 className="font-medium text-foreground">Nenhum domínio próprio</h3>
+            <p className="text-sm text-muted-foreground max-w-[280px]">
+              Adicione um domínio acima para começar a usar seu próprio endereço.
             </p>
           </div>
-        )}
-
-        {/* Step 2: Detecting */}
-        {step === "detecting" && (
-          <div className="flex flex-col items-center gap-3 py-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Detectando provedor DNS de <strong>{domain}</strong>...</p>
-          </div>
-        )}
-
-        {/* Step 3: Instructions */}
-        {step === "instructions" && (
-          <div className="space-y-4">
-            {/* Provider detected */}
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/50 p-3">
-              <span className="text-2xl">{providerInfo.logo}</span>
-              <div>
-                <p className="text-sm font-medium">
-                  Detectamos que seu domínio está na <strong>{providerInfo.name}</strong>
-                </p>
-                {nameservers.length > 0 && (
-                  <p className="text-xs text-muted-foreground font-mono">
-                    NS: {nameservers.slice(0, 2).join(", ")}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Verify result badges */}
-            {verifyResult && (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Badge variant={verifyResult.aRecord ? "default" : "destructive"} className="text-xs">
-                    {verifyResult.aRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
-                    Registro A
-                  </Badge>
-                  <Badge variant={verifyResult.txtRecord ? "default" : "destructive"} className="text-xs">
-                    {verifyResult.txtRecord ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <XCircle className="mr-1 h-3 w-3" />}
-                    Registro TXT
-                  </Badge>
-                  {verifyResult.dnsComplete && (
-                    <Badge variant={verifyResult.sslReady ? "default" : "secondary"} className="text-xs">
-                      {verifyResult.sslReady ? <CheckCircle2 className="mr-1 h-3 w-3" /> : <Clock className="mr-1 h-3 w-3" />}
-                      SSL
-                    </Badge>
-                  )}
-                </div>
-                {verifyResult.dnsComplete && !verifyResult.sslReady && (
-                  <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
-                    {autoPolling ? (
-                      <>
-                        <Loader2 className="h-4 w-4 text-primary shrink-0 animate-spin" />
-                        <div>
-                          <p className="text-xs font-medium text-foreground">
-                            🔄 Verificação automática ativa ({pollCount}/20)
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Checando SSL a cada 30 segundos... Você será notificado quando estiver pronto.
-                          </p>
+        ) : (
+          <div className="divide-y divide-border">
+            {domains?.map((domain) => (
+              <Accordion type="single" collapsible key={domain.id}>
+                <AccordionItem value="item-1" className="border-none">
+                  <div className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${domain.is_primary ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        {domain.is_primary ? <Star className="h-4 w-4 fill-primary" /> : <Globe className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{domain.hostname}</span>
+                          {domain.is_primary && <Badge className="text-[10px] h-4 bg-primary/20 text-primary border-none">Principal</Badge>}
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="h-4 w-4 text-primary shrink-0" />
-                        <p className="text-xs text-muted-foreground">
-                          DNS correto! O certificado SSL está sendo provisionado. Clique em <strong>Verificar</strong> para ativar a verificação automática.
-                        </p>
-                      </>
-                    )}
+                        <div className="flex items-center gap-2 mt-1">
+                          {getStatusBadge(domain.status, domain.ssl_status)}
+                          <span className="text-[10px] text-muted-foreground">
+                            Adicionado em {new Date(domain.created_at).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <AccordionTrigger className="hover:no-underline p-2 rounded-md hover:bg-muted">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </AccordionTrigger>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        onClick={() => handleVerify(domain)}
+                        disabled={verifyingId === domain.id}
+                      >
+                        {verifyingId === domain.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemove(domain)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* Instructions */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">📋 Siga os passos:</p>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                {providerInfo.instructions.map((inst, i) => (
-                  <li key={i}>{inst}</li>
-                ))}
-              </ol>
-            </div>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-4 pt-2">
+                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-800 space-y-1">
+                          <p className="font-bold">Instruções de Configuração DNS</p>
+                          <p>Acesse o painel do seu provedor de domínio (Hostinger, Godaddy, Cloudflare, etc) e adicione os registros abaixo exatamente como mostrados.</p>
+                          <p className="font-medium">Importante: Propagação DNS pode levar até 48 horas.</p>
+                        </div>
+                      </div>
 
-            {/* DNS Records Table */}
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50">
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Tipo</th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Nome</th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Valor</th>
-                    <th className="py-2 px-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="font-mono">
-                  <tr className="border-b border-border/50">
-                    <td className="py-2 px-3"><Badge variant="outline" className="text-xs">A</Badge></td>
-                    <td className="py-2 px-3">@</td>
-                    <td className="py-2 px-3 text-primary font-medium">185.158.133.1</td>
-                    <td className="py-2 px-3">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy("185.158.133.1", "a-root")}>
-                        {copied === "a-root" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr className="border-b border-border/50">
-                    <td className="py-2 px-3"><Badge variant="outline" className="text-xs">A</Badge></td>
-                    <td className="py-2 px-3">www</td>
-                    <td className="py-2 px-3 text-primary font-medium">185.158.133.1</td>
-                    <td className="py-2 px-3">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy("185.158.133.1", "a-www")}>
-                        {copied === "a-www" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      </Button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 px-3"><Badge variant="outline" className="text-xs">TXT</Badge></td>
-                    <td className="py-2 px-3">_lovable</td>
-                    <td className="py-2 px-3 text-primary font-medium break-all">lovable_verify={verificationToken}</td>
-                    <td className="py-2 px-3">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(`lovable_verify=${verificationToken}`, "txt")}>
-                        {copied === "txt" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      </Button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      <div className="overflow-x-auto rounded-lg border border-border">
+                        <table className="w-full text-[11px] text-left">
+                          <thead className="bg-muted/50 text-muted-foreground uppercase font-bold">
+                            <tr className="border-b border-border">
+                              <th className="py-2 px-3">Tipo</th>
+                              <th className="py-2 px-3">Host / Nome</th>
+                              <th className="py-2 px-3">Valor / Destino</th>
+                              <th className="py-2 px-3 text-right">Ação</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border font-mono">
+                            {/* A Record Root */}
+                            <tr>
+                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono">A</Badge></td>
+                              <td className="py-2 px-3 font-medium">@</td>
+                              <td className="py-2 px-3 text-primary">{PLATFORM_IP}</td>
+                              <td className="py-2 px-3 text-right">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(PLATFORM_IP, `${domain.id}-a`)}>
+                                  {copied === `${domain.id}-a` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                              </td>
+                            </tr>
+                            {/* CNAME Record WWW */}
+                            <tr>
+                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono">CNAME</Badge></td>
+                              <td className="py-2 px-3 font-medium">www</td>
+                              <td className="py-2 px-3 text-primary">{PLATFORM_EDGE}</td>
+                              <td className="py-2 px-3 text-right">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(PLATFORM_EDGE, `${domain.id}-cname`)}>
+                                  {copied === `${domain.id}-cname` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                              </td>
+                            </tr>
+                            {/* TXT Verification */}
+                            <tr>
+                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono">TXT</Badge></td>
+                              <td className="py-2 px-3 font-medium">_lovable</td>
+                              <td className="py-2 px-3 text-primary truncate max-w-[150px]">{domain.verification_token}</td>
+                              <td className="py-2 px-3 text-right">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(domain.verification_token, `${domain.id}-txt`)}>
+                                  {copied === `${domain.id}-txt` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
 
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" /> A propagação DNS pode levar até <strong>72 horas</strong>.
-              </p>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Server className="h-3 w-3" /> O certificado SSL será provisionado automaticamente.
-              </p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button onClick={() => { onSave(); handleVerify(); }} disabled={checking}>
-                {checking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                Verificar Conexão
-              </Button>
-              <Button variant="outline" onClick={handleReset}>
-                Alterar Domínio
-              </Button>
-            </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => handleVerify(domain)}
+                          disabled={verifyingId === domain.id}
+                        >
+                          {verifyingId === domain.id ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-2" />}
+                          Verificar Agora
+                        </Button>
+                        {!domain.is_primary && domain.status === 'active' && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="flex-1 text-xs"
+                            onClick={() => handleSetPrimary(domain)}
+                          >
+                            <Star className="h-3 w-3 mr-2" />
+                            Tornar Principal
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ))}
           </div>
         )}
-
-        {/* Step: Verifying */}
-        {step === "verifying" && (
-          <div className="flex flex-col items-center gap-3 py-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Verificando registros DNS de <strong>{domain}</strong>...</p>
-          </div>
-        )}
-
-        {/* Step 4: Done */}
-        {step === "done" && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30 p-4">
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm font-semibold text-green-700 dark:text-green-400">Domínio Conectado!</p>
-                <p className="text-xs text-green-600 dark:text-green-500">
-                  <strong>{domain}</strong> está verificado e com SSL ativo.
-                </p>
-              </div>
-            </div>
-
-            {lastCheck && (
-              <p className="text-xs text-muted-foreground">
-                Última verificação: {new Date(lastCheck).toLocaleString("pt-BR")}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              <Button variant="default" size="sm" asChild>
-                <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" /> Abrir Loja
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleVerify} disabled={checking}>
-                {checking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                Reverificar
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleReset}>
-                Alterar Domínio
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step !== "done" && verifyResult?.status === "verified" && !isSslReady && (
-          <div className="rounded-lg border border-border bg-muted/50 p-4">
-            <p className="text-sm font-medium text-foreground">DNS conectado, SSL pendente</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Seu domínio já foi reconhecido, mas ainda não está abrindo porque o certificado HTTPS não terminou de ativar.
-              Enquanto isso, a loja continua disponível em <strong>/loja/{storeSlug || "sua-loja"}</strong>.
-            </p>
-          </div>
-        )}
-        {/* Tutorial */}
-        <Accordion type="single" collapsible className="mt-2">
-          <AccordionItem value="tutorial" className="border-border">
-            <AccordionTrigger className="text-sm py-2">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-primary" />
-                Tutorial: Como configurar o domínio
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="text-sm space-y-4 text-muted-foreground">
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">⚠️ Importante: NÃO altere os Nameservers (NS)</p>
-                <p>Você <strong>não</strong> precisa mudar os nameservers do seu domínio. Apenas adicione os registros DNS (A e TXT) no painel do seu provedor atual.</p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Passo a passo:</p>
-                <ol className="list-decimal list-inside space-y-2">
-                  <li>Acesse o <strong>painel de DNS</strong> do seu provedor de domínio (Hostinger, GoDaddy, Cloudflare, Registro.br, etc.)</li>
-                  <li>Adicione um registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">@</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
-                  <li>Adicione outro registro <strong>A</strong> com nome <code className="bg-muted px-1 rounded">www</code> apontando para <code className="bg-muted px-1 rounded">185.158.133.1</code></li>
-                  <li>Adicione um registro <strong>TXT</strong> com nome <code className="bg-muted px-1 rounded">_lovable</code> e valor <code className="bg-muted px-1 rounded">lovable_verify={settingsId || "..."}</code> (Se o seu provedor adicionar aspas automaticamente, não tem problema)</li>
-                  <li>Aguarde a propagação DNS (pode levar de 5 minutos a 72 horas)</li>
-                  <li>Clique em <strong>"Verificar Conexão"</strong> acima</li>
-                </ol>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Se usar Cloudflare:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Desative o proxy (nuvem laranja)</strong> no registro A — use DNS Only (nuvem cinza)</li>
-                  <li>Se preferir manter o proxy ativo, use CNAME em vez de A record</li>
-                </ul>
-              </div>
-
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">Problemas comuns:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Registro A não detectado:</strong> Verifique se não há outro registro A conflitante para @ ou www</li>
-                  <li><strong>TXT não detectado:</strong> Certifique-se de que o nome é <code className="bg-muted px-1 rounded">_lovable</code> (com underscore)</li>
-                  <li><strong>Aspas (") no TXT:</strong> Alguns provedores (como GoDaddy/Hostinger) adicionam aspas automaticamente. <strong>Não se preocupe</strong>, nosso sistema identifica o valor mesmo com aspas.</li>
-                  <li><strong>Demora na propagação:</strong> Use <a href="https://dnschecker.org" target="_blank" rel="noopener noreferrer" className="text-primary underline">dnschecker.org</a> para verificar</li>
-                </ul>
-              </div>
-
-              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs">
-                  <strong>💡 Dica:</strong> Após o domínio ser verificado, o botão "Ver Loja" no painel usará automaticamente seu domínio personalizado e o certificado SSL será provisionado em poucos minutos.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
       </CardContent>
     </Card>
   );
