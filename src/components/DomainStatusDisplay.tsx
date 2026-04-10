@@ -11,11 +11,12 @@ interface DomainStatusDisplayProps {
   lastCheck: string | null;
   settingsId?: string;
   storeSlug?: string;
+  savedVerifyDetails?: { sslReady?: boolean } | null;
 }
 
-export default function DomainStatusDisplay({ domain, status, lastCheck, settingsId, storeSlug }: DomainStatusDisplayProps) {
+export default function DomainStatusDisplay({ domain, status, lastCheck, settingsId, storeSlug, savedVerifyDetails }: DomainStatusDisplayProps) {
   const [checking, setChecking] = useState(false);
-  const [sslReady, setSslReady] = useState(status === "verified");
+  const [sslReady, setSslReady] = useState(Boolean(savedVerifyDetails?.sslReady));
 
   const handleVerify = async () => {
     if (!settingsId) return;
@@ -109,7 +110,7 @@ export default function DomainStatusDisplay({ domain, status, lastCheck, setting
                 <tr>
                   <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">TXT</Badge></td>
                   <td className="py-2 pr-3">_lovable</td>
-                  <td className="py-2 text-primary font-medium break-all">lovable_verify={settingsId?.slice(0, 12) || "..."}</td>
+                  <td className="py-2 text-primary font-medium break-all">lovable_verify={settingsId || "..."}</td>
                 </tr>
               </tbody>
             </table>
