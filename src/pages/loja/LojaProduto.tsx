@@ -666,14 +666,22 @@ export default function LojaProduto() {
         </div>
       )}
       <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
-        <DialogContent className="max-w-[95vw] sm:max-w-screen-lg p-0 border-none bg-transparent shadow-none">
-          <div className="relative w-full h-full flex items-center justify-center overflow-hidden p-2">
+        <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 border-none bg-black/90 shadow-none flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center overflow-auto p-4">
              <img 
                src={allImages[selectedImageIndex] || allImages[0]} 
                alt={product?.name || "Product"} 
-               className="max-w-full max-h-[90vh] object-contain rounded-lg"
+               className="max-w-full max-h-[90vh] object-contain cursor-zoom-out"
                onClick={() => setIsZoomed(false)}
              />
+             <Button
+               variant="ghost"
+               size="icon"
+               className="absolute top-2 right-2 text-white hover:bg-white/20 rounded-full"
+               onClick={() => setIsZoomed(false)}
+             >
+               <X className="h-6 w-6" />
+             </Button>
           </div>
         </DialogContent>
       </Dialog>
