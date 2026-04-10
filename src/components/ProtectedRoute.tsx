@@ -95,8 +95,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/conta-em-analise" replace />;
   }
 
-  // Maintenance mode is handled by AuthContext (signs out non-super-admin users immediately).
-  // No redirect needed here — avoids stale state causing false redirects.
+  // If maintenance mode is active for non-super-admin, redirect to conta-em-analise
+  if (maintenanceMode) {
+    return <Navigate to="/conta-em-analise" replace />;
+  }
 
   // Check admin panel blocked
   if ((storeSettings as any)?.admin_blocked === true) {
