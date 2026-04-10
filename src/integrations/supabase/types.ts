@@ -2189,6 +2189,7 @@ export type Database = {
           custom_domain: string | null
           domain_last_check: string | null
           domain_status: string
+          domain_verify_details: Json | null
           facebook_url: string | null
           favicon_url: string | null
           footer_bg_color: string
@@ -2260,6 +2261,7 @@ export type Database = {
           custom_domain?: string | null
           domain_last_check?: string | null
           domain_status?: string
+          domain_verify_details?: Json | null
           facebook_url?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
@@ -2331,6 +2333,7 @@ export type Database = {
           custom_domain?: string | null
           domain_last_check?: string | null
           domain_status?: string
+          domain_verify_details?: Json | null
           facebook_url?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
