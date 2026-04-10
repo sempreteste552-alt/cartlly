@@ -43,7 +43,18 @@ export default function ResetPassword() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("Senha redefinida com sucesso!");
-      navigate("/login", { replace: true });
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.user_metadata?.is_customer) {
+        const lastStore = localStorage.getItem("last_visited_store");
+        if (lastStore) {
+          navigate(`/loja/${lastStore}`, { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      } else {
+        navigate("/login", { replace: true });
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao redefinir senha");
     } finally {
