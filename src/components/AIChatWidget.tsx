@@ -41,7 +41,15 @@ const QUICK_ACTIONS = [
   { label: "⬆️ Trocar de plano", prompt: "Quero fazer upgrade do meu plano. Quais planos estão disponíveis?" },
 ];
 
-const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "" };
+const AI_SETTINGS_DEFAULT = { name: "Assistente IA", avatarUrl: "", tone: "educada" };
+
+const AI_TONE_OPTIONS = [
+  { value: "educada", label: "🤗 Educada", desc: "Gentil, paciente e acolhedora" },
+  { value: "profissional", label: "💼 Profissional", desc: "Direta, eficiente e empresarial" },
+  { value: "divertida", label: "🎉 Divertida", desc: "Descontraída com emojis e humor" },
+  { value: "formal", label: "🎩 Formal", desc: "Elegante e respeitosa com 'senhor(a)'" },
+  { value: "amigavel", label: "❤️ Amigável", desc: "Calorosa, próxima e empática" },
+];
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
