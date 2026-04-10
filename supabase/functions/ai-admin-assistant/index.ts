@@ -128,6 +128,16 @@ Você pode realizar ações inserindo blocos JSON no final da sua resposta:
 7. GERAR CONTEÚDO PARA PRODUTO (SEO, Descrição ou Selo):
 [ACTION_GENERATE_PRODUCT_CONTENT]{ "product_name": "...", "type": "description|seo|badge" }[/ACTION_GENERATE_PRODUCT_CONTENT]
 
+8. CRIAR CUPOM DE DESCONTO:
+[ACTION_CREATE_COUPON]{
+  "code": "CÓDIGO",
+  "discount_type": "percentage|fixed",
+  "discount_value": 10,
+  "min_order_value": 0,
+  "validity_days": 30,
+  "reason": "frase explicando por que criou este cupom"
+}[/ACTION_CREATE_COUPON]
+
 REGRAS:
 - Responda sempre em Português do Brasil.
 - Se o usuário pedir para adicionar uma "faixa", "banner de aviso" ou "topo", use ACTION_UPDATE_MARKETING_CONFIG.
