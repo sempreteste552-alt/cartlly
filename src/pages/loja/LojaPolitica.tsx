@@ -13,6 +13,7 @@ const POLICY_MAP: Record<string, { key: "privacy_policy" | "terms_of_service" | 
 export default function LojaPolitica() {
   const { policySlug } = useParams<{ policySlug: string }>();
   const { settings } = useLojaContext();
+  const { data: policies, isLoading } = usePublicStorePolicies(settings?.user_id);
 
   const meta = policySlug ? POLICY_MAP[policySlug] : null;
   const content = meta && policies ? (policies as any)[meta.key] : null;
@@ -35,15 +36,11 @@ export default function LojaPolitica() {
   }
 
   return (
-    <>
-      <title>{`${meta.title} — ${storeName}`}</title>
-      <meta name="description" content={`${meta.title} de ${storeName}`} />
-      <div className="max-w-3xl mx-auto py-8 sm:py-12 px-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">{meta.title}</h1>
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown>{content || "Esta política ainda não foi definida pelo lojista."}</ReactMarkdown>
-        </div>
+    <div className="max-w-3xl mx-auto py-8 sm:py-12 px-4">
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6">{meta.title}</h1>
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown>{content || "Esta política ainda não foi definida pelo lojista."}</ReactMarkdown>
       </div>
-    </>
+    </div>
   );
 }
