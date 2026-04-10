@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye, Loader2 } from "lucide-react";
+import { ShoppingCart, Package, ArrowLeft, MessageCircle, Truck, ShieldCheck, RotateCcw, Share2, Heart, AlertTriangle, Ruler, HelpCircle, ShoppingBag, Video, Eye, Loader2, X } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useBehaviorTracking } from "@/hooks/useBehaviorTracking";
 import { ProductReviews } from "@/components/ProductReviews";
@@ -62,6 +62,7 @@ export default function LojaProduto() {
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [navigatingProductId, setNavigatingProductId] = useState<string | null>(null);
   const [showStickyCart, setShowStickyCart] = useState(false);
 
@@ -233,7 +234,10 @@ export default function LojaProduto() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
         <div className="space-y-3 pdp-reveal pdp-reveal-d1">
-          <div className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}>
+          <div 
+            onClick={() => productPageConfig?.enable_image_zoom && setIsZoomed(true)}
+            className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}
+          >
             {allImages.length > 0 ? (
               <img
                 src={allImages[selectedImageIndex] || allImages[0]}
@@ -661,6 +665,27 @@ export default function LojaProduto() {
           </Carousel>
         </div>
       )}
+      <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+        <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 border-none bg-black/90 shadow-none flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center overflow-auto p-4">
+             <img 
+               src={allImages[selectedImageIndex] || allImages[0]} 
+               alt={product?.name || "Product"} 
+               className="max-w-full max-h-[90vh] object-contain cursor-zoom-out"
+               onClick={() => setIsZoomed(false)}
+             />
+             <Button
+               variant="ghost"
+               size="icon"
+               className="absolute top-2 right-2 text-white hover:bg-white/20 rounded-full"
+               onClick={() => setIsZoomed(false)}
+             >
+               <X className="h-6 w-6" />
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {cartNotif.notification && (
         <CartNotification
           productName={cartNotif.notification.productName}
