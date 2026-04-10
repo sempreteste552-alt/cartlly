@@ -35,11 +35,15 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
   const restockProducts = allProducts?.filter((p) => {
     const isManual = alert?.product_ids?.includes(p.id);
     
-    // Auto-include products updated in the last 7 days (restock/new)
+    // Auto-include products created or updated in the last 7 days (restock/new)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
     const updatedDate = p.updated_at ? new Date(p.updated_at) : null;
-    const isRecent = updatedDate && updatedDate > sevenDaysAgo && p.stock > 0;
+    const createdAt = p.created_at ? new Date(p.created_at) : null;
+    
+    // Consider as news/restock if created or updated in the last 7 days and has stock
+    const isRecent = ((updatedDate && updatedDate > sevenDaysAgo) || (createdAt && createdAt > sevenDaysAgo)) && (p.stock || 0) > 0;
     
     return isManual || isRecent;
   }) ?? [];
@@ -48,6 +52,8 @@ export function RestockAlertCard({ storeUserId, basePath, primaryColor = "#6d28d
     if (alert && restockProducts.length > 0) {
       const t = setTimeout(() => setVisible(true), 800);
       return () => clearTimeout(t);
+    } else if (restockProducts.length === 0) {
+      setVisible(false);
     }
   }, [alert, restockProducts.length]);
 
