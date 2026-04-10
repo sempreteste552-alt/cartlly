@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Loader2, Mail, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
+import { TurnstileWidget, validateTurnstileToken } from "@/components/TurnstileWidget";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { lovable } from "@/integrations/lovable/index";
@@ -28,6 +29,7 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
   const [showEmailConfirmCard, setShowEmailConfirmCard] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const getPasswordStrength = (pass: string) => {
     let score = 0;
@@ -63,6 +65,18 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     clearAlerts();
     setLoading(true);
     try {
+      if (!turnstileToken) {
+        setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
+        setLoading(false);
+        return;
+      }
+      const captchaValid = await validateTurnstileToken(turnstileToken);
+      if (!captchaValid) {
+        setTurnstileToken(null);
+        setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+        setLoading(false);
+        return;
+      }
       await signIn(email, password, storeUserId);
       toast.success("Login efetuado com sucesso!", { duration: 3000 });
       setEmail("");
@@ -93,6 +107,18 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
     }
     setLoading(true);
     try {
+      if (!turnstileToken) {
+        setAlertCard({ type: "error", message: "Confirme que você não é um robô para continuar." });
+        setLoading(false);
+        return;
+      }
+      const captchaValid = await validateTurnstileToken(turnstileToken);
+      if (!captchaValid) {
+        setTurnstileToken(null);
+        setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+        setLoading(false);
+        return;
+      }
       await signUp(email, password, name, storeUserId);
       setRegisteredEmail(email);
       setShowEmailConfirmCard(true);
