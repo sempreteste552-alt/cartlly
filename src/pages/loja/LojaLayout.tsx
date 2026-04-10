@@ -26,6 +26,7 @@ import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotif
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { PromoBanner } from "@/components/storefront/PromoBanner";
+import { CookieConsent } from "@/components/storefront/CookieConsent";
 import { toast } from "sonner";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
@@ -1017,6 +1018,7 @@ export default function LojaLayout() {
             <CustomerProfileModal open={profileModalOpen} onOpenChange={setProfileModalOpen} storeUserId={settings.user_id} basePath={basePath} />
           </>
         )}
+        <CookieConsent />
       </div>
     </LojaContext.Provider>
   );

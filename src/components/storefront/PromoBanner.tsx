@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
@@ -7,11 +7,10 @@ interface PromoBannerProps {
   storeUserId?: string;
 }
 
-const DEFAULT_TEXT = "🚀 Crie sua própria loja online agora mesmo!";
+const DEFAULT_TEXT = "Crie sua própria loja online agora mesmo";
 const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
-  // Realtime: auto-refresh when platform_settings change
   useRealtimeSync("platform_settings", [["platform_promo_banner_config_public"]]);
 
   const { data: globalConfig } = useQuery({
@@ -61,64 +60,31 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const bannerText = globalConfig?.text || DEFAULT_TEXT;
   const bannerLink = globalConfig?.link || DEFAULT_LINK;
 
-  const c1 = globalConfig?.bg_color_1 || "#1a1a2e";
-  const c2 = globalConfig?.bg_color_2 || "#533483";
-  const c3 = globalConfig?.bg_color_3 || "#e94560";
-  const bgGradient = `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`;
-
-  // Split text into characters for jumping animation
-  const chars = Array.from(bannerText);
+  const c1 = globalConfig?.bg_color_1 || "#0f0f17";
+  const c2 = globalConfig?.bg_color_2 || "#1a1a2e";
+  const c3 = globalConfig?.bg_color_3 || "#16213e";
 
   return (
-    <div className="relative overflow-hidden" style={{ background: bgGradient }}>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-      </div>
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute top-0 -left-full w-full h-full"
-          style={{
-            background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
-            animation: "shimmer-sweep 3s ease-in-out infinite",
-          }}
-        />
-      </div>
-      <style>{`
-        @keyframes shimmer-sweep {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(200%); }
-        }
-        @keyframes slow-jump {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
-        }
-        .jumping-letter {
-          display: inline-block;
-          animation: slow-jump 2.5s ease-in-out infinite;
-        }
-      `}</style>
+    <div
+      className="relative overflow-hidden border-b border-white/5"
+      style={{ background: `linear-gradient(90deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)` }}
+    >
+      {/* Subtle noise texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      }} />
 
-      <div className="relative max-w-7xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-center">
-        <Sparkles className="h-4 w-4 shrink-0 text-yellow-300 animate-pulse" />
-        <p className="text-xs sm:text-sm font-semibold text-white drop-shadow-lg">
-          {chars.map((char, i) => (
-            <span
-              key={i}
-              className="jumping-letter"
-              style={{ animationDelay: `${i * 0.06}s` }}
-            >
-              {char === " " ? "\u00A0" : char}
-            </span>
-          ))}
+      <div className="relative max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
+        <p className="text-[11px] sm:text-xs font-medium text-white/80 tracking-wide">
+          {bannerText}
         </p>
         <a
           href={bannerLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-xs font-bold text-white border border-white/20 transition-all hover:scale-105 shadow-lg"
+          className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-md text-[10px] sm:text-[11px] font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-all duration-200"
         >
-          Saiba mais <ExternalLink className="h-3 w-3" />
+          Saiba mais <ExternalLink className="h-2.5 w-2.5" />
         </a>
       </div>
     </div>
