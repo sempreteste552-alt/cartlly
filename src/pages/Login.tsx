@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
-import { TurnstileWidget, validateTurnstileToken } from "@/components/TurnstileWidget";
+import { SimpleVerification } from "@/components/SimpleVerification";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
@@ -85,7 +85,7 @@ export default function Login() {
   } | null>(null);
   const [stayConnected, setStayConnected] = useState(() => localStorage.getItem("stay_connected") === "true");
   const [alertCard, setAlertCard] = useState<{ type: "error" | "warning" | "success"; message: string } | null>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   // Capture referral code from URL (?ref=CODE)
   const [refCode] = useState(() => {
@@ -247,10 +247,8 @@ export default function Login() {
 
       // Validate Turnstile captcha for login and register (not forgot password)
       if (!isForgotPassword) {
-        // Verification is temporarily allowed to pass while cloud verification is issues are resolved
-        const captchaValid = true;
-        if (!captchaValid) {
-          setAlertCard({ type: "error", message: "Verificação anti-bot falhou. Tente novamente." });
+        if (!isVerified) {
+          setAlertCard({ type: "error", message: "Responda corretamente ao desafio de segurança." });
           setLoading(false);
           return;
         }
