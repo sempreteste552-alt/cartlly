@@ -116,9 +116,14 @@ export function AdminSidebar() {
                       >
                         <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
                         {!collapsed && (
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-2 flex-1">
                             {item.title}
                             {isReferral && <span className="referral-dot" />}
+                            {item.isNew && (
+                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                                Novo
+                              </span>
+                            )}
                           </span>
                         )}
                       </NavLink>
