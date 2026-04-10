@@ -46,10 +46,29 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
 
   return (
     <SectionWrapper section={section} primaryColor={primaryColor}>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div 
+        className="grid" 
+        style={{ 
+          gridTemplateColumns: `repeat(var(--store-grid-cols-mobile, 2), 1fr)`,
+          gap: `var(--store-grid-gap, 16px)`,
+          "--desktop-cols": `var(--store-grid-cols-desktop, 4)`,
+        } as any}
+      >
+        <style>{`
+          @media (min-width: 640px) {
+            .grid { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
+          }
+        `}</style>
         {filteredProducts.map((product) => (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
-            <Card className="overflow-hidden border-border hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <Card 
+              className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
+              style={{ 
+                borderRadius: "var(--store-card-radius, 8px)",
+                boxShadow: "var(--store-card-shadow, 0 1px 2px 0 rgb(0 0 0 / 0.05))",
+                fontFamily: "var(--store-font-body)"
+              }}
+            >
               <div className="aspect-square overflow-hidden bg-muted">
                 {product.image_url ? (
                   <img
