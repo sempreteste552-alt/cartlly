@@ -306,6 +306,7 @@ function GeneralSettingsTab() {
       welcome_coupon_expires_days: welcomeCouponExpiresDays,
       banner_mobile_format: bannerMobileFormat,
       is_verified: isVerified,
+      favicon_url: faviconUrl || null,
     } as any);
   };
 
