@@ -5,11 +5,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Platform IPs for Lovable Ingress (used as fallback or for direct pointing)
 const PLATFORM_IPS = new Set([
   "185.158.133.1",
   "185.41.148.1",
   "185.41.148.2",
 ]);
+
+// Cloudflare API Configuration (for automatic SSL provisioning)
+const CLOUDFLARE_API_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN");
+const CLOUDFLARE_ZONE_ID = Deno.env.get("CLOUDFLARE_ZONE_ID");
+const CLOUDFLARE_FALLBACK_ORIGIN = Deno.env.get("CLOUDFLARE_FALLBACK_ORIGIN"); // e.g., origin.cartlly.com
 
 const PLATFORM_HOST_SUFFIXES = [".lovable.app", ".lovableproject.com"];
 
@@ -89,6 +95,69 @@ async function checkHttps(domain: string) {
   }
 
   return false;
+}
+
+async function manageCloudflareHostname(domain: string, settingsId: string) {
+  if (!CLOUDFLARE_API_TOKEN || !CLOUDFLARE_ZONE_ID) return null;
+
+  try {
+    // 1. Check if hostname already exists
+    const listRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/custom_hostnames?hostname=${domain}`,
+      {
+        headers: {
+          "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const listData = await listRes.json();
+    
+    if (listData?.result?.length > 0) {
+      const existing = listData.result[0];
+      return { 
+        id: existing.id, 
+        sslStatus: existing.ssl?.status, 
+        sslMethod: existing.ssl?.method,
+        sslType: existing.ssl?.type,
+        ownershipStatus: existing.ownership_status 
+      };
+    }
+
+    // 2. Add custom hostname if not exists
+    const createRes = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/custom_hostnames`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          hostname: domain,
+          ssl: {
+            method: "txt", // or "http"
+            type: "dv",
+          },
+        }),
+      }
+    );
+    const createData = await createRes.json();
+    
+    if (createData?.success) {
+      return { 
+        id: createData.result.id, 
+        sslStatus: createData.result.ssl?.status,
+        ownershipStatus: createData.result.ownership_status 
+      };
+    }
+    
+    console.error("Cloudflare Error:", createData?.errors);
+    return null;
+  } catch (error) {
+    console.error("Cloudflare exception:", error);
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -205,7 +274,16 @@ Deno.serve(async (req) => {
     }
 
     const dnsVerified = aRecordFound && txtRecordFound;
-    const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
+    
+    // SSL check via Cloudflare or direct HTTPS
+    let cloudflareStatus = null;
+    if (dnsVerified && CLOUDFLARE_API_TOKEN && CLOUDFLARE_ZONE_ID) {
+      cloudflareStatus = await manageCloudflareHostname(requestedDomain, settingsId);
+    }
+
+    const directSsl = dnsVerified ? await checkHttps(requestedDomain) : false;
+    const sslReady = cloudflareStatus?.sslStatus === "active" || directSsl;
+    
     const newStatus = sslReady
       ? "verified"
       : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
@@ -219,6 +297,8 @@ Deno.serve(async (req) => {
       pointsToPlatform: aRecordFound,
       provider: detectedProvider,
       checkedAt: new Date().toISOString(),
+      cloudflare: cloudflareStatus,
+      usingCloudflare: !!CLOUDFLARE_API_TOKEN,
     };
 
     // Check previous status to detect transition to verified
