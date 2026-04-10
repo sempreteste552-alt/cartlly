@@ -3002,6 +3002,10 @@ export type Database = {
         Args: { _coupon_code: string; _store_user_id: string }
         Returns: boolean
       }
+      increment_customer_view_count: {
+        Args: { p_customer_id: string; p_product_id: string }
+        Returns: undefined
+      }
       increment_product_views: {
         Args: { product_id: string }
         Returns: undefined
