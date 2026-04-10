@@ -13,7 +13,7 @@ const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
   const [dismissed, setDismissed] = useState(false);
 
-  // Check global platform setting
+  // Check global platform settings (only super admin controls this)
   const { data: globalConfig } = useQuery({
     queryKey: ["platform_promo_banner_config"],
     queryFn: async () => {
@@ -31,17 +31,17 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
     },
   });
 
-  // Check per-tenant setting
-  const { data: tenantSetting } = useQuery({
-    queryKey: ["tenant_promo_banner_full", storeUserId],
+  // Check per-tenant override from super admin (promo_banner_enabled on store_settings)
+  const { data: tenantOverride } = useQuery({
+    queryKey: ["tenant_promo_banner_override", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
       const { data } = await supabase
         .from("store_settings")
-        .select("promo_banner_enabled, promo_banner_text, promo_banner_link")
+        .select("promo_banner_enabled")
         .eq("user_id", storeUserId!)
         .maybeSingle();
-      return data;
+      return (data as any)?.promo_banner_enabled as boolean | null;
     },
   });
 
@@ -75,22 +75,28 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
   };
 
   const isPremium = tenantPlan === "PREMIUM";
-  const tenantEnabled = (tenantSetting as any)?.promo_banner_enabled;
 
-  const shouldShow = !dismissed && (
-    (globalConfig?.enabled && !isPremium) ||
-    tenantEnabled === true
-  );
+  // If super admin explicitly set per-tenant override to false, hide it
+  // If per-tenant override is true, show regardless of plan
+  // Otherwise follow global: show for all non-premium when global is on
+  let shouldShow = false;
+  if (tenantOverride === true) {
+    shouldShow = true; // Super admin force-enabled for this tenant
+  } else if (tenantOverride === false) {
+    shouldShow = false; // Super admin force-disabled for this tenant
+  } else {
+    // No per-tenant override: follow global, except premium
+    shouldShow = globalConfig?.enabled === true && !isPremium;
+  }
 
-  if (!shouldShow) return null;
+  if (!shouldShow || dismissed) return null;
 
-  // Resolve text and link: tenant override > global override > defaults
-  const bannerText = (tenantSetting as any)?.promo_banner_text || globalConfig?.text || DEFAULT_TEXT;
-  const bannerLink = (tenantSetting as any)?.promo_banner_link || globalConfig?.link || DEFAULT_LINK;
+  const bannerText = globalConfig?.text || DEFAULT_TEXT;
+  const bannerLink = globalConfig?.link || DEFAULT_LINK;
 
   return (
     <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #e94560 100%)" }}>
-      {/* Glow / shimmer effects */}
+      {/* Glow effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/30 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
@@ -98,7 +104,7 @@ export function PromoBanner({ storeUserId }: PromoBannerProps) {
       </div>
       {/* Shimmer sweep */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div 
+        <div
           className="absolute top-0 -left-full w-full h-full"
           style={{
             background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
