@@ -82,6 +82,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
   const handleAnalyze = async () => {
     if (inputMode === "text" && !catalogText.trim()) return toast.error("Cole o texto do catálogo");
     if (inputMode === "image" && imagePreviews.length === 0) return toast.error("Adicione ao menos uma imagem");
+    if (inputMode === "audio" && !catalogText.trim()) return toast.error("Grave seu catálogo por áudio primeiro");
     setAnalyzing(true);
 
     try {
