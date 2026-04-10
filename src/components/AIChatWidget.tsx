@@ -604,7 +604,6 @@ export function AIChatWidget() {
                     </AvatarFallback>
                   </Avatar>
                 )}
-                </div>
                 <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
                   <div className="prose prose-sm dark:prose-invert break-words max-w-full">
                     <ReactMarkdown>
