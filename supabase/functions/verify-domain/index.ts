@@ -73,6 +73,7 @@ async function inspectHostResolution(host: string) {
 }
 
 async function checkHttps(domain: string) {
+  let lastError = null;
   for (const method of ["HEAD", "GET"]) {
     try {
       const response = await fetch(`https://${domain}`, {
@@ -81,14 +82,14 @@ async function checkHttps(domain: string) {
       });
 
       if (response.status >= 200 && response.status < 500) {
-        return true;
+        return { ready: true, error: null };
       }
-    } catch (_error) {
-      // Try the next method before considering SSL unavailable.
+    } catch (error: any) {
+      lastError = error.message;
     }
   }
 
-  return false;
+  return { ready: false, error: lastError };
 }
 
 Deno.serve(async (req) => {
