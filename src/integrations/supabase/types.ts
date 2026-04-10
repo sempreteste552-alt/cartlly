@@ -623,6 +623,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_view_stats: {
+        Row: {
+          customer_id: string | null
+          id: string
+          last_viewed_at: string | null
+          product_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          customer_id?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          product_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          customer_id?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          product_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_view_stats_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_view_stats_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_wishlist: {
         Row: {
           created_at: string
@@ -656,9 +695,11 @@ export type Database = {
           cpf: string | null
           created_at: string
           email: string
+          gender: string | null
           id: string
           name: string
           phone: string | null
+          routine_notes: string | null
           state: string | null
           store_user_id: string
           updated_at: string
@@ -671,9 +712,11 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email: string
+          gender?: string | null
           id?: string
           name: string
           phone?: string | null
+          routine_notes?: string | null
           state?: string | null
           store_user_id: string
           updated_at?: string
@@ -686,9 +729,11 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email?: string
+          gender?: string | null
           id?: string
           name?: string
           phone?: string | null
+          routine_notes?: string | null
           state?: string | null
           store_user_id?: string
           updated_at?: string
@@ -2283,6 +2328,7 @@ export type Database = {
           shipping_per_km: number
           store_address: string | null
           store_blocked: boolean
+          store_category: string | null
           store_cep: string | null
           store_description: string | null
           store_location: string | null
@@ -2356,6 +2402,7 @@ export type Database = {
           shipping_per_km?: number
           store_address?: string | null
           store_blocked?: boolean
+          store_category?: string | null
           store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
@@ -2429,6 +2476,7 @@ export type Database = {
           shipping_per_km?: number
           store_address?: string | null
           store_blocked?: boolean
+          store_category?: string | null
           store_cep?: string | null
           store_description?: string | null
           store_location?: string | null
