@@ -89,6 +89,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_announcements: {
+        Row: {
+          active: boolean
+          banner_type: string
+          bg_color: string | null
+          body: string | null
+          created_at: string
+          created_by: string
+          id: string
+          text_color: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          banner_type?: string
+          bg_color?: string | null
+          body?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          text_color?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          banner_type?: string
+          bg_color?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          text_color?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
