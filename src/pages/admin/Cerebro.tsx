@@ -104,6 +104,9 @@ export default function Cerebro() {
       const { error } = await supabase.from("admin_ai_chats").delete().eq("user_id", user!.id);
       if (error) throw error;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
+      toast.success("Chat limpo!");
     }
   });
 
