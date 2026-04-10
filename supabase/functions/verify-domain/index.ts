@@ -143,6 +143,7 @@ Deno.serve(async (req) => {
     const dnsVerified = aRecordFound && txtRecordFound;
     const sslReady = dnsVerified ? await checkHttps(requestedDomain) : false;
     const newStatus = sslReady ? "verified" : (dnsVerified || aRecordFound || txtRecordFound ? "pending" : "failed");
+    const dnsComplete = aRecordFound && txtRecordFound;
 
     const { error: updateError } = await supabase
       .from("store_settings")
@@ -163,11 +164,13 @@ Deno.serve(async (req) => {
         aRecord: aRecordFound,
         txtRecord: txtRecordFound,
         sslReady,
+        dnsComplete,
         domain: requestedDomain,
         provider: detectedProvider,
         nameservers,
         checkedAHosts,
         checkedTxtHosts,
+        expectedTxt,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
