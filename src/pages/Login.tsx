@@ -96,7 +96,7 @@ export default function Login() {
           _code: ref, 
           _ip: null,
           _ua: navigator.userAgent || null 
-        }).then(() => {}).catch(() => {});
+        }).then(() => {}, () => {});
       } catch { /* ignore */ }
     }
     return ref || localStorage.getItem("referral_code") || null;
