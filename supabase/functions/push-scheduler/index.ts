@@ -546,6 +546,22 @@ Deno.serve(async (req) => {
       .select("user_id, store_name, store_slug");
     const storeMap = new Map((allStores || []).map((s: any) => [s.user_id, s]));
 
+    // ========== LOAD CATEGORIES PER STORE (for niche detection) ==========
+    const allStoreUserIds = (allStores || []).map((s: any) => s.user_id);
+    const { data: allCategories } = await supabase
+      .from("categories")
+      .select("user_id, name")
+      .in("user_id", allStoreUserIds.length > 0 ? allStoreUserIds : ["00000000-0000-0000-0000-000000000000"]);
+    
+    const storeCategoriesMap = new Map<string, string[]>();
+    (allCategories || []).forEach((c: any) => {
+      if (!storeCategoriesMap.has(c.user_id)) storeCategoriesMap.set(c.user_id, []);
+      storeCategoriesMap.get(c.user_id)!.push(c.name);
+    });
+
+    // Cache niche per store (computed lazily)
+    const storeNicheCache = new Map<string, StoreNiche>();
+
     // ========== LOAD DAILY COUNTS FOR ALL CUSTOMERS ==========
     const today = new Date();
     today.setHours(0, 0, 0, 0);
