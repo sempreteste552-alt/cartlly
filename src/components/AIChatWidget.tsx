@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone, Trash2, RotateCcw, FileText } from "lucide-react";
+import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone, Trash2, RotateCcw, FileText, Mic, MicOff } from "lucide-react";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -149,6 +150,12 @@ export function AIChatWidget() {
   const chatImageInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const voiceRecorder = useVoiceRecorder({
+    onTranscript: (text) => {
+      setInput(prev => prev ? prev + " " + text : text);
+    },
+  });
   const { ctx } = useTenantContext();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -941,6 +948,17 @@ export function AIChatWidget() {
             >
               <ImagePlus className="h-5 w-5" />
             </Button>
+            {voiceRecorder.isSupported && (
+              <Button 
+                variant={voiceRecorder.isRecording ? "destructive" : "outline"}
+                size="icon" 
+                className="shrink-0 h-10 w-10" 
+                onClick={voiceRecorder.toggleRecording}
+                title={voiceRecorder.isRecording ? "Parar gravação" : "Gravar áudio"}
+              >
+                {voiceRecorder.isRecording ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+              </Button>
+            )}
             <Input
               ref={inputRef}
               value={input}
