@@ -7,6 +7,7 @@ import LojaCheckout from "./pages/loja/LojaCheckout";
 import LojaRastreio from "./pages/loja/LojaRastreio";
 import LojaCupons from "./pages/loja/LojaCupons";
 import LojaPagina from "./pages/loja/LojaPagina";
+import LojaPolitica from "./pages/loja/LojaPolitica";
 
 export default function StoreRoutes() {
   return (
@@ -20,6 +21,7 @@ export default function StoreRoutes() {
           <Route path="rastreio/:orderId" element={<LojaRastreio />} />
           <Route path="cupons" element={<LojaCupons />} />
           <Route path="p/:pageSlug" element={<LojaPagina />} />
+          <Route path="legal/:policySlug" element={<LojaPolitica />} />
         </Route>
       </Routes>
     </CustomerAuthProvider>

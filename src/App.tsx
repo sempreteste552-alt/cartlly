@@ -26,6 +26,8 @@ import Automacao from "./pages/admin/Automacao";
 import SetupStore from "./pages/admin/SetupStore";
 import Cerebro from "./pages/admin/Cerebro";
 import Indicacoes from "./pages/admin/Indicacoes";
+import Politicas from "./pages/admin/Politicas";
+import LojaPolitica from "./pages/loja/LojaPolitica";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
 import LojaProduto from "./pages/loja/LojaProduto";
@@ -148,6 +150,7 @@ const App = () => {
                     <Route path="automacao" element={<Automacao />} />
                     <Route path="cerebro" element={<Cerebro />} />
                     <Route path="indicacoes" element={<Indicacoes />} />
+                    <Route path="politicas" element={<Politicas />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
@@ -159,6 +162,7 @@ const App = () => {
                     <Route path="rastreio/:orderId" element={<LojaRastreio />} />
                     <Route path="cupons" element={<LojaCupons />} />
                     <Route path="p/:pageSlug" element={<LojaPagina />} />
+                    <Route path="legal/:policySlug" element={<LojaPolitica />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
