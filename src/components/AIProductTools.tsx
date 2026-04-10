@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight } from "lucide-react";
+import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff } from "lucide-react";
 import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult } from "@/hooks/useAIProductEnhance";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 
 interface AIProductToolsProps {
   name: string;
@@ -28,6 +29,15 @@ export function AIProductTools({
   const [imageResult, setImageResult] = useState<ImageAnalysisResult | null>(null);
   const [restockResult, setRestockResult] = useState<RestockPhrasesResult | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [voiceText, setVoiceText] = useState("");
+
+  const voiceRecorder = useVoiceRecorder({
+    onTranscript: (text) => {
+      setVoiceText(text);
+      // Auto-apply voice text as description
+      onApplyDescription(text);
+    },
+  });
 
   const handleGenerateSEO = async () => {
     setActiveAction("seo");
@@ -123,6 +133,17 @@ export function AIProductTools({
           {activeAction === "restock" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
           Gerar Frases de Destaque
         </Button>
+        {voiceRecorder.isSupported && (
+          <Button
+            type="button" variant={voiceRecorder.isRecording ? "destructive" : "outline"} size="sm"
+            onClick={voiceRecorder.toggleRecording}
+            disabled={locked || isLoading}
+            title={voiceRecorder.isRecording ? "Parar gravação" : "Ditar descrição por voz"}
+          >
+            {voiceRecorder.isRecording ? <MicOff className="mr-1.5 h-3.5 w-3.5 animate-pulse" /> : <Mic className="mr-1.5 h-3.5 w-3.5" />}
+            {voiceRecorder.isRecording ? "Parar" : "Ditar por Voz"}
+          </Button>
+        )}
       </div>
 
       {locked && (
