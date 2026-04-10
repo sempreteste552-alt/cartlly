@@ -362,7 +362,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-20 md:bottom-6 left-4 md:left-6 animate-fade-in"
+        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-36 md:bottom-[5.5rem] right-6 animate-fade-in"
         style={{ backgroundColor: accentColor }}
         title="Chat com IA"
       >
