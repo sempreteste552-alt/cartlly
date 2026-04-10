@@ -8,7 +8,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicStoreBySlug, usePublicThemeConfig, usePublicProductPageConfig } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -56,7 +56,7 @@ export default function LojaLayout() {
   const { slug } = useParams();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
-  const { data: settingsBySlug, isLoading: slugLoading } = usePublicStoreBySlug(slug);
+  const { data: settingsBySlug, isLoading: slugLoading } = useResolvedPublicStore(slug);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -263,7 +263,7 @@ export default function LojaLayout() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const basePath = slug ? `/loja/${slug}` : "/loja";
+  const basePath = slug ? `/loja/${slug}` : "";
   const logoSize = settings?.logo_size || 32;
 
   // Apply store colors as CSS custom properties for the entire store
@@ -297,14 +297,14 @@ export default function LojaLayout() {
     }
   }, [settings, themeConfig]);
 
-  // Slug is required — no default store
-  if (!slug) {
+  // Slug or settingsBySlug required
+  if (!slug && !settingsBySlug && !isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico.</p>
+          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico ou domínio.</p>
         </div>
       </div>
     );
@@ -318,13 +318,13 @@ export default function LojaLayout() {
     );
   }
 
-  if (slug && !settings) {
+  if (!settings && !isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
           <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">A loja "{slug}" não existe ou foi removida.</p>
+          <p className="text-muted-foreground">A loja procurada não existe ou foi removida.</p>
         </div>
       </div>
     );
