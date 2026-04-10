@@ -143,8 +143,9 @@ export default function LojaLayout() {
 
     const recognizeLocation = async () => {
       try {
-        const response = await fetch("https://ipapi.co/json/");
-        const data = await response.json();
+        // Try ipapi.co first
+        let response = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(5000) });
+        let data = await response.json();
         if (data && data.postal) {
           const cleanCep = data.postal.replace(/\D/g, "");
           if (cleanCep.length === 8) {
@@ -156,15 +157,35 @@ export default function LojaLayout() {
               localStorage.setItem("global_city", cityName);
             }
             toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+            return;
           }
         }
-      } catch (error) {
-        console.error("Error recognizing location:", error);
+      } catch {
+        // ipapi failed, try fallback
+      }
+      try {
+        const response = await fetch("https://ip-api.com/json/?fields=zip,city,regionName", { signal: AbortSignal.timeout(5000) });
+        const data = await response.json();
+        if (data && data.zip) {
+          const cleanCep = data.zip.replace(/\D/g, "");
+          if (cleanCep.length === 8) {
+            setGlobalCep(cleanCep);
+            localStorage.setItem("global_cep", cleanCep);
+            const cityName = data.city ? `${data.city} - ${data.regionName || ""}` : "";
+            if (cityName) {
+              setGlobalCity(cityName);
+              localStorage.setItem("global_city", cityName);
+            }
+            toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+          }
+        }
+      } catch {
+        console.error("All geolocation APIs failed");
       }
     };
     
-    const timer = setTimeout(recognizeLocation, 2000);
-    return () => clearTimeout(timer);
+    // Run immediately, no delay
+    recognizeLocation();
   }, []);
 
   const handleGlobalCepChange = (val: string) => {
