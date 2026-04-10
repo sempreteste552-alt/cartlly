@@ -169,28 +169,33 @@ export default function Produtos() {
           "Remova o fundo das imagens com um clique (Pro)"
         ]}
       />
-      <div id="products-header" className="flex items-center justify-between">
+      <div id="products-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">
             Gerencie o catálogo da sua loja
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => aiAvailable ? setAiImportOpen(true) : navigate("/admin/plano")}
-            className={!aiAvailable ? "border-primary/30 text-primary" : undefined}
+            className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
           >
-            {aiAvailable ? <Sparkles className="mr-2 h-4 w-4" /> : <Lock className="mr-2 h-4 w-4" />}
-            {aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}
+            {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}</span>
+            <span className="sm:hidden">IA</span>
           </Button>
-          <Button variant="outline" onClick={() => setCatDialogOpen(true)}>
-            <Tag className="mr-2 h-4 w-4" />
-            Categorias
+          <Button variant="outline" size="sm" onClick={() => setCatDialogOpen(true)} className="text-xs sm:text-sm">
+            <Tag className="mr-1.5 h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Categorias</span>
+            <span className="sm:hidden">Cat.</span>
           </Button>
           <Button
             id="new-product-btn"
+            size="sm"
+            className="text-xs sm:text-sm"
             onClick={() => {
               if (!canCreate) {
                 toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
@@ -199,8 +204,8 @@ export default function Produtos() {
               setFormOpen(true);
             }}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Produto
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Novo
           </Button>
         </div>
       </div>
@@ -289,7 +294,8 @@ export default function Produtos() {
           </CardContent>
         </Card>
       ) : (
-        <Card id="products-table" className="border-border">
+        <Card id="products-table" className="border-border overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -372,6 +378,7 @@ export default function Produtos() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       )}
 

@@ -235,14 +235,14 @@ export default function Dashboard() {
     <div className="space-y-6">
       <WelcomeTrialCard />
 
-      <div id="dashboard-welcome" className="flex items-center justify-between">
+      <div id="dashboard-welcome" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-primary" /> Dashboard
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">Visão geral da sua loja</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Visão geral da sua loja</p>
         </div>
-        {loadingStats && <Badge variant="outline" className="animate-pulse">Atualizando dados...</Badge>}
+        {loadingStats && <Badge variant="outline" className="animate-pulse text-xs self-start sm:self-auto">Atualizando...</Badge>}
       </div>
 
       {/* KPI Cards */}
