@@ -284,6 +284,7 @@ export default function Login() {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
         // Store creation is now handled by database trigger handle_new_user_setup
+        localStorage.removeItem("referral_code");
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {
