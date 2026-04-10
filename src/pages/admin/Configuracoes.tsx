@@ -677,8 +677,9 @@ function GeneralSettingsTab() {
                   setFaviconUrl("");
                   if (settings) {
                     await supabase.from("store_settings").update({ favicon_url: null } as any).eq("id", settings.id);
-                    queryClient.invalidateQueries({ queryKey: ["store_settings"] });
                     toast.success("Favicon removido!");
+                    // Force refetch
+                    window.location.reload();
                   }
                 }}>
                   <Trash2 className="h-3 w-3" />
