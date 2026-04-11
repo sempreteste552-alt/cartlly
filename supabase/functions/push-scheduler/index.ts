@@ -1392,9 +1392,34 @@ Deno.serve(async (req) => {
             relatedProductId = selectedProduct.id;
 
           } else if (selectedProduct) {
-            // Use niche+gender templates (40% chance) or product templates (60%)
-            if (storeNiche !== "geral" && Math.random() < 0.4) {
-              const nicheMsg = pickNicheTemplate(storeNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
+            // Use AI-generated messages with tenant config and customer history
+            if (lovableApiKey) {
+              try {
+                const customerHistory = await fetchCustomerPushHistory(supabase, customer.id, customer.store_user_id);
+                const aiMsg = await generateAISequenceMessage(lovableApiKey, {
+                  customerName: customer.name || "amigo(a)",
+                  productName: selectedProduct.name,
+                  productPrice: selectedProduct.price,
+                  storeName,
+                  step: 1,
+                  totalSteps: 1,
+                  intensity: "soft",
+                  sequenceType: "hourly_engagement",
+                  niche: storeNiche as StoreNiche,
+                  gender: customerGender,
+                  tenantAiConfig: tenantAiConfigMap.get(customer.store_user_id),
+                  customerHistory,
+                });
+                title = aiMsg.title;
+                body = aiMsg.body;
+              } catch {
+                // Fallback to niche template
+                const nicheMsg = pickNicheTemplate(storeNiche as StoreNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
+                title = nicheMsg.title;
+                body = nicheMsg.body;
+              }
+            } else if (storeNiche !== "geral" && Math.random() < 0.4) {
+              const nicheMsg = pickNicheTemplate(storeNiche as StoreNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
               title = nicheMsg.title;
               body = nicheMsg.body;
             } else {
@@ -1425,18 +1450,49 @@ Deno.serve(async (req) => {
             relatedProductId = selectedProduct.id;
 
           } else {
-            // Fallback: generic engagement
-            const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
-              if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
-              if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
-              return true;
-            });
-            const tmpl = validTemplates.length > 0
-              ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
-              : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
-            
-            title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
-            body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+            // Fallback: AI engagement without product or static templates
+            if (lovableApiKey) {
+              try {
+                const customerHistory = await fetchCustomerPushHistory(supabase, customer.id, customer.store_user_id);
+                const aiMsg = await generateAISequenceMessage(lovableApiKey, {
+                  customerName: customer.name || "amigo(a)",
+                  productName: "",
+                  storeName,
+                  step: 1,
+                  totalSteps: 1,
+                  intensity: "soft",
+                  sequenceType: "hourly_engagement",
+                  niche: storeNiche as StoreNiche,
+                  gender: customerGender,
+                  tenantAiConfig: tenantAiConfigMap.get(customer.store_user_id),
+                  customerHistory,
+                });
+                title = aiMsg.title;
+                body = aiMsg.body;
+              } catch {
+                const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+                  if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+                  if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+                  return true;
+                });
+                const tmpl = validTemplates.length > 0
+                  ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+                  : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+                title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+                body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+              }
+            } else {
+              const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+                if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+                if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+                return true;
+              });
+              const tmpl = validTemplates.length > 0
+                ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+                : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+              title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+              body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+            }
           }
 
           if (specialEvent) {
