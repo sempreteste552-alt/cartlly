@@ -1232,10 +1232,10 @@ Deno.serve(async (req) => {
         });
 
         const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-        const nowEng = new Date();
-        const dayName = dayNames[nowEng.getDay()];
-        const hour = nowEng.getHours();
-        const dayOfWeek = nowEng.getDay();
+        const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const dayName = dayNames[nowBrasilia.getDay()];
+        const hour = nowBrasilia.getHours();
+        const dayOfWeek = nowBrasilia.getDay();
 
         // Special dates
         const specialDates: Record<string, string> = {
@@ -1243,7 +1243,7 @@ Deno.serve(async (req) => {
           "14/05": "Dia das Mães", "11/08": "Dia dos Pais", "12/10": "Dia das Crianças",
           "29/11": "Black Friday", "25/11": "Black Friday se aproxima",
         };
-        const dateStr = `${nowEng.getDate().toString().padStart(2, '0')}/${(nowEng.getMonth() + 1).toString().padStart(2, '0')}`;
+        const dateStr = `${nowBrasilia.getDate().toString().padStart(2, '0')}/${(nowBrasilia.getMonth() + 1).toString().padStart(2, '0')}`;
         const specialEvent = specialDates[dateStr];
 
         // Load products per store (cached)
@@ -1687,7 +1687,8 @@ async function generateAISequenceMessage(
     gender?: Gender;
   }
 ): Promise<{ title: string; body: string }> {
-  const hour = new Date().getHours();
+  const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const hour = nowBR.getHours();
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const priceFormatted = ctx.productPrice ? `R$ ${Number(ctx.productPrice).toFixed(2)}` : "";
   const seed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
