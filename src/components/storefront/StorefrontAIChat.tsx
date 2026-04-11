@@ -66,57 +66,62 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       typing: "Digitando...",
       placeholder: "Digite sua mensagem...",
       whatsapp: "Continuar pelo WhatsApp",
+      addressFound: "📍 **Endereço encontrado:**",
+      street: "🏠 **Rua:**",
+      neighborhood: "🏘️ **Bairro:**",
+      city: "🏙️ **Cidade:**",
+      notFoundF: "Não encontrada",
+      notFoundM: "Não encontrado",
+      askNumber: "Agora me informe o **número** da sua casa/apartamento e o **complemento** (se houver).",
+      cepNotFound: "❌ CEP não encontrado. Por favor, verifique e tente novamente.",
+      orderCreated: "🎉 **Pedido criado com sucesso!**",
+      orderNumber: "📋 **Número:**",
+      total: "💰 **Total:**",
+      status: "📦 **Status:**",
+      pending: "Pendente",
+      trackOrder: "🔍 **Rastreie seu pedido:** Use o código",
+      trackingSuffix: "na página de rastreio.",
+      thanks: "Obrigado pela sua compra! 🛍️",
+      orderCreatedToast: "Pedido criado com sucesso!",
+      orderError: "❌ Houve um erro ao criar seu pedido. Por favor, tente novamente ou entre em contato conosco.",
+      orderProcessError: "❌ Erro ao processar o pedido. Tente novamente.",
+      noOrderForPayment: "❌ Nenhum pedido encontrado para processar o pagamento.",
+      paymentError: "Erro ao processar pagamento",
+      pixCreated: "✅ **PIX gerado com sucesso!**",
+      pixCopy: "📋 **Código PIX (copie e cole):**",
+      pixExpires: "⏰ O PIX expira em 30 minutos. Após o pagamento, seu pedido será processado automaticamente!",
+      pixToast: "PIX gerado! Escaneie o QR Code para pagar.",
+      paymentApproved: "✅ **Pagamento aprovado!** Seu pedido está sendo processado. Obrigado! 🎉",
+      paymentApprovedToast: "Pagamento aprovado!",
+      boletoCreated: "📄 **Boleto gerado com sucesso!**",
+      boletoLink: "📥 Clique aqui para visualizar/baixar o boleto",
+      boletoExpires: "⏰ O boleto vence em 3 dias úteis.",
+      boletoToast: "Boleto gerado!",
+      paymentProcessed: "💳 Pagamento processado! Status:",
+      unknownError: "Erro desconhecido",
+      connectionError: "Erro de conexão",
+      noResponse: "Sem resposta",
     },
     en: {
-      quickProducts: "🛍️ View products",
-      quickPromos: "🏷️ Promotions",
-      quickShipping: "🚚 Shipping",
-      quickOrder: "📦 Place order",
-      quickProductsPrompt: "Which products do you have available?",
-      quickPromosPrompt: "Do you have any discount coupon or promotion?",
-      quickShippingPrompt: "How does shipping work? Which areas do you serve?",
-      quickOrderPrompt: "I want to place an order!",
-      title: "AI chat",
-      subtitle: "Shopping assistant",
-      welcome: `Hello! Welcome to ${storeName}! 👋`,
-      intro: `I'm ${displayName}, your shopping assistant. I can help you find products, calculate shipping and finish your order!`,
-      typing: "Typing...",
-      placeholder: "Type your message...",
-      whatsapp: "Continue on WhatsApp",
+      quickProducts: "🛍️ View products", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Shipping", quickOrder: "📦 Place order",
+      quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Do you have any discount coupon or promotion?", quickShippingPrompt: "How does shipping work? Which areas do you serve?", quickOrderPrompt: "I want to place an order!",
+      title: "AI chat", subtitle: "Shopping assistant", welcome: `Hello! Welcome to ${storeName}! 👋`, intro: `I'm ${displayName}, your shopping assistant. I can help you find products, calculate shipping and finish your order!`, typing: "Typing...", placeholder: "Type your message...", whatsapp: "Continue on WhatsApp",
+      addressFound: "📍 **Address found:**", street: "🏠 **Street:**", neighborhood: "🏘️ **Neighborhood:**", city: "🏙️ **City:**", notFoundF: "Not found", notFoundM: "Not found", askNumber: "Now please tell me the **house/apartment number** and the **complement** (if any).", cepNotFound: "❌ ZIP code not found. Please check it and try again.",
+      orderCreated: "🎉 **Order created successfully!**", orderNumber: "📋 **Number:**", total: "💰 **Total:**", status: "📦 **Status:**", pending: "Pending", trackOrder: "🔍 **Track your order:** Use the code", trackingSuffix: "on the tracking page.", thanks: "Thank you for your purchase! 🛍️", orderCreatedToast: "Order created successfully!", orderError: "❌ There was an error creating your order. Please try again or contact us.", orderProcessError: "❌ Error processing the order. Please try again.", noOrderForPayment: "❌ No order found to process the payment.", paymentError: "Error processing payment", pixCreated: "✅ **PIX generated successfully!**", pixCopy: "📋 **PIX code (copy and paste):**", pixExpires: "⏰ PIX expires in 30 minutes. After payment, your order will be processed automatically!", pixToast: "PIX generated! Scan the QR code to pay.", paymentApproved: "✅ **Payment approved!** Your order is being processed. Thank you! 🎉", paymentApprovedToast: "Payment approved!", boletoCreated: "📄 **Boleto generated successfully!**", boletoLink: "📥 Click here to view/download the boleto", boletoExpires: "⏰ The boleto expires in 3 business days.", boletoToast: "Boleto generated!", paymentProcessed: "💳 Payment processed! Status:", unknownError: "Unknown error", connectionError: "Connection error", noResponse: "No response",
     },
     es: {
-      quickProducts: "🛍️ Ver productos",
-      quickPromos: "🏷️ Promociones",
-      quickShipping: "🚚 Envío",
-      quickOrder: "📦 Hacer pedido",
-      quickProductsPrompt: "¿Qué productos tienen disponibles?",
-      quickPromosPrompt: "¿Tienen algún cupón de descuento o promoción?",
-      quickShippingPrompt: "¿Cómo funciona la entrega? ¿Qué regiones atienden?",
-      quickOrderPrompt: "¡Quiero hacer un pedido!",
-      title: "Chat con IA",
-      subtitle: "Asistente de compras",
-      welcome: `¡Hola! Bienvenido a ${storeName}! 👋`,
-      intro: `Soy ${displayName}, tu asistente de compras. Puedo ayudarte a encontrar productos, calcular el envío y finalizar tu pedido.`,
-      typing: "Escribiendo...",
-      placeholder: "Escribe tu mensaje...",
-      whatsapp: "Continuar por WhatsApp",
+      quickProducts: "🛍️ Ver productos", quickPromos: "🏷️ Promociones", quickShipping: "🚚 Envío", quickOrder: "📦 Hacer pedido",
+      quickProductsPrompt: "¿Qué productos tienen disponibles?", quickPromosPrompt: "¿Tienen algún cupón de descuento o promoción?", quickShippingPrompt: "¿Cómo funciona la entrega? ¿Qué regiones atienden?", quickOrderPrompt: "¡Quiero hacer un pedido!",
+      title: "Chat con IA", subtitle: "Asistente de compras", welcome: `¡Hola! Bienvenido a ${storeName}! 👋`, intro: `Soy ${displayName}, tu asistente de compras. Puedo ayudarte a encontrar productos, calcular el envío y finalizar tu pedido.`, typing: "Escribiendo...", placeholder: "Escribe tu mensaje...", whatsapp: "Continuar por WhatsApp",
+      addressFound: "📍 **Dirección encontrada:**", street: "🏠 **Calle:**", neighborhood: "🏘️ **Barrio:**", city: "🏙️ **Ciudad:**", notFoundF: "No encontrada", notFoundM: "No encontrado", askNumber: "Ahora indícame el **número** de tu casa/departamento y el **complemento** (si existe).", cepNotFound: "❌ Código postal no encontrado. Por favor, revísalo e inténtalo de nuevo.",
+      orderCreated: "🎉 **¡Pedido creado con éxito!**", orderNumber: "📋 **Número:**", total: "💰 **Total:**", status: "📦 **Estado:**", pending: "Pendiente", trackOrder: "🔍 **Sigue tu pedido:** Usa el código", trackingSuffix: "en la página de seguimiento.", thanks: "¡Gracias por tu compra! 🛍️", orderCreatedToast: "¡Pedido creado con éxito!", orderError: "❌ Hubo un error al crear tu pedido. Inténtalo de nuevo o contáctanos.", orderProcessError: "❌ Error al procesar el pedido. Inténtalo de nuevo.", noOrderForPayment: "❌ No se encontró ningún pedido para procesar el pago.", paymentError: "Error al procesar el pago", pixCreated: "✅ **¡PIX generado con éxito!**", pixCopy: "📋 **Código PIX (copiar y pegar):**", pixExpires: "⏰ El PIX vence en 30 minutos. Después del pago, tu pedido se procesará automáticamente.", pixToast: "¡PIX generado! Escanea el código QR para pagar.", paymentApproved: "✅ **¡Pago aprobado!** Tu pedido está siendo procesado. ¡Gracias! 🎉", paymentApprovedToast: "¡Pago aprobado!", boletoCreated: "📄 **¡Boleto generado con éxito!**", boletoLink: "📥 Haz clic aquí para ver/descargar el boleto", boletoExpires: "⏰ El boleto vence en 3 días hábiles.", boletoToast: "¡Boleto generado!", paymentProcessed: "💳 ¡Pago procesado! Estado:", unknownError: "Error desconocido", connectionError: "Error de conexión", noResponse: "Sin respuesta",
     },
     fr: {
-      quickProducts: "🛍️ Voir les produits",
-      quickPromos: "🏷️ Promotions",
-      quickShipping: "🚚 Livraison",
-      quickOrder: "📦 Commander",
-      quickProductsPrompt: "Quels produits avez-vous disponibles ?",
-      quickPromosPrompt: "Avez-vous un coupon de réduction ou une promotion ?",
-      quickShippingPrompt: "Comment fonctionne la livraison ? Quelles zones desservez-vous ?",
-      quickOrderPrompt: "Je veux passer une commande !",
-      title: "Chat IA",
-      subtitle: "Assistant d'achat",
-      welcome: `Bonjour ! Bienvenue chez ${storeName} ! 👋`,
-      intro: `Je suis ${displayName}, votre assistant d'achat. Je peux vous aider à trouver des produits, calculer la livraison et finaliser votre commande !`,
-      typing: "Saisie en cours...",
-      placeholder: "Écrivez votre message...",
-      whatsapp: "Continuer sur WhatsApp",
+      quickProducts: "🛍️ Voir les produits", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Livraison", quickOrder: "📦 Commander",
+      quickProductsPrompt: "Quels produits avez-vous disponibles ?", quickPromosPrompt: "Avez-vous un coupon de réduction ou une promotion ?", quickShippingPrompt: "Comment fonctionne la livraison ? Quelles zones desservez-vous ?", quickOrderPrompt: "Je veux passer une commande !",
+      title: "Chat IA", subtitle: "Assistant d'achat", welcome: `Bonjour ! Bienvenue chez ${storeName} ! 👋`, intro: `Je suis ${displayName}, votre assistant d'achat. Je peux vous aider à trouver des produits, calculer la livraison et finaliser votre commande !`, typing: "Saisie en cours...", placeholder: "Écrivez votre message...", whatsapp: "Continuer sur WhatsApp",
+      addressFound: "📍 **Adresse trouvée :**", street: "🏠 **Rue :**", neighborhood: "🏘️ **Quartier :**", city: "🏙️ **Ville :**", notFoundF: "Non trouvée", notFoundM: "Non trouvé", askNumber: "Indiquez-moi maintenant le **numéro** de votre maison/appartement et le **complément** (s'il y en a un).", cepNotFound: "❌ Code postal introuvable. Veuillez vérifier et réessayer.",
+      orderCreated: "🎉 **Commande créée avec succès !**", orderNumber: "📋 **Numéro :**", total: "💰 **Total :**", status: "📦 **Statut :**", pending: "En attente", trackOrder: "🔍 **Suivez votre commande :** Utilisez le code", trackingSuffix: "sur la page de suivi.", thanks: "Merci pour votre achat ! 🛍️", orderCreatedToast: "Commande créée avec succès !", orderError: "❌ Une erreur s'est produite lors de la création de votre commande. Veuillez réessayer ou nous contacter.", orderProcessError: "❌ Erreur lors du traitement de la commande. Veuillez réessayer.", noOrderForPayment: "❌ Aucune commande trouvée pour traiter le paiement.", paymentError: "Erreur lors du traitement du paiement", pixCreated: "✅ **PIX généré avec succès !**", pixCopy: "📋 **Code PIX (copier-coller) :**", pixExpires: "⏰ Le PIX expire dans 30 minutes. Après le paiement, votre commande sera traitée automatiquement !", pixToast: "PIX généré ! Scannez le QR code pour payer.", paymentApproved: "✅ **Paiement approuvé !** Votre commande est en cours de traitement. Merci ! 🎉", paymentApprovedToast: "Paiement approuvé !", boletoCreated: "📄 **Boleto généré avec succès !**", boletoLink: "📥 Cliquez ici pour voir/télécharger le boleto", boletoExpires: "⏰ Le boleto expire dans 3 jours ouvrables.", boletoToast: "Boleto généré !", paymentProcessed: "💳 Paiement traité ! Statut :", unknownError: "Erreur inconnue", connectionError: "Erreur de connexion", noResponse: "Pas de réponse",
     },
   }[locale];
 
@@ -144,10 +149,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           const data = await res.json();
           if (data && !data.erro) {
             // Send address info back as system context in next message
-            const addressInfo = `Endereço encontrado: ${data.logradouro || ""}, ${data.bairro || ""}, ${data.localidade || ""} - ${data.uf || ""}, CEP: ${cep}`;
-            setMessages(prev => [...prev, { role: "assistant", content: `📍 **Endereço encontrado:**\n\n🏠 **Rua:** ${data.logradouro || "Não encontrada"}\n🏘️ **Bairro:** ${data.bairro || "Não encontrado"}\n🏙️ **Cidade:** ${data.localidade || ""} - ${data.uf || ""}\n\nAgora me informe o **número** da sua casa/apartamento e o **complemento** (se houver).` }]);
+            const addressInfo = `Address found: ${data.logradouro || ""}, ${data.bairro || ""}, ${data.localidade || ""} - ${data.uf || ""}, CEP: ${cep}`;
+            setMessages(prev => [...prev, { role: "assistant", content: `${uiText.addressFound}\n\n${uiText.street} ${data.logradouro || uiText.notFoundF}\n${uiText.neighborhood} ${data.bairro || uiText.notFoundM}\n${uiText.city} ${data.localidade || ""} - ${data.uf || ""}\n\n${uiText.askNumber}` }]);
           } else {
-            setMessages(prev => [...prev, { role: "assistant", content: "❌ CEP não encontrado. Por favor, verifique e tente novamente." }]);
+            setMessages(prev => [...prev, { role: "assistant", content: uiText.cepNotFound }]);
           }
         }
       } catch (e) {
@@ -246,14 +251,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: `🎉 **Pedido criado com sucesso!**\n\n📋 **Número:** #${orderId}\n💰 **Total:** R$ ${total.toFixed(2)}\n📦 **Status:** Pendente\n\n${trackToken ? `🔍 **Rastreie seu pedido:** Use o código \`${trackToken}\` na página de rastreio.` : ""}\n\nObrigado pela sua compra! 🛍️`
+          content: `${uiText.orderCreated}\n\n${uiText.orderNumber} #${orderId}\n${uiText.total} R$ ${total.toFixed(2)}\n${uiText.status} ${uiText.pending}\n\n${trackToken ? `${uiText.trackOrder} \`${trackToken}\` ${uiText.trackingSuffix}` : ""}\n\n${uiText.thanks}`
         }]);
 
-        toast.success("Pedido criado com sucesso!");
+        toast.success(uiText.orderCreatedToast);
         queryClient.invalidateQueries({ queryKey: ["orders"] });
       } catch (e) {
         console.error("Create order error:", e);
-        setMessages(prev => [...prev, { role: "assistant", content: "❌ Erro ao processar o pedido. Tente novamente." }]);
+        setMessages(prev => [...prev, { role: "assistant", content: uiText.orderProcessError }]);
       }
     }
 
@@ -264,7 +269,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         const payload = JSON.parse(paymentMatch[1].trim());
         const orderId = payload.order_id || lastOrderId;
         if (!orderId) {
-          setMessages(prev => [...prev, { role: "assistant", content: "❌ Nenhum pedido encontrado para processar o pagamento." }]);
+          setMessages(prev => [...prev, { role: "assistant", content: uiText.noOrderForPayment }]);
           return;
         }
 
@@ -288,7 +293,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           }
         );
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Erro ao processar pagamento");
+        if (!response.ok) throw new Error(data.error || uiText.paymentError);
 
         const payment = data.payment;
         if (payload.method === "pix" && payment?.pix_qr_code) {
@@ -296,30 +301,30 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           const pixCode = payment.pix_qr_code;
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `✅ **PIX gerado com sucesso!**\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n📋 **Código PIX (copie e cole):**\n\`\`\`\n${pixCode}\n\`\`\`\n\n⏰ O PIX expira em 30 minutos. Após o pagamento, seu pedido será processado automaticamente!`
+            content: `${uiText.pixCreated}\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n${uiText.pixCopy}\n\n\`\`\`\n${pixCode}\n\`\`\`\n\n${uiText.pixExpires}`
           }]);
-          toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+          toast.success(uiText.pixToast);
         } else if (payment?.status === "approved") {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: "✅ **Pagamento aprovado!** Seu pedido está sendo processado. Obrigado! 🎉"
+            content: uiText.paymentApproved
           }]);
-          toast.success("Pagamento aprovado!");
+          toast.success(uiText.paymentApprovedToast);
         } else if (payload.method === "boleto" && payment?.boleto_url) {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `📄 **Boleto gerado com sucesso!**\n\n[📥 Clique aqui para visualizar/baixar o boleto](${payment.boleto_url})\n\n⏰ O boleto vence em 3 dias úteis.`
+            content: `${uiText.boletoCreated}\n\n[${uiText.boletoLink}](${payment.boleto_url})\n\n${uiText.boletoExpires}`
           }]);
-          toast.success("Boleto gerado!");
+          toast.success(uiText.boletoToast);
         } else {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `💳 Pagamento processado! Status: **${payment?.status || "pendente"}**`
+            content: `${uiText.paymentProcessed} **${payment?.status || uiText.pending}**`
           }]);
         }
       } catch (e) {
         console.error("Payment error:", e);
-        const errorMsg = e instanceof Error ? e.message : "Erro ao processar pagamento";
+        const errorMsg = e instanceof Error ? e.message : uiText.paymentError;
         setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
       }
     }
@@ -362,7 +367,40 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
         if (customerState) {
           const recent = (customerState.metadata as any)?.recent_events || [];
-          enrichedContext = `
+          enrichedContext = locale === "en"
+            ? `
+            CUSTOMER STATUS:
+            - Current state: ${customerState.state}
+            - Interest level: ${customerState.intent_level}
+            - Last viewed product: ${customerState.last_product_name || "None"}
+            - Recent events: ${recent.join(", ")}
+            - Email: ${customer.email}
+            - Phone: ${customer.phone || "Not informed"}
+            Act like a warm sales assistant who understands this customer's preferences and converts their interest into a sale.
+          `
+            : locale === "es"
+            ? `
+            ESTADO DEL CLIENTE:
+            - Estado actual: ${customerState.state}
+            - Nivel de interés: ${customerState.intent_level}
+            - Último producto visto: ${customerState.last_product_name || "Ninguno"}
+            - Eventos recientes: ${recent.join(", ")}
+            - Email: ${customer.email}
+            - Teléfono: ${customer.phone || "No informado"}
+            Actúa como una asesora cálida que entiende lo que le gusta y convierte su interés en venta.
+          `
+            : locale === "fr"
+            ? `
+            STATUT DU CLIENT :
+            - État actuel : ${customerState.state}
+            - Niveau d'intérêt : ${customerState.intent_level}
+            - Dernier produit consulté : ${customerState.last_product_name || "Aucun"}
+            - Événements récents : ${recent.join(", ")}
+            - Email : ${customer.email}
+            - Téléphone : ${customer.phone || "Non renseigné"}
+            Agis comme une conseillère chaleureuse qui comprend ses goûts et transforme son intérêt en achat.
+          `
+            : `
             STATUS DO CLIENTE:
             - Estado atual: ${customerState.state}
             - Nível de interesse: ${customerState.intent_level}
@@ -393,11 +431,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       });
 
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "Erro de conexão" }));
+        const err = await resp.json().catch(() => ({ error: uiText.connectionError }));
         throw new Error(err.error || `Erro ${resp.status}`);
       }
 
-      if (!resp.body) throw new Error("Sem resposta");
+      if (!resp.body) throw new Error(uiText.noResponse);
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -444,7 +482,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         await processActions(assistantSoFar);
       }
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : "Erro desconhecido";
+      const errorMsg = e instanceof Error ? e.message : uiText.unknownError;
       setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
     } finally {
       setIsLoading(false);
