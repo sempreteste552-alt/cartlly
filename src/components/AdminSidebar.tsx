@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Settings, Ticket, ExternalLink, LogOut,
   Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle
 } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -211,7 +212,15 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
 
       <SidebarFooter className="p-3">
         {!collapsed && (
-          <p className="mb-2 truncate px-2 text-[11px] text-sidebar-foreground/40">{user?.email}</p>
+          <div className="flex items-center justify-between mb-2 px-2">
+            <p className="truncate text-[11px] text-sidebar-foreground/40 flex-1">{user?.email}</p>
+            <LanguageSelector compact className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground" />
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex justify-center mb-2">
+            <LanguageSelector compact className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground" />
+          </div>
         )}
         <Button
           variant="ghost"
