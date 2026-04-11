@@ -125,16 +125,6 @@ export function AdminLayout() {
     "--sidebar-accent-foreground": "0 0% 100%",
   } as CSSProperties;
 
-  // Show neutral loading state until tenant data is fully resolved
-  // This prevents flash of wrong theme/permissions from another tenant
-  if (!tenantReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground" />
-      </div>
-    );
-  }
-
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.themeScope = adminThemeScope;
@@ -147,6 +137,16 @@ export function AdminLayout() {
       }
     };
   }, [adminDark, adminThemeScope]);
+
+  // Show neutral loading state until tenant data is fully resolved
+  // This prevents flash of wrong theme/permissions from another tenant
+  if (!tenantReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
