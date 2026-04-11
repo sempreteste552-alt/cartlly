@@ -9,14 +9,71 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Trash2, Brain, Sparkles, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Bot, Send, Trash2, Brain, Sparkles, Clock, AlertTriangle, CheckCircle2, Bell, Users, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
+}
+
+function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; eventType: string; emptyText: string }) {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["push-logs", userId, eventType],
+    queryFn: async () => {
+      let query = supabase
+        .from("push_logs")
+        .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (eventType === "motivational_push") {
+        query = query.eq("event_type", "motivational_push");
+      } else {
+        query = query.neq("event_type", "motivational_push");
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!userId,
+    refetchInterval: 30000,
+  });
+
+  return (
+    <Card className="h-full">
+      <CardContent className="px-3 py-3">
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-2">
+            {isLoading ? (
+              <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
+            ) : logs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">{emptyText}</p>
+            ) : logs.map(log => (
+              <div key={log.id} className="p-2 rounded-lg border text-xs space-y-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-semibold text-foreground line-clamp-1 flex-1">{log.title}</span>
+                  <Badge variant={log.status === "sent" ? "default" : "secondary"} className="text-[8px] shrink-0">
+                    {log.status === "sent" ? "✅" : log.status}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground line-clamp-2">{log.body}</p>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}</span>
+                  {log.trigger_type && <Badge variant="outline" className="text-[8px]">{log.trigger_type}</Badge>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function Cerebro() {
@@ -418,22 +475,39 @@ export default function Cerebro() {
           </CardFooter>
         </Card>
 
-        <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader className="py-3"><CardTitle className="text-sm flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Tarefas IA</CardTitle></CardHeader>
-            <CardContent className="px-3 pb-3">
-              <ScrollArea className="h-[300px]">
-                <div className="space-y-2">
-                  {scheduledTasks.length === 0 ? <p className="text-xs text-muted-foreground text-center py-4">Sem tarefas.</p> : scheduledTasks.map(task => (
-                    <div key={task.id} className="p-2 rounded-lg border text-xs space-y-1">
-                      <div className="flex justify-between"><Badge variant="outline" className="text-[9px]">{task.status}</Badge></div>
-                      <p className="line-clamp-2 italic">"{task.ai_instruction}"</p>
+        <div className="flex flex-col gap-4 overflow-hidden">
+          <Tabs defaultValue="tasks" className="flex flex-col overflow-hidden">
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="tasks" className="text-[10px] gap-1"><Clock className="h-3 w-3" /> Tarefas</TabsTrigger>
+              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Meus Pushes</TabsTrigger>
+              <TabsTrigger value="client-pushes" className="text-[10px] gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="tasks" className="flex-1 overflow-hidden mt-2">
+              <Card className="h-full">
+                <CardContent className="px-3 py-3">
+                  <ScrollArea className="h-[300px]">
+                    <div className="space-y-2">
+                      {scheduledTasks.length === 0 ? <p className="text-xs text-muted-foreground text-center py-4">Sem tarefas.</p> : scheduledTasks.map(task => (
+                        <div key={task.id} className="p-2 rounded-lg border text-xs space-y-1">
+                          <div className="flex justify-between"><Badge variant="outline" className="text-[9px]">{task.status}</Badge></div>
+                          <p className="line-clamp-2 italic">"{task.ai_instruction}"</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="my-pushes" className="flex-1 overflow-hidden mt-2">
+              <PushLogPanel userId={user?.id} eventType="motivational_push" emptyText="Nenhum push motivacional enviado." />
+            </TabsContent>
+
+            <TabsContent value="client-pushes" className="flex-1 overflow-hidden mt-2">
+              <PushLogPanel userId={user?.id} eventType="customer" emptyText="Nenhuma notificação enviada para clientes." />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
