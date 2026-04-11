@@ -1204,6 +1204,10 @@ Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}`;
 
+/** Get current time in Brasília (UTC-3) */
+function getNowBrasilia() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+}
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
