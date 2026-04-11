@@ -585,6 +585,17 @@ Deno.serve(async (req) => {
     // Cache niche per store (computed lazily)
     const storeNicheCache = new Map<string, StoreNiche>();
 
+    // ========== LOAD TENANT AI BRAIN CONFIG (per store) ==========
+    const { data: allAiConfigs } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("user_id, niche, personality, store_knowledge, custom_instructions")
+      .in("user_id", allStoreUserIds.length > 0 ? allStoreUserIds : ["00000000-0000-0000-0000-000000000000"]);
+    
+    const tenantAiConfigMap = new Map<string, any>();
+    (allAiConfigs || []).forEach((c: any) => {
+      tenantAiConfigMap.set(c.user_id, c);
+    });
+
     // ========== LOAD DAILY COUNTS FOR ALL CUSTOMERS ==========
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -724,6 +735,7 @@ Deno.serve(async (req) => {
           const seqGender = detectGender(customer.name);
 
           try {
+            const customerHistory = await fetchCustomerPushHistory(supabase, seq.customer_id, seq.store_user_id);
             msg = await generateAISequenceMessage(lovableApiKey, {
               customerName: customer.name,
               productName,
@@ -735,6 +747,8 @@ Deno.serve(async (req) => {
               sequenceType: seqType,
               niche: seqNiche,
               gender: seqGender,
+              tenantAiConfig: tenantAiConfigMap.get(seq.store_user_id),
+              customerHistory,
             });
           } catch {
             msg = pickVariedMessage(step.templates, customer.name, productName, storeName, stepIndex, seq.customer_id, seq.product_id);
@@ -1378,9 +1392,34 @@ Deno.serve(async (req) => {
             relatedProductId = selectedProduct.id;
 
           } else if (selectedProduct) {
-            // Use niche+gender templates (40% chance) or product templates (60%)
-            if (storeNiche !== "geral" && Math.random() < 0.4) {
-              const nicheMsg = pickNicheTemplate(storeNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
+            // Use AI-generated messages with tenant config and customer history
+            if (lovableApiKey) {
+              try {
+                const customerHistory = await fetchCustomerPushHistory(supabase, customer.id, customer.store_user_id);
+                const aiMsg = await generateAISequenceMessage(lovableApiKey, {
+                  customerName: customer.name || "amigo(a)",
+                  productName: selectedProduct.name,
+                  productPrice: selectedProduct.price,
+                  storeName,
+                  step: 1,
+                  totalSteps: 1,
+                  intensity: "soft",
+                  sequenceType: "hourly_engagement",
+                  niche: storeNiche as StoreNiche,
+                  gender: customerGender,
+                  tenantAiConfig: tenantAiConfigMap.get(customer.store_user_id),
+                  customerHistory,
+                });
+                title = aiMsg.title;
+                body = aiMsg.body;
+              } catch {
+                // Fallback to niche template
+                const nicheMsg = pickNicheTemplate(storeNiche as StoreNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
+                title = nicheMsg.title;
+                body = nicheMsg.body;
+              }
+            } else if (storeNiche !== "geral" && Math.random() < 0.4) {
+              const nicheMsg = pickNicheTemplate(storeNiche as StoreNiche, customerGender, customer.name || "amigo(a)", selectedProduct.name, storeName);
               title = nicheMsg.title;
               body = nicheMsg.body;
             } else {
@@ -1411,18 +1450,49 @@ Deno.serve(async (req) => {
             relatedProductId = selectedProduct.id;
 
           } else {
-            // Fallback: generic engagement
-            const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
-              if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
-              if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
-              return true;
-            });
-            const tmpl = validTemplates.length > 0
-              ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
-              : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
-            
-            title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
-            body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+            // Fallback: AI engagement without product or static templates
+            if (lovableApiKey) {
+              try {
+                const customerHistory = await fetchCustomerPushHistory(supabase, customer.id, customer.store_user_id);
+                const aiMsg = await generateAISequenceMessage(lovableApiKey, {
+                  customerName: customer.name || "amigo(a)",
+                  productName: "",
+                  storeName,
+                  step: 1,
+                  totalSteps: 1,
+                  intensity: "soft",
+                  sequenceType: "hourly_engagement",
+                  niche: storeNiche as StoreNiche,
+                  gender: customerGender,
+                  tenantAiConfig: tenantAiConfigMap.get(customer.store_user_id),
+                  customerHistory,
+                });
+                title = aiMsg.title;
+                body = aiMsg.body;
+              } catch {
+                const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+                  if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+                  if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+                  return true;
+                });
+                const tmpl = validTemplates.length > 0
+                  ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+                  : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+                title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+                body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+              }
+            } else {
+              const validTemplates = HOURLY_ENGAGEMENT_TEMPLATES.filter((t: any) => {
+                if (t.hourStart !== undefined && (hour < t.hourStart || hour > t.hourEnd)) return false;
+                if (t.dayOfWeek !== undefined && !t.dayOfWeek.includes(dayOfWeek)) return false;
+                return true;
+              });
+              const tmpl = validTemplates.length > 0
+                ? validTemplates[Math.floor(Math.random() * validTemplates.length)]
+                : HOURLY_ENGAGEMENT_TEMPLATES[Math.floor(Math.random() * HOURLY_ENGAGEMENT_TEMPLATES.length)];
+              title = tmpl.title.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+              body = tmpl.body.replace(/\{name\}/g, customer.name || "amigo(a)").replace(/\{day\}/g, dayName).replace(/\{store\}/g, storeName);
+            }
           }
 
           if (specialEvent) {
@@ -1685,6 +1755,8 @@ async function generateAISequenceMessage(
     sequenceType: string;
     niche?: StoreNiche;
     gender?: Gender;
+    tenantAiConfig?: any;
+    customerHistory?: string[];
   }
 ): Promise<{ title: string; body: string }> {
   const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
@@ -1699,7 +1771,6 @@ async function generateAISequenceMessage(
     aggressive: "Tom MUITO urgente e agressivo. Use CAPS em palavras-chave. CTAs fortes como COMPRE AGORA, ÚLTIMA CHANCE, É AGORA OU NUNCA. Máxima urgência!",
   }[ctx.intensity] || "Tom amigável.";
 
-  // Niche-specific tone guidance
   const nicheGuide: Record<string, string> = {
     moda: "Loja de MODA/ROUPAS. Use termos como 'look', 'estilo', 'tendência', 'coleção'. Linguagem fashion e moderna.",
     acessorios: "Loja de ACESSÓRIOS/JOIAS. Use termos como 'brilho', 'elegância', 'sofisticação', 'charme'. Linguagem refinada.",
@@ -1712,7 +1783,6 @@ async function generateAISequenceMessage(
     pet: "Loja PET. Use termos como 'bichinho', 'amor pet', 'companheiro', 'patinha'. Linguagem afetiva.",
   };
 
-  // Gender-specific tone guidance
   const genderGuide = ctx.gender === "female"
     ? "A cliente é MULHER. Use tom doce, empoderador e acolhedor. Emojis como 💕🌸✨💜🌷💃. Linguagem mais delicada e carinhosa."
     : ctx.gender === "male"
@@ -1724,8 +1794,52 @@ async function generateAISequenceMessage(
     typeGuide = `O cliente "${ctx.customerName}" ABANDONOU O CARRINHO na loja "${ctx.storeName}". Traga-o de volta para FINALIZAR A COMPRA.`;
   } else if (ctx.sequenceType === "pending_order") {
     typeGuide = `O cliente "${ctx.customerName}" SALVOU UM PEDIDO (status pendente) na loja "${ctx.storeName}". Lembre-o de FINALIZAR O PAGAMENTO (PIX ou Boleto).`;
+  } else if (ctx.sequenceType === "hourly_engagement") {
+    typeGuide = ctx.productName
+      ? `Engajamento periódico para o cliente "${ctx.customerName}" da loja "${ctx.storeName}". Destaque o produto "${ctx.productName}" ${priceFormatted ? `(${priceFormatted})` : ""} de forma natural e não invasiva.`
+      : `Engajamento periódico para o cliente "${ctx.customerName}" da loja "${ctx.storeName}". Crie uma mensagem natural e relevante sobre a loja.`;
   } else {
     typeGuide = `O cliente "${ctx.customerName}" visualizou o produto "${ctx.productName}" ${priceFormatted ? `(${priceFormatted})` : ""} na loja "${ctx.storeName}" mas NÃO COMPROU.`;
+  }
+
+  // Build tenant-specific context from AI brain config
+  const aiConfig = ctx.tenantAiConfig;
+  let tenantContext = "";
+  if (aiConfig) {
+    const configuredNiche = aiConfig.niche || "";
+    const personality = aiConfig.personality || "educada";
+    const storeKnowledge = typeof aiConfig.store_knowledge === "object" && aiConfig.store_knowledge
+      ? (aiConfig.store_knowledge as any).description || ""
+      : "";
+    const customInstructions = aiConfig.custom_instructions || "";
+    
+    const personalityMap: Record<string, string> = {
+      amigavel: "Amigável e próxima — como uma amiga de confiança.",
+      profissional: "Profissional e direta — com linguagem objetiva.",
+      divertida: "Divertida e descontraída — com emojis e humor leve.",
+      agressiva: "Agressiva e focada em conversão — com urgência e frases fortes.",
+      educada: "Educada e formal — com linguagem refinada e respeitosa.",
+    };
+    
+    tenantContext = `
+PERSONALIDADE DA LOJA: ${personalityMap[personality] || personalityMap.educada}
+${configuredNiche ? `NICHO CONFIGURADO: ${configuredNiche}` : ""}
+${storeKnowledge ? `SOBRE A LOJA: ${storeKnowledge}` : ""}
+${customInstructions ? `INSTRUÇÕES DO LOJISTA: ${customInstructions}` : ""}`;
+  }
+
+  // Build anti-repetition context from customer's push history
+  let historyContext = "";
+  if (ctx.customerHistory && ctx.customerHistory.length > 0) {
+    historyContext = `
+ANTI-REPETIÇÃO OBRIGATÓRIA — Analise estas ${ctx.customerHistory.length} mensagens ANTERIORES enviadas para ESTE cliente:
+${ctx.customerHistory.map((m, i) => `${i + 1}. ${m}`).join("\n")}
+
+REGRAS:
+- A nova mensagem DEVE ser TOTALMENTE diferente de TODAS as anteriores.
+- NÃO repita: mesma frase de abertura, mesma estrutura, mesmo CTA, mesma ideia principal.
+- Pode repetir o nome do produto, mas o TEXTO, ABORDAGEM e GANCHO devem ser completamente diferentes.
+- Se perceber semelhança, REESCREVA até ficar genuinamente único.`;
   }
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -1741,12 +1855,13 @@ async function generateAISequenceMessage(
           role: "system",
           content: `Você é uma especialista em marketing de conversão da loja "${ctx.storeName}".
 ${typeGuide}
-
+${tenantContext}
 ${ctx.niche && ctx.niche !== "geral" ? `NICHO DA LOJA: ${nicheGuide[ctx.niche] || ""}` : ""}
 ${genderGuide}
 
-Esta é a mensagem ${ctx.step} de ${ctx.totalSteps} de uma SEQUÊNCIA de retargeting.
+${ctx.sequenceType !== "hourly_engagement" ? `Esta é a mensagem ${ctx.step} de ${ctx.totalSteps} de uma SEQUÊNCIA de retargeting.` : ""}
 ${intensityGuide}
+${historyContext}
 
 REGRAS RÍGIDAS:
 - Responda APENAS com JSON: {"title": "...", "body": "..."}
@@ -1754,14 +1869,17 @@ REGRAS RÍGIDAS:
 - body: máximo 130 caracteres
 - Mencione o nome do cliente "${ctx.customerName}" e a loja "${ctx.storeName}"
 ${ctx.productName ? `- Mencione o produto "${ctx.productName}"` : ""}
-- Saudação: "${greetings}"
+- Horário: ${hour}h (${greetings}). NUNCA use saudação errada para o horário.
 - NUNCA repita mensagens. Seed: ${seed}
 - Adapte a linguagem ao NICHO da loja e ao GÊNERO do cliente
+- A mensagem deve ser NATURAL, RELEVANTE e NÃO INVASIVA
 - ${ctx.intensity === "aggressive" ? "Use CTAs FORTES: COMPRE AGORA, GARANTA JÁ, É AGORA, CORRA, VÁ AGORA" : ""}`,
         },
         {
           role: "user",
-          content: `Gere a mensagem push para Step ${ctx.step}/${ctx.totalSteps} (${ctx.intensity}).`,
+          content: ctx.sequenceType === "hourly_engagement"
+            ? `Gere uma mensagem push de engajamento única e personalizada para ${ctx.customerName}.`
+            : `Gere a mensagem push para Step ${ctx.step}/${ctx.totalSteps} (${ctx.intensity}).`,
         },
       ],
       max_tokens: 150,
@@ -1780,4 +1898,20 @@ ${ctx.productName ? `- Mencione o produto "${ctx.productName}"` : ""}
     return { title: parsed.title.slice(0, 50), body: parsed.body.slice(0, 130) };
   }
   throw new Error("Invalid AI response");
+}
+
+// Helper to fetch customer's recent push history for anti-repetition
+async function fetchCustomerPushHistory(supabase: any, customerId: string, storeUserId: string): Promise<string[]> {
+  const { data: recentPushes } = await supabase
+    .from("push_logs")
+    .select("title, body")
+    .or(`customer_id.eq.${customerId},user_id.eq.${customerId}`)
+    .eq("store_user_id", storeUserId)
+    .eq("status", "sent")
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  return (recentPushes || [])
+    .map((p: any) => `${p.title || ""} ${p.body || ""}`.trim())
+    .filter(Boolean);
 }
