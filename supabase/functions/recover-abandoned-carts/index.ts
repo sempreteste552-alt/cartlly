@@ -201,7 +201,6 @@ Deno.serve(async (req) => {
             }
           } catch (e) { console.error("AI error:", e); }
         }
-        }
 
         // GLOBAL DEDUPLICATION & COOLDOWN (5 MINS MINIMUM)
         const { data: canSend } = await supabase.rpc("can_send_message", {
