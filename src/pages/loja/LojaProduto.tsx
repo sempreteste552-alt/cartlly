@@ -237,7 +237,7 @@ export default function LojaProduto() {
         <div className="space-y-3 pdp-reveal pdp-reveal-d1">
           <div 
             onClick={() => productPageConfig?.enable_image_zoom && setIsZoomed(true)}
-            className={`aspect-square bg-gray-50 rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}
+            className={`aspect-square bg-muted rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}
           >
             {allImages.length > 0 ? (
               <img
@@ -247,7 +247,7 @@ export default function LojaProduto() {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Package className="h-24 w-24 text-gray-200" />
+                <Package className="h-24 w-24 text-muted-foreground/30" />
               </div>
             )}
           </div>
@@ -321,7 +321,7 @@ export default function LojaProduto() {
               })()}
             </div>
             
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm animate-pulse" title="Visualizações reais deste produto">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full border border-border shadow-sm animate-pulse" title="Visualizações reais deste produto">
               <Eye className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold text-muted-foreground">
                 {product.views || 0} visualizações
@@ -502,7 +502,7 @@ export default function LojaProduto() {
                 to={`${basePath}/produto/${p.id}`}
                 className="block group"
               >
-                <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-100 group-hover:border-primary transition-colors mb-2">
+                <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border group-hover:border-primary transition-colors mb-2">
                   <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
                 </div>
                 <p className="text-xs font-medium line-clamp-1">{p.name}</p>
@@ -525,8 +525,8 @@ export default function LojaProduto() {
               {bestSellersInCategory.map((p) => (
                 <CarouselItem key={p.id} className="pl-3 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                   <Link to={`${basePath}/produto/${p.id}`} className="group block">
-                    <Card className="overflow-hidden border-gray-200">
-                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                    <Card className="overflow-hidden border-border">
+                      <div className="aspect-square bg-muted overflow-hidden">
                         <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       </div>
                       <div className="p-3">
@@ -636,7 +636,7 @@ export default function LojaProduto() {
                     className="group block"
                   >
                     <Card
-                      className="overflow-hidden border-gray-200 hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+                      className="overflow-hidden border-border hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
                       style={{
                         transition: "all 0.5s cubic-bezier(0.4,0,0.2,1)",
                         ...(navigatingProductId === p.id
@@ -644,7 +644,7 @@ export default function LojaProduto() {
                           : {}),
                       }}
                     >
-                      <div className="aspect-square bg-gray-50 overflow-hidden relative">
+                      <div className="aspect-square bg-muted overflow-hidden relative">
                         {p.image_url ? (
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                         ) : (
