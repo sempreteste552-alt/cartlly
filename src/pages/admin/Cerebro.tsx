@@ -65,7 +65,9 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
                 </div>
                 <p className="text-muted-foreground line-clamp-2">{log.body}</p>
                 <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                  <span>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}</span>
+                  <span title={format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}>
+                    {format(new Date(log.created_at), "dd/MM HH:mm", { locale: ptBR })} · {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}
+                  </span>
                   {log.trigger_type && <Badge variant="outline" className="text-[8px]">{log.trigger_type}</Badge>}
                 </div>
               </div>
