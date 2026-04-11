@@ -2833,6 +2833,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_verified: boolean | null
+          language: string
           logo_size: number
           logo_url: string | null
           low_stock_threshold: number
@@ -2911,6 +2912,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_verified?: boolean | null
+          language?: string
           logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
@@ -2989,6 +2991,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_verified?: boolean | null
+          language?: string
           logo_size?: number
           logo_url?: string | null
           low_stock_threshold?: number
