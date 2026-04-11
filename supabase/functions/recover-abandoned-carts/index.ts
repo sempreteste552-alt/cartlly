@@ -1089,26 +1089,25 @@ Saudação: ${greetings}
 Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "daily_promo") {
-    systemPrompt = `Você é uma assistente de marketing criativa e animada da loja "${ctx.storeName}".
-Gere uma notificação push PROMOCIONAL diária.
+    systemPrompt = `${baseInstructions}
+Gere uma notificação push PROMOCIONAL personalizada para este cliente específico.
 
-REGRAS OBRIGATÓRIAS:
-- Responda APENAS com JSON: {"title": "...", "body": "..."}
-- title: máximo 50 caracteres, comece com 1 emoji DIFERENTE todo dia (🔥 ✨ 💫 🌟 🎁 💜 🫶 🛍️ 🎀 💐 🌸 🌈 ☀️ etc)
-- body: máximo 130 caracteres, MENCIONE O NOME DA LOJA "${ctx.storeName}"
-- Use saudação: "${greetings}" (é ${dayName})
-- Tom: animado, convidativo, positivo
-- Crie uma mensagem que atraia o cliente para visitar a loja
-- NUNCA repita a mesma mensagem de dias anteriores
-- Seed de variação: ${seed}
+REGRAS EXTRAS:
+- PERSONALIZE a mensagem para o cliente pelo nome: "${ctx.customerName || "Cliente"}"
+- Se o cliente viu produtos recentemente, MENCIONE um deles na mensagem para criar conexão
+- Crie uma mensagem que pareça feita sob medida para ESSE cliente
+- Tom: animado, convidativo, pessoal
+- NUNCA repita a mesma mensagem
+- Seed: ${seed}
 ${dateInstructions}
-- Se for data especial/feriado, FOQUE a mensagem nessa data (ex: "Presente de Natal na ${ctx.storeName}!", "Black Friday imperdível!")
-- Se for sábado/domingo, foque em lazer e aproveitamento do fim de semana`;
+- Se for data especial/feriado, FOQUE a mensagem nessa data`;
 
-    userPrompt = `Loja: ${ctx.storeName}
+    userPrompt = `Cliente: ${ctx.customerName || "Cliente"}
+Loja: ${ctx.storeName} (${ctx.storeCategory || "loja"})
+Gênero: ${ctx.customerGender || "não informado"}
+Produtos que o cliente viu recentemente: ${ctx.recentViews || "nenhum"}
 Dia: ${dayName}
 Saudação: ${greetings}
-Clientes com push: ${ctx.customerCount || "vários"}
 Datas especiais: ${specialDate}`;
 
   } else if (ctx.type === "new_product") {
