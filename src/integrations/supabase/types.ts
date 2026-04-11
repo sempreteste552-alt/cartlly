@@ -2227,6 +2227,54 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_notify_subscriptions: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          email: string
+          id: string
+          notified: boolean
+          notified_at: string | null
+          product_id: string
+          store_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          email: string
+          id?: string
+          notified?: boolean
+          notified_at?: string | null
+          product_id: string
+          store_user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          email?: string
+          id?: string
+          notified?: boolean
+          notified_at?: string | null
+          product_id?: string
+          store_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_notify_subscriptions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_notify_subscriptions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_ai_reminders: {
         Row: {
           created_at: string | null
