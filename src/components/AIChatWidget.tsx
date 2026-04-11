@@ -899,7 +899,7 @@ export function AIChatWidget() {
                   <Button
                     key={action.label}
                     variant="outline"
-                    className="justify-start text-xs h-auto py-2.5 px-3 whitespace-normal text-left border-border/60 hover:border-primary/50 hover:bg-primary/5"
+                    className="justify-start text-xs h-auto py-2.5 px-3 whitespace-normal text-left border-border/60 bg-background text-foreground hover:border-primary/50 hover:bg-accent hover:text-accent-foreground"
                     onClick={() => sendMessage(action.prompt)}
                   >
                     {action.label}
