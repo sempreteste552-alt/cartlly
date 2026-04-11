@@ -131,7 +131,7 @@ export default function LojaRastreio() {
       {notFound && (
         <Card>
           <CardContent className="flex flex-col items-center py-12">
-            <XCircle className="h-12 w-12 text-gray-300" />
+            <XCircle className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 font-medium">Pedido não encontrado</p>
             <p className="text-sm text-muted-foreground mt-1">Verifique o código e tente novamente</p>
           </CardContent>
@@ -160,7 +160,7 @@ export default function LojaRastreio() {
               ) : (
                 <div className="flex items-center justify-between relative px-4">
                   {/* Progress bar */}
-                  <div className="absolute top-5 left-8 right-8 h-1 bg-gray-200 rounded-full">
+                  <div className="absolute top-5 left-8 right-8 h-1 bg-muted rounded-full">
                     <div
                       className="h-full bg-black rounded-full transition-all duration-700 ease-out"
                       style={{ width: `${Math.max(0, (currentStepIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
@@ -179,12 +179,12 @@ export default function LojaRastreio() {
                           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
                             isCompleted
                               ? "bg-black text-white shadow-lg"
-                              : "bg-gray-100 text-muted-foreground border-2 border-border"
+                              : "bg-muted text-muted-foreground border-2 border-border"
                           } ${isCurrent ? "ring-4 ring-gray-200 scale-110" : ""}`}
                         >
                           <Icon className="h-5 w-5" />
                         </div>
-                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-black" : "text-muted-foreground"}`}>
+                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
                           {info.label}
                         </span>
                       </div>
@@ -213,7 +213,7 @@ export default function LojaRastreio() {
                   {item.product_image ? (
                     <img src={item.product_image} alt={item.product_name} className="h-12 w-12 rounded object-cover" />
                   ) : (
-                    <div className="h-12 w-12 rounded bg-gray-100" />
+                    <div className="h-12 w-12 rounded bg-muted" />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.product_name}</p>
@@ -248,13 +248,13 @@ export default function LojaRastreio() {
               <CardHeader><CardTitle className="text-base">Histórico</CardTitle></CardHeader>
               <CardContent>
                 <div className="relative pl-6">
-                  <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-gray-200" />
+                  <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-muted" />
                   {history.map((h, i) => {
                     const Icon = STATUS_ICONS[h.status] || Clock;
                     return (
                       <div key={h.id} className="relative flex items-start gap-3 pb-4 last:pb-0">
                         <div className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center ${
-                          i === history.length - 1 ? "bg-black text-white" : "bg-gray-200 text-muted-foreground"
+                          i === history.length - 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
                         }`}>
                           <Icon className="h-3 w-3" />
                         </div>
