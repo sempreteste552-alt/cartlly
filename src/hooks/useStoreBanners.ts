@@ -58,16 +58,20 @@ export function useCreateBanner() {
 export function useUpdateBannerLink() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, link_url }: { id: string; link_url: string | null }) => {
+    mutationFn: async ({ id, link_url, category_id }: { id: string; link_url?: string | null; category_id?: string | null }) => {
+      const updates: Record<string, any> = {};
+      if (link_url !== undefined) updates.link_url = link_url;
+      if (category_id !== undefined) updates.category_id = category_id;
       const { error } = await supabase
         .from("store_banners")
-        .update({ link_url } as any)
+        .update(updates as any)
         .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["store_banners"] });
-      toast.success("Link atualizado!");
+      queryClient.invalidateQueries({ queryKey: ["public_banners"] });
+      toast.success("Banner atualizado!");
     },
     onError: (e) => toast.error("Erro: " + e.message),
   });
