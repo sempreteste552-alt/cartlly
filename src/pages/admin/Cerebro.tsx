@@ -24,6 +24,27 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["push-logs", userId, eventType],
     queryFn: async () => {
+      if (eventType === "ceo_insight") {
+        // CEO insights are stored in admin_notifications
+        const { data, error } = await supabase
+          .from("admin_notifications")
+          .select("id, title, message, type, created_at")
+          .eq("target_user_id", userId!)
+          .eq("type", "ceo_insight")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        return (data || []).map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          body: n.message,
+          status: "sent",
+          created_at: n.created_at,
+          trigger_type: "ceo_brain",
+          event_type: "ceo_insight",
+        }));
+      }
+
       let query = supabase
         .from("push_logs")
         .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
@@ -31,10 +52,8 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
         .limit(20);
 
       if (eventType === "motivational_push") {
-        // Motivational pushes are sent TO the tenant (user_id = tenant)
         query = query.eq("user_id", userId!).eq("event_type", "motivational_push");
       } else {
-        // Customer pushes are stored with store_user_id = tenant
         query = query.eq("store_user_id", userId!).neq("event_type", "motivational_push");
       }
 
