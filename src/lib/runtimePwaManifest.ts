@@ -79,10 +79,6 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   // Prevent applying manifest without a tenant-specific id
   if (!options.id) return;
 
-  // Skip if we already applied for this exact tenant
-  if (_lastAppliedTenantId === options.id) return;
-  _lastAppliedTenantId = options.id;
-
   const currentPath = getCurrentPath();
   const startUrl = options.startUrl || currentPath;
   const scope = options.scope || currentPath;
