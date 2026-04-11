@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearRuntimePwaManifest } from "@/lib/runtimePwaManifest";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
