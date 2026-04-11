@@ -5,10 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * AI CEO Brain: Proactive Business Insights for Admins.
- * Runs periodically to analyze store data and push "money-making" ideas to admins.
- */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -24,7 +20,6 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 1. Get all stores/admins
     const { data: stores, error: storeErr } = await supabase
       .from("store_settings")
       .select("user_id, store_name, category");
@@ -40,17 +35,35 @@ Deno.serve(async (req) => {
       try {
         const userId = store.user_id;
 
-        // 2. Fetch Rich Insights
+        // Fetch Rich Insights
         const { data: insights, error: insightErr } = await supabase.rpc("get_store_rich_insights", { p_user_id: userId });
         if (insightErr) {
           console.error(`[ai-ceo-brain] Insights error for ${userId}:`, insightErr);
           continue;
         }
 
-        // 3. Ask AI for a CEO Insight
-        const systemPrompt = `Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja (admins) ganharem muito dinheiro.
-Sua personalidade: Amigável (como um braço direito/amigo), extremamente analítica, focada em resultados e proativa.
-Você não manda mensagens chatas ou genéricas. Cada mensagem deve ser uma oportunidade real de lucro ou eficiência.
+        // Fetch last 20 CEO notifications to prevent ANY repetition
+        const { data: previousNotifs } = await supabase
+          .from("admin_notifications")
+          .select("title, message, created_at")
+          .eq("target_user_id", userId)
+          .eq("type", "ceo_insight")
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        const previousMessages = previousNotifs?.map(
+          (n: any) => `[${n.title}] ${n.message}`
+        ).join("\n") || "Nenhuma mensagem anterior.";
+
+        // Extract unique words from previous messages for blacklist
+        const allPrevWords = previousNotifs?.flatMap((n: any) => {
+          const text = `${n.title} ${n.message}`.toLowerCase();
+          return text.split(/\s+/).filter((w: string) => w.length > 4);
+        }) || [];
+        const frequentWords = [...new Set(allPrevWords)].slice(0, 50).join(", ");
+
+        const systemPrompt = `Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
+Personalidade: Amigável, analítica, focada em resultados e proativa.
 
 STATUS DA LOJA (${store.store_name}):
 - Faturamento APROVADO (30d): R$ ${insights.sales_30d}
@@ -66,16 +79,32 @@ STATUS DA LOJA (${store.store_name}):
 - Melhores Produtos: ${JSON.stringify(insights.top_products)}
 - Piores Produtos (vistos mas pouco vendidos): ${JSON.stringify(insights.bottom_products)}
 
-IMPORTANTE: "Faturamento" = APENAS pedidos aprovados. Nunca misture com cancelados ou recusados.
+IMPORTANTE: "Faturamento" = APENAS pedidos aprovados.
 
-REGRAS:
-1. Se os dados estiverem excelentes, dê um parabéns entusiasmado e uma dica de escala.
-2. Se houver problemas (ex: muitos abandonos, pagamentos falhos, produtos sem giro), dê uma solução acionável IMEDIATA.
-3. Use um tom de "amigo CEO" — direto ao ponto, encorajador.
-4. Jamais repita a mesma ideia de forma idêntica a mensagens anteriores.
-5. Se não houver nada de relevante para falar agora, responda apenas "[NO_INSIGHT]".
+===== REGRAS ANTI-REPETIÇÃO (OBRIGATÓRIO) =====
+1. Abaixo estão TODAS as mensagens que você já enviou. Leia CADA UMA com atenção.
+2. Sua nova mensagem NÃO PODE:
+   - Começar com a mesma palavra ou emoji de qualquer mensagem anterior
+   - Usar o mesmo tema/assunto (ex: se já falou de "carrinho abandonado", fale de OUTRO assunto)
+   - Repetir NENHUMA frase, expressão ou estrutura similar
+   - Usar gírias de dia da semana (Sextou, Sabadão, Segundou, etc.) se já usou antes
+3. Se TODAS as ideias já foram cobertas, responda "[NO_INSIGHT]".
+4. Cada mensagem deve trazer uma perspectiva 100% NOVA e ÚNICA.
 
-FORMATO DE RESPOSTA (JSON):
+MENSAGENS JÁ ENVIADAS (NUNCA REPITA NADA DAQUI):
+${previousMessages}
+
+PALAVRAS JÁ USADAS (EVITE TODAS):
+${frequentWords}
+=======================================
+
+REGRAS DE CONTEÚDO:
+1. Se os dados estiverem excelentes, dê parabéns com dica de escala.
+2. Se houver problemas, dê solução acionável IMEDIATA.
+3. Tom de "amigo CEO" — direto, encorajador.
+4. Se não houver nada novo para falar, responda "[NO_INSIGHT]".
+
+FORMATO (JSON):
 {
   "title": "Título curto e impactante (com emoji)",
   "message": "Corpo da mensagem curto e direto ao ponto"
@@ -90,27 +119,39 @@ FORMATO DE RESPOSTA (JSON):
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
             messages: [{ role: "system", content: systemPrompt }],
-            temperature: 0.8,
+            temperature: 0.9,
             response_format: { type: "json_object" }
           }),
         });
 
         const aiData = await aiResponse.json();
-        const content = JSON.parse(aiData.choices[0].message.content);
+        const rawContent = aiData.choices?.[0]?.message?.content || "";
 
-        if (aiData.choices[0].message.content.includes("[NO_INSIGHT]")) {
+        if (rawContent.includes("[NO_INSIGHT]")) {
           results.push({ userId, status: "skipped", reason: "AI decided no insight needed" });
           continue;
         }
 
-        const { title, message } = content;
+        let content;
+        try {
+          content = JSON.parse(rawContent);
+        } catch {
+          results.push({ userId, status: "skipped", reason: "Failed to parse AI response" });
+          continue;
+        }
 
-        // 4. Rate Limit & Dedup Check (using our new generic RPC)
+        const { title, message } = content;
+        if (!title || !message) {
+          results.push({ userId, status: "skipped", reason: "Empty title or message" });
+          continue;
+        }
+
+        // Rate Limit & Dedup Check
         const { data: canSend, error: rateErr } = await supabase.rpc("can_send_message", {
           p_target_id: userId,
           p_title: title,
           p_body: message,
-          p_cooldown_minutes: 5 // User requested at least 5 minutes
+          p_cooldown_minutes: 5
         });
 
         if (rateErr) {
@@ -123,12 +164,11 @@ FORMATO DE RESPOSTA (JSON):
           continue;
         }
 
-        // 5. Save Notification & Send Push
-        // Insert into admin_notifications
+        // Save Notification
         const { error: notifErr } = await supabase
           .from("admin_notifications")
           .insert({
-            sender_user_id: userId, // AI is acting as the system/store brain
+            sender_user_id: userId,
             target_user_id: userId,
             title,
             message,
@@ -141,7 +181,7 @@ FORMATO DE RESPOSTA (JSON):
           continue;
         }
 
-        // Trigger real push notification
+        // Send push
         await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: {

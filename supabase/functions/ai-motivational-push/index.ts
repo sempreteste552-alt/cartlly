@@ -118,23 +118,44 @@ serve(async (req) => {
     // Detect day of week in Brazil
     const dayOfWeek = nowBrasilia.toLocaleDateString("pt-BR", { weekday: "long" });
 
-    const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Sua missão é enviar UMA mensagem curta (máx 120 caracteres no body), motivacional e persuasiva para o dono da loja quando ele acessa o painel.
+    // Extract words from previous messages to create a blacklist
+    const prevWords = lastMsgs?.flatMap((m: any) => {
+      const text = `${m.title} ${m.body}`.toLowerCase();
+      return text.split(/\s+/).filter((w: string) => w.length > 3);
+    }) || [];
+    const wordBlacklist = [...new Set(prevWords)].slice(0, 80).join(", ");
 
-REGRAS:
-- Seja breve, direto, empático e positivo
-- Use o nome do lojista quando possível
-- Varie MUITO o tom e o tema: dica de negócio, celebração, motivação pessoal, insight de vendas, elogio, provocação positiva, etc.
-- Se houver vendas recentes, parabenize
-- Se não houver vendas, motive sem ser negativo
-- Use emojis com moderação (1-2 máx)
-- Responda APENAS com um JSON: {"title": "...", "body": "..."}
-- O title deve ter no máximo 40 caracteres
-- O body deve ter no máximo 120 caracteres
-- IMPORTANTE: O horário atual em Brasília é ${hour}h (${dayOfWeek}). Use a saudação correta: "${greeting}". NUNCA diga "Bom dia" se for tarde/noite/madrugada!
-- GÍRIAS DIVERTIDAS (ex: "Sextou!", "Segundou!", "Bora!"): Pode usar SIM, mas com MODERAÇÃO — no máximo 1 a cada 5 mensagens. Não use a mesma gíria duas vezes seguidas. Alterne bastante entre mensagens sérias/profissionais e mensagens descontraídas/engraçadas.
-- DIVERSIDADE OBRIGATÓRIA: Cada mensagem deve ter um TEMA COMPLETAMENTE DIFERENTE das anteriores. Varie entre: dica de estoque, elogio pessoal, insight de marketing, meta de vendas, celebração de conquista, sugestão de produto, frase inspiradora de empreendedorismo, etc.
-- NUNCA repita palavras-chave, temas, estruturas ou ideias das mensagens anteriores listadas abaixo.
-${customInstructions ? `\nINSTRUÇÕES PERSONALIZADAS DO LOJISTA (siga rigorosamente):\n${customInstructions}` : ""}`;
+    const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
+
+REGRAS DE FORMATO:
+- JSON: {"title": "...", "body": "..."}
+- title: máx 40 chars. body: máx 120 chars.
+- Emojis: 1-2 máx.
+- Horário Brasília: ${hour}h (${dayOfWeek}). Saudação: "${greeting}". NUNCA erre o período do dia.
+
+===== REGRAS ANTI-REPETIÇÃO (CRÍTICO - SIGA À RISCA) =====
+Abaixo estão as mensagens anteriores. Sua nova mensagem DEVE ser 100% DIFERENTE:
+1. NÃO comece com a mesma palavra ou emoji de NENHUMA mensagem anterior
+2. NÃO use o mesmo tema (se falou de vendas, fale de outro assunto)
+3. NÃO repita NENHUMA expressão, gíria ou estrutura similar
+4. NÃO use referências ao dia da semana se já usou nas últimas 5 mensagens
+5. Proibido: repetir qualquer início de frase já usado
+6. CADA mensagem deve parecer escrita por uma pessoa DIFERENTE
+
+PALAVRAS PROIBIDAS (já usadas - NÃO repita nenhuma):
+${wordBlacklist}
+
+MENSAGENS ANTERIORES (leia TODAS e faça algo COMPLETAMENTE diferente):
+${recentMessages}
+==========================================================
+
+TEMAS POSSÍVEIS (escolha um que NÃO foi usado recentemente):
+- Dica de precificação, organização, atendimento, branding
+- Elogio pessoal, frase de empreendedor famoso
+- Meta numérica específica, desafio do dia
+- Insight de marketing digital, redes sociais
+- Curiosidade de mercado, tendência
+${customInstructions ? `\nINSTRUÇÕES DO LOJISTA:\n${customInstructions}` : ""}`;
 
     const userPrompt = `Gere uma mensagem motivacional para ${tenantName} (loja: ${storeName}).
 Contexto: ${greeting}, ${isFirstPush ? "primeiro acesso do dia" : "segundo acesso do dia"}.

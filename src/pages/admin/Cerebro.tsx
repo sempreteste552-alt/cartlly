@@ -24,6 +24,27 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ["push-logs", userId, eventType],
     queryFn: async () => {
+      if (eventType === "ceo_insight") {
+        // CEO insights are stored in admin_notifications
+        const { data, error } = await supabase
+          .from("admin_notifications")
+          .select("id, title, message, type, created_at")
+          .eq("target_user_id", userId!)
+          .eq("type", "ceo_insight")
+          .order("created_at", { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        return (data || []).map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          body: n.message,
+          status: "sent",
+          created_at: n.created_at,
+          trigger_type: "ceo_brain",
+          event_type: "ceo_insight",
+        }));
+      }
+
       let query = supabase
         .from("push_logs")
         .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
@@ -31,10 +52,8 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
         .limit(20);
 
       if (eventType === "motivational_push") {
-        // Motivational pushes are sent TO the tenant (user_id = tenant)
         query = query.eq("user_id", userId!).eq("event_type", "motivational_push");
       } else {
-        // Customer pushes are stored with store_user_id = tenant
         query = query.eq("store_user_id", userId!).neq("event_type", "motivational_push");
       }
 
@@ -494,8 +513,9 @@ export default function Cerebro() {
 
       {/* Mobile: Tabs for Chat vs Logs. Desktop: Side by side */}
       <Tabs defaultValue="chat" className="flex flex-col lg:hidden">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="chat" className="text-xs gap-1"><Bot className="h-3 w-3" /> Chat</TabsTrigger>
+          <TabsTrigger value="ceo" className="text-xs gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
           <TabsTrigger value="my-pushes" className="text-xs gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
           <TabsTrigger value="client-pushes" className="text-xs gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
         </TabsList>
@@ -510,6 +530,9 @@ export default function Cerebro() {
             handleSend={handleSend}
             scrollRef={scrollRef}
           />
+        </TabsContent>
+        <TabsContent value="ceo" className="mt-2">
+          <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />
         </TabsContent>
         <TabsContent value="my-pushes" className="mt-2">
           <PushLogPanel userId={user?.id} eventType="motivational_push" emptyText="Nenhum push motivacional enviado." />
@@ -535,12 +558,17 @@ export default function Cerebro() {
         </div>
 
         <div className="flex flex-col gap-4 overflow-hidden">
-          <Tabs defaultValue="tasks" className="flex flex-col overflow-hidden">
-            <TabsList className="w-full grid grid-cols-3">
+          <Tabs defaultValue="ceo" className="flex flex-col overflow-hidden">
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="ceo" className="text-[10px] gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
               <TabsTrigger value="tasks" className="text-[10px] gap-1"><Clock className="h-3 w-3" /> Tarefas</TabsTrigger>
-              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Meus Pushes</TabsTrigger>
+              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
               <TabsTrigger value="client-pushes" className="text-[10px] gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ceo" className="flex-1 overflow-hidden mt-2">
+              <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />
+            </TabsContent>
 
             <TabsContent value="tasks" className="flex-1 overflow-hidden mt-2">
               <Card className="h-full">
