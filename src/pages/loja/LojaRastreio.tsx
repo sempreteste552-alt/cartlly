@@ -104,7 +104,7 @@ export default function LojaRastreio() {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Rastreio do Pedido</h1>
-        <p className="text-gray-500 text-sm mt-1">Acompanhe o status do seu pedido em tempo real</p>
+        <p className="text-muted-foreground text-sm mt-1">Acompanhe o status do seu pedido em tempo real</p>
       </div>
 
       {/* Search */}
@@ -112,7 +112,7 @@ export default function LojaRastreio() {
         <CardContent className="p-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Código do pedido (ex: a1b2c3d4)"
                 value={searchId}
@@ -133,7 +133,7 @@ export default function LojaRastreio() {
           <CardContent className="flex flex-col items-center py-12">
             <XCircle className="h-12 w-12 text-gray-300" />
             <p className="mt-4 font-medium">Pedido não encontrado</p>
-            <p className="text-sm text-gray-500 mt-1">Verifique o código e tente novamente</p>
+            <p className="text-sm text-muted-foreground mt-1">Verifique o código e tente novamente</p>
           </CardContent>
         </Card>
       )}
@@ -179,12 +179,12 @@ export default function LojaRastreio() {
                           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
                             isCompleted
                               ? "bg-black text-white shadow-lg"
-                              : "bg-gray-100 text-gray-400 border-2 border-gray-200"
+                              : "bg-gray-100 text-muted-foreground border-2 border-border"
                           } ${isCurrent ? "ring-4 ring-gray-200 scale-110" : ""}`}
                         >
                           <Icon className="h-5 w-5" />
                         </div>
-                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-black" : "text-gray-400"}`}>
+                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-black" : "text-muted-foreground"}`}>
                           {info.label}
                         </span>
                       </div>
@@ -196,7 +196,7 @@ export default function LojaRastreio() {
           </Card>
 
           {/* Realtime indicator */}
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -217,7 +217,7 @@ export default function LojaRastreio() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.product_name}</p>
-                    <p className="text-xs text-gray-500">{item.quantity}x {formatPrice(item.unit_price)}</p>
+                    <p className="text-xs text-muted-foreground">{item.quantity}x {formatPrice(item.unit_price)}</p>
                   </div>
                   <p className="text-sm font-medium">{formatPrice(item.quantity * item.unit_price)}</p>
                 </div>
@@ -225,7 +225,7 @@ export default function LojaRastreio() {
               <Separator />
               {(order.shipping_cost > 0) && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Frete ({order.shipping_method || "Padrão"})</span>
+                  <span className="text-muted-foreground">Frete ({order.shipping_method || "Padrão"})</span>
                   <span>{formatPrice(order.shipping_cost)}</span>
                 </div>
               )}
@@ -254,7 +254,7 @@ export default function LojaRastreio() {
                     return (
                       <div key={h.id} className="relative flex items-start gap-3 pb-4 last:pb-0">
                         <div className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center ${
-                          i === history.length - 1 ? "bg-black text-white" : "bg-gray-200 text-gray-500"
+                          i === history.length - 1 ? "bg-black text-white" : "bg-gray-200 text-muted-foreground"
                         }`}>
                           <Icon className="h-3 w-3" />
                         </div>
@@ -262,7 +262,7 @@ export default function LojaRastreio() {
                           <p className="text-sm font-medium">
                             {ORDER_STATUS_MAP[h.status as OrderStatus]?.label || h.status}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-muted-foreground">
                             {format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
                         </div>
@@ -278,11 +278,11 @@ export default function LojaRastreio() {
           <Card>
             <CardHeader><CardTitle className="text-base">Dados do Pedido</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">Cliente</span><span>{order.customer_name}</span></div>
-              {order.customer_phone && <div className="flex justify-between"><span className="text-gray-500">Telefone</span><span>{order.customer_phone}</span></div>}
-              {order.customer_email && <div className="flex justify-between"><span className="text-gray-500">Email</span><span>{order.customer_email}</span></div>}
-              {order.customer_address && <div className="flex justify-between"><span className="text-gray-500">Endereço</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
-              <div className="flex justify-between"><span className="text-gray-500">Data</span><span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Cliente</span><span>{order.customer_name}</span></div>
+              {order.customer_phone && <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{order.customer_phone}</span></div>}
+              {order.customer_email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{order.customer_email}</span></div>}
+              {order.customer_address && <div className="flex justify-between"><span className="text-muted-foreground">Endereço</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
+              <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span></div>
             </CardContent>
           </Card>
         </div>
