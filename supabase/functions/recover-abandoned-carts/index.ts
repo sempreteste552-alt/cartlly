@@ -128,20 +128,50 @@ Deno.serve(async (req) => {
         const rule = ruleMap.get(cart.user_id);
         if (!rule) { skipped++; continue; }
 
-        // Check per-store wait time
-        const waitMs = (rule.wait_minutes || 20) * 60 * 1000;
-        if (Date.now() - new Date(cart.abandoned_at).getTime() < waitMs) { skipped++; continue; }
+        // Progressive sequence: 1h → 6h → 24h with escalating urgency
+        const reminderCount = cart.reminder_sent_count || 0;
+        const progressiveWaits = [
+          (rule.wait_minutes || 20),   // 1st: use store config (default 20min)
+          360,                          // 2nd: 6 hours
+          1440,                         // 3rd: 24 hours
+          2880,                         // 4th: 48 hours
+          4320,                         // 5th: 72 hours
+        ];
+        const waitMinutes = progressiveWaits[Math.min(reminderCount, progressiveWaits.length - 1)];
+        
+        // For subsequent reminders, check time since LAST reminder, not since abandoned
+        const referenceTime = reminderCount === 0 
+          ? new Date(cart.abandoned_at).getTime()
+          : new Date(cart.last_reminder_at || cart.abandoned_at).getTime();
+        const waitMs = waitMinutes * 60 * 1000;
+        if (Date.now() - referenceTime < waitMs) { skipped++; continue; }
 
         const store = storeMap.get(cart.user_id);
         const storeName = store?.store_name || "nossa loja";
         const items = Array.isArray(cart.items) ? cart.items : [];
         const itemNames = items.slice(0, 3).map((i: any) => i.name || "Produto").join(", ");
+        const itemImages = items.slice(0, 2).map((i: any) => i.image || i.image_url || "").filter(Boolean);
         const totalValue = cart.total || items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 1)), 0);
 
-        // Discount context
-        const discountCtx = rule.offer_discount && rule.discount_code
-          ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
-          : { hasDiscount: false, code: "", percentage: 0 };
+        // Progressive discount: escalate based on reminder count
+        const progressiveDiscounts = [
+          { hasDiscount: false, code: "", percentage: 0 },                    // 1st: no discount, gentle reminder
+          { hasDiscount: false, code: "", percentage: 0 },                    // 2nd: urgency, no discount
+          rule.offer_discount && rule.discount_code                           // 3rd: offer discount
+            ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
+            : { hasDiscount: false, code: "", percentage: 0 },
+          rule.offer_discount && rule.discount_code                           // 4th: bigger discount
+            ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min((rule.discount_percentage || 10) + 5, 30) }
+            : { hasDiscount: false, code: "", percentage: 0 },
+          rule.offer_discount && rule.discount_code                           // 5th: last chance, max discount
+            ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min((rule.discount_percentage || 10) + 10, 40) }
+            : { hasDiscount: false, code: "", percentage: 0 },
+        ];
+        const discountCtx = progressiveDiscounts[Math.min(reminderCount, progressiveDiscounts.length - 1)];
+        
+        // Progressive urgency labels for AI context
+        const urgencyLevels = ["gentil", "curioso", "urgente_com_desconto", "ultima_chance", "despedida_final"];
+        const urgencyLevel = urgencyLevels[Math.min(reminderCount, urgencyLevels.length - 1)];
 
         const abandonedCartFallbacks = [
           { title: "🛒 Seus itens estão te esperando!", body: `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!` },
