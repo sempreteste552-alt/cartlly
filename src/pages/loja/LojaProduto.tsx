@@ -41,6 +41,7 @@ export default function LojaProduto() {
   const product = products?.find((p) => p.id === id);
   const localeTag = getLocaleTag(locale);
   const localizedDescription = useLocalizedText(product?.description);
+  const localizedProductName = useLocalizedText(product?.name);
   const localizedDeliveryText = useLocalizedText(productPageConfig?.delivery_estimation_text);
   const localizedSizeGuideContent = useLocalizedText(productPageConfig?.size_guide_content);
   const uiText = {
