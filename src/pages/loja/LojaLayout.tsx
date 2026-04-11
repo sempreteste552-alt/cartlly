@@ -316,18 +316,63 @@ export default function LojaLayout() {
     }
   }, [searchTerm, settings?.user_id]);
 
+  // Apply dark mode CSS vars to both the store container AND documentElement
+  // (portaled elements like Dialogs/Sheets render outside the container)
   useLayoutEffect(() => {
     const container = document.getElementById(`store-theme-${slug}`);
-    if (!container) return;
+    const root = document.documentElement;
 
     if (isDarkMode) {
-      container.classList.add("dark");
+      container?.classList.add("dark");
+      root.classList.add("dark");
+      // Set dark CSS vars on root for portaled elements
+      const darkVars: Record<string, string> = {
+        "--card": "0 0% 5%",
+        "--card-foreground": "0 0% 98%",
+        "--background": "0 0% 0%",
+        "--foreground": "0 0% 98%",
+        "--popover": "0 0% 5%",
+        "--popover-foreground": "0 0% 98%",
+        "--muted": "0 0% 10%",
+        "--muted-foreground": "0 0% 65%",
+        "--border": "0 0% 14%",
+        "--input": "0 0% 14%",
+        "--secondary": "0 0% 10%",
+        "--secondary-foreground": "0 0% 98%",
+        "--accent": "0 0% 12%",
+        "--accent-foreground": "0 0% 98%",
+      };
+      Object.entries(darkVars).forEach(([k, v]) => root.style.setProperty(k, v));
     } else {
-      container.classList.remove("dark");
+      container?.classList.remove("dark");
+      root.classList.remove("dark");
+      // Reset to light vars
+      const lightVars: Record<string, string> = {
+        "--card": "0 0% 100%",
+        "--card-foreground": "224 30% 12%",
+        "--background": "220 20% 97%",
+        "--foreground": "224 30% 12%",
+        "--popover": "0 0% 100%",
+        "--popover-foreground": "224 30% 12%",
+        "--muted": "220 14% 96%",
+        "--muted-foreground": "220 9% 46%",
+        "--border": "220 13% 91%",
+        "--input": "220 13% 91%",
+        "--secondary": "220 14% 96%",
+        "--secondary-foreground": "224 30% 12%",
+        "--accent": "243 75% 95%",
+        "--accent-foreground": "243 75% 59%",
+      };
+      Object.entries(lightVars).forEach(([k, v]) => root.style.setProperty(k, v));
     }
 
     return () => {
-      container.classList.remove("dark");
+      container?.classList.remove("dark");
+      root.classList.remove("dark");
+      // Clean up all overridden vars
+      ["--card","--card-foreground","--background","--foreground","--popover","--popover-foreground",
+       "--muted","--muted-foreground","--border","--input","--secondary","--secondary-foreground",
+       "--accent","--accent-foreground"].forEach((k) => root.style.removeProperty(k));
     };
   }, [isDarkMode, slug]);
 
