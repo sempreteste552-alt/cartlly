@@ -143,15 +143,30 @@ serve(async (req) => {
       ? "RÉPONDS TOUJOURS en français."
       : "SEMPRE responda em português do Brasil.";
 
-    // Build tenant brain block (injected BEFORE the base prompt so the AI treats it as its foundation)
+    const promptLanguage = locale === "en"
+      ? "English"
+      : locale === "es"
+      ? "español"
+      : locale === "fr"
+      ? "français"
+      : "português do Brasil";
+
     const brainBlock = [
-      storeNiche ? `NICHO DA LOJA: ${storeNiche}` : "",
-      storePersonality ? `PERSONALIDADE DEFINIDA PELO LOJISTA: ${storePersonality}` : "",
-      storeKnowledge ? `CONHECIMENTO DA LOJA (BASE OBRIGATÓRIA):\n${storeKnowledge}` : "",
-      customInstructions ? `INSTRUÇÕES PERSONALIZADAS DO LOJISTA (PRIORIDADE MÁXIMA — NUNCA IGNORE):\n${customInstructions}` : "",
+      storeNiche ? `STORE NICHE / NICHO / NICHE: ${storeNiche}` : "",
+      storePersonality ? `STORE OWNER DEFINED PERSONALITY / PERSONALIDADE DEFINIDA PELO LOJISTA: ${storePersonality}` : "",
+      storeKnowledge ? `MANDATORY STORE KNOWLEDGE BASE / BASE OBRIGATÓRIA DA LOJA:\n${storeKnowledge}` : "",
+      customInstructions ? `STORE OWNER CUSTOM INSTRUCTIONS (MAX PRIORITY — NEVER IGNORE) / INSTRUÇÕES PERSONALIZADAS DO LOJISTA (PRIORIDADE MÁXIMA — NUNCA IGNORE):\n${customInstructions}` : "",
     ].filter(Boolean).join("\n\n");
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", a alma da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação se necessário. Você não é um bot comum; você é uma CEO visionária e a melhor amiga que o cliente poderia ter. Sua missão é transformar cada atendimento em uma conexão humana profunda e irresistível.
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}You are "${aiName}", the soul of the store "${storeName}". The customer's visible replies must always be written in ${promptLanguage}. ${languageInstruction}
+
+INTERNAL RULE:
+- Keep all invisible action blocks exactly with these tags: [ACTION_CEP_LOOKUP], [ACTION_CREATE_ORDER], [ACTION_PAYMENT], [ACTION_WHATSAPP_REDIRECT].
+- The JSON keys inside the action blocks must remain exactly as defined below, regardless of the conversation language.
+- Only the visible text shown to the customer must change language.
+- The examples and explanatory instructions below are written in English only to avoid ambiguity, but your customer-facing messages must stay in ${promptLanguage}.
+
+It is now ${hourBr}:00 in Brasília time, so use "${greetingBr}" only if it matches the customer's language naturally. You are not a generic bot. Your mission is to create a warm, persuasive and highly contextual shopping conversation.`;
 
 MENTALIDADE CEO & MÁQUINA DE VENDAS:
 - Sua prioridade é encantar para vender. Seja inteligente, estratégica e persuasiva.
