@@ -6,6 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const STOPWORDS = new Set([
+  "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
+  "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
+  "mais", "muito", "muita", "hoje", "ontem", "amanha", "você", "voce", "pra", "pro", "como", "sua",
+  "loja", "cartlly", "bom", "boa", "dia", "tarde", "noite", "madrugada", "aqui", "essa", "esse",
+]);
+
+const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
+  { topic: "vendas", keywords: ["venda", "vendas", "fatur", "pedido", "pedidos", "ticket", "lucro", "resultado", "meta"] },
+  { topic: "marketing", keywords: ["marketing", "campanha", "anuncio", "anuncios", "trafego", "instagram", "conteudo", "criativo", "rede social"] },
+  { topic: "operacao", keywords: ["organiza", "catalogo", "estoque", "cadastro", "banner", "foto", "preco", "precificacao", "vitrine"] },
+  { topic: "clientes", keywords: ["cliente", "clientes", "atendimento", "feedback", "avaliacao", "resposta", "relacionamento"] },
+  { topic: "motivacao", keywords: ["foco", "constancia", "disciplina", "energia", "coragem", "persistencia", "forca"] },
+  { topic: "oferta", keywords: ["cupom", "desconto", "oferta", "promocao", "promo", "off"] },
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -17,7 +33,6 @@ serve(async (req) => {
     const { user_id } = await req.json();
     if (!user_id) throw new Error("user_id required");
 
-    // 1. Check if user is a tenant (not super admin)
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
@@ -31,8 +46,7 @@ serve(async (req) => {
       });
     }
 
-    // 2. Check how many motivational pushes were sent today
-    const todayStart = new Date();
+    const todayStart = getNowBrasilia();
     todayStart.setHours(0, 0, 0, 0);
 
     const { data: todayPushes, error: countErr } = await supabase
@@ -40,6 +54,7 @@ serve(async (req) => {
       .select("id")
       .eq("user_id", user_id)
       .eq("event_type", "motivational_push")
+      .eq("status", "sent")
       .gte("created_at", todayStart.toISOString());
 
     if (countErr) throw countErr;
@@ -50,7 +65,6 @@ serve(async (req) => {
       });
     }
 
-    // 3. Get tenant info for personalization
     const { data: profile } = await supabase
       .from("profiles")
       .select("display_name")
@@ -63,7 +77,6 @@ serve(async (req) => {
       .eq("user_id", user_id)
       .maybeSingle();
 
-    // 4. Get some quick stats for context
     const { data: recentOrders } = await supabase
       .from("orders")
       .select("id, total")
@@ -72,7 +85,7 @@ serve(async (req) => {
       .neq("status", "cancelado");
 
     const orderCount = recentOrders?.length || 0;
-    const revenue = recentOrders?.reduce((s: number, o: any) => s + (o.total || 0), 0) || 0;
+    const revenue = recentOrders?.reduce((sum: number, order: any) => sum + (order.total || 0), 0) || 0;
 
     const { count: productCount } = await supabase
       .from("products")
@@ -89,7 +102,6 @@ serve(async (req) => {
     const storeName = storeSetting?.store_name || "sua loja";
     const isFirstPush = (todayPushes?.length || 0) === 0;
 
-    // Read AI brain config for custom instructions
     const { data: aiConfig } = await supabase
       .from("tenant_ai_brain_config")
       .select("custom_instructions")
@@ -97,33 +109,32 @@ serve(async (req) => {
       .maybeSingle();
     const customInstructions = aiConfig?.custom_instructions || "";
 
-    // 5. Get last 15 motivational messages to avoid repetition of themes
     const { data: lastMsgs } = await supabase
       .from("push_logs")
       .select("body, title, created_at")
       .eq("user_id", user_id)
       .eq("event_type", "motivational_push")
+      .eq("status", "sent")
       .order("created_at", { ascending: false })
       .limit(15);
 
-    const recentMessages = lastMsgs?.map((m: any) => `[${m.title}] ${m.body}`).filter(Boolean).join("\n") || "Nenhuma mensagem anterior.";
+    const historyTexts = (lastMsgs || [])
+      .map((msg: any) => `${msg.title || ""} ${msg.body || ""}`.trim())
+      .filter(Boolean);
 
-    // 6. Generate AI motivational message
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    // Usa horário de Brasília (UTC-3) para saudação correta
-    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const recentMessages = historyTexts.length > 0
+      ? historyTexts.map((msg, index) => `${index + 1}. ${msg}`).join("\n")
+      : "Nenhuma mensagem anterior.";
+
+    const prevWords = historyTexts.flatMap((text) =>
+      tokenizeMeaningful(text).filter((word) => word.length > 3),
+    );
+    const wordBlacklist = [...new Set(prevWords)].slice(0, 80).join(", ") || "nenhuma";
+
+    const nowBrasilia = getNowBrasilia();
     const hour = nowBrasilia.getHours();
     const greeting = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-
-    // Detect day of week in Brazil
     const dayOfWeek = nowBrasilia.toLocaleDateString("pt-BR", { weekday: "long" });
-
-    // Extract words from previous messages to create a blacklist
-    const prevWords = lastMsgs?.flatMap((m: any) => {
-      const text = `${m.title} ${m.body}`.toLowerCase();
-      return text.split(/\s+/).filter((w: string) => w.length > 3);
-    }) || [];
-    const wordBlacklist = [...new Set(prevWords)].slice(0, 80).join(", ");
 
     const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
 
@@ -133,73 +144,98 @@ REGRAS DE FORMATO:
 - Emojis: 1-2 máx.
 - Horário Brasília: ${hour}h (${dayOfWeek}). Saudação: "${greeting}". NUNCA erre o período do dia.
 
-===== REGRAS ANTI-REPETIÇÃO (CRÍTICO - SIGA À RISCA) =====
-Abaixo estão as mensagens anteriores. Sua nova mensagem DEVE ser 100% DIFERENTE:
-1. NÃO comece com a mesma palavra ou emoji de NENHUMA mensagem anterior
-2. NÃO use o mesmo tema (se falou de vendas, fale de outro assunto)
-3. NÃO repita NENHUMA expressão, gíria ou estrutura similar
-4. NÃO use referências ao dia da semana se já usou nas últimas 5 mensagens
-5. Proibido: repetir qualquer início de frase já usado
-6. CADA mensagem deve parecer escrita por uma pessoa DIFERENTE
+REGRAS CRÍTICAS:
+- Você DEVE analisar as 15 mensagens anteriores listadas abaixo antes de escrever.
+- A nova mensagem precisa soar como OUTRA pessoa, com OUTRO gancho, OUTRA estrutura e OUTRO assunto.
+- NÃO use a mesma lógica de abertura, a mesma energia de vendas ou o mesmo raciocínio batido.
+- NÃO repita primeira frase, emoji inicial, vocabulário dominante nem tema principal.
+- Se não conseguir criar algo realmente novo, responda {"title":"","body":""}.
 
-PALAVRAS PROIBIDAS (já usadas - NÃO repita nenhuma):
-${wordBlacklist}
+PALAVRAS JÁ USADAS (EVITE): ${wordBlacklist}
 
-MENSAGENS ANTERIORES (leia TODAS e faça algo COMPLETAMENTE diferente):
+15 MENSAGENS ANTERIORES PARA ANALISAR:
 ${recentMessages}
-==========================================================
 
-TEMAS POSSÍVEIS (escolha um que NÃO foi usado recentemente):
-- Dica de precificação, organização, atendimento, branding
-- Elogio pessoal, frase de empreendedor famoso
-- Meta numérica específica, desafio do dia
-- Insight de marketing digital, redes sociais
-- Curiosidade de mercado, tendência
+TEMAS DISPONÍVEIS:
+- organização prática da loja
+- atendimento e experiência do cliente
+- marketing e conteúdo
+- preço, margem ou vitrine
+- disciplina do lojista
+- ação simples para hoje
 ${customInstructions ? `\nINSTRUÇÕES DO LOJISTA:\n${customInstructions}` : ""}`;
 
-    const userPrompt = `Gere uma mensagem motivacional para ${tenantName} (loja: ${storeName}).
+    const userPromptBase = `Gere uma mensagem motivacional para ${tenantName} (loja: ${storeName}).
 Contexto: ${greeting}, ${isFirstPush ? "primeiro acesso do dia" : "segundo acesso do dia"}.
 Pedidos hoje: ${orderCount} (R$ ${revenue.toFixed(2)}).
 Produtos ativos: ${productCount || 0}. Clientes cadastrados: ${customerCount || 0}.
 
-MENSAGENS ANTERIORES (NÃO REPITA):
-${recentMessages}`;
+Lembre-se: analise as 15 anteriores e mude totalmente a lógica da mensagem.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.9,
-      }),
-    });
+    let selectedMessage: { title: string; body: string } | null = null;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    const aiResult = await aiResponse.json();
-    const rawContent = aiResult.choices?.[0]?.message?.content || "";
+    for (let attempt = 0; attempt < 4 && LOVABLE_API_KEY; attempt++) {
+      const retryInstruction = attempt === 0
+        ? ""
+        : `\nREJEIÇÃO ${attempt}: a opção anterior foi recusada por repetição de tema, abertura ou lógica. Troque radicalmente o gancho.`;
 
-    // Parse JSON from AI response
-    let title = "💪 Cartlly";
-    let body = `${greeting}, ${tenantName}! Bora vender hoje!`;
-    
-    try {
-      const cleaned = rawContent.replace(/```json\s*/g, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      if (parsed.title) title = parsed.title.substring(0, 50);
-      if (parsed.body) body = parsed.body.substring(0, 150);
-    } catch {
-      // Use fallback message
-      console.warn("Failed to parse AI response, using fallback:", rawContent);
+      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `${userPromptBase}${retryInstruction}` },
+          ],
+          temperature: 1,
+        }),
+      });
+
+      const aiResult = await aiResponse.json();
+      const rawContent = aiResult.choices?.[0]?.message?.content || "";
+      const candidate = parseGeneratedCopy(rawContent, ["body"]);
+
+      if (!candidate) continue;
+
+      const similarityReason = getSimilarityBlockReason(candidate.title, candidate.body, historyTexts, true);
+      if (similarityReason) {
+        console.warn(`[ai-motivational-push] Candidate rejected (${similarityReason})`);
+        continue;
+      }
+
+      selectedMessage = {
+        title: candidate.title.substring(0, 50),
+        body: candidate.body.substring(0, 150),
+      };
     }
 
-    // 7. Send push notification
-    await supabase.functions.invoke("send-push-internal", {
+    if (!selectedMessage) {
+      const fallbackCandidates = [
+        { title: "🧭 Ajuste simples, impacto real", body: `${greeting}, ${tenantName}: escolha 1 detalhe da vitrine da ${storeName} e melhore hoje.` },
+        { title: "📸 Sua loja merece capricho", body: `${tenantName}, revise fotos e destaque da ${storeName}. Pequeno ajuste pode puxar mais cliques.` },
+        { title: "🤝 Atendimento vende de novo", body: `${greeting}, ${tenantName}: responda um cliente com atenção extra hoje e fortaleça a ${storeName}.` },
+        { title: "💡 Ideia boa é a que sai", body: `${tenantName}, publique uma oferta clara na ${storeName} hoje. Ação simples vale mais que plano parado.` },
+      ];
+
+      selectedMessage = fallbackCandidates.find((candidate) =>
+        !getSimilarityBlockReason(candidate.title, candidate.body, historyTexts, true)
+      ) || null;
+    }
+
+    if (!selectedMessage) {
+      return new Response(JSON.stringify({ skipped: true, reason: "similarity_guard" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { title, body } = selectedMessage;
+
+    const { data: pushResult, error: pushError } = await supabase.functions.invoke("send-push-internal", {
       body: {
         target_user_id: user_id,
         title,
@@ -209,15 +245,13 @@ ${recentMessages}`;
       },
     });
 
-    // 8. Log the push with event_type for dedup
-    await supabase.from("push_logs").insert({
-      user_id,
-      title,
-      body,
-      event_type: "motivational_push",
-      status: "sent",
-      trigger_type: "ai_motivational",
-    });
+    if (pushError) throw pushError;
+
+    if (!pushResult?.sent) {
+      return new Response(JSON.stringify({ skipped: true, reason: pushResult?.message || "blocked", title, body }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ sent: true, title, body }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -230,3 +264,116 @@ ${recentMessages}`;
     });
   }
 });
+
+function getNowBrasilia() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+}
+
+function normalizeText(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeMeaningful(text: string) {
+  return normalizeText(text)
+    .split(" ")
+    .filter((token) => token.length > 2 && !STOPWORDS.has(token));
+}
+
+function detectTopic(text: string) {
+  const normalized = normalizeText(text);
+  let bestTopic = "other";
+  let bestScore = 0;
+
+  for (const entry of TOPIC_KEYWORDS) {
+    const score = entry.keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? 1 : 0), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestTopic = entry.topic;
+    }
+  }
+
+  return bestScore > 0 ? bestTopic : "other";
+}
+
+function getOpeningSignature(text: string) {
+  return normalizeText(text).split(" ").slice(0, 6).join(" ");
+}
+
+function jaccardSimilarity(a: string, b: string) {
+  const setA = new Set(tokenizeMeaningful(a));
+  const setB = new Set(tokenizeMeaningful(b));
+
+  if (setA.size === 0 || setB.size === 0) return 0;
+
+  let intersection = 0;
+  for (const token of setA) {
+    if (setB.has(token)) intersection++;
+  }
+
+  return intersection / (setA.size + setB.size - intersection);
+}
+
+function getSimilarityBlockReason(
+  title: string,
+  body: string | undefined,
+  historyTexts: string[],
+  strictTheme: boolean,
+) {
+  const candidate = `${title} ${body || ""}`.trim();
+  if (!candidate) return "mensagem vazia";
+
+  const candidateTopic = detectTopic(candidate);
+  if (strictTheme && candidateTopic !== "other") {
+    const sameTopicCount = historyTexts.filter((previous) => detectTopic(previous) === candidateTopic).length;
+    if (sameTopicCount >= 2) {
+      return `tema repetido (${candidateTopic})`;
+    }
+  }
+
+  for (const previous of historyTexts) {
+    if (!previous) continue;
+
+    const sameOpening = getOpeningSignature(candidate);
+    if (sameOpening && sameOpening === getOpeningSignature(previous)) {
+      return "abertura repetida";
+    }
+
+    const samePrefix = normalizeText(candidate).slice(0, 24);
+    if (samePrefix.length >= 16 && samePrefix === normalizeText(previous).slice(0, 24)) {
+      return "prefixo repetido";
+    }
+
+    const similarity = jaccardSimilarity(candidate, previous);
+    if (similarity >= 0.52) {
+      return `conteúdo muito parecido (${Math.round(similarity * 100)}%)`;
+    }
+
+    if (candidateTopic !== "other" && candidateTopic === detectTopic(previous) && similarity >= (strictTheme ? 0.18 : 0.3)) {
+      return `mesma lógica de tema (${candidateTopic})`;
+    }
+  }
+
+  return null;
+}
+
+function parseGeneratedCopy(rawContent: string, bodyKeys: string[]) {
+  try {
+    const cleaned = rawContent.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
+    const body = bodyKeys
+      .map((key) => (typeof parsed[key] === "string" ? parsed[key].trim() : ""))
+      .find(Boolean) || "";
+
+    if (!title || !body) return null;
+    return { title, body };
+  } catch {
+    return null;
+  }
+}

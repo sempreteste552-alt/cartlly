@@ -166,28 +166,28 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // === DEDUPLICATION: 5-min cooldown + no repeated message ===
+    // === DEDUPLICATION: cooldown + exact duplicate + semantic similarity on last 15 ===
     const effectiveTarget = target_user_id || customer_id;
     if (effectiveTarget) {
-      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      // Check for any push sent to this target in the last 5 minutes
-      const { data: recentPushes } = await supabase
+      const { data: recentHistory } = await supabase
         .from("push_logs")
         .select("title, body, created_at")
         .or(`user_id.eq.${effectiveTarget},customer_id.eq.${effectiveTarget}`)
-        .gte("created_at", fiveMinAgo)
-        .in("status", ["sent"])
+        .eq("status", "sent")
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(15);
 
-      if (recentPushes && recentPushes.length > 0) {
-        // Block if any push was sent in the last 5 minutes (cooldown)
-        console.log(`[DEDUP] Cooldown active for ${effectiveTarget}, last push at ${recentPushes[0].created_at}`);
+      const recentHistoryTexts = (recentHistory || [])
+        .map((entry: any) => `${entry.title || ""} ${entry.body || ""}`.trim())
+        .filter(Boolean);
+
+      const latestSentAt = recentHistory?.[0]?.created_at ? new Date(recentHistory[0].created_at).getTime() : 0;
+      if (latestSentAt && Date.now() - latestSentAt < 5 * 60 * 1000) {
+        console.log(`[DEDUP] Cooldown active for ${effectiveTarget}, last push at ${recentHistory?.[0]?.created_at}`);
         await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "cooldown_blocked", "5-min cooldown active", effectiveStoreUserId);
         return json({ sent: 0, total: 0, removed: 0, message: "Cooldown: push sent less than 5 minutes ago" });
       }
 
-      // Check for exact same message in the last 24 hours
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: duplicates } = await supabase
         .from("push_logs")
@@ -196,13 +196,20 @@ Deno.serve(async (req) => {
         .eq("title", title)
         .eq("body", msgBody || "")
         .gte("created_at", twentyFourHoursAgo)
-        .in("status", ["sent"])
+        .eq("status", "sent")
         .limit(1);
 
       if (duplicates && duplicates.length > 0) {
         console.log(`[DEDUP] Duplicate message blocked for ${effectiveTarget}: "${title}"`);
         await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "duplicate_blocked", "Same message sent in last 24h", effectiveStoreUserId);
         return json({ sent: 0, total: 0, removed: 0, message: "Duplicate: same message already sent in 24h" });
+      }
+
+      const similarityReason = getSimilarityBlockReason(title, msgBody, recentHistoryTexts, type || "general");
+      if (similarityReason) {
+        console.log(`[DEDUP] Similarity blocked for ${effectiveTarget}: ${similarityReason}`);
+        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "similarity_blocked", similarityReason, effectiveStoreUserId);
+        return json({ sent: 0, total: 0, removed: 0, message: `Similarity blocked: ${similarityReason}` });
       }
     }
 
@@ -389,4 +396,136 @@ async function logPush(
   } catch (e) {
     console.error("Failed to log push:", e);
   }
+}
+
+const STOPWORDS = new Set([
+  "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
+  "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
+  "mais", "muito", "muita", "hoje", "ontem", "amanha", "voce", "você", "pra", "pro", "como", "essa",
+  "esse", "bom", "boa", "dia", "tarde", "noite", "madrugada", "cartlly", "loja",
+]);
+
+const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
+  { topic: "vendas", keywords: ["venda", "vendas", "fatur", "pedido", "pedidos", "ticket", "lucro", "resultado", "meta"] },
+  { topic: "marketing", keywords: ["marketing", "campanha", "anuncio", "anuncios", "trafego", "instagram", "conteudo", "criativo", "rede social"] },
+  { topic: "operacao", keywords: ["organiza", "catalogo", "estoque", "cadastro", "banner", "foto", "preco", "precificacao", "vitrine"] },
+  { topic: "clientes", keywords: ["cliente", "clientes", "atendimento", "feedback", "avaliacao", "resposta", "relacionamento"] },
+  { topic: "oferta", keywords: ["cupom", "desconto", "oferta", "promocao", "promo", "off"] },
+  { topic: "recompra", keywords: ["carrinho", "checkout", "finalizar", "abandono", "voltar", "comprar"] },
+];
+
+const SIMILARITY_GUARD_TYPES = new Set([
+  "motivational_push",
+  "ceo_insight",
+  "store_promotion",
+  "abandoned_cart",
+  "product_view",
+  "product_view_10x",
+  "new_product",
+  "new_coupon",
+  "review_thankyou",
+  "new_customer",
+]);
+
+const STRICT_DIVERSITY_TYPES = new Set([
+  "motivational_push",
+  "ceo_insight",
+  "store_promotion",
+]);
+
+function normalizeText(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeMeaningful(text: string) {
+  return normalizeText(text)
+    .split(" ")
+    .filter((token) => token.length > 2 && !STOPWORDS.has(token));
+}
+
+function detectTopic(text: string) {
+  const normalized = normalizeText(text);
+  let bestTopic = "other";
+  let bestScore = 0;
+
+  for (const entry of TOPIC_KEYWORDS) {
+    const score = entry.keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? 1 : 0), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestTopic = entry.topic;
+    }
+  }
+
+  return bestScore > 0 ? bestTopic : "other";
+}
+
+function getOpeningSignature(text: string) {
+  return normalizeText(text).split(" ").slice(0, 6).join(" ");
+}
+
+function jaccardSimilarity(a: string, b: string) {
+  const setA = new Set(tokenizeMeaningful(a));
+  const setB = new Set(tokenizeMeaningful(b));
+
+  if (setA.size === 0 || setB.size === 0) return 0;
+
+  let intersection = 0;
+  for (const token of setA) {
+    if (setB.has(token)) intersection++;
+  }
+
+  return intersection / (setA.size + setB.size - intersection);
+}
+
+function getSimilarityBlockReason(
+  title: string,
+  body: string | undefined,
+  historyTexts: string[],
+  eventType: string,
+) {
+  if (!SIMILARITY_GUARD_TYPES.has(eventType)) return null;
+
+  const candidate = `${title} ${body || ""}`.trim();
+  if (!candidate) return "mensagem vazia";
+
+  const strictTheme = STRICT_DIVERSITY_TYPES.has(eventType);
+  const candidateTopic = detectTopic(candidate);
+
+  if (strictTheme && candidateTopic !== "other") {
+    const sameTopicCount = historyTexts.filter((previous) => detectTopic(previous) === candidateTopic).length;
+    if (sameTopicCount >= 2) {
+      return `tema repetido (${candidateTopic}) nas últimas 15`;
+    }
+  }
+
+  for (const previous of historyTexts) {
+    if (!previous) continue;
+
+    const sameOpening = getOpeningSignature(candidate);
+    if (sameOpening && sameOpening === getOpeningSignature(previous)) {
+      return "abertura repetida nas últimas 15";
+    }
+
+    const samePrefix = normalizeText(candidate).slice(0, 24);
+    if (samePrefix.length >= 16 && samePrefix === normalizeText(previous).slice(0, 24)) {
+      return "prefixo repetido nas últimas 15";
+    }
+
+    const similarity = jaccardSimilarity(candidate, previous);
+    if (similarity >= 0.52) {
+      return `conteúdo muito parecido (${Math.round(similarity * 100)}%)`;
+    }
+
+    if (candidateTopic !== "other" && candidateTopic === detectTopic(previous) && similarity >= (strictTheme ? 0.18 : 0.32)) {
+      return `mesma lógica de tema (${candidateTopic})`;
+    }
+  }
+
+  return null;
 }
