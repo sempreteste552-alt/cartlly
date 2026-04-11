@@ -17,13 +17,20 @@ import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
-import { useTranslation } from "@/i18n";
+import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
 
 export default function LojaHome() {
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const localeTag = getLocaleTag(locale);
+  const storeText = {
+    pt: { other: "Outros" },
+    en: { other: "Other" },
+    es: { other: "Otros" },
+    fr: { other: "Autres" },
+  }[locale];
 
   // Smooth scroll to top on page load
   useEffect(() => {
@@ -41,7 +48,7 @@ export default function LojaHome() {
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+    new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
 
   const filtered = useMemo(() => {
     if (!products) return [];
@@ -54,12 +61,12 @@ export default function LojaHome() {
     if (!filtered.length) return {};
     const groups: Record<string, typeof filtered> = {};
     filtered.forEach((p) => {
-      const catName = (p as any).categories?.name || "Outros";
+      const catName = (p as any).categories?.name || storeText.other;
       if (!groups[catName]) groups[catName] = [];
       groups[catName].push(p);
     });
     return groups;
-  }, [filtered]);
+  }, [filtered, storeText.other]);
 
   if (!prodLoading && (!products || products.length === 0)) {
     return (
@@ -244,7 +251,14 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   onAddToCart: (name: string, image?: string | null) => void;
   maxInstallments: number;
 }) {
+  const { t, locale } = useTranslation();
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
+  const uiText = {
+    pt: { shareLead: "Confira", copied: "Link copiado!", favorite: "Favoritar", share: "Compartilhar", new: "NOVO", recommended: "RECOMENDADO", or: "ou", cash: "à vista", inStock: "Em estoque" },
+    en: { shareLead: "Check out", copied: "Link copied!", favorite: "Favorite", share: "Share", new: "NEW", recommended: "RECOMMENDED", or: "or", cash: "cash price", inStock: "In stock" },
+    es: { shareLead: "Mira", copied: "¡Enlace copiado!", favorite: "Favorito", share: "Compartir", new: "NUEVO", recommended: "RECOMENDADO", or: "o", cash: "al contado", inStock: "En stock" },
+    fr: { shareLead: "Découvrez", copied: "Lien copié !", favorite: "Favori", share: "Partager", new: "NOUVEAU", recommended: "RECOMMANDÉ", or: "ou", cash: "au comptant", inStock: "En stock" },
+  }[locale];
 
   const handleShare = async (e: React.MouseEvent, product: any) => {
     e.preventDefault();
@@ -252,11 +266,11 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
     const url = `${window.location.origin}${basePath}/produto/${product.id}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: product.name, text: `Confira: ${product.name}`, url });
+        await navigator.share({ title: product.name, text: `${uiText.shareLead}: ${product.name}`, url });
       } catch {}
     } else {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copiado!");
+      toast.success(uiText.copied);
     }
   };
 
@@ -298,22 +312,22 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
               <div className="aspect-square overflow-hidden relative">
                 <ProductImageSlideshow mainImage={mainImage} additionalImages={extraImages} alt={product.name} className="h-full w-full" showArrows autoplaySpeed={3500} glowColor={primaryColor} />
                 <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110" title="Favoritar">
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); wishlist.toggleWishlist(product.id); }} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card shadow-sm transition-all hover:scale-110" title={uiText.favorite}>
                     <Heart className={`h-4 w-4 transition-colors ${wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
                   </button>
-                  <button onClick={(e) => handleShare(e, product)} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110" title="Compartilhar">
+                  <button onClick={(e) => handleShare(e, product)} className="h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-card shadow-sm hover:scale-110" title={uiText.share}>
                     <Share2 className="h-4 w-4 text-foreground" />
                   </button>
                 </div>
                 {new Date(product.created_at).getTime() > Date.now() - 7 * 86400000 && (
                   <div className="absolute top-2 left-2 z-10">
-                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>NOVO</Badge>
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm" style={{ backgroundColor: accentColor, color: "#fff" }}>{uiText.new}</Badge>
                   </div>
                 )}
                 {bestSellers?.has(product.id) && (
                   <div className="absolute bottom-2 left-2 z-10">
                     <Badge className="text-[10px] font-bold px-1.5 py-0.5 shadow-sm flex items-center gap-0.5" style={{ backgroundColor: "#f59e0b", color: "#fff" }}>
-                      <Award className="h-3 w-3" /> RECOMENDADO
+                      <Award className="h-3 w-3" /> {uiText.recommended}
                     </Badge>
                   </div>
                 )}
@@ -329,16 +343,16 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 )}
                 <p className="text-lg font-bold mt-1" style={{ color: primaryColor }}>{formatPrice(product.price)}</p>
                 {maxInstallments > 1 ? (
-                  <p className="text-[10px] text-muted-foreground">ou {maxInstallments}x de {formatPrice(product.price / maxInstallments)}</p>
+                  <p className="text-[10px] text-muted-foreground">{uiText.or} {maxInstallments}x {t.common.of} {formatPrice(product.price / maxInstallments)}</p>
                 ) : (
-                  <p className="text-[10px] text-muted-foreground">à vista</p>
+                  <p className="text-[10px] text-muted-foreground">{uiText.cash}</p>
                 )}
                 {product.stock > 0 ? (
-                  <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-1">Em estoque</p>
+                  <p className="text-xs text-emerald-500 dark:text-emerald-400 mt-1">{uiText.inStock}</p>
                 ) : (product as any).made_to_order ? (
-                  <p className="text-xs mt-1" style={{ color: primaryColor }}>📦 Sob encomenda</p>
+                  <p className="text-xs mt-1" style={{ color: primaryColor }}>📦 {t.store.madeToOrder}</p>
                 ) : (
-                  <p className="text-xs text-red-400 mt-1">Esgotado</p>
+                  <p className="text-xs text-red-400 mt-1">{t.store.outOfStock}</p>
                 )}
                 <Button 
                   className="w-full mt-2 transition-transform active:scale-95 text-[10px] xs:text-xs px-2 whitespace-nowrap" 
@@ -351,7 +365,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                     onAddToCart(product.name, product.image_url); 
                   }}
                 >
-                  <ShoppingCart className="mr-1 h-3 w-3 shrink-0" /> <span className="truncate">Adicionar ao Carrinho</span>
+                  <ShoppingCart className="mr-1 h-3 w-3 shrink-0" /> <span className="truncate">{t.store.addToCart}</span>
                 </Button>
               </div>
             </Card>

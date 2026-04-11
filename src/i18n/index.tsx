@@ -15,6 +15,22 @@ export const LOCALE_OPTIONS: { value: Locale; label: string; flag: string }[] = 
 
 const translations: Record<Locale, TranslationKeys> = { pt, en, es, fr };
 
+export const isLocale = (value: string | null | undefined): value is Locale =>
+  !!value && value in translations;
+
+export const getLocaleTag = (locale: Locale) => {
+  switch (locale) {
+    case "en":
+      return "en-US";
+    case "es":
+      return "es-ES";
+    case "fr":
+      return "fr-FR";
+    default:
+      return "pt-BR";
+  }
+};
+
 interface I18nContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -29,26 +45,38 @@ const I18nContext = createContext<I18nContextType>({
 
 export function I18nProvider({ children, defaultLocale }: { children: ReactNode; defaultLocale?: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
-    if (defaultLocale) return defaultLocale;
+    if (defaultLocale && isLocale(defaultLocale)) return defaultLocale;
     const stored = localStorage.getItem("app_language") as Locale | null;
-    return stored && translations[stored] ? stored : "pt";
+    return isLocale(stored) ? stored : "pt";
   });
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     localStorage.setItem("app_language", newLocale);
-    document.documentElement.lang = newLocale === "pt" ? "pt-BR" : newLocale;
+    document.documentElement.lang = getLocaleTag(newLocale);
   }, []);
 
   // Sync with external changes (e.g. store settings)
   useEffect(() => {
     if (defaultLocale && defaultLocale !== locale) {
-      setLocaleState(defaultLocale);
+      setLocale(defaultLocale);
     }
-  }, [defaultLocale]);
+  }, [defaultLocale, locale, setLocale]);
 
   useEffect(() => {
-    document.documentElement.lang = locale === "pt" ? "pt-BR" : locale;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== "app_language") return;
+      if (!isLocale(event.newValue)) return;
+      setLocaleState(event.newValue);
+      document.documentElement.lang = getLocaleTag(event.newValue);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = getLocaleTag(locale);
   }, [locale]);
 
   const t = translations[locale] || pt;

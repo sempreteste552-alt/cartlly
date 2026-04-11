@@ -24,7 +24,7 @@ import { normalizeDomain } from "@/lib/storeDomain";
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +33,12 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { ctx } = useTenantContext();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
+  const adminSidebarText = {
+    pt: { defaultStore: "Minha Loja", new: "Novo", push: "Push" },
+    en: { defaultStore: "My Store", new: "New", push: "Push" },
+    es: { defaultStore: "Mi Tienda", new: "Nuevo", push: "Push" },
+    fr: { defaultStore: "Ma Boutique", new: "Nouveau", push: "Push" },
+  }[locale];
   const storeSlug = (settings as any)?.store_slug;
   const customDomain = (settings as any)?.custom_domain;
   const domainStatus = (settings as any)?.domain_status;
@@ -87,7 +93,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
             <div className="flex flex-col flex-1 min-w-0">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                  {(settings as any)?.store_name || "Minha Loja"}
+                  {(settings as any)?.store_name || adminSidebarText.defaultStore}
                 </span>
                 {(planSlug === "PREMIUM" || planSlug === "PRO") && isTenantActive(ctx) && (
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
@@ -128,7 +134,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                             {isReferral && <span className="referral-dot" />}
                             {item.isNew && (
                               <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
-                                Novo
+                                {adminSidebarText.new}
                               </span>
                             )}
                           </span>
