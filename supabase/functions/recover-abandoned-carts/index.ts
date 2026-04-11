@@ -518,9 +518,10 @@ async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableA
 
   const isGoodReview = rating >= 4;
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const hour = new Date().getHours();
-  const greetings = hour < 6 ? "Boa madrugada" : hour < 18 ? "Bom dia" : "Boa noite";
-  const dayName = dayNames[new Date().getDay()];
+  const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const hour = nowBR.getHours();
+  const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const dayName = dayNames[nowBR.getDay()];
 
   let title = "";
   let msgBody = "";
