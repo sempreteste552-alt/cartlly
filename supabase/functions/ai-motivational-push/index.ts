@@ -131,7 +131,7 @@ REGRAS:
 - O title deve ter no máximo 40 caracteres
 - O body deve ter no máximo 120 caracteres
 - IMPORTANTE: O horário atual em Brasília é ${hour}h (${dayOfWeek}). Use a saudação correta: "${greeting}". NUNCA diga "Bom dia" se for tarde/noite/madrugada!
-- PROIBIDO: NÃO use referências ao dia da semana como tema principal (ex: "Sextou", "Segundou", "Domingou"). Evite completamente gírias de dia da semana. Use temas variados sobre o NEGÓCIO, não sobre o calendário.
+- GÍRIAS DIVERTIDAS (ex: "Sextou!", "Segundou!", "Bora!"): Pode usar SIM, mas com MODERAÇÃO — no máximo 1 a cada 5 mensagens. Não use a mesma gíria duas vezes seguidas. Alterne bastante entre mensagens sérias/profissionais e mensagens descontraídas/engraçadas.
 - DIVERSIDADE OBRIGATÓRIA: Cada mensagem deve ter um TEMA COMPLETAMENTE DIFERENTE das anteriores. Varie entre: dica de estoque, elogio pessoal, insight de marketing, meta de vendas, celebração de conquista, sugestão de produto, frase inspiradora de empreendedorismo, etc.
 - NUNCA repita palavras-chave, temas, estruturas ou ideias das mensagens anteriores listadas abaixo.
 ${customInstructions ? `\nINSTRUÇÕES PERSONALIZADAS DO LOJISTA (siga rigorosamente):\n${customInstructions}` : ""}`;
