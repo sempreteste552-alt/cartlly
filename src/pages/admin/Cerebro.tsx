@@ -203,6 +203,15 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
+    // 8. Atualizar Instruções da IA
+    const aiInstructionsRegex = /\[ACTION_UPDATE_AI_INSTRUCTIONS\]([\s\S]*?)\[\/ACTION_UPDATE_AI_INSTRUCTIONS\]/g;
+    while ((match = aiInstructionsRegex.exec(content)) !== null) {
+      try {
+        const payload = JSON.parse(match[1]);
+        actions.push({ type: "update_ai_instructions", label: `🧠 Atualizar Instruções IA: "${(payload.instructions || "").slice(0, 60)}..."`, payload });
+      } catch (e) {}
+    }
+
     if (actions.length > 0) setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
   };
 
@@ -269,6 +278,28 @@ export default function Cerebro() {
         });
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
+      } else if (action.type === "update_ai_instructions") {
+        // Append new instructions to existing ones
+        const { data: existing } = await supabase
+          .from("tenant_ai_brain_config")
+          .select("custom_instructions")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        const currentInstructions = existing?.custom_instructions || "";
+        const newInstructions = currentInstructions 
+          ? `${currentInstructions}\n- ${action.payload.instructions}` 
+          : `- ${action.payload.instructions}`;
+        
+        const { error } = await supabase
+          .from("tenant_ai_brain_config")
+          .upsert({ 
+            user_id: user.id, 
+            custom_instructions: newInstructions 
+          }, { onConflict: "user_id" });
+        if (error) throw error;
+        toast.success("✅ Instruções da IA atualizadas! A IA vai seguir suas correções.");
+        queryClient.invalidateQueries({ queryKey: ["ai-brain-config"] });
       }
 
       setPendingActions(prev => {
