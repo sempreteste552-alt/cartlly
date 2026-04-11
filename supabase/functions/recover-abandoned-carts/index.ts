@@ -1026,7 +1026,7 @@ function getSpecialDateContext(): string {
 
 async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: string; body: string } | null> {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const greetings = ctx.hour < 12 ? "Bom dia" : ctx.hour < 18 ? "Boa tarde" : "Boa noite";
+  const greetings = ctx.hour < 6 ? "Boa madrugada" : ctx.hour < 12 ? "Bom dia" : ctx.hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[ctx.dayOfWeek] || "hoje";
   const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}-${Date.now()}`;
   const specialDate = getSpecialDateContext();
@@ -1037,12 +1037,17 @@ async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: str
   let systemPrompt = "";
   let userPrompt = "";
 
+  const lateNightNote = ctx.hour >= 23 || ctx.hour < 6
+    ? `\n- É madrugada/noite tardia. Pode usar tom leve como "pra quem está acordado" MAS apenas se não repetir o tema das últimas mensagens.`
+    : `\n- NÃO use frases como "pra quem está acordado", "insônia", "coruja" — o horário é ${greetings}.`;
+
   const baseInstructions = `
 - Você é uma IA INTELIGENTE e AMIGÁVEL da loja "${ctx.storeName}". 
 - ${storeContext}
 - Sua missão é ser mais que uma assistente, seja uma AMIGA do cliente. 
 - Use a rotina do cliente como gancho (ex: "descansando nesse ${dayName}?", "começando a semana?", "hora do café?").
 - Adapte sua fala: ${genderInfo}
+${lateNightNote}
 - REGRAS OBRIGATÓRIAS:
   - Responda APENAS com JSON: {"title": "...", "body": "..."}
   - title: máximo 50 caracteres, comece com 1 emoji temático.

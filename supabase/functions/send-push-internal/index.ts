@@ -152,6 +152,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { target_user_id, customer_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
+    const effectiveStoreUserId = store_user_id || null;
 
     if ((!target_user_id && !customer_id) || !title) {
       return json({ error: "target_user_id or customer_id and title required" }, 400);
@@ -182,7 +183,7 @@ Deno.serve(async (req) => {
       if (recentPushes && recentPushes.length > 0) {
         // Block if any push was sent in the last 5 minutes (cooldown)
         console.log(`[DEDUP] Cooldown active for ${effectiveTarget}, last push at ${recentPushes[0].created_at}`);
-        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "cooldown_blocked", "5-min cooldown active");
+        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "cooldown_blocked", "5-min cooldown active", effectiveStoreUserId);
         return json({ sent: 0, total: 0, removed: 0, message: "Cooldown: push sent less than 5 minutes ago" });
       }
 
@@ -200,7 +201,7 @@ Deno.serve(async (req) => {
 
       if (duplicates && duplicates.length > 0) {
         console.log(`[DEDUP] Duplicate message blocked for ${effectiveTarget}: "${title}"`);
-        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "duplicate_blocked", "Same message sent in last 24h");
+        await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "duplicate_blocked", "Same message sent in last 24h", effectiveStoreUserId);
         return json({ sent: 0, total: 0, removed: 0, message: "Duplicate: same message already sent in 24h" });
       }
     }
@@ -276,7 +277,7 @@ Deno.serve(async (req) => {
       if (shouldMirrorInAppNotification) {
         await mirrorInAppNotification();
       }
-      await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null);
+      await logPush(supabase, target_user_id, customer_id, null, type || "general", title, msgBody, extraData, "no_subscription", null, effectiveStoreUserId);
       return json({ sent: 0, total: 0, removed: 0, message: "No push subscriptions" });
     }
 
@@ -320,24 +321,24 @@ Deno.serve(async (req) => {
 
           if (resp.status === 201 || resp.status === 200) {
             sent++;
-            await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "sent", null);
+            await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "sent", null, effectiveStoreUserId);
           } else {
             const text = await resp.text();
             if (shouldDeleteSubscription(resp.status, text)) {
               await supabase.from("push_subscriptions").delete().eq("id", sub.id);
               removed++;
-              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200));
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "expired", text.slice(0, 200), effectiveStoreUserId);
             } else {
               console.error(`Push failed ${sub.id}: ${resp.status} ${text}`);
               failures.push(`${sub.id}: ${resp.status}`);
-              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`);
+              await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "failed", `HTTP ${resp.status}: ${text.slice(0, 200)}`, effectiveStoreUserId);
             }
           }
         }
       } catch (e: any) {
         console.error(`Push error ${sub.id}:`, e);
         failures.push(`${sub.id}: ${e.message}`);
-        await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200));
+        await logPush(supabase, target_user_id, customer_id, sub.id, type || "general", title, msgBody, extraData, "error", e.message?.slice(0, 200), effectiveStoreUserId);
       }
     }
 
@@ -369,7 +370,8 @@ async function logPush(
   body: string | undefined,
   payload: any,
   status: string,
-  errorMessage: string | null
+  errorMessage: string | null,
+  storeUserId?: string | null
 ) {
   try {
     await supabase.from("push_logs").insert({
@@ -382,6 +384,7 @@ async function logPush(
       payload: payload || {},
       status,
       error_message: errorMessage,
+      store_user_id: storeUserId || null,
     });
   } catch (e) {
     console.error("Failed to log push:", e);

@@ -27,14 +27,15 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
       let query = supabase
         .from("push_logs")
         .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
-        .eq("user_id", userId!)
         .order("created_at", { ascending: false })
         .limit(20);
 
       if (eventType === "motivational_push") {
-        query = query.eq("event_type", "motivational_push");
+        // Motivational pushes are sent TO the tenant (user_id = tenant)
+        query = query.eq("user_id", userId!).eq("event_type", "motivational_push");
       } else {
-        query = query.neq("event_type", "motivational_push");
+        // Customer pushes are stored with store_user_id = tenant
+        query = query.eq("store_user_id", userId!).neq("event_type", "motivational_push");
       }
 
       const { data, error } = await query;
