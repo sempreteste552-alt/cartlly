@@ -563,7 +563,7 @@ export default function LojaProduto() {
                   />
                 </div>
                 <div className="rounded-lg border p-3 bg-muted/50 text-sm space-y-1">
-                  <p className="font-medium">{product.name}</p>
+                  <p className="font-medium">{localizedProductName || product.name}</p>
                   <p className="text-muted-foreground">{formatPrice(effectivePrice)}</p>
                 </div>
                 <Button
@@ -691,7 +691,7 @@ export default function LojaProduto() {
             <div className="flex items-center gap-3 hidden md:flex">
               <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded object-cover" />
               <div>
-                <p className="text-sm font-bold line-clamp-1">{product.name}</p>
+                <p className="text-sm font-bold line-clamp-1">{localizedProductName || product.name}</p>
                 <p className="text-xs text-muted-foreground">{formatPrice(effectivePrice)}</p>
               </div>
             </div>
