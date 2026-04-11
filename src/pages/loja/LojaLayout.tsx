@@ -130,8 +130,6 @@ export default function LojaLayout() {
       whatsappTitle: "Parlez-nous sur WhatsApp",
     },
   }[locale];
-  const localizedStoreDescription = useLocalizedText(settings?.store_description);
-  const localizedStorePageTitles = useLocalizedTextList(storePages?.map((page) => page.title) || []);
 
   useEffect(() => {
     const nextLocale = (settingsBySlug as any)?.language;
@@ -314,6 +312,8 @@ export default function LojaLayout() {
     },
   });
   const hasShippingZones = (shippingZonesData?.length ?? 0) > 0;
+  const localizedStoreDescription = useLocalizedText(settings?.store_description);
+  const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
 
   const storeInstallName = settings?.store_name?.trim()
     || slug
@@ -1064,13 +1064,13 @@ export default function LojaLayout() {
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
                     <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
                   </Link>
-                  {storePages?.map((page) => (
+                  {storePages?.map((page, idx) => (
                     <Link
                       key={page.slug}
                       to={`${basePath}/p/${page.slug}`}
                       className="block hover:opacity-100 transition-opacity"
                     >
-                      {localizedStorePageTitles[index] || page.title}
+                      {localizedStorePageTitles[idx] || page.title}
                     </Link>
                   ))}
                 </div>
