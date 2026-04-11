@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MessageSquare, User, ImagePlus, X, ZoomIn } from "lucide-react";
+import { MessageSquare, User, ImagePlus, X, ZoomIn, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProductReviewsProps {
@@ -232,6 +232,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-400" />
                     <span className="font-medium text-sm">{r.customer_name}</span>
+                    {r.is_verified_purchase && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                        <BadgeCheck className="h-3 w-3" /> Compra verificada
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs text-gray-400">{formatDate(r.created_at)}</span>
                 </div>
