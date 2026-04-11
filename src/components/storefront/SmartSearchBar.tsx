@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Search, Clock, TrendingUp, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getLocaleTag, useTranslation } from "@/i18n";
 
 interface Product {
   id: string;
@@ -72,6 +73,7 @@ export function SmartSearchBar({
   storeUserId,
   className,
 }: SmartSearchBarProps) {
+  const { t, locale } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +127,7 @@ export function SmartSearchBar({
   }, [onProductClick, storeUserId]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+    new Intl.NumberFormat(getLocaleTag(locale), { style: "currency", currency: "BRL" }).format(price);
 
   const showSuggestions = showDropdown && (searchTerm.trim() ? suggestions.length > 0 : history.length > 0);
 
@@ -136,7 +138,7 @@ export function SmartSearchBar({
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Buscar produtos..."
+          placeholder={t.store.searchPlaceholder}
           value={searchTerm}
           onChange={(e) => {
             onSearchChange(e.target.value);
@@ -171,7 +173,7 @@ export function SmartSearchBar({
           {!searchTerm.trim() && history.length > 0 && (
             <div className="p-2">
               <p className="text-xs font-medium text-muted-foreground px-2 py-1 flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Buscas recentes
+                <Clock className="h-3 w-3" /> {locale === "pt" ? "Buscas recentes" : locale === "en" ? "Recent searches" : locale === "es" ? "Búsquedas recientes" : "Recherches récentes"}
               </p>
               {history.map((h, i) => (
                 <button
@@ -190,7 +192,7 @@ export function SmartSearchBar({
           {searchTerm.trim() && suggestions.length > 0 && (
             <div className="p-2">
               <p className="text-xs font-medium text-muted-foreground px-2 py-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> Sugestões
+                <TrendingUp className="h-3 w-3" /> {locale === "pt" ? "Sugestões" : locale === "en" ? "Suggestions" : locale === "es" ? "Sugerencias" : "Suggestions"}
               </p>
               {suggestions.map((product) => (
                 <button

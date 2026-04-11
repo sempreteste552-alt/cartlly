@@ -40,6 +40,7 @@ import iconTiktok from "@/assets/icon-tiktok.png";
 import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
+import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -129,6 +130,8 @@ export default function LojaLayout() {
       whatsappTitle: "Parlez-nous sur WhatsApp",
     },
   }[locale];
+  const localizedStoreDescription = useLocalizedText(settings?.store_description);
+  const localizedStorePageTitles = useLocalizedTextList(storePages?.map((page) => page.title) || []);
 
   useEffect(() => {
     const nextLocale = (settingsBySlug as any)?.language;
@@ -207,7 +210,7 @@ export default function LojaLayout() {
               setGlobalCity(cityName);
               localStorage.setItem("global_city", cityName);
             }
-            toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+            toast.info(`📍 ${locale === "pt" ? "Localização detectada" : locale === "en" ? "Location detected" : locale === "es" ? "Ubicación detectada" : "Position détectée"}: ${data.city || (locale === "pt" ? "Sua região" : locale === "en" ? "Your area" : locale === "es" ? "Tu zona" : "Votre zone")}`);
             return;
           }
         }
@@ -227,7 +230,7 @@ export default function LojaLayout() {
               setGlobalCity(cityName);
               localStorage.setItem("global_city", cityName);
             }
-            toast.info(`📍 Localização detectada: ${data.city || "Sua região"}`);
+            toast.info(`📍 ${locale === "pt" ? "Localização detectada" : locale === "en" ? "Location detected" : locale === "es" ? "Ubicación detectada" : "Position détectée"}: ${data.city || (locale === "pt" ? "Sua região" : locale === "en" ? "Your area" : locale === "es" ? "Tu zona" : "Votre zone")}`);
           }
         }
       } catch {
@@ -252,7 +255,7 @@ export default function LojaLayout() {
 
   const detectMyLocation = async () => {
     try {
-      toast.info("📍 Detectando sua localização...");
+      toast.info(locale === "pt" ? "📍 Detectando sua localização..." : locale === "en" ? "📍 Detecting your location..." : locale === "es" ? "📍 Detectando tu ubicación..." : "📍 Détection de votre position...");
       const response = await fetch("https://ipapi.co/json/");
       const data = await response.json();
       if (data && data.postal) {
@@ -268,10 +271,10 @@ export default function LojaLayout() {
           toast.success(`📍 ${data.city || "Localização detectada"}`);
         }
       } else {
-        toast.error("Não foi possível detectar sua localização");
+        toast.error(locale === "pt" ? "Não foi possível detectar sua localização" : locale === "en" ? "Could not detect your location" : locale === "es" ? "No se pudo detectar tu ubicación" : "Impossible de détecter votre position");
       }
     } catch {
-      toast.error("Erro ao detectar localização");
+      toast.error(locale === "pt" ? "Erro ao detectar localização" : locale === "en" ? "Error detecting location" : locale === "es" ? "Error al detectar la ubicación" : "Erreur lors de la détection de la position");
     }
   };
 
@@ -1050,7 +1053,7 @@ export default function LojaLayout() {
                     <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
                   )}
                 </h3>
-                {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
+                {localizedStoreDescription && <p className="opacity-60 text-sm">{localizedStoreDescription}</p>}
               </div>
               <div>
                 <h3 className="font-bold mb-3">{t.store.links}</h3>
@@ -1067,7 +1070,7 @@ export default function LojaLayout() {
                       to={`${basePath}/p/${page.slug}`}
                       className="block hover:opacity-100 transition-opacity"
                     >
-                      {page.title}
+                      {localizedStorePageTitles[index] || page.title}
                     </Link>
                   ))}
                 </div>

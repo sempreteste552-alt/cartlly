@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ShoppingCart, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 
 interface CartNotificationProps {
   productName: string;
@@ -19,7 +20,14 @@ export function CartNotification({
   onClose,
   onOpenCart,
 }: CartNotificationProps) {
+  const { locale } = useTranslation();
   const [exiting, setExiting] = useState(false);
+  const uiText = {
+    pt: { added: "Adicionado ao carrinho!", continue: "Continuar comprando", view: "Ver Carrinho" },
+    en: { added: "Added to cart!", continue: "Keep shopping", view: "View cart" },
+    es: { added: "¡Añadido al carrito!", continue: "Seguir comprando", view: "Ver carrito" },
+    fr: { added: "Ajouté au panier !", continue: "Continuer vos achats", view: "Voir le panier" },
+  }[locale];
 
   const handleClose = useCallback(() => {
     setExiting(true);
@@ -57,7 +65,7 @@ export function CartNotification({
 
           {/* Product info */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Adicionado ao carrinho!</p>
+            <p className="text-sm font-semibold text-foreground">{uiText.added}</p>
             <p className="text-xs text-muted-foreground truncate">{productName}</p>
           </div>
 
@@ -79,7 +87,7 @@ export function CartNotification({
             className="flex-1 text-xs"
             onClick={handleClose}
           >
-            Continuar comprando
+            {uiText.continue}
           </Button>
           <Button
             size="sm"
@@ -91,7 +99,7 @@ export function CartNotification({
             }}
           >
             <ShoppingCart className="mr-1 h-3 w-3" />
-            Ver Carrinho
+            {uiText.view}
           </Button>
         </div>
       </div>
