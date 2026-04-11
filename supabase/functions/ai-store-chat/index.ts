@@ -72,6 +72,13 @@ serve(async (req) => {
       .eq("user_id", storeUserId)
       .eq("active", true);
 
+    // Fetch tenant AI brain config (training/instructions from store owner)
+    const { data: aiConfig } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("custom_instructions, niche, personality, store_knowledge")
+      .eq("user_id", storeUserId)
+      .maybeSingle();
+
     // Build product catalog
     const categoryMap: Record<string, string> = {};
     (categories || []).forEach((c: any) => { categoryMap[c.id] = c.name; });
