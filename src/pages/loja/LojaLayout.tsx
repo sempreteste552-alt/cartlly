@@ -28,6 +28,7 @@ import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotif
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "@/i18n";
 import { PromoBanner } from "@/components/storefront/PromoBanner";
 import { CookieConsent } from "@/components/storefront/CookieConsent";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
+  const { t } = useTranslation();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading, refetch: refetchSettings } = useResolvedPublicStore(slug);
@@ -487,8 +489,8 @@ export default function LojaLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🚧</div>
-          <h1 className="text-3xl font-bold">Loja Fechada</h1>
-          <p className="text-muted-foreground">Estamos temporariamente fechados. Volte em breve!</p>
+            <h1 className="text-3xl font-bold">{t.misc.storeClosed}</h1>
+            <p className="text-muted-foreground">{t.misc.storeClosedMessage}</p>
         </div>
       </div>
     );
@@ -646,7 +648,7 @@ export default function LojaLayout() {
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
             {settings?.is_premium_plan && (
-              <LanguageSelector compact className="hidden sm:flex" skipGate />
+              <LanguageSelector compact className="flex shrink-0" skipGate />
             )}
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
@@ -699,11 +701,11 @@ export default function LojaLayout() {
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-md">
                 <SheetHeader>
-                  <SheetTitle>Carrinho ({cart.count})</SheetTitle>
+                  <SheetTitle>{t.store.cart} ({cart.count})</SheetTitle>
                 </SheetHeader>
                 <div className="mt-4 space-y-3 flex-1 overflow-auto">
                   {cart.items.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">Carrinho vazio</p>
+                    <p className="text-center text-muted-foreground py-8">{t.store.emptyCart}</p>
                   ) : (
                     cart.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 border-b border-border pb-3">
@@ -731,11 +733,11 @@ export default function LojaLayout() {
                 {cart.items.length > 0 && (
                   <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
+                      <span>{t.common.total}</span>
                       <span>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}</span>
                     </div>
                     <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
-                      Finalizar Compra
+                      {t.store.goToCheckout}
                     </Button>
                     {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
                       <Button
@@ -747,7 +749,7 @@ export default function LojaLayout() {
                           window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
                         }}
                       >
-                        <MessageCircle className="mr-2 h-4 w-4" /> Pedir via WhatsApp
+                        <MessageCircle className="mr-2 h-4 w-4" /> {t.store.buyNow} WhatsApp
                       </Button>
                     )}
                   </div>
@@ -818,12 +820,12 @@ export default function LojaLayout() {
               </div>
             )}
             {[
-              { icon: Home, label: "Início", to: basePath },
-              { icon: Package, label: "Produtos", to: basePath },
-              { icon: Ticket, label: "Cupons", to: `${basePath}/cupons` },
-              { icon: Truck, label: "Rastrear Pedido", to: `${basePath}/rastreio` },
-              ...(user ? [{ icon: User, label: "Minha Conta", to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: "Entrar", to: "#", onClick: () => setAuthModalOpen(true) }]),
-              ...(user ? [{ icon: LogOut, label: "Sair", to: "#", onClick: () => signOut() }] : []),
+              { icon: Home, label: t.store.home, to: basePath },
+              { icon: Package, label: t.sidebar.products, to: basePath },
+              { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
+              { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
+              ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
+              ...(user ? [{ icon: LogOut, label: t.auth.logout, to: "#", onClick: () => signOut() }] : []),
               ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
             ].map((item: any, i) => {
               const content = (
@@ -889,14 +891,14 @@ export default function LojaLayout() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
-                <span className="text-sm font-semibold">Calcular frete</span>
+                <span className="text-sm font-semibold">{t.shipping.calculateShipping}</span>
               </div>
               {globalCity && (
                 <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
               )}
               <div className="flex gap-2">
                 <Input
-                  placeholder="Seu CEP (00000-000)"
+                  placeholder={t.store.zipPlaceholder}
                   className="bg-secondary border-border font-mono h-11"
                   value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
                   onChange={(e) => handleGlobalCepChange(e.target.value)}
@@ -907,17 +909,17 @@ export default function LojaLayout() {
                   variant="outline" 
                   className="h-11 aspect-square p-0"
                   onClick={detectMyLocation}
-                  title="Detectar minha localização"
+                  title={t.store.detectLocation}
                 >
                   <LocateFixed className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Informe seu CEP para calcular o frete, ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar.</p>
+              <p className="text-[10px] text-muted-foreground">{t.store.shippingHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingHelpSuffix}</p>
             </div>
 
             <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
               <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
-              <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
+              <span className="text-sm" style={{ color: headerTextColor }}>{t.settings.darkMode}</span>
             </div>
 
             {settings?.is_premium_plan && (
@@ -941,17 +943,17 @@ export default function LojaLayout() {
               >
                 <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
                 <span className="font-medium truncate">
-                  {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : "Informe seu CEP para calcular frete")}
+                  {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : t.shipping.calculateShipping)}
                 </span>
                 <span className="text-muted-foreground text-xs ml-auto shrink-0">
-                  {locationBarOpen ? "Fechar" : "Alterar"}
+                  {locationBarOpen ? t.common.close : t.common.change}
                 </span>
               </button>
               {locationBarOpen && (
                 <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Seu CEP (00000-000)"
+                      placeholder={t.store.zipPlaceholder}
                       className="bg-background border-border font-mono h-10"
                       value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
                       onChange={(e) => handleGlobalCepChange(e.target.value)}
@@ -962,7 +964,7 @@ export default function LojaLayout() {
                       variant="outline" 
                       className="h-10 aspect-square p-0"
                       onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
-                      title="Detectar minha localização"
+                      title={t.store.detectLocation}
                     >
                       <LocateFixed className="h-4 w-4" />
                     </Button>
@@ -973,7 +975,7 @@ export default function LojaLayout() {
                     </p>
                   )}
                   <p className="text-[10px] text-muted-foreground">
-                    Informe seu CEP para calcular o valor da entrega, ou toque em <LocateFixed className="h-3 w-3 inline" /> para detectar automaticamente.
+                    {t.store.shippingDeliveryHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingDeliveryHelpSuffix}
                   </p>
                 </div>
               )}
@@ -1005,13 +1007,13 @@ export default function LojaLayout() {
                 {settings?.store_description && <p className="opacity-60 text-sm">{settings.store_description}</p>}
               </div>
               <div>
-                <h3 className="font-bold mb-3">Links</h3>
+                <h3 className="font-bold mb-3">{t.store.links}</h3>
                 <div className="space-y-2 text-sm opacity-60">
                   <Link to={`${basePath}/cupons`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
-                    <Ticket className="h-3.5 w-3.5" /> Cupons de Desconto
+                    <Ticket className="h-3.5 w-3.5" /> {t.store.discountCoupons}
                   </Link>
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
-                    <Truck className="h-3.5 w-3.5" /> Rastrear Pedido
+                    <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
                   </Link>
                   {storePages?.map((page) => (
                     <Link
@@ -1025,7 +1027,7 @@ export default function LojaLayout() {
                 </div>
               </div>
               <div>
-                <h3 className="font-bold mb-3">Contato</h3>
+                <h3 className="font-bold mb-3">{t.store.contact}</h3>
                 <div className="space-y-2 text-sm opacity-60">
                   {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
                   {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
@@ -1033,7 +1035,7 @@ export default function LojaLayout() {
                 </div>
               </div>
               <div>
-                <h3 className="font-bold mb-3">Redes Sociais</h3>
+                <h3 className="font-bold mb-3">{t.settings.socialMedia}</h3>
                 <div className="flex gap-4 flex-wrap items-center">
                   {settings?.instagram_url && (
                     <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
@@ -1062,7 +1064,7 @@ export default function LojaLayout() {
                 {settings?.google_maps_url && (
                   <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 hover:scale-105 transition-transform">
                     <img src={iconLocation} alt="Localização" className="h-6 w-6" />
-                    <span className="text-sm opacity-70">Ver no Google Maps</span>
+                    <span className="text-sm opacity-70">{t.store.viewOnGoogleMaps}</span>
                   </a>
                 )}
               </div>
@@ -1070,7 +1072,7 @@ export default function LojaLayout() {
             <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
             <div className="flex flex-col items-center gap-6 mb-6 px-4">
               <div className="text-center">
-                <p className="text-sm font-semibold mb-3 opacity-70">Formas de pagamento</p>
+                <p className="text-sm font-semibold mb-3 opacity-70">{t.store.paymentMethods}</p>
                 <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-md mx-auto object-contain" />
               </div>
               <div className="bg-white/10 rounded-xl p-4 border border-white/20">
@@ -1078,11 +1080,11 @@ export default function LojaLayout() {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs opacity-50">
-              <Link to={`${basePath}/legal/politica-de-privacidade`} className="hover:opacity-100 transition-opacity underline">Política de Privacidade</Link>
-              <Link to={`${basePath}/legal/termos-de-uso`} className="hover:opacity-100 transition-opacity underline">Termos de Uso</Link>
-              <Link to={`${basePath}/legal/cookies`} className="hover:opacity-100 transition-opacity underline">Política de Cookies</Link>
+              <Link to={`${basePath}/legal/politica-de-privacidade`} className="hover:opacity-100 transition-opacity underline">{t.store.privacyPolicy}</Link>
+              <Link to={`${basePath}/legal/termos-de-uso`} className="hover:opacity-100 transition-opacity underline">{t.store.termsOfUse}</Link>
+              <Link to={`${basePath}/legal/cookies`} className="hover:opacity-100 transition-opacity underline">{t.store.cookiePolicy}</Link>
             </div>
-            <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. Todos os direitos reservados.</p>
+            <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. {t.store.allRightsReserved}</p>
           </div>
         </footer>
 
@@ -1094,7 +1096,7 @@ export default function LojaLayout() {
               style={{ color: isHomePage ? primaryColor : undefined }}
             >
               <Home className={`h-5 w-5 ${!isHomePage ? "text-muted-foreground" : ""}`} />
-              <span className="text-[10px] mt-0.5 font-medium">Início</span>
+              <span className="text-[10px] mt-0.5 font-medium">{t.store.home}</span>
             </Link>
             <button
               onClick={() => {
@@ -1105,7 +1107,7 @@ export default function LojaLayout() {
               className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground transition-colors"
             >
               <Search className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">Buscar</span>
+              <span className="text-[10px] mt-0.5 font-medium">{t.store.search}</span>
             </button>
             <Link
               to={`${basePath}/checkout`}
@@ -1120,7 +1122,7 @@ export default function LojaLayout() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 font-medium">Carrinho</span>
+              <span className="text-[10px] mt-0.5 font-medium">{t.store.cart}</span>
             </Link>
             <div className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-muted-foreground">
               <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} isMobileNav />
@@ -1131,7 +1133,7 @@ export default function LojaLayout() {
               style={{ color: user ? primaryColor : undefined }}
             >
               <User className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? "Preview" : "Conta") : "Entrar"}</span>
+              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? "Preview" : t.store.account) : t.auth.login}</span>
             </button>
           </div>
         </nav>
