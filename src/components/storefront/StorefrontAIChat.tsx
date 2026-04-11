@@ -301,9 +301,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           const pixCode = payment.pix_qr_code;
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `${uiText.pixCreated}\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n${uiText.pixCopy}\n\ \ \ `
-${pixCode}
-\ \ \ `\n\n${uiText.pixExpires}`
+            content: `${uiText.pixCreated}\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n${uiText.pixCopy}\n\n\`\`\`\n${pixCode}\n\`\`\`\n\n${uiText.pixExpires}`
           }]);
           toast.success(uiText.pixToast);
         } else if (payment?.status === "approved") {
