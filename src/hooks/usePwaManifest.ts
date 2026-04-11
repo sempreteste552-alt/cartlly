@@ -1,9 +1,17 @@
 import { useLayoutEffect } from "react";
-import { applyRuntimePwaManifest, PwaManifestOptions } from "@/lib/runtimePwaManifest";
+import { applyRuntimePwaManifest, clearRuntimePwaManifest, PwaManifestOptions } from "@/lib/runtimePwaManifest";
 
 export function usePwaManifest(options: PwaManifestOptions) {
   useLayoutEffect(() => {
+    // Don't apply manifest without a tenant-specific id
+    if (!options.id) return;
+
     applyRuntimePwaManifest(options);
+
+    return () => {
+      // Clean up manifest when component unmounts (e.g. logout)
+      clearRuntimePwaManifest();
+    };
   }, [
     options.id,
     options.name,

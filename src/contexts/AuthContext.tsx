@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearRuntimePwaManifest } from "@/lib/runtimePwaManifest";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -83,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // stale tenant data from leaking to the next session
         if (_event === "SIGNED_OUT") {
           queryClient.clear();
+          // Clear PWA manifest to prevent cross-tenant leakage
+          clearRuntimePwaManifest();
           // Clean up any lingering CSS variables from admin theme
           document.documentElement.style.removeProperty("--primary");
           document.documentElement.style.removeProperty("--ring");
