@@ -101,6 +101,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <I18nProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -180,6 +181,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
+      </I18nProvider>
     </ErrorBoundary>
   );
 };
