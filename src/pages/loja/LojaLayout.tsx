@@ -1070,7 +1070,7 @@ export default function LojaLayout() {
                       to={`${basePath}/p/${page.slug}`}
                       className="block hover:opacity-100 transition-opacity"
                     >
-                      {page.title}
+                      {localizedStorePageTitles[idx] || page.title}
                     </Link>
                   ))}
                 </div>
