@@ -130,8 +130,6 @@ export default function LojaLayout() {
       whatsappTitle: "Parlez-nous sur WhatsApp",
     },
   }[locale];
-  const localizedStoreDescription = useLocalizedText(settingsBySlug?.store_description);
-  const localizedStorePageTitles = useLocalizedTextList([]);
 
   useEffect(() => {
     const nextLocale = (settingsBySlug as any)?.language;
