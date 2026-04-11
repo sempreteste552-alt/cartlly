@@ -735,6 +735,7 @@ Deno.serve(async (req) => {
           const seqGender = detectGender(customer.name);
 
           try {
+            const customerHistory = await fetchCustomerPushHistory(supabase, seq.customer_id, seq.store_user_id);
             msg = await generateAISequenceMessage(lovableApiKey, {
               customerName: customer.name,
               productName,
@@ -746,6 +747,8 @@ Deno.serve(async (req) => {
               sequenceType: seqType,
               niche: seqNiche,
               gender: seqGender,
+              tenantAiConfig: tenantAiConfigMap.get(seq.store_user_id),
+              customerHistory,
             });
           } catch {
             msg = pickVariedMessage(step.templates, customer.name, productName, storeName, stepIndex, seq.customer_id, seq.product_id);
