@@ -94,9 +94,25 @@ export default function LojaHome() {
   const buttonTextColor = settings?.button_text_color || "#ffffff";
   const accentColor = settings?.accent_color || "#8b5cf6";
 
+  const activeCategoryName = useMemo(() => {
+    if (!categoriaParam || !categories) return null;
+    const cat = categories.find((c: any) => c.id === categoriaParam);
+    return cat?.name || null;
+  }, [categoriaParam, categories]);
+
   return (
     <div className="space-y-6">
-      {!searchTerm.trim() && (
+      {categoriaParam && activeCategoryName && (
+        <div className="max-w-7xl mx-auto px-4 pt-4 flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm px-3 py-1">
+            {activeCategoryName}
+          </Badge>
+          <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSearchParams({})}>
+            ✕ Limpar filtro
+          </Button>
+        </div>
+      )}
+      {!searchTerm.trim() && !categoriaParam && (
         <>
           {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
