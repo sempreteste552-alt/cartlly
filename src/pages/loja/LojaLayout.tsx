@@ -453,6 +453,13 @@ export default function LojaLayout() {
                 "--input": "0 0% 14%",
                 "--secondary": "0 0% 10%",
                 "--secondary-foreground": "0 0% 98%",
+                "--accent": "0 0% 12%",
+                "--accent-foreground": "0 0% 98%",
+                "--destructive": "0 72% 51%",
+                "--destructive-foreground": "0 0% 100%",
+                "--ring": "243 75% 62%",
+                backgroundColor: "hsl(0 0% 0%)",
+                color: "hsl(0 0% 98%)",
               } as React.CSSProperties
             : {
                 "--card": "0 0% 100%",
@@ -467,6 +474,8 @@ export default function LojaLayout() {
                 "--input": "220 13% 91%",
                 "--secondary": "220 14% 96%",
                 "--secondary-foreground": "224 30% 12%",
+                "--accent": "243 75% 95%",
+                "--accent-foreground": "243 75% 59%",
                 backgroundColor: themeConfig?.background_color || (settings as any)?.page_bg_color || undefined,
                 color: themeConfig?.text_color || undefined,
               } as React.CSSProperties
