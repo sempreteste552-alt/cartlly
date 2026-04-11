@@ -199,7 +199,7 @@ html {
   background: hsl(var(--card));
   border-radius: var(--radius);
   overflow: hidden;
-  animation: referral-pulse 2.5s ease-in-out infinite;
+  animation: referral-pulse 5s ease-in-out infinite;
 }
 
 .referral-glow-card::before {
@@ -216,7 +216,7 @@ html {
     hsl(var(--primary)) 100%
   );
   z-index: -1;
-  animation: rotate-border 3s linear infinite;
+  animation: rotate-border 6s linear infinite;
 }
 
 .referral-glow-card::after {
@@ -240,7 +240,7 @@ html {
 }
 
 .sidebar-referral-item {
-  animation: sidebar-sparkle 2s ease-in-out infinite;
+  animation: sidebar-sparkle 4s ease-in-out infinite;
 }
 
 .sidebar-referral-item .referral-dot {
@@ -248,11 +248,21 @@ html {
   height: 6px;
   border-radius: 50%;
   background: hsl(var(--primary));
-  animation: referral-pulse 1.5s ease-in-out infinite;
+  animation: referral-pulse 3s ease-in-out infinite;
   display: inline-block;
 }
 
 @keyframes waveform {
   0% { transform: scaleY(0.4); }
   100% { transform: scaleY(1.2); }
+}
+
+/* Slow spin animation for loading states */
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: slow-spin 2s linear infinite;
 }
