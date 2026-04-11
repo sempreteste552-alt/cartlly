@@ -24,11 +24,13 @@ import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
 import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
+import { useTranslation } from "@/i18n";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, customer, loading: authLoading } = useCustomerAuth();
   const createReview = useCreateReview();
@@ -740,20 +742,20 @@ export default function LojaCheckout() {
   if (cart.items.length === 0) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <h1 className="text-xl font-bold">Carrinho vazio</h1>
-        <Button className="mt-4" variant="outline" onClick={() => navigate(`/loja/${settings?.store_slug || ""}`)}>Ver Produtos</Button>
+        <h1 className="text-xl font-bold">{t.store.emptyCart}</h1>
+        <Button className="mt-4" variant="outline" onClick={() => navigate(`/loja/${settings?.store_slug || ""}`)}>{t.store.continueShopping}</Button>
       </div>
     );
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8" style={{ fontFamily: "var(--store-font-body)" }}>
-      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--store-font-heading)" }}>Finalizar Compra</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--store-font-heading)" }}>{t.checkout.title}</h1>
 
       <div className="grid gap-6">
         {/* Items summary */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Resumo do Pedido</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t.checkout.orderSummary}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {cart.items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
@@ -833,19 +835,19 @@ export default function LojaCheckout() {
         </Card>
 
         <Card className={errors.size > 0 ? "border-destructive ring-1 ring-destructive ring-offset-2" : ""}>
-          <CardHeader><CardTitle className="text-base">Seus Dados</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">{t.checkout.personalData}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className={errors.has("name") ? "text-destructive" : ""}>Nome Completo *</Label>
+                <Label className={errors.has("name") ? "text-destructive" : ""}>{t.checkout.fullName} *</Label>
                 <Input value={name} onChange={(e) => { setName(e.target.value); if(errors.has("name")) setErrors(prev => { const s = new Set(prev); s.delete("name"); return s; }); }} placeholder="Seu nome completo" maxLength={100} className={errors.has("name") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label className={errors.has("cpf") ? "text-destructive" : ""}>CPF *</Label>
+                <Label className={errors.has("cpf") ? "text-destructive" : ""}>{t.checkout.cpf} *</Label>
                 <Input value={cpf} onChange={(e) => { setCpf(formatCPF(e.target.value)); if(errors.has("cpf")) setErrors(prev => { const s = new Set(prev); s.delete("cpf"); return s; }); }} placeholder="000.000.000-00" maxLength={14} className={errors.has("cpf") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">
-                <Label className={errors.has("phone") ? "text-destructive" : ""}>Telefone *</Label>
+                <Label className={errors.has("phone") ? "text-destructive" : ""}>{t.common.phone} *</Label>
                 <Input value={phone} onChange={(e) => { setPhone(e.target.value); if(errors.has("phone")) setErrors(prev => { const s = new Set(prev); s.delete("phone"); return s; }); }} placeholder="(11) 99999-9999" maxLength={20} className={errors.has("phone") ? "border-destructive focus-visible:ring-destructive" : ""} />
               </div>
               <div className="space-y-2">

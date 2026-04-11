@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { LockedFeature } from "@/components/LockedFeature";
+import { useTranslation } from "@/i18n";
 
 
 interface AISuggestion {
@@ -32,6 +33,7 @@ interface AISuggestion {
 
 export default function Cupons() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { data: coupons, isLoading } = useCoupons();
   const createCoupon = useCreateCoupon();
   const updateCoupon = useUpdateCoupon();
@@ -216,8 +218,8 @@ export default function Cupons() {
     <div className="space-y-6">
       <div id="coupons-header" className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Cupons de Desconto</h1>
-          <p className="text-muted-foreground">Crie e gerencie cupons para sua loja</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.coupons.title}</h1>
+          <p className="text-muted-foreground">{t.coupons.addCoupon}</p>
         </div>
         <div className="flex gap-2">
           {isLocked("ai_tools") ? (
@@ -231,7 +233,7 @@ export default function Cupons() {
               {aiLoading ? "Gerando..." : "Sugestões IA"}
             </Button>
           )}
-          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Novo Cupom</Button>
+          <Button onClick={openNew}><Plus className="mr-2 h-4 w-4" /> {t.coupons.addCoupon}</Button>
         </div>
       </div>
 
@@ -241,9 +243,9 @@ export default function Cupons() {
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Ticket className="h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mt-4 text-lg font-medium">Nenhum cupom</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Crie seu primeiro cupom de desconto</p>
-            <Button className="mt-4" size="sm" onClick={openNew}><Plus className="mr-2 h-4 w-4" /> Criar Cupom</Button>
+            <h3 className="mt-4 text-lg font-medium">{t.coupons.noCoupons}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t.coupons.addCoupon}</p>
+            <Button className="mt-4" size="sm" onClick={openNew}><Plus className="mr-2 h-4 w-4" /> {t.coupons.addCoupon}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -251,13 +253,13 @@ export default function Cupons() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Desconto</TableHead>
-                <TableHead>Mín. Pedido</TableHead>
-                <TableHead>Usos</TableHead>
-                <TableHead>Validade</TableHead>
+                <TableHead>{t.coupons.code}</TableHead>
+                <TableHead>{t.coupons.discountValue}</TableHead>
+                <TableHead>{t.coupons.minOrderValue}</TableHead>
+                <TableHead>{t.coupons.usedCount}</TableHead>
+                <TableHead>{t.coupons.expiresAt}</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -336,8 +338,8 @@ export default function Cupons() {
               <Switch checked={active} onCheckedChange={setActive} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSave}>{editing ? "Salvar" : "Criar"}</Button>
+              <Button variant="outline" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
+              <Button onClick={handleSave}>{editing ? t.common.save : t.common.add}</Button>
             </div>
           </div>
         </DialogContent>
@@ -350,8 +352,8 @@ export default function Cupons() {
             <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { deleteCoupon.mutate(deleteId!); setDeleteId(null); }} className="bg-destructive text-destructive-foreground">Remover</AlertDialogAction>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { deleteCoupon.mutate(deleteId!); setDeleteId(null); }} className="bg-destructive text-destructive-foreground">{t.common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
