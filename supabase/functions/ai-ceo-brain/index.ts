@@ -5,6 +5,23 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const STOPWORDS = new Set([
+  "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
+  "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
+  "mais", "muito", "muita", "hoje", "ontem", "amanha", "voce", "você", "pra", "pro", "como", "essa",
+  "esse", "bom", "boa", "dia", "tarde", "noite", "madrugada", "cartlly", "loja",
+]);
+
+const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
+  { topic: "vendas", keywords: ["venda", "vendas", "fatur", "pedido", "pedidos", "ticket", "lucro", "resultado", "meta"] },
+  { topic: "carrinho", keywords: ["carrinho", "checkout", "abandono", "abandono", "abandona", "abandono"] },
+  { topic: "produtos", keywords: ["produto", "produtos", "catalogo", "estoque", "mix", "colecao", "vitrine"] },
+  { topic: "clientes", keywords: ["cliente", "clientes", "recorrencia", "recompra", "atendimento", "fidelizacao", "avaliacao"] },
+  { topic: "marketing", keywords: ["marketing", "campanha", "anuncio", "anuncios", "trafego", "instagram", "conteudo", "criativo"] },
+  { topic: "pagamento", keywords: ["pagamento", "pagamentos", "pix", "boleto", "cartao", "falha", "falhas"] },
+  { topic: "operacao", keywords: ["organiz", "processo", "margem", "preco", "precificacao", "banner", "foto"] },
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -12,7 +29,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!lovableApiKey) {
       console.error("[ai-ceo-brain] LOVABLE_API_KEY is missing");
       return json({ error: "AI key not configured" }, 500);
@@ -35,32 +52,29 @@ Deno.serve(async (req) => {
       try {
         const userId = store.user_id;
 
-        // Fetch Rich Insights
         const { data: insights, error: insightErr } = await supabase.rpc("get_store_rich_insights", { p_user_id: userId });
         if (insightErr) {
           console.error(`[ai-ceo-brain] Insights error for ${userId}:`, insightErr);
           continue;
         }
 
-        // Fetch last 20 CEO notifications to prevent ANY repetition
         const { data: previousNotifs } = await supabase
           .from("admin_notifications")
           .select("title, message, created_at")
           .eq("target_user_id", userId)
           .eq("type", "ceo_insight")
           .order("created_at", { ascending: false })
-          .limit(20);
+          .limit(15);
 
-        const previousMessages = previousNotifs?.map(
-          (n: any) => `[${n.title}] ${n.message}`
-        ).join("\n") || "Nenhuma mensagem anterior.";
+        const historyTexts = (previousNotifs || [])
+          .map((notification: any) => `${notification.title || ""} ${notification.message || ""}`.trim())
+          .filter(Boolean);
 
-        // Extract unique words from previous messages for blacklist
-        const allPrevWords = previousNotifs?.flatMap((n: any) => {
-          const text = `${n.title} ${n.message}`.toLowerCase();
-          return text.split(/\s+/).filter((w: string) => w.length > 4);
-        }) || [];
-        const frequentWords = [...new Set(allPrevWords)].slice(0, 50).join(", ");
+        const previousMessages = historyTexts.length > 0
+          ? historyTexts.map((msg, index) => `${index + 1}. ${msg}`).join("\n")
+          : "Nenhuma mensagem anterior.";
+
+        const frequentWords = [...new Set(historyTexts.flatMap((text) => tokenizeMeaningful(text)))].slice(0, 60).join(", ") || "nenhuma";
 
         const systemPrompt = `Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
 Personalidade: Amigável, analítica, focada em resultados e proativa.
@@ -81,77 +95,84 @@ STATUS DA LOJA (${store.store_name}):
 
 IMPORTANTE: "Faturamento" = APENAS pedidos aprovados.
 
-===== REGRAS ANTI-REPETIÇÃO (OBRIGATÓRIO) =====
-1. Abaixo estão TODAS as mensagens que você já enviou. Leia CADA UMA com atenção.
-2. Sua nova mensagem NÃO PODE:
-   - Começar com a mesma palavra ou emoji de qualquer mensagem anterior
-   - Usar o mesmo tema/assunto (ex: se já falou de "carrinho abandonado", fale de OUTRO assunto)
-   - Repetir NENHUMA frase, expressão ou estrutura similar
-   - Usar gírias de dia da semana (Sextou, Sabadão, Segundou, etc.) se já usou antes
-3. Se TODAS as ideias já foram cobertas, responda "[NO_INSIGHT]".
-4. Cada mensagem deve trazer uma perspectiva 100% NOVA e ÚNICA.
+REGRAS CRÍTICAS:
+- Você DEVE analisar as 15 mensagens anteriores antes de responder.
+- A nova saída NÃO PODE repetir abertura, emoji inicial, frase dominante, tema principal nem a mesma lógica de conselho.
+- Se as 15 anteriores já cobrirem aquele raciocínio, mude o ângulo totalmente.
+- Se realmente não houver nada novo, responda "[NO_INSIGHT]".
 
-MENSAGENS JÁ ENVIADAS (NUNCA REPITA NADA DAQUI):
+15 MENSAGENS ANTERIORES PARA ANALISAR:
 ${previousMessages}
 
-PALAVRAS JÁ USADAS (EVITE TODAS):
-${frequentWords}
-=======================================
+PALAVRAS JÁ GASTAS (EVITE): ${frequentWords}
 
-REGRAS DE CONTEÚDO:
-1. Se os dados estiverem excelentes, dê parabéns com dica de escala.
-2. Se houver problemas, dê solução acionável IMEDIATA.
-3. Tom de "amigo CEO" — direto, encorajador.
-4. Se não houver nada novo para falar, responda "[NO_INSIGHT]".
-
-FORMATO (JSON):
+FORMATO OBRIGATÓRIO (JSON):
 {
   "title": "Título curto e impactante (com emoji)",
   "message": "Corpo da mensagem curto e direto ao ponto"
 }`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableApiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{ role: "system", content: systemPrompt }],
-            temperature: 0.9,
-            response_format: { type: "json_object" }
-          }),
-        });
+        const userPromptBase = `Crie UM insight novo para ${store.store_name}.
+Escolha um ângulo realmente diferente do histórico acima.
+Se houver problema, entregue solução prática. Se houver oportunidade, entregue ação objetiva.`;
 
-        const aiData = await aiResponse.json();
-        const rawContent = aiData.choices?.[0]?.message?.content || "";
+        let selectedMessage: { title: string; message: string } | null = null;
 
-        if (rawContent.includes("[NO_INSIGHT]")) {
-          results.push({ userId, status: "skipped", reason: "AI decided no insight needed" });
+        for (let attempt = 0; attempt < 4; attempt++) {
+          const retryInstruction = attempt === 0
+            ? ""
+            : `\nREJEIÇÃO ${attempt}: a opção anterior repetiu abertura, lógica ou tema. Gere um insight com outro raciocínio.`;
+
+          const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${lovableApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: `${userPromptBase}${retryInstruction}` },
+              ],
+              temperature: 1,
+              response_format: { type: "json_object" },
+            }),
+          });
+
+          const aiData = await aiResponse.json();
+          const rawContent = aiData.choices?.[0]?.message?.content || "";
+
+          if (rawContent.includes("[NO_INSIGHT]")) break;
+
+          const candidate = parseGeneratedCopy(rawContent, ["message", "body"]);
+          if (!candidate) continue;
+
+          const similarityReason = getSimilarityBlockReason(candidate.title, candidate.body, historyTexts, true);
+          if (similarityReason) {
+            console.warn(`[ai-ceo-brain] Candidate rejected for ${userId} (${similarityReason})`);
+            continue;
+          }
+
+          selectedMessage = {
+            title: candidate.title.substring(0, 60),
+            message: candidate.body.substring(0, 220),
+          };
+          break;
+        }
+
+        if (!selectedMessage) {
+          results.push({ userId, status: "skipped", reason: "similarity_guard_or_no_insight" });
           continue;
         }
 
-        let content;
-        try {
-          content = JSON.parse(rawContent);
-        } catch {
-          results.push({ userId, status: "skipped", reason: "Failed to parse AI response" });
-          continue;
-        }
+        const { title, message } = selectedMessage;
 
-        const { title, message } = content;
-        if (!title || !message) {
-          results.push({ userId, status: "skipped", reason: "Empty title or message" });
-          continue;
-        }
-
-        // Rate Limit & Dedup Check
         const { data: canSend, error: rateErr } = await supabase.rpc("can_send_message", {
           p_target_id: userId,
           p_title: title,
           p_body: message,
-          p_cooldown_minutes: 5
+          p_cooldown_minutes: 5,
         });
 
         if (rateErr) {
@@ -160,11 +181,10 @@ FORMATO (JSON):
         }
 
         if (!canSend) {
-          results.push({ userId, status: "skipped", reason: "Rate limited or duplicate" });
+          results.push({ userId, status: "skipped", reason: "rate_limited_or_duplicate" });
           continue;
         }
 
-        // Save Notification
         const { error: notifErr } = await supabase
           .from("admin_notifications")
           .insert({
@@ -173,7 +193,7 @@ FORMATO (JSON):
             title,
             message,
             type: "ceo_insight",
-            read: false
+            read: false,
           });
 
         if (notifErr) {
@@ -181,12 +201,11 @@ FORMATO (JSON):
           continue;
         }
 
-        // Send push
         await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabaseKey}`
+            Authorization: `Bearer ${supabaseKey}`,
           },
           body: JSON.stringify({
             target_user_id: userId,
@@ -194,12 +213,11 @@ FORMATO (JSON):
             body: message,
             type: "ceo_insight",
             store_user_id: userId,
-            url: "/admin"
+            url: "/admin",
           }),
         });
 
         results.push({ userId, status: "sent", title });
-
       } catch (err: any) {
         console.error(`[ai-ceo-brain] Store error for ${store.user_id}:`, err);
         results.push({ userId: store.user_id, status: "error", message: err.message });
@@ -207,7 +225,6 @@ FORMATO (JSON):
     }
 
     return json({ processed: results.length, results });
-
   } catch (error: any) {
     console.error("[ai-ceo-brain] Fatal error:", error);
     return json({ error: error.message }, 500);
@@ -219,4 +236,113 @@ function json(data: any, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function normalizeText(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeMeaningful(text: string) {
+  return normalizeText(text)
+    .split(" ")
+    .filter((token) => token.length > 2 && !STOPWORDS.has(token));
+}
+
+function detectTopic(text: string) {
+  const normalized = normalizeText(text);
+  let bestTopic = "other";
+  let bestScore = 0;
+
+  for (const entry of TOPIC_KEYWORDS) {
+    const score = entry.keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? 1 : 0), 0);
+    if (score > bestScore) {
+      bestScore = score;
+      bestTopic = entry.topic;
+    }
+  }
+
+  return bestScore > 0 ? bestTopic : "other";
+}
+
+function getOpeningSignature(text: string) {
+  return normalizeText(text).split(" ").slice(0, 6).join(" ");
+}
+
+function jaccardSimilarity(a: string, b: string) {
+  const setA = new Set(tokenizeMeaningful(a));
+  const setB = new Set(tokenizeMeaningful(b));
+
+  if (setA.size === 0 || setB.size === 0) return 0;
+
+  let intersection = 0;
+  for (const token of setA) {
+    if (setB.has(token)) intersection++;
+  }
+
+  return intersection / (setA.size + setB.size - intersection);
+}
+
+function getSimilarityBlockReason(
+  title: string,
+  body: string | undefined,
+  historyTexts: string[],
+  strictTheme: boolean,
+) {
+  const candidate = `${title} ${body || ""}`.trim();
+  if (!candidate) return "mensagem vazia";
+
+  const candidateTopic = detectTopic(candidate);
+  if (strictTheme && candidateTopic !== "other") {
+    const sameTopicCount = historyTexts.filter((previous) => detectTopic(previous) === candidateTopic).length;
+    if (sameTopicCount >= 2) {
+      return `tema repetido (${candidateTopic})`;
+    }
+  }
+
+  for (const previous of historyTexts) {
+    if (!previous) continue;
+
+    const sameOpening = getOpeningSignature(candidate);
+    if (sameOpening && sameOpening === getOpeningSignature(previous)) {
+      return "abertura repetida";
+    }
+
+    const samePrefix = normalizeText(candidate).slice(0, 24);
+    if (samePrefix.length >= 16 && samePrefix === normalizeText(previous).slice(0, 24)) {
+      return "prefixo repetido";
+    }
+
+    const similarity = jaccardSimilarity(candidate, previous);
+    if (similarity >= 0.5) {
+      return `conteúdo muito parecido (${Math.round(similarity * 100)}%)`;
+    }
+
+    if (candidateTopic !== "other" && candidateTopic === detectTopic(previous) && similarity >= (strictTheme ? 0.16 : 0.3)) {
+      return `mesma lógica de tema (${candidateTopic})`;
+    }
+  }
+
+  return null;
+}
+
+function parseGeneratedCopy(rawContent: string, bodyKeys: string[]) {
+  try {
+    const cleaned = rawContent.replace(/```json\s*/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
+    const body = bodyKeys
+      .map((key) => (typeof parsed[key] === "string" ? parsed[key].trim() : ""))
+      .find(Boolean) || "";
+
+    if (!title || !body) return null;
+    return { title, body };
+  } catch {
+    return null;
+  }
 }
