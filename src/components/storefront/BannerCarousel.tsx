@@ -110,7 +110,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
               className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             >
               {isVideo ? (
-                <MaybeLink href={banner.link_url} disabled={!active}>
+                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
                   <video
                     ref={(element) => {
                       videoRefs.current[index] = element;
@@ -126,7 +126,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
                   />
                 </MaybeLink>
               ) : (
-                <MaybeLink href={banner.link_url} disabled={!active}>
+                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
                   <img
                     src={banner.image_url}
                     alt="Banner"
