@@ -89,6 +89,14 @@ serve(async (req) => {
     const storeName = storeSetting?.store_name || "sua loja";
     const isFirstPush = (todayPushes?.length || 0) === 0;
 
+    // Read AI brain config for custom instructions
+    const { data: aiConfig } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("custom_instructions")
+      .eq("user_id", user_id)
+      .maybeSingle();
+    const customInstructions = aiConfig?.custom_instructions || "";
+
     // 5. Get last 3 motivational messages to avoid repetition
     const { data: lastMsgs } = await supabase
       .from("push_logs")
@@ -119,7 +127,9 @@ REGRAS:
 - Use emojis com moderação (1-2 máx)
 - Responda APENAS com um JSON: {"title": "...", "body": "..."}
 - O title deve ter no máximo 40 caracteres
-- O body deve ter no máximo 120 caracteres`;
+- O body deve ter no máximo 120 caracteres
+- IMPORTANTE: O horário atual em Brasília é ${hour}h. Use a saudação correta: "${greeting}". NUNCA diga "Bom dia" se for tarde/noite/madrugada!
+${customInstructions ? `\nINSTRUÇÕES PERSONALIZADAS DO LOJISTA (siga rigorosamente):\n${customInstructions}` : ""}`;
 
     const userPrompt = `Gere uma mensagem motivacional para ${tenantName} (loja: ${storeName}).
 Contexto: ${greeting}, ${isFirstPush ? "primeiro acesso do dia" : "segundo acesso do dia"}.
