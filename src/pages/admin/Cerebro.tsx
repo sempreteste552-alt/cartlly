@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Trash2, Brain, Sparkles, Clock, AlertTriangle, CheckCircle2, Bell, Users, Megaphone } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Bot, Send, Trash2, Brain, Sparkles, Clock, AlertTriangle, CheckCircle2, Bell, Users, Megaphone, Settings2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -25,7 +28,6 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
     queryKey: ["push-logs", userId, eventType],
     queryFn: async () => {
       if (eventType === "ceo_insight") {
-        // CEO insights are stored in admin_notifications
         const { data, error } = await supabase
           .from("admin_notifications")
           .select("id, title, message, type, created_at")
@@ -43,6 +45,19 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
           trigger_type: "ceo_brain",
           event_type: "ceo_insight",
         }));
+      }
+
+      if (eventType === "customer") {
+        // Customer pushes: all push_logs sent TO customers of this store
+        const { data, error } = await supabase
+          .from("push_logs")
+          .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
+          .eq("store_user_id", userId!)
+          .not("customer_id", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(30);
+        if (error) throw error;
+        return data as any[];
       }
 
       let query = supabase
@@ -165,6 +180,160 @@ function ChatPanel({ chatHistory, sendMessage, pendingActions, confirmAction, in
   );
 }
 
+const NICHE_OPTIONS = [
+  "Moda Feminina", "Moda Masculina", "Moda Infantil", "Acessórios",
+  "Calçados", "Bolsas", "Joias e Bijuterias",
+  "Cosméticos e Beleza", "Perfumaria", "Skincare",
+  "Doceria e Confeitaria", "Alimentação Saudável", "Bebidas",
+  "Papelaria", "Artesanato", "Decoração",
+  "Eletrônicos", "Games", "Informática",
+  "Pet Shop", "Fitness", "Esportes",
+  "Sex Shop", "Brinquedos", "Livros",
+  "Casa e Jardim", "Saúde e Bem-estar", "Outro",
+];
+
+const PERSONALITY_OPTIONS = [
+  { value: "amigavel", label: "🤗 Amigável" },
+  { value: "profissional", label: "💼 Profissional" },
+  { value: "divertida", label: "🎉 Divertida" },
+  { value: "agressiva", label: "🔥 Agressiva (Alta Conversão)" },
+  { value: "educada", label: "🎩 Educada e Formal" },
+];
+
+function AITrainingPanel({ userId }: { userId: string }) {
+  const queryClient = useQueryClient();
+  
+  const { data: config, isLoading } = useQuery({
+    queryKey: ["tenant-ai-brain-config", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
+  const [niche, setNiche] = useState("");
+  const [personality, setPersonality] = useState("amigavel");
+  const [customInstructions, setCustomInstructions] = useState("");
+  const [storeKnowledge, setStoreKnowledge] = useState("");
+
+  useEffect(() => {
+    if (config) {
+      setNiche(config.niche || "");
+      setPersonality(config.personality || "amigavel");
+      setCustomInstructions(config.custom_instructions || "");
+      const knowledge = config.store_knowledge;
+      if (typeof knowledge === "string") {
+        setStoreKnowledge(knowledge);
+      } else if (knowledge && typeof knowledge === "object") {
+        setStoreKnowledge((knowledge as any).description || JSON.stringify(knowledge));
+      } else {
+        setStoreKnowledge("");
+      }
+    }
+  }, [config]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("tenant_ai_brain_config")
+        .upsert({
+          user_id: userId,
+          niche,
+          personality,
+          custom_instructions: customInstructions,
+          store_knowledge: { description: storeKnowledge } as any,
+        }, { onConflict: "user_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("✅ Treinamento da IA salvo! As próximas mensagens serão personalizadas.");
+      queryClient.invalidateQueries({ queryKey: ["tenant-ai-brain-config"] });
+    },
+    onError: (err: any) => toast.error("Erro: " + err.message),
+  });
+
+  if (isLoading) return <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>;
+
+  return (
+    <Card>
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Settings2 className="h-4 w-4 text-primary" /> Treinamento da IA
+        </CardTitle>
+        <CardDescription className="text-[11px]">
+          Configure o nicho, personalidade e conhecimentos da sua IA. Isso muda como ela fala com você e seus clientes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-3">
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Nicho / Categoria</Label>
+          <Select value={niche} onValueChange={setNiche}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Selecione o nicho da loja" />
+            </SelectTrigger>
+            <SelectContent>
+              {NICHE_OPTIONS.map(n => (
+                <SelectItem key={n} value={n} className="text-xs">{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Personalidade da IA</Label>
+          <Select value={personality} onValueChange={setPersonality}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERSONALITY_OPTIONS.map(p => (
+                <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">O que sua loja oferece? (Treine a IA)</Label>
+          <Textarea
+            value={storeKnowledge}
+            onChange={e => setStoreKnowledge(e.target.value)}
+            placeholder="Ex: Vendemos bolos artesanais, doces finos e tortas sob encomenda. Nosso diferencial é cobertura de chocolate belga. Entregamos em até 48h na região de São Paulo..."
+            className="text-xs min-h-[80px] resize-none"
+            rows={4}
+          />
+          <p className="text-[10px] text-muted-foreground">Quanto mais detalhes, melhor a IA entende seu negócio.</p>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Instruções extras para a IA</Label>
+          <Textarea
+            value={customInstructions}
+            onChange={e => setCustomInstructions(e.target.value)}
+            placeholder="Ex: Não use gírias. Sempre mencione frete grátis acima de R$150. Nunca fale de concorrentes..."
+            className="text-xs min-h-[60px] resize-none"
+            rows={3}
+          />
+        </div>
+
+        <Button
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+          className="w-full h-8 text-xs gap-1"
+        >
+          <Save className="h-3 w-3" />
+          {saveMutation.isPending ? "Salvando..." : "Salvar Treinamento"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Cerebro() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -283,7 +452,6 @@ export default function Cerebro() {
   const processAIActions = (content: string, msgIndex: number) => {
     const actions: any[] = [];
     
-    // 1. Agendar Tarefa
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
     let match;
     while ((match = taskRegex.exec(content)) !== null) {
@@ -293,7 +461,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 2. Criar Cupom
     const couponRegex = /\[ACTION_CREATE_COUPON\]([\s\S]*?)\[\/ACTION_CREATE_COUPON\]/g;
     while ((match = couponRegex.exec(content)) !== null) {
       try {
@@ -302,7 +469,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 3. Atualizar Configurações da Loja (Letreiro, etc)
     const storeSettingsRegex = /\[ACTION_UPDATE_STORE_SETTINGS\]([\s\S]*?)\[\/ACTION_UPDATE_STORE_SETTINGS\]/g;
     while ((match = storeSettingsRegex.exec(content)) !== null) {
       try {
@@ -312,7 +478,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 4. Atualizar Marketing (Faixa, Frete Grátis, Countdown)
     const marketingRegex = /\[ACTION_UPDATE_MARKETING_CONFIG\]([\s\S]*?)\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g;
     while ((match = marketingRegex.exec(content)) !== null) {
       try {
@@ -322,7 +487,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 5. Atualizar Estoque
     const stockRegex = /\[ACTION_UPDATE_STOCK\]([\s\S]*?)\[\/ACTION_UPDATE_STOCK\]/g;
     while ((match = stockRegex.exec(content)) !== null) {
       try {
@@ -331,7 +495,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 6. Atualizar Página
     const pageRegex = /\[ACTION_UPDATE_PAGE\]([\s\S]*?)\[\/ACTION_UPDATE_PAGE\]/g;
     while ((match = pageRegex.exec(content)) !== null) {
       try {
@@ -340,7 +503,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 7. Lembrete Pessoal
     const reminderRegex = /\[ACTION_SCHEDULE_REMINDER\]([\s\S]*?)\[\/ACTION_SCHEDULE_REMINDER\]/g;
     while ((match = reminderRegex.exec(content)) !== null) {
       try {
@@ -349,7 +511,6 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    // 8. Atualizar Instruções da IA
     const aiInstructionsRegex = /\[ACTION_UPDATE_AI_INSTRUCTIONS\]([\s\S]*?)\[\/ACTION_UPDATE_AI_INSTRUCTIONS\]/g;
     while ((match = aiInstructionsRegex.exec(content)) !== null) {
       try {
@@ -425,7 +586,6 @@ export default function Cerebro() {
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
       } else if (action.type === "update_ai_instructions") {
-        // Append new instructions to existing ones
         const { data: existing } = await supabase
           .from("tenant_ai_brain_config")
           .select("custom_instructions")
@@ -445,7 +605,7 @@ export default function Cerebro() {
           }, { onConflict: "user_id" });
         if (error) throw error;
         toast.success("✅ Instruções da IA atualizadas! A IA vai seguir suas correções.");
-        queryClient.invalidateQueries({ queryKey: ["ai-brain-config"] });
+        queryClient.invalidateQueries({ queryKey: ["tenant-ai-brain-config"] });
       }
 
       setPendingActions(prev => {
@@ -507,17 +667,23 @@ export default function Cerebro() {
                 {aiConfig.niche}
               </Badge>
             )}
+            {aiConfig?.personality && (
+              <Badge variant="outline" className="text-[10px]">
+                {PERSONALITY_OPTIONS.find(p => p.value === aiConfig.personality)?.label || aiConfig.personality}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile: Tabs for Chat vs Logs. Desktop: Side by side */}
       <Tabs defaultValue="chat" className="flex flex-col lg:hidden">
-        <TabsList className="w-full grid grid-cols-4">
-          <TabsTrigger value="chat" className="text-xs gap-1"><Bot className="h-3 w-3" /> Chat</TabsTrigger>
-          <TabsTrigger value="ceo" className="text-xs gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
-          <TabsTrigger value="my-pushes" className="text-xs gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
-          <TabsTrigger value="client-pushes" className="text-xs gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-5">
+          <TabsTrigger value="chat" className="text-[10px] gap-1"><Bot className="h-3 w-3" /> Chat</TabsTrigger>
+          <TabsTrigger value="training" className="text-[10px] gap-1"><Settings2 className="h-3 w-3" /> Treinar</TabsTrigger>
+          <TabsTrigger value="ceo" className="text-[10px] gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
+          <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
+          <TabsTrigger value="client-pushes" className="text-[10px] gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
         </TabsList>
         <TabsContent value="chat" className="mt-2">
           <ChatPanel
@@ -530,6 +696,9 @@ export default function Cerebro() {
             handleSend={handleSend}
             scrollRef={scrollRef}
           />
+        </TabsContent>
+        <TabsContent value="training" className="mt-2">
+          {user && <AITrainingPanel userId={user.id} />}
         </TabsContent>
         <TabsContent value="ceo" className="mt-2">
           <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />
@@ -544,7 +713,7 @@ export default function Cerebro() {
 
       {/* Desktop layout */}
       <div className="hidden lg:grid lg:grid-cols-3 gap-4 flex-1" style={{ minHeight: "calc(100vh - 14rem)" }}>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 flex flex-col gap-4">
           <ChatPanel
             chatHistory={chatHistory}
             sendMessage={sendMessage}
@@ -558,13 +727,18 @@ export default function Cerebro() {
         </div>
 
         <div className="flex flex-col gap-4 overflow-hidden">
-          <Tabs defaultValue="ceo" className="flex flex-col overflow-hidden">
-            <TabsList className="w-full grid grid-cols-4">
+          <Tabs defaultValue="training" className="flex flex-col overflow-hidden">
+            <TabsList className="w-full grid grid-cols-5">
+              <TabsTrigger value="training" className="text-[10px] gap-1"><Settings2 className="h-3 w-3" /> Treinar</TabsTrigger>
               <TabsTrigger value="ceo" className="text-[10px] gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
               <TabsTrigger value="tasks" className="text-[10px] gap-1"><Clock className="h-3 w-3" /> Tarefas</TabsTrigger>
-              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
+              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Push</TabsTrigger>
               <TabsTrigger value="client-pushes" className="text-[10px] gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="training" className="flex-1 overflow-auto mt-2">
+              {user && <AITrainingPanel userId={user.id} />}
+            </TabsContent>
 
             <TabsContent value="ceo" className="flex-1 overflow-hidden mt-2">
               <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />

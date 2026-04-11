@@ -53,21 +53,32 @@ serve(async (req) => {
     ]);
 
     const storeName = storeSettings?.store_name || "Sua Loja";
-    const niche = aiConfig?.niche || "Não definido";
-    const chatTone = storeSettings?.ai_chat_tone || "educada";
+    const niche = aiConfig?.niche || storeSettings?.store_category || "Não definido";
+    const chatTone = storeSettings?.ai_chat_tone || aiConfig?.personality || "educada";
+    const storeKnowledge = typeof aiConfig?.store_knowledge === "object" && aiConfig?.store_knowledge
+      ? (aiConfig.store_knowledge as any).description || ""
+      : "";
     
-    // 2. Build System Prompt (Enhanced Amiga CEO Mode)
-    // Saudação baseada no horário de Brasília (UTC-3)
     const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const hourBr = nowBrasilia.getHours();
     const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
+    const personalityMap: Record<string, string> = {
+      amigavel: "Amigável e próxima — como uma amiga empreendedora de confiança.",
+      profissional: "Profissional e direta — com dados, métricas e linguagem objetiva.",
+      divertida: "Divertida e descontraída — com emojis e humor leve.",
+      agressiva: "Agressiva e focada em conversão — com urgência, metas ambiciosas e frases fortes.",
+      educada: "Educada e formal — com linguagem refinada e respeitosa.",
+    };
+    const personalityDesc = personalityMap[chatTone] || personalityMap.educada;
+
     const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
-TONALIDADE ATUAL: ${chatTone} (Se for "agressiva", use frases de conversão direta, chamadas para ação fortes e foco total em fechar a venda).
+PERSONALIDADE: ${personalityDesc}
 
 NICHO DA LOJA: ${niche}
+${storeKnowledge ? `\nO QUE A LOJA OFERECE (dados fornecidos pelo dono):\n${storeKnowledge}\n\nUse esse conhecimento para dar conselhos específicos e relevantes ao nicho.` : ""}
 
 CONTEXTO DA LOJA:
 - Configurações: ${JSON.stringify(storeSettings || {})}
@@ -87,10 +98,10 @@ STATUS ATUAL:
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
-- Use um tom de "amiga CEO" — direta ao ponto, inteligente, encorajadora e extremamente ágil.
+- Fale a linguagem do nicho "${niche}" — use termos, gírias e referências do segmento.
 - Se o dono pedir "agressividade", crie frases de alto impacto para checkout, banners e descrição da loja que removam objeções e criem urgência.
 - Se houver produtos "parados" (muitas visualizações mas pouca venda, ou sem visualizações), sugira frases de impacto, selos de destaque ou melhoria no SEO/CTA.
-- O contexto customizado do seu "cérebro" é: ${aiConfig?.custom_instructions || 'Nenhum'}.
+${aiConfig?.custom_instructions ? `\nINSTRUÇÕES PERSONALIZADAS DO LOJISTA:\n${aiConfig.custom_instructions}` : ""}
 
 CAPACIDADES ESPECIAIS (AÇÕES):
 Você pode realizar ações inserindo blocos JSON no final da sua resposta:
