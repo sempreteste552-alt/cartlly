@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useStoreSettings, useUpdateStoreSettings, useUploadStoreLogo } from "@/hooks/useStoreSettings";
 import { useStoreBanners, useCreateBanner, useUpdateBannerLink, useReorderBanners, useDeleteBanner } from "@/hooks/useStoreBanners";
+import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -114,6 +115,7 @@ function GeneralSettingsTab() {
   const updateBannerLink = useUpdateBannerLink();
   const reorderBanners = useReorderBanners();
   const deleteBanner = useDeleteBanner();
+  const { data: categories } = useCategories();
 
   const moveBanner = (index: number, direction: "up" | "down") => {
     if (!banners) return;
@@ -534,6 +536,25 @@ function GeneralSettingsTab() {
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground">Ao clicar no banner, redireciona para este link</p>
+                    <Label className="text-xs mt-2">Ou redirecionar para categoria</Label>
+                    <Select
+                      value={(b as any).category_id || "none"}
+                      onValueChange={(val) => {
+                        const categoryId = val === "none" ? null : val;
+                        updateBannerLink.mutate({ id: b.id, category_id: categoryId });
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Nenhuma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma categoria</SelectItem>
+                        {categories?.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground">Se selecionada, o clique filtra pela categoria na loja</p>
                   </div>
                   <Button
                     variant="ghost"

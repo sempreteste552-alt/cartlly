@@ -7,11 +7,12 @@ interface Banner {
   image_url: string;
   link_url?: string | null;
   media_type?: string;
+  category_id?: string | null;
 }
 
 const ZOOM_DURATION = 8000;
 
-export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banners: Banner[]; mobileFormat?: string }) {
+export function BannerCarousel({ banners, mobileFormat = "landscape", basePath = "" }: { banners: Banner[]; mobileFormat?: string; basePath?: string }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -109,7 +110,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banner
               className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             >
               {isVideo ? (
-                <MaybeLink href={banner.link_url} disabled={!active}>
+                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
                   <video
                     ref={(element) => {
                       videoRefs.current[index] = element;
@@ -125,7 +126,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banner
                   />
                 </MaybeLink>
               ) : (
-                <MaybeLink href={banner.link_url} disabled={!active}>
+                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
                   <img
                     src={banner.image_url}
                     alt="Banner"

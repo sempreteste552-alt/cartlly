@@ -131,11 +131,11 @@ export default function LojaLayout() {
   }[locale];
 
   useEffect(() => {
-    const nextLocale = settingsBySlug?.language;
+    const nextLocale = (settingsBySlug as any)?.language;
     if (isLocale(nextLocale) && nextLocale !== locale) {
       setLocale(nextLocale);
     }
-  }, [settingsBySlug?.language, locale, setLocale]);
+  }, [(settingsBySlug as any)?.language, locale, setLocale]);
 
   // Real-time store status monitoring
   useEffect(() => {
