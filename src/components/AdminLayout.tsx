@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -112,7 +112,7 @@ export function AdminLayout() {
 
   const adminPrimary = (settings as any)?.admin_primary_color || "#6d28d9";
   const adminAccent = (settings as any)?.admin_accent_color || adminPrimary;
-  const adminThemeScope = user?.id ? `admin-${user.id}` : "admin";
+  const adminThemeScope = "admin";
   const { dark: adminDark } = useThemeScope(adminThemeScope);
   const adminThemeStyle = {
     "--primary": toHSL(adminPrimary),
@@ -124,6 +124,19 @@ export function AdminLayout() {
     "--accent": toHSL(adminAccent),
     "--sidebar-accent-foreground": "0 0% 100%",
   } as CSSProperties;
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.themeScope = adminThemeScope;
+    root.classList.toggle("dark", adminDark);
+
+    return () => {
+      if (root.dataset.themeScope === adminThemeScope) {
+        root.classList.remove("dark");
+        delete root.dataset.themeScope;
+      }
+    };
+  }, [adminDark, adminThemeScope]);
 
   // Show neutral loading state until tenant data is fully resolved
   // This prevents flash of wrong theme/permissions from another tenant

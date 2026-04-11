@@ -27,51 +27,49 @@ function getStorageKey(scope: string) {
   return `theme_${scope}`;
 }
 
-export function ThemeToggle({ className, scope = "global", applyToRoot = true }: ThemeToggleProps) {
-  const storageKey = getStorageKey(scope);
+function getSystemPrefersDark() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+}
 
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) return stored === "dark";
-      // Fall back to system preference
-      return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-    }
-    return false;
-  });
+function readThemeState(storageKey: string) {
+  if (typeof window === "undefined") return false;
+  const stored = localStorage.getItem(storageKey);
+  if (stored) return stored === "dark";
+  return getSystemPrefersDark();
+}
+
+function emitThemeChange(storageKey: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(`theme-change-${storageKey}`));
+}
+
+export function ThemeToggle({ className, scope = "global", applyToRoot = true }: ThemeToggleProps) {
+  const { dark, toggle } = useThemeScope(scope);
 
   useLayoutEffect(() => {
     if (applyToRoot) {
-      if (dark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      document.documentElement.dataset.themeScope = scope;
+      document.documentElement.classList.toggle("dark", dark);
     }
-  }, [dark, applyToRoot]);
+  }, [dark, applyToRoot, scope]);
 
   // Cleanup: when unmounting an applyToRoot toggle, remove the class
   // so the next layout can set its own.
   useEffect(() => {
     return () => {
-      if (applyToRoot) {
+      if (applyToRoot && document.documentElement.dataset.themeScope === scope) {
         document.documentElement.classList.remove("dark");
+        delete document.documentElement.dataset.themeScope;
       }
     };
-  }, [applyToRoot]);
+  }, [applyToRoot, scope]);
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => {
-        setDark((d) => {
-          const next = !d;
-          localStorage.setItem(storageKey, next ? "dark" : "light");
-          window.dispatchEvent(new Event(`theme-change-${storageKey}`));
-          return next;
-        });
-      }}
+      onClick={toggle}
       className={className}
       title={dark ? "Modo claro" : "Modo escuro"}
     >
@@ -85,33 +83,54 @@ export function ThemeToggle({ className, scope = "global", applyToRoot = true }:
  */
 export function useThemeScope(scope: string) {
   const storageKey = getStorageKey(scope);
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) return stored === "dark";
-      return false;
-    }
-    return false;
-  });
+  const [dark, setDarkState] = useState(() => readThemeState(storageKey));
+
+  useEffect(() => {
+    setDarkState(readThemeState(storageKey));
+  }, [storageKey]);
 
   // Listen for storage changes from ThemeToggle (same tab via custom event)
   useEffect(() => {
-    const handler = () => {
-      const stored = localStorage.getItem(storageKey);
-      setDark(stored === "dark");
+    const syncTheme = () => {
+      setDarkState(readThemeState(storageKey));
     };
-    window.addEventListener(`theme-change-${storageKey}`, handler);
-    return () => window.removeEventListener(`theme-change-${storageKey}`, handler);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === storageKey) {
+        syncTheme();
+      }
+    };
+
+    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
+    const handleSystemThemeChange = () => {
+      if (!localStorage.getItem(storageKey)) {
+        syncTheme();
+      }
+    };
+
+    window.addEventListener(`theme-change-${storageKey}`, syncTheme);
+    window.addEventListener("storage", handleStorage);
+    media?.addEventListener?.("change", handleSystemThemeChange);
+
+    return () => {
+      window.removeEventListener(`theme-change-${storageKey}`, syncTheme);
+      window.removeEventListener("storage", handleStorage);
+      media?.removeEventListener?.("change", handleSystemThemeChange);
+    };
   }, [storageKey]);
 
-  const toggle = useCallback(() => {
-    setDark((d) => {
-      const next = !d;
+  const setDark = useCallback((value: boolean | ((current: boolean) => boolean)) => {
+    setDarkState((current) => {
+      const next = typeof value === "function" ? value(current) : value;
       localStorage.setItem(storageKey, next ? "dark" : "light");
-      window.dispatchEvent(new Event(`theme-change-${storageKey}`));
+      emitThemeChange(storageKey);
       return next;
     });
   }, [storageKey]);
 
-  return { dark, toggle };
+  const toggle = useCallback(() => {
+    setDark((current) => !current);
+  }, [setDark]);
+
+  return { dark, setDark, toggle };
 }
