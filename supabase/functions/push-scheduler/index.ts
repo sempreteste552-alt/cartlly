@@ -585,6 +585,17 @@ Deno.serve(async (req) => {
     // Cache niche per store (computed lazily)
     const storeNicheCache = new Map<string, StoreNiche>();
 
+    // ========== LOAD TENANT AI BRAIN CONFIG (per store) ==========
+    const { data: allAiConfigs } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("user_id, niche, personality, store_knowledge, custom_instructions")
+      .in("user_id", allStoreUserIds.length > 0 ? allStoreUserIds : ["00000000-0000-0000-0000-000000000000"]);
+    
+    const tenantAiConfigMap = new Map<string, any>();
+    (allAiConfigs || []).forEach((c: any) => {
+      tenantAiConfigMap.set(c.user_id, c);
+    });
+
     // ========== LOAD DAILY COUNTS FOR ALL CUSTOMERS ==========
     const today = new Date();
     today.setHours(0, 0, 0, 0);
