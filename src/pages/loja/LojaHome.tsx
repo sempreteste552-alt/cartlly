@@ -17,10 +17,12 @@ import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
+import { useTranslation } from "@/i18n";
 import { toast } from "sonner";
 
 export default function LojaHome() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
 
   // Smooth scroll to top on page load
@@ -63,9 +65,9 @@ export default function LojaHome() {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
         <div className="text-7xl mb-6">🏗️</div>
-        <h1 className="text-3xl font-bold text-center text-foreground">Loja em Construção</h1>
+        <h1 className="text-3xl font-bold text-center text-foreground">{t.misc.storeUnavailable}</h1>
         <p className="text-muted-foreground mt-3 text-center max-w-md">
-          Estamos preparando nossos produtos para você. Volte em breve para conferir as novidades!
+          {t.misc.storeUnderConstruction}
         </p>
       </div>
     );
@@ -143,7 +145,7 @@ export default function LojaHome() {
           </div>
         ) : searchTerm.trim() ? (
           <>
-            <h2 className="text-lg font-bold">Resultados para "{searchTerm}" ({filtered.length})</h2>
+            <h2 className="text-lg font-bold">{t.store.searchResultsFor} "{searchTerm}" ({filtered.length})</h2>
             <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} />
           </>
         ) : (
