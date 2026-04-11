@@ -358,7 +358,7 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
 
     const { data: customers } = await supabase
       .from("customers")
-      .select("id, name, auth_user_id")
+      .select("id, name, auth_user_id, gender")
       .eq("store_user_id", sid);
 
     if (!customers || customers.length === 0) continue;
@@ -369,46 +369,78 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       .select("user_id")
       .in("user_id", customerUserIds);
 
-    const pushUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
-    if (pushUserIds.length === 0) continue;
+    const pushUserIds = new Set((subs || []).map((s: any) => s.user_id));
+    if (pushUserIds.size === 0) continue;
 
-    const dayOfWeek = new Date().getDay();
-    const hour = new Date().getHours();
+    // Build customer lookup by auth_user_id
+    const customerByAuth = new Map(customers.filter((c: any) => c.auth_user_id).map((c: any) => [c.auth_user_id, c]));
 
-    let title = `✨ Novidades na ${storeName}!`;
-    let body = `Temos ofertas incríveis preparadas para você hoje na ${storeName}. Venha conferir!`;
-
-    const fallbackMessages = [
-      { title: `🎁 Presente para você na ${storeName}`, body: `Preparamos uma seleção exclusiva de produtos que você vai amar. Confira!` },
-      { title: `✨ Brilhe com a ${storeName}`, body: `Novidades fresquinhas acabaram de chegar. Não perca as ofertas de hoje!` },
-      { title: `🛍️ Sua sacola te espera`, body: `Que tal dar uma olhadinha no que temos de novo na ${storeName} hoje?` },
-      { title: `🔥 Tendências na ${storeName}`, body: `Veja o que está fazendo sucesso na nossa loja agora mesmo!` }
-    ];
-    
-    const randomFallback = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
-    title = randomFallback.title;
-    body = randomFallback.body;
-
-    if (lovableApiKey) {
-      try {
-        const aiMsg = await generateAIMessage(lovableApiKey, {
-          type: "daily_promo",
-          storeName,
-          dayOfWeek,
-          hour,
-          customerCount: pushUserIds.length,
+    // Fetch recent product views per customer for personalization
+    let viewsByCustomer: Record<string, string[]> = {};
+    try {
+      const customerIds = customers.map((c: any) => c.id);
+      const { data: views } = await supabase
+        .from("customer_view_stats")
+        .select("customer_id, product_id")
+        .in("customer_id", customerIds)
+        .order("last_viewed_at", { ascending: false })
+        .limit(100);
+      
+      if (views) {
+        const productIds = [...new Set(views.map((v: any) => v.product_id))];
+        const { data: products } = await supabase
+          .from("products")
+          .select("id, name")
+          .in("id", productIds);
+        const productMap = new Map((products || []).map((p: any) => [p.id, p.name]));
+        
+        views.forEach((v: any) => {
+          if (!viewsByCustomer[v.customer_id]) viewsByCustomer[v.customer_id] = [];
+          const name = productMap.get(v.product_id);
+          if (name && viewsByCustomer[v.customer_id].length < 3) viewsByCustomer[v.customer_id].push(name);
         });
-        if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
-      } catch (e) { console.error("AI daily promo error:", e); }
-    }
+      }
+    } catch (e) { console.error("Views lookup error:", e); }
+
+    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const dayOfWeek = nowBrasilia.getDay();
+    const hour = nowBrasilia.getHours();
+    const storeCategory = store?.category || "loja";
 
     for (const uid of pushUserIds) {
+      const customer = customerByAuth.get(uid);
+      if (!customer) continue;
+      
+      const customerName = customer.name?.split(" ")[0] || "Cliente";
+      const recentViews = viewsByCustomer[customer.id] || [];
+
+      let title = `✨ ${customerName}, novidades na ${storeName}!`;
+      let msgBody = `Preparamos ofertas especiais pra você hoje. Vem conferir! 🛍️`;
+
+      if (lovableApiKey) {
+        try {
+          const aiMsg = await generateAIMessage(lovableApiKey, {
+            type: "daily_promo",
+            storeName,
+            storeCategory,
+            dayOfWeek,
+            hour,
+            customerName,
+            customerGender: customer.gender,
+            recentViews: recentViews.join(", ") || "nenhum produto visualizado recentemente",
+            customerCount: pushUserIds.size,
+          });
+          if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
+        } catch (e) { console.error("AI daily promo error:", e); }
+      }
+
       try {
         const resp = await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            target_user_id: uid, title, body, url: "/", type: "daily_promo",
+            target_user_id: uid, title, body: msgBody, url: "/", type: "daily_promo",
+            store_user_id: sid,
           }),
         });
         const data = await resp.json();
@@ -420,7 +452,7 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       user_id: sid,
       trigger_type: "daily_promo",
       channel: "push",
-      message_text: `${title} — ${body}`,
+      message_text: `Promo personalizada para ${pushUserIds.size} clientes`,
       ai_generated: !!lovableApiKey,
       status: totalSent > 0 ? "sent" : "failed",
     });
