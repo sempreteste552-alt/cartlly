@@ -152,6 +152,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { target_user_id, customer_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
+    const effectiveStoreUserId = store_user_id || null;
 
     if ((!target_user_id && !customer_id) || !title) {
       return json({ error: "target_user_id or customer_id and title required" }, 400);
@@ -369,7 +370,8 @@ async function logPush(
   body: string | undefined,
   payload: any,
   status: string,
-  errorMessage: string | null
+  errorMessage: string | null,
+  storeUserId?: string | null
 ) {
   try {
     await supabase.from("push_logs").insert({
@@ -382,6 +384,7 @@ async function logPush(
       payload: payload || {},
       status,
       error_message: errorMessage,
+      store_user_id: storeUserId || null,
     });
   } catch (e) {
     console.error("Failed to log push:", e);
