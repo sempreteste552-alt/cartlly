@@ -395,6 +395,29 @@ export default function LojaLayout() {
       container.style.setProperty("--store-button-text", settings?.button_text_color || "#ffffff");
       container.style.setProperty("--store-bg-base", bg);
       container.style.setProperty("--store-text-base", text);
+
+      // Apply fonts from theme config
+      const fontBody = themeConfig?.font_body || "Inter";
+      const fontHeading = themeConfig?.font_heading || fontBody;
+      
+      // Load Google Fonts dynamically
+      const fontsToLoad = new Set([fontBody, fontHeading].filter(f => f && f !== "Inter"));
+      fontsToLoad.forEach((font) => {
+        const linkId = `gfont-${font.replace(/\s+/g, "-")}`;
+        if (!document.getElementById(linkId)) {
+          const link = document.createElement("link");
+          link.id = linkId;
+          link.rel = "stylesheet";
+          link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@300;400;500;600;700;800&display=swap`;
+          document.head.appendChild(link);
+        }
+      });
+
+      container.style.setProperty("--store-font-body", `'${fontBody}'`);
+      container.style.setProperty("--store-font-heading", `'${fontHeading}'`);
+      // Also set on root so body inherits when needed
+      document.documentElement.style.setProperty("--store-font-body", `'${fontBody}'`);
+      document.documentElement.style.setProperty("--store-font-heading", `'${fontHeading}'`);
       
       return () => {
         container.style.removeProperty("--store-primary");
@@ -404,6 +427,10 @@ export default function LojaLayout() {
         container.style.removeProperty("--store-button-text");
         container.style.removeProperty("--store-bg-base");
         container.style.removeProperty("--store-text-base");
+        container.style.removeProperty("--store-font-body");
+        container.style.removeProperty("--store-font-heading");
+        document.documentElement.style.removeProperty("--store-font-body");
+        document.documentElement.style.removeProperty("--store-font-heading");
       };
     }
   }, [settings, themeConfig, slug]);
