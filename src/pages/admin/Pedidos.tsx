@@ -13,8 +13,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
+import { useTranslation } from "@/i18n";
 
 export default function Pedidos() {
+  const { t } = useTranslation();
   const STATUS_ICONS: Record<string, any> = {
     pendente: Clock, processando: Package, enviado: Truck, entregue: CheckCircle, cancelado: XCircle,
   };

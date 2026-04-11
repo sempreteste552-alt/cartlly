@@ -24,11 +24,13 @@ import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
 import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
+import { useTranslation } from "@/i18n";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
 export default function LojaCheckout() {
   const { cart, settings } = useLojaContext();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, customer, loading: authLoading } = useCustomerAuth();
   const createReview = useCreateReview();

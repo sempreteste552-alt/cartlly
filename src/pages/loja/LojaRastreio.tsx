@@ -10,6 +10,7 @@ import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
+import { useTranslation } from "@/i18n";
 
 const STATUS_ICONS: Record<string, any> = {
   pendente: Clock,
@@ -23,6 +24,7 @@ const STATUS_ICONS: Record<string, any> = {
 const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entregue"];
 
 export default function LojaRastreio() {
+  const { t } = useTranslation();
   const { orderId: urlOrderId } = useParams();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(urlOrderId || "");
@@ -103,8 +105,8 @@ export default function LojaRastreio() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Rastreio do Pedido</h1>
-        <p className="text-muted-foreground text-sm mt-1">Acompanhe o status do seu pedido em tempo real</p>
+        <h1 className="text-2xl font-bold">{t.store.trackOrder}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t.store.trackingPlaceholder}</p>
       </div>
 
       {/* Search */}
@@ -121,8 +123,8 @@ export default function LojaRastreio() {
                 className="pl-9 font-mono"
               />
             </div>
-            <Button onClick={handleSearch} disabled={loading || !searchId.trim()} className="bg-black text-white hover:bg-gray-800">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+            <Button onClick={handleSearch} disabled={loading || !searchId.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.common.search}
             </Button>
           </div>
         </CardContent>
@@ -132,8 +134,8 @@ export default function LojaRastreio() {
         <Card>
           <CardContent className="flex flex-col items-center py-12">
             <XCircle className="h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 font-medium">Pedido não encontrado</p>
-            <p className="text-sm text-muted-foreground mt-1">Verifique o código e tente novamente</p>
+            <p className="mt-4 font-medium">{t.common.noResults}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t.common.tryAgain}</p>
           </CardContent>
         </Card>
       )}
