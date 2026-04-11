@@ -376,6 +376,11 @@ export const pt = {
     termsOfService: "Termos de Serviço",
     refundPolicy: "Política de Reembolso",
   },
-} as const;
+};
 
-export type TranslationKeys = typeof pt;
+// Use structural type (not literal) so other locales can have different string values
+type DeepStringRecord<T> = {
+  [K in keyof T]: T[K] extends Record<string, any> ? DeepStringRecord<T[K]> : string;
+};
+
+export type TranslationKeys = DeepStringRecord<typeof pt>;
