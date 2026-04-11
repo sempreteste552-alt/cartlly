@@ -190,7 +190,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">{t.store.searchResultsFor} "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} productNameMap={productNameMap} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -211,6 +211,7 @@ export default function LojaHome() {
               basePath={basePath}
               onAddToCart={cartNotif.show}
               maxInstallments={(settings as any)?.max_installments || 12}
+              productNameMap={productNameMap}
             />
           ))
         )}
