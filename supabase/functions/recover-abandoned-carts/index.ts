@@ -128,20 +128,47 @@ Deno.serve(async (req) => {
         const rule = ruleMap.get(cart.user_id);
         if (!rule) { skipped++; continue; }
 
-        // Check per-store wait time
-        const waitMs = (rule.wait_minutes || 20) * 60 * 1000;
-        if (Date.now() - new Date(cart.abandoned_at).getTime() < waitMs) { skipped++; continue; }
+        // Progressive sequence: 1h → 6h → 24h with escalating urgency
+        const reminderCount = cart.reminder_sent_count || 0;
+        const progressiveWaits = [
+          (rule.wait_minutes || 20),   // 1st: use store config (default 20min)
+          360,                          // 2nd: 6 hours
+          1440,                         // 3rd: 24 hours
+          2880,                         // 4th: 48 hours
+          4320,                         // 5th: 72 hours
+        ];
+        const waitMinutes = progressiveWaits[Math.min(reminderCount, progressiveWaits.length - 1)];
+        
+        // For subsequent reminders, check time since LAST reminder, not since abandoned
+        const referenceTime = reminderCount === 0 
+          ? new Date(cart.abandoned_at).getTime()
+          : new Date(cart.last_reminder_at || cart.abandoned_at).getTime();
+        const waitMs = waitMinutes * 60 * 1000;
+        if (Date.now() - referenceTime < waitMs) { skipped++; continue; }
 
         const store = storeMap.get(cart.user_id);
         const storeName = store?.store_name || "nossa loja";
         const items = Array.isArray(cart.items) ? cart.items : [];
         const itemNames = items.slice(0, 3).map((i: any) => i.name || "Produto").join(", ");
+        const itemImages = items.slice(0, 2).map((i: any) => i.image || i.image_url || "").filter(Boolean);
         const totalValue = cart.total || items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 1)), 0);
 
-        // Discount context
-        const discountCtx = rule.offer_discount && rule.discount_code
-          ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
-          : { hasDiscount: false, code: "", percentage: 0 };
+        // Progressive discount: escalate based on reminder count
+        const hasBaseDiscount = !!(rule.offer_discount && rule.discount_code);
+        const basePerc = rule.discount_percentage || 10;
+        const noDiscount = { hasDiscount: false, code: "", percentage: 0 };
+        const progressiveDiscounts = [
+          noDiscount,
+          noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: basePerc } : noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min(basePerc + 5, 30) } : noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min(basePerc + 10, 40) } : noDiscount,
+        ];
+        const discountCtx = progressiveDiscounts[Math.min(reminderCount, progressiveDiscounts.length - 1)];
+        
+        // Progressive urgency labels for AI context
+        const urgencyLevels = ["gentil", "curioso", "urgente_com_desconto", "ultima_chance", "despedida_final"];
+        const urgencyLevel = urgencyLevels[Math.min(reminderCount, urgencyLevels.length - 1)];
 
         const abandonedCartFallbacks = [
           { title: "🛒 Seus itens estão te esperando!", body: `Olá ${customer.name}! Você deixou ${items.length} item(s) no carrinho na ${storeName}. Finalize sua compra!` },
@@ -159,9 +186,11 @@ Deno.serve(async (req) => {
               storeName,
               storeCategory: store?.category,
               itemNames,
+              itemImages: itemImages.join(", "),
               totalValue: Number(totalValue).toFixed(2),
               itemCount: items.length,
-              reminderCount: cart.reminder_sent_count,
+              reminderCount,
+              urgencyLevel,
               dayOfWeek,
               hour,
               ...discountCtx,
@@ -1065,8 +1094,19 @@ ${specialDate}
       ? `\n- INCLUA O CUPOM DE DESCONTO "${ctx.code}" (${ctx.percentage}% OFF) na mensagem! Exemplo: "Use o cupom ${ctx.code} e ganhe ${ctx.percentage}% de desconto!"`
       : "";
 
+    const urgencyInstructions: Record<string, string> = {
+      gentil: "Tom GENTIL e sutil. Apenas lembre que os itens estão esperando. Não pressione.",
+      curioso: "Tom CURIOSO e amigável. Pergunte se o cliente precisa de ajuda ou se esqueceu algo.",
+      urgente_com_desconto: "Tom URGENTE mas amigável. Crie senso de oportunidade. Se houver desconto, DESTAQUE!",
+      ultima_chance: "Tom de ÚLTIMA CHANCE. Itens podem esgotar. Se houver desconto, é a MELHOR oferta.",
+      despedida_final: "Tom de DESPEDIDA carinhosa. Última mensagem sobre este carrinho. Se houver desconto, é a oferta FINAL e IRRECUSÁVEL.",
+    };
+    const urgencyNote = urgencyInstructions[ctx.urgencyLevel] || urgencyInstructions.gentil;
+
     systemPrompt = `${baseInstructions}
-Gere uma notificação push ÚNICA para recuperar um carrinho abandonado. 
+Gere uma notificação push ÚNICA para recuperar um carrinho abandonado.
+NÍVEL DE URGÊNCIA: ${ctx.urgencyLevel} (lembrete nº ${(ctx.reminderCount || 0) + 1} de 5)
+INSTRUÇÃO DE TOM: ${urgencyNote}
 ${discountLine}
 ${dateInstructions}`;
 
@@ -1076,6 +1116,7 @@ Produtos: ${ctx.itemNames}
 Valor: R$ ${ctx.totalValue}
 Itens: ${ctx.itemCount}
 Lembrete nº: ${(ctx.reminderCount || 0) + 1}
+Nível de urgência: ${ctx.urgencyLevel}
 Dia: ${dayName}
 Saudação: ${greetings}
 Datas especiais: ${specialDate}
