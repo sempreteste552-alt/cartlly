@@ -51,6 +51,15 @@ export default function LojaHome() {
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
   const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
 
+  // Build a product id -> translated name map
+  const productNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    products?.forEach((p, i) => {
+      map[p.id] = translatedProductNames[i] || p.name;
+    });
+    return map;
+  }, [products, translatedProductNames]);
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
 
