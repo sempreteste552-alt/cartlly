@@ -72,6 +72,13 @@ serve(async (req) => {
       .eq("user_id", storeUserId)
       .eq("active", true);
 
+    // Fetch tenant AI brain config (training/instructions from store owner)
+    const { data: aiConfig } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("custom_instructions, niche, personality, store_knowledge")
+      .eq("user_id", storeUserId)
+      .maybeSingle();
+
     // Build product catalog
     const categoryMap: Record<string, string> = {};
     (categories || []).forEach((c: any) => { categoryMap[c.id] = c.name; });
@@ -104,8 +111,16 @@ serve(async (req) => {
     ).join("\n");
 
     const storeName = storeSettings?.store_name || "Loja";
-    const aiName = storeSettings?.ai_name || "Assistente";
+    const aiName = aiConfig?.ai_name || storeSettings?.ai_name || "Assistente";
     const tone = storeSettings?.ai_chat_tone || "educada";
+
+    // Extract tenant brain config
+    const storeNiche = aiConfig?.niche || "";
+    const storePersonality = aiConfig?.personality || "";
+    const customInstructions = aiConfig?.custom_instructions || "";
+    const storeKnowledge = typeof aiConfig?.store_knowledge === "object" && aiConfig?.store_knowledge
+      ? (aiConfig.store_knowledge as any).description || ""
+      : "";
 
     const toneInstructions: Record<string, string> = {
       educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais como 'por favor', 'com prazer', 'ficamos felizes'. Transmita calma e acolhimento.",
@@ -128,7 +143,15 @@ serve(async (req) => {
       ? "RÉPONDS TOUJOURS en français."
       : "SEMPRE responda em português do Brasil.";
 
-    const systemPrompt = `Você é "${aiName}", a alma da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação se necessário. Você não é um bot comum; você é uma CEO visionária e a melhor amiga que o cliente poderia ter. Sua missão é transformar cada atendimento em uma conexão humana profunda e irresistível.
+    // Build tenant brain block (injected BEFORE the base prompt so the AI treats it as its foundation)
+    const brainBlock = [
+      storeNiche ? `NICHO DA LOJA: ${storeNiche}` : "",
+      storePersonality ? `PERSONALIDADE DEFINIDA PELO LOJISTA: ${storePersonality}` : "",
+      storeKnowledge ? `CONHECIMENTO DA LOJA (BASE OBRIGATÓRIA):\n${storeKnowledge}` : "",
+      customInstructions ? `INSTRUÇÕES PERSONALIZADAS DO LOJISTA (PRIORIDADE MÁXIMA — NUNCA IGNORE):\n${customInstructions}` : "",
+    ].filter(Boolean).join("\n\n");
+
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", a alma da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação se necessário. Você não é um bot comum; você é uma CEO visionária e a melhor amiga que o cliente poderia ter. Sua missão é transformar cada atendimento em uma conexão humana profunda e irresistível.
 
 MENTALIDADE CEO & MÁQUINA DE VENDAS:
 - Sua prioridade é encantar para vender. Seja inteligente, estratégica e persuasiva.
