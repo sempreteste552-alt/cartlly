@@ -154,18 +154,15 @@ Deno.serve(async (req) => {
         const totalValue = cart.total || items.reduce((s: number, i: any) => s + ((i.price || 0) * (i.quantity || 1)), 0);
 
         // Progressive discount: escalate based on reminder count
+        const hasBaseDiscount = !!(rule.offer_discount && rule.discount_code);
+        const basePerc = rule.discount_percentage || 10;
+        const noDiscount = { hasDiscount: false, code: "", percentage: 0 };
         const progressiveDiscounts = [
-          { hasDiscount: false, code: "", percentage: 0 },                    // 1st: no discount, gentle reminder
-          { hasDiscount: false, code: "", percentage: 0 },                    // 2nd: urgency, no discount
-          rule.offer_discount && rule.discount_code                           // 3rd: offer discount
-            ? { hasDiscount: true, code: rule.discount_code, percentage: rule.discount_percentage || 10 }
-            : { hasDiscount: false, code: "", percentage: 0 },
-          rule.offer_discount && rule.discount_code                           // 4th: bigger discount
-            ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min((rule.discount_percentage || 10) + 5, 30) }
-            : { hasDiscount: false, code: "", percentage: 0 },
-          rule.offer_discount && rule.discount_code                           // 5th: last chance, max discount
-            ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min((rule.discount_percentage || 10) + 10, 40) }
-            : { hasDiscount: false, code: "", percentage: 0 },
+          noDiscount,
+          noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: basePerc } : noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min(basePerc + 5, 30) } : noDiscount,
+          hasBaseDiscount ? { hasDiscount: true, code: rule.discount_code, percentage: Math.min(basePerc + 10, 40) } : noDiscount,
         ];
         const discountCtx = progressiveDiscounts[Math.min(reminderCount, progressiveDiscounts.length - 1)];
         
