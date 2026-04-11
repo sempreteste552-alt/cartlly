@@ -41,6 +41,7 @@ export default function LojaProduto() {
   const product = products?.find((p) => p.id === id);
   const localeTag = getLocaleTag(locale);
   const localizedDescription = useLocalizedText(product?.description);
+  const localizedProductName = useLocalizedText(product?.name);
   const localizedDeliveryText = useLocalizedText(productPageConfig?.delivery_estimation_text);
   const localizedSizeGuideContent = useLocalizedText(productPageConfig?.size_guide_content);
   const uiText = {
@@ -436,7 +437,7 @@ export default function LojaProduto() {
           )}
 
           <div className="flex items-start justify-between gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{localizedProductName || product.name}</h1>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title={uiText.favorite}>
                 <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
@@ -562,7 +563,7 @@ export default function LojaProduto() {
                   />
                 </div>
                 <div className="rounded-lg border p-3 bg-muted/50 text-sm space-y-1">
-                  <p className="font-medium">{product.name}</p>
+                  <p className="font-medium">{localizedProductName || product.name}</p>
                   <p className="text-muted-foreground">{formatPrice(effectivePrice)}</p>
                 </div>
                 <Button
@@ -690,7 +691,7 @@ export default function LojaProduto() {
             <div className="flex items-center gap-3 hidden md:flex">
               <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded object-cover" />
               <div>
-                <p className="text-sm font-bold line-clamp-1">{product.name}</p>
+                <p className="text-sm font-bold line-clamp-1">{localizedProductName || product.name}</p>
                 <p className="text-xs text-muted-foreground">{formatPrice(effectivePrice)}</p>
               </div>
             </div>

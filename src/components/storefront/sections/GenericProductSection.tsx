@@ -5,6 +5,8 @@ import { SectionWrapper } from "../DynamicHomeSections";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
+import { useTranslation } from "@/i18n";
+import { useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 
 interface Props {
   section: StoreHomeSection;
@@ -18,8 +20,9 @@ interface Props {
 }
 
 export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
+  const { locale } = useTranslation();
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+    new Intl.NumberFormat(locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
   const filteredProducts = useMemo(() => {
     if (!products || products.length === 0) return [];
@@ -42,6 +45,15 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
     }
   }, [products, section]);
 
+  const translatedNames = useLocalizedTextList(filteredProducts.map((p) => p.name));
+
+  const addToCartText = {
+    pt: "Adicionar ao Carrinho",
+    en: "Add to Cart",
+    es: "Añadir al Carrito",
+    fr: "Ajouter au Panier",
+  }[locale];
+
   if (filteredProducts.length === 0) return null;
 
   return (
@@ -59,7 +71,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
             .grid { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
           }
         `}</style>
-        {filteredProducts.map((product) => (
+        {filteredProducts.map((product, index) => (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card 
               className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
@@ -73,7 +85,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                 {product.image_url ? (
                   <img
                     src={product.image_url}
-                    alt={product.name}
+                    alt={translatedNames[index] || product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
                 ) : (
@@ -82,7 +94,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] flex-1">{product.name}</p>
+                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] flex-1">{translatedNames[index] || product.name}</p>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full shrink-0">
                     <Eye className="h-3 w-3" />
                     <span>{product.views || 0}</span>
@@ -102,7 +114,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                     onAddToCart?.(product.name, product.image_url);
                   }}
                 >
-                  <ShoppingCart className="mr-1 h-3 w-3 shrink-0" /> <span className="truncate">Adicionar ao Carrinho</span>
+                  <ShoppingCart className="mr-1 h-3 w-3 shrink-0" /> <span className="truncate">{addToCartText}</span>
                 </Button>
               </div>
             </Card>

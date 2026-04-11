@@ -1,5 +1,6 @@
 import type { StoreHomeSection } from "@/hooks/useStoreHomeSections";
 import { Button } from "@/components/ui/button";
+import { useLocalizedText } from "@/hooks/useLocalizedStoreText";
 
 interface Props {
   section: StoreHomeSection;
@@ -11,6 +12,10 @@ interface Props {
 export function HeroBannerSection({ section, primaryColor, buttonColor, buttonTextColor }: Props) {
   const hasImage = !!section.image_url;
   const hasVideo = !!section.video_url;
+  const localizedTitle = useLocalizedText(section.title);
+  const localizedSubtitle = useLocalizedText(section.subtitle);
+  const localizedDescription = useLocalizedText(section.description);
+  const localizedButtonText = useLocalizedText(section.button_text);
 
   return (
     <div className="relative w-full overflow-hidden rounded-xl max-w-7xl mx-auto px-4">
@@ -32,7 +37,7 @@ export function HeroBannerSection({ section, primaryColor, buttonColor, buttonTe
         ) : hasImage ? (
           <img
             src={section.image_url!}
-            alt={section.title || "Banner"}
+            alt={localizedTitle || section.title || "Banner"}
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : null}
@@ -42,17 +47,17 @@ export function HeroBannerSection({ section, primaryColor, buttonColor, buttonTe
 
         {/* Content */}
         <div className="relative z-10 text-center px-6 py-12 text-white max-w-2xl">
-          {section.title && <h1 className="text-3xl md:text-5xl font-bold mb-3 drop-shadow-lg">{section.title}</h1>}
-          {section.subtitle && <p className="text-lg md:text-xl mb-2 drop-shadow">{section.subtitle}</p>}
-          {section.description && <p className="text-sm md:text-base mb-6 opacity-90">{section.description}</p>}
-          {section.button_text && section.button_link && (
+          {localizedTitle && <h1 className="text-3xl md:text-5xl font-bold mb-3 drop-shadow-lg">{localizedTitle}</h1>}
+          {localizedSubtitle && <p className="text-lg md:text-xl mb-2 drop-shadow">{localizedSubtitle}</p>}
+          {localizedDescription && <p className="text-sm md:text-base mb-6 opacity-90">{localizedDescription}</p>}
+          {localizedButtonText && section.button_link && (
             <a href={section.button_link}>
               <Button
                 size="lg"
                 className="text-base px-8"
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
-                {section.button_text}
+                {localizedButtonText}
               </Button>
             </a>
           )}

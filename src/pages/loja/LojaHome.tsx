@@ -49,6 +49,16 @@ export default function LojaHome() {
   const { data: productImagesMap } = usePublicProductImages(productIds);
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
+  const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
+
+  // Build a product id -> translated name map
+  const productNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    products?.forEach((p, i) => {
+      map[p.id] = translatedProductNames[i] || p.name;
+    });
+    return map;
+  }, [products, translatedProductNames]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
@@ -79,6 +89,17 @@ export default function LojaHome() {
     return groups;
   }, [filtered, storeText.other]);
 
+  const primaryColor = settings?.primary_color || "#6d28d9";
+  const buttonColor = settings?.button_color || "#000000";
+  const buttonTextColor = settings?.button_text_color || "#ffffff";
+  const accentColor = settings?.accent_color || "#8b5cf6";
+
+  const activeCategoryName = useMemo(() => {
+    if (!categoriaParam || !categories) return null;
+    const index = categories.findIndex((c: any) => c.id === categoriaParam);
+    return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
+  }, [categoriaParam, categories, translatedCategoryNames]);
+
   if (!prodLoading && (!products || products.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
@@ -90,17 +111,6 @@ export default function LojaHome() {
       </div>
     );
   }
-
-  const primaryColor = settings?.primary_color || "#6d28d9";
-  const buttonColor = settings?.button_color || "#000000";
-  const buttonTextColor = settings?.button_text_color || "#ffffff";
-  const accentColor = settings?.accent_color || "#8b5cf6";
-
-  const activeCategoryName = useMemo(() => {
-    if (!categoriaParam || !categories) return null;
-    const index = categories.findIndex((c: any) => c.id === categoriaParam);
-    return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
-  }, [categoriaParam, categories, translatedCategoryNames]);
 
   return (
     <div className="space-y-6">
@@ -180,7 +190,7 @@ export default function LojaHome() {
         ) : searchTerm.trim() ? (
           <>
             <h2 className="text-lg font-bold">{t.store.searchResultsFor} "{searchTerm}" ({filtered.length})</h2>
-            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} />
+            <ProductGrid products={filtered} formatPrice={formatPrice} cart={cart} ratings={ratings} productImagesMap={productImagesMap} bestSellers={bestSellers} buttonColor={buttonColor} buttonTextColor={buttonTextColor} primaryColor={primaryColor} accentColor={accentColor} wishlist={wishlist} basePath={basePath} onAddToCart={cartNotif.show} maxInstallments={(settings as any)?.max_installments || 12} productNameMap={productNameMap} />
           </>
         ) : (
           Object.entries(groupedByCategory).map(([catName, catProducts]) => (
@@ -201,6 +211,7 @@ export default function LojaHome() {
               basePath={basePath}
               onAddToCart={cartNotif.show}
               maxInstallments={(settings as any)?.max_installments || 12}
+              productNameMap={productNameMap}
             />
           ))
         )}
@@ -236,6 +247,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
   maxInstallments: number;
+  productNameMap?: Record<string, string>;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
   const localizedCategoryName = useLocalizedText(catName);
@@ -263,7 +275,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart, maxInstallments }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart, maxInstallments, productNameMap }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -278,6 +290,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
   maxInstallments: number;
+  productNameMap?: Record<string, string>;
 }) {
   const { t, locale } = useTranslation();
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
@@ -361,7 +374,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 )}
               </div>
               <div className="p-3 text-foreground">
-                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
+                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{productNameMap?.[product.id] || product.name}</p>
                 {r && r.count > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
