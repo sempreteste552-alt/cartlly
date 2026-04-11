@@ -513,8 +513,9 @@ export default function Cerebro() {
 
       {/* Mobile: Tabs for Chat vs Logs. Desktop: Side by side */}
       <Tabs defaultValue="chat" className="flex flex-col lg:hidden">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="chat" className="text-xs gap-1"><Bot className="h-3 w-3" /> Chat</TabsTrigger>
+          <TabsTrigger value="ceo" className="text-xs gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
           <TabsTrigger value="my-pushes" className="text-xs gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
           <TabsTrigger value="client-pushes" className="text-xs gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
         </TabsList>
@@ -529,6 +530,9 @@ export default function Cerebro() {
             handleSend={handleSend}
             scrollRef={scrollRef}
           />
+        </TabsContent>
+        <TabsContent value="ceo" className="mt-2">
+          <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />
         </TabsContent>
         <TabsContent value="my-pushes" className="mt-2">
           <PushLogPanel userId={user?.id} eventType="motivational_push" emptyText="Nenhum push motivacional enviado." />
@@ -554,12 +558,17 @@ export default function Cerebro() {
         </div>
 
         <div className="flex flex-col gap-4 overflow-hidden">
-          <Tabs defaultValue="tasks" className="flex flex-col overflow-hidden">
-            <TabsList className="w-full grid grid-cols-3">
+          <Tabs defaultValue="ceo" className="flex flex-col overflow-hidden">
+            <TabsList className="w-full grid grid-cols-4">
+              <TabsTrigger value="ceo" className="text-[10px] gap-1"><Brain className="h-3 w-3" /> CEO</TabsTrigger>
               <TabsTrigger value="tasks" className="text-[10px] gap-1"><Clock className="h-3 w-3" /> Tarefas</TabsTrigger>
-              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Meus Pushes</TabsTrigger>
+              <TabsTrigger value="my-pushes" className="text-[10px] gap-1"><Bell className="h-3 w-3" /> Pushes</TabsTrigger>
               <TabsTrigger value="client-pushes" className="text-[10px] gap-1"><Users className="h-3 w-3" /> Clientes</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="ceo" className="flex-1 overflow-hidden mt-2">
+              <PushLogPanel userId={user?.id} eventType="ceo_insight" emptyText="Nenhum insight CEO enviado ainda." />
+            </TabsContent>
 
             <TabsContent value="tasks" className="flex-1 overflow-hidden mt-2">
               <Card className="h-full">
