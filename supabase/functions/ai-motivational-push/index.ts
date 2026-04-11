@@ -97,16 +97,16 @@ serve(async (req) => {
       .maybeSingle();
     const customInstructions = aiConfig?.custom_instructions || "";
 
-    // 5. Get last 3 motivational messages to avoid repetition
+    // 5. Get last 15 motivational messages to avoid repetition of themes
     const { data: lastMsgs } = await supabase
       .from("push_logs")
-      .select("body")
+      .select("body, title, created_at")
       .eq("user_id", user_id)
       .eq("event_type", "motivational_push")
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(15);
 
-    const recentMessages = lastMsgs?.map((m: any) => m.body).filter(Boolean).join("\n---\n") || "Nenhuma mensagem anterior.";
+    const recentMessages = lastMsgs?.map((m: any) => `[${m.title}] ${m.body}`).filter(Boolean).join("\n") || "Nenhuma mensagem anterior.";
 
     // 6. Generate AI motivational message
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -115,20 +115,25 @@ serve(async (req) => {
     const hour = nowBrasilia.getHours();
     const greeting = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
+    // Detect day of week in Brazil
+    const dayOfWeek = nowBrasilia.toLocaleDateString("pt-BR", { weekday: "long" });
+
     const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Sua missão é enviar UMA mensagem curta (máx 120 caracteres no body), motivacional e persuasiva para o dono da loja quando ele acessa o painel.
 
 REGRAS:
 - Seja breve, direto, empático e positivo
 - Use o nome do lojista quando possível
-- Varie o tom: às vezes encorajador, às vezes dica rápida, às vezes celebração
+- Varie MUITO o tom e o tema: dica de negócio, celebração, motivação pessoal, insight de vendas, elogio, provocação positiva, etc.
 - Se houver vendas recentes, parabenize
 - Se não houver vendas, motive sem ser negativo
-- NUNCA repita mensagens que já foram enviadas
 - Use emojis com moderação (1-2 máx)
 - Responda APENAS com um JSON: {"title": "...", "body": "..."}
 - O title deve ter no máximo 40 caracteres
 - O body deve ter no máximo 120 caracteres
-- IMPORTANTE: O horário atual em Brasília é ${hour}h. Use a saudação correta: "${greeting}". NUNCA diga "Bom dia" se for tarde/noite/madrugada!
+- IMPORTANTE: O horário atual em Brasília é ${hour}h (${dayOfWeek}). Use a saudação correta: "${greeting}". NUNCA diga "Bom dia" se for tarde/noite/madrugada!
+- PROIBIDO: NÃO use referências ao dia da semana como tema principal (ex: "Sextou", "Segundou", "Domingou"). Evite completamente gírias de dia da semana. Use temas variados sobre o NEGÓCIO, não sobre o calendário.
+- DIVERSIDADE OBRIGATÓRIA: Cada mensagem deve ter um TEMA COMPLETAMENTE DIFERENTE das anteriores. Varie entre: dica de estoque, elogio pessoal, insight de marketing, meta de vendas, celebração de conquista, sugestão de produto, frase inspiradora de empreendedorismo, etc.
+- NUNCA repita palavras-chave, temas, estruturas ou ideias das mensagens anteriores listadas abaixo.
 ${customInstructions ? `\nINSTRUÇÕES PERSONALIZADAS DO LOJISTA (siga rigorosamente):\n${customInstructions}` : ""}`;
 
     const userPrompt = `Gere uma mensagem motivacional para ${tenantName} (loja: ${storeName}).
