@@ -256,3 +256,13 @@ html {
   0% { transform: scaleY(0.4); }
   100% { transform: scaleY(1.2); }
 }
+
+/* Slow spin animation for loading states */
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: slow-spin 2s linear infinite;
+}
