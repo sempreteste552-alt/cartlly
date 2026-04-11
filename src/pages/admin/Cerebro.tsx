@@ -76,6 +76,73 @@ function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; event
   );
 }
 
+function ChatPanel({ chatHistory, sendMessage, pendingActions, confirmAction, input, setInput, handleSend, scrollRef }: {
+  chatHistory: any[]; sendMessage: any; pendingActions: Record<number, any[]>; confirmAction: (i: number, a: number) => void;
+  input: string; setInput: (v: string) => void; handleSend: () => void; scrollRef: React.RefObject<HTMLDivElement>;
+}) {
+  return (
+    <Card className="flex flex-col border-primary/20 bg-primary/5" style={{ height: "min(70vh, 500px)" }}>
+      <CardHeader className="py-2 border-b bg-card">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Bot className="h-4 w-4 text-primary" /> Conversa com Gerente IA
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden p-0 relative">
+        <ScrollArea className="h-full p-3">
+          <div className="space-y-3">
+            {chatHistory.length === 0 && !sendMessage.isPending && (
+              <div className="text-center py-8 space-y-3">
+                <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">Como posso ajudar sua loja?</h3>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
+                    Vendas, notificações, análises e mais.
+                  </p>
+                </div>
+              </div>
+            )}
+            {chatHistory.map((msg: any, i: number) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                  msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-card border shadow-sm rounded-tl-none'
+                }`}>
+                  {msg.content}
+                  {pendingActions[i]?.map((action: any, aidx: number) => (
+                    <div key={aidx} className="mt-2 bg-muted/50 p-2 rounded-lg border border-border/50">
+                      <span className="text-[11px] font-medium leading-tight text-foreground block mb-1">{action.label}</span>
+                      <Button size="sm" className="h-7 w-full text-[10px]" disabled={action.confirmed} onClick={() => confirmAction(i, aidx)}>
+                        {action.confirmed ? "✅ Confirmado" : "Confirmar e Executar"}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {sendMessage.isPending && (
+              <div className="flex justify-start">
+                <div className="bg-card border shadow-sm rounded-2xl px-4 py-3 flex gap-1">
+                  <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce"></span>
+                  <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce"></span>
+                </div>
+              </div>
+            )}
+            <div ref={scrollRef} />
+          </div>
+        </ScrollArea>
+      </CardContent>
+      <CardFooter className="p-2 border-t bg-card">
+        <div className="flex w-full gap-2">
+          <Input placeholder="Fale com a IA..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} className="flex-1 h-9 text-sm" />
+          <Button size="icon" className="h-9 w-9" onClick={handleSend} disabled={sendMessage.isPending || !input.trim()}><Send className="h-4 w-4" /></Button>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
 export default function Cerebro() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
