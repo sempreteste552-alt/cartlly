@@ -20,6 +20,62 @@ interface ChatMessage {
   content: string;
 }
 
+function PushLogPanel({ userId, eventType, emptyText }: { userId?: string; eventType: string; emptyText: string }) {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["push-logs", userId, eventType],
+    queryFn: async () => {
+      let query = supabase
+        .from("push_logs")
+        .select("id, title, body, status, created_at, customer_id, trigger_type, event_type")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (eventType === "motivational_push") {
+        query = query.eq("event_type", "motivational_push");
+      } else {
+        query = query.neq("event_type", "motivational_push");
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!userId,
+    refetchInterval: 30000,
+  });
+
+  return (
+    <Card className="h-full">
+      <CardContent className="px-3 py-3">
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-2">
+            {isLoading ? (
+              <p className="text-xs text-muted-foreground text-center py-4">Carregando...</p>
+            ) : logs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">{emptyText}</p>
+            ) : logs.map(log => (
+              <div key={log.id} className="p-2 rounded-lg border text-xs space-y-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-semibold text-foreground line-clamp-1 flex-1">{log.title}</span>
+                  <Badge variant={log.status === "sent" ? "default" : "secondary"} className="text-[8px] shrink-0">
+                    {log.status === "sent" ? "✅" : log.status}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground line-clamp-2">{log.body}</p>
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR })}</span>
+                  {log.trigger_type && <Badge variant="outline" className="text-[8px]">{log.trigger_type}</Badge>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Cerebro() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
