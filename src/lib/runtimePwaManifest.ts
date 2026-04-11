@@ -64,8 +64,24 @@ function upsertLink(selector: string, attributes: Record<string, string>, href: 
   }
 }
 
+export function clearRuntimePwaManifest() {
+  const existing = document.getElementById(MANIFEST_ID) as HTMLLinkElement | null;
+  if (existing?.href?.startsWith("blob:")) {
+    URL.revokeObjectURL(existing.href);
+  }
+  existing?.remove();
+  _lastAppliedTenantId = undefined;
+}
+
 export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   if (typeof window === "undefined" || typeof document === "undefined") return;
+
+  // Prevent applying manifest without a tenant-specific id
+  if (!options.id) return;
+
+  // Skip if we already applied for this exact tenant
+  if (_lastAppliedTenantId === options.id) return;
+  _lastAppliedTenantId = options.id;
 
   const currentPath = getCurrentPath();
   const startUrl = options.startUrl || currentPath;
