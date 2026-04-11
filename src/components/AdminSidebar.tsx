@@ -5,6 +5,7 @@ import {
   Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle
 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "@/i18n";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,33 +22,9 @@ import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { normalizeDomain } from "@/lib/storeDomain";
 
-const mainItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, isNew: false },
-  { title: "Produtos", url: "/admin/produtos", icon: Package, isNew: false },
-  { title: "Pedidos", url: "/admin/pedidos", icon: ShoppingCart, isNew: false },
-  { title: "Clientes", url: "/admin/clientes", icon: Users, isNew: false },
-  { title: "Cérebro IA", url: "/admin/cerebro", icon: Bot, isNew: true },
-  { title: "Cupons", url: "/admin/cupons", icon: Ticket, isNew: false },
-  { title: "Páginas", url: "/admin/paginas", icon: FileText, isNew: false },
-  { title: "Automação", url: "/admin/automacao", icon: Zap, isNew: true },
-  { title: "Indicações", url: "/admin/indicacoes", icon: Gift, isNew: true },
-  { title: "Políticas", url: "/admin/politicas", icon: Shield, isNew: false },
-  { title: "Fidelidade", url: "/admin/fidelidade", icon: Award, isNew: true },
-  { title: "Lucro Real", url: "/admin/lucro", icon: DollarSign, isNew: true },
-  { title: "Analytics Funil", url: "/admin/analytics", icon: BarChart3, isNew: true },
-  { title: "WhatsApp IA", url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
-];
-
-const configItemsBase = [
-  { title: "Loja", url: "/admin/config", icon: Settings, feature: null },
-  { title: "Pagamentos", url: "/admin/pagamentos", icon: CreditCard, feature: "gateway" as const },
-  { title: "Gateway", url: "/admin/gateway", icon: Zap, feature: "gateway" as const },
-  { title: "Frete", url: "/admin/frete", icon: Truck, feature: null },
-  { title: "Meu Plano", url: "/admin/plano", icon: Crown, feature: null },
-];
-
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
+  const { t } = useTranslation();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,7 +42,30 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     ? `https://${sanitizedCustomDomain}`
     : storeSlug ? `${window.location.origin}/loja/${storeSlug}` : "";
 
-  const configItems = configItemsBase;
+  const mainItems = [
+    { title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard, isNew: false },
+    { title: t.sidebar.products, url: "/admin/produtos", icon: Package, isNew: false },
+    { title: t.sidebar.orders, url: "/admin/pedidos", icon: ShoppingCart, isNew: false },
+    { title: t.sidebar.customers, url: "/admin/clientes", icon: Users, isNew: false },
+    { title: t.sidebar.aiBrain, url: "/admin/cerebro", icon: Bot, isNew: true },
+    { title: t.sidebar.coupons, url: "/admin/cupons", icon: Ticket, isNew: false },
+    { title: t.sidebar.pages, url: "/admin/paginas", icon: FileText, isNew: false },
+    { title: t.sidebar.automation, url: "/admin/automacao", icon: Zap, isNew: true },
+    { title: t.sidebar.referrals, url: "/admin/indicacoes", icon: Gift, isNew: true },
+    { title: t.sidebar.policies, url: "/admin/politicas", icon: Shield, isNew: false },
+    { title: t.sidebar.loyalty, url: "/admin/fidelidade", icon: Award, isNew: true },
+    { title: t.sidebar.profit, url: "/admin/lucro", icon: DollarSign, isNew: true },
+    { title: t.sidebar.analytics, url: "/admin/analytics", icon: BarChart3, isNew: true },
+    { title: t.sidebar.whatsappAi, url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
+  ];
+
+  const configItems = [
+    { title: t.sidebar.store, url: "/admin/config", icon: Settings, feature: null },
+    { title: t.sidebar.payments, url: "/admin/pagamentos", icon: CreditCard, feature: "gateway" as const },
+    { title: t.sidebar.gateway, url: "/admin/gateway", icon: Zap, feature: "gateway" as const },
+    { title: t.sidebar.shipping, url: "/admin/frete", icon: Truck, feature: null },
+    { title: t.sidebar.myPlan, url: "/admin/plano", icon: Crown, feature: null },
+  ];
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
@@ -93,7 +93,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
                 )}
               </div>
-              <span className="text-[11px] text-sidebar-foreground/50">Painel Admin</span>
+              <span className="text-[11px] text-sidebar-foreground/50">{t.sidebar.management}</span>
             </div>
           )}
           {!collapsed && <AdminNotificationsBell />}
@@ -105,7 +105,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            Principal
+            {t.sidebar.management}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -144,7 +144,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            Configurações
+            {t.sidebar.settings}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -199,7 +199,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                     onClick={(e) => { if (!storeUrl) e.preventDefault(); }}
                   >
                     <ExternalLink className="h-4 w-4" />
-                    {!collapsed && <span className="font-medium">Ver Loja</span>}
+                    {!collapsed && <span className="font-medium">{t.sidebar.openStore}</span>}
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -229,7 +229,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
           className="w-full justify-start text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sair</span>}
+          {!collapsed && <span className="ml-2">{t.auth.logout}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
