@@ -247,6 +247,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
   maxInstallments: number;
+  productNameMap?: Record<string, string>;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
   const localizedCategoryName = useLocalizedText(catName);
@@ -274,7 +275,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   );
 }
 
-function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart, maxInstallments }: {
+function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, bestSellers, buttonColor, buttonTextColor, primaryColor, accentColor, wishlist, basePath, onAddToCart, maxInstallments, productNameMap }: {
   products: any[];
   formatPrice: (p: number) => string;
   cart: ReturnType<typeof import("@/hooks/useCart").useCart>;
@@ -289,6 +290,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   basePath: string;
   onAddToCart: (name: string, image?: string | null) => void;
   maxInstallments: number;
+  productNameMap?: Record<string, string>;
 }) {
   const { t, locale } = useTranslation();
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
