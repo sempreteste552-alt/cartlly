@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
 
     let sent = 0;
     let skipped = 0;
-    const dayOfWeek = new Date().getDay();
-    const hour = new Date().getHours();
+    const dayOfWeek = getNowBrasilia().getDay();
+    const hour = getNowBrasilia().getHours();
 
     for (const cart of carts) {
       try {
@@ -288,7 +288,7 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
   const storeMap = await getStoreMap(supabase, storeUserIds);
 
   let sent = 0;
-  const dayOfWeek = new Date().getDay();
+  const dayOfWeek = getNowBrasilia().getDay();
 
   for (const customer of newCustomers) {
     if (alreadySent.has(customer.id) || !customer.auth_user_id) continue;
@@ -313,7 +313,7 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
           customerName: customer.name,
           storeName,
           dayOfWeek,
-          hour: new Date().getHours(),
+          hour: getNowBrasilia().getHours(),
         });
         if (aiMsg) { title = aiMsg.title; body = aiMsg.body; }
       } catch (e) { console.error("AI welcome error:", e); }
@@ -663,8 +663,8 @@ async function handleNewProduct(supabase: any, supabaseUrl: string, lovableApiKe
   const pushUserIds = [...new Set((subs || []).map((s: any) => s.user_id))];
   if (pushUserIds.length === 0) return json({ processed: 0, message: "No push subscriptions" });
 
-  const dayOfWeek = new Date().getDay();
-  const hour = new Date().getHours();
+  const dayOfWeek = getNowBrasilia().getDay();
+  const hour = getNowBrasilia().getHours();
   const priceFormatted = product_price ? `R$ ${Number(product_price).toFixed(2)}` : "";
 
   let title = `🆕 Novidade na ${storeName}!`;
@@ -764,8 +764,8 @@ async function handleNewCoupon(supabase: any, supabaseUrl: string, lovableApiKey
 
   if (lovableApiKey) {
     try {
-      const dayOfWeek = new Date().getDay();
-      const hour = new Date().getHours();
+      const dayOfWeek = getNowBrasilia().getDay();
+      const hour = getNowBrasilia().getHours();
       const aiMsg = await generateAIMessage(lovableApiKey, {
         type: "new_coupon",
         storeName,
@@ -874,8 +874,8 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
         storeName,
         storeCategory,
         productName,
-        dayOfWeek: new Date().getDay(),
-        hour: new Date().getHours(),
+        dayOfWeek: getNowBrasilia().getDay(),
+        hour: getNowBrasilia().getHours(),
       });
       if (aiMsg) { title = aiMsg.title; msgBody = aiMsg.body; }
     } catch (e) { console.error("AI product view error:", e); }
@@ -944,8 +944,8 @@ async function handleProductView10x(supabase: any, supabaseUrl: string, lovableA
         storeName,
         storeCategory,
         productName,
-        dayOfWeek: new Date().getDay(),
-        hour: new Date().getHours(),
+        dayOfWeek: getNowBrasilia().getDay(),
+        hour: getNowBrasilia().getHours(),
         discountCode: "AMO10",
         discountPercentage: 10
       });
