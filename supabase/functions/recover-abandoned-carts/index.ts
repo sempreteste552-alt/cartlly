@@ -189,9 +189,11 @@ Deno.serve(async (req) => {
               storeName,
               storeCategory: store?.category,
               itemNames,
+              itemImages: itemImages.join(", "),
               totalValue: Number(totalValue).toFixed(2),
               itemCount: items.length,
-              reminderCount: cart.reminder_sent_count,
+              reminderCount,
+              urgencyLevel,
               dayOfWeek,
               hour,
               ...discountCtx,
@@ -201,6 +203,7 @@ Deno.serve(async (req) => {
               body = aiMsg.body;
             }
           } catch (e) { console.error("AI error:", e); }
+        }
         }
 
         // GLOBAL DEDUPLICATION & COOLDOWN (5 MINS MINIMUM)
