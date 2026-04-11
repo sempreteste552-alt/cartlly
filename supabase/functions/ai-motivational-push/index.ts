@@ -102,7 +102,9 @@ serve(async (req) => {
 
     // 6. Generate AI motivational message
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const hour = new Date().getHours();
+    // Usa horário de Brasília (UTC-3) para saudação correta
+    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const hour = nowBrasilia.getHours();
     const greeting = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
     const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Sua missão é enviar UMA mensagem curta (máx 120 caracteres no body), motivacional e persuasiva para o dono da loja quando ele acessa o painel.
