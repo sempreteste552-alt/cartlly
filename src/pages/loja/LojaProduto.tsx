@@ -437,7 +437,7 @@ export default function LojaProduto() {
           )}
 
           <div className="flex items-start justify-between gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{localizedProductName || product.name}</h1>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title={uiText.favorite}>
                 <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
