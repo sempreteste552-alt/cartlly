@@ -356,6 +356,19 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
           <Save className="h-3 w-3" />
           {saveMutation.isPending ? "Salvando..." : "Salvar Treinamento"}
         </Button>
+
+        {(aiResponding || aiResponse) && (
+          <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-[11px] font-semibold text-primary mb-1 flex items-center gap-1">
+              <Bot className="h-3 w-3" /> Resposta da IA
+            </p>
+            {aiResponding ? (
+              <p className="text-xs text-muted-foreground animate-pulse">Pensando...</p>
+            ) : (
+              <p className="text-xs whitespace-pre-wrap">{aiResponse}</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
