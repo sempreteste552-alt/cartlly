@@ -28,6 +28,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
+import { useTranslation } from "@/i18n";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -38,6 +39,7 @@ export default function Produtos() {
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
   const { ctx } = useTenantContext();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -172,9 +174,9 @@ export default function Produtos() {
       />
       <div id="products-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Produtos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{t.products.title}</h1>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            Gerencie o catálogo da sua loja
+            {t.products.searchProducts}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -217,7 +219,7 @@ export default function Produtos() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-foreground flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
-              Produtos cadastrados
+              {t.products.title}
             </span>
             <span className="text-sm font-bold text-foreground">
               {limits.currentProducts}/{limits.maxProducts === 99999 ? "∞" : limits.maxProducts}
@@ -286,11 +288,11 @@ export default function Produtos() {
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mt-4 text-lg font-medium text-foreground">Nenhum produto</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Comece adicionando seu primeiro produto</p>
+            <h3 className="mt-4 text-lg font-medium text-foreground">{t.products.noProducts}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t.products.addProduct}</p>
             <Button className="mt-4" size="sm" onClick={() => setFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Adicionar Produto
+              {t.products.addProduct}
             </Button>
           </CardContent>
         </Card>
@@ -300,14 +302,14 @@ export default function Produtos() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">Imagem</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Estoque</TableHead>
+                <TableHead className="w-16">{t.common.image}</TableHead>
+                <TableHead>{t.common.name}</TableHead>
+                <TableHead>{t.common.category}</TableHead>
+                <TableHead>{t.common.price}</TableHead>
+                <TableHead>{t.products.stock}</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Views</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-right">{t.common.actions}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -391,12 +393,12 @@ export default function Produtos() {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover produto?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+            <AlertDialogTitle>{t.products.deleteConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{t.products.deleteConfirm}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Remover</AlertDialogAction>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t.common.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

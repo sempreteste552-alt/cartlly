@@ -23,9 +23,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
+import { useTranslation } from "@/i18n";
 
 export default function Clientes() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "orders" | "spent">("name");
@@ -168,12 +170,12 @@ export default function Clientes() {
     <div className="space-y-6">
       <div id="customers-header" className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Clientes</h1>
-          <p className="text-muted-foreground">Gerencie seus clientes e veja estatísticas de compra</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t.customers.title}</h1>
+          <p className="text-muted-foreground">{t.customers.totalCustomers}</p>
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary" className="px-3 py-1">
-            <Users className="mr-1.5 h-4 w-4" /> {customers?.length || 0} cadastrados
+            <Users className="mr-1.5 h-4 w-4" /> {customers?.length || 0}
           </Badge>
         </div>
       </div>
@@ -207,8 +209,8 @@ export default function Clientes() {
         <Card>
           <CardContent className="p-12 text-center text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-            <h3 className="text-lg font-medium text-foreground">Nenhum cliente encontrado</h3>
-            <p>Tente ajustar sua busca ou filtros</p>
+            <h3 className="text-lg font-medium text-foreground">{t.customers.noCustomers}</h3>
+            <p>{t.common.noResults}</p>
           </CardContent>
         </Card>
       ) : (
@@ -265,13 +267,13 @@ export default function Clientes() {
                     <div className="flex items-center gap-6 justify-between md:justify-end">
                       <div className="flex gap-4 text-right">
                         <div className="space-y-0.5">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Pedidos</p>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{t.sidebar.orders}</p>
                           <div className="flex items-center justify-end gap-1 font-medium">
                             <ShoppingBag className="h-3.5 w-3.5 text-primary" /> {stats.count}
                           </div>
                         </div>
                         <div className="space-y-0.5 border-l pl-4 border-border">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Total Gasto</p>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{t.customers.totalSpent}</p>
                           <p className="font-bold text-foreground">
                             R$ {stats.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                           </p>

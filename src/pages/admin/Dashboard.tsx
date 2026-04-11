@@ -16,6 +16,7 @@ import { TrialBanner } from "@/components/TrialBanner";
 import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
+import { useTranslation } from "@/i18n";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -55,6 +56,7 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const { ctx } = useTenantContext();
@@ -238,11 +240,11 @@ export default function Dashboard() {
       <div id="dashboard-welcome" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Dashboard
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> {t.dashboard.title}
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Visão geral da sua loja</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t.dashboard.welcome}</p>
         </div>
-        {loadingStats && <Badge variant="outline" className="animate-pulse text-xs self-start sm:self-auto">Atualizando...</Badge>}
+        {loadingStats && <Badge variant="outline" className="animate-pulse text-xs self-start sm:self-auto">{t.common.loading}</Badge>}
       </div>
 
       {/* KPI Cards */}

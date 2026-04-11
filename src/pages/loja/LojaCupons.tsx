@@ -3,9 +3,11 @@ import { useLojaContext } from "./LojaLayout";
 import { Copy, Check, Tag, Ticket, Clock, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { usePublicCoupons } from "@/hooks/usePublicCoupons";
+import { useTranslation } from "@/i18n";
 
 export default function LojaCupons() {
   const { storeUserId, settings } = useLojaContext();
+  const { t } = useTranslation();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const { data: coupons, isLoading } = usePublicCoupons(storeUserId);
@@ -44,8 +46,8 @@ export default function LojaCupons() {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Cupons de Desconto</h1>
-            <p className="text-sm text-muted-foreground">Aproveite nossas ofertas especiais</p>
+            <h1 className="text-2xl font-bold text-foreground">{t.store.discountCoupons}</h1>
+            <p className="text-sm text-muted-foreground">{t.coupons.title}</p>
           </div>
           <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
             {coupons?.length || 0} cupom(ns)
@@ -58,7 +60,7 @@ export default function LojaCupons() {
           <div className="h-20 w-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primaryColor}10` }}>
             <Tag className="h-10 w-10 text-muted-foreground/40" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Nenhum cupom disponível</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t.coupons.noCoupons}</h2>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm">
             No momento não temos cupons ativos. Fique de olho, novas promoções podem surgir a qualquer momento!
           </p>
@@ -130,7 +132,7 @@ export default function LojaCupons() {
                       <Copy className="h-5 w-5" />
                     )}
                     <span className="text-[10px] font-semibold">
-                      {copiedCode === c.code ? "Copiado!" : "Copiar"}
+                      {copiedCode === c.code ? t.common.copied : t.common.copy}
                     </span>
                   </button>
                 </div>

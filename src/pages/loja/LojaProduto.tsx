@@ -21,11 +21,13 @@ import { CartNotification, useCartNotification } from "@/components/storefront/C
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StockNotifyButton } from "@/components/storefront/StockNotifyButton";
+import { useTranslation } from "@/i18n";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
 
 export default function LojaProduto() {
   const { id } = useParams();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
   const { data: products, isLoading: productsLoading } = usePublicProducts(storeUserId);
@@ -191,7 +193,7 @@ export default function LojaProduto() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <Loader2 className="h-10 w-10 mx-auto animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mt-4">Carregando produto...</p>
+        <p className="text-sm text-muted-foreground mt-4">{t.common.loading}</p>
       </div>
     );
   }
@@ -200,8 +202,8 @@ export default function LojaProduto() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <Package className="h-16 w-16 mx-auto text-muted-foreground" />
-        <h2 className="text-xl font-bold mt-4">Produto não encontrado</h2>
-        <Link to={basePath} className="text-sm text-muted-foreground hover:underline mt-2 inline-block">Voltar para a loja</Link>
+        <h2 className="text-xl font-bold mt-4">{t.common.noResults}</h2>
+        <Link to={basePath} className="text-sm text-muted-foreground hover:underline mt-2 inline-block">{t.common.back}</Link>
       </div>
     );
   }
@@ -229,7 +231,7 @@ export default function LojaProduto() {
         .pdp-reveal-d5 { animation-delay: 0.45s; }
       `}</style>
       <Link to={basePath} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 pdp-reveal">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
+        <ArrowLeft className="h-4 w-4 mr-1" /> {t.common.back}
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -385,7 +387,7 @@ export default function LojaProduto() {
               disabled={product.stock <= 0 && !(product as any).made_to_order}
               onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
             >
-              <ShoppingCart className="mr-2 h-5 w-5 shrink-0" /> <span className="truncate">Adicionar ao Carrinho</span>
+              <ShoppingCart className="mr-2 h-5 w-5 shrink-0" /> <span className="truncate">{t.store.addToCart}</span>
             </Button>
             {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
               <Button
@@ -494,7 +496,7 @@ export default function LojaProduto() {
       {/* Recently Viewed */}
       {productPageConfig?.enable_recently_viewed && recentlyViewedProducts.length > 0 && (
         <div className="mt-12 pdp-reveal pdp-reveal-d4">
-          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Vistos Recentemente</h2>
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>{t.store.recentlyViewed}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {recentlyViewedProducts.map((p) => (
               <Link
@@ -516,7 +518,7 @@ export default function LojaProduto() {
       {/* Category Best Sellers */}
       {productPageConfig?.enable_category_best_sellers && bestSellersInCategory.length > 0 && (
         <div className="mt-12 pdp-reveal pdp-reveal-d5">
-          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Mais Vendidos da Categoria</h2>
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>{t.store.relatedProducts}</h2>
           <Carousel
             opts={{ align: "start" }}
             className="w-full"
