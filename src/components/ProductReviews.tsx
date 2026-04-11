@@ -148,7 +148,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             {count > 0 && (
               <div className="flex items-center gap-2 mt-1">
                 <StarRating rating={Math.round(average)} size={18} />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {average.toFixed(1)} ({count} {count === 1 ? "avaliação" : "avaliações"})
                 </span>
               </div>
@@ -160,7 +160,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         </div>
 
         {showForm && (
-          <div className="border rounded-lg p-4 mb-6 space-y-3 bg-gray-50">
+          <div className="border rounded-lg p-4 mb-6 space-y-3 bg-muted">
             <p className="font-medium text-sm">Deixe sua avaliação</p>
             <StarRating rating={rating} interactive onChange={setRating} size={28} />
             <Input placeholder="Seu nome *" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
@@ -212,7 +212,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleSubmit} disabled={createReview.isPending || uploading} className="bg-black text-white hover:bg-gray-800">
+              <Button onClick={handleSubmit} disabled={createReview.isPending || uploading} className="bg-foreground text-background hover:bg-foreground/90">
                 {uploading || createReview.isPending ? "Enviando..." : "Enviar"}
               </Button>
               <Button variant="ghost" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -221,16 +221,16 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         )}
 
         {isLoading ? (
-          <p className="text-sm text-gray-400">Carregando avaliações...</p>
+          <p className="text-sm text-muted-foreground">Carregando avaliações...</p>
         ) : !reviews || reviews.length === 0 ? (
-          <p className="text-sm text-gray-400">Nenhuma avaliação ainda. Seja o primeiro!</p>
+          <p className="text-sm text-muted-foreground">Nenhuma avaliação ainda. Seja o primeiro!</p>
         ) : (
           <div className="space-y-4">
             {reviews.map((r) => (
               <div key={r.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-400" />
+                    <User className="h-4 w-4 text-muted-foreground" />
                     <span className="font-medium text-sm">{r.customer_name}</span>
                     {r.is_verified_purchase && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
@@ -238,10 +238,10 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-gray-400">{formatDate(r.created_at)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDate(r.created_at)}</span>
                 </div>
                 <StarRating rating={r.rating} size={16} />
-                {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
+                {r.comment && <p className="text-sm text-muted-foreground mt-2">{r.comment}</p>}
                 {r.image_urls && r.image_urls.length > 0 && (
                   <div className="flex gap-2 mt-3">
                     {r.image_urls.map((url, i) => {
