@@ -1098,8 +1098,19 @@ ${specialDate}
       ? `\n- INCLUA O CUPOM DE DESCONTO "${ctx.code}" (${ctx.percentage}% OFF) na mensagem! Exemplo: "Use o cupom ${ctx.code} e ganhe ${ctx.percentage}% de desconto!"`
       : "";
 
+    const urgencyInstructions: Record<string, string> = {
+      gentil: "Tom GENTIL e sutil. Apenas lembre que os itens estão esperando. Não pressione.",
+      curioso: "Tom CURIOSO e amigável. Pergunte se o cliente precisa de ajuda ou se esqueceu algo.",
+      urgente_com_desconto: "Tom URGENTE mas amigável. Crie senso de oportunidade. Se houver desconto, DESTAQUE!",
+      ultima_chance: "Tom de ÚLTIMA CHANCE. Itens podem esgotar. Se houver desconto, é a MELHOR oferta.",
+      despedida_final: "Tom de DESPEDIDA carinhosa. Última mensagem sobre este carrinho. Se houver desconto, é a oferta FINAL e IRRECUSÁVEL.",
+    };
+    const urgencyNote = urgencyInstructions[ctx.urgencyLevel] || urgencyInstructions.gentil;
+
     systemPrompt = `${baseInstructions}
-Gere uma notificação push ÚNICA para recuperar um carrinho abandonado. 
+Gere uma notificação push ÚNICA para recuperar um carrinho abandonado.
+NÍVEL DE URGÊNCIA: ${ctx.urgencyLevel} (lembrete nº ${(ctx.reminderCount || 0) + 1} de 5)
+INSTRUÇÃO DE TOM: ${urgencyNote}
 ${discountLine}
 ${dateInstructions}`;
 
@@ -1109,6 +1120,7 @@ Produtos: ${ctx.itemNames}
 Valor: R$ ${ctx.totalValue}
 Itens: ${ctx.itemCount}
 Lembrete nº: ${(ctx.reminderCount || 0) + 1}
+Nível de urgência: ${ctx.urgencyLevel}
 Dia: ${dayName}
 Saudação: ${greetings}
 Datas especiais: ${specialDate}
