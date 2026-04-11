@@ -27,6 +27,7 @@ import { CustomerProfileModal } from "@/components/CustomerProfileModal";
 import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotificationsBell";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { PromoBanner } from "@/components/storefront/PromoBanner";
 import { CookieConsent } from "@/components/storefront/CookieConsent";
 import { toast } from "sonner";
@@ -644,6 +645,9 @@ export default function LojaLayout() {
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
             <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
+            {settings?.is_premium_plan && (
+              <LanguageSelector compact className="hidden sm:flex" skipGate />
+            )}
             <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
             <div className="flex items-center gap-1.5">
@@ -915,6 +919,12 @@ export default function LojaLayout() {
               <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
               <span className="text-sm" style={{ color: headerTextColor }}>Alternar tema</span>
             </div>
+
+            {settings?.is_premium_plan && (
+              <div className="px-3 py-2 border-t border-border flex items-center gap-2">
+                <LanguageSelector skipGate />
+              </div>
+            )}
 
             <div className="px-3 py-2">
               <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
