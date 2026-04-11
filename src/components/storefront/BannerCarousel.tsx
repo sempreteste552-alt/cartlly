@@ -7,11 +7,12 @@ interface Banner {
   image_url: string;
   link_url?: string | null;
   media_type?: string;
+  category_id?: string | null;
 }
 
 const ZOOM_DURATION = 8000;
 
-export function BannerCarousel({ banners, mobileFormat = "landscape" }: { banners: Banner[]; mobileFormat?: string }) {
+export function BannerCarousel({ banners, mobileFormat = "landscape", basePath = "" }: { banners: Banner[]; mobileFormat?: string; basePath?: string }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
