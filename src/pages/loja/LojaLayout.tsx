@@ -28,7 +28,7 @@ import { CustomerNotificationsBell } from "@/components/storefront/CustomerNotif
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useTranslation } from "@/i18n";
+import { getLocaleTag, isLocale, useTranslation } from "@/i18n";
 import { PromoBanner } from "@/components/storefront/PromoBanner";
 import { CookieConsent } from "@/components/storefront/CookieConsent";
 import { toast } from "sonner";
@@ -60,7 +60,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
   const { slug } = useParams();
-  const { t } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading, refetch: refetchSettings } = useResolvedPublicStore(slug);
@@ -90,6 +90,52 @@ export default function LojaLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const basePath = slug ? `/loja/${slug}` : "/loja";
+  const localeTag = getLocaleTag(locale);
+  const storeText = {
+    pt: {
+      accessStore: "Acesse uma loja pelo seu endereço específico ou domínio.",
+      storeRemoved: "A loja procurada não existe ou foi removida.",
+      blockedDescription: "Esta loja está temporariamente indisponível. Entre em contato com o suporte.",
+      defaultStore: "Loja",
+      preview: "Preview",
+      whatsappMessage: "Olá! Gostaria de mais informações.",
+      whatsappTitle: "Fale conosco pelo WhatsApp",
+    },
+    en: {
+      accessStore: "Open a store using its specific address or domain.",
+      storeRemoved: "The requested store does not exist or has been removed.",
+      blockedDescription: "This store is temporarily unavailable. Please contact support.",
+      defaultStore: "Store",
+      preview: "Preview",
+      whatsappMessage: "Hello! I would like more information.",
+      whatsappTitle: "Talk to us on WhatsApp",
+    },
+    es: {
+      accessStore: "Acceda a una tienda por su dirección específica o dominio.",
+      storeRemoved: "La tienda solicitada no existe o fue eliminada.",
+      blockedDescription: "Esta tienda está temporalmente indisponible. Póngase en contacto con soporte.",
+      defaultStore: "Tienda",
+      preview: "Vista previa",
+      whatsappMessage: "¡Hola! Me gustaría más información.",
+      whatsappTitle: "Hable con nosotros por WhatsApp",
+    },
+    fr: {
+      accessStore: "Accédez à une boutique via son adresse ou son domaine.",
+      storeRemoved: "La boutique demandée n'existe pas ou a été supprimée.",
+      blockedDescription: "Cette boutique est temporairement indisponible. Veuillez contacter le support.",
+      defaultStore: "Boutique",
+      preview: "Aperçu",
+      whatsappMessage: "Bonjour ! Je voudrais plus d'informations.",
+      whatsappTitle: "Parlez-nous sur WhatsApp",
+    },
+  }[locale];
+
+  useEffect(() => {
+    const nextLocale = settingsBySlug?.language;
+    if (isLocale(nextLocale) && nextLocale !== locale) {
+      setLocale(nextLocale);
+    }
+  }, [settingsBySlug?.language, locale, setLocale]);
 
   // Real-time store status monitoring
   useEffect(() => {
@@ -445,8 +491,8 @@ export default function LojaLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
-          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">Acesse uma loja pelo seu endereço específico ou domínio.</p>
+          <h1 className="text-3xl font-bold">{t.misc.storeNotFound}</h1>
+          <p className="text-muted-foreground">{storeText.accessStore}</p>
         </div>
       </div>
     );
@@ -465,8 +511,8 @@ export default function LojaLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8">
           <div className="text-6xl">🔍</div>
-          <h1 className="text-3xl font-bold">Loja não encontrada</h1>
-          <p className="text-muted-foreground">A loja procurada não existe ou foi removida.</p>
+          <h1 className="text-3xl font-bold">{t.misc.storeNotFound}</h1>
+          <p className="text-muted-foreground">{storeText.storeRemoved}</p>
         </div>
       </div>
     );
@@ -477,8 +523,8 @@ export default function LojaLayout() {
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 p-8 max-w-md">
           <div className="text-6xl">🚫</div>
-          <h1 className="text-3xl font-bold">Loja Indisponível</h1>
-          <p className="text-muted-foreground">Esta loja está temporariamente indisponível. Entre em contato com o suporte.</p>
+          <h1 className="text-3xl font-bold">{t.misc.storeUnavailable}</h1>
+          <p className="text-muted-foreground">{storeText.blockedDescription}</p>
         </div>
       </div>
     );
@@ -496,7 +542,7 @@ export default function LojaLayout() {
     );
   }
 
-  const storeName = settings?.store_name || "Loja";
+  const storeName = settings?.store_name || storeText.defaultStore;
   const primaryColor = settings?.primary_color || "#6d28d9";
   const headerBgColor = isDarkMode ? "#000000" : (settings?.header_bg_color || "#ffffff");
   const headerTextColor = isDarkMode ? "#fafafa" : (settings?.header_text_color || "#000000");
@@ -682,7 +728,7 @@ export default function LojaLayout() {
 
             <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
               {user ? (
-                isAdminPreview ? <span className="text-[10px] font-bold">PREVIEW</span> : <User className="h-5 w-5" />
+                isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
               ) : (
                 <User className="h-5 w-5" />
               )}
@@ -716,7 +762,7 @@ export default function LojaLayout() {
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.price)}</p>
+                          <p className="text-sm text-muted-foreground">{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(item.price)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
                             <span className="text-sm w-6 text-center">{item.quantity}</span>
@@ -734,7 +780,7 @@ export default function LojaLayout() {
                   <div className="mt-4 space-y-3 border-t border-border pt-4">
                     <div className="flex justify-between font-bold text-lg">
                       <span>{t.common.total}</span>
-                      <span>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}</span>
+                      <span>{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(cart.total)}</span>
                     </div>
                     <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
                       {t.store.goToCheckout}
@@ -1100,7 +1146,7 @@ export default function LojaLayout() {
             </Link>
             <button
               onClick={() => {
-                const searchInput = document.querySelector('input[placeholder="Buscar produtos..."]') as HTMLInputElement;
+                const searchInput = document.querySelector(`input[placeholder="${t.store.searchPlaceholder}"]`) as HTMLInputElement;
                 if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
                 else navigate(basePath);
               }}
@@ -1133,7 +1179,7 @@ export default function LojaLayout() {
               style={{ color: user ? primaryColor : undefined }}
             >
               <User className="h-5 w-5" />
-              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? "Preview" : t.store.account) : t.auth.login}</span>
+              <span className="text-[10px] mt-0.5 font-medium">{user ? (isAdminPreview ? storeText.preview : t.store.account) : t.auth.login}</span>
             </button>
           </div>
         </nav>
@@ -1141,7 +1187,7 @@ export default function LojaLayout() {
         {settings?.user_id && (settings as any).is_premium_plan && (
           <StorefrontAIChat
             storeUserId={settings.user_id}
-            storeName={settings.store_name || "Loja"}
+            storeName={settings.store_name || storeText.defaultStore}
             aiName={(settings as any).ai_name}
             aiAvatarUrl={(settings as any).ai_avatar_url}
             primaryColor={settings.primary_color}
@@ -1150,11 +1196,11 @@ export default function LojaLayout() {
 
         {settings?.store_whatsapp && (
           <a
-            href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent("Olá! Gostaria de mais informações.")}`}
+            href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 animate-fade-in bottom-20 md:bottom-6 right-6"
-            title="Fale conosco pelo WhatsApp"
+            title={storeText.whatsappTitle}
             style={{ boxShadow: "0 4px 20px rgba(37, 211, 102, 0.35)" }}
           >
             <img src={whatsappIcon} alt="WhatsApp" className="h-14 w-14 rounded-full drop-shadow-md" />

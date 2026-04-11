@@ -27,8 +27,10 @@ import { Crown, Clock, HelpCircle } from "lucide-react";
 import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { isLocale, useTranslation } from "@/i18n";
 
 export function AdminLayout() {
+  const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
   const { user } = useAuth();
@@ -76,6 +78,19 @@ export function AdminLayout() {
   const isTrial = currentSub?.status === "trial";
   const trialEndsAt = currentSub?.trial_ends_at ? new Date(currentSub.trial_ends_at) : null;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+  const adminText = {
+    pt: { panel: "Painel Administrativo", tutorial: "Reiniciar Tutorial", remaining: "restantes" },
+    en: { panel: "Admin Panel", tutorial: "Restart Tutorial", remaining: "remaining" },
+    es: { panel: "Panel Administrativo", tutorial: "Reiniciar tutorial", remaining: "restantes" },
+    fr: { panel: "Panneau Admin", tutorial: "Redémarrer le tutoriel", remaining: "restants" },
+  }[locale];
+
+  useEffect(() => {
+    const nextLocale = (settings as any)?.language;
+    if (isLocale(nextLocale) && nextLocale !== locale) {
+      setLocale(nextLocale);
+    }
+  }, [settings, locale, setLocale]);
 
   useEffect(() => {
     const sessionKey = `welcome_shown_${user?.id}`;
@@ -167,14 +182,14 @@ export function AdminLayout() {
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-1" />
               <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
-                {(settings as any)?.store_name || "Painel Administrativo"}
+                {(settings as any)?.store_name || adminText.panel}
               </h2>
             </div>
             <div className="flex items-center gap-2">
               {isTrial && trialDaysLeft > 0 && (
                 <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
                   <Clock className="h-3 w-3" />
-                  {trialDaysLeft}d restantes
+                  {trialDaysLeft}d {adminText.remaining}
                 </Badge>
               )}
               <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
@@ -190,7 +205,7 @@ export function AdminLayout() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Reiniciar Tutorial</p>
+                  <p>{adminText.tutorial}</p>
                 </TooltipContent>
               </Tooltip>
               <AdminNotificationsBell />
