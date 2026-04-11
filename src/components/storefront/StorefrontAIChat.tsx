@@ -149,10 +149,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           const data = await res.json();
           if (data && !data.erro) {
             // Send address info back as system context in next message
-            const addressInfo = `Endereço encontrado: ${data.logradouro || ""}, ${data.bairro || ""}, ${data.localidade || ""} - ${data.uf || ""}, CEP: ${cep}`;
-            setMessages(prev => [...prev, { role: "assistant", content: `📍 **Endereço encontrado:**\n\n🏠 **Rua:** ${data.logradouro || "Não encontrada"}\n🏘️ **Bairro:** ${data.bairro || "Não encontrado"}\n🏙️ **Cidade:** ${data.localidade || ""} - ${data.uf || ""}\n\nAgora me informe o **número** da sua casa/apartamento e o **complemento** (se houver).` }]);
+            const addressInfo = `Address found: ${data.logradouro || ""}, ${data.bairro || ""}, ${data.localidade || ""} - ${data.uf || ""}, CEP: ${cep}`;
+            setMessages(prev => [...prev, { role: "assistant", content: `${uiText.addressFound}\n\n${uiText.street} ${data.logradouro || uiText.notFoundF}\n${uiText.neighborhood} ${data.bairro || uiText.notFoundM}\n${uiText.city} ${data.localidade || ""} - ${data.uf || ""}\n\n${uiText.askNumber}` }]);
           } else {
-            setMessages(prev => [...prev, { role: "assistant", content: "❌ CEP não encontrado. Por favor, verifique e tente novamente." }]);
+            setMessages(prev => [...prev, { role: "assistant", content: uiText.cepNotFound }]);
           }
         }
       } catch (e) {
@@ -251,14 +251,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: `🎉 **Pedido criado com sucesso!**\n\n📋 **Número:** #${orderId}\n💰 **Total:** R$ ${total.toFixed(2)}\n📦 **Status:** Pendente\n\n${trackToken ? `🔍 **Rastreie seu pedido:** Use o código \`${trackToken}\` na página de rastreio.` : ""}\n\nObrigado pela sua compra! 🛍️`
+          content: `${uiText.orderCreated}\n\n${uiText.orderNumber} #${orderId}\n${uiText.total} R$ ${total.toFixed(2)}\n${uiText.status} ${uiText.pending}\n\n${trackToken ? `${uiText.trackOrder} \`${trackToken}\` ${uiText.trackingSuffix}` : ""}\n\n${uiText.thanks}`
         }]);
 
-        toast.success("Pedido criado com sucesso!");
+        toast.success(uiText.orderCreatedToast);
         queryClient.invalidateQueries({ queryKey: ["orders"] });
       } catch (e) {
         console.error("Create order error:", e);
-        setMessages(prev => [...prev, { role: "assistant", content: "❌ Erro ao processar o pedido. Tente novamente." }]);
+        setMessages(prev => [...prev, { role: "assistant", content: uiText.orderProcessError }]);
       }
     }
 
@@ -269,7 +269,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         const payload = JSON.parse(paymentMatch[1].trim());
         const orderId = payload.order_id || lastOrderId;
         if (!orderId) {
-          setMessages(prev => [...prev, { role: "assistant", content: "❌ Nenhum pedido encontrado para processar o pagamento." }]);
+          setMessages(prev => [...prev, { role: "assistant", content: uiText.noOrderForPayment }]);
           return;
         }
 
@@ -293,7 +293,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           }
         );
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Erro ao processar pagamento");
+        if (!response.ok) throw new Error(data.error || uiText.paymentError);
 
         const payment = data.payment;
         if (payload.method === "pix" && payment?.pix_qr_code) {
@@ -301,30 +301,32 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           const pixCode = payment.pix_qr_code;
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `✅ **PIX gerado com sucesso!**\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n📋 **Código PIX (copie e cole):**\n\`\`\`\n${pixCode}\n\`\`\`\n\n⏰ O PIX expira em 30 minutos. Após o pagamento, seu pedido será processado automaticamente!`
+            content: `${uiText.pixCreated}\n\n${qrBase64 ? `![QR Code PIX](data:image/png;base64,${qrBase64})` : ""}\n\n${uiText.pixCopy}\n\ \ \ `
+${pixCode}
+\ \ \ `\n\n${uiText.pixExpires}`
           }]);
-          toast.success("PIX gerado! Escaneie o QR Code para pagar.");
+          toast.success(uiText.pixToast);
         } else if (payment?.status === "approved") {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: "✅ **Pagamento aprovado!** Seu pedido está sendo processado. Obrigado! 🎉"
+            content: uiText.paymentApproved
           }]);
-          toast.success("Pagamento aprovado!");
+          toast.success(uiText.paymentApprovedToast);
         } else if (payload.method === "boleto" && payment?.boleto_url) {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `📄 **Boleto gerado com sucesso!**\n\n[📥 Clique aqui para visualizar/baixar o boleto](${payment.boleto_url})\n\n⏰ O boleto vence em 3 dias úteis.`
+            content: `${uiText.boletoCreated}\n\n[${uiText.boletoLink}](${payment.boleto_url})\n\n${uiText.boletoExpires}`
           }]);
-          toast.success("Boleto gerado!");
+          toast.success(uiText.boletoToast);
         } else {
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `💳 Pagamento processado! Status: **${payment?.status || "pendente"}**`
+            content: `${uiText.paymentProcessed} **${payment?.status || uiText.pending}**`
           }]);
         }
       } catch (e) {
         console.error("Payment error:", e);
-        const errorMsg = e instanceof Error ? e.message : "Erro ao processar pagamento";
+        const errorMsg = e instanceof Error ? e.message : uiText.paymentError;
         setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
       }
     }
@@ -367,7 +369,40 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
         if (customerState) {
           const recent = (customerState.metadata as any)?.recent_events || [];
-          enrichedContext = `
+          enrichedContext = locale === "en"
+            ? `
+            CUSTOMER STATUS:
+            - Current state: ${customerState.state}
+            - Interest level: ${customerState.intent_level}
+            - Last viewed product: ${customerState.last_product_name || "None"}
+            - Recent events: ${recent.join(", ")}
+            - Email: ${customer.email}
+            - Phone: ${customer.phone || "Not informed"}
+            Act like a warm sales assistant who understands this customer's preferences and converts their interest into a sale.
+          `
+            : locale === "es"
+            ? `
+            ESTADO DEL CLIENTE:
+            - Estado actual: ${customerState.state}
+            - Nivel de interés: ${customerState.intent_level}
+            - Último producto visto: ${customerState.last_product_name || "Ninguno"}
+            - Eventos recientes: ${recent.join(", ")}
+            - Email: ${customer.email}
+            - Teléfono: ${customer.phone || "No informado"}
+            Actúa como una asesora cálida que entiende lo que le gusta y convierte su interés en venta.
+          `
+            : locale === "fr"
+            ? `
+            STATUT DU CLIENT :
+            - État actuel : ${customerState.state}
+            - Niveau d'intérêt : ${customerState.intent_level}
+            - Dernier produit consulté : ${customerState.last_product_name || "Aucun"}
+            - Événements récents : ${recent.join(", ")}
+            - Email : ${customer.email}
+            - Téléphone : ${customer.phone || "Non renseigné"}
+            Agis comme une conseillère chaleureuse qui comprend ses goûts et transforme son intérêt en achat.
+          `
+            : `
             STATUS DO CLIENTE:
             - Estado atual: ${customerState.state}
             - Nível de interesse: ${customerState.intent_level}
@@ -398,11 +433,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       });
 
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "Erro de conexão" }));
+        const err = await resp.json().catch(() => ({ error: uiText.connectionError }));
         throw new Error(err.error || `Erro ${resp.status}`);
       }
 
-      if (!resp.body) throw new Error("Sem resposta");
+      if (!resp.body) throw new Error(uiText.noResponse);
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -449,7 +484,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         await processActions(assistantSoFar);
       }
     } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : "Erro desconhecido";
+      const errorMsg = e instanceof Error ? e.message : uiText.unknownError;
       setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errorMsg}` }]);
     } finally {
       setIsLoading(false);
