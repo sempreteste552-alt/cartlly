@@ -136,7 +136,6 @@ export default function LojaHome() {
             cart={cart}
             basePath={basePath}
             onAddToCart={cartNotif.show}
-            translatedProductNames={translatedProductNames}
           />
         </>
       )}
