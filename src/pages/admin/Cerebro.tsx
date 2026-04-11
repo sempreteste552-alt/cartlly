@@ -237,6 +237,9 @@ function AITrainingPanel({ userId }: { userId: string }) {
     }
   }, [config]);
 
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiResponding, setAiResponding] = useState(false);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -250,9 +253,33 @@ function AITrainingPanel({ userId }: { userId: string }) {
         }, { onConflict: "user_id" });
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast.success("✅ Treinamento da IA salvo! As próximas mensagens serão personalizadas.");
+    onSuccess: async () => {
+      toast.success("✅ Treinamento salvo! Gerando apresentação da IA...");
       queryClient.invalidateQueries({ queryKey: ["tenant-ai-brain-config"] });
+
+      // Ask the AI to introduce itself based on the new training
+      setAiResponding(true);
+      setAiResponse(null);
+      try {
+        const personalityLabel = PERSONALITY_OPTIONS.find(p => p.value === personality)?.label || personality;
+        const prompt = `O lojista acabou de salvar o treinamento da IA com as seguintes configurações:
+- Nicho: ${niche || "Não definido"}
+- Personalidade: ${personalityLabel}
+- Conhecimento da loja: ${storeKnowledge || "Nenhum"}
+- Instruções extras: ${customInstructions || "Nenhuma"}
+
+Apresente-se brevemente ao lojista mostrando como você vai se comportar a partir de agora. Dê um exemplo curto de como seria uma notificação push para os clientes dele e um exemplo de como você responderia no chat. Seja breve (máximo 4 parágrafos).`;
+
+        const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
+          body: { messages: [{ role: "user", content: prompt }] },
+        });
+        if (error) throw error;
+        setAiResponse(data?.content || "Treinamento salvo com sucesso!");
+      } catch {
+        setAiResponse("✅ Treinamento salvo! A IA já está configurada com suas preferências.");
+      } finally {
+        setAiResponding(false);
+      }
     },
     onError: (err: any) => toast.error("Erro: " + err.message),
   });
@@ -329,6 +356,19 @@ function AITrainingPanel({ userId }: { userId: string }) {
           <Save className="h-3 w-3" />
           {saveMutation.isPending ? "Salvando..." : "Salvar Treinamento"}
         </Button>
+
+        {(aiResponding || aiResponse) && (
+          <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-[11px] font-semibold text-primary mb-1 flex items-center gap-1">
+              <Bot className="h-3 w-3" /> Resposta da IA
+            </p>
+            {aiResponding ? (
+              <p className="text-xs text-muted-foreground animate-pulse">Pensando...</p>
+            ) : (
+              <p className="text-xs whitespace-pre-wrap">{aiResponse}</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
