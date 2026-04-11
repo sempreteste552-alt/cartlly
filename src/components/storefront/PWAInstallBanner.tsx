@@ -177,14 +177,14 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
       {showInstructions && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowInstructions(false)}>
           <div
-            className="bg-white dark:bg-gray-900 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 space-y-5 animate-in slide-in-from-bottom duration-300"
+            className="bg-card w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 space-y-5 animate-in slide-in-from-bottom duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {logoUrl && <img src={logoUrl} alt={name} className="h-10 w-10 rounded-xl object-contain" />}
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-bold text-card-foreground">
                     Instalar {name}
                   </h3>
                   <p className="text-xs text-gray-500">
@@ -202,7 +202,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
                 <Bell className="h-4 w-4" style={{ color: bgColor }} />
                 <p className="text-sm font-medium" style={{ color: bgColor }}>Por que instalar?</p>
               </div>
-              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 pl-6 list-disc">
+              <ul className="text-xs text-muted-foreground space-y-1 pl-6 list-disc">
                 <li>Receba notificações de promoções exclusivas</li>
                 <li>Acesso rápido direto da tela inicial</li>
                 <li>Experiência de app nativo</li>
@@ -260,7 +260,7 @@ function Step({ number, icon, children, color }: { number: number; icon: React.R
       </div>
       <div className="flex items-start gap-2 pt-1">
         {icon}
-        <p className="text-sm text-gray-700 dark:text-gray-300">{children}</p>
+        <p className="text-sm text-muted-foreground">{children}</p>
       </div>
     </div>
   );
