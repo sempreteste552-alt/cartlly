@@ -374,7 +374,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                 )}
               </div>
               <div className="p-3 text-foreground">
-                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{product.name}</p>
+                <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">{productNameMap?.[product.id] || product.name}</p>
                 {r && r.count > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
