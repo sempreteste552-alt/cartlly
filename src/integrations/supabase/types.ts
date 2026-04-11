@@ -3353,6 +3353,7 @@ export type Database = {
           customer_name: string | null
           id: string | null
           image_urls: string[] | null
+          is_verified_purchase: boolean | null
           product_id: string | null
           rating: number | null
         }
@@ -3362,6 +3363,7 @@ export type Database = {
           customer_name?: string | null
           id?: string | null
           image_urls?: string[] | null
+          is_verified_purchase?: never
           product_id?: string | null
           rating?: number | null
         }
@@ -3371,6 +3373,7 @@ export type Database = {
           customer_name?: string | null
           id?: string | null
           image_urls?: string[] | null
+          is_verified_purchase?: never
           product_id?: string | null
           rating?: number | null
         }
