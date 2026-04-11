@@ -49,6 +49,7 @@ export default function LojaHome() {
   const { data: productImagesMap } = usePublicProductImages(productIds);
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
+  const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
@@ -135,6 +136,7 @@ export default function LojaHome() {
             cart={cart}
             basePath={basePath}
             onAddToCart={cartNotif.show}
+            translatedProductNames={translatedProductNames}
           />
         </>
       )}
