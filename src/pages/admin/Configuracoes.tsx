@@ -114,6 +114,7 @@ function GeneralSettingsTab() {
   const updateBannerLink = useUpdateBannerLink();
   const reorderBanners = useReorderBanners();
   const deleteBanner = useDeleteBanner();
+  const { data: categories } = useCategories();
 
   const moveBanner = (index: number, direction: "up" | "down") => {
     if (!banners) return;
