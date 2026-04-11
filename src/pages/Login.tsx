@@ -528,11 +528,11 @@ export default function Login() {
             className="absolute inset-0 animate-spin"
             style={{
               background: "conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8, #3b82f6)",
-              animationDuration: "3s",
+              animationDuration: "8s",
             }}
           />
         </div>
-        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" />
+        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" style={{ animationDuration: "4s" }} />
 
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
