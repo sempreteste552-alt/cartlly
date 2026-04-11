@@ -46,8 +46,9 @@ export function AdminLayout() {
 
   // Dynamic PWA manifest for admin context — only apply when we have confirmed tenant data
   const storeSlug = (settings as any)?.store_slug;
+  const rawStoreName = (settings as any)?.store_name || "";
   const adminName = storeSlug
-    ? `Admin ${(settings as any).store_name}`
+    ? `Painel ${rawStoreName}`.trim()
     : "";
   const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : undefined;
   usePwaManifest({
