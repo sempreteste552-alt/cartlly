@@ -899,7 +899,7 @@ export function AIChatWidget() {
                   <Button
                     key={action.label}
                     variant="outline"
-                    className="justify-start text-xs h-auto py-2.5 px-3 whitespace-normal text-left border-border/60 hover:border-primary/50 hover:bg-primary/5"
+                    className="justify-start text-xs h-auto py-2.5 px-3 whitespace-normal text-left border-border/60 bg-background text-foreground hover:border-primary/50 hover:bg-accent hover:text-accent-foreground"
                     onClick={() => sendMessage(action.prompt)}
                   >
                     {action.label}
@@ -926,8 +926,8 @@ export function AIChatWidget() {
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-                  <div className="prose prose-sm dark:prose-invert break-words max-w-full">
+                <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground border border-border"}`}>
+                  <div className="prose prose-sm max-w-full break-words text-inherit prose-headings:text-inherit prose-p:text-inherit prose-strong:text-inherit prose-li:text-inherit prose-code:text-inherit prose-pre:bg-muted prose-pre:text-foreground prose-a:text-primary">
                     <ReactMarkdown>
                       {cleanContent(getTextContent(msg.content))}
                     </ReactMarkdown>
