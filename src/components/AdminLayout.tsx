@@ -44,14 +44,16 @@ export function AdminLayout() {
   // Block rendering until all tenant-specific data is resolved
   const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
 
-  // Dynamic PWA manifest for admin context
-  const adminName = (settings as any)?.store_name
+  // Dynamic PWA manifest for admin context — only apply when we have confirmed tenant data
+  const storeSlug = (settings as any)?.store_slug;
+  const adminName = storeSlug
     ? `Admin ${(settings as any).store_name}`
-    : "Painel Admin";
+    : "";
+  const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : undefined;
   usePwaManifest({
-    id: (settings as any)?.store_slug ? `cartlly-admin-${(settings as any).store_slug}` : `${window.location.origin}/admin/`,
-    name: adminName,
-    shortName: adminName.slice(0, 12),
+    id: manifestId,
+    name: adminName || undefined,
+    shortName: adminName ? adminName.slice(0, 12) : undefined,
     themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
     iconUrl: themeConfig?.favicon_url || (settings as any)?.favicon_url || (settings as any)?.logo_url || undefined,
     iconVersion: themeConfig?.updated_at || (settings as any)?.updated_at || undefined,
