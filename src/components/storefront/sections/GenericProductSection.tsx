@@ -89,7 +89,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                  <div className="w-full h-full flex items-center justify-center"><span className="text-2xl">📦</span></div>
                 )}
               </div>
               <div className="p-3">
