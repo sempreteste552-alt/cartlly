@@ -57,7 +57,12 @@ serve(async (req) => {
     const chatTone = storeSettings?.ai_chat_tone || "educada";
     
     // 2. Build System Prompt (Enhanced Amiga CEO Mode)
-    const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". 
+    // Saudação baseada no horário de Brasília (UTC-3)
+    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const hourBr = nowBrasilia.getHours();
+    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+
+    const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
 TONALIDADE ATUAL: ${chatTone} (Se for "agressiva", use frases de conversão direta, chamadas para ação fortes e foco total em fechar a venda).
