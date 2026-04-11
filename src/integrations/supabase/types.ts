@@ -2311,6 +2311,7 @@ export type Database = {
       store_banners: {
         Row: {
           active: boolean
+          category_id: string | null
           created_at: string
           id: string
           image_url: string
@@ -2321,6 +2322,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          category_id?: string | null
           created_at?: string
           id?: string
           image_url: string
@@ -2331,6 +2333,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          category_id?: string | null
           created_at?: string
           id?: string
           image_url?: string
@@ -2339,7 +2342,15 @@ export type Database = {
           sort_order?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "store_banners_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       store_domains: {
         Row: {
