@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { I18nProvider } from "@/i18n";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -100,6 +101,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <I18nProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -179,6 +181,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
+      </I18nProvider>
     </ErrorBoundary>
   );
 };

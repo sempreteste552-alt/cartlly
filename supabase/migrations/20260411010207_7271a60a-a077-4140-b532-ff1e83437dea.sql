@@ -1,0 +1,1 @@
+ALTER TABLE public.store_settings ADD COLUMN IF NOT EXISTS language TEXT NOT NULL DEFAULT 'pt';
