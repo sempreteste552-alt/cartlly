@@ -19,6 +19,7 @@ import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
+import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 
 export default function LojaHome() {
   const location = useLocation();
@@ -47,6 +48,7 @@ export default function LojaHome() {
   const { data: ratings } = useAllProductReviews(productIds);
   const { data: productImagesMap } = usePublicProductImages(productIds);
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
+  const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
@@ -96,9 +98,9 @@ export default function LojaHome() {
 
   const activeCategoryName = useMemo(() => {
     if (!categoriaParam || !categories) return null;
-    const cat = categories.find((c: any) => c.id === categoriaParam);
-    return cat?.name || null;
-  }, [categoriaParam, categories]);
+    const index = categories.findIndex((c: any) => c.id === categoriaParam);
+    return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
+  }, [categoriaParam, categories, translatedCategoryNames]);
 
   return (
     <div className="space-y-6">
@@ -108,7 +110,7 @@ export default function LojaHome() {
             {activeCategoryName}
           </Badge>
           <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSearchParams({})}>
-            ✕ Limpar filtro
+            ✕ {locale === "pt" ? "Limpar filtro" : locale === "en" ? "Clear filter" : locale === "es" ? "Limpiar filtro" : "Effacer le filtre"}
           </Button>
         </div>
       )}
@@ -157,7 +159,7 @@ export default function LojaHome() {
                    }
                  }}
               >
-                {cat.name}
+                {translatedCategoryNames[categories.findIndex((item: any) => item.id === cat.id)] || cat.name}
               </Badge>
             ))}
           </div>
@@ -236,6 +238,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
   maxInstallments: number;
 }) {
   const { ref: titleRef, isVisible: titleVisible } = useScrollReveal<HTMLDivElement>();
+  const localizedCategoryName = useLocalizedText(catName);
 
   return (
     <div id={`category-${catName}`}>
@@ -252,7 +255,7 @@ function CategorySection({ catName, catProducts, ...gridProps }: {
             fontFamily: "var(--store-font-heading)"
           }}
         >
-          {catName}
+          {localizedCategoryName || catName}
         </h2>
       </div>
       <ProductGrid products={catProducts} {...gridProps} />

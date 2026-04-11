@@ -11,6 +11,8 @@ import { CustomHTMLSection } from "./sections/CustomHTMLSection";
 import { GenericProductSection } from "./sections/GenericProductSection";
 import { HighlightsSection } from "./sections/HighlightsSection";
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/i18n";
+import { useLocalizedText } from "@/hooks/useLocalizedStoreText";
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(window.innerWidth < 768);
@@ -87,6 +89,14 @@ function DynamicSection({
   buttonTextColor: string;
   onAddToCart?: (name: string, image?: string | null) => void;
 }) {
+  const { locale } = useTranslation();
+  const uiText = {
+    pt: { instagramSoon: "Feed do Instagram em breve" },
+    en: { instagramSoon: "Instagram feed coming soon" },
+    es: { instagramSoon: "Feed de Instagram próximamente" },
+    fr: { instagramSoon: "Flux Instagram bientôt disponible" },
+  }[locale];
+
   switch (section.section_type) {
     case "hero_banner":
       return <HeroBannerSection section={section} primaryColor={primaryColor} buttonColor={buttonColor} buttonTextColor={buttonTextColor} />;
@@ -149,7 +159,7 @@ function DynamicSection({
     case "instagram_feed":
       return (
         <SectionWrapper section={section} primaryColor={primaryColor}>
-          <p className="text-sm text-muted-foreground text-center">Feed do Instagram em breve</p>
+          <p className="text-sm text-muted-foreground text-center">{uiText.instagramSoon}</p>
         </SectionWrapper>
       );
 
@@ -169,16 +179,19 @@ export function SectionWrapper({
   children: React.ReactNode;
   className?: string;
 }) {
+  const localizedTitle = useLocalizedText(section.title);
+  const localizedSubtitle = useLocalizedText(section.subtitle);
+
   return (
     <div className={`max-w-7xl mx-auto px-4 ${className}`}>
-      {(section.title || section.subtitle) && (
+      {(localizedTitle || localizedSubtitle) && (
         <div className="text-center mb-6">
-          {section.title && (
+          {localizedTitle && (
             <h2 className="text-2xl md:text-3xl font-bold" style={{ color: primaryColor, fontFamily: "var(--store-font-heading)" }}>
-              {section.title}
+              {localizedTitle}
             </h2>
           )}
-          {section.subtitle && <p className="text-muted-foreground mt-1">{section.subtitle}</p>}
+          {localizedSubtitle && <p className="text-muted-foreground mt-1">{localizedSubtitle}</p>}
         </div>
       )}
       {children}

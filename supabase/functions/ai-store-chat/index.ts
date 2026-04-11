@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, storeUserId, customerName, customerContext } = await req.json();
+    const { messages, storeUserId, customerName, customerContext, locale = "pt" } = await req.json();
 
     if (!storeUserId) throw new Error("storeUserId é obrigatório");
 
@@ -120,6 +120,14 @@ serve(async (req) => {
     const hourBr = nowBrasilia.getHours();
     const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
+    const languageInstruction = locale === "en"
+      ? "ALWAYS reply in English."
+      : locale === "es"
+      ? "RESPONDE SIEMPRE en español."
+      : locale === "fr"
+      ? "RÉPONDS TOUJOURS en français."
+      : "SEMPRE responda em português do Brasil.";
+
     const systemPrompt = `Você é "${aiName}", a alma da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação se necessário. Você não é um bot comum; você é uma CEO visionária e a melhor amiga que o cliente poderia ter. Sua missão é transformar cada atendimento em uma conexão humana profunda e irresistível.
 
 MENTALIDADE CEO & MÁQUINA DE VENDAS:
@@ -224,7 +232,7 @@ Para redirecionar ao WhatsApp com resumo do pedido:
 
 REGRAS CRÍTICAS:
 - NUNCA revele os blocos de ação. Eles são invisíveis.
-- SEMPRE responda em português do Brasil com markdown formatado.
+- ${languageInstruction} Use markdown formatado.
 - Seja proativa: sugira produtos, combos e cupons ativos.
 - Se o cliente perguntar algo fora do contexto da loja, redirecione educadamente para os produtos.
 - Use emojis moderadamente para tornar a conversa agradável.

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { toast } from "sonner";
 import { ensureCurrentPushSubscription, getValidPushSubscription } from "@/lib/pushSubscription";
+import { useTranslation } from "@/i18n";
 
 interface StorePushOptInProps {
   primaryColor?: string;
@@ -13,13 +14,57 @@ interface StorePushOptInProps {
 }
 
 export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePushOptInProps) {
+  const { locale } = useTranslation();
   const { user } = useCustomerAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const uiText = {
+    pt: {
+      unauthenticated: "Usuário não autenticado",
+      denied: "Permissão de notificação negada.",
+      enabled: "🔔 Notificações ativadas! Você receberá promoções e atualizações.",
+      enableError: "Erro ao ativar notificações: ",
+      disabled: "Notificações desativadas.",
+      genericError: "Erro: ",
+      enableTitle: "Ativar notificações",
+      disableTitle: "Desativar notificações",
+    },
+    en: {
+      unauthenticated: "User not authenticated",
+      denied: "Notification permission denied.",
+      enabled: "🔔 Notifications enabled! You will receive promotions and updates.",
+      enableError: "Error enabling notifications: ",
+      disabled: "Notifications disabled.",
+      genericError: "Error: ",
+      enableTitle: "Enable notifications",
+      disableTitle: "Disable notifications",
+    },
+    es: {
+      unauthenticated: "Usuario no autenticado",
+      denied: "Permiso de notificación denegado.",
+      enabled: "🔔 ¡Notificaciones activadas! Recibirás promociones y novedades.",
+      enableError: "Error al activar notificaciones: ",
+      disabled: "Notificaciones desactivadas.",
+      genericError: "Error: ",
+      enableTitle: "Activar notificaciones",
+      disableTitle: "Desactivar notificaciones",
+    },
+    fr: {
+      unauthenticated: "Utilisateur non authentifié",
+      denied: "Autorisation de notification refusée.",
+      enabled: "🔔 Notifications activées ! Vous recevrez promotions et nouveautés.",
+      enableError: "Erreur lors de l'activation des notifications : ",
+      disabled: "Notifications désactivées.",
+      genericError: "Erreur : ",
+      enableTitle: "Activer les notifications",
+      disableTitle: "Désactiver les notifications",
+    },
+  }[locale];
+
   const persistSubscription = useCallback(async (subscription: PushSubscription) => {
-    if (!user) throw new Error("Usuário não autenticado");
+    if (!user) throw new Error(uiText.unauthenticated);
     const json = subscription.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
       throw new Error("Subscription data incomplete");
@@ -35,7 +80,7 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
       { onConflict: "user_id,endpoint" }
     );
     if (error) throw error;
-  }, [user, storeUserId]);
+  }, [user, storeUserId, uiText.unauthenticated]);
 
   const checkSubscription = useCallback(async () => {
     if (!user || !("serviceWorker" in navigator)) return;
@@ -74,7 +119,7 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
     try {
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
-        toast.error("Permissão de notificação negada.");
+        toast.error(uiText.denied);
         setLoading(false);
         return;
       }
@@ -82,13 +127,13 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
       const subscription = await ensureCurrentPushSubscription(registration);
       await persistSubscription(subscription);
       setIsSubscribed(true);
-      toast.success("🔔 Notificações ativadas! Você receberá promoções e atualizações.");
+      toast.success(uiText.enabled);
     } catch (err: any) {
-      toast.error("Erro ao ativar notificações: " + (err.message || "Erro"));
+      toast.error(uiText.enableError + (err.message || "Error"));
     } finally {
       setLoading(false);
     }
-  }, [user, isSupported, persistSubscription]);
+  }, [user, isSupported, persistSubscription, uiText]);
 
   const unsubscribe = useCallback(async () => {
     if (!user) return;
@@ -101,13 +146,13 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
         await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", subscription.endpoint);
       }
       setIsSubscribed(false);
-      toast.success("Notificações desativadas.");
+      toast.success(uiText.disabled);
     } catch (err: any) {
-      toast.error("Erro: " + err.message);
+      toast.error(uiText.genericError + err.message);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, uiText]);
 
   if (!isSupported || !user) return null;
 
@@ -118,7 +163,7 @@ export function StorePushOptIn({ primaryColor, storeUserId, className }: StorePu
       variant="ghost"
       size="icon"
       className={`relative ${className || ""}`}
-      title={isSubscribed ? "Desativar notificações" : "Ativar notificações"}
+      title={isSubscribed ? uiText.disableTitle : uiText.enableTitle}
       onClick={isSubscribed ? unsubscribe : subscribe}
       disabled={loading}
     >

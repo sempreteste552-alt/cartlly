@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
+import { useTranslation } from "@/i18n";
 
 interface Props {
   storeUserId?: string;
@@ -15,20 +16,28 @@ interface Props {
 }
 
 export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9", headerTextColor, className, isMobileNav }: Props) {
+  const { locale } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useCustomerNotifications(storeUserId);
   const [open, setOpen] = useState(false);
+
+  const uiText = {
+    pt: { now: "agora", alerts: "Avisos", title: "🔔 Notificações", all: "Todas", empty: "Nenhuma notificação" },
+    en: { now: "now", alerts: "Alerts", title: "🔔 Notifications", all: "All", empty: "No notifications" },
+    es: { now: "ahora", alerts: "Avisos", title: "🔔 Notificaciones", all: "Todas", empty: "Sin notificaciones" },
+    fr: { now: "maintenant", alerts: "Alertes", title: "🔔 Notifications", all: "Toutes", empty: "Aucune notification" },
+  }[locale];
 
   const formatDate = (date: string) => {
     const d = new Date(date);
     const now = new Date();
     const diffMin = Math.floor((now.getTime() - d.getTime()) / 60000);
-    if (diffMin < 1) return "agora";
+    if (diffMin < 1) return uiText.now;
     if (diffMin < 60) return `${diffMin}min`;
     const diffH = Math.floor(diffMin / 60);
     if (diffH < 24) return `${diffH}h`;
     const diffD = Math.floor(diffH / 24);
     if (diffD < 7) return `${diffD}d`;
-    return d.toLocaleDateString("pt-BR");
+    return d.toLocaleDateString(locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : locale === "es" ? "es-ES" : "fr-FR");
   };
 
   if (isMobileNav) {
@@ -47,11 +56,11 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
                 </span>
               )}
             </div>
-            <span className="text-[10px] mt-0.5 font-medium">Avisos</span>
+            <span className="text-[10px] mt-0.5 font-medium">{uiText.alerts}</span>
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-80 p-0 mb-2 shadow-xl border-primary/10" align="center" side="top" sideOffset={8}>
-          <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
+          <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} uiText={uiText} />
         </PopoverContent>
       </Popover>
     );
@@ -73,20 +82,20 @@ export function CustomerNotificationsBell({ storeUserId, primaryColor = "#6d28d9
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 shadow-xl border-primary/10" align="end" sideOffset={8}>
-        <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} />
+        <NotificationList notifications={notifications} unreadCount={unreadCount} markAsRead={markAsRead} markAllAsRead={markAllAsRead} formatDate={formatDate} primaryColor={primaryColor} uiText={uiText} />
       </PopoverContent>
     </Popover>
   );
 }
 
-function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRead, formatDate, primaryColor }: any) {
+function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRead, formatDate, primaryColor, uiText }: any) {
   return (
     <>
       <div className="flex items-center justify-between p-3 border-b">
-        <h3 className="font-semibold text-sm">🔔 Notificações</h3>
+        <h3 className="font-semibold text-sm">{uiText.title}</h3>
         {unreadCount > 0 && (
           <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllAsRead}>
-            <CheckCheck className="h-3 w-3 mr-1" /> Todas
+            <CheckCheck className="h-3 w-3 mr-1" /> {uiText.all}
           </Button>
         )}
       </div>
@@ -94,7 +103,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
         {notifications.length === 0 ? (
           <div className="p-6 text-center text-sm text-muted-foreground">
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            Nenhuma notificação
+            {uiText.empty}
           </div>
         ) : (
           notifications.map((n: any) => (

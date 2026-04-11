@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { toast } from "sonner";
 import { ensureCurrentPushSubscription } from "@/lib/pushSubscription";
+import { useTranslation } from "@/i18n";
 
 interface PushPermissionPromptProps {
   storeName?: string;
@@ -14,8 +15,51 @@ interface PushPermissionPromptProps {
 }
 
 export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUserId }: PushPermissionPromptProps) {
+  const { locale } = useTranslation();
   const { user } = useCustomerAuth();
   const [show, setShow] = useState(false);
+  const uiText = {
+    pt: {
+      denied: "Permissão de notificação negada. Ative nas configurações do dispositivo.",
+      enabled: "🔔 Notificações ativadas!",
+      error: "Erro ao ativar notificações: ",
+      title: "🔔 Ative as notificações",
+      description: "Receba promoções, novidades e ofertas exclusivas de",
+      action: "Ativar Notificações",
+      later: "Agora não",
+      storeFallback: "esta loja",
+    },
+    en: {
+      denied: "Notification permission denied. Enable it in your device settings.",
+      enabled: "🔔 Notifications enabled!",
+      error: "Error enabling notifications: ",
+      title: "🔔 Turn on notifications",
+      description: "Receive promotions, news and exclusive offers from",
+      action: "Enable notifications",
+      later: "Not now",
+      storeFallback: "this store",
+    },
+    es: {
+      denied: "Permiso de notificaciones denegado. Actívalo en la configuración del dispositivo.",
+      enabled: "🔔 ¡Notificaciones activadas!",
+      error: "Error al activar notificaciones: ",
+      title: "🔔 Activa las notificaciones",
+      description: "Recibe promociones, novedades y ofertas exclusivas de",
+      action: "Activar notificaciones",
+      later: "Ahora no",
+      storeFallback: "esta tienda",
+    },
+    fr: {
+      denied: "Autorisation de notification refusée. Activez-la dans les réglages de l'appareil.",
+      enabled: "🔔 Notifications activées !",
+      error: "Erreur lors de l'activation des notifications : ",
+      title: "🔔 Activez les notifications",
+      description: "Recevez promotions, nouveautés et offres exclusives de",
+      action: "Activer les notifications",
+      later: "Pas maintenant",
+      storeFallback: "cette boutique",
+    },
+  }[locale];
 
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -36,7 +80,7 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
     try {
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
-        toast.error("Permissão de notificação negada. Ative nas configurações do dispositivo.");
+        toast.error(uiText.denied);
         return;
       }
 
@@ -59,12 +103,12 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
         }
       }
 
-      toast.success("🔔 Notificações ativadas!");
+      toast.success(uiText.enabled);
     } catch (err: any) {
       console.error("Push permission error:", err);
-      toast.error("Erro ao ativar notificações: " + (err.message || "Erro desconhecido"));
+      toast.error(uiText.error + (err.message || "Unknown error"));
     }
-  }, [user]);
+  }, [user, uiText, storeUserId]);
 
   const handleDismiss = () => {
     setShow(false);
@@ -74,7 +118,7 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
   if (!show) return null;
 
   const color = primaryColor || "#6d28d9";
-  const name = storeName || "esta loja";
+  const name = storeName || uiText.storeFallback;
 
   return (
     <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-[70] animate-in slide-in-from-bottom-4 duration-500">
@@ -94,10 +138,10 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm text-foreground">
-                🔔 Ative as notificações
+                 {uiText.title}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Receba promoções, novidades e ofertas exclusivas de {name} em tempo real!
+                 {uiText.description} {name} {locale === "pt" ? "em tempo real!" : locale === "en" ? "in real time!" : locale === "es" ? "en tiempo real!" : "en temps réel !"}
               </p>
             </div>
             <button onClick={handleDismiss} className="p-1 rounded hover:bg-muted shrink-0">
@@ -111,10 +155,10 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
               onClick={handleAllow}
             >
               <Bell className="h-4 w-4 mr-1.5" />
-              Ativar Notificações
+               {uiText.action}
             </Button>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={handleDismiss}>
-              Agora não
+              {uiText.later}
             </Button>
           </div>
         </div>

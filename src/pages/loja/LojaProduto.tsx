@@ -21,13 +21,14 @@ import { CartNotification, useCartNotification } from "@/components/storefront/C
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StockNotifyButton } from "@/components/storefront/StockNotifyButton";
-import { useTranslation } from "@/i18n";
+import { getLocaleTag, useTranslation } from "@/i18n";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
+import { useLocalizedText } from "@/hooks/useLocalizedStoreText";
 
 export default function LojaProduto() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const navigate = useNavigate();
   const { cart, settings, productPageConfig, storeUserId, openCart, basePath } = useLojaContext();
   const { data: products, isLoading: productsLoading } = usePublicProducts(storeUserId);
@@ -38,6 +39,140 @@ export default function LojaProduto() {
   const { trackEvent } = useBehaviorTracking(storeUserId);
 
   const product = products?.find((p) => p.id === id);
+  const localeTag = getLocaleTag(locale);
+  const localizedDescription = useLocalizedText(product?.description);
+  const localizedDeliveryText = useLocalizedText(productPageConfig?.delivery_estimation_text);
+  const localizedSizeGuideContent = useLocalizedText(productPageConfig?.size_guide_content);
+  const uiText = {
+    pt: {
+      copied: "Link copiado!",
+      videos: "Vídeos do produto",
+      favorite: "Favoritar",
+      share: "Compartilhar",
+      realViews: "Visualizações reais deste produto",
+      views: "visualizações",
+      stock: "Em estoque",
+      units: "unid.",
+      hurry: "Corra! Restam apenas",
+      stockSuffix: "unidades em estoque!",
+      whatsappTitle: "Falar pelo WhatsApp",
+      whatsappDesc: "Informe seu nome para enviarmos uma mensagem sobre este produto.",
+      yourName: "Seu nome",
+      yourNamePlaceholder: "Digite seu nome...",
+      sendMessage: "Enviar Mensagem",
+      paymentMethods: "Formas de pagamento",
+      paymentMethodsAlt: "Formas de pagamento aceitas",
+      secureAlt: "Site Seguro - SSL Certificado",
+      deliveryEstimate: "Prazo estimado de entrega:",
+      defaultDelivery: "3-7 dias úteis",
+      sizeGuide: "Guia de Tamanhos",
+      faq: "Dúvidas Frequentes",
+      faqText: "Consulte nossa central de atendimento para mais detalhes.",
+      buyNow: "Comprar Agora",
+      description: "Descrição",
+      bundle: "Compre Junto e Ganhe 5% OFF",
+      bundleAdded: "Combo Adicionado!",
+      addBoth: "Adicionar Ambos ao Carrinho",
+      similar: "Produtos Similares",
+      cash: "à vista",
+    },
+    en: {
+      copied: "Link copied!",
+      videos: "Product videos",
+      favorite: "Favorite",
+      share: "Share",
+      realViews: "Real views for this product",
+      views: "views",
+      stock: "In stock",
+      units: "units",
+      hurry: "Hurry! Only",
+      stockSuffix: "units left in stock!",
+      whatsappTitle: "Talk on WhatsApp",
+      whatsappDesc: "Enter your name so we can send a message about this product.",
+      yourName: "Your name",
+      yourNamePlaceholder: "Type your name...",
+      sendMessage: "Send Message",
+      paymentMethods: "Payment methods",
+      paymentMethodsAlt: "Accepted payment methods",
+      secureAlt: "Secure site - SSL certified",
+      deliveryEstimate: "Estimated delivery time:",
+      defaultDelivery: "3-7 business days",
+      sizeGuide: "Size Guide",
+      faq: "Frequently Asked Questions",
+      faqText: "Check our help center for more details.",
+      buyNow: "Buy Now",
+      description: "Description",
+      bundle: "Buy Together and Get 5% OFF",
+      bundleAdded: "Bundle Added!",
+      addBoth: "Add Both to Cart",
+      similar: "Similar Products",
+      cash: "cash price",
+    },
+    es: {
+      copied: "¡Enlace copiado!",
+      videos: "Videos del producto",
+      favorite: "Favorito",
+      share: "Compartir",
+      realViews: "Visualizaciones reales de este producto",
+      views: "visualizaciones",
+      stock: "En stock",
+      units: "unid.",
+      hurry: "¡Corre! Solo quedan",
+      stockSuffix: "unidades en stock!",
+      whatsappTitle: "Hablar por WhatsApp",
+      whatsappDesc: "Ingresa tu nombre para enviarte un mensaje sobre este producto.",
+      yourName: "Tu nombre",
+      yourNamePlaceholder: "Escribe tu nombre...",
+      sendMessage: "Enviar mensaje",
+      paymentMethods: "Métodos de pago",
+      paymentMethodsAlt: "Métodos de pago aceptados",
+      secureAlt: "Sitio seguro - SSL certificado",
+      deliveryEstimate: "Tiempo estimado de entrega:",
+      defaultDelivery: "3-7 días hábiles",
+      sizeGuide: "Guía de tallas",
+      faq: "Preguntas frecuentes",
+      faqText: "Consulta nuestro centro de ayuda para más detalles.",
+      buyNow: "Comprar ahora",
+      description: "Descripción",
+      bundle: "Compra juntos y gana 5% OFF",
+      bundleAdded: "¡Combo añadido!",
+      addBoth: "Añadir ambos al carrito",
+      similar: "Productos similares",
+      cash: "al contado",
+    },
+    fr: {
+      copied: "Lien copié !",
+      videos: "Vidéos du produit",
+      favorite: "Favori",
+      share: "Partager",
+      realViews: "Vues réelles de ce produit",
+      views: "vues",
+      stock: "En stock",
+      units: "u.",
+      hurry: "Dépêchez-vous ! Il ne reste que",
+      stockSuffix: "articles en stock !",
+      whatsappTitle: "Parler sur WhatsApp",
+      whatsappDesc: "Saisissez votre nom pour que nous puissions envoyer un message sur ce produit.",
+      yourName: "Votre nom",
+      yourNamePlaceholder: "Saisissez votre nom...",
+      sendMessage: "Envoyer le message",
+      paymentMethods: "Modes de paiement",
+      paymentMethodsAlt: "Modes de paiement acceptés",
+      secureAlt: "Site sécurisé - SSL certifié",
+      deliveryEstimate: "Délai de livraison estimé :",
+      defaultDelivery: "3-7 jours ouvrés",
+      sizeGuide: "Guide des tailles",
+      faq: "Questions fréquentes",
+      faqText: "Consultez notre centre d'aide pour plus de détails.",
+      buyNow: "Acheter maintenant",
+      description: "Description",
+      bundle: "Achetez ensemble et obtenez 5% OFF",
+      bundleAdded: "Pack ajouté !",
+      addBoth: "Ajouter les deux au panier",
+      similar: "Produits similaires",
+      cash: "au comptant",
+    },
+  }[locale];
 
   const { allImages, allVideos } = useMemo(() => {
     const images: string[] = [];
@@ -141,7 +276,11 @@ export default function LojaProduto() {
     return groups;
   }, [variants]);
 
-  const variantTypeLabels: Record<string, string> = { color: "Cor", size: "Tamanho", model: "Modelo" };
+  const variantTypeLabels: Record<string, string> = {
+    color: locale === "pt" ? "Cor" : locale === "en" ? "Color" : locale === "es" ? "Color" : "Couleur",
+    size: locale === "pt" ? "Tamanho" : locale === "en" ? "Size" : locale === "es" ? "Talla" : "Taille",
+    model: locale === "pt" ? "Modelo" : locale === "en" ? "Model" : locale === "es" ? "Modelo" : "Modèle",
+  };
 
   const effectivePrice = useMemo(() => {
     if (!product) return 0;
@@ -171,7 +310,7 @@ export default function LojaProduto() {
   }, [effectivePrice, buyTogetherProduct]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+    new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -181,7 +320,7 @@ export default function LojaProduto() {
       } catch {}
     } else {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copiado!");
+      toast.success(uiText.copied);
     }
   };
 
@@ -272,7 +411,7 @@ export default function LojaProduto() {
           {allVideos.length > 0 && (
             <div className="space-y-2 pt-2">
               <p className="text-sm font-medium flex items-center gap-1.5 text-foreground">
-                <Video className="h-4 w-4" /> Vídeos do produto
+                <Video className="h-4 w-4" /> {uiText.videos}
               </p>
               <div className="space-y-3">
                 {allVideos.map((videoUrl, i) => (
@@ -299,10 +438,10 @@ export default function LojaProduto() {
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{product.name}</h1>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title="Favoritar">
+              <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title={uiText.favorite}>
                 <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleShare} title="Compartilhar">
+              <Button variant="ghost" size="icon" onClick={handleShare} title={uiText.share}>
                 <Share2 className="h-5 w-5" />
               </Button>
             </div>
@@ -314,19 +453,19 @@ export default function LojaProduto() {
               {(() => {
                 const maxInst = (settings as any)?.max_installments || 12;
                 return maxInst > 1 ? (
-                  <p className="text-sm text-emerald-500 dark:text-emerald-400">
+                   <p className="text-sm text-emerald-500 dark:text-emerald-400">
                     ou {maxInst}x de {formatPrice(effectivePrice / maxInst)} sem juros
                   </p>
                 ) : (
-                  <p className="text-sm text-emerald-500 dark:text-emerald-400">à vista</p>
+                   <p className="text-sm text-emerald-500 dark:text-emerald-400">{uiText.cash}</p>
                 );
               })()}
             </div>
             
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full border border-border shadow-sm animate-pulse" title="Visualizações reais deste produto">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full border border-border shadow-sm animate-pulse" title={uiText.realViews}>
               <Eye className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-semibold text-muted-foreground">
-                {product.views || 0} visualizações
+                {product.views || 0} {uiText.views}
               </span>
             </div>
           </div>
@@ -363,7 +502,7 @@ export default function LojaProduto() {
           )}
 
           {product.stock > 0 ? (
-            <Badge className="bg-green-100 text-green-800">Em estoque ({product.stock} unid.)</Badge>
+            <Badge className="bg-green-100 text-green-800">{uiText.stock} ({product.stock} {uiText.units})</Badge>
           ) : (product as any).made_to_order ? (
             <Badge style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>📦 Sob encomenda</Badge>
           ) : (
@@ -376,7 +515,7 @@ export default function LojaProduto() {
           {productPageConfig?.enable_stock_urgency && product.stock > 0 && product.stock <= (productPageConfig?.stock_urgency_threshold || 5) && (
             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 animate-pulse">
               <AlertTriangle className="h-4 w-4" />
-              <p className="text-sm font-bold">Corra! Restam apenas {product.stock} unidades em estoque!</p>
+              <p className="text-sm font-bold">{uiText.hurry} {product.stock} {uiText.stockSuffix}</p>
             </div>
           )}
 
@@ -406,18 +545,18 @@ export default function LojaProduto() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
-                  Falar pelo WhatsApp
+                  {uiText.whatsappTitle}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Informe seu nome para enviarmos uma mensagem sobre este produto.
+                  {uiText.whatsappDesc}
                 </p>
                 <div className="space-y-2">
-                  <Label htmlFor="customer-name">Seu nome</Label>
+                  <Label htmlFor="customer-name">{uiText.yourName}</Label>
                   <Input
                     id="customer-name"
-                    placeholder="Digite seu nome..."
+                    placeholder={uiText.yourNamePlaceholder}
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                   />
@@ -448,7 +587,7 @@ export default function LojaProduto() {
                     setCustomerName("");
                   }}
                 >
-                  <MessageCircle className="mr-2 h-4 w-4" /> Enviar Mensagem
+                    <MessageCircle className="mr-2 h-4 w-4" /> {uiText.sendMessage}
                 </Button>
               </div>
             </DialogContent>
@@ -458,10 +597,10 @@ export default function LojaProduto() {
 
           {productPageConfig?.enable_trust_badges && (
             <div className="flex flex-col items-center gap-4 py-4 pdp-reveal pdp-reveal-d3">
-              <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
-              <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
+              <p className="text-sm font-semibold text-muted-foreground">{uiText.paymentMethods}</p>
+              <img src={paymentMethodsImg} alt={uiText.paymentMethodsAlt} className="w-full max-w-sm object-contain" />
               <div className="bg-muted/50 rounded-xl p-3 border border-border">
-                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-md object-contain" />
+                <img src={securityBadgesImg} alt={uiText.secureAlt} className="w-full max-w-md object-contain" />
               </div>
             </div>
           )}
@@ -469,7 +608,7 @@ export default function LojaProduto() {
           {productPageConfig?.enable_delivery_estimation && (
             <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-700">
               <Truck className="h-4 w-4" />
-              <p className="text-sm">Prazo estimado de entrega: <span className="font-bold">{productPageConfig.delivery_estimation_text || "3-7 dias úteis"}</span></p>
+              <p className="text-sm">{uiText.deliveryEstimate} <span className="font-bold">{localizedDeliveryText || uiText.defaultDelivery}</span></p>
             </div>
           )}
 
@@ -477,9 +616,9 @@ export default function LojaProduto() {
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Ruler className="h-4 w-4" />
-                <h4 className="text-sm font-bold">Guia de Tamanhos</h4>
+                <h4 className="text-sm font-bold">{uiText.sizeGuide}</h4>
               </div>
-              <p className="text-sm text-slate-600 whitespace-pre-wrap">{productPageConfig.size_guide_content}</p>
+              <p className="text-sm text-slate-600 whitespace-pre-wrap">{localizedSizeGuideContent}</p>
             </div>
           )}
 
@@ -487,9 +626,9 @@ export default function LojaProduto() {
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <HelpCircle className="h-4 w-4" />
-                <h4 className="text-sm font-bold">Dúvidas Frequentes</h4>
+                <h4 className="text-sm font-bold">{uiText.faq}</h4>
               </div>
-              <p className="text-xs text-slate-500 italic">Consulte nossa central de atendimento para mais detalhes.</p>
+              <p className="text-xs text-slate-500 italic">{uiText.faqText}</p>
         </div>
       )}
 
@@ -561,7 +700,7 @@ export default function LojaProduto() {
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
                 onClick={() => { cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url }); cartNotif.show(product.name, product.image_url); }}
               >
-                <ShoppingCart className="mr-2 h-4 w-4" /> Comprar Agora
+                <ShoppingCart className="mr-2 h-4 w-4" /> {uiText.buyNow}
               </Button>
             </div>
           </div>
@@ -572,8 +711,8 @@ export default function LojaProduto() {
             <>
               <Separator />
               <div>
-                <h3 className="font-bold mb-2">Descrição</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p>
+              <h3 className="font-bold mb-2">{uiText.description}</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{localizedDescription}</p>
               </div>
             </>
           )}
@@ -582,7 +721,7 @@ export default function LojaProduto() {
             <div className="mt-6 p-4 border border-primary/20 rounded-xl bg-primary/5 space-y-4">
               <h3 className="font-bold flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-primary" />
-                Compre Junto e Ganhe 5% OFF
+                {uiText.bundle}
               </h3>
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2 flex-1">
@@ -605,11 +744,11 @@ export default function LojaProduto() {
                 onClick={() => {
                   cart.addItem({ id: product.id, name: product.name, price: effectivePrice, image_url: product.image_url });
                   cart.addItem({ id: buyTogetherProduct.id, name: buyTogetherProduct.name, price: buyTogetherProduct.price, image_url: buyTogetherProduct.image_url });
-                  cartNotif.show("Combo Adicionado!", product.image_url);
+                   cartNotif.show(uiText.bundleAdded, product.image_url);
                   openCart();
                 }}
               >
-                Adicionar Ambos ao Carrinho
+                {uiText.addBoth}
               </Button>
             </div>
           )}
@@ -623,7 +762,7 @@ export default function LojaProduto() {
       {/* Similar Products Carousel */}
       {productPageConfig?.enable_related_products !== false && similarProducts.length > 0 && (
         <div className="mt-12">
-          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>Produtos Similares</h2>
+          <h2 className="text-xl font-bold mb-4 pb-2" style={{ borderBottom: `2px solid ${primaryColor}20` }}>{uiText.similar}</h2>
           <Carousel
             opts={{ align: "start", loop: similarProducts.length > 4 }}
             plugins={[Autoplay({ delay: 3000, stopOnInteraction: true, stopOnMouseEnter: true })]}

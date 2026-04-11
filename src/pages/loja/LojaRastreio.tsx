@@ -24,7 +24,7 @@ const STATUS_ICONS: Record<string, any> = {
 const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entregue"];
 
 export default function LojaRastreio() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { orderId: urlOrderId } = useParams();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(urlOrderId || "");
@@ -35,7 +35,66 @@ export default function LojaRastreio() {
   const [notFound, setNotFound] = useState(false);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
+    new Intl.NumberFormat(locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : locale === "es" ? "es-ES" : "fr-FR", { style: "currency", currency: "BRL" }).format(price);
+
+  const uiText = {
+    pt: {
+      searchPlaceholder: "Código do pedido (ex: a1b2c3d4)",
+      order: "Pedido",
+      cancelled: "Pedido Cancelado",
+      realtime: "Atualização em tempo real",
+      items: "Itens do Pedido",
+      shipping: "Frete",
+      standard: "Padrão",
+      discount: "Desconto",
+      history: "Histórico",
+      details: "Dados do Pedido",
+      customer: "Cliente",
+      address: "Endereço",
+    },
+    en: {
+      searchPlaceholder: "Order code (e.g. a1b2c3d4)",
+      order: "Order",
+      cancelled: "Order Cancelled",
+      realtime: "Real-time updates",
+      items: "Order Items",
+      shipping: "Shipping",
+      standard: "Standard",
+      discount: "Discount",
+      history: "History",
+      details: "Order Details",
+      customer: "Customer",
+      address: "Address",
+    },
+    es: {
+      searchPlaceholder: "Código del pedido (ej: a1b2c3d4)",
+      order: "Pedido",
+      cancelled: "Pedido cancelado",
+      realtime: "Actualización en tiempo real",
+      items: "Artículos del pedido",
+      shipping: "Envío",
+      standard: "Estándar",
+      discount: "Descuento",
+      history: "Historial",
+      details: "Datos del pedido",
+      customer: "Cliente",
+      address: "Dirección",
+    },
+    fr: {
+      searchPlaceholder: "Code de commande (ex : a1b2c3d4)",
+      order: "Commande",
+      cancelled: "Commande annulée",
+      realtime: "Mise à jour en temps réel",
+      items: "Articles de la commande",
+      shipping: "Livraison",
+      standard: "Standard",
+      discount: "Remise",
+      history: "Historique",
+      details: "Détails de la commande",
+      customer: "Client",
+      address: "Adresse",
+    },
+  }[locale];
 
   const fetchOrder = async (id: string) => {
     setLoading(true);
@@ -116,7 +175,7 @@ export default function LojaRastreio() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Código do pedido (ex: a1b2c3d4)"
+                placeholder={uiText.searchPlaceholder}
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -146,7 +205,7 @@ export default function LojaRastreio() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Pedido #{order.id.slice(0, 8)}</CardTitle>
+                <CardTitle className="text-base">{uiText.order} #{order.id.slice(0, 8)}</CardTitle>
                 <Badge variant={isCancelled ? "destructive" : "secondary"} className="gap-1">
                   <span className={`h-2 w-2 rounded-full ${ORDER_STATUS_MAP[order.status as OrderStatus]?.color || "bg-gray-400"}`} />
                   {ORDER_STATUS_MAP[order.status as OrderStatus]?.label || order.status}
@@ -157,7 +216,7 @@ export default function LojaRastreio() {
               {isCancelled ? (
                 <div className="text-center py-4">
                   <XCircle className="h-12 w-12 text-red-400 mx-auto" />
-                  <p className="mt-2 font-medium text-red-600">Pedido Cancelado</p>
+                  <p className="mt-2 font-medium text-red-600">{uiText.cancelled}</p>
                 </div>
               ) : (
                 <div className="flex items-center justify-between relative px-4">
@@ -203,12 +262,12 @@ export default function LojaRastreio() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
             </span>
-            Atualização em tempo real
+            {uiText.realtime}
           </div>
 
           {/* Order Items */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Itens do Pedido</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{uiText.items}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
@@ -227,13 +286,13 @@ export default function LojaRastreio() {
               <Separator />
               {(order.shipping_cost > 0) && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Frete ({order.shipping_method || "Padrão"})</span>
+                  <span className="text-muted-foreground">{uiText.shipping} ({order.shipping_method || uiText.standard})</span>
                   <span>{formatPrice(order.shipping_cost)}</span>
                 </div>
               )}
               {(order.discount_amount > 0) && (
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Desconto {order.coupon_code && `(${order.coupon_code})`}</span>
+                  <span>{uiText.discount} {order.coupon_code && `(${order.coupon_code})`}</span>
                   <span>-{formatPrice(order.discount_amount)}</span>
                 </div>
               )}
@@ -247,7 +306,7 @@ export default function LojaRastreio() {
           {/* Timeline */}
           {history.length > 0 && (
             <Card>
-              <CardHeader><CardTitle className="text-base">Histórico</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-base">{uiText.history}</CardTitle></CardHeader>
               <CardContent>
                 <div className="relative pl-6">
                   <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-muted" />
@@ -278,12 +337,12 @@ export default function LojaRastreio() {
 
           {/* Customer Info */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Dados do Pedido</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{uiText.details}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Cliente</span><span>{order.customer_name}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">{uiText.customer}</span><span>{order.customer_name}</span></div>
               {order.customer_phone && <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{order.customer_phone}</span></div>}
               {order.customer_email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{order.customer_email}</span></div>}
-              {order.customer_address && <div className="flex justify-between"><span className="text-muted-foreground">Endereço</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
+              {order.customer_address && <div className="flex justify-between"><span className="text-muted-foreground">{uiText.address}</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
               <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span></div>
             </CardContent>
           </Card>
