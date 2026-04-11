@@ -20,6 +20,7 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { StockNotifyButton } from "@/components/storefront/StockNotifyButton";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
 
@@ -364,7 +365,10 @@ export default function LojaProduto() {
           ) : (product as any).made_to_order ? (
             <Badge style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>📦 Sob encomenda</Badge>
           ) : (
-            <Badge variant="destructive">Esgotado</Badge>
+            <div className="space-y-2">
+              <Badge variant="destructive">Esgotado</Badge>
+              <StockNotifyButton productId={product.id} productName={product.name} storeUserId={storeUserId!} primaryColor={primaryColor} />
+            </div>
           )}
           
           {productPageConfig?.enable_stock_urgency && product.stock > 0 && product.stock <= (productPageConfig?.stock_urgency_threshold || 5) && (

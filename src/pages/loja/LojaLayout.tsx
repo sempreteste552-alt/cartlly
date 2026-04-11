@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +8,9 @@ import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
-
+import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -227,6 +228,7 @@ export default function LojaLayout() {
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
+  const { data: smartSearchProducts } = usePublicProducts(settings?.user_id);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
@@ -548,17 +550,15 @@ export default function LojaLayout() {
             </Link>
 
             <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" style={{ color: headerTextColor }} />
-                <Input
-                  placeholder="Buscar produtos..."
-                  className="pl-9 bg-secondary border-border rounded-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(basePath)}
-                  style={{ "--tw-ring-color": primaryColor } as any}
-                />
-              </div>
+              <SmartSearchBar
+                products={smartSearchProducts}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
+                primaryColor={primaryColor}
+                storeUserId={settings?.user_id}
+                className="flex-1"
+              />
             </div>
 
             <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
@@ -672,15 +672,14 @@ export default function LojaLayout() {
           </div>
 
           <div className="sm:hidden px-4 pb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                className="pl-9 bg-secondary border-border rounded-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            <SmartSearchBar
+              products={smartSearchProducts}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
+              primaryColor={primaryColor}
+              storeUserId={settings?.user_id}
+            />
           </div>
 
           {mobileMenu && (

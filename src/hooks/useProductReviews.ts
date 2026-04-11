@@ -11,6 +11,7 @@ export interface ProductReview {
   comment: string | null;
   image_urls: string[];
   created_at: string;
+  is_verified_purchase?: boolean;
 }
 
 export function useProductReviews(productId: string | undefined) {
@@ -25,7 +26,7 @@ export function useProductReviews(productId: string | undefined) {
         .eq("product_id", productId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data as any[]).map((d) => ({ ...d, customer_email: null })) as ProductReview[];
+      return (data as any[]).map((d) => ({ ...d, customer_email: null, is_verified_purchase: d.is_verified_purchase ?? false })) as ProductReview[];
     },
   });
 }
