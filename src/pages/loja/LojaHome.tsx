@@ -89,6 +89,17 @@ export default function LojaHome() {
     return groups;
   }, [filtered, storeText.other]);
 
+  const primaryColor = settings?.primary_color || "#6d28d9";
+  const buttonColor = settings?.button_color || "#000000";
+  const buttonTextColor = settings?.button_text_color || "#ffffff";
+  const accentColor = settings?.accent_color || "#8b5cf6";
+
+  const activeCategoryName = useMemo(() => {
+    if (!categoriaParam || !categories) return null;
+    const index = categories.findIndex((c: any) => c.id === categoriaParam);
+    return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
+  }, [categoriaParam, categories, translatedCategoryNames]);
+
   if (!prodLoading && (!products || products.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4">
@@ -100,17 +111,6 @@ export default function LojaHome() {
       </div>
     );
   }
-
-  const primaryColor = settings?.primary_color || "#6d28d9";
-  const buttonColor = settings?.button_color || "#000000";
-  const buttonTextColor = settings?.button_text_color || "#ffffff";
-  const accentColor = settings?.accent_color || "#8b5cf6";
-
-  const activeCategoryName = useMemo(() => {
-    if (!categoriaParam || !categories) return null;
-    const index = categories.findIndex((c: any) => c.id === categoriaParam);
-    return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
-  }, [categoriaParam, categories, translatedCategoryNames]);
 
   return (
     <div className="space-y-6">
