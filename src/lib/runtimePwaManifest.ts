@@ -1,5 +1,6 @@
 const MANIFEST_ID = "runtime-pwa-manifest";
 const APPLE_ICON_SIZES = ["180x180", "167x167", "152x152", "120x120"];
+let _lastAppliedTenantId: string | undefined;
 
 const DEFAULT_ICONS = [
   { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
