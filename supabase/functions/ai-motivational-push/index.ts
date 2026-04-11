@@ -104,10 +104,14 @@ serve(async (req) => {
 
     const { data: aiConfig } = await supabase
       .from("tenant_ai_brain_config")
-      .select("custom_instructions")
+      .select("custom_instructions, niche, personality, store_knowledge")
       .eq("user_id", user_id)
       .maybeSingle();
     const customInstructions = aiConfig?.custom_instructions || "";
+    const storeNiche = aiConfig?.niche || "";
+    const storeKnowledge = typeof aiConfig?.store_knowledge === "object" && aiConfig?.store_knowledge
+      ? (aiConfig.store_knowledge as any).description || ""
+      : "";
 
     const { data: lastMsgs } = await supabase
       .from("push_logs")

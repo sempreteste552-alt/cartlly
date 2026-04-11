@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: stores, error: storeErr } = await supabase
       .from("store_settings")
-      .select("user_id, store_name, category");
+      .select("user_id, store_name, store_category");
 
     if (storeErr) throw storeErr;
     if (!stores || stores.length === 0) {
@@ -52,11 +52,23 @@ Deno.serve(async (req) => {
       try {
         const userId = store.user_id;
 
-        const { data: insights, error: insightErr } = await supabase.rpc("get_store_rich_insights", { p_user_id: userId });
+        const [
+          { data: insights, error: insightErr },
+          { data: aiConfig },
+        ] = await Promise.all([
+          supabase.rpc("get_store_rich_insights", { p_user_id: userId }),
+          supabase.from("tenant_ai_brain_config").select("custom_instructions, niche, personality, store_knowledge").eq("user_id", userId).maybeSingle(),
+        ]);
         if (insightErr) {
           console.error(`[ai-ceo-brain] Insights error for ${userId}:`, insightErr);
           continue;
         }
+
+        const storeNiche = aiConfig?.niche || store.store_category || "Loja virtual";
+        const storeKnowledge = typeof aiConfig?.store_knowledge === "object" && aiConfig?.store_knowledge
+          ? (aiConfig.store_knowledge as any).description || ""
+          : "";
+        const customInstructions = aiConfig?.custom_instructions || "";
 
         const { data: previousNotifs } = await supabase
           .from("admin_notifications")
@@ -77,7 +89,10 @@ Deno.serve(async (req) => {
         const frequentWords = [...new Set(historyTexts.flatMap((text) => tokenizeMeaningful(text)))].slice(0, 60).join(", ") || "nenhuma";
 
         const systemPrompt = `Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
-Personalidade: Amigável, analítica, focada em resultados e proativa.
+
+NICHO DA LOJA: ${storeNiche}
+${storeKnowledge ? `\nCONHECIMENTO DA LOJA:\n${storeKnowledge}\n` : ""}
+${customInstructions ? `\nINSTRUÇÕES DO LOJISTA:\n${customInstructions}\n` : ""}
 
 STATUS DA LOJA (${store.store_name}):
 - Faturamento APROVADO (30d): R$ ${insights.sales_30d}
@@ -91,26 +106,22 @@ STATUS DA LOJA (${store.store_name}):
 - Novos Clientes (30d): ${insights.new_customers_30d}
 - Falhas de Pagamento (7d): ${insights.failed_payments_7d}
 - Melhores Produtos: ${JSON.stringify(insights.top_products)}
-- Piores Produtos (vistos mas pouco vendidos): ${JSON.stringify(insights.bottom_products)}
+- Piores Produtos: ${JSON.stringify(insights.bottom_products)}
 
-IMPORTANTE: "Faturamento" = APENAS pedidos aprovados.
+Use terminologia do nicho "${storeNiche}" nas mensagens.
 
 REGRAS CRÍTICAS:
-- Você DEVE analisar as 15 mensagens anteriores antes de responder.
-- A nova saída NÃO PODE repetir abertura, emoji inicial, frase dominante, tema principal nem a mesma lógica de conselho.
-- Se as 15 anteriores já cobrirem aquele raciocínio, mude o ângulo totalmente.
-- Se realmente não houver nada novo, responda "[NO_INSIGHT]".
+- Analise as 15 mensagens anteriores antes de responder.
+- NÃO repita abertura, emoji inicial, tema ou lógica.
+- Se não houver nada novo, responda "[NO_INSIGHT]".
 
-15 MENSAGENS ANTERIORES PARA ANALISAR:
+15 MENSAGENS ANTERIORES:
 ${previousMessages}
 
-PALAVRAS JÁ GASTAS (EVITE): ${frequentWords}
+PALAVRAS JÁ GASTAS: ${frequentWords}
 
-FORMATO OBRIGATÓRIO (JSON):
-{
-  "title": "Título curto e impactante (com emoji)",
-  "message": "Corpo da mensagem curto e direto ao ponto"
-}`;
+FORMATO (JSON):
+{"title": "...", "message": "..."}`;
 
         const userPromptBase = `Crie UM insight novo para ${store.store_name}.
 Escolha um ângulo realmente diferente do histórico acima.
