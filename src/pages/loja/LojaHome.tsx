@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
@@ -22,6 +22,7 @@ import { toast } from "sonner";
 
 export default function LojaHome() {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useTranslation();
   const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
   const localeTag = getLocaleTag(locale);
@@ -50,12 +51,20 @@ export default function LojaHome() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(price);
 
+  const categoriaParam = searchParams.get("categoria");
+
   const filtered = useMemo(() => {
     if (!products) return [];
-    if (!searchTerm.trim()) return products;
-    const term = searchTerm.toLowerCase();
-    return products.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
-  }, [products, searchTerm]);
+    let result = products;
+    if (categoriaParam) {
+      result = result.filter((p) => p.category_id === categoriaParam);
+    }
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
+    }
+    return result;
+  }, [products, searchTerm, categoriaParam]);
 
   const groupedByCategory = useMemo(() => {
     if (!filtered.length) return {};
@@ -91,7 +100,7 @@ export default function LojaHome() {
         <>
           {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
-            <BannerCarousel banners={banners} mobileFormat={(settings as any)?.banner_mobile_format || "landscape"} />
+            <BannerCarousel banners={banners} mobileFormat={(settings as any)?.banner_mobile_format || "landscape"} basePath={basePath} />
           )}
 
           {/* 2. Destaques (Stories) - abaixo do banner */}
