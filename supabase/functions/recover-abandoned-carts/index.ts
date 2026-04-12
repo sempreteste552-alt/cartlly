@@ -431,7 +431,28 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
       }
     } catch (e) { console.error("Views lookup error:", e); }
 
-    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(new Date());
+    const d: any = {};
+    parts.forEach(({ type, value }) => { d[type] = value; });
+    
+    const nowBrasilia = new Date(
+      parseInt(d.year),
+      parseInt(d.month) - 1,
+      parseInt(d.day),
+      parseInt(d.hour),
+      parseInt(d.minute),
+      parseInt(d.second)
+    );
     const dayOfWeek = nowBrasilia.getDay();
     const hour = nowBrasilia.getHours();
     const storeCategory = store?.category || "loja";
@@ -518,7 +539,28 @@ async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableA
 
   const isGoodReview = rating >= 4;
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(new Date());
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  const nowBR = new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
   const hour = nowBR.getHours();
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[nowBR.getDay()];
@@ -1206,7 +1248,29 @@ Saudação: ${greetings}`;
 
 /** Get current time in Brasília (UTC-3) */
 function getNowBrasilia() {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  return new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
 }
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {

@@ -1246,7 +1246,28 @@ Deno.serve(async (req) => {
         });
 
         const dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-        const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/Sao_Paulo",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: false,
+        });
+        const parts = formatter.formatToParts(new Date());
+        const d: any = {};
+        parts.forEach(({ type, value }) => { d[type] = value; });
+        
+        const nowBrasilia = new Date(
+          parseInt(d.year),
+          parseInt(d.month) - 1,
+          parseInt(d.day),
+          parseInt(d.hour),
+          parseInt(d.minute),
+          parseInt(d.second)
+        );
         const dayName = dayNames[nowBrasilia.getDay()];
         const hour = nowBrasilia.getHours();
         const dayOfWeek = nowBrasilia.getDay();
@@ -1759,7 +1780,28 @@ async function generateAISequenceMessage(
     customerHistory?: string[];
   }
 ): Promise<{ title: string; body: string }> {
-  const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(new Date());
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  const nowBR = new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
   const hour = nowBR.getHours();
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const priceFormatted = ctx.productPrice ? `R$ ${Number(ctx.productPrice).toFixed(2)}` : "";

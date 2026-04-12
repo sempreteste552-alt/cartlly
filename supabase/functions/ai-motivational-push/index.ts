@@ -285,7 +285,30 @@ Lembre-se: analise as 15 anteriores e mude totalmente a lógica da mensagem.`;
 });
 
 function getNowBrasilia() {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  // Create a date object where the "local" time matches Brasília
+  return new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
 }
 
 function normalizeText(text: string) {
