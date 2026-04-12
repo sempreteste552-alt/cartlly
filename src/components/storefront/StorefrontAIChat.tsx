@@ -208,6 +208,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
             await supabase
               .from("support_messages")
+              .update({ delivered_at: new Date().toISOString() })
+              .eq("conversation_id", currentConvId)
+              .eq("sender_type", "admin")
+              .is("delivered_at", null);
+
+            await supabase
+              .from("support_messages")
               .update({ read_at: new Date().toISOString() })
               .eq("conversation_id", currentConvId)
               .eq("sender_type", "admin")
