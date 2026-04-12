@@ -223,8 +223,8 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
-        <WhatsAppSupportBubble />
-        <AIChatWidget />
+        {!isCerebroPage && <WhatsAppSupportBubble />}
+        {!isCerebroPage && <AIChatWidget />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
