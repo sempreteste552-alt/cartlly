@@ -740,7 +740,7 @@ export default function Cerebro() {
     }
   });
 
-  const processAIActions = (content: string, msgIndex: number) => {
+  const processAIActions = (content: string, msgIndex: number, silent = false) => {
     const actions: any[] = [];
     
     const taskRegex = /\[ACTION_SCHEDULE_TASK\]([\s\S]*?)\[\/ACTION_SCHEDULE_TASK\]/g;
@@ -810,7 +810,9 @@ export default function Cerebro() {
       } catch (e) {}
     }
 
-    if (actions.length > 0) setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+    if (actions.length > 0) {
+      setPendingActions(prev => ({ ...prev, [msgIndex]: actions }));
+    }
   };
 
   const confirmAction = async (msgIndex: number, actionIndex: number) => {
