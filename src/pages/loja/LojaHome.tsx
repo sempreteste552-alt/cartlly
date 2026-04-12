@@ -48,6 +48,7 @@ export default function LojaHome() {
   const { data: ratings } = useAllProductReviews(productIds);
   const { data: productImagesMap } = usePublicProductImages(productIds);
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
+  const { data: productVariantsMap } = usePublicProductVariants(productIds);
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
   const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
 
