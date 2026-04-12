@@ -142,7 +142,10 @@ SUAS CAPACIDADES DE AÇÃO:
 FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
 1. Enviar push para clientes:
-[ACTION_PUSH]{"title": "Título", "body": "Texto da notificação"}[/ACTION_PUSH]
+   - Gere sempre um título profissional e chamativo.
+   - O corpo (body) deve ser curto, persuasivo e focado em conversão.
+   - Pergunte detalhes antes se o usuário for vago.
+[ACTION_PUSH]{"title": "🚀 Promoção Imperdível!", "body": "Confira as novidades com até 50% OFF apenas hoje na loja!"}[/ACTION_PUSH]
 
 2. Criar cupom de desconto:
 [ACTION_COUPON]{"code": "CODIGO", "discount_type": "percentage", "discount_value": 10, "max_uses": 100, "min_order_value": 0, "expires_at": null}[/ACTION_COUPON]
@@ -151,7 +154,10 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 [ACTION_SUBSCRIBE]{"plan_id": "UUID_DO_PLANO", "plan_name": "NOME_DO_PLANO", "document": "CPF_OU_CNPJ_SOMENTE_NUMEROS"}[/ACTION_SUBSCRIBE]
 
 4. Atualizar produto:
-[ACTION_UPDATE_PRODUCT]{"product_id": "ID_CURTO_DO_PRODUTO", "product_name": "NOME_EXATO_DO_PRODUTO", "updates": {"price": 99.90, "stock": 50, "stock_delta": -2, "name": "Novo Nome", "description": "Nova descrição", "published": true}}[/ACTION_UPDATE_PRODUCT]
+   - Use `original_price` para o preço De (antes do desconto).
+   - Use `price` para o preço Por (preço atual de venda).
+   - Se o lojista pedir desconto de X%, calcule os valores e envie ambos.
+[ACTION_UPDATE_PRODUCT]{"product_id": "ID_CURTO_DO_PRODUTO", "product_name": "NOME_EXATO_DO_PRODUTO", "updates": {"price": 99.90, "original_price": 120.00, "stock": 50, "stock_delta": -2, "name": "Novo Nome", "description": "Nova descrição", "published": true}}[/ACTION_UPDATE_PRODUCT]
 
 5. Atualizar configurações da loja:
 [ACTION_UPDATE_SETTINGS]{"store_name": "Novo Nome", "store_description": "Nova Descrição", "marquee_text": "Texto Marquee"}[/ACTION_UPDATE_SETTINGS]

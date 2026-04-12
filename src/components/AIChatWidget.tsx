@@ -948,13 +948,22 @@ export function AIChatWidget() {
                       {pendingActions[i].map((action, aidx) => (
                         <div key={aidx} className="flex flex-col gap-1.5 bg-muted/50 p-2 rounded-lg border border-border/50">
                           <span className="text-[11px] font-medium leading-tight">{action.label}</span>
+                          
+                          {/* Push Preview */}
+                          {action.type === "push" && action.payload?.body && (
+                            <div className="bg-background/50 p-2 rounded border border-border/50 my-1">
+                              <p className="text-[10px] font-bold text-foreground line-clamp-1">{action.payload.title}</p>
+                              <p className="text-[10px] text-muted-foreground line-clamp-3 leading-tight">{action.payload.body}</p>
+                            </div>
+                          )}
+                          
                           <Button 
                             size="sm" 
                             className="h-7 w-full text-[10px]" 
                             disabled={action.confirmed}
                             onClick={() => confirmAction(i, aidx)}
                           >
-                            {action.confirmed ? "Confirmado" : "Confirmar e Executar"}
+                            {action.confirmed ? "Confirmado" : "Confirmar e Enviar"}
                           </Button>
                         </div>
                       ))}
