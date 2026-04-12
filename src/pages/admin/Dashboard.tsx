@@ -260,7 +260,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <WelcomeTrialCard />
 
-      {(!aiConfig || !aiConfig.niche) && (
+      {(!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
         <AITrainingAlert />
       )}
 

@@ -390,7 +390,7 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 pb-4">
-        {!config?.niche && (
+        {(!config?.niche || !config?.personality || !config?.store_knowledge) && (
           <div className="mb-4">
             <AITrainingAlert />
           </div>
