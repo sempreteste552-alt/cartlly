@@ -2449,37 +2449,52 @@ export type Database = {
       store_domains: {
         Row: {
           created_at: string
+          dns_status: string | null
           hostname: string
           id: string
           is_primary: boolean | null
+          is_published: boolean | null
+          last_ssl_error: string | null
           last_verified_at: string | null
+          ssl_issued_at: string | null
           ssl_status: string | null
           status: string
           store_id: string
+          txt_status: string | null
           updated_at: string
           verification_token: string | null
         }
         Insert: {
           created_at?: string
+          dns_status?: string | null
           hostname: string
           id?: string
           is_primary?: boolean | null
+          is_published?: boolean | null
+          last_ssl_error?: string | null
           last_verified_at?: string | null
+          ssl_issued_at?: string | null
           ssl_status?: string | null
           status?: string
           store_id: string
+          txt_status?: string | null
           updated_at?: string
           verification_token?: string | null
         }
         Update: {
           created_at?: string
+          dns_status?: string | null
           hostname?: string
           id?: string
           is_primary?: boolean | null
+          is_published?: boolean | null
+          last_ssl_error?: string | null
           last_verified_at?: string | null
+          ssl_issued_at?: string | null
           ssl_status?: string | null
           status?: string
           store_id?: string
+          txt_status?: string | null
           updated_at?: string
           verification_token?: string | null
         }
