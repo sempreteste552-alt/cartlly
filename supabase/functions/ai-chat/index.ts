@@ -201,6 +201,10 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
    - Gere a ação para iniciar o processo de conexão.
 [ACTION_DOMAIN_CONNECT]{"domain": "www.minhaloja.com.br"}[/ACTION_DOMAIN_CONNECT]
 
+9. Verificar um domínio:
+   - Use quando o lojista disser que já configurou o DNS ou pedir para verificar.
+[ACTION_DOMAIN_VERIFY]{"domain": "www.minhaloja.com.br"}[/ACTION_DOMAIN_VERIFY]
+
 REGRAS CRÍTICAS:
 - Responda sempre em português do Brasil.
 - NUNCA responda com JSON puro.
