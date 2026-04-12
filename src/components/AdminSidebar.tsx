@@ -40,10 +40,9 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     fr: { defaultStore: "Ma Boutique", new: "Nouveau", push: "Push" },
   }[locale];
   const storeUrl = buildStoreUrl({
-    slug: (settings as any)?.store_slug,
-    customDomain: (settings as any)?.custom_domain,
-    domainStatus: (settings as any)?.domain_status,
-    sslReady: Boolean((settings as any)?.domain_verify_details?.sslReady)
+    slug: settings?.store_slug,
+    customDomain: settings?.custom_domain,
+    domainStatus: settings?.domain_status,
   });
 
   const mainItems = [
