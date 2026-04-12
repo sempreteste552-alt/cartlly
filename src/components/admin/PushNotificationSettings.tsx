@@ -115,24 +115,6 @@ export default function PushNotificationSettings() {
       });
       if (error) throw error;
 
-      // Log to tenant_messages for audit trail
-      await supabase.from("tenant_messages").insert({
-        source_tenant_id: user.id,
-        sender_type: "tenant_admin",
-        sender_user_id: user.id,
-        audience_type: "tenant_admin_to_all_customers",
-        target_area: "public_store",
-        target_tenant_id: user.id,
-        channel: "push",
-        title: custTitle.trim(),
-        body: custBody || null,
-        message_type: "promotion",
-        is_global: false,
-        delivered_count: data?.sent || 0,
-        failed_count: data?.failures || 0,
-        status: (data?.sent || 0) > 0 ? "sent" : "failed",
-      } as any);
-
       if ((data?.sent || 0) > 0) {
         toast.success(`📢 Push enviado! ${data?.sent || 0} notificação(ões) entregue(s) para ${data?.customers_with_push || 0} cliente(s).`);
       } else if ((data?.removed || 0) > 0) {
