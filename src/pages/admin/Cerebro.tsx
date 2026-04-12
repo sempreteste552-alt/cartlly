@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { AITrainingGuide } from "@/components/admin/AITrainingGuide";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
