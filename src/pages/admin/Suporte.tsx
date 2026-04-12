@@ -346,7 +346,9 @@ export default function Suporte() {
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-background" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm text-foreground">Visitante {selectedConversation.session_id.slice(0, 4)}</h3>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    {selectedConversation.customer?.name || `Visitante ${selectedConversation.session_id.slice(0, 4)}`}
+                  </h3>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     {selectedConversation.is_typing_customer ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
