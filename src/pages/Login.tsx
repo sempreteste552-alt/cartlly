@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
 import { SimpleVerification } from "@/components/SimpleVerification";
-import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
+import msktelemarktingLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
@@ -23,7 +23,7 @@ const LOGIN_PHRASES = [
   "Bem-vindo ao Painel Administrativo 🔐",
   "Gerencie suas vendas com inteligência 📊",
   "Sua plataforma, suas regras! ✨",
-  "Fature mais com a MSK Telemarketing 💰",
+  "Fature mais com a Cartlly 💰",
 ];
 
 const REGISTER_PHRASES = [
@@ -397,7 +397,7 @@ export default function Login() {
         </div>
         <Card className="relative w-full max-w-md border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-24 w-auto drop-shadow-lg" />
+            <img src={msktelemarktingLogo} alt="Cartlly" className="h-24 w-auto drop-shadow-lg" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
               <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
@@ -438,7 +438,7 @@ export default function Login() {
         </div>
         <Card className="relative w-full max-w-md border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-16 w-auto" />
+            <img src={msktelemarktingLogo} alt="Cartlly" className="h-16 w-auto" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
               <Mail className="h-10 w-10 text-green-500" />
             </div>
@@ -536,7 +536,7 @@ export default function Login() {
 
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
-            <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="mx-auto h-14 w-auto drop-shadow-lg" />
+            <img src={msktelemarktingLogo} alt="Cartlly" className="mx-auto h-14 w-auto drop-shadow-lg" />
             <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-16 object-contain" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
               {getTitle()}

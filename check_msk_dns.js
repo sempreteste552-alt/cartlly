@@ -1,7 +1,7 @@
 import dns from 'node:dns/promises';
 
 async function checkDomain() {
-  const domains = ['msktelemarkting.shop', 'www.msktelemarkting.shop'];
+  const domains = ['cartlly.lovable.app', 'www.cartlly.lovable.app'];
   for (const domain of domains) {
     console.log(`Checking ${domain}:`);
     try {

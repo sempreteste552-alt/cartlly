@@ -80,7 +80,7 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
 
   const header = { typ: "JWT", alg: "ES256" };
   const now = Math.floor(Date.now() / 1000);
-  const payload = { aud: audience, exp: now + 86400, sub: "mailto:noreply@www.msktelemarkting.shop" };
+  const payload = { aud: audience, exp: now + 86400, sub: "mailto:noreply@www.cartlly.lovable.app" };
 
   const headerB64 = b64url(enc.encode(JSON.stringify(header)));
   const payloadB64 = b64url(enc.encode(JSON.stringify(payload)));

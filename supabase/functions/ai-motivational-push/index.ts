@@ -155,7 +155,7 @@ serve(async (req) => {
       "If generation conflicts with merchant training, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o assistente motivacional da plataforma MSK Telemarketing. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
 
 REGRAS DE FORMATO:
 - JSON: {"title": "...", "body": "..."}

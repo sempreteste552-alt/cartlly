@@ -1187,7 +1187,7 @@ export function AIChatWidget() {
               <Input 
                 value={tempName} 
                 onChange={(e) => setTempName(e.target.value)} 
-                placeholder="Ex: MSK Telemarketing Bot, Maria, Suporte IA..." 
+                placeholder="Ex: Cartlly Bot, Maria, Suporte IA..." 
               />
             </div>
 

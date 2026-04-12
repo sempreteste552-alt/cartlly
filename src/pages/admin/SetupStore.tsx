@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
+import msktelemarktingLogo from "@/assets/cartly-logo.png";
 
 export default function SetupStore() {
   const { user } = useAuth();
@@ -149,7 +149,7 @@ export default function SetupStore() {
         </div>
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardHeader className="text-center space-y-4 pt-8">
-            <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="mx-auto h-20 w-auto drop-shadow-lg" />
+            <img src={msktelemarktingLogo} alt="Cartlly" className="mx-auto h-20 w-auto drop-shadow-lg" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               Configure sua Loja
             </CardTitle>

@@ -84,7 +84,7 @@ export function SuperAdminSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Super Admin</span>
-              <span className="text-xs text-sidebar-foreground/60">MSK Telemarketing</span>
+              <span className="text-xs text-sidebar-foreground/60">Cartlly</span>
             </div>
           )}
         </div>

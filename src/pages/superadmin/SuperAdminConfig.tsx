@@ -48,8 +48,8 @@ interface PlatformConfig {
 }
 
 const defaultConfig: PlatformConfig = {
-  platform_name: "MSK Telemarketing",
-  platform_email: "contato@msktelemarkting.shop",
+  platform_name: "Cartlly",
+  platform_email: "contato@cartlly.lovable.app",
   default_trial_days: 7,
   auto_confirm_emails: false,
   maintenance_mode: false,
@@ -170,7 +170,7 @@ export default function SuperAdminConfig() {
             </div>
             <div className="space-y-2">
               <Label>E-mail da Plataforma</Label>
-              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@msktelemarkting.shop" />
+              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@cartlly.lovable.app" />
             </div>
           </div>
           <div className="space-y-2">

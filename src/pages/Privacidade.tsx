@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
+import msktelemarktingLogo from "@/assets/cartly-logo.png";
 
 export default function Privacidade() {
   return (
@@ -11,7 +11,7 @@ export default function Privacidade() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-10 w-auto" />
+          <img src={msktelemarktingLogo} alt="Cartlly" className="h-10 w-auto" />
         </div>
 
         <article className="prose prose-sm dark:prose-invert max-w-none space-y-6">
@@ -19,7 +19,7 @@ export default function Privacidade() {
           <p className="text-sm text-muted-foreground">Última atualização: 10 de abril de 2026</p>
 
           <h2>1. Informações que Coletamos</h2>
-          <p>Coletamos as seguintes informações quando você usa a MSK Telemarketing:</p>
+          <p>Coletamos as seguintes informações quando você usa a Cartlly:</p>
           <ul>
             <li><strong>Dados de cadastro:</strong> nome, e-mail, telefone e informações da loja</li>
             <li><strong>Dados de uso:</strong> páginas visitadas, funcionalidades utilizadas, horários de acesso</li>
@@ -78,7 +78,7 @@ export default function Privacidade() {
 
           <h2>8. Dados de Menores</h2>
           <p>
-            A MSK Telemarketing não é direcionada a menores de 18 anos. Não coletamos intencionalmente dados 
+            A Cartlly não é direcionada a menores de 18 anos. Não coletamos intencionalmente dados 
             de menores. Se tomarmos conhecimento de que coletamos dados de um menor, tomaremos medidas 
             para excluí-los.
           </p>
