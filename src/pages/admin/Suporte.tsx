@@ -67,7 +67,7 @@ export default function Suporte() {
         .from("support_conversations")
         .select(`
           *,
-          messages:support_messages(body, created_at)
+          messages:support_messages(body, created_at, sender_type, read_at)
         `)
         .eq("tenant_id", user?.id)
         .order("last_message_at", { ascending: false });
@@ -76,8 +76,9 @@ export default function Suporte() {
       
       return data.map((conv: any) => ({
         ...conv,
-        last_message: conv.messages?.[0]?.body || "Nenhuma mensagem"
-      })) as Conversation[];
+        last_message: conv.messages?.[0]?.body || "Nenhuma mensagem",
+        unread_count: conv.messages?.filter((m: any) => m.sender_type === "customer" && !m.read_at).length || 0
+      })) as (Conversation & { unread_count: number })[];
     },
     enabled: !!user,
   });
