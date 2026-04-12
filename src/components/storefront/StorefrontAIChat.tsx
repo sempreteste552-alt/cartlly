@@ -387,7 +387,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         body: text.trim() 
       });
 
-      // Notify admin via push
+      // Notify admin via push — use support_message type to bypass dedup cooldown
       try {
         await supabase.functions.invoke("send-push-internal", {
           body: {
@@ -395,8 +395,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
             title: `💬 ${customer?.name || "Cliente"}`,
             body: text.trim().length > 100 ? text.trim().substring(0, 97) + "..." : text.trim(),
             url: `/admin/suporte?conv=${conversationId}`,
-            type: "new_customer",
-            store_user_id: storeUserId,
+            type: "support_message",
           }
         });
       } catch (e) {

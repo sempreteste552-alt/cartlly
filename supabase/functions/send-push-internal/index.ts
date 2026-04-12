@@ -167,8 +167,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // === DEDUPLICATION: cooldown + exact duplicate + semantic similarity on last 15 ===
+    // Skip dedup entirely for chat/support messages — they are conversational and frequent
+    const chatTypes = ["support_message", "new_customer", "admin_message"];
+    const skipDedup = chatTypes.includes(type || "");
+
     const effectiveTarget = target_user_id || customer_id;
-    if (effectiveTarget) {
+    if (effectiveTarget && !skipDedup) {
       const { data: recentHistory } = await supabase
         .from("push_logs")
         .select("title, body, created_at")
