@@ -121,6 +121,10 @@ STATUS ATUAL:
 - Produtos Parados (menos visualizações/vendas): ${JSON.stringify(stagnantProducts || [])}
 - Amostragem de Itens Vendidos: ${JSON.stringify(recentOrderItems || [])}
 - Histórico de Entrega de Mensagens/Push: ${JSON.stringify(deliveryLogs || [])}
+- Comportamento Recente dos Clientes (Navegação, Favoritos, Carrinhos):
+    * Eventos: ${JSON.stringify(behaviorStats || [])}
+    * Favoritos/Wishlist: ${JSON.stringify(wishlistItems || [])}
+    * Carrinhos Abandonados: ${JSON.stringify(cartItems || [])}
 
 INSTRUÇÕES DE PERSONALIDADE:
 - Seja proativa, analítica e focada em resultados (vendas e eficiência).
