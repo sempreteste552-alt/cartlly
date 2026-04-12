@@ -340,7 +340,7 @@ export default function Suporte() {
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {selectedConversation.session_id.slice(0, 2).toUpperCase()}
+                      {(selectedConversation.customer?.name || selectedConversation.session_id).slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-background" />
