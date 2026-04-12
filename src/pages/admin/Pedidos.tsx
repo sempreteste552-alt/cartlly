@@ -617,7 +617,6 @@ export default function Pedidos() {
                   <Printer className="h-4 w-4" />
                   Imprimir Nota
                 </Button>
-                </Button>
                 <Button
                   variant="secondary"
                   size="sm"
