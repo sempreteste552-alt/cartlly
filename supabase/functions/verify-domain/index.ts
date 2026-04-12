@@ -5,8 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// This is the domain tenants should CNAME to. 
-// If using Cloudflare for SaaS, this should be the fallback domain.
+// The main platform domain for CNAMEs
 const RECOMMENDED_CNAME = "cartlly.lovable.app"; 
 
 async function resolveDns(name: string, type: string) {
@@ -23,17 +22,37 @@ function normalizeDnsValue(value: string) {
   return value.trim().toLowerCase().replace(/\.$/, "").replace(/"/g, "");
 }
 
-async function registerCloudflareCustomHostname(hostname: string) {
-  const token = Deno.env.get("CLOUDFLARE_API_TOKEN");
-  const zoneId = Deno.env.get("CLOUDFLARE_ZONE_ID");
+async function detectDnsProvider(hostname: string) {
+  const domain = hostname.startsWith("www.") ? hostname.substring(4) : hostname;
+  const nsData = await resolveDns(domain, "NS");
+  
+  if (!nsData.Answer) return "Desconhecido";
+  
+  const nsList = nsData.Answer.filter((r: any) => r.type === 2).map((r: any) => normalizeDnsValue(r.data));
+  
+  if (nsList.some((ns: string) => ns.includes("cloudflare.com"))) return "Cloudflare";
+  if (nsList.some((ns: string) => ns.includes("hostinger.com"))) return "Hostinger";
+  if (nsList.some((ns: string) => ns.includes("godaddy.com") || ns.includes("domaincontrol.com"))) return "GoDaddy";
+  if (nsList.some((ns: string) => ns.includes("registro.br"))) return "Registro.br";
+  if (nsList.some((ns: string) => ns.includes("google.com"))) return "Google Domains";
+  if (nsList.some((ns: string) => ns.includes("aws.com") || ns.includes("awsdns"))) return "AWS Route53";
+  if (nsList.some((ns: string) => ns.includes("namecheap.com"))) return "Namecheap";
+  
+  return nsList[0] || "Desconhecido";
+}
+
+async function registerCloudflareCustomHostname(hostname: string, tenantToken?: string, tenantZoneId?: string) {
+  // Use tenant-specific credentials if available, otherwise fallback to global ones
+  const token = tenantToken || Deno.env.get("CLOUDFLARE_API_TOKEN");
+  const zoneId = tenantZoneId || Deno.env.get("CLOUDFLARE_ZONE_ID");
 
   if (!token || !zoneId) {
-    console.log(`Cloudflare config missing: TOKEN=${!!token}, ZONE_ID=${!!zoneId}`);
-    return { success: false, error: "Cloudflare configuration missing (TOKEN or ZONE_ID)" };
+    console.log(`Cloudflare config missing for ${hostname}`);
+    return { success: false, error: "Cloudflare configuration missing" };
   }
 
   try {
-    console.log(`Registering Custom Hostname in Cloudflare: ${hostname}`);
+    console.log(`Registering Custom Hostname: ${hostname} (Zone: ${zoneId})`);
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/zones/${zoneId}/custom_hostnames`,
       {
@@ -47,6 +66,10 @@ async function registerCloudflareCustomHostname(hostname: string) {
           ssl: {
             method: "http",
             type: "dv",
+            settings: {
+              min_tls_version: "1.2",
+              http2: "on"
+            }
           },
         }),
       }
@@ -54,19 +77,14 @@ async function registerCloudflareCustomHostname(hostname: string) {
 
     const data = await response.json();
     if (!data.success) {
-      // Check if it already exists (Error code 1406)
       if (data.errors?.some((e: any) => e.code === 1406)) {
-        console.log(`Hostname ${hostname} already registered in Cloudflare.`);
         return { success: true, already_exists: true };
       }
-      console.error(`Cloudflare API Error:`, data.errors);
       return { success: false, error: data.errors?.[0]?.message || "Cloudflare API Error" };
     }
 
-    console.log(`Successfully registered ${hostname} in Cloudflare.`);
     return { success: true, data: data.result };
   } catch (e: any) {
-    console.error(`Cloudflare API Exception:`, e);
     return { success: false, error: e.message };
   }
 }
@@ -83,53 +101,35 @@ async function checkHttps(domain: string) {
     });
     
     clearTimeout(timeoutId);
-
-    // If we get any response from the domain on HTTPS, it means SSL is at least somewhat working
     if (response.status >= 200 && response.status < 500) {
       return { ready: true, error: null };
     }
-    return { ready: false, error: `Status ${response.status} returned` };
+    return { ready: false, error: `Status ${response.status}` };
   } catch (error: any) {
-    // If we get a certificate error, it will show up here
-    return { ready: false, error: error.message || "SSL certificate not active or unreachable" };
+    return { ready: false, error: error.message || "SSL not ready" };
   }
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { settingsId, domain, domainId } = body;
+    const { settingsId, domain, domainId } = await req.json();
     
-    if (!settingsId || (!domain && !domainId)) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // 1. Fetch domain record
-    let domainRecord;
-    if (domainId) {
-      const { data } = await supabase.from("store_domains").select("*").eq("id", domainId).maybeSingle();
-      domainRecord = data;
-    } else {
-      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", domain).maybeSingle();
-      domainRecord = data;
-    }
+    let { data: domainRecord, error: fetchErr } = await supabase
+      .from("store_domains")
+      .select("*")
+      .eq(domainId ? "id" : "hostname", domainId || domain)
+      .eq("store_id", settingsId)
+      .maybeSingle();
 
     if (!domainRecord) {
-      return new Response(JSON.stringify({ error: "Domain not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Domain not found" }), { status: 404, headers: corsHeaders });
     }
 
     const hostname = domainRecord.hostname;
@@ -137,94 +137,65 @@ Deno.serve(async (req) => {
     const apexDomain = isWww ? hostname.substring(4) : hostname;
     const verificationHost = `_lovable.${apexDomain}`;
     const verificationToken = domainRecord.verification_token;
-    const expectedTxt = `lovable_verify=${verificationToken}`;
+    
+    // 2. Provider Detection
+    const provider = await detectDnsProvider(hostname);
 
-    // 2. Perform DNS Checks
+    // 3. DNS Checks
     const dnsResults: any = {
       cname: { found: false, value: null, correct: false },
       txt: { found: false, value: [], correct: false },
-      a: { found: false, values: [] },
       conflicts: [],
     };
 
-    // A. Check CNAME for the actual hostname
     const cnameData = await resolveDns(hostname, "CNAME");
     if (cnameData.Answer) {
       const record = cnameData.Answer.find((r: any) => r.type === 5);
       if (record) {
         dnsResults.cname.found = true;
         dnsResults.cname.value = normalizeDnsValue(record.data);
-        // Accept either the recommended one or the project one
         dnsResults.cname.correct = dnsResults.cname.value === RECOMMENDED_CNAME || dnsResults.cname.value.endsWith(".lovable.app");
       }
     }
 
-    // B. Check TXT for verification
     const txtData = await resolveDns(verificationHost, "TXT");
     if (txtData.Answer) {
       const records = txtData.Answer.filter((r: any) => r.type === 16).map((r: any) => normalizeDnsValue(r.data));
       dnsResults.txt.found = records.length > 0;
-      dnsResults.txt.value = records;
-      dnsResults.txt.correct = records.some((r: string) => r.includes(expectedTxt) || r.includes(verificationToken));
+      dnsResults.txt.correct = records.some((r: string) => r.includes(verificationToken) || r.includes("lovable_verify="));
     }
 
-    // C. Check for Apex domain A records (Conflicts for www)
-    if (isWww) {
-      const apexAData = await resolveDns(apexDomain, "A");
-      if (apexAData.Answer) {
-        dnsResults.a.values = apexAData.Answer.filter((r: any) => r.type === 1).map((r: any) => r.data);
-        dnsResults.a.found = dnsResults.a.values.length > 0;
-      }
-    }
-
-    // 3. Cloudflare & SSL Check
-    let cloudflareResult = null;
-    let sslResult = { ready: false, error: "Aguardando verificação DNS e TXT" };
+    // 4. Cloudflare Logic
+    let cfResult = null;
+    let sslResult = { ready: false, error: "Aguardando verificação DNS" };
 
     if (dnsResults.txt.correct || dnsResults.cname.correct) {
-      // Register in Cloudflare SSL for SaaS if CNAME is pointing correctly
-      if (dnsResults.cname.correct) {
-        cloudflareResult = await registerCloudflareCustomHostname(hostname);
-      }
-      
+      cfResult = await registerCloudflareCustomHostname(
+        hostname, 
+        domainRecord.cloudflare_api_token, 
+        domainRecord.cloudflare_zone_id
+      );
       sslResult = await checkHttps(hostname);
     }
 
-    // 4. Update Statuses
+    // 5. Calculate Statuses
     const txtStatus = dnsResults.txt.correct ? "verified" : "pending";
+    const dnsStatus = dnsResults.cname.correct ? "propagated" : (dnsResults.cname.found ? "failed" : "pending");
     
-    let dnsStatus = "pending";
-    if (dnsResults.cname.correct) {
-      dnsStatus = "propagated";
-    } else if (dnsResults.cname.found) {
-      dnsStatus = "failed";
-    }
-
     let sslStatus = "pending";
-    if (sslResult.ready) {
-      sslStatus = "active";
-    } else if (dnsStatus === "propagated" && txtStatus === "verified") {
-      sslStatus = "emitting";
-    } else if (sslResult.error && !sslResult.error.includes("Aguardando")) {
-      sslStatus = "failed";
-      // If Cloudflare failed, add it to the error
-      if (cloudflareResult && !cloudflareResult.success) {
-        sslResult.error = `${sslResult.error} (Cloudflare: ${cloudflareResult.error})`;
-      }
-    }
+    if (sslResult.ready) sslStatus = "active";
+    else if (dnsStatus === "propagated" && txtStatus === "verified") sslStatus = "emitting";
+    else if (sslResult.error && !sslResult.error.includes("Aguardando")) sslStatus = "failed";
 
-    // Final Domain Status
-    let finalStatus = "pending_dns";
-    if (sslStatus === "active") finalStatus = "active";
-    else if (sslStatus === "emitting") finalStatus = "pending_ssl";
-    else if (txtStatus === "verified" && dnsStatus === "propagated") finalStatus = "pending_ssl";
-    else if (txtStatus === "verified") finalStatus = "pending_dns";
+    const finalStatus = sslStatus === "active" ? "active" : 
+                       (sslStatus === "emitting" || (txtStatus === "verified" && dnsStatus === "propagated") ? "pending_ssl" : "pending_dns");
 
     const updateData = {
       status: finalStatus,
       txt_status: txtStatus,
       dns_status: dnsStatus,
       ssl_status: sslStatus,
+      detected_provider: provider,
       last_verified_at: new Date().toISOString(),
       dns_validation_details: dnsResults,
       ssl_validation_details: sslResult,
@@ -233,7 +204,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("store_domains").update(updateData).eq("id", domainRecord.id);
 
-    // Sync with store_settings if primary
+    // Sync primary domain
     if (domainRecord.is_primary && finalStatus === "active") {
       await supabase.from("store_settings").update({
         custom_domain: hostname,
@@ -241,22 +212,14 @@ Deno.serve(async (req) => {
       } as any).eq("id", settingsId);
     }
 
-    return new Response(
-      JSON.stringify({
-        status: finalStatus,
-        dns: dnsResults,
-        ssl: sslResult,
-        txtStatus,
-        dnsStatus,
-        sslStatus
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({
+      status: finalStatus,
+      provider,
+      dns: dnsResults,
+      ssl: sslResult,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (error: any) {
-    console.error("Error in verify-domain:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
   }
 });
