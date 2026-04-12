@@ -354,7 +354,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
             target_user_id: storeUserId,
             title: `💬 ${customer?.name || "Cliente"}`,
             body: text.trim().length > 100 ? text.trim().substring(0, 97) + "..." : text.trim(),
-            url: "/admin/suporte",
+            url: `/admin/suporte?conv=${conversationId}`,
             type: "new_customer",
             store_user_id: storeUserId,
           }
