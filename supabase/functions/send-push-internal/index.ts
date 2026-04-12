@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
     // Tenant isolation
     if (store_user_id) {
       query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
-      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight"];
+      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight", "support_message"];
       if (target_user_id === store_user_id && !behaviorTypes.includes(type || "")) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store promo push to store owner" });
       }
