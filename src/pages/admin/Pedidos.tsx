@@ -33,6 +33,7 @@ export default function Pedidos() {
   const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entregue"];
 
   const { data: orders, isLoading } = useOrders();
+  const { data: storeSettings } = useStoreSettings();
   const updateStatus = useUpdateOrderStatus();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
