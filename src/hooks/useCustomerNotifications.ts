@@ -84,11 +84,11 @@ export function useCustomerNotifications(storeUserId?: string) {
       if (!user) {
         // For guest users, we use localStorage to track the last seen notification ID to simulate unread status
         const lastSeenId = localStorage.getItem(`last_notif_${storeUserId}`);
-        const lastSeenIdx = filtered.findIndex(n => n.id === lastSeenId);
+        const lastSeenIdx = allMessages.findIndex(n => n.id === lastSeenId);
         
-        return filtered.map((m: any, idx) => ({
+        return allMessages.map((m: any, idx) => ({
           ...m,
-          read: lastSeenIdx === -1 ? false : idx >= lastSeenIdx,
+          read: m.read || (lastSeenIdx === -1 ? false : idx >= lastSeenIdx),
         }));
       }
 
@@ -100,9 +100,9 @@ export function useCustomerNotifications(storeUserId?: string) {
 
       const readSet = new Set((reads || []).map((r: any) => r.message_id));
 
-      return filtered.map((m: any) => ({
+      return allMessages.map((m: any) => ({
         ...m,
-        read: readSet.has(m.id),
+        read: m.read || readSet.has(m.id),
       }));
     },
   });
