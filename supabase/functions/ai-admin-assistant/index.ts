@@ -262,7 +262,7 @@ REGRAS CRÍTICAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
@@ -272,6 +272,13 @@ REGRAS CRÍTICAS:
     });
 
     const aiResult = await response.json();
+    console.log("[ai-admin-assistant] AI response status:", response.status, "has choices:", !!aiResult?.choices);
+    
+    if (!response.ok || !aiResult?.choices?.length) {
+      console.error("[ai-admin-assistant] AI API error:", JSON.stringify(aiResult));
+      throw new Error(aiResult?.error?.message || aiResult?.error || "Falha ao obter resposta da IA. Tente novamente.");
+    }
+    
     const assistantMessage = aiResult.choices[0].message.content;
 
     // Store conversation once
