@@ -41,6 +41,21 @@ interface StorefrontAIChatProps {
   isPremium?: boolean;
 }
 
+const SOUNDS = {
+  SENT: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "SENT" | "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {}); // Browser might block auto-play
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
+
 export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium }: StorefrontAIChatProps) {
   const { locale } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -68,6 +83,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const { customer } = useCustomerAuth();
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
+
+  const unreadCount = useMemo(() => {
+    return messages.filter(m => m.role === "assistant" && !m.read_at).length;
+  }, [messages]);
 
   const displayName = aiName || "Assistente";
   const initials = displayName.slice(0, 2).toUpperCase();
