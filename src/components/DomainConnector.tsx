@@ -17,6 +17,7 @@ import { normalizeDomain } from "@/lib/storeDomain";
 
 interface DomainConnectorProps {
   settingsId: string;
+  storeSlug?: string;
 }
 
 const PLATFORM_IP = "185.158.133.1";
@@ -39,6 +40,7 @@ interface StoreDomain {
 
 export default function DomainConnector({
   settingsId,
+  storeSlug,
 }: DomainConnectorProps) {
   const queryClient = useQueryClient();
   const [newDomain, setNewDomain] = useState("");
@@ -302,75 +304,158 @@ export default function DomainConnector({
 
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-6 pt-2">
+                      {/* Relationship with Tenant */}
+                      <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">Vínculo com a loja</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">Loja: {storeSlug || '...'}</span>
+                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Rota interna: /loja/{storeSlug || '...'}</span>
+                          </div>
+                        </div>
+                        {domain.status === 'active' ? (
+                          <Button size="sm" asChild>
+                            <a href={`https://${domain.hostname}`} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Ver Loja
+                            </a>
+                          </Button>
+                        ) : (
+                          <div className="flex flex-col items-end">
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={`/loja/${storeSlug}`} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Ver Loja (Slug)
+                              </a>
+                            </Button>
+                            <span className="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" />
+                              Domínio ainda em configuração
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Step Status Indicator */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                        <div className={`flex flex-col items-center p-2 rounded-lg border ${domain.dns_status === 'propagated' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-muted border-border text-muted-foreground'}`}>
-                          {domain.dns_status === 'propagated' ? <CheckCircle2 className="h-4 w-4 mb-1" /> : <Clock className="h-4 w-4 mb-1" />}
-                          <span className="text-[10px] font-medium">1. DNS</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* 1. Verificação */}
+                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold uppercase text-muted-foreground">1. Verificação</span>
+                            {domain.txt_status === 'verified' ? (
+                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Verificado</Badge>
+                            ) : domain.txt_status === 'failed' ? (
+                              <Badge variant="destructive">Falhou</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="animate-pulse">Aguardando TXT</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {domain.txt_status === 'verified' ? 'Propriedade do domínio confirmada com sucesso.' : 'Adicione o registro TXT para provar que você é dono do domínio.'}
+                          </p>
                         </div>
-                        <div className={`flex flex-col items-center p-2 rounded-lg border ${domain.txt_status === 'verified' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-muted border-border text-muted-foreground'}`}>
-                          {domain.txt_status === 'verified' ? <CheckCircle2 className="h-4 w-4 mb-1" /> : <Clock className="h-4 w-4 mb-1" />}
-                          <span className="text-[10px] font-medium">2. Verificação</span>
+
+                        {/* 2. DNS */}
+                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold uppercase text-muted-foreground">2. DNS</span>
+                            {domain.dns_status === 'propagated' ? (
+                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Configurado</Badge>
+                            ) : domain.dns_status === 'failed' ? (
+                              <Badge variant="destructive">Erro de IP</Badge>
+                            ) : (
+                              <Badge variant="secondary">Não configurado</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {domain.dns_status === 'propagated' ? 'Apontamento DNS correto para nossa rede.' : 'Seu domínio ainda não aponta para nossos servidores.'}
+                          </p>
                         </div>
-                        <div className={`flex flex-col items-center p-2 rounded-lg border ${domain.ssl_status === 'active' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-muted border-border text-muted-foreground'}`}>
-                          {domain.ssl_status === 'active' ? <CheckCircle2 className="h-4 w-4 mb-1" /> : <Shield className="h-4 w-4 mb-1" />}
-                          <span className="text-[10px] font-medium">3. SSL</span>
-                        </div>
-                        <div className={`flex flex-col items-center p-2 rounded-lg border ${domain.status === 'active' ? 'bg-green-50 border-green-100 text-green-700' : 'bg-muted border-border text-muted-foreground'}`}>
-                          {domain.status === 'active' ? <CheckCircle2 className="h-4 w-4 mb-1" /> : <Globe className="h-4 w-4 mb-1" />}
-                          <span className="text-[10px] font-medium">4. Publicado</span>
+
+                        {/* 3. SSL */}
+                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold uppercase text-muted-foreground">3. SSL (Segurança)</span>
+                            {domain.ssl_status === 'active' ? (
+                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Ativo</Badge>
+                            ) : domain.ssl_status === 'failed' ? (
+                              <Badge variant="destructive">Erro</Badge>
+                            ) : domain.status === 'pending_ssl' ? (
+                              <Badge variant="secondary" className="bg-blue-50 text-blue-600 animate-pulse border-none">Emitindo...</Badge>
+                            ) : (
+                              <Badge variant="secondary">Aguardando</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {domain.ssl_status === 'active' ? 'Conexão segura HTTPS ativa e protegida.' : 'O certificado será gerado automaticamente após o DNS.'}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="text-xs text-amber-800 space-y-1">
-                          <p className="font-bold">Instruções Obrigatórias</p>
-                          <p>Acesse seu provedor de domínio e adicione os 3 registros abaixo exatamente como indicados.</p>
-                          <p className="font-medium">O SSL será emitido automaticamente após a propagação do DNS.</p>
+                      {/* DNS Table */}
+                      <div className="bg-muted/30 border border-border rounded-xl p-6 space-y-4">
+                        <div className="flex flex-col gap-1">
+                          <h4 className="font-bold text-sm">Configuração DNS</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Acesse o painel do seu provedor (Hostinger, GoDaddy, etc) e adicione <strong>exatamente</strong> esses registros:
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          {/* CNAME RECORD */}
+                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-background p-4 rounded-lg border border-border shadow-sm">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Tipo</span>
+                              <Badge variant="outline" className="w-fit font-mono mt-1">CNAME</Badge>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Host / Nome</span>
+                              <span className="text-sm font-mono font-medium mt-1">www</span>
+                            </div>
+                            <div className="flex flex-col sm:col-span-1">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Valor / Destino</span>
+                              <span className="text-sm font-mono font-medium mt-1 text-primary truncate">{PLATFORM_EDGE}</span>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button variant="secondary" size="sm" className="h-8 gap-2" onClick={() => handleCopy(PLATFORM_EDGE, `${domain.id}-cname`)}>
+                                {copied === `${domain.id}-cname` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                {copied === `${domain.id}-cname` ? 'Copiado' : 'Copiar'}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* TXT RECORD */}
+                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-background p-4 rounded-lg border border-border shadow-sm">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Tipo</span>
+                              <Badge variant="outline" className="w-fit font-mono mt-1">TXT</Badge>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Host / Nome</span>
+                              <span className="text-sm font-mono font-medium mt-1">_lovable</span>
+                            </div>
+                            <div className="flex flex-col sm:col-span-1">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Valor</span>
+                              <span className="text-sm font-mono font-medium mt-1 text-primary truncate">lovable_verify={domain.verification_token || settingsId}</span>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button variant="secondary" size="sm" className="h-8 gap-2" onClick={() => handleCopy(`lovable_verify=${domain.verification_token || settingsId}`, `${domain.id}-txt`)}>
+                                {copied === `${domain.id}-txt` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                {copied === `${domain.id}-txt` ? 'Copiado' : 'Copiar'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3">
+                          <HelpCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-amber-800 leading-relaxed">
+                            Após adicionar os registros, aguarde a propagação (pode levar alguns minutos ou horas) e clique no botão <strong>Atualizar Status</strong> acima.
+                          </p>
                         </div>
                       </div>
-
-                      <div className="overflow-x-auto rounded-lg border border-border">
-                        <table className="w-full text-[11px] text-left">
-                          <thead className="bg-muted/50 text-muted-foreground uppercase font-bold">
-                            <tr className="border-b border-border">
-                              <th className="py-2 px-3">Tipo</th>
-                              <th className="py-2 px-3">Host / Nome</th>
-                              <th className="py-2 px-3">Valor / Destino</th>
-                              <th className="py-2 px-3">Finalidade</th>
-                              <th className="py-2 px-3 text-right">Copiar</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border font-mono">
-                            <tr>
-                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono bg-white">A</Badge></td>
-                              <td className="py-2 px-3 font-medium">@</td>
-                              <td className="py-2 px-3 text-primary">{PLATFORM_IP}</td>
-                              <td className="py-2 px-3 text-muted-foreground">Raiz do domínio</td>
-                              <td className="py-2 px-3 text-right">
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(PLATFORM_IP, `${domain.id}-a`)}>
-                                  {copied === `${domain.id}-a` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                </Button>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono bg-white">CNAME</Badge></td>
-                              <td className="py-2 px-3 font-medium">www</td>
-                              <td className="py-2 px-3 text-primary">{PLATFORM_EDGE}</td>
-                              <td className="py-2 px-3 text-muted-foreground">Subdomínio www</td>
-                              <td className="py-2 px-3 text-right">
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(PLATFORM_EDGE, `${domain.id}-cname`)}>
-                                  {copied === `${domain.id}-cname` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                </Button>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="py-2 px-3"><Badge variant="outline" className="text-[10px] font-mono bg-white">TXT</Badge></td>
-                              <td className="py-2 px-3 font-medium">_lovable</td>
-                              <td className="py-2 px-3 text-primary truncate max-w-[120px]">lovable_verify={domain.verification_token || settingsId}</td>
-                              <td className="py-2 px-3 text-muted-foreground">Verificação de posse</td>
-                              <td className="py-2 px-3 text-right">
+                    </div>
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(`lovable_verify=${domain.verification_token || settingsId}`, `${domain.id}-txt`)}>
                                   {copied === `${domain.id}-txt` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                 </Button>
