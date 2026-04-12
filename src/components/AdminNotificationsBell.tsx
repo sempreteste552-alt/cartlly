@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 
@@ -28,6 +29,7 @@ export function AdminNotificationsBell() {
   const { isSupported, isSubscribed, subscribe, loading: pushLoading } = usePushNotifications();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [testingPush, setTestingPush] = useState(false);
 
@@ -55,7 +57,11 @@ export function AdminNotificationsBell() {
           if (conv && conv.tenant_id === user.id) {
             playNotificationSound();
             toast.info("Nova mensagem de suporte recebida!", {
-              description: payload.new.body.substring(0, 50) + "..."
+              description: payload.new.body.substring(0, 50) + "...",
+              action: {
+                label: "Ver",
+                onClick: () => navigate(`/admin/suporte?conv=${payload.new.conversation_id}`),
+              },
             });
             queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
           }
