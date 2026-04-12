@@ -1206,7 +1206,29 @@ Saudação: ${greetings}`;
 
 /** Get current time in Brasília (UTC-3) */
 function getNowBrasilia() {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  return new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
 }
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
