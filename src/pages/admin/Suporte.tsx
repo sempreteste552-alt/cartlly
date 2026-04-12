@@ -106,7 +106,7 @@ export default function Suporte() {
         );
       }
       
-      return data.map((conv: any) => {
+      return (data || []).map((conv: any) => {
         const orderedMessages = [...(conv.messages || [])].sort(
           (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
@@ -117,7 +117,7 @@ export default function Suporte() {
           last_message: orderedMessages[0]?.body || "Nenhuma mensagem",
           unread_count: orderedMessages.filter((m: any) => m.sender_type === "customer" && !m.read_at).length || 0
         };
-      })) as Conversation[];
+      }) as Conversation[];
     },
     enabled: !!user,
   });
