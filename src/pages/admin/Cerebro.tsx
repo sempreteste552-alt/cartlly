@@ -686,7 +686,15 @@ export default function Cerebro() {
       const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
         body: { messages, userId: user!.id },
       });
-      if (error) throw error;
+      if (error) {
+        // Handle 401 specifically - session expired
+        const errorBody = typeof error === 'object' && error.message ? error.message : String(error);
+        if (errorBody.includes("401") || errorBody.includes("Sessão expirada") || errorBody.includes("Token")) {
+          toast.error("Sua sessão expirou. Faça login novamente.");
+          return;
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: (data) => {
