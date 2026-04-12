@@ -165,6 +165,7 @@ export default function Suporte() {
     queryKey: ["support_messages", selectedConversation?.id],
     queryFn: async () => {
       if (!selectedConversation) return [];
+
       const { data, error } = await supabase
         .from("support_messages")
         .select("*")
@@ -173,21 +174,31 @@ export default function Suporte() {
 
       if (error) throw error;
 
+      const now = new Date().toISOString();
+
       await supabase
         .from("support_messages")
-        .update({ delivered_at: new Date().toISOString() })
+        .update({ delivered_at: now })
         .eq("conversation_id", selectedConversation.id)
         .eq("sender_type", "customer")
         .is("delivered_at", null);
 
       await supabase
         .from("support_messages")
-        .update({ read_at: new Date().toISOString() })
+        .update({ read_at: now })
         .eq("conversation_id", selectedConversation.id)
         .eq("sender_type", "customer")
         .is("read_at", null);
 
-      return data as Message[];
+      return ((data || []) as Message[]).map((message) =>
+        message.sender_type === "customer"
+          ? {
+              ...message,
+              delivered_at: message.delivered_at ?? now,
+              read_at: message.read_at ?? now,
+            }
+          : message
+      );
     },
     enabled: !!selectedConversation,
   });
@@ -220,7 +231,6 @@ export default function Suporte() {
       const pushBody = body.length > 100 ? body.substring(0, 97) + "..." : body;
       const pushUrl = storeSettings?.store_slug ? `/loja/${storeSettings.store_slug}?chat=true` : "/";
 
-      // Mirror to tenant_messages for notification bell
       if (targetAuthUserId) {
         await supabase.from("tenant_messages").insert({
           source_tenant_id: user.id,
@@ -239,7 +249,6 @@ export default function Suporte() {
         });
       }
 
-      // Send push notification
       if (targetAuthUserId) {
         try {
           await supabase.functions.invoke("send-push-internal", {
@@ -299,19 +308,34 @@ export default function Suporte() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages" },
         (payload: any) => {
+          const isCurrentConversationOpen = selectedConversation?.id === payload.new.conversation_id && document.visibilityState === "visible";
+          const now = new Date().toISOString();
+
           if (payload.new.sender_type === "customer") {
             playNotificationSound();
+
+            const updates: Record<string, string> = {
+              delivered_at: payload.new.delivered_at || now,
+            };
+
+            if (isCurrentConversationOpen) {
+              updates.read_at = payload.new.read_at || now;
+            }
+
             supabase.from("support_messages")
-              .update({ delivered_at: new Date().toISOString() })
+              .update(updates)
               .eq("id", payload.new.id)
-              .is("delivered_at", null)
               .then();
           }
           
           queryClient.setQueryData(["support_messages", payload.new.conversation_id], (old: Message[] | undefined) => {
             const alreadyExists = (old || []).some(m => m.id === payload.new.id || (m.body === payload.new.body && Math.abs(new Date(m.created_at).getTime() - new Date(payload.new.created_at).getTime()) < 2000));
             if (alreadyExists) return old;
-            return [...(old || []), { ...payload.new, delivered_at: payload.new.delivered_at || new Date().toISOString() }];
+            return [...(old || []), {
+              ...payload.new,
+              delivered_at: payload.new.sender_type === "customer" ? (payload.new.delivered_at || now) : payload.new.delivered_at,
+              read_at: payload.new.sender_type === "customer" && isCurrentConversationOpen ? (payload.new.read_at || now) : payload.new.read_at,
+            }];
           });
 
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
@@ -330,7 +354,7 @@ export default function Suporte() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_conversations" },
-        (payload: any) => {
+        () => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
       )
@@ -341,7 +365,7 @@ export default function Suporte() {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
           setSelectedConversation(prev => {
             if (prev && payload.new.id === prev.id) {
-              return { ...prev, is_typing_customer: payload.new.is_typing_customer };
+              return { ...prev, ...payload.new };
             }
             return prev;
           });
@@ -352,14 +376,14 @@ export default function Suporte() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [user, queryClient, selectedConversation?.id]);
 
   useEffect(() => {
     if (selectedConversation) {
       const updateTypingStatus = async (typing: boolean) => {
         await supabase
           .from("support_conversations")
-          .update({ is_typing_admin: typing })
+          .update({ is_typing_admin: typing, updated_at: new Date().toISOString() })
           .eq("id", selectedConversation.id);
       };
 
@@ -377,7 +401,24 @@ export default function Suporte() {
         }
       }, 3000);
     }
-  }, [newMessage, selectedConversation]);
+  }, [newMessage, selectedConversation, isAdminTyping]);
+
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const touchPresence = () => {
+      supabase
+        .from("support_conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", selectedConversation.id)
+        .then();
+    };
+
+    touchPresence();
+    const interval = window.setInterval(touchPresence, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [selectedConversation?.id]);
 
   useEffect(() => {
     if (scrollRef.current) {
