@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, MessageCircle, Bot, User, Minimize2, ShoppingBag, ExternalLink } from "lucide-react";
+import { X, Send, Loader2, MessageCircle, Bot, User, Minimize2, ShoppingBag, ExternalLink, Headphones, Check, CheckCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,8 +10,9 @@ import { useLojaContext } from "@/pages/loja/LojaLayout";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n";
+import { v4 as uuidv4 } from "uuid";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; created_at?: string; read_at?: string | null; delivered_at?: string | null };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-store-chat`;
 
@@ -33,13 +34,24 @@ interface StorefrontAIChatProps {
 }
 
 export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor }: StorefrontAIChatProps) {
-  const { locale } = useTranslation();
+  const { locale, t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [whatsappRedirect, setWhatsappRedirect] = useState<{ phone: string; summary: string } | null>(null);
+  const [isHumanMode, setIsHumanMode] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [sessionId] = useState(() => {
+    let id = localStorage.getItem("chat_session_id");
+    if (!id) {
+      id = uuidv4();
+      localStorage.setItem("chat_session_id", id);
+    }
+    return id;
+  });
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { customer } = useCustomerAuth();
@@ -49,18 +61,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const displayName = aiName || "Assistente";
   const initials = displayName.slice(0, 2).toUpperCase();
   const accentColor = primaryColor || "#6d28d9";
+
   const uiText = {
     pt: {
       quickProducts: "🛍️ Ver produtos",
       quickPromos: "🏷️ Promoções",
       quickShipping: "🚚 Frete",
       quickOrder: "📦 Fazer pedido",
-      quickProductsPrompt: "Quais produtos vocês têm disponíveis?",
-      quickPromosPrompt: "Tem algum cupom de desconto ou promoção?",
-      quickShippingPrompt: "Como funciona a entrega? Quais regiões atendem?",
-      quickOrderPrompt: "Quero fazer um pedido!",
-      title: "Chat com IA",
-      subtitle: "Assistente de compras",
+      humanSupport: "🎧 Suporte Humano",
+      title: isHumanMode ? "Suporte Humano" : "Chat com IA",
+      subtitle: isHumanMode ? "Atendimento em tempo real" : "Assistente de compras",
       welcome: `Olá! Bem-vindo à ${storeName}! 👋`,
       intro: `Sou ${displayName}, seu assistente de compras. Posso ajudar a encontrar produtos, calcular frete e finalizar seu pedido!`,
       typing: "Digitando...",
@@ -105,37 +115,139 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     en: {
       quickProducts: "🛍️ View products", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Shipping", quickOrder: "📦 Place order",
       quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Do you have any discount coupon or promotion?", quickShippingPrompt: "How does shipping work? Which areas do you serve?", quickOrderPrompt: "I want to place an order!",
-      title: "AI chat", subtitle: "Shopping assistant", welcome: `Hello! Welcome to ${storeName}! 👋`, intro: `I'm ${displayName}, your shopping assistant. I can help you find products, calculate shipping and finish your order!`, typing: "Typing...", placeholder: "Type your message...", whatsapp: "Continue on WhatsApp",
+      title: isHumanMode ? "Human Support" : "AI chat", subtitle: isHumanMode ? "Real-time support" : "Shopping assistant", welcome: `Hello! Welcome to ${storeName}! 👋`, intro: `I'm ${displayName}, your shopping assistant. I can help you find products, calculate shipping and finish your order!`, typing: "Typing...", placeholder: "Type your message...", whatsapp: "Continue on WhatsApp",
       addressFound: "📍 **Address found:**", street: "🏠 **Street:**", neighborhood: "🏘️ **Neighborhood:**", city: "🏙️ **City:**", notFoundF: "Not found", notFoundM: "Not found", askNumber: "Now please tell me the **house/apartment number** and the **complement** (if any).", cepNotFound: "❌ ZIP code not found. Please check it and try again.",
       orderCreated: "🎉 **Order created successfully!**", orderNumber: "📋 **Number:**", total: "💰 **Total:**", status: "📦 **Status:**", pending: "Pending", trackOrder: "🔍 **Track your order:** Use the code", trackingSuffix: "on the tracking page.", thanks: "Thank you for your purchase! 🛍️", orderCreatedToast: "Order created successfully!", orderError: "❌ There was an error creating your order. Please try again or contact us.", orderProcessError: "❌ Error processing the order. Please try again.", noOrderForPayment: "❌ No order found to process the payment.", paymentError: "Error processing payment", pixCreated: "✅ **PIX generated successfully!**", pixCopy: "📋 **PIX code (copy and paste):**", pixExpires: "⏰ PIX expires in 30 minutes. After payment, your order will be processed automatically!", pixToast: "PIX generated! Scan the QR code to pay.", paymentApproved: "✅ **Payment approved!** Your order is being processed. Thank you! 🎉", paymentApprovedToast: "Payment approved!", boletoCreated: "📄 **Boleto generated successfully!**", boletoLink: "📥 Click here to view/download the boleto", boletoExpires: "⏰ The boleto expires in 3 business days.", boletoToast: "Boleto generated!", paymentProcessed: "💳 Payment processed! Status:", unknownError: "Unknown error", connectionError: "Connection error", noResponse: "No response",
     },
     es: {
       quickProducts: "🛍️ Ver productos", quickPromos: "🏷️ Promociones", quickShipping: "🚚 Envío", quickOrder: "📦 Hacer pedido",
       quickProductsPrompt: "¿Qué productos tienen disponibles?", quickPromosPrompt: "¿Tienen algún cupón de descuento o promoción?", quickShippingPrompt: "¿Cómo funciona la entrega? ¿Qué regiones atienden?", quickOrderPrompt: "¡Quiero hacer un pedido!",
-      title: "Chat con IA", subtitle: "Asistente de compras", welcome: `¡Hola! Bienvenido a ${storeName}! 👋`, intro: `Soy ${displayName}, tu asistente de compras. Puedo ayudarte a encontrar productos, calcular el envío y finalizar tu pedido.`, typing: "Escribiendo...", placeholder: "Escribe tu mensaje...", whatsapp: "Continuar por WhatsApp",
+      title: isHumanMode ? "Soporte Humano" : "Chat con IA", subtitle: isHumanMode ? "Atención en tiempo real" : "Asistente de compras", welcome: `¡Hola! Bienvenido a ${storeName}! 👋`, intro: `Soy ${displayName}, tu asistente de compras. Puedo ayudarte a encontrar productos, calcular el envío y finalizar tu pedido.`, typing: "Escribiendo...", placeholder: "Escribe tu mensaje...", whatsapp: "Continuar por WhatsApp",
       addressFound: "📍 **Dirección encontrada:**", street: "🏠 **Calle:**", neighborhood: "🏘️ **Barrio:**", city: "🏙️ **Ciudad:**", notFoundF: "No encontrada", notFoundM: "No encontrado", askNumber: "Ahora indícame el **número** de tu casa/departamento y el **complemento** (si existe).", cepNotFound: "❌ Código postal no encontrado. Por favor, revísalo e inténtalo de nuevo.",
       orderCreated: "🎉 **¡Pedido creado con éxito!**", orderNumber: "📋 **Número:**", total: "💰 **Total:**", status: "📦 **Estado:**", pending: "Pendiente", trackOrder: "🔍 **Sigue tu pedido:** Usa el código", trackingSuffix: "en la página de seguimiento.", thanks: "¡Gracias por tu compra! 🛍️", orderCreatedToast: "¡Pedido creado con éxito!", orderError: "❌ Hubo un error al crear tu pedido. Inténtalo de nuevo o contáctanos.", orderProcessError: "❌ Error al procesar el pedido. Inténtalo de nuevo.", noOrderForPayment: "❌ No se encontró ningún pedido para procesar el pago.", paymentError: "Error al procesar el pago", pixCreated: "✅ **¡PIX generado con éxito!**", pixCopy: "📋 **Código PIX (copiar y pegar):**", pixExpires: "⏰ El PIX vence en 30 minutos. Después del pago, tu pedido se procesará automáticamente.", pixToast: "¡PIX generado! Escanea el código QR para pagar.", paymentApproved: "✅ **¡Pago aprobado!** Tu pedido está siendo procesado. ¡Gracias! 🎉", paymentApprovedToast: "¡Pago aprobado!", boletoCreated: "📄 **¡Boleto generado con éxito!**", boletoLink: "📥 Haz clic aquí para ver/descargar el boleto", boletoExpires: "⏰ El boleto vence en 3 días hábiles.", boletoToast: "¡Boleto generado!", paymentProcessed: "💳 ¡Pago procesado! Estado:", unknownError: "Error desconocido", connectionError: "Error de conexión", noResponse: "Sin respuesta",
     },
     fr: {
       quickProducts: "🛍️ Voir les produits", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Livraison", quickOrder: "📦 Commander",
       quickProductsPrompt: "Quels produits avez-vous disponibles ?", quickPromosPrompt: "Avez-vous un coupon de réduction ou une promotion ?", quickShippingPrompt: "Comment fonctionne la livraison ? Quelles zones desservez-vous ?", quickOrderPrompt: "Je veux passer une commande !",
-      title: "Chat IA", subtitle: "Assistant d'achat", welcome: `Bonjour ! Bienvenue chez ${storeName} ! 👋`, intro: `Je suis ${displayName}, votre assistant d'achat. Je peux vous aider à trouver des produits, calculer la livraison et finaliser votre commande !`, typing: "Saisie en cours...", placeholder: "Écrivez votre message...", whatsapp: "Continuer sur WhatsApp",
+      title: isHumanMode ? "Support Humain" : "Chat IA", subtitle: isHumanMode ? "Support en temps réel" : "Assistant d'achat", welcome: `Bonjour ! Bienvenue chez ${storeName} ! 👋`, intro: `Je suis ${displayName}, votre assistant d'achat. Je peux vous aider à trouver des produits, calculer la livraison et finaliser votre commande !`, typing: "Saisie en cours...", placeholder: "Écrivez votre message...", whatsapp: "Continuer sur WhatsApp",
       addressFound: "📍 **Adresse trouvée :**", street: "🏠 **Rue :**", neighborhood: "🏘️ **Quartier :**", city: "🏙️ **Ville :**", notFoundF: "Non trouvée", notFoundM: "Non trouvé", askNumber: "Indiquez-moi maintenant le **numéro** de votre maison/appartement et le **complément** (s'il y en a un).", cepNotFound: "❌ Code postal introuvable. Veuillez vérifier et réessayer.",
       orderCreated: "🎉 **Commande créée avec succès !**", orderNumber: "📋 **Numéro :**", total: "💰 **Total :**", status: "📦 **Statut :**", pending: "En attente", trackOrder: "🔍 **Suivez votre commande :** Utilisez le code", trackingSuffix: "sur la page de suivi.", thanks: "Merci pour votre achat ! 🛍️", orderCreatedToast: "Commande créée avec succès !", orderError: "❌ Une erreur s'est produite lors de la création de votre commande. Veuillez réessayer ou nous contacter.", orderProcessError: "❌ Erreur lors du traitement de la commande. Veuillez réessayer.", noOrderForPayment: "❌ Aucune commande trouvée pour traiter le paiement.", paymentError: "Erreur lors du traitement du paiement", pixCreated: "✅ **PIX généré avec succès !**", pixCopy: "📋 **Code PIX (copier-coller) :**", pixExpires: "⏰ Le PIX expire dans 30 minutes. Après le paiement, votre commande sera traitée automatiquement !", pixToast: "PIX généré ! Scannez le QR code pour payer.", paymentApproved: "✅ **Paiement approuvé !** Votre commande est en cours de traitement. Merci ! 🎉", paymentApprovedToast: "Paiement approuvé !", boletoCreated: "📄 **Boleto généré avec succès !**", boletoLink: "📥 Cliquez ici pour voir/télécharger le boleto", boletoExpires: "⏰ Le boleto expire dans 3 jours ouvrables.", boletoToast: "Boleto généré !", paymentProcessed: "💳 Paiement traité ! Statut :", unknownError: "Erreur inconnue", connectionError: "Erreur de connexion", noResponse: "Pas de réponse",
     },
-  }[locale];
+  }[locale] || {
+    // Fallback for types
+  };
 
+  // Human support message fetching
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    if (isHumanMode && open) {
+      const initSupport = async () => {
+        // Find or create conversation
+        const { data: conv, error } = await supabase
+          .from("support_conversations")
+          .select("id")
+          .eq("tenant_id", storeUserId)
+          .eq("session_id", sessionId)
+          .maybeSingle();
 
-  useEffect(() => {
-    if (open && inputRef.current) {
-      inputRef.current.focus();
+        if (error) {
+          console.error("Error fetching conversation:", error);
+          return;
+        }
+
+        let currentConvId = conv?.id;
+
+        if (!currentConvId) {
+          const { data: newConv, error: createError } = await supabase
+            .from("support_conversations")
+            .insert({
+              tenant_id: storeUserId,
+              session_id: sessionId,
+              customer_id: customer?.id || null,
+            })
+            .select("id")
+            .single();
+
+          if (createError) {
+            console.error("Error creating conversation:", createError);
+            return;
+          }
+          currentConvId = newConv.id;
+        }
+
+        setConversationId(currentConvId);
+
+        // Fetch messages
+        const { data: msgs } = await supabase
+          .from("support_messages")
+          .select("*")
+          .eq("conversation_id", currentConvId)
+          .order("created_at", { ascending: true });
+
+        if (msgs) {
+          setMessages(msgs.map(m => ({
+            role: m.sender_type === "customer" ? "user" : "assistant",
+            content: m.body,
+            created_at: m.created_at,
+            read_at: m.read_at,
+            delivered_at: m.delivered_at
+          })));
+
+          // Mark admin messages as read
+          await supabase
+            .from("support_messages")
+            .update({ read_at: new Date().toISOString() })
+            .eq("conversation_id", currentConvId)
+            .eq("sender_type", "admin")
+            .is("read_at", null);
+        }
+      };
+
+      initSupport();
+
+      // Real-time subscription
+      const channel = supabase
+        .channel(`support_${sessionId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "support_messages" },
+          (payload: any) => {
+            if (payload.new.conversation_id === conversationId) {
+              setMessages(prev => [...prev, {
+                role: payload.new.sender_type === "customer" ? "user" : "assistant",
+                content: payload.new.body,
+                created_at: payload.new.created_at,
+                read_at: payload.new.read_at,
+                delivered_at: payload.new.delivered_at
+              }]);
+              
+              if (payload.new.sender_type === "admin") {
+                // Mark as read
+                supabase
+                  .from("support_messages")
+                  .update({ read_at: new Date().toISOString() })
+                  .eq("id", payload.new.id)
+                  .then();
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-  }, [open]);
+  }, [isHumanMode, open, storeUserId, sessionId, conversationId]);
+
+  const handleHumanSupportClick = () => {
+    setIsHumanMode(true);
+    setMessages([]); // Clear AI messages and load human messages
+  };
+
+  const handleAISupportClick = () => {
+    setIsHumanMode(false);
+    setMessages([]); // Revert to AI
+  };
 
   const processActions = useCallback(async (content: string) => {
     // CEP Lookup
@@ -342,6 +454,24 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       }
     }
   }, [storeUserId, queryClient, lastOrderId]);
+
+  const sendHumanMessage = async (text: string) => {
+    if (!text.trim() || !conversationId) return;
+
+    const { error } = await supabase
+      .from("support_messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_type: "customer",
+        body: text.trim(),
+      });
+
+    if (error) {
+      toast.error("Erro ao enviar mensagem");
+      return;
+    }
+    setInput("");
+  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
