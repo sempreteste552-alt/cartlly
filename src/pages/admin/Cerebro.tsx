@@ -735,6 +735,7 @@ export default function Cerebro() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
+      setPendingActions({});
       toast.success("Chat limpo!");
     }
   });
