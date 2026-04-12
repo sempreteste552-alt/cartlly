@@ -490,8 +490,6 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                     }}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja
                     </Button>
-                      <Eye className="mr-2 h-3 w-3" /> Ver Loja
-                    </Button>
                   )}
                   <Button
                     variant="outline"
