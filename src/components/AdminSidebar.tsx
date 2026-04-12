@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { normalizeDomain } from "@/lib/storeDomain";
+import { normalizeDomain, buildStoreUrl } from "@/lib/storeDomain";
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
