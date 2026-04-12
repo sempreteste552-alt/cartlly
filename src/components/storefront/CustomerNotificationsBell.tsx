@@ -105,16 +105,27 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
             {uiText.empty}
           </div>
-        ) : (
+         ) : (
           notifications.map((n: any) => (
             <div key={n.id}>
               <button
-                onClick={() => { if (!n.read) markAsRead(n); }}
+                onClick={() => {
+                  if (!n.read) markAsRead(n);
+                  if (n.is_chat || n.message_type === "support") {
+                    // Add ?chat=true to current URL to open chat widget
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("chat", "true");
+                    window.history.pushState({}, "", url.toString());
+                    window.dispatchEvent(new Event("popstate"));
+                    // Force reload the param check
+                    window.location.search = url.search;
+                  }
+                }}
                 className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
               >
                 <div className="flex items-start gap-2">
                   <span className="text-lg shrink-0 mt-0.5">
-                    {n.message_type === "promo" || n.message_type === "promotion" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
+                    {n.is_chat || n.message_type === "support" ? "💬" : n.message_type === "promo" || n.message_type === "promotion" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
