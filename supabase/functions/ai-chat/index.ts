@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, storeContext, userId } = await req.json();
+    const { messages, storeContext, userId, clientTime } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -105,19 +105,51 @@ serve(async (req) => {
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    // Add current time context
-    const now = new Date();
-    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
-    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
-    const hourBr = parseInt(brTime.split(":")[0]);
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    // Add current time context with robust calculation
+    // Prefer clientTime if provided to synchronize with user's local experience
+    const now = clientTime ? new Date(clientTime) : new Date();
+    
+    const formatter = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "numeric",
+      minute: "numeric",
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+      hour12: false,
+      weekday: "long",
+    });
+    const parts = formatter.formatToParts(now);
+    const d: any = {};
+    parts.forEach(({ type, value }) => { d[type] = value; });
+    
+    const hour = d.hour.padStart(2, "0");
+    const minute = d.minute.padStart(2, "0");
+    const day = d.day.padStart(2, "0");
+    const month = d.month.padStart(2, "0");
+    const year = d.year;
+    const weekday = d.weekday;
+    
+    const brTime = `${hour}:${minute}`;
+    const brDate = `${day}/${month}/${year}`;
+    const hourBr = parseInt(hour);
+    const greetingBr = hourBr < 6 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    
+    console.log(`[ai-chat] Contexto temporal: ${brTime} (${weekday}), ${brDate}. UTC (Base): ${now.toISOString()}. Client-Sync: ${!!clientTime}`);
+
+
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
 
-CONTEÚDO TEMPORAL:
-- Agora são ${brTime} do dia ${brDate} (Horário de Brasília).
-- Use a saudação "${greetingBr}" se for iniciar a conversa agora.
+CONTEÚDO TEMPORAL (EXTREMAMENTE CRÍTICO PARA SAUDAÇÃO E MARKETING):
+- Hoje é ${weekday}, dia ${brDate}.
+- Agora são exatos ${brTime} (Horário de Brasília).
+- Sua saudação atual DEVE ser "${greetingBr}" se estiver iniciando ou voltando à conversa agora.
+- Use o contexto de "${weekday}" e o período do dia (${greetingBr}) para adaptar seu tom, seguindo rigorosamente as instruções do lojista na base de treinamento acima.
+- NUNCA diga "bom dia" se o horário for madrugada (00h-06h).
+
+
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}

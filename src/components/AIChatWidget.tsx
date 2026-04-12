@@ -837,7 +837,10 @@ export function AIChatWidget() {
         body: JSON.stringify({
           messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
           storeContext: getStoreContext(),
+          userId: user?.id,
+          clientTime: new Date().toISOString(),
         }),
+
       });
 
       if (!resp.ok) {
