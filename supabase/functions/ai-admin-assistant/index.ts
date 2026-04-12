@@ -153,7 +153,7 @@ serve(async (req) => {
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${finalHourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${brTime} de ${weekday}, dia ${brDate} (horário de Brasília). Use "${greetingBr}" como saudação apropriada.
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
 PERSONALIDADE: ${personalityDesc}
