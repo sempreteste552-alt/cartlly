@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 import { generateOrderLabel } from "@/lib/generateOrderLabel";
 import { exportToCSV, exportToXLSX, exportToPDF } from "@/lib/exportUtils";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 import { useTranslation } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -94,7 +96,14 @@ export default function Pedidos() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
+  const { ctx } = useTenantContext();
+  const canPrintLabel = canAccess("gateway", ctx); // STARTER+
+
   const handlePrintLabel = async (order: any) => {
+    if (!canPrintLabel) {
+      toast.error("Imprimir nota está disponível a partir do plano Starter. Faça upgrade para desbloquear.");
+      return;
+    }
     const pStatus = (order as any).payments?.[0]?.status || "pendente";
     const isPaid = pStatus === "approved" || pStatus === "paid";
     
