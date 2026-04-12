@@ -225,10 +225,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       initSupport();
 
       const channel = supabase
-        .channel(`support_storefront_${conversationId}`)
+        .channel(`support_storefront_${conversationId || currentConvId}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
+          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId || currentConvId}` },
           (payload: any) => {
               setMessages(prev => {
                 const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
@@ -236,6 +236,21 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 
                 if (payload.new.sender_type === "admin") {
                   playNotificationSound();
+                  // Auto-set delivered_at for admin messages arriving to customer
+                  supabase.from("support_messages")
+                    .update({ delivered_at: new Date().toISOString() })
+                    .eq("id", payload.new.id)
+                    .is("delivered_at", null)
+                    .then();
+                  
+                  // Auto-set read_at if chat is open
+                  if (open) {
+                    supabase.from("support_messages")
+                      .update({ read_at: new Date().toISOString() })
+                      .eq("id", payload.new.id)
+                      .is("read_at", null)
+                      .then();
+                  }
                 }
 
                 return [...prev, {
@@ -243,8 +258,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                   role: payload.new.sender_type === "customer" ? "user" : "assistant",
                   content: payload.new.body,
                   created_at: payload.new.created_at,
-                  read_at: payload.new.read_at,
-                  delivered_at: payload.new.delivered_at
+                  read_at: open && payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.read_at,
+                  delivered_at: payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.delivered_at
                 }];
               });
               
@@ -255,7 +270,19 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         )
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
+          { event: "UPDATE", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId || currentConvId}` },
+          (payload: any) => {
+            // Reflect read_at / delivered_at changes in real-time
+            setMessages(prev => prev.map(m => 
+              m.id === payload.new.id 
+                ? { ...m, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
+                : m
+            ));
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId || currentConvId}` },
           (payload: any) => {
             setIsAdminTyping(payload.new.is_typing_admin);
           }

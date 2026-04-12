@@ -260,12 +260,18 @@ export default function Suporte() {
         (payload: any) => {
           if (payload.new.sender_type === "customer") {
             playNotificationSound();
+            // Auto-set delivered_at for customer messages arriving to admin
+            supabase.from("support_messages")
+              .update({ delivered_at: new Date().toISOString() })
+              .eq("id", payload.new.id)
+              .is("delivered_at", null)
+              .then();
           }
           
           queryClient.setQueryData(["support_messages", payload.new.conversation_id], (old: Message[] | undefined) => {
             const alreadyExists = (old || []).some(m => m.id === payload.new.id || (m.body === payload.new.body && Math.abs(new Date(m.created_at).getTime() - new Date(payload.new.created_at).getTime()) < 2000));
             if (alreadyExists) return old;
-            return [...(old || []), payload.new];
+            return [...(old || []), { ...payload.new, delivered_at: payload.new.delivered_at || new Date().toISOString() }];
           });
 
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
