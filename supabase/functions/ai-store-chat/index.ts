@@ -134,6 +134,35 @@ serve(async (req) => {
     const persuasionStyle = aiConfig?.persuasion_style || "";
     const brandIdentity = aiConfig?.brand_identity || "";
 
+    const toneInstructions: Record<string, string> = {
+      educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais como 'por favor', 'com prazer', 'ficamos felizes'. Transmita calma e acolhimento.",
+      profissional: "Mantenha um tom profissional, direto e eficiente. Sem informalidade excessiva. Use linguagem empresarial mas acessível.",
+      divertida: "Seja divertida, use emojis com frequência, gírias leves e tom descontraído. Faça o cliente se sentir à vontade com humor leve.",
+      formal: "Use linguagem formal e respeitosa. Trate o cliente por 'senhor(a)'. Evite gírias e abreviações. Mantenha elegância na comunicação.",
+      amigavel: "Seja como um amigo íntimo e atencioso. Use um tom caloroso, empático e extremamente pessoal. Chame pelo nome, use gírias leves se apropriado, e demonstre que você se importa genuinamente com a satisfação dele. Crie um vínculo real, não pareça um robô."
+    };
+
+    // Saudação baseada no horário de Brasília (UTC-3)
+    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const hourBr = nowBrasilia.getHours();
+    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+
+    const languageInstruction = locale === "en"
+      ? "ALWAYS reply in English."
+      : locale === "es"
+      ? "RESPONDE SIEMPRE en español."
+      : locale === "fr"
+      ? "RÉPONDS TOUJOURS en français."
+      : "SEMPRE responda em português do Brasil.";
+
+    const promptLanguage = locale === "en"
+      ? "English"
+      : locale === "es"
+      ? "español"
+      : locale === "fr"
+      ? "français"
+      : "português do Brasil";
+
     const brainBlock = [
       "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO DO TENANT (MANDATORY PRIORITY):",
       brandIdentity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${brandIdentity}` : "",
