@@ -110,6 +110,40 @@ export default function Suporte() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoSelectedConvRef = useRef<string | null>(null);
 
+  const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("support_messages")
+      .update({ delivered_at: now })
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "customer")
+      .is("delivered_at", null);
+
+    if (markAsRead) {
+      await supabase
+        .from("support_messages")
+        .update({ read_at: now })
+        .eq("conversation_id", conversationId)
+        .eq("sender_type", "customer")
+        .is("read_at", null);
+    }
+
+    queryClient.setQueryData(["support_messages", conversationId], (old: Message[] | undefined) =>
+      (old || []).map((message) =>
+        message.sender_type === "customer"
+          ? {
+              ...message,
+              delivered_at: message.delivered_at ?? now,
+              read_at: markAsRead ? message.read_at ?? now : message.read_at,
+            }
+          : message
+      )
+    );
+
+    return now;
+  };
+
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ["support_conversations", user?.id],
     queryFn: async () => {
@@ -174,28 +208,17 @@ export default function Suporte() {
 
       if (error) throw error;
 
-      const now = new Date().toISOString();
-
-      await supabase
-        .from("support_messages")
-        .update({ delivered_at: now })
-        .eq("conversation_id", selectedConversation.id)
-        .eq("sender_type", "customer")
-        .is("delivered_at", null);
-
-      await supabase
-        .from("support_messages")
-        .update({ read_at: now })
-        .eq("conversation_id", selectedConversation.id)
-        .eq("sender_type", "customer")
-        .is("read_at", null);
+      const now = await syncSelectedConversationReception(
+        selectedConversation.id,
+        document.visibilityState === "visible"
+      );
 
       return ((data || []) as Message[]).map((message) =>
         message.sender_type === "customer"
           ? {
               ...message,
               delivered_at: message.delivered_at ?? now,
-              read_at: message.read_at ?? now,
+              read_at: document.visibilityState === "visible" ? message.read_at ?? now : message.read_at,
             }
           : message
       );
@@ -512,9 +535,7 @@ export default function Suporte() {
                       </AvatarFallback>
                     </Avatar>
                     {(() => {
-                      const lastMsg = new Date(conv.last_message_at);
-                      const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
-                      const isOnline = conv.is_typing_customer || diffMin < 5;
+                      const isOnline = isConversationOnline(conv);
                       return (
                         <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${isOnline ? "bg-green-400" : "bg-muted-foreground/30"}`} />
                       );
@@ -570,9 +591,7 @@ export default function Suporte() {
                     </AvatarFallback>
                   </Avatar>
                   {(() => {
-                    const lastMsg = new Date(selectedConversation.last_message_at);
-                    const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
-                    const isOnline = selectedConversation.is_typing_customer || diffMin < 5;
+                    const isOnline = isConversationOnline(selectedConversation);
                     return (
                       <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${isOnline ? "bg-green-400" : "bg-muted-foreground/40"}`} />
                     );
@@ -585,20 +604,14 @@ export default function Suporte() {
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     {selectedConversation.is_typing_customer ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
-                    ) : (() => {
-                      const lastMsg = new Date(selectedConversation.last_message_at);
-                      const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
-                      if (diffMin < 5) return (
-                        <>
-                          <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
-                          Online
-                        </>
-                      );
-                      if (diffMin < 60) return `Visto há ${diffMin}min`;
-                      const diffH = Math.floor(diffMin / 60);
-                      if (diffH < 24) return `Visto há ${diffH}h`;
-                      return `Visto ${format(lastMsg, "dd/MM HH:mm")}`;
-                    })()}
+                    ) : isConversationOnline(selectedConversation) ? (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
+                        Online
+                      </>
+                    ) : (
+                      formatCustomerPresence(selectedConversation)
+                    )}
                   </p>
                 </div>
               </div>
