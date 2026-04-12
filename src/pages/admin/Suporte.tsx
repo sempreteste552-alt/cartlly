@@ -296,7 +296,9 @@ export default function Suporte() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-semibold text-sm text-foreground truncate">Visitante {conv.session_id.slice(0, 4)}</span>
+                      <span className="font-semibold text-sm text-foreground truncate">
+                        {conv.customer?.name || `Visitante ${conv.session_id.slice(0, 4)}`}
+                      </span>
                       <span className={`text-[10px] shrink-0 ${(conv.unread_count || 0) > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                         {formatConversationDate(conv.last_message_at)}
                       </span>
