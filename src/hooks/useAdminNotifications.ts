@@ -3,6 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+const SOUNDS = {
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
+
 export interface AdminNotification {
   id: string;
   title: string;
