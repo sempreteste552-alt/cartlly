@@ -12,7 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown, Eye } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown, Eye, ExternalLink } from "lucide-react";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
@@ -29,6 +29,8 @@ import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 import { useTranslation } from "@/i18n";
+import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 
 export default function Produtos() {
   const { data: products, isLoading } = useProducts();
@@ -42,6 +44,7 @@ export default function Produtos() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { data: settings } = useStoreSettings();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -52,6 +55,13 @@ export default function Produtos() {
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
   const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
+
+  const getProductUrl = (product: any) => buildStoreUrl({
+    slug: settings?.store_slug,
+    customDomain: settings?.custom_domain,
+    domainStatus: settings?.domain_status,
+    path: `/p/${product.slug}`
+  });
 
   // Auto-open product editor when navigating from dashboard low-stock alert
   useEffect(() => {

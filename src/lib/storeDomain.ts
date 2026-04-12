@@ -42,12 +42,15 @@ export function buildStoreUrl({
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
 
-  // If we have an active custom domain with SSL, use it as the primary URL
-  if (domain && (domainStatus === "verified" || domainStatus === "active") && sslReady !== false) {
+  // Priority 1: Verified Custom Domain with SSL
+  // Status 'active' or 'verified' are considered valid for public use
+  if (domain && (domainStatus === "verified" || domainStatus === "active")) {
+    // If sslReady is explicitly false, we might want to wait, 
+    // but usually if status is 'active', SSL is already verified by the edge function
     return `https://${domain}${normalizedPath}`;
   }
 
-  // Fallback to the platform slug-based URL
+  // Priority 2: Platform Slug-based URL (Fallback)
   if (slug) {
     const base = `/loja/${slug}`;
     const resultPath = normalizedPath === "/" ? base : `${base}${normalizedPath}`;

@@ -5,22 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLATFORM_IPS = new Set([
-  "185.158.133.1",
-  "185.41.148.1",
-  "185.41.148.2",
-]);
-
-const PLATFORM_HOST_SUFFIXES = [".lovable.app", ".lovableproject.com"];
-
-function sanitizeDomain(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "")
-    .replace(/\.$/, "");
-}
+const LOVABLE_EDGE_CNAME = "edge.lovableproject.com";
 
 async function resolveDns(name: string, type: string) {
   try {
@@ -33,71 +18,29 @@ async function resolveDns(name: string, type: string) {
 }
 
 function normalizeDnsValue(value: string) {
-  return value.trim().toLowerCase().replace(/\.$/, "");
-}
-
-function pointsToPlatformIp(value: string) {
-  return PLATFORM_IPS.has(normalizeDnsValue(value));
-}
-
-function pointsToPlatformHostname(value: string) {
-  const normalized = normalizeDnsValue(value);
-  return PLATFORM_HOST_SUFFIXES.some((suffix) => normalized.endsWith(suffix));
-}
-
-async function inspectHostResolution(host: string) {
-  const aData = await resolveDns(host, "A");
-  const answers = Array.isArray(aData?.Answer) ? aData.Answer : [];
-  
-  const aRecords = answers
-    .filter((record: any) => record?.type === 1)
-    .map((record: any) => normalizeDnsValue(String(record?.data || "")));
-
-  const cnameRecords = answers
-    .filter((record: any) => record?.type === 5)
-    .map((record: any) => normalizeDnsValue(String(record?.data || "")));
-
-  const matchedBy = aRecords.some(pointsToPlatformIp)
-    ? "a"
-    : cnameRecords.some(pointsToPlatformHostname)
-      ? "cname"
-      : null;
-
-  return {
-    host,
-    aRecords,
-    cnameRecords,
-    matchedBy,
-    matched: matchedBy !== null,
-  };
+  return value.trim().toLowerCase().replace(/\.$/, "").replace(/"/g, "");
 }
 
 async function checkHttps(domain: string) {
-  let lastError = null;
-  // Try with different protocols and methods
-  const methods = ["HEAD", "GET"];
-  for (const method of methods) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(`https://${domain}`, {
-        method,
-        redirect: "manual",
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`https://${domain}`, {
+      method: "HEAD",
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
 
-      if (response.status >= 200 && response.status < 500) {
-        return { ready: true, error: null };
-      }
-    } catch (error: any) {
-      lastError = error.message;
+    if (response.status >= 200 && response.status < 500) {
+      return { ready: true, error: null };
     }
+    return { ready: false, error: `Status ${response.status} returned` };
+  } catch (error: any) {
+    return { ready: false, error: error.message || "SSL certificate not active or unreachable" };
   }
-
-  return { ready: false, error: lastError || "SSL certificate not yet active or untrusted" };
 }
 
 Deno.serve(async (req) => {
@@ -107,132 +50,157 @@ Deno.serve(async (req) => {
 
   try {
     const { settingsId, domain, domainId } = await req.json();
-    const requestedDomain = sanitizeDomain(domain || "");
-
-    if (!settingsId || !requestedDomain) {
-      return new Response(JSON.stringify({ error: "Missing settingsId or domain" }), {
+    if (!settingsId || (!domain && !domainId)) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const apexDomain = requestedDomain.replace(/^www\./, "");
-    const aHosts = Array.from(new Set([requestedDomain, apexDomain].filter(Boolean)));
-    const txtHosts = Array.from(new Set([`_lovable.${requestedDomain}`, `_lovable.${apexDomain}`]));
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // 1. Fetch domain info
+    // 1. Fetch domain record
     let domainRecord;
     if (domainId) {
       const { data } = await supabase.from("store_domains").select("*").eq("id", domainId).single();
       domainRecord = data;
     } else {
-      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", requestedDomain).single();
+      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", domain).single();
       domainRecord = data;
     }
 
-    const verificationToken = domainRecord?.verification_token || settingsId;
-    const possibleTxts = [
-      `lovable_verify=${verificationToken}`,
-      verificationToken,
-      `lovable_verify=${settingsId}`,
-      settingsId,
-    ];
-
-    let aRecordFound = false;
-    let txtRecordFound = false;
-    let checkedAHosts = [];
-    let checkedTxtHosts = [];
-
-    // Check A/CNAME records
-    for (const host of aHosts) {
-      const resolution = await inspectHostResolution(host);
-      checkedAHosts.push(resolution);
-      if (resolution.matched) aRecordFound = true;
+    if (!domainRecord) {
+      return new Response(JSON.stringify({ error: "Domain not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Check TXT records
-    for (const host of txtHosts) {
-      const txtData = await resolveDns(host, "TXT");
-      const records = (txtData.Answer || []).map((r: any) => String(r.data || "").replace(/["']/g, "").trim());
-      checkedTxtHosts.push({ host, records });
-      if (records.some((record) => possibleTxts.some(p => record.includes(p) || p.includes(record)))) {
-        txtRecordFound = true;
+    const hostname = domainRecord.hostname;
+    const isWww = hostname.startsWith("www.");
+    const apexDomain = isWww ? hostname.substring(4) : hostname;
+    const wwwDomain = isWww ? hostname : `www.${apexDomain}`;
+    
+    // We strictly enforce/recommend www for the CNAME
+    const targetHost = wwwDomain;
+    const verificationHost = `_lovable.${apexDomain}`;
+    const verificationToken = domainRecord.verification_token;
+    const expectedTxt = `lovable_verify=${verificationToken}`;
+
+    // 2. Perform DNS Checks
+    const dnsResults: any = {
+      cname: { found: false, value: null, correct: false },
+      txt: { found: false, value: [], correct: false },
+      conflicts: [],
+    };
+
+    // A. Check CNAME for wwwDomain
+    const cnameData = await resolveDns(targetHost, "CNAME");
+    if (cnameData.Answer) {
+      const record = cnameData.Answer.find((r: any) => r.type === 5);
+      if (record) {
+        dnsResults.cname.found = true;
+        dnsResults.cname.value = normalizeDnsValue(record.data);
+        dnsResults.cname.correct = dnsResults.cname.value === LOVABLE_EDGE_CNAME;
       }
     }
 
-    const dnsVerified = aRecordFound;
-    const { ready: sslReady, error: sslError } = dnsVerified ? await checkHttps(requestedDomain) : { ready: false, error: "DNS incomplete" };
-    
-    // Status Mapping
-    // pending_dns: No A record found
-    // pending_verification: A record found but TXT missing
-    // pending_ssl: DNS/TXT ok but SSL failing
-    // active: All ok
-    let newStatus = "failed";
-    if (sslReady) {
-      newStatus = "active";
-    } else if (dnsVerified && txtRecordFound) {
-      newStatus = "pending_ssl";
-    } else if (dnsVerified) {
-      newStatus = "pending_verification";
-    } else {
-      newStatus = "pending_dns";
+    // B. Check TXT for verification
+    const txtData = await resolveDns(verificationHost, "TXT");
+    if (txtData.Answer) {
+      const records = txtData.Answer.filter((r: any) => r.type === 16).map((r: any) => normalizeDnsValue(r.data));
+      dnsResults.txt.found = records.length > 0;
+      dnsResults.txt.value = records;
+      dnsResults.txt.correct = records.some((r: string) => r.includes(expectedTxt));
     }
+
+    // C. Check for conflicts on Apex domain (A records pointing elsewhere)
+    const apexAData = await resolveDns(apexDomain, "A");
+    if (apexAData.Answer) {
+      const aRecords = apexAData.Answer.filter((r: any) => r.type === 1).map((r: any) => r.data);
+      if (aRecords.length > 0) {
+        dnsResults.conflicts.push({
+          type: "A",
+          host: apexDomain,
+          values: aRecords,
+          message: "Encontramos um apontamento A no domínio raiz que pode impedir a emissão do SSL.",
+        });
+      }
+    }
+
+    // 3. SSL Check (only if DNS/TXT are good)
+    let sslResult = { ready: false, error: "Aguardando verificação DNS e TXT" };
+    if (dnsResults.cname.correct && dnsResults.txt.correct) {
+      sslResult = await checkHttps(targetHost);
+    }
+
+    // 4. Update Statuses
+    // Verification status
+    const txtStatus = dnsResults.txt.correct ? "verified" : "pending";
+    
+    // DNS status
+    let dnsStatus = "pending";
+    if (dnsResults.cname.correct) {
+      dnsStatus = dnsResults.conflicts.length > 0 ? "conflict" : "propagated";
+    } else if (dnsResults.cname.found) {
+      dnsStatus = "failed"; // Found but incorrect
+    }
+
+    // SSL status
+    let sslStatus = "pending";
+    if (sslResult.ready) {
+      sslStatus = "active";
+    } else if (dnsStatus === "propagated" && txtStatus === "verified") {
+      sslStatus = "emitting";
+    } else if (sslResult.error && sslResult.error !== "Aguardando verificação DNS e TXT") {
+      sslStatus = "failed";
+    }
+
+    // Final Domain Status
+    let finalStatus = "pending_dns";
+    if (sslStatus === "active") finalStatus = "active";
+    else if (sslStatus === "emitting") finalStatus = "pending_ssl";
+    else if (txtStatus === "verified" && dnsStatus === "propagated") finalStatus = "pending_ssl";
+    else if (txtStatus === "verified") finalStatus = "pending_dns";
 
     const updateData = {
-      status: newStatus,
-      txt_status: txtRecordFound ? "verified" : "pending",
-      dns_status: aRecordFound ? "propagated" : "pending",
-      ssl_status: sslReady ? "active" : (dnsVerified && txtRecordFound ? "pending" : "failed"),
-      is_published: sslReady && domainRecord?.is_primary,
+      status: finalStatus,
+      txt_status: txtStatus,
+      dns_status: dnsStatus,
+      ssl_status: sslStatus,
       last_verified_at: new Date().toISOString(),
-      last_ssl_error: sslError,
+      dns_validation_details: dnsResults,
+      ssl_validation_details: sslResult,
+      conflicting_records: dnsResults.conflicts,
+      last_ssl_error: sslResult.error,
     };
 
-    if (sslReady) {
-      (updateData as any).ssl_issued_at = new Date().toISOString();
-    }
+    await supabase.from("store_domains").update(updateData).eq("id", domainRecord.id);
 
-    if (domainRecord) {
-      await supabase.from("store_domains").update(updateData).eq("id", domainRecord.id);
+    // Sync with store_settings if primary
+    if (domainRecord.is_primary && finalStatus === "active") {
+      await supabase.from("store_settings").update({
+        custom_domain: hostname,
+        domain_status: "verified"
+      }).eq("id", settingsId);
     }
-
-    // Legacy support update for store_settings
-    await supabase
-      .from("store_settings")
-      .update({
-        domain_status: newStatus === "active" ? "verified" : "pending",
-        domain_last_check: new Date().toISOString(),
-        custom_domain: (newStatus === "active" && domainRecord?.is_primary) ? requestedDomain : undefined,
-        domain_verify_details: {
-          aRecord: aRecordFound,
-          txtRecord: txtRecordFound,
-          sslReady,
-          dnsComplete: dnsVerified && txtRecordFound,
-          status: newStatus,
-          checkedAt: new Date().toISOString(),
-        },
-      })
-      .eq("id", settingsId);
 
     return new Response(
       JSON.stringify({
-        status: newStatus,
-        txtStatus: updateData.txt_status,
-        dnsStatus: updateData.dns_status,
-        sslStatus: updateData.ssl_status,
-        sslError,
-        domain: requestedDomain,
+        status: finalStatus,
+        dns: dnsResults,
+        ssl: sslResult,
+        txtStatus,
+        dnsStatus,
+        sslStatus
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck, ArrowUp, ArrowDown } from "lucide-react";
+import { Loader2, Upload, X, Palette, Store, Globe, MapPin, Share2, Image, Clock, Trash2, Megaphone, KeyRound, Mail, Gift, LayoutDashboard, ShoppingBag, TrendingUp, Type, Bell, BadgeCheck, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
 import DomainConnector from "@/components/DomainConnector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -707,17 +707,30 @@ function GeneralSettingsTab() {
       {/* Slug & Domain */}
       <Card className="border-border">
         <CardHeader>
-          <div className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" /><CardTitle className="text-lg">URL e Domínio</CardTitle></div>
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Endereço da Loja</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label>Slug da Loja</Label>
+            <Label>Slug da Loja (Fallback)</Label>
             <div className="flex items-center gap-0">
               <span className="inline-flex h-10 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
               <Input value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="minha-loja" maxLength={50} className="rounded-l-none" />
             </div>
-            {storeSlug && (
-              <p className="text-xs text-muted-foreground">Acessível em: <span className="font-mono font-medium text-primary">{window.location.origin}/loja/{storeSlug}</span></p>
+            {settings?.custom_domain && settings?.domain_status === 'verified' ? (
+              <div className="flex flex-col gap-1 mt-2">
+                <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  Domínio principal ativo: <a href={`https://${settings.custom_domain}`} target="_blank" rel="noopener noreferrer" className="underline font-mono">{settings.custom_domain}</a>
+                </p>
+                <p className="text-[10px] text-muted-foreground italic">O slug '/loja/{storeSlug}' continuará funcionando como endereço reserva.</p>
+              </div>
+            ) : (
+              storeSlug && (
+                <p className="text-xs text-muted-foreground">Endereço público temporário: <a href={`${window.location.origin}/loja/${storeSlug}`} target="_blank" rel="noopener noreferrer" className="font-mono font-medium text-primary underline">{window.location.origin}/loja/{storeSlug}</a></p>
+              )
             )}
           </div>
         </CardContent>
