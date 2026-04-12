@@ -813,14 +813,20 @@ export default function LojaLayout() {
             </Sheet>
           </div>
 
-          <div className="sm:hidden px-4 pb-3">
+          <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
             <SmartSearchBar
-              products={smartSearchProducts}
+              products={smartSearchProducts || []}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
               primaryColor={primaryColor}
               storeUserId={settings?.user_id}
+              className="flex-1"
+            />
+            <StoreFilter 
+              storeUserId={settings?.user_id || ""} 
+              primaryColor={primaryColor} 
+              products={smartSearchProducts || []} 
             />
           </div>
 
