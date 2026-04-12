@@ -233,6 +233,60 @@ function AITrainingPanel({ userId }: { userId: string }) {
   const [emojiUsage, setEmojiUsage] = useState("");
   const [persuasionStyle, setPersuasionStyle] = useState("");
   const [brandIdentity, setBrandIdentity] = useState("");
+  const [newTrainingText, setNewTrainingText] = useState("");
+  const [isIngesting, setIsIngesting] = useState(false);
+  
+  const { data: knowledgeCount = 0 } = useQuery({
+    queryKey: ["tenant-ai-knowledge-count", userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tenant_ai_knowledge")
+        .select("*", { count: 'exact', head: true })
+        .eq("tenant_id", userId);
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const { data: insightsCount = 0 } = useQuery({
+    queryKey: ["customer-ai-insights-count", userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("customer_ai_insights")
+        .select("*", { count: 'exact', head: true })
+        .eq("tenant_id", userId);
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const handleIngestTraining = async () => {
+    if (!newTrainingText.trim()) {
+      toast.error("Digite o texto do treinamento");
+      return;
+    }
+
+    setIsIngesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-memory-manager", {
+        body: {
+          action: "ingest-tenant",
+          tenantId: userId,
+          content: newTrainingText,
+          category: "training"
+        }
+      });
+
+      if (error) throw error;
+      toast.success("🧠 Treinamento memorizado com sucesso!");
+      setNewTrainingText("");
+      queryClient.invalidateQueries({ queryKey: ["tenant-ai-knowledge-count"] });
+    } catch (e: any) {
+      toast.error("Erro ao memorizar: " + e.message);
+    } finally {
+      setIsIngesting(false);
+    }
+  };
 
   useEffect(() => {
     if (config) {
@@ -335,12 +389,13 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <Tabs defaultValue="base" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-8 mb-4">
+          <TabsList className="grid w-full grid-cols-4 h-8 mb-4">
             <TabsTrigger value="base" className="text-[10px]">Identidade</TabsTrigger>
             <TabsTrigger value="comportamento" className="text-[10px]">Comportamento</TabsTrigger>
             <TabsTrigger value="regras" className="text-[10px]">Regras</TabsTrigger>
+            <TabsTrigger value="memoria" className="text-[10px]">Memória 🧠</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="base" className="space-y-3 mt-0">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Nicho / Categoria</Label>
@@ -471,6 +526,57 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
                 className="text-xs min-h-[80px] resize-none"
                 rows={3}
               />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="memoria" className="space-y-4 mt-0">
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 flex flex-col items-center justify-center text-center">
+                <Brain className="h-5 w-5 text-primary mb-1" />
+                <span className="text-xl font-bold text-primary">{knowledgeCount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Treinamentos Salvos</span>
+              </div>
+              <div className="bg-secondary/10 p-3 rounded-lg border border-secondary/20 flex flex-col items-center justify-center text-center">
+                <Users className="h-5 w-5 text-secondary-foreground mb-1" />
+                <span className="text-xl font-bold text-secondary-foreground">{insightsCount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Memórias de Clientes</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" /> Novo Treinamento Persistente
+              </Label>
+              <Textarea
+                value={newTrainingText}
+                onChange={e => setNewTrainingText(e.target.value)}
+                placeholder="Ex: No Natal do ano passado vendemos muito panetone trufado. Sempre que um cliente perguntar sobre presentes em dezembro, sugira o kit com 3 unidades."
+                className="text-xs min-h-[100px] resize-none bg-muted/30"
+                rows={4}
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Treinamentos de memória são permanentes e a IA os consulta usando busca vetorial (RAG) antes de cada resposta.
+              </p>
+              <Button 
+                onClick={handleIngestTraining} 
+                disabled={isIngesting || !newTrainingText.trim()}
+                className="w-full h-8 text-xs gap-2"
+              >
+                {isIngesting ? <Clock className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                Memorizar Treinamento
+              </Button>
+            </div>
+
+            <div className="p-3 rounded-lg border bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
+              <div className="flex gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-400">Aprendizado Evolutivo Ativado</p>
+                  <p className="text-[10px] text-amber-700 dark:text-amber-500">
+                    A IA está aprendendo automaticamente com o comportamento dos seus clientes. Clique em links e compras bem-sucedidas fortalecem a memória da IA.
+                  </p>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
