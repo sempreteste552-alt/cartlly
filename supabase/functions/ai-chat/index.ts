@@ -103,7 +103,14 @@ serve(async (req) => {
       aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
       "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
-    ].filter(Boolean).join("\n") : "";
+].filter(Boolean).join("\n") : "";
+
+    // Add current time context
+    const now = new Date();
+    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
+    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
+    const hourBr = parseInt(brTime.split(":")[0]);
+    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
 
     // Add current time context
