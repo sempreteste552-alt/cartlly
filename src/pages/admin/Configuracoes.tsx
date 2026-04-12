@@ -869,6 +869,33 @@ function GeneralSettingsTab() {
   );
 }
 
+function DomainSettingsTab() {
+  const { data: settings, isLoading } = useStoreSettings();
+  const { ctx } = useTenantContext();
+
+  if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!settings) return null;
+
+  return (
+    <div className="space-y-6">
+      <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Próprio">
+        <FeatureTutorialCard
+          id="domain_tutorial"
+          title="Domínio Próprio"
+          description="Conecte seu domínio oficial para profissionalizar sua loja e melhorar seu SEO."
+          steps={[
+            "Informe o endereço do seu domínio (ex: www.sualoja.com.br)",
+            "Adicione os registros TXT e CNAME no seu provedor DNS",
+            "Aguarde a propagação e a emissão automática do SSL",
+            "Pronto! Sua loja estará disponível no seu endereço oficial"
+          ]}
+        />
+        <DomainConnector settingsId={settings.id} storeSlug={settings.store_slug} />
+      </LockedFeature>
+    </div>
+  );
+}
+
 
 export default function Configuracoes() {
   const { ctx } = useTenantContext();
