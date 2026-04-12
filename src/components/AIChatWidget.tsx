@@ -616,12 +616,55 @@ export function AIChatWidget() {
         toast.success(`✅ Domínio ${cleanDomain} adicionado!`);
         queryClient.invalidateQueries({ queryKey: ["store_domains_chat"] });
         
-        // After adding, we want to show instructions. 
-        // We can do this by adding a message to the chat or just letting the user know.
+        // Fetch the domain record we just created to get the verification token
+        const { data: newDomainData } = await supabase
+          .from("store_domains")
+          .select("verification_token")
+          .eq("hostname", cleanDomain)
+          .single();
+
         setMessages(prev => [...prev, { 
           role: "assistant", 
-          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nPara concluir a conexão, você precisa configurar os registros DNS no seu provedor (como Registro.br, Godaddy, Cloudflare, etc):\n\n1. **Tipo: CNAME**\n   Nome/Host: **www**\n   Valor/Destino: **www.cartlly.lovable.app**\n\n2. **Tipo: TXT**\n   Nome/Host: **_lovable-verification**\n   Valor: \`(aguarde a geração do token)\`\n\nApós configurar, clique em verificar no painel de domínios ou me peça para verificar!` 
+          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nAgora você precisa configurar os registros DNS no seu provedor:\n\n1. **Tipo: CNAME**\n   Nome/Host: **www**\n   Valor/Destino: **www.cartlly.lovable.app**\n\n2. **Tipo: TXT**\n   Nome/Host: **_lovable-verification**\n   Valor: \`${newDomainData?.verification_token || "(aguarde a geração do token)"}\`\n\nApós configurar, clique em verificar no painel de domínios ou me peça para verificar!` 
         }]);
+      } else if (action.type === "domain_verify") {
+        if (!settings?.id) throw new Error("Configurações da loja não encontradas.");
+        
+        const cleanDomain = normalizeDomain(action.payload.domain);
+        const domainRecord = (domains || []).find((d: any) => d.hostname === cleanDomain);
+
+        if (!domainRecord) {
+          throw new Error("Este domínio não está vinculado a sua loja.");
+        }
+
+        toast.info(`Verificando domínio ${cleanDomain}...`);
+        
+        const { data, error } = await supabase.functions.invoke("verify-domain", {
+          body: { 
+            settingsId: settings.id, 
+            domain: cleanDomain,
+            domainId: domainRecord.id
+          },
+        });
+        
+        if (error) throw error;
+
+        if (data?.status === "active") {
+          toast.success(`🎉 Domínio ${cleanDomain} verificado e online!`);
+          setMessages(prev => [...prev, { 
+            role: "assistant", 
+            content: `🎉 **Boas notícias!** O domínio **${cleanDomain}** foi verificado com sucesso e já está online. Sua loja agora é acessível por este endereço profissional! 🚀` 
+          }]);
+        } else {
+          toast.warning("Status atualizado, mas ainda há pendências.");
+          setMessages(prev => [...prev, { 
+            role: "assistant", 
+            content: `⚠️ O domínio **${cleanDomain}** ainda não está totalmente ativo.\n\nStatus atual: **${data?.status || 'Processando'}**\n\nCertifique-se de que os registros DNS (CNAME e TXT) foram inseridos corretamente no seu provedor. A propagação pode levar de alguns minutos a 24 horas.` 
+          }]);
+        }
+        
+        queryClient.invalidateQueries({ queryKey: ["store_domains_chat"] });
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
       }
 
       setPendingActions((prev) => {
