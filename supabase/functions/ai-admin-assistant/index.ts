@@ -72,7 +72,27 @@ serve(async (req) => {
     };
     const personalityDesc = personalityMap[chatTone] || personalityMap.educada;
 
-    const systemPrompt = `Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
+    const brainBlock = aiConfig ? [
+      "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
+      aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
+      aiConfig.niche ? `STORE NICHE / NICHO: ${aiConfig.niche}` : "",
+      aiConfig.personality ? `DEFINED PERSONALITY / PERSONALIDADE: ${aiConfig.personality}` : "",
+      aiConfig.tone_of_voice ? `TONE OF VOICE / TOM DE VOZ: ${aiConfig.tone_of_voice}` : "",
+      aiConfig.formality_level ? `FORMALITY LEVEL / FORMALIDADE: ${aiConfig.formality_level}` : "",
+      aiConfig.writing_style ? `WRITING STYLE / ESTILO DE ESCRITA: ${aiConfig.writing_style}` : "",
+      aiConfig.emoji_usage ? `EMOJI USAGE / USO DE EMOJIS: ${aiConfig.emoji_usage}` : "",
+      aiConfig.persuasion_style ? `PERSUASION STYLE / PERSUASÃO: ${aiConfig.persuasion_style}` : "",
+      aiConfig.approach_type ? `APPROACH TYPE / ABORDAGEM: ${aiConfig.approach_type}` : "",
+      aiConfig.sending_rules ? `SENDING RULES / REGRAS DE ENVIO: ${aiConfig.sending_rules}` : "",
+      aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
+      aiConfig.approved_examples ? `APPROVED MESSAGE EXAMPLES / EXEMPLOS APROVADOS:\n${aiConfig.approved_examples}` : "",
+      storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
+      "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
+      "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
+    ].filter(Boolean).join("\n") : "";
+
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
 PERSONALIDADE: ${personalityDesc}

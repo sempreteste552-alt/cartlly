@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
           { data: aiConfig },
         ] = await Promise.all([
           supabase.rpc("get_store_rich_insights", { p_user_id: userId }),
-          supabase.from("tenant_ai_brain_config").select("custom_instructions, niche, personality, store_knowledge").eq("user_id", userId).maybeSingle(),
+          supabase.from("tenant_ai_brain_config").select("custom_instructions, niche, personality, store_knowledge, tone_of_voice, writing_style, approach_type, sending_rules, approved_examples, prohibitions, language_preferences, formality_level, emoji_usage, persuasion_style, brand_identity").eq("user_id", userId).maybeSingle(),
         ]);
         if (insightErr) {
           console.error(`[ai-ceo-brain] Insights error for ${userId}:`, insightErr);
@@ -88,7 +88,22 @@ Deno.serve(async (req) => {
 
         const frequentWords = [...new Set(historyTexts.flatMap((text) => tokenizeMeaningful(text)))].slice(0, 60).join(", ") || "nenhuma";
 
-        const systemPrompt = `Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
+        const brainBlock = aiConfig ? [
+          "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
+          aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
+          aiConfig.niche ? `STORE NICHE / NICHO: ${aiConfig.niche}` : "",
+          aiConfig.personality ? `DEFINED PERSONALITY / PERSONALIDADE: ${aiConfig.personality}` : "",
+          aiConfig.tone_of_voice ? `TONE OF VOICE / TOM DE VOZ: ${aiConfig.tone_of_voice}` : "",
+          aiConfig.writing_style ? `WRITING STYLE / ESTILO DE ESCRITA: ${aiConfig.writing_style}` : "",
+          aiConfig.emoji_usage ? `EMOJI USAGE / USO DE EMOJIS: ${aiConfig.emoji_usage}` : "",
+          aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
+          storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+          aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
+          "\nCRITICAL HIERARCHY: 1. MERCHANT TRAINING > 2. DATA INSIGHTS > 3. AI OPTIMIZATIONS",
+          "If any insight conflicts with the merchant's training above, YOU MUST CORRECT IT."
+        ].filter(Boolean).join("\n") : "";
+
+        const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
 
 NICHO DA LOJA: ${storeNiche}
 ${storeKnowledge ? `\nCONHECIMENTO DA LOJA:\n${storeKnowledge}\n` : ""}

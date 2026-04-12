@@ -588,7 +588,7 @@ Deno.serve(async (req) => {
     // ========== LOAD TENANT AI BRAIN CONFIG (per store) ==========
     const { data: allAiConfigs } = await supabase
       .from("tenant_ai_brain_config")
-      .select("user_id, niche, personality, store_knowledge, custom_instructions")
+      .select("user_id, niche, personality, store_knowledge, custom_instructions, tone_of_voice, writing_style, approach_type, sending_rules, approved_examples, prohibitions, language_preferences, formality_level, emoji_usage, persuasion_style, brand_identity")
       .in("user_id", allStoreUserIds.length > 0 ? allStoreUserIds : ["00000000-0000-0000-0000-000000000000"]);
     
     const tenantAiConfigMap = new Map<string, any>();
@@ -1822,10 +1822,19 @@ async function generateAISequenceMessage(
     };
     
     tenantContext = `
+MANDATORY MERCHANT TRAINING (MAX PRIORITY):
+${aiConfig.brand_identity ? `IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : ""}
 PERSONALIDADE DA LOJA: ${personalityMap[personality] || personalityMap.educada}
-${configuredNiche ? `NICHO CONFIGURADO: ${configuredNiche}` : ""}
+${aiConfig.tone_of_voice ? `TOM DE VOZ: ${aiConfig.tone_of_voice}` : ""}
+${aiConfig.writing_style ? `ESTILO DE ESCRITA: ${aiConfig.writing_style}` : ""}
+${aiConfig.emoji_usage ? `USO DE EMOJIS: ${aiConfig.emoji_usage}` : ""}
+${aiConfig.prohibitions ? `PROIBIÇÕES: ${aiConfig.prohibitions}` : ""}
+${aiConfig.sending_rules ? `REGRAS DE ENVIO: ${aiConfig.sending_rules}` : ""}
+${configuredNiche ? `NICHO: ${configuredNiche}` : ""}
 ${storeKnowledge ? `SOBRE A LOJA: ${storeKnowledge}` : ""}
-${customInstructions ? `INSTRUÇÕES DO LOJISTA: ${customInstructions}` : ""}`;
+${customInstructions ? `INSTRUÇÕES EXTRAS: ${customInstructions}` : ""}
+HIERARQUIA: TREINAMENTO DO LOJISTA > CONTEXTO DO CLIENTE > OTIMIZAÇÃO DA IA.
+CORRIJA QUALQUER CONFLITO COM AS REGRAS ACIMA.`;
   }
 
   // Build anti-repetition context from customer's push history

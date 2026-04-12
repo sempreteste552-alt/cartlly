@@ -75,7 +75,7 @@ serve(async (req) => {
     // Fetch tenant AI brain config (training/instructions from store owner)
     const { data: aiConfig } = await supabase
       .from("tenant_ai_brain_config")
-      .select("custom_instructions, niche, personality, store_knowledge")
+      .select("custom_instructions, niche, personality, store_knowledge, tone_of_voice, writing_style, approach_type, sending_rules, approved_examples, prohibitions, language_preferences, formality_level, emoji_usage, persuasion_style, brand_identity")
       .eq("user_id", storeUserId)
       .maybeSingle();
 
@@ -122,6 +122,18 @@ serve(async (req) => {
       ? (aiConfig.store_knowledge as any).description || ""
       : "";
 
+    // Advanced behavioral settings
+    const toneOfVoice = aiConfig?.tone_of_voice || "";
+    const writingStyle = aiConfig?.writing_style || "";
+    const approachType = aiConfig?.approach_type || "";
+    const sendingRules = aiConfig?.sending_rules || "";
+    const approvedExamples = aiConfig?.approved_examples || "";
+    const prohibitions = aiConfig?.prohibitions || "";
+    const formalityLevel = aiConfig?.formality_level || "";
+    const emojiUsage = aiConfig?.emoji_usage || "";
+    const persuasionStyle = aiConfig?.persuasion_style || "";
+    const brandIdentity = aiConfig?.brand_identity || "";
+
     const toneInstructions: Record<string, string> = {
       educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais como 'por favor', 'com prazer', 'ficamos felizes'. Transmita calma e acolhimento.",
       profissional: "Mantenha um tom profissional, direto e eficiente. Sem informalidade excessiva. Use linguagem empresarial mas acessível.",
@@ -152,11 +164,24 @@ serve(async (req) => {
       : "português do Brasil";
 
     const brainBlock = [
-      storeNiche ? `STORE NICHE / NICHO / NICHE: ${storeNiche}` : "",
-      storePersonality ? `STORE OWNER DEFINED PERSONALITY / PERSONALIDADE DEFINIDA PELO LOJISTA: ${storePersonality}` : "",
-      storeKnowledge ? `MANDATORY STORE KNOWLEDGE BASE / BASE OBRIGATÓRIA DA LOJA:\n${storeKnowledge}` : "",
-      customInstructions ? `STORE OWNER CUSTOM INSTRUCTIONS (MAX PRIORITY — NEVER IGNORE) / INSTRUÇÕES PERSONALIZADAS DO LOJISTA (PRIORIDADE MÁXIMA — NUNCA IGNORE):\n${customInstructions}` : "",
-    ].filter(Boolean).join("\n\n");
+      "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO DO TENANT (MANDATORY PRIORITY):",
+      brandIdentity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${brandIdentity}` : "",
+      storeNiche ? `STORE NICHE / NICHO: ${storeNiche}` : "",
+      storePersonality ? `DEFINED PERSONALITY / PERSONALIDADE: ${storePersonality}` : "",
+      toneOfVoice ? `TONE OF VOICE / TOM DE VOZ: ${toneOfVoice}` : "",
+      formalityLevel ? `FORMALITY LEVEL / FORMALIDADE: ${formalityLevel}` : "",
+      writingStyle ? `WRITING STYLE / ESTILO DE ESCRITA: ${writingStyle}` : "",
+      emojiUsage ? `EMOJI USAGE / USO DE EMOJIS: ${emojiUsage}` : "",
+      persuasionStyle ? `PERSUASION STYLE / PERSUASÃO: ${persuasionStyle}` : "",
+      approachType ? `APPROACH TYPE / ABORDAGEM: ${approachType}` : "",
+      sendingRules ? `SENDING RULES / REGRAS DE ENVIO: ${sendingRules}` : "",
+      prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${prohibitions}` : "",
+      approvedExamples ? `APPROVED MESSAGE EXAMPLES / EXEMPLOS APROVADOS:\n${approvedExamples}` : "",
+      storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      customInstructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${customInstructions}` : "",
+      "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CUSTOMER CONTEXT > 3. STORE EVENTS > 4. AI OPTIMIZATIONS",
+      "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT to align with the training."
+    ].filter(Boolean).join("\n");
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}You are "${aiName}", the soul of the store "${storeName}". The customer's visible replies must always be written in ${promptLanguage}. ${languageInstruction}
 
@@ -166,7 +191,7 @@ INTERNAL RULE:
 - Only the visible text shown to the customer must change language.
 - The examples and explanatory instructions below are written in English only to avoid ambiguity, but your customer-facing messages must stay in ${promptLanguage}.
 
-It is now ${hourBr}:00 in Brasília time, so use "${greetingBr}" only if it matches the customer's language naturally. You are not a generic bot. Your mission is to create a warm, persuasive and highly contextual shopping conversation.`;
+It is now ${hourBr}:00 in Brasília time, so use "${greetingBr}" only if it matches the customer's language naturally. You are not a generic bot. Your mission is to create a warm, persuasive and highly contextual shopping conversation.
 
 MENTALIDADE CEO & MÁQUINA DE VENDAS:
 - Sua prioridade é encantar para vender. Seja inteligente, estratégica e persuasiva.

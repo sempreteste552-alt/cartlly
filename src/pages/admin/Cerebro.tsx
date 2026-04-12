@@ -220,12 +220,38 @@ function AITrainingPanel({ userId }: { userId: string }) {
   const [personality, setPersonality] = useState("amigavel");
   const [customInstructions, setCustomInstructions] = useState("");
   const [storeKnowledge, setStoreKnowledge] = useState("");
+  
+  // New behavioral fields
+  const [toneOfVoice, setToneOfVoice] = useState("");
+  const [writingStyle, setWritingStyle] = useState("");
+  const [approachType, setApproachType] = useState("");
+  const [sendingRules, setSendingRules] = useState("");
+  const [approvedExamples, setApprovedExamples] = useState("");
+  const [prohibitions, setProhibitions] = useState("");
+  const [languagePreferences, setLanguagePreferences] = useState("");
+  const [formalityLevel, setFormalityLevel] = useState("");
+  const [emojiUsage, setEmojiUsage] = useState("");
+  const [persuasionStyle, setPersuasionStyle] = useState("");
+  const [brandIdentity, setBrandIdentity] = useState("");
 
   useEffect(() => {
     if (config) {
       setNiche(config.niche || "");
       setPersonality(config.personality || "amigavel");
       setCustomInstructions(config.custom_instructions || "");
+      
+      setToneOfVoice(config.tone_of_voice || "");
+      setWritingStyle(config.writing_style || "");
+      setApproachType(config.approach_type || "");
+      setSendingRules(config.sending_rules || "");
+      setApprovedExamples(config.approved_examples || "");
+      setProhibitions(config.prohibitions || "");
+      setLanguagePreferences(config.language_preferences || "");
+      setFormalityLevel(config.formality_level || "");
+      setEmojiUsage(config.emoji_usage || "");
+      setPersuasionStyle(config.persuasion_style || "");
+      setBrandIdentity(config.brand_identity || "");
+
       const knowledge = config.store_knowledge;
       if (typeof knowledge === "string") {
         setStoreKnowledge(knowledge);
@@ -250,6 +276,17 @@ function AITrainingPanel({ userId }: { userId: string }) {
           personality,
           custom_instructions: customInstructions,
           store_knowledge: { description: storeKnowledge } as any,
+          tone_of_voice: toneOfVoice,
+          writing_style: writingStyle,
+          approach_type: approachType,
+          sending_rules: sendingRules,
+          approved_examples: approvedExamples,
+          prohibitions: prohibitions,
+          language_preferences: languagePreferences,
+          formality_level: formalityLevel,
+          emoji_usage: emojiUsage,
+          persuasion_style: persuasionStyle,
+          brand_identity: brandIdentity,
         }, { onConflict: "user_id" });
       if (error) throw error;
     },
@@ -296,65 +333,155 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
           Configure o nicho, personalidade e conhecimentos da sua IA. Isso muda como ela fala com você e seus clientes.
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-3">
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Nicho / Categoria</Label>
-          <Select value={niche} onValueChange={setNiche}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Selecione o nicho da loja" />
-            </SelectTrigger>
-            <SelectContent>
-              {NICHE_OPTIONS.map(n => (
-                <SelectItem key={n} value={n} className="text-xs">{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <CardContent className="px-4 pb-4">
+        <Tabs defaultValue="base" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-8 mb-4">
+            <TabsTrigger value="base" className="text-[10px]">Identidade</TabsTrigger>
+            <TabsTrigger value="comportamento" className="text-[10px]">Comportamento</TabsTrigger>
+            <TabsTrigger value="regras" className="text-[10px]">Regras</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="base" className="space-y-3 mt-0">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Nicho / Categoria</Label>
+              <Select value={niche} onValueChange={setNiche}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Selecione o nicho da loja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NICHE_OPTIONS.map(n => (
+                    <SelectItem key={n} value={n} className="text-xs">{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Personalidade da IA</Label>
-          <Select value={personality} onValueChange={setPersonality}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERSONALITY_OPTIONS.map(p => (
-                <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Personalidade da IA</Label>
+              <Select value={personality} onValueChange={setPersonality}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PERSONALITY_OPTIONS.map(p => (
+                    <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">O que sua loja oferece? (Treine a IA)</Label>
-          <Textarea
-            value={storeKnowledge}
-            onChange={e => setStoreKnowledge(e.target.value)}
-            placeholder="Ex: Vendemos bolos artesanais, doces finos e tortas sob encomenda. Nosso diferencial é cobertura de chocolate belga. Entregamos em até 48h na região de São Paulo..."
-            className="text-xs min-h-[80px] resize-none"
-            rows={4}
-          />
-          <p className="text-[10px] text-muted-foreground">Quanto mais detalhes, melhor a IA entende seu negócio.</p>
-        </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Identidade da Marca</Label>
+              <Textarea
+                value={brandIdentity}
+                onChange={e => setBrandIdentity(e.target.value)}
+                placeholder="Ex: Somos uma marca eco-friendly, focada em sustentabilidade e elegância minimalista."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
 
-        <div className="space-y-1">
-          <Label className="text-xs font-medium">Instruções extras para a IA</Label>
-          <Textarea
-            value={customInstructions}
-            onChange={e => setCustomInstructions(e.target.value)}
-            placeholder="Ex: Não use gírias. Sempre mencione frete grátis acima de R$150. Nunca fale de concorrentes..."
-            className="text-xs min-h-[60px] resize-none"
-            rows={3}
-          />
-        </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">O que sua loja oferece? (Conhecimento)</Label>
+              <Textarea
+                value={storeKnowledge}
+                onChange={e => setStoreKnowledge(e.target.value)}
+                placeholder="Ex: Vendemos bolos artesanais, doces finos e tortas sob encomenda..."
+                className="text-xs min-h-[80px] resize-none"
+                rows={4}
+              />
+              <p className="text-[10px] text-muted-foreground">Quanto mais detalhes, melhor a IA entende seu negócio.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="comportamento" className="space-y-3 mt-0">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Tom de Voz</Label>
+                <Input value={toneOfVoice} onChange={e => setToneOfVoice(e.target.value)} placeholder="Ex: Entusiasta, Calmo" className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Nível de Formalidade</Label>
+                <Input value={formalityLevel} onChange={e => setFormalityLevel(e.target.value)} placeholder="Ex: Informal, Você" className="h-8 text-xs" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Estilo de Escrita</Label>
+              <Input value={writingStyle} onChange={e => setWritingStyle(e.target.value)} placeholder="Ex: Frases curtas, Poético, Direto" className="h-8 text-xs" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Uso de Emojis</Label>
+              <Input value={emojiUsage} onChange={e => setEmojiUsage(e.target.value)} placeholder="Ex: Muitos emojis, Apenas um no fim" className="h-8 text-xs" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Forma de Persuasão</Label>
+              <Textarea
+                value={persuasionStyle}
+                onChange={e => setPersuasionStyle(e.target.value)}
+                placeholder="Ex: Focar em escassez, Focar em benefícios, Focar em prova social"
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="regras" className="space-y-3 mt-0">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Proibições (O que NÃO fazer)</Label>
+              <Textarea
+                value={prohibitions}
+                onChange={e => setProhibitions(e.target.value)}
+                placeholder="Ex: Nunca mencionar concorrentes. Nunca falar de política. Não usar gírias."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Regras de Abordagem / Envio</Label>
+              <Textarea
+                value={sendingRules}
+                onChange={e => setSendingRules(e.target.value)}
+                placeholder="Ex: Sempre oferecer cupom se o cliente hesitar. Abordar após 2h de abandono."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Instruções extras (Prioridade Máxima)</Label>
+              <Textarea
+                value={customInstructions}
+                onChange={e => setCustomInstructions(e.target.value)}
+                placeholder="Qualquer outra regra específica..."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Exemplos de Mensagens Aprovadas</Label>
+              <Textarea
+                value={approvedExamples}
+                onChange={e => setApprovedExamples(e.target.value)}
+                placeholder="Cole aqui exemplos de como você gosta que a IA escreva..."
+                className="text-xs min-h-[80px] resize-none"
+                rows={3}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <Button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="w-full h-8 text-xs gap-1"
+          className="w-full h-8 text-xs gap-1 mt-4"
         >
           <Save className="h-3 w-3" />
-          {saveMutation.isPending ? "Salvando..." : "Salvar Treinamento"}
+          {saveMutation.isPending ? "Salvando..." : "Salvar Treinamento e Aplicar à IA"}
         </Button>
 
         {(aiResponding || aiResponse) && (
@@ -443,7 +570,7 @@ export default function Cerebro() {
       messages.push({ role: "user", content });
 
       const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
-        body: { messages },
+        body: { messages, userId: user!.id },
       });
       if (error) throw error;
       return data;

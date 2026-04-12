@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,22 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { storeContext, action } = await req.json();
+    const { storeContext, action, userId } = await req.json();
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch tenant brain config if userId is provided
+    let aiConfig = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      aiConfig = data;
+    }
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -52,7 +68,16 @@ Retorne cupons práticos e criativos.`;
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em marketing e e-commerce brasileiro. Responda sempre em português do Brasil. Seja criativo e prático nas sugestões.`
+            content: `Você é um especialista em marketing e e-commerce brasileiro. Responda sempre em português do Brasil. Seja criativo e prático nas sugestões.
+            ${aiConfig ? `
+            TREINAMENTO OBRIGATÓRIO:
+            Identidade: ${aiConfig.brand_identity || ""}
+            Nicho: ${aiConfig.niche || ""}
+            Tom: ${aiConfig.tone_of_voice || ""}
+            Persuasão: ${aiConfig.persuasion_style || ""}
+            Proibições: ${aiConfig.prohibitions || ""}
+            Instruções: ${aiConfig.custom_instructions || ""}
+            ` : ""}`
           },
           { role: "user", content: prompt },
         ],
