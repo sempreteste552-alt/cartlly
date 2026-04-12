@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useState, useMemo, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -256,6 +257,7 @@ export default function Indicacoes() {
   }, [referrals, statusFilter, paymentFilter, emailSearch]);
 
   return (
+    <PlanGate feature="referral_program">
     <div className="space-y-6">
       {/* Aggressive Hero */}
       <MotivationalHero
@@ -504,5 +506,6 @@ export default function Indicacoes() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }
