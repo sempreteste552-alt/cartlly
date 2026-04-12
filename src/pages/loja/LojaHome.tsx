@@ -68,15 +68,27 @@ export default function LojaHome() {
   const filtered = useMemo(() => {
     if (!products) return [];
     let result = products;
+
+    // Filter by categories (comma-separated IDs)
     if (categoriaParam) {
-      result = result.filter((p) => p.category_id === categoriaParam);
+      const selectedCats = categoriaParam.split(",");
+      result = result.filter((p) => selectedCats.includes(p.category_id));
     }
+
+    // Filter by searchTerm
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
     }
+
+    // Filter by price range
+    const minP = searchParams.get("min_price");
+    const maxP = searchParams.get("max_price");
+    if (minP) result = result.filter((p) => p.price >= Number(minP));
+    if (maxP) result = result.filter((p) => p.price <= Number(maxP));
+
     return result;
-  }, [products, searchTerm, categoriaParam]);
+  }, [products, searchTerm, categoriaParam, searchParams]);
 
   const groupedByCategory = useMemo(() => {
     if (!filtered.length) return {};
