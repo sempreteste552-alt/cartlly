@@ -691,7 +691,7 @@ export default function LojaCheckout() {
             className="w-full h-12 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 transition-opacity font-bold rounded-xl"
             onClick={handleDownloadReceipt}
           >
-            <Download className="mr-2 h-4 w-4" /> Baixar Comprovante PDF
+            <Printer className="mr-2 h-4 w-4" /> Imprimir Nota Fiscal
           </Button>
           
           <div className="grid grid-cols-2 gap-3">
