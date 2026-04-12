@@ -483,6 +483,52 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
             </div>
           </TabsContent>
 
+          <TabsContent value="regras" className="space-y-3 mt-0">
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Proibições (O que NÃO fazer)</Label>
+              <Textarea
+                value={prohibitions}
+                onChange={e => setProhibitions(e.target.value)}
+                placeholder="Ex: Nunca mencionar concorrentes. Nunca falar de política. Não usar gírias."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Regras de Abordagem / Envio</Label>
+              <Textarea
+                value={sendingRules}
+                onChange={e => setSendingRules(e.target.value)}
+                placeholder="Ex: Sempre oferecer cupom se o cliente hesitar. Abordar após 2h de abandono."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Instruções extras (Prioridade Máxima)</Label>
+              <Textarea
+                value={customInstructions}
+                onChange={e => setCustomInstructions(e.target.value)}
+                placeholder="Qualquer outra regra específica..."
+                className="text-xs min-h-[60px] resize-none"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Exemplos de Mensagens Aprovadas</Label>
+              <Textarea
+                value={approvedExamples}
+                onChange={e => setApprovedExamples(e.target.value)}
+                placeholder="Cole aqui exemplos de como você gosta que a IA escreva..."
+                className="text-xs min-h-[80px] resize-none"
+                rows={3}
+              />
+            </div>
+          </TabsContent>
+
           <TabsContent value="memoria" className="space-y-4 mt-0">
             <div className="grid grid-cols-2 gap-3 mb-2">
               <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 flex flex-col items-center justify-center text-center">
@@ -531,53 +577,6 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
                   </p>
                 </div>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-          <TabsContent value="regras" className="space-y-3 mt-0">
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Proibições (O que NÃO fazer)</Label>
-              <Textarea
-                value={prohibitions}
-                onChange={e => setProhibitions(e.target.value)}
-                placeholder="Ex: Nunca mencionar concorrentes. Nunca falar de política. Não usar gírias."
-                className="text-xs min-h-[60px] resize-none"
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Regras de Abordagem / Envio</Label>
-              <Textarea
-                value={sendingRules}
-                onChange={e => setSendingRules(e.target.value)}
-                placeholder="Ex: Sempre oferecer cupom se o cliente hesitar. Abordar após 2h de abandono."
-                className="text-xs min-h-[60px] resize-none"
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Instruções extras (Prioridade Máxima)</Label>
-              <Textarea
-                value={customInstructions}
-                onChange={e => setCustomInstructions(e.target.value)}
-                placeholder="Qualquer outra regra específica..."
-                className="text-xs min-h-[60px] resize-none"
-                rows={2}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-medium">Exemplos de Mensagens Aprovadas</Label>
-              <Textarea
-                value={approvedExamples}
-                onChange={e => setApprovedExamples(e.target.value)}
-                placeholder="Cole aqui exemplos de como você gosta que a IA escreva..."
-                className="text-xs min-h-[80px] resize-none"
-                rows={3}
-              />
             </div>
           </TabsContent>
         </Tabs>
