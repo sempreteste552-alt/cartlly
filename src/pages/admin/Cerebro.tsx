@@ -704,7 +704,6 @@ export default function Cerebro() {
       });
 
       if (error) {
-        // Handle 401 specifically - session expired
         const errorBody = typeof error === 'object' && error.message ? error.message : String(error);
         if (errorBody.includes("401") || errorBody.includes("Sessão expirada") || errorBody.includes("Token")) {
           toast.error("Sua sessão expirou. Faça login novamente.");
@@ -713,6 +712,15 @@ export default function Cerebro() {
         throw error;
       }
       return data;
+    },
+    onMutate: async (newContent) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-ai-chats", user?.id] });
+      const previousChats = queryClient.getQueryData(["admin-ai-chats", user?.id]);
+      queryClient.setQueryData(["admin-ai-chats", user?.id], (old: any[] = []) => [
+        ...old,
+        { role: "user", content: newContent, created_at: new Date().toISOString(), id: "temp-" + Date.now() }
+      ]);
+      return { previousChats };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-ai-chats"] });
@@ -723,7 +731,10 @@ export default function Cerebro() {
       }
       setInput("");
     },
-    onError: (err: any) => {
+    onError: (err: any, _, context) => {
+      if (context?.previousChats) {
+        queryClient.setQueryData(["admin-ai-chats", user?.id], context.previousChats);
+      }
       toast.error("Erro ao falar com a IA: " + (err.message || "Erro desconhecido"));
     }
   });
