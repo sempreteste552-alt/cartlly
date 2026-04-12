@@ -196,6 +196,20 @@ export function AIChatWidget() {
     enabled: !!user,
   });
 
+  // Fetch domains
+  const { data: domains } = useQuery({
+    queryKey: ["store_domains_chat", settings?.id],
+    queryFn: async () => {
+      if (!settings?.id) return [];
+      const { data } = await supabase
+        .from("store_domains")
+        .select("*")
+        .eq("store_id", settings.id);
+      return data || [];
+    },
+    enabled: !!settings?.id,
+  });
+
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
   const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
   const aiTone = (settings as any)?.ai_chat_tone || AI_SETTINGS_DEFAULT.tone;
@@ -260,6 +274,12 @@ export function AIChatWidget() {
     const approvedRevenue = approvedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
     const avgTicket = approvedOrders.length > 0 ? approvedRevenue / approvedOrders.length : 0;
 
+    const domainList = (domains || []).map((d: any) => ({
+      hostname: d.hostname,
+      status: d.status,
+      is_primary: d.is_primary,
+    }));
+
     return {
       storeName: (settings as any)?.store_name || "",
       storeDescription: (settings as any)?.store_description || "",
@@ -300,8 +320,10 @@ export function AIChatWidget() {
       subscriptionStatus: ctx.subscriptionStatus,
       isTrial: ctx.isTrial,
       trialDaysLeft: ctx.trialDaysLeft,
+      domains: domainList,
+      primaryDomain: (domains || []).find((d: any) => d.is_primary)?.hostname || null,
     };
-  }, [products, categories, coupons, orders, settings, aiName, plans, ctx]);
+  }, [products, categories, coupons, orders, settings, aiName, plans, ctx, domains]);
 
   const handleSubscribe = async (planId: string, planName: string, document: string) => {
     if (!user) return;
