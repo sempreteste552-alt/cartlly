@@ -15,6 +15,7 @@ import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { normalizeDomain } from "@/lib/storeDomain";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -579,6 +580,42 @@ export function AIChatWidget() {
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
         queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      } else if (action.type === "domain_connect") {
+        if (!settings?.id) throw new Error("Configurações da loja não encontradas.");
+        
+        let cleanDomain = normalizeDomain(action.payload.domain);
+        if (!cleanDomain || !cleanDomain.includes(".")) {
+          throw new Error("Informe um domínio válido (ex: minhaloja.com.br)");
+        }
+
+        const { data: existing } = await supabase
+          .from("store_domains")
+          .select("id")
+          .eq("hostname", cleanDomain)
+          .maybeSingle();
+
+        if (existing) {
+          throw new Error("Este domínio já está vinculado a uma loja.");
+        }
+
+        const { error } = await supabase.from("store_domains").insert({
+          store_id: settings.id,
+          hostname: cleanDomain,
+          is_primary: (domains?.length || 0) === 0,
+          status: 'pending_dns'
+        });
+
+        if (error) throw error;
+
+        toast.success(`✅ Domínio ${cleanDomain} adicionado!`);
+        queryClient.invalidateQueries({ queryKey: ["store_domains_chat"] });
+        
+        // After adding, we want to show instructions. 
+        // We can do this by adding a message to the chat or just letting the user know.
+        setMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nPara concluir a conexão, você precisa configurar os registros DNS no seu provedor (como Registro.br, Godaddy, Cloudflare, etc):\n\n1. **Tipo: CNAME**\n   Nome/Host: **www**\n   Valor/Destino: **www.cartlly.lovable.app**\n\n2. **Tipo: TXT**\n   Nome/Host: **_lovable-verification**\n   Valor: \`(aguarde a geração do token)\`\n\nApós configurar, clique em verificar no painel de domínios ou me peça para verificar!` 
+        }]);
       }
 
       setPendingActions((prev) => {
