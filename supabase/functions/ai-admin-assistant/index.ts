@@ -242,6 +242,7 @@ Você pode realizar ações inserindo blocos JSON no final da sua resposta:
 9. ATUALIZAR INSTRUÇÕES DA IA (Push, Chat, Comportamento):
 Use esta ação quando o dono pedir para corrigir, ajustar ou ensinar algo à IA (ex: "não mande bom dia à noite", "seja mais agressiva nos pushes", "não fale gírias").
 [ACTION_UPDATE_AI_INSTRUCTIONS]{ "instructions": "Novas instruções adicionais aqui..." }[/ACTION_UPDATE_AI_INSTRUCTIONS]
+MANDATORY: Quando o lojista te treinar ou der uma regra nova, você DEVE incluir este bloco para que a regra seja salva permanentemente no seu "cérebro". Sem o bloco, a regra será esquecida.
 
 REGRAS CRÍTICAS:
 - Responda sempre em Português do Brasil.
@@ -261,7 +262,7 @@ REGRAS CRÍTICAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.0-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
