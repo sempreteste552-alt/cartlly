@@ -47,6 +47,11 @@ type Conversation = {
   created_at: string;
   last_message?: string;
   unread_count?: number;
+  customer?: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+  };
 };
 
 function formatConversationDate(dateStr: string) {
@@ -74,6 +79,7 @@ export default function Suporte() {
         .from("support_conversations")
         .select(`
           *,
+          customer:customers(name, email, phone),
           messages:support_messages(body, created_at, sender_type, read_at)
         `)
         .eq("tenant_id", user?.id)
@@ -117,6 +123,13 @@ export default function Suporte() {
   const sendMessage = useMutation({
     mutationFn: async (body: string) => {
       if (!selectedConversation || !user) return;
+      
+      const { data: storeSettings } = await supabase
+        .from("store_settings")
+        .select("store_name")
+        .eq("user_id", user.id)
+        .single();
+
       const { error } = await supabase
         .from("support_messages")
         .insert({
@@ -130,7 +143,7 @@ export default function Suporte() {
       if (selectedConversation.customer_id) {
         await supabase.functions.invoke("send-push", {
           body: {
-            title: `Nova mensagem de ${user.email || "Suporte"}`,
+            title: storeSettings?.store_name || "Suporte da Loja",
             body: body.length > 100 ? body.substring(0, 97) + "..." : body,
             targetUserId: selectedConversation.customer_id,
             url: `/loja/${selectedConversation.tenant_id}?chat=true`
@@ -274,7 +287,7 @@ export default function Suporte() {
                   <div className="relative">
                     <Avatar className="h-11 w-11">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                        {conv.session_id.slice(0, 2).toUpperCase()}
+                        {(conv.customer?.name || conv.session_id).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {conv.is_typing_customer && (
@@ -283,7 +296,9 @@ export default function Suporte() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-semibold text-sm text-foreground truncate">Visitante {conv.session_id.slice(0, 4)}</span>
+                      <span className="font-semibold text-sm text-foreground truncate">
+                        {conv.customer?.name || `Visitante ${conv.session_id.slice(0, 4)}`}
+                      </span>
                       <span className={`text-[10px] shrink-0 ${(conv.unread_count || 0) > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                         {formatConversationDate(conv.last_message_at)}
                       </span>
@@ -325,13 +340,15 @@ export default function Suporte() {
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {selectedConversation.session_id.slice(0, 2).toUpperCase()}
+                      {(selectedConversation.customer?.name || selectedConversation.session_id).slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-background" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm text-foreground">Visitante {selectedConversation.session_id.slice(0, 4)}</h3>
+                  <h3 className="font-semibold text-sm text-foreground">
+                    {selectedConversation.customer?.name || `Visitante ${selectedConversation.session_id.slice(0, 4)}`}
+                  </h3>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     {selectedConversation.is_typing_customer ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
