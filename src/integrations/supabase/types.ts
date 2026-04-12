@@ -173,6 +173,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feedback_loop: {
+        Row: {
+          action_type: string
+          content_sent: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          insight_generated: string | null
+          is_processed: boolean | null
+          message_id: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          action_type: string
+          content_sent?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          insight_generated?: string | null
+          is_processed?: boolean | null
+          message_id?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          content_sent?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          insight_generated?: string | null
+          is_processed?: boolean | null
+          message_id?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_loop_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_message_templates: {
         Row: {
           channel: string
@@ -549,6 +593,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      customer_ai_insights: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          insight: string
+          insight_vector: string | null
+          metadata: Json | null
+          relevance_score: number | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          insight: string
+          insight_vector?: string | null
+          metadata?: Json | null
+          relevance_score?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          insight?: string
+          insight_vector?: string | null
+          metadata?: Json | null
+          relevance_score?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ai_insights_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_behavior_events: {
         Row: {
@@ -3221,6 +3312,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_ai_knowledge: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tenant_messages: {
         Row: {
           audience_type: string
@@ -3689,6 +3816,36 @@ export type Database = {
             Args: { _code: string; _ip?: string; _ua?: string }
             Returns: boolean
           }
+      match_customer_insights: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_customer_id: string
+          p_tenant_id: string
+          query_embedding: string
+        }
+        Returns: {
+          category: string
+          id: string
+          insight: string
+          similarity: number
+        }[]
+      }
+      match_tenant_knowledge: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          p_category?: string
+          p_tenant_id: string
+          query_embedding: string
+        }
+        Returns: {
+          category: string
+          content: string
+          id: string
+          similarity: number
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
