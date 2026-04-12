@@ -106,7 +106,14 @@ serve(async (req) => {
     ].filter(Boolean).join("\n") : "";
 
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
+    // Add current time context
+    const now = new Date();
+    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
+    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
+    const hourBr = parseInt(brTime.split(":")[0]);
+    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+
+
 ${toneMap[aiTone] || toneMap.educada}
 
 DADOS DA LOJA:
