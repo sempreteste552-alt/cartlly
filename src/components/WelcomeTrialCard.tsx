@@ -13,6 +13,7 @@ import {
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useProducts } from "@/hooks/useProducts";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 
 const CHECKLIST = [
@@ -24,6 +25,7 @@ const CHECKLIST = [
 ];
 
 export function WelcomeTrialCard() {
+  const { user } = useAuth();
   const { ctx } = useTenantContext();
   const { data: products } = useProducts();
   const { data: settings } = useStoreSettings();
@@ -57,12 +59,12 @@ export function WelcomeTrialCard() {
   
   // Extend settings with AI training status for checklist
   const { data: aiConfig } = useQuery({
-    queryKey: ["tenant-ai-brain-config", ctx.userId],
+    queryKey: ["tenant-ai-brain-config", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("tenant_ai_brain_config").select("niche").eq("user_id", ctx.userId!).maybeSingle();
+      const { data } = await supabase.from("tenant_ai_brain_config").select("niche").eq("user_id", user!.id).maybeSingle();
       return data;
     },
-    enabled: !!ctx.userId,
+    enabled: !!user?.id,
   });
 
   const augmentedSettings = { 
