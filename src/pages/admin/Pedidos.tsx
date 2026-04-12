@@ -107,13 +107,31 @@ export default function Pedidos() {
       const { data: items, error } = await supabase.from("order_items").select("*").eq("order_id", order.id);
       if (error) throw error;
       
+      const storeName = (storeSettings as any)?.store_name || "Minha Loja";
       generateOrderLabel({
         orderId: order.id,
         date: format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR }),
-        storeName: "Minha Loja",
+        storeName,
+        storeLogo: (storeSettings as any)?.logo_url || undefined,
+        storeCity: (storeSettings as any)?.store_city || undefined,
+        storeState: (storeSettings as any)?.store_state || undefined,
+        storePhone: (storeSettings as any)?.whatsapp_number || undefined,
+        storeEmail: (storeSettings as any)?.store_email || undefined,
+        storeCep: (storeSettings as any)?.store_cep || undefined,
         customerName: order.customer_name,
         customerPhone: order.customer_phone || undefined,
+        customerCpf: order.customer_cpf || undefined,
+        customerEmail: order.customer_email || undefined,
         customerAddress: order.customer_address || undefined,
+        shippingStreet: order.shipping_street || undefined,
+        shippingNumber: order.shipping_number || undefined,
+        shippingComplement: order.shipping_complement || undefined,
+        shippingNeighborhood: order.shipping_neighborhood || undefined,
+        shippingCity: order.shipping_city || undefined,
+        shippingState: order.shipping_state || undefined,
+        shippingCep: order.shipping_cep || undefined,
+        shippingMethod: order.shipping_method || undefined,
+        shippingCost: order.shipping_cost || 0,
         items: items?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
         total: order.total,
         paymentMethod: (order as any).payments?.[0]?.method || (order.whatsapp_order ? "WhatsApp" : "Online"),
