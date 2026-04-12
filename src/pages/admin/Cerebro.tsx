@@ -17,6 +17,7 @@ import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { AITrainingGuide } from "@/components/admin/AITrainingGuide";
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -388,6 +389,7 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 pb-4">
+        <AITrainingGuide />
         <Tabs defaultValue="base" className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-8 mb-4">
             <TabsTrigger value="base" className="text-[10px]">Identidade</TabsTrigger>
