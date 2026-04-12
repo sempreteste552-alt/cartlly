@@ -57,6 +57,23 @@ serve(async (req) => {
         supabase.from("customer_wishlist").select("customer_id, product_id, created_at").eq("store_user_id", user.id).order("created_at", { ascending: false }).limit(30),
         supabase.from("abandoned_carts").select("customer_id, items, total_amount, created_at").eq("store_user_id", user.id).order("created_at", { ascending: false }).limit(20)
       ]);
+    // Fetch RAG context from memory manager
+    let ragKnowledge: any[] = [];
+    try {
+      const lastMessage = messages[messages.length - 1]?.content || "";
+      const { data: ragRes } = await supabase.functions.invoke("ai-memory-manager", {
+        body: {
+          action: "retrieve-context",
+          tenantId: user.id,
+          content: lastMessage
+        }
+      });
+      if (ragRes) {
+        ragKnowledge = ragRes.knowledge || [];
+      }
+    } catch (e) {
+      console.warn("RAG failed for admin-assistant", e);
+    }
 
     const storeName = storeSettings?.store_name || "Sua Loja";
     const niche = aiConfig?.niche || storeSettings?.store_category || "Não definido";
