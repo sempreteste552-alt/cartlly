@@ -143,8 +143,21 @@ serve(async (req) => {
     };
 
     // Saudação baseada no horário de Brasília (UTC-3)
-    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const hourBr = nowBrasilia.getHours();
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(new Date());
+    const d: any = {};
+    parts.forEach(({ type, value }) => { d[type] = value; });
+    
+    const hourBr = parseInt(d.hour);
     const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
     const languageInstruction = locale === "en"
