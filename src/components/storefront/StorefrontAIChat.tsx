@@ -346,6 +346,22 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         sender_id: customer?.id || null,
         body: text.trim() 
       });
+
+      // Notify admin via push
+      try {
+        await supabase.functions.invoke("send-push-internal", {
+          body: {
+            target_user_id: storeUserId,
+            title: `💬 ${customer?.name || "Cliente"}`,
+            body: text.trim().length > 100 ? text.trim().substring(0, 97) + "..." : text.trim(),
+            url: "/admin/suporte",
+            type: "new_customer",
+            store_user_id: storeUserId,
+          }
+        });
+      } catch (e) {
+        console.error("Push to admin error:", e);
+      }
       return;
     }
 
