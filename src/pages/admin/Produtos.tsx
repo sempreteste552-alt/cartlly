@@ -12,7 +12,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown, Eye } from "lucide-react";
+import { Plus, Package, Pencil, Trash2, Loader2, Tag, Sparkles, Layers, Lock, ArrowUpCircle, Crown, Eye, ExternalLink } from "lucide-react";
+import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, type Product } from "@/hooks/useProducts";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import { ProductForm } from "@/components/ProductForm";
@@ -51,7 +53,15 @@ export default function Produtos() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
-  const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
+  const [variantsProductId, setVariantsProductId] = setVariantsProductId] = useState<string | null>(null);
+  const { data: settings } = useStoreSettings();
+
+  const getProductUrl = (product: any) => buildStoreUrl({
+    slug: settings?.store_slug,
+    customDomain: settings?.custom_domain,
+    domainStatus: settings?.domain_status,
+    path: `/p/${product.slug}`
+  });
 
   // Auto-open product editor when navigating from dashboard low-stock alert
   useEffect(() => {
