@@ -364,8 +364,9 @@ function AITrainingPanel({ userId }: { userId: string }) {
 Apresente-se brevemente ao lojista mostrando como você vai se comportar a partir de agora. Dê um exemplo curto de como seria uma notificação push para os clientes dele e um exemplo de como você responderia no chat. Seja breve (máximo 4 parágrafos).`;
 
         const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
-          body: { messages: [{ role: "user", content: prompt }] },
+          body: { messages: [{ role: "user", content: prompt }], clientTime: new Date().toISOString() },
         });
+
         if (error) throw error;
         setAiResponse(data?.content || "Treinamento salvo com sucesso!");
       } catch {
