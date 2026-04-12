@@ -26,7 +26,7 @@ export function WhatsAppSupportBubble() {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-[11.5rem] md:bottom-[7.5rem] right-5 z-[49] group"
+      className="fixed bottom-5 right-5 z-[49] group"
       title="Suporte via WhatsApp"
     >
       <div className="relative">
