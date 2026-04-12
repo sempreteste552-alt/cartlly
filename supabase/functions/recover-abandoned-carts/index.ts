@@ -539,7 +539,28 @@ async function handleReviewThankyou(supabase: any, supabaseUrl: string, lovableA
 
   const isGoodReview = rating >= 4;
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const nowBR = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(new Date());
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  const nowBR = new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
   const hour = nowBR.getHours();
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[nowBR.getDay()];
