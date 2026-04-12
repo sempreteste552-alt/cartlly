@@ -427,7 +427,9 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           customerName: customer?.name || "Cliente",
           customerContext: enrichedContext || undefined,
           locale,
+          clientTime: new Date().toISOString(),
         }),
+
       });
 
       if (!resp.ok) {
