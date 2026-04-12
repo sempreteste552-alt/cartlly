@@ -190,8 +190,17 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           (payload: any) => {
             if (payload.new.conversation_id === conversationId) {
               setMessages(prev => {
-                if (prev.some(m => m.content === payload.new.body && m.created_at === payload.new.created_at)) return prev;
+                const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && m.created_at === payload.new.created_at));
+                if (alreadyExists) return prev;
+                
+                if (payload.new.sender_type === "admin") {
+                  playSound("RECEIVED");
+                } else {
+                  playSound("SENT");
+                }
+
                 return [...prev, {
+                  id: payload.new.id,
                   role: payload.new.sender_type === "customer" ? "user" : "assistant",
                   content: payload.new.body,
                   created_at: payload.new.created_at,
@@ -200,7 +209,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 }];
               });
               
-              if (payload.new.sender_type === "admin") {
+              if (payload.new.sender_type === "admin" && open) {
                 supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
               }
             }
