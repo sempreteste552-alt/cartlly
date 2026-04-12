@@ -436,6 +436,12 @@ export function AIChatWidget() {
       payload,
     }));
 
+    extractActions(/\[ACTION_DOMAIN_CONNECT\]([\s\S]*?)\[\/ACTION_DOMAIN_CONNECT\]/g, (payload) => ({
+      type: "domain_connect",
+      label: `🌐 Conectar domínio ${payload.domain || ""}`,
+      payload,
+    }));
+
     if (actions.length > 0) {
       setPendingActions((prev) => ({ ...prev, [msgIndex]: actions }));
     }
