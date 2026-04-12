@@ -15,12 +15,8 @@ export function isPlatformHost(hostname?: string | null) {
   const platformDomains = [
     "localhost",
     "127.0.0.1",
-    "msktelemarkting.shop",
-    "www.msktelemarkting.shop",
-    "msktelemarkting.com",
-    "www.msktelemarkting.com",
-    "msktelemarkting.com.br",
-    "www.msktelemarkting.com.br",
+    "cartlly.lovable.app",
+    "www.cartlly.lovable.app",
   ];
 
   if (platformDomains.includes(host)) return true;
