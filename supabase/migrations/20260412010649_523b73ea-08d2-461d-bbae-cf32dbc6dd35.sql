@@ -1,0 +1,1 @@
+ALTER FUNCTION public.sync_primary_domain_to_settings() SET search_path = public;
