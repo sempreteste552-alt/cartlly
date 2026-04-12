@@ -27,13 +27,36 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Always create a message in the notification center (bell) for ALL customers
+    // This ensures even customers without push subscriptions get the message
+    const { data: msgRecord } = await serviceClient.from("tenant_messages").insert({
+      source_tenant_id: user.id,
+      sender_type: "tenant_admin",
+      sender_user_id: user.id,
+      audience_type: "tenant_admin_to_all_customers",
+      target_area: "public_store",
+      target_tenant_id: user.id,
+      channel: "push_broadcast",
+      title: title.trim(),
+      body: body || null,
+      message_type: "promotion",
+      is_global: false,
+      status: "sent",
+    }).select().single();
+
     const { data: customers } = await serviceClient
       .from("customers")
       .select("auth_user_id")
       .eq("store_user_id", user.id);
 
     if (!customers || customers.length === 0) {
-      return json({ sent: 0, total_customers: 0, customers_with_push: 0, removed: 0, message: "Nenhum cliente encontrado" });
+      return json({ 
+        sent: 0, 
+        total_customers: 0, 
+        customers_with_push: 0, 
+        removed: 0, 
+        message: "Nenhum cliente encontrado, mas a mensagem foi registrada no sistema." 
+      });
     }
 
     // Get all unique customer auth_user_ids, EXCLUDING the store owner (admin)
@@ -42,7 +65,13 @@ Deno.serve(async (req) => {
     )];
 
     if (customerUserIds.length === 0) {
-      return json({ sent: 0, total_customers: customers.length, customers_with_push: 0, removed: 0, message: "Nenhum cliente com conta encontrado" });
+      return json({ 
+        sent: 0, 
+        total_customers: customers.length, 
+        customers_with_push: 0, 
+        removed: 0, 
+        message: "Nenhum cliente com conta encontrado, mas a mensagem ficará visível no sino da loja." 
+      });
     }
 
     // Get push subscriptions for these customers
@@ -64,7 +93,7 @@ Deno.serve(async (req) => {
         total_customers: customers.length,
         customers_with_push: 0,
         removed: 0,
-        message: `Nenhum dos ${customers.length} cliente(s) ativou notificações push na loja. Os clientes precisam clicar no ícone de sino na vitrine para ativar.`,
+        message: `Nenhum dos ${customers.length} cliente(s) ativou notificações push. A mensagem ficará disponível apenas no sino da loja.`,
       });
     }
 
@@ -101,6 +130,14 @@ Deno.serve(async (req) => {
       } catch (_e: any) {
         failures.push(targetUserId);
       }
+    }
+
+    // Update message stats if we have the record
+    if (msgRecord) {
+      await serviceClient.from("tenant_messages").update({
+        delivered_count: sent,
+        failed_count: failures.length,
+      }).eq("id", msgRecord.id);
     }
 
     return json({
