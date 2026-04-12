@@ -28,14 +28,13 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/text-embedding-3-small", // Standard embedding model
+          model: "openai/text-embedding-3-small",
           input: text,
         }),
       });
 
       if (!response.ok) {
         const err = await response.text();
-        console.error("Embedding error:", err);
         throw new Error(`AI gateway error: ${err}`);
       }
 
@@ -44,85 +43,72 @@ serve(async (req) => {
     };
 
     if (action === "ingest-tenant") {
-      if (!tenantId || !content || !category) throw new Error("Missing parameters");
       const embedding = await generateEmbedding(content);
-      
-      const { data, error } = await supabase
-        .from("tenant_ai_knowledge")
-        .insert({
-          tenant_id: tenantId,
-          content,
-          category,
-          embedding,
-          metadata
-        })
-        .select()
-        .single();
-
+      const { data, error } = await supabase.from("tenant_ai_knowledge").insert({
+        tenant_id: tenantId, content, category, embedding, metadata
+      }).select().single();
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ success: true, data }), { headers: corsHeaders });
     }
 
     if (action === "ingest-customer") {
-      if (!tenantId || !customerId || !content) throw new Error("Missing parameters");
       const embedding = await generateEmbedding(content);
-      
-      const { data, error } = await supabase
-        .from("customer_ai_insights")
-        .insert({
-          tenant_id: tenantId,
-          customer_id: customerId,
-          insight: content,
-          insight_vector: embedding,
-          category: category || "behavior",
-          metadata
-        })
-        .select()
-        .single();
-
+      const { data, error } = await supabase.from("customer_ai_insights").insert({
+        tenant_id: tenantId, customer_id: customerId, insight: content, insight_vector: embedding, category: category || "behavior", metadata
+      }).select().single();
       if (error) throw error;
-      return new Response(JSON.stringify({ success: true, data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ success: true, data }), { headers: corsHeaders });
     }
 
     if (action === "retrieve-context") {
-      if (!tenantId || !content) throw new Error("Missing parameters");
       const queryEmbedding = await generateEmbedding(content);
-      
-      // Call the SQL functions we created in the migration
       const [knowledgeRes, insightsRes] = await Promise.all([
         supabase.rpc("match_tenant_knowledge", {
           query_embedding: queryEmbedding,
           p_tenant_id: tenantId,
           match_threshold: 0.3,
-          match_count: 10
+          match_count: 8
         }),
         customerId ? supabase.rpc("match_customer_insights", {
           query_embedding: queryEmbedding,
           p_customer_id: customerId,
           p_tenant_id: tenantId,
           match_threshold: 0.3,
-          match_count: 5
+          match_count: 4
         }) : Promise.resolve({ data: [] })
       ]);
+      return new Response(JSON.stringify({ knowledge: knowledgeRes.data || [], insights: insightsRes.data || [] }), { headers: corsHeaders });
+    }
 
-      return new Response(JSON.stringify({ 
-        knowledge: knowledgeRes.data || [], 
-        insights: insightsRes.data || [] 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (action === "learn-from-purchase") {
+      const { orderId, amount, products } = metadata;
+      const insightText = `Cliente realizou uma compra de R$ ${amount}. Produtos: ${products}. Comportamento: Cliente de alto valor que responde bem a ofertas diretas.`;
+      const embedding = await generateEmbedding(insightText);
+      
+      const { error } = await supabase.from("customer_ai_insights").insert({
+        tenant_id: tenantId,
+        customer_id: customerId,
+        insight: insightText,
+        insight_vector: embedding,
+        category: "buying_pattern",
+        relevance_score: 1.5,
+        metadata: { orderId, amount }
       });
+      if (error) throw error;
+
+      await supabase.from("ai_feedback_loop").insert({
+        tenant_id: tenantId,
+        customer_id: customerId,
+        action_type: "purchase",
+        insight_generated: insightText,
+        is_processed: true
+      });
+
+      return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
     }
 
     throw new Error("Invalid action");
-
   } catch (error: any) {
-    console.error("AI Memory Manager error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
   }
 });
