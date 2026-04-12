@@ -141,6 +141,13 @@ export default function Suporte() {
 
       await supabase
         .from("support_messages")
+        .update({ delivered_at: new Date().toISOString() })
+        .eq("conversation_id", selectedConversation.id)
+        .eq("sender_type", "customer")
+        .is("delivered_at", null);
+
+      await supabase
+        .from("support_messages")
         .update({ read_at: new Date().toISOString() })
         .eq("conversation_id", selectedConversation.id)
         .eq("sender_type", "customer")

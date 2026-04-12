@@ -11,7 +11,7 @@ import { useLojaContext } from "@/pages/loja/LojaLayout";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n";
-import { v4 as uuidv4 } from "uuid";
+import { getOrCreateChatSessionId } from "@/lib/chatSession";
 import { format } from "date-fns";
 
 type Msg = { 

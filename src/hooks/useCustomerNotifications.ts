@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import { getOrCreateChatSessionId } from "@/lib/chatSession";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 
