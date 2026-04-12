@@ -123,6 +123,13 @@ export default function Suporte() {
   const sendMessage = useMutation({
     mutationFn: async (body: string) => {
       if (!selectedConversation || !user) return;
+      
+      const { data: storeSettings } = await supabase
+        .from("store_settings")
+        .select("store_name")
+        .eq("user_id", user.id)
+        .single();
+
       const { error } = await supabase
         .from("support_messages")
         .insert({
@@ -136,7 +143,7 @@ export default function Suporte() {
       if (selectedConversation.customer_id) {
         await supabase.functions.invoke("send-push", {
           body: {
-            title: `Nova mensagem de ${user.email || "Suporte"}`,
+            title: storeSettings?.store_name || "Suporte da Loja",
             body: body.length > 100 ? body.substring(0, 97) + "..." : body,
             targetUserId: selectedConversation.customer_id,
             url: `/loja/${selectedConversation.tenant_id}?chat=true`
