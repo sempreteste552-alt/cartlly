@@ -10,6 +10,8 @@ interface ReceiptData {
   date: string;
   storeName: string;
   storeLogoUrl?: string;
+  storeAddress?: string;
+  storePhone?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -21,6 +23,7 @@ interface ReceiptData {
   shipping: number;
   total: number;
   paymentMethod: string;
+  notes?: string;
 }
 
 const formatPrice = (price: number) =>
@@ -39,200 +42,252 @@ export function generateReceiptPdf(data: ReceiptData): void {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Comprovante - Pedido #${data.orderId.slice(0, 8)}</title>
+  <title>Nota Fiscal - Pedido #${data.orderId.slice(0, 8)}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: 'Inter', sans-serif; 
-      color: #1a1a1a; 
-      padding: 20px; 
-      background-color: #f8fafc;
+      color: #000; 
+      padding: 10px;
+      background: #fff;
+      font-size: 10px;
     }
-    .receipt {
-      max-width: 500px;
+    .nf-container {
+      width: 100%;
+      max-width: 800px;
       margin: 0 auto;
-      background: white;
-      padding: 40px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #000;
+      padding: 5px;
     }
-    .bank-header {
-      border-bottom: 2px solid #1a1a1a;
-      padding-bottom: 15px;
-      margin-bottom: 25px;
+    .header {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-    .bank-header h1 {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-weight: 800;
-    }
-    .bank-header .date {
-      font-size: 12px;
-      color: #64748b;
-    }
-    
-    .main-value {
-      text-align: center;
-      padding: 30px 0;
-      background: #f1f5f9;
-      margin-bottom: 25px;
-    }
-    .main-value .label {
-      font-size: 10px;
-      text-transform: uppercase;
-      color: #64748b;
-      font-weight: 700;
-      letter-spacing: 1px;
+      border-bottom: 1px solid #000;
       margin-bottom: 5px;
     }
-    .main-value .amount {
-      font-size: 32px;
-      font-weight: 800;
-      color: #0f172a;
+    .logo-container {
+      width: 20%;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid #000;
     }
-
+    .store-info {
+      width: 50%;
+      padding: 5px;
+      border-right: 1px solid #000;
+    }
+    .nf-title {
+      width: 30%;
+      padding: 5px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .nf-title h1 { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+    .nf-title p { font-size: 9px; font-weight: 600; }
+    
     .section {
-      margin-bottom: 20px;
-    }
-    .section-title {
-      font-size: 10px;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: #64748b;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 5px;
-      margin-bottom: 10px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-    .info-row .label {
-      color: #64748b;
-    }
-    .info-row .value {
-      font-weight: 600;
-      text-align: right;
-    }
-
-    .items-list {
-      margin-bottom: 20px;
-    }
-    .item-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
+      border: 1px solid #000;
       margin-bottom: 5px;
-      color: #334155;
+    }
+    .section-header {
+      background: #f0f0f0;
+      padding: 2px 5px;
+      font-weight: 800;
+      font-size: 9px;
+      border-bottom: 1px solid #000;
+      text-transform: uppercase;
+    }
+    .section-content {
+      padding: 5px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .field {
+      margin-right: 15px;
+      margin-bottom: 2px;
+    }
+    .field-label {
+      font-size: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      display: block;
+    }
+    .field-value {
+      font-size: 10px;
+      font-weight: 400;
     }
 
-    .authentication {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px dashed #cbd5e1;
-      text-align: center;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 5px;
     }
-    .authentication p {
+    th {
+      background: #f0f0f0;
+      text-align: left;
+      padding: 3px 5px;
       font-size: 9px;
-      color: #94a3b8;
+      border: 1px solid #000;
       text-transform: uppercase;
-      margin-bottom: 8px;
     }
-    .auth-code {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 10px;
-      color: #475569;
-      word-break: break-all;
+    td {
+      padding: 3px 5px;
+      border: 1px solid #000;
+      font-size: 9px;
     }
     
-    .footer-note {
-      margin-top: 20px;
+    .totals {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .totals-box {
+      width: 250px;
+      border: 1px solid #000;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 5px;
+      border-bottom: 1px solid #eee;
+    }
+    .total-row:last-child {
+      border-bottom: none;
+      background: #f0f0f0;
+      font-weight: 800;
+      font-size: 11px;
+    }
+    
+    .footer {
+      margin-top: 10px;
+      font-size: 8px;
       text-align: center;
-      font-size: 10px;
-      color: #94a3b8;
+      color: #666;
     }
 
     @media print {
-      body { background: white; padding: 0; }
-      .receipt { box-shadow: none; border: 1px solid #000; width: 100%; max-width: none; }
+      body { padding: 0; }
+      .nf-container { border: 1px solid #000; width: 100%; max-width: none; }
     }
   </style>
 </head>
 <body>
-  <div class="receipt">
-    <div class="bank-header">
-      <div>
-        ${data.storeLogoUrl ? `<img src="${data.storeLogoUrl}" alt="${data.storeName}" style="max-height:36px;max-width:160px;object-fit:contain;margin-bottom:6px;" />` : ""}
-        <h1>Comprovante de Transação</h1>
+  <div class="nf-container">
+    <div class="header">
+      <div class="logo-container">
+        ${data.storeLogoUrl ? `<img src="${data.storeLogoUrl}" alt="${data.storeName}" style="max-height:50px;max-width:100%;object-fit:contain;" />` : `<div style="font-weight:800;font-size:12px;">${data.storeName}</div>`}
       </div>
-      <div class="date">${data.date}</div>
-    </div>
-
-    <div class="main-value">
-      <div class="label">Valor Total</div>
-      <div class="amount">${formatPrice(data.total)}</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Dados do Beneficiário</div>
-      <div class="info-row">
-        <span class="label">Nome/Razão Social:</span>
-        <span class="value">${data.storeName}</span>
+      <div class="store-info">
+        <div style="font-weight:800; font-size:11px;">${data.storeName}</div>
+        <div style="margin-top:2px;">${data.storeAddress || "Endereço não informado"}</div>
+        <div>Tel: ${data.storePhone || "Não informado"}</div>
       </div>
-      <div class="info-row">
-        <span class="label">Identificação:</span>
-        <span class="value">PAGAMENTO DE PEDIDO #${data.orderId.slice(0, 8).toUpperCase()}</span>
+      <div class="nf-title">
+        <h1>DANFE</h1>
+        <p>Documento Auxiliar da Nota Fiscal Eletrônica</p>
+        <div style="margin-top:5px; font-weight:800;">Nº ${data.orderId.slice(0, 8).toUpperCase()}</div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Dados do Pagador</div>
-      <div class="info-row">
-        <span class="label">Nome:</span>
-        <span class="value">${data.customerName}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">CPF:</span>
-        <span class="value">${maskedCpf}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Meio de Pagamento:</span>
-        <span class="value">${data.paymentMethod}</span>
+      <div class="section-header">Destinatário / Remetente</div>
+      <div class="section-content">
+        <div class="field" style="width: 60%;">
+          <span class="field-label">Nome / Razão Social</span>
+          <span class="field-value">${data.customerName}</span>
+        </div>
+        <div class="field" style="width: 35%;">
+          <span class="field-label">CPF / CNPJ</span>
+          <span class="field-value">${data.customerCpf || "—"}</span>
+        </div>
+        <div class="field" style="width: 60%;">
+          <span class="field-label">Endereço</span>
+          <span class="field-value">${data.customerAddress || "Retirada / Não informado"}</span>
+        </div>
+        <div class="field" style="width: 20%;">
+          <span class="field-label">Data de Emissão</span>
+          <span class="field-value">${data.date.split(" ")[0]}</span>
+        </div>
+        <div class="field" style="width: 15%;">
+          <span class="field-label">Hora</span>
+          <span class="field-value">${data.date.split(" ")[1] || ""}</span>
+        </div>
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Detalhamento da Compra</div>
-      <div class="items-list">
-        ${data.items.map(item => `
-          <div class="item-row">
-            <span>${item.quantity}x ${item.name}</span>
-            <span>${formatPrice(item.price * item.quantity)}</span>
-          </div>
+      <div class="section-header">Dados do Pagamento</div>
+      <div class="section-content">
+        <div class="field">
+          <span class="field-label">Meio de Pagamento</span>
+          <span class="field-value">${data.paymentMethod}</span>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 10%;">CÓDIGO</th>
+          <th style="width: 45%;">DESCRIÇÃO DOS PRODUTOS/SERVIÇOS</th>
+          <th style="width: 10%;">QTD.</th>
+          <th style="width: 15%;">VLR. UNIT.</th>
+          <th style="width: 20%;">VLR. TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.items.map((item, index) => `
+          <tr>
+            <td>${(index + 1).toString().padStart(3, "0")}</td>
+            <td>${item.name}</td>
+            <td style="text-align: center;">${item.quantity}</td>
+            <td style="text-align: right;">${formatPrice(item.price)}</td>
+            <td style="text-align: right;">${formatPrice(item.price * item.quantity)}</td>
+          </tr>
         `).join("")}
+      </tbody>
+    </table>
+
+    <div style="display: flex; gap: 5px;">
+      <div class="section" style="flex: 1;">
+        <div class="section-header">Dados Adicionais</div>
+        <div class="section-content" style="font-size: 8px;">
+          <strong>Informações Complementares:</strong><br>
+          ${data.notes ? `Observações do Cliente: ${data.notes}<br>` : ""}
+          Pedido realizado via Loja Online. 
+          Este documento é uma representação simplificada de um pedido.
+        </div>
       </div>
-      <div class="info-row" style="margin-top: 10px; font-weight: 700; border-top: 1px solid #f1f5f9; padding-top: 5px;">
-        <span class="label" style="color: #1a1a1a">Total:</span>
-        <span class="value">${formatPrice(data.total)}</span>
+      
+      <div class="totals-box">
+        <div class="total-row">
+          <span>Subtotal:</span>
+          <span>${formatPrice(data.subtotal)}</span>
+        </div>
+        ${data.shipping > 0 ? `
+        <div class="total-row">
+          <span>Frete:</span>
+          <span>${formatPrice(data.shipping)}</span>
+        </div>
+        ` : ""}
+        ${data.discount > 0 ? `
+        <div class="total-row" style="color: green;">
+          <span>Desconto:</span>
+          <span>-${formatPrice(data.discount)}</span>
+        </div>
+        ` : ""}
+        <div class="total-row">
+          <span>VALOR TOTAL:</span>
+          <span>${formatPrice(data.total)}</span>
+        </div>
       </div>
     </div>
 
-    <div class="authentication">
-      <p>Autenticação Eletrônica</p>
-      <div class="auth-code">${authenticationCode}</div>
-    </div>
-
-    <div class="footer-note">
-      Comprovante gerado eletronicamente em conformidade com as normas bancárias.<br>
-      Este documento é um registro de transação financeira.
+    <div class="footer">
+      Gerado eletronicamente por ${data.storeName} - Documento Auxiliar
     </div>
   </div>
 </body>

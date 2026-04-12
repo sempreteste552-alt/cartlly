@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save, Printer } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -467,10 +467,12 @@ export default function LojaCheckout() {
         date: formattedDate,
         storeName: settings?.store_name || "Loja",
         storeLogoUrl: settings?.logo_url || undefined,
+        storeAddress: settings?.store_address || undefined,
+        storePhone: settings?.store_phone || settings?.store_whatsapp || undefined,
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
-        customerAddress: address,
+        customerAddress: address || `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state}, ${cep}`,
         customerCpf: savedPayerCpf || undefined,
         items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
         subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
@@ -478,6 +480,7 @@ export default function LojaCheckout() {
         shipping: savedShippingCost,
         total: savedFinalTotal,
         paymentMethod: getMethodLabel(paymentMethod),
+        notes: notes || undefined,
       });
     };
 
@@ -674,7 +677,7 @@ export default function LojaCheckout() {
                 {(orderId?.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32)}
               </p>
               <p className="text-[9px] text-zinc-400 uppercase tracking-widest pt-2 opacity-50">
-                Comprovante gerado eletronicamente
+                Nota Fiscal gerada eletronicamente
               </p>
             </div>
           </div>
@@ -688,7 +691,7 @@ export default function LojaCheckout() {
             className="w-full h-12 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 transition-opacity font-bold rounded-xl"
             onClick={handleDownloadReceipt}
           >
-            <Download className="mr-2 h-4 w-4" /> Baixar Comprovante PDF
+            <Printer className="mr-2 h-4 w-4" /> Imprimir Nota Fiscal
           </Button>
           
           <div className="grid grid-cols-2 gap-3">
