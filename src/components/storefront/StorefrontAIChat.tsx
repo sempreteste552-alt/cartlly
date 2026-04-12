@@ -74,6 +74,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return id;
   });
   const [isTyping, setIsTyping] = useState(false);
+  const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -190,7 +191,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           (payload: any) => {
             if (payload.new.conversation_id === conversationId) {
               setMessages(prev => {
-                const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && m.created_at === payload.new.created_at));
+                const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
                 if (alreadyExists) return prev;
                 
                 if (payload.new.sender_type === "admin") {
@@ -211,6 +212,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
               }
             }
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
+          (payload: any) => {
+            setIsAdminTyping(payload.new.is_typing_admin);
           }
         )
         .subscribe();
@@ -295,13 +303,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
     if (isHumanMode) {
       if (!conversationId) return;
+      const userMsg: Msg = { 
+        role: "user", 
+        content: text.trim(), 
+        created_at: new Date().toISOString() 
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setInput("");
+      
       await supabase.from("support_messages").insert({ 
         conversation_id: conversationId, 
         sender_type: "customer", 
         sender_id: customer?.id || null,
         body: text.trim() 
       });
-      setInput("");
       return;
     }
 
@@ -417,8 +432,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">{isHumanMode ? "Atendente" : displayName}</p>
           <p className="text-[11px] text-white/70 flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
-            {uiText.online}
+            {isAdminTyping ? (
+              <span className="text-white font-medium animate-pulse">{uiText.typing}</span>
+            ) : (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
+                {uiText.online}
+              </>
+            )}
           </p>
         </div>
 
