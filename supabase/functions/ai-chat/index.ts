@@ -297,7 +297,7 @@ REGRAS CRÍTICAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-1.5-flash",
+        model: "gpt-4o-mini",
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
         temperature: 0.7,
