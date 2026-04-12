@@ -1260,7 +1260,7 @@ export default function LojaLayout() {
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="fixed z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 animate-fade-in bottom-20 md:bottom-6 right-6"
+            className="fixed z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 animate-fade-in bottom-20 md:bottom-6 right-6"
             title={storeText.whatsappTitle}
             style={{ boxShadow: "0 4px 20px rgba(37, 211, 102, 0.35)" }}
           >
