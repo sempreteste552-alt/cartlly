@@ -175,10 +175,54 @@ export default function Indicacoes() {
   const PRODUCTION_ORIGIN = "https://www.cartlly.lovable.app";
   const referralLink = code?.code ? `${PRODUCTION_ORIGIN}/login?ref=${code.code}` : "";
 
+  const fireMoneyEmojis = useCallback(() => {
+    const emojis = ["💵", "💰", "🤑", "💲", "💸"];
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const shootEmoji = (emoji: string, origin: { x: number; y: number }) => {
+      confetti({
+        ...defaults,
+        particleCount: 8,
+        origin,
+        scalar: 2,
+        shapes: ["circle"],
+        colors: ["#2e7d32", "#66bb6a", "#a5d6a7"],
+      });
+
+      // Create floating emoji elements
+      for (let i = 0; i < 3; i++) {
+        const el = document.createElement("div");
+        el.textContent = emoji;
+        el.style.cssText = `
+          position:fixed;top:${40 + Math.random() * 40}%;left:${10 + Math.random() * 80}%;
+          font-size:${28 + Math.random() * 20}px;z-index:10000;pointer-events:none;
+          animation:moneyFall 1.5s ease-out forwards;opacity:1;
+        `;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1600);
+      }
+    };
+
+    // Inject keyframes once
+    if (!document.getElementById("money-fall-style")) {
+      const style = document.createElement("style");
+      style.id = "money-fall-style";
+      style.textContent = `@keyframes moneyFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(360deg);opacity:0}}`;
+      document.head.appendChild(style);
+    }
+
+    shootEmoji(emojis[0], { x: 0.5, y: 0.4 });
+    setTimeout(() => shootEmoji(emojis[1], { x: 0.3, y: 0.5 }), 150);
+    setTimeout(() => shootEmoji(emojis[2], { x: 0.7, y: 0.5 }), 300);
+    setTimeout(() => shootEmoji(emojis[3], { x: 0.4, y: 0.3 }), 450);
+    setTimeout(() => shootEmoji(emojis[4], { x: 0.6, y: 0.3 }), 600);
+  }, []);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     toast.success("Link copiado! Agora é só compartilhar! 🚀");
+    fireMoneyEmojis();
     setTimeout(() => setCopied(false), 2000);
   };
 
