@@ -142,11 +142,13 @@ serve(async (req) => {
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
 
-CONTEÚDO TEMPORAL:
+CONTEÚDO TEMPORAL (EXTREMAMENTE CRÍTICO PARA SAUDAÇÃO E MARKETING):
 - Hoje é ${weekday}, dia ${brDate}.
-- Agora são ${brTime} (Horário de Brasília).
-- Use a saudação "${greetingBr}" se for iniciar a conversa agora.
-- O contexto de "${weekday}" é muito importante para a tom de voz e estratégias de marketing.
+- Agora são exatos ${brTime} (Horário de Brasília).
+- Sua saudação atual DEVE ser "${greetingBr}" se estiver iniciando ou voltando à conversa agora.
+- Use o contexto de "${weekday}" e o período do dia (${greetingBr}) para adaptar seu tom, seguindo rigorosamente as instruções do lojista na base de treinamento acima.
+- NUNCA diga "bom dia" se o horário for madrugada (00h-06h).
+
 
 
 DADOS DA LOJA:
