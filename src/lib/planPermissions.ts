@@ -38,7 +38,13 @@ export type FeatureKey =
   | "free_shipping_bar"
   | "trust_badges"
   | "countdown_timer"
-  | "delivery_estimation";
+  | "delivery_estimation"
+  | "loyalty_program"
+  | "referral_program"
+  | "customer_management"
+  | "profit_reports"
+  | "payment_dashboard"
+  | "whatsapp_ai";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
@@ -122,6 +128,12 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   integrations_advanced:{ label: "Integrações Avançadas", description: "APIs e integrações externas", minPlan: "PREMIUM", category: "enterprise" },
   enterprise_permissions:{ label: "Permissões Enterprise", description: "Controle granular de acessos", minPlan: "PREMIUM", category: "enterprise" },
   verified_badge:       { label: "Selo de Verificado", description: "Selo de conta verificada no nome da loja", minPlan: "PREMIUM", category: "design" },
+  loyalty_program:      { label: "Programa de Fidelidade", description: "Sistema de pontos e recompensas", minPlan: "PRO", category: "marketing" },
+  referral_program:     { label: "Programa de Indicações", description: "Indicações com recompensas", minPlan: "PRO", category: "marketing" },
+  customer_management:  { label: "Gestão de Clientes", description: "Painel completo de clientes", minPlan: "STARTER", category: "basic" },
+  profit_reports:       { label: "Relatórios de Lucro", description: "Análise de lucro e margem", minPlan: "PRO", category: "advanced" },
+  payment_dashboard:    { label: "Dashboard de Pagamentos", description: "Painel de pagamentos e transações", minPlan: "STARTER", category: "marketing" },
+  whatsapp_ai:          { label: "WhatsApp IA", description: "Atendimento automatizado via WhatsApp", minPlan: "PREMIUM", category: "ai" },
 };
 
 // ─── Plan hierarchy ───────────────────────────────────────────────
