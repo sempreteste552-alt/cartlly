@@ -369,6 +369,7 @@ export const pt = {
     promotions: "🏷️ Promoções",
     shippingInfo: "🚚 Frete",
     placeOrder: "📦 Fazer pedido",
+    humanSupport: "🎧 Suporte Humano",
   },
 
   // ─── Misc UI ──────────────────
