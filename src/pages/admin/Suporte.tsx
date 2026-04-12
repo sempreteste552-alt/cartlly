@@ -287,7 +287,7 @@ export default function Suporte() {
                   <div className="relative">
                     <Avatar className="h-11 w-11">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                        {conv.session_id.slice(0, 2).toUpperCase()}
+                        {(conv.customer?.name || conv.session_id).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     {conv.is_typing_customer && (
