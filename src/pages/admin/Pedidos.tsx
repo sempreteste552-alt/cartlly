@@ -92,7 +92,7 @@ export default function Pedidos() {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
-  const handlePrintLabel = (order: any) => {
+  const handlePrintLabel = async (order: any) => {
     const pStatus = (order as any).payments?.[0]?.status || "pendente";
     const isPaid = pStatus === "approved" || pStatus === "paid";
     
@@ -101,31 +101,31 @@ export default function Pedidos() {
       return;
     }
 
-    // Fetch items if we don't have them (though in the table we don't have items, we'll need to fetch)
-    // For now, let's assume we fetch them when user clicks print
-    toast.promise(
-      supabase.from("order_items").select("*").eq("order_id", order.id),
-      {
-        loading: "Preparando etiqueta...",
-        success: ({ data: items }) => {
-          generateOrderLabel({
-            orderId: order.id,
-            date: format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR }),
-            storeName: "Minha Loja",
-            customerName: order.customer_name,
-            customerPhone: order.customer_phone || undefined,
-            customerAddress: order.customer_address || undefined,
-            items: items?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
-            total: order.total,
-            paymentMethod: (order as any).payments?.[0]?.method || (order.whatsapp_order ? "WhatsApp" : "Online"),
-            paymentStatus: isPaid ? "Pago" : "Pendente",
-            notes: order.notes,
-          });
-          return "Etiqueta gerada!";
-        },
-        error: "Erro ao carregar itens do pedido."
-      }
-    );
+    const fetchItems = async () => {
+      const { data: items, error } = await supabase.from("order_items").select("*").eq("order_id", order.id);
+      if (error) throw error;
+      
+      generateOrderLabel({
+        orderId: order.id,
+        date: format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR }),
+        storeName: "Minha Loja",
+        customerName: order.customer_name,
+        customerPhone: order.customer_phone || undefined,
+        customerAddress: order.customer_address || undefined,
+        items: items?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+        total: order.total,
+        paymentMethod: (order as any).payments?.[0]?.method || (order.whatsapp_order ? "WhatsApp" : "Online"),
+        paymentStatus: isPaid ? "Pago" : "Pendente",
+        notes: order.notes || "",
+      });
+      return items;
+    };
+
+    toast.promise(fetchItems(), {
+      loading: "Preparando etiqueta...",
+      success: "Etiqueta gerada!",
+      error: "Erro ao carregar itens do pedido."
+    });
   };
 
   const handleExport = (type: "csv" | "xlsx" | "pdf") => {
