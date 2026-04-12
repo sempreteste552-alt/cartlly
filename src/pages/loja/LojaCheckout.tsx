@@ -467,10 +467,12 @@ export default function LojaCheckout() {
         date: formattedDate,
         storeName: settings?.store_name || "Loja",
         storeLogoUrl: settings?.logo_url || undefined,
+        storeAddress: settings?.store_address || undefined,
+        storePhone: settings?.store_phone || settings?.store_whatsapp || undefined,
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
-        customerAddress: address,
+        customerAddress: address || `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state}, ${cep}`,
         customerCpf: savedPayerCpf || undefined,
         items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
         subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
@@ -478,6 +480,7 @@ export default function LojaCheckout() {
         shipping: savedShippingCost,
         total: savedFinalTotal,
         paymentMethod: getMethodLabel(paymentMethod),
+        notes: notes || undefined,
       });
     };
 
