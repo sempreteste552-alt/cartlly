@@ -129,7 +129,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       >
                         <div className="relative">
                           <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
-                          {!!item.badgeCount && item.badgeCount > 0 && (
+                          {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
                             <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                               {item.badgeCount > 9 ? "9+" : item.badgeCount}
                             </span>
