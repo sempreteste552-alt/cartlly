@@ -23,6 +23,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlanGate } from "@/components/PlanGate";
+import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
 
 interface AutomationRule {
   id: string;
@@ -217,6 +218,15 @@ export default function Automacao() {
     refetchInterval: 15000,
   });
 
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("tenant_ai_brain_config").select("niche").eq("user_id", user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const customerIds = [...new Set(abandonedCarts.map(c => c.customer_id).filter(Boolean))];
   const { data: customerNames = {} } = useQuery({
     queryKey: ["automation-customer-names", customerIds.join(",")],
@@ -383,6 +393,10 @@ export default function Automacao() {
           </Button>
         </div>
       </div>
+
+      {!aiConfig?.niche && (
+        <AITrainingAlert />
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
