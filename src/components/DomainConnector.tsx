@@ -309,17 +309,22 @@ export default function DomainConnector({
                       )}
 
                       {/* SSL Error Diagnostics */}
-                      {domain.ssl_status === 'failed' && domain.last_ssl_error && (
+                      {(domain.ssl_status === 'failed' || domain.status === 'failed') && (
                         <Alert variant="destructive" className="bg-destructive/5 border-destructive/20">
                           <Lock className="h-4 w-4" />
-                          <AlertTitle>Erro na emissão do SSL</AlertTitle>
-                          <AlertDescription className="text-xs">
-                            Motivo provável: {domain.last_ssl_error}
-                            <br />
-                            Certifique-se que o DNS propagou e não há bloqueios de proxy (Cloudflare, etc).
+                          <AlertTitle>Erro de Conexão ou SSL (1014/1034)</AlertTitle>
+                          <AlertDescription className="text-xs space-y-2">
+                            <p>Se você vir um erro do Cloudflare (1014), certifique-se de que:</p>
+                            <ul className="list-disc pl-4 space-y-1">
+                              <li>O CNAME está apontando para <strong>{PLATFORM_EDGE}</strong></li>
+                              <li>O domínio não possui outros registros 'A' ou 'AAAA' conflitantes.</li>
+                              <li>O seu domínio <strong>não</strong> está com o "Proxy" (nuvem laranja) ativado no Cloudflare. Use "Somente DNS" (nuvem cinza).</li>
+                            </ul>
+                            <p className="font-semibold mt-2">Motivo técnico: {domain.last_ssl_error || "Certificado não pôde ser validado"}</p>
                           </AlertDescription>
                         </Alert>
                       )}
+
 
                       {/* Relationship with Tenant */}
                       <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
