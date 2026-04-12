@@ -443,6 +443,12 @@ export function AIChatWidget() {
       payload,
     }));
 
+    extractActions(/\[ACTION_DOMAIN_VERIFY\]([\s\S]*?)\[\/ACTION_DOMAIN_VERIFY\]/g, (payload) => ({
+      type: "domain_verify",
+      label: `🔍 Verificar domínio ${payload.domain || ""}`,
+      payload,
+    }));
+
     if (actions.length > 0) {
       setPendingActions((prev) => ({ ...prev, [msgIndex]: actions }));
     }
