@@ -295,7 +295,12 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
     if (isHumanMode) {
       if (!conversationId) return;
-      await supabase.from("support_messages").insert({ conversation_id: conversationId, sender_type: "customer", body: text.trim() });
+      await supabase.from("support_messages").insert({ 
+        conversation_id: conversationId, 
+        sender_type: "customer", 
+        sender_id: customer?.id || null,
+        body: text.trim() 
+      });
       setInput("");
       return;
     }
