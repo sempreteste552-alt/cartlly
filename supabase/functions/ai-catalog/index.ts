@@ -66,7 +66,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -125,7 +125,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes." }), {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação. Verifique seu plano." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
