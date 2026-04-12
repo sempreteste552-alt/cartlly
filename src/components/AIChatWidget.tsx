@@ -482,7 +482,7 @@ export function AIChatWidget() {
 
         if (!fullProduct) throw new Error("Produto não encontrado. Peça para a IA usar o nome exato do produto.");
 
-        const allowedFields = ["price", "stock", "name", "description", "published"];
+        const allowedFields = ["price", "stock", "name", "description", "published", "original_price"];
         const updates: Record<string, any> = {};
         for (const key of allowedFields) {
           if (action.payload.updates?.[key] !== undefined) updates[key] = action.payload.updates[key];
