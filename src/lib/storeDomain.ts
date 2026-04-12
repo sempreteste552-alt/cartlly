@@ -42,13 +42,16 @@ export function buildStoreUrl({
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
 
-  if (domain && domainStatus === "verified") {
+  // If we have an active custom domain with SSL, use it as the primary URL
+  if (domain && (domainStatus === "verified" || domainStatus === "active") && sslReady !== false) {
     return `https://${domain}${normalizedPath}`;
   }
 
+  // Fallback to the platform slug-based URL
   if (slug) {
     const base = `/loja/${slug}`;
-    return normalizedPath === "/" ? base : `${base}${normalizedPath}`;
+    const resultPath = normalizedPath === "/" ? base : `${base}${normalizedPath}`;
+    return resultPath;
   }
 
   return normalizedPath;

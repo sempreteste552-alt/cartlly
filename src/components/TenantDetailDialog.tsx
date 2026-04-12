@@ -15,6 +15,7 @@ import {
   MessageCircle, Settings, BarChart3, Mail, KeyRound, UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { buildStoreUrl } from "@/lib/storeDomain";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -228,7 +229,20 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                         <div><span className="text-muted-foreground">Gateway:</span> {storeSettings.payment_gateway || "Nenhum"}</div>
                       </div>
                       {storeSettings.store_slug && (
-                        <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(`/loja/${storeSettings.store_slug}`, "_blank")}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2" 
+                          onClick={() => {
+                            const url = buildStoreUrl({
+                              slug: storeSettings.store_slug,
+                              customDomain: storeSettings.custom_domain,
+                              domainStatus: storeSettings.domain_status,
+                              sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
+                            });
+                            window.open(url, "_blank");
+                          }}
+                        >
                           <Eye className="mr-2 h-3 w-3" /> Ver Loja
                         </Button>
                       )}
@@ -466,10 +480,12 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                   </Button>
                   {storeSettings?.store_slug && (
                     <Button variant="outline" size="sm" onClick={() => {
-                      const cd = (storeSettings as any)?.custom_domain;
-                      const ds = (storeSettings as any)?.domain_status;
-                      const sslReady = Boolean((storeSettings as any)?.domain_verify_details?.sslReady);
-                      const url = (cd && ds === "verified" && sslReady) ? `https://${cd.replace(/^https?:\/\//, "")}` : `/loja/${storeSettings.store_slug}`;
+                      const url = buildStoreUrl({
+                        slug: storeSettings.store_slug,
+                        customDomain: storeSettings.custom_domain,
+                        domainStatus: storeSettings.domain_status,
+                        sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
+                      });
                       window.open(url, "_blank");
                     }}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja

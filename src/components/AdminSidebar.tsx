@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { normalizeDomain } from "@/lib/storeDomain";
+import { normalizeDomain, buildStoreUrl } from "@/lib/storeDomain";
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
@@ -39,14 +39,12 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     es: { defaultStore: "Mi Tienda", new: "Nuevo", push: "Push" },
     fr: { defaultStore: "Ma Boutique", new: "Nouveau", push: "Push" },
   }[locale];
-  const storeSlug = (settings as any)?.store_slug;
-  const customDomain = (settings as any)?.custom_domain;
-  const domainStatus = (settings as any)?.domain_status;
-  const sslReady = Boolean((settings as any)?.domain_verify_details?.sslReady);
-  const sanitizedCustomDomain = normalizeDomain(customDomain);
-  const storeUrl = (sanitizedCustomDomain && domainStatus === "verified" && sslReady)
-    ? `https://${sanitizedCustomDomain}`
-    : storeSlug ? `${window.location.origin}/loja/${storeSlug}` : "";
+  const storeUrl = buildStoreUrl({
+    slug: (settings as any)?.store_slug,
+    customDomain: (settings as any)?.custom_domain,
+    domainStatus: (settings as any)?.domain_status,
+    sslReady: Boolean((settings as any)?.domain_verify_details?.sslReady)
+  });
 
   const mainItems = [
     { title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard, isNew: false },
