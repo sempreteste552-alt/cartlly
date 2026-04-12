@@ -103,7 +103,7 @@ serve(async (req) => {
       aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
       "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
-].filter(Boolean).join("\n") : "";
+    ].filter(Boolean).join("\n") : "";
 
     // Add current time context
     const now = new Date();
@@ -112,16 +112,12 @@ serve(async (req) => {
     const hourBr = parseInt(brTime.split(":")[0]);
     const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
-
-    // Add current time context
-    const now = new Date();
-    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
-    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
-    const hourBr = parseInt(brTime.split(":")[0]);
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
-
-
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
+
+CONTEÚDO TEMPORAL:
+- Agora são ${brTime} do dia ${brDate} (Horário de Brasília).
+- Use a saudação "${greetingBr}" se for iniciar a conversa agora.
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}
