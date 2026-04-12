@@ -181,7 +181,7 @@ export default function LojaHome() {
         </>
       )}
 
-      {!searchTerm.trim() && categories && categories.length > 0 && (
+      {categories && categories.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 mt-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (
