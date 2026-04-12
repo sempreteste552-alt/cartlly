@@ -235,7 +235,7 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
    ⚠️ Se usar Cloudflare, deixe a nuvem cinza (DNS only).
 
-   - Use o verification_token do domínio nos dados do contexto (storeContext.domains) ou, se for um novo domínio, use o settingsId da loja como fallback.
+   - Use the verification_token do domínio nos dados do contexto (storeContext.domains) ou, se for um novo domínio, use the settingsId da loja como fallback.
 [ACTION_DOMAIN_CONNECT]{"domain": "www.minhaloja.com.br"}[/ACTION_DOMAIN_CONNECT]
 
 9. Verificar um domínio:
