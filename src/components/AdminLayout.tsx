@@ -53,7 +53,7 @@ export function AdminLayout() {
   const adminName = storeSlug
     ? `Painel ${rawStoreName}`.trim()
     : "";
-  const manifestId = storeSlug ? `msktelemarkting-admin-${storeSlug}` : undefined;
+  const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : undefined;
   usePwaManifest({
     id: manifestId,
     name: adminName || undefined,

@@ -209,7 +209,7 @@ export default function SuperAdminConfig() {
           <div className="space-y-2">
             <Label>Link do Botão "Saiba mais"</Label>
             <Input
-              placeholder="https://usemsktelemarkting.vercel.app/"
+              placeholder="https://usecartlly.vercel.app/"
               value={config.promo_banner_link}
               onChange={e => updateField("promo_banner_link", e.target.value)}
             />

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       .single();
 
     const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
-    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@msktelemarkting.com`;
+    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
     const tenantName = profile?.display_name || "Tenant";
 
     const identifier = `plan_${plan.id}_user_${user_id}_${Date.now()}`;

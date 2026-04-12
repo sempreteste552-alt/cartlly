@@ -8,7 +8,7 @@ interface PromoBannerProps {
 }
 
 const DEFAULT_TEXT = "Crie sua própria loja online agora mesmo";
-const DEFAULT_LINK = "https://usemsktelemarkting.vercel.app/";
+const DEFAULT_LINK = "https://usecartlly.vercel.app/";
 
 export function PromoBanner({ storeUserId }: PromoBannerProps) {
   useRealtimeSync("platform_settings", [["platform_promo_banner_config_public"]]);

@@ -10,7 +10,7 @@ const STOPWORDS = new Set([
   "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
   "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
   "mais", "muito", "muita", "hoje", "ontem", "amanha", "você", "voce", "pra", "pro", "como", "sua",
-  "loja", "msktelemarkting", "bom", "boa", "dia", "tarde", "noite", "madrugada", "aqui", "essa", "esse",
+  "loja", "cartlly", "bom", "boa", "dia", "tarde", "noite", "madrugada", "aqui", "essa", "esse",
 ]);
 
 const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
