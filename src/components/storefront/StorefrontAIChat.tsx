@@ -55,6 +55,20 @@ const playNotificationSound = () => {
   }
 };
 
+function getPresenceLabel(isTyping: boolean, updatedAt?: string | null) {
+  if (isTyping) return "Digitando...";
+  if (!updatedAt) return "Offline";
+
+  const diffMin = Math.max(1, Math.floor((Date.now() - new Date(updatedAt).getTime()) / 60000));
+  if (diffMin < 2) return "Online";
+  if (diffMin < 60) return `Visto há ${diffMin} min`;
+
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `Visto há ${diffH} h`;
+
+  return `Visto ${format(new Date(updatedAt), "dd/MM HH:mm")}`;
+}
+
 export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium }: StorefrontAIChatProps) {
   const { locale } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -69,6 +83,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [sessionId] = useState(() => getOrCreateChatSessionId());
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -92,21 +107,21 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const uiText = {
     pt: {
       quickProducts: "🛍️ Ver produtos", quickPromos: "🏷️ Promoções", quickShipping: "🚚 Frete", quickOrder: "📦 Fazer pedido", humanSupport: "🎧 Suporte Humano",
-      quickProductsPrompt: "Quais produtos vocês têm disponíveis?", quickPromosPrompt: "Tem algum cupom de desconto ou promoção?", quickShippingPrompt: "Como funciona a entrega? Quais regiões atendem?", quickOrderPrompt: "Quero fazer um pedido!",
+      quickProductsPrompt: "Quais produtos vocês têm disponíveis?", quickPromosPrompt: "Tem algum cupom de desconto ou promoção?", quickShippingPrompt: "Como funciona a entrega? Quais regiões atendem?", quickOrderPrompt: "Quero fazer um pedido!", humanStatusTyping: "Digitando...", humanStatusOnline: "Online",
       title: isHumanMode ? "Suporte Humano" : "Chat com IA", subtitle: isHumanMode ? "Atendimento em tempo real" : "Assistente de compras", welcome: `Olá! Bem-vindo à ${storeName}! 👋`, intro: isHumanMode ? "Olá! Em que posso ajudar? Um atendente falará com você em breve." : `Sou ${displayName}, seu assistente de compras. Posso ajudar com produtos, frete e pedidos!`, typing: "Digitando...", placeholder: "Digite sua mensagem...", whatsapp: "Continuar pelo WhatsApp", online: "Online agora",
       addressFound: "📍 **Endereço encontrado:**", street: "🏠 **Rua:**", neighborhood: "🏘️ **Bairro:**", city: "🏙️ **Cidade:**", notFoundF: "Não encontrada", notFoundM: "Não encontrado", askNumber: "Agora me informe o **número** da sua casa/apartamento e o **complemento** (se houver).", cepNotFound: "❌ CEP não encontrado. Por favor, verifique e tente novamente.",
       orderCreated: "🎉 **Pedido criado com sucesso!**", orderNumber: "📋 **Número:**", total: "💰 **Total:**", status: "📦 **Status:**", pending: "Pendente", trackOrder: "🔍 **Rastreie seu pedido:** Use o código", trackingSuffix: "na página de rastreio.", thanks: "Obrigado pela sua compra! 🛍️", orderCreatedToast: "Pedido criado com sucesso!", orderError: "❌ Houve um erro ao criar seu pedido.", orderProcessError: "❌ Erro ao processar o pedido. Tente novamente.", noOrderForPayment: "❌ Nenhum pedido encontrado.", paymentError: "Erro ao processar pagamento", pixCreated: "✅ **PIX gerado com sucesso!**", pixCopy: "📋 **Código PIX (copie e cole):**", pixExpires: "⏰ O PIX expira em 30 minutos.", pixToast: "PIX gerado!", paymentApproved: "✅ **Pagamento aprovado!**", paymentApprovedToast: "Pagamento aprovado!", boletoCreated: "📄 **Boleto gerado com sucesso!**", boletoLink: "📥 Clique aqui para baixar o boleto", boletoExpires: "⏰ O boleto vence em 3 dias úteis.", boletoToast: "Boleto gerado!", paymentProcessed: "💳 Pagamento processado! Status:", unknownError: "Erro desconhecido", connectionError: "Erro de conexão", noResponse: "Sem resposta",
     },
     en: {
       quickProducts: "🛍️ View products", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Shipping", quickOrder: "📦 Place order", humanSupport: "🎧 Human Support",
-      quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Do you have any discount coupon or promotion?", quickShippingPrompt: "How does shipping work?", quickOrderPrompt: "I want to place an order!",
+      quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Do you have any discount coupon or promotion?", quickShippingPrompt: "How does shipping work?", quickOrderPrompt: "I want to place an order!", humanStatusTyping: "Typing...", humanStatusOnline: "Online",
       title: isHumanMode ? "Human Support" : "AI chat", subtitle: isHumanMode ? "Real-time support" : "Shopping assistant", welcome: `Hello! Welcome to ${storeName}! 👋`, intro: isHumanMode ? "Hello! How can I help you? An agent will be with you shortly." : `I'm ${displayName}, your shopping assistant!`, typing: "Typing...", placeholder: "Type your message...", whatsapp: "Continue on WhatsApp", online: "Online now",
       addressFound: "📍 **Address found:**", street: "🏠 **Street:**", neighborhood: "🏘️ **Neighborhood:**", city: "🏙️ **City:**", notFoundF: "Not found", notFoundM: "Not found", askNumber: "Now tell me the **number** and **complement**.", cepNotFound: "❌ ZIP code not found.",
       orderCreated: "🎉 **Order created!**", orderNumber: "📋 **Number:**", total: "💰 **Total:**", status: "📦 **Status:**", pending: "Pending", trackOrder: "🔍 **Track:** Use code", trackingSuffix: "on the tracking page.", thanks: "Thank you! 🛍️", orderCreatedToast: "Order created!", orderError: "❌ Error creating order.", orderProcessError: "❌ Error processing order.", noOrderForPayment: "❌ No order found.", paymentError: "Payment error", pixCreated: "✅ **PIX generated!**", pixCopy: "📋 **PIX code:**", pixExpires: "⏰ Expires in 30 min.", pixToast: "PIX generated!", paymentApproved: "✅ **Payment approved!**", paymentApprovedToast: "Payment approved!", boletoCreated: "📄 **Boleto generated!**", boletoLink: "📥 Download boleto", boletoExpires: "⏰ Expires in 3 days.", boletoToast: "Boleto generated!", paymentProcessed: "💳 Payment processed:", unknownError: "Unknown error", connectionError: "Connection error", noResponse: "No response",
     },
   }[locale] || {
     quickProducts: "🛍️ View products", quickPromos: "🏷️ Promotions", quickShipping: "🚚 Shipping", quickOrder: "📦 Place order", humanSupport: "🎧 Human Support",
-    quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Any promotions?", quickShippingPrompt: "How does shipping work?", quickOrderPrompt: "I want to place an order!",
+    quickProductsPrompt: "Which products do you have available?", quickPromosPrompt: "Any promotions?", quickShippingPrompt: "How does shipping work?", quickOrderPrompt: "I want to place an order!", humanStatusTyping: "Typing...", humanStatusOnline: "Online",
     title: isHumanMode ? "Human Support" : "AI chat", subtitle: isHumanMode ? "Real-time support" : "Shopping assistant", welcome: `Welcome to ${storeName}! 👋`, intro: isHumanMode ? "An agent will be with you shortly." : `I'm ${displayName}, your assistant!`, typing: "Typing...", placeholder: "Type your message...", whatsapp: "Continue on WhatsApp", online: "Online now",
     addressFound: "📍 **Address found:**", street: "🏠 **Street:**", neighborhood: "🏘️ **Neighborhood:**", city: "🏙️ **City:**", notFoundF: "Not found", notFoundM: "Not found", askNumber: "Now tell me the **number**.", cepNotFound: "❌ ZIP not found.",
     orderCreated: "🎉 **Order created!**", orderNumber: "📋 **Number:**", total: "💰 **Total:**", status: "📦 **Status:**", pending: "Pending", trackOrder: "🔍 **Track:** Use code", trackingSuffix: "on tracking page.", thanks: "Thank you! 🛍️", orderCreatedToast: "Order created!", orderError: "❌ Error creating order.", orderProcessError: "❌ Error processing.", noOrderForPayment: "❌ No order found.", paymentError: "Payment error", pixCreated: "✅ **PIX generated!**", pixCopy: "📋 **PIX code:**", pixExpires: "⏰ 30 min.", pixToast: "PIX!", paymentApproved: "✅ **Approved!**", paymentApprovedToast: "Approved!", boletoCreated: "📄 **Boleto generated!**", boletoLink: "📥 Download", boletoExpires: "⏰ 3 days.", boletoToast: "Boleto!", paymentProcessed: "💳 Processed:", unknownError: "Unknown error", connectionError: "Connection error", noResponse: "No response",
@@ -136,7 +151,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     }
   }, []);
 
-  // Listen for custom event from notification bell to open chat
   useEffect(() => {
     const handler = () => {
       setIsHumanMode(true);
@@ -146,32 +160,37 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return () => window.removeEventListener("open-support-chat", handler);
   }, []);
 
-  // Init support conversation
   useEffect(() => {
     if (isHumanMode && open && !conversationId) {
       const initSupport = async () => {
         let currentConvId: string | null = null;
+        let currentUpdatedAt: string | null = null;
+        let currentTypingAdmin = false;
 
         if (customer?.id) {
           const { data: customerConv } = await supabase
             .from("support_conversations")
-            .select("id")
+            .select("id, updated_at, is_typing_admin")
             .eq("tenant_id", storeUserId)
             .eq("customer_id", customer.id)
             .maybeSingle();
 
           currentConvId = customerConv?.id ?? null;
+          currentUpdatedAt = customerConv?.updated_at ?? null;
+          currentTypingAdmin = !!customerConv?.is_typing_admin;
         }
 
         if (!currentConvId) {
           const { data: conv } = await supabase
             .from("support_conversations")
-            .select("id")
+            .select("id, updated_at, is_typing_admin")
             .eq("tenant_id", storeUserId)
             .eq("session_id", sessionId)
             .maybeSingle();
 
           currentConvId = conv?.id ?? null;
+          currentUpdatedAt = conv?.updated_at ?? null;
+          currentTypingAdmin = !!conv?.is_typing_admin;
         }
 
         if (!currentConvId) {
@@ -182,19 +201,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               session_id: sessionId,
               customer_id: customer?.id || null,
             })
-            .select("id")
+            .select("id, updated_at, is_typing_admin")
             .single();
 
-          if (newConv) currentConvId = newConv.id;
+          if (newConv) {
+            currentConvId = newConv.id;
+            currentUpdatedAt = newConv.updated_at ?? null;
+            currentTypingAdmin = !!newConv.is_typing_admin;
+          }
         }
 
         if (currentConvId) {
           setConversationId(currentConvId);
+          setConversationUpdatedAt(currentUpdatedAt);
+          setIsAdminTyping(currentTypingAdmin);
+
           const { data: msgs } = await supabase
             .from("support_messages")
             .select("*")
             .eq("conversation_id", currentConvId)
             .order("created_at", { ascending: true });
+
+          const now = new Date().toISOString();
 
           if (msgs) {
             setMessages(msgs.map(m => ({
@@ -202,20 +230,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               role: m.sender_type === "customer" ? "user" : "assistant",
               content: m.body,
               created_at: m.created_at,
-              read_at: m.read_at,
-              delivered_at: m.delivered_at
+              read_at: m.sender_type === "admin" ? (m.read_at ?? now) : m.read_at,
+              delivered_at: m.sender_type === "admin" ? (m.delivered_at ?? now) : m.delivered_at
             })));
 
             await supabase
               .from("support_messages")
-              .update({ delivered_at: new Date().toISOString() })
+              .update({ delivered_at: now })
               .eq("conversation_id", currentConvId)
               .eq("sender_type", "admin")
               .is("delivered_at", null);
 
             await supabase
               .from("support_messages")
-              .update({ read_at: new Date().toISOString() })
+              .update({ read_at: now })
               .eq("conversation_id", currentConvId)
               .eq("sender_type", "admin")
               .is("read_at", null);
@@ -227,7 +255,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     }
   }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId]);
 
-  // Realtime channel for support messages
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
 
@@ -237,6 +264,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
         (payload: any) => {
+            const now = new Date().toISOString();
+
             setMessages(prev => {
               const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
               if (alreadyExists) return prev;
@@ -244,14 +273,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               if (payload.new.sender_type === "admin") {
                 playNotificationSound();
                 supabase.from("support_messages")
-                  .update({ delivered_at: new Date().toISOString() })
+                  .update({ delivered_at: now })
                   .eq("id", payload.new.id)
                   .is("delivered_at", null)
                   .then();
                 
-                if (open) {
+                if (open && document.visibilityState === "visible") {
                   supabase.from("support_messages")
-                    .update({ read_at: new Date().toISOString() })
+                    .update({ read_at: now })
                     .eq("id", payload.new.id)
                     .is("read_at", null)
                     .then();
@@ -263,14 +292,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 role: payload.new.sender_type === "customer" ? "user" : "assistant",
                 content: payload.new.body,
                 created_at: payload.new.created_at,
-                read_at: open && payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.read_at,
-                delivered_at: payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.delivered_at
+                read_at: payload.new.sender_type === "admin" && open && document.visibilityState === "visible" ? (payload.new.read_at || now) : payload.new.read_at,
+                delivered_at: payload.new.sender_type === "admin" ? (payload.new.delivered_at || now) : payload.new.delivered_at
               }];
             });
-            
-            if (payload.new.sender_type === "admin" && open) {
-              supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
-            }
         }
       )
       .on(
@@ -288,7 +313,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
         (payload: any) => {
-          setIsAdminTyping(payload.new.is_typing_admin);
+          setIsAdminTyping(!!payload.new.is_typing_admin);
+          setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
       .subscribe();
@@ -301,7 +327,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       const updateTypingStatus = async (typing: boolean) => {
         await supabase
           .from("support_conversations")
-          .update({ is_typing_customer: typing })
+          .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
           .eq("id", conversationId);
       };
 
@@ -319,7 +345,24 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         }
       }, 3000);
     }
-  }, [input, conversationId, isHumanMode]);
+  }, [input, conversationId, isHumanMode, isTyping]);
+
+  useEffect(() => {
+    if (!conversationId || !isHumanMode || !open) return;
+
+    const touchPresence = () => {
+      supabase
+        .from("support_conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .then();
+    };
+
+    touchPresence();
+    const interval = window.setInterval(touchPresence, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [conversationId, isHumanMode, open]);
 
   const processActions = useCallback(async (content: string) => {
     const cepMatch = content.match(/\[ACTION_CEP_LOOKUP\]([\s\S]*?)\[\/ACTION_CEP_LOOKUP\]/);
