@@ -1662,6 +1662,7 @@ export type Database = {
           made_to_order: boolean
           min_stock_alert: number
           name: string
+          original_price: number | null
           price: number
           published: boolean
           stock: number
@@ -1681,6 +1682,7 @@ export type Database = {
           made_to_order?: boolean
           min_stock_alert?: number
           name: string
+          original_price?: number | null
           price?: number
           published?: boolean
           stock?: number
@@ -1700,6 +1702,7 @@ export type Database = {
           made_to_order?: boolean
           min_stock_alert?: number
           name?: string
+          original_price?: number | null
           price?: number
           published?: boolean
           stock?: number
