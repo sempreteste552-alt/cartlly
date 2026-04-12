@@ -19,6 +19,7 @@ import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { useTranslation } from "@/i18n";
+import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -93,6 +94,20 @@ export default function Dashboard() {
       return data as any;
     },
     enabled: !!user && hasPremiumAnalytics,
+  });
+
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+    enabled: !!user,
   });
 
   const { data: products } = useProducts();
@@ -244,6 +259,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <WelcomeTrialCard />
+
+      {(!aiConfig || !aiConfig.niche) && (
+        <AITrainingAlert />
+      )}
 
       <div id="dashboard-welcome" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
