@@ -2531,6 +2531,13 @@ export type Database = {
             referencedRelation: "store_settings_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       store_highlight_items: {
@@ -3597,6 +3604,55 @@ export type Database = {
           },
         ]
       }
+      store_domains_public: {
+        Row: {
+          hostname: string | null
+          id: string | null
+          is_primary: boolean | null
+          is_published: boolean | null
+          status: string | null
+          store_id: string | null
+        }
+        Insert: {
+          hostname?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          is_published?: boolean | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Update: {
+          hostname?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          is_published?: boolean | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_marketing_config_public: {
         Row: {
           announcement_bar_bg_color: string | null
@@ -3753,6 +3809,243 @@ export type Database = {
           welcome_coupon_expires_days: number | null
           welcome_coupon_min_order: number | null
           youtube_url: string | null
+        }
+        Relationships: []
+      }
+      store_settings_safe: {
+        Row: {
+          accent_color: string | null
+          admin_accent_color: string | null
+          admin_blocked: boolean | null
+          admin_primary_color: string | null
+          ai_avatar_url: string | null
+          ai_chat_tone: string | null
+          ai_last_analysis_at: string | null
+          ai_name: string | null
+          banner_mobile_format: string | null
+          button_color: string | null
+          button_text_color: string | null
+          created_at: string | null
+          custom_domain: string | null
+          domain_last_check: string | null
+          domain_status: string | null
+          domain_verify_details: Json | null
+          facebook_url: string | null
+          favicon_url: string | null
+          footer_bg_color: string | null
+          footer_text_color: string | null
+          gateway_environment: string | null
+          gateway_public_key: string | null
+          google_maps_url: string | null
+          header_bg_color: string | null
+          header_text_color: string | null
+          id: string | null
+          instagram_url: string | null
+          is_verified: boolean | null
+          language: string | null
+          logo_size: number | null
+          logo_url: string | null
+          low_stock_threshold: number | null
+          marquee_bg_color: string | null
+          marquee_enabled: boolean | null
+          marquee_speed: number | null
+          marquee_text: string | null
+          marquee_text_color: string | null
+          max_installments: number | null
+          page_bg_color: string | null
+          payment_boleto: boolean | null
+          payment_credit_card: boolean | null
+          payment_debit_card: boolean | null
+          payment_gateway: string | null
+          payment_pix: boolean | null
+          primary_color: string | null
+          promo_banner_enabled: boolean | null
+          promo_banner_link: string | null
+          promo_banner_text: string | null
+          secondary_color: string | null
+          sell_via_whatsapp: boolean | null
+          shipping_base_cost: number | null
+          shipping_enabled: boolean | null
+          shipping_flat_rate: number | null
+          shipping_free_above: number | null
+          shipping_per_km: number | null
+          store_address: string | null
+          store_blocked: boolean | null
+          store_category: string | null
+          store_cep: string | null
+          store_description: string | null
+          store_location: string | null
+          store_name: string | null
+          store_open: boolean | null
+          store_phone: string | null
+          store_slug: string | null
+          store_whatsapp: string | null
+          tiktok_url: string | null
+          twitter_url: string | null
+          updated_at: string | null
+          user_id: string | null
+          welcome_coupon_discount_type: string | null
+          welcome_coupon_discount_value: number | null
+          welcome_coupon_enabled: boolean | null
+          welcome_coupon_expires_days: number | null
+          welcome_coupon_min_order: number | null
+          youtube_url: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          admin_accent_color?: string | null
+          admin_blocked?: boolean | null
+          admin_primary_color?: string | null
+          ai_avatar_url?: string | null
+          ai_chat_tone?: string | null
+          ai_last_analysis_at?: string | null
+          ai_name?: string | null
+          banner_mobile_format?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          custom_domain?: string | null
+          domain_last_check?: string | null
+          domain_status?: string | null
+          domain_verify_details?: Json | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_bg_color?: string | null
+          footer_text_color?: string | null
+          gateway_environment?: string | null
+          gateway_public_key?: string | null
+          google_maps_url?: string | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_verified?: boolean | null
+          language?: string | null
+          logo_size?: number | null
+          logo_url?: string | null
+          low_stock_threshold?: number | null
+          marquee_bg_color?: string | null
+          marquee_enabled?: boolean | null
+          marquee_speed?: number | null
+          marquee_text?: string | null
+          marquee_text_color?: string | null
+          max_installments?: number | null
+          page_bg_color?: string | null
+          payment_boleto?: boolean | null
+          payment_credit_card?: boolean | null
+          payment_debit_card?: boolean | null
+          payment_gateway?: string | null
+          payment_pix?: boolean | null
+          primary_color?: string | null
+          promo_banner_enabled?: boolean | null
+          promo_banner_link?: string | null
+          promo_banner_text?: string | null
+          secondary_color?: string | null
+          sell_via_whatsapp?: boolean | null
+          shipping_base_cost?: number | null
+          shipping_enabled?: boolean | null
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number | null
+          store_address?: string | null
+          store_blocked?: boolean | null
+          store_category?: string | null
+          store_cep?: string | null
+          store_description?: string | null
+          store_location?: string | null
+          store_name?: string | null
+          store_open?: boolean | null
+          store_phone?: string | null
+          store_slug?: string | null
+          store_whatsapp?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_coupon_discount_type?: string | null
+          welcome_coupon_discount_value?: number | null
+          welcome_coupon_enabled?: boolean | null
+          welcome_coupon_expires_days?: number | null
+          welcome_coupon_min_order?: number | null
+          youtube_url?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          admin_accent_color?: string | null
+          admin_blocked?: boolean | null
+          admin_primary_color?: string | null
+          ai_avatar_url?: string | null
+          ai_chat_tone?: string | null
+          ai_last_analysis_at?: string | null
+          ai_name?: string | null
+          banner_mobile_format?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          custom_domain?: string | null
+          domain_last_check?: string | null
+          domain_status?: string | null
+          domain_verify_details?: Json | null
+          facebook_url?: string | null
+          favicon_url?: string | null
+          footer_bg_color?: string | null
+          footer_text_color?: string | null
+          gateway_environment?: string | null
+          gateway_public_key?: string | null
+          google_maps_url?: string | null
+          header_bg_color?: string | null
+          header_text_color?: string | null
+          id?: string | null
+          instagram_url?: string | null
+          is_verified?: boolean | null
+          language?: string | null
+          logo_size?: number | null
+          logo_url?: string | null
+          low_stock_threshold?: number | null
+          marquee_bg_color?: string | null
+          marquee_enabled?: boolean | null
+          marquee_speed?: number | null
+          marquee_text?: string | null
+          marquee_text_color?: string | null
+          max_installments?: number | null
+          page_bg_color?: string | null
+          payment_boleto?: boolean | null
+          payment_credit_card?: boolean | null
+          payment_debit_card?: boolean | null
+          payment_gateway?: string | null
+          payment_pix?: boolean | null
+          primary_color?: string | null
+          promo_banner_enabled?: boolean | null
+          promo_banner_link?: string | null
+          promo_banner_text?: string | null
+          secondary_color?: string | null
+          sell_via_whatsapp?: boolean | null
+          shipping_base_cost?: number | null
+          shipping_enabled?: boolean | null
+          shipping_flat_rate?: number | null
+          shipping_free_above?: number | null
+          shipping_per_km?: number | null
+          store_address?: string | null
+          store_blocked?: boolean | null
+          store_category?: string | null
+          store_cep?: string | null
+          store_description?: string | null
+          store_location?: string | null
+          store_name?: string | null
+          store_open?: boolean | null
+          store_phone?: string | null
+          store_slug?: string | null
+          store_whatsapp?: string | null
+          tiktok_url?: string | null
+          twitter_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          welcome_coupon_discount_type?: string | null
+          welcome_coupon_discount_value?: number | null
+          welcome_coupon_enabled?: boolean | null
+          welcome_coupon_expires_days?: number | null
+          welcome_coupon_min_order?: number | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
