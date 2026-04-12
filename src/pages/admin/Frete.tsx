@@ -44,6 +44,7 @@ export default function Frete() {
   }
 
   return (
+    <PlanGate feature="shipping_zones">
     <>
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -108,5 +109,6 @@ export default function Frete() {
       </div>
     </div>
     </>
+    </PlanGate>
   );
 }
