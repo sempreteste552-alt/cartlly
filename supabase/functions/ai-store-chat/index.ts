@@ -143,7 +143,7 @@ serve(async (req) => {
     };
 
     // Saudação baseada no horário de Brasília (UTC-3)
-    const now = new Date();
+    const now = clientTime ? new Date(clientTime) : new Date();
     const formatter = new Intl.DateTimeFormat("pt-BR", {
       timeZone: "America/Sao_Paulo",
       hour: "numeric",
