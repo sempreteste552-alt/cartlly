@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,22 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt } = await req.json();
+    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt, userId } = await req.json();
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch tenant brain config if userId is provided
+    let aiConfig = null;
+    if (userId) {
+      const { data } = await supabase
+        .from("tenant_ai_brain_config")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      aiConfig = data;
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
