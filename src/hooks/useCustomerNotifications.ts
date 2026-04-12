@@ -56,7 +56,10 @@ export function useCustomerNotifications(storeUserId?: string) {
       if (sessionId) {
         const { data: conv } = await supabase
           .from("support_conversations")
-          .select("id")
+          .select(`
+            id,
+            tenant:store_settings(store_name)
+          `)
           .eq("tenant_id", storeUserId!)
           .eq("session_id", sessionId)
           .maybeSingle();
@@ -71,9 +74,10 @@ export function useCustomerNotifications(storeUserId?: string) {
             .limit(10);
           
           if (msgs) {
+            const storeName = (conv as any).tenant?.store_name || "Suporte";
             supportMsgs = msgs.map(m => ({
               id: m.id,
-              title: "Nova mensagem do suporte",
+              title: storeName,
               body: m.body,
               created_at: m.created_at,
               message_type: "support",
