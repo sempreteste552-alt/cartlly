@@ -42,6 +42,8 @@ export default function Suporte() {
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ["support_conversations", user?.id],
@@ -136,6 +138,31 @@ export default function Suporte() {
       supabase.removeChannel(channel);
     };
   }, [user, queryClient]);
+
+  useEffect(() => {
+    if (selectedConversation) {
+      const updateTypingStatus = async (typing: boolean) => {
+        await supabase
+          .from("support_conversations")
+          .update({ is_typing_admin: typing })
+          .eq("id", selectedConversation.id);
+      };
+
+      if (newMessage.trim() && !isAdminTyping) {
+        setIsAdminTyping(true);
+        updateTypingStatus(true);
+      }
+
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        if (isAdminTyping) {
+          setIsAdminTyping(false);
+          updateTypingStatus(false);
+        }
+      }, 3000);
+    }
+  }, [newMessage, selectedConversation]);
 
   useEffect(() => {
     if (scrollRef.current) {

@@ -58,6 +58,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     }
     return id;
   });
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -188,6 +190,31 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       return () => { supabase.removeChannel(channel); };
     }
   }, [isHumanMode, open, storeUserId, sessionId, conversationId, customer?.id]);
+
+  useEffect(() => {
+    if (conversationId && isHumanMode) {
+      const updateTypingStatus = async (typing: boolean) => {
+        await supabase
+          .from("support_conversations")
+          .update({ is_typing_customer: typing })
+          .eq("id", conversationId);
+      };
+
+      if (input.trim() && !isTyping) {
+        setIsTyping(true);
+        updateTypingStatus(true);
+      }
+
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        if (isTyping) {
+          setIsTyping(false);
+          updateTypingStatus(false);
+        }
+      }, 3000);
+    }
+  }, [input, conversationId, isHumanMode]);
 
   const processActions = useCallback(async (content: string) => {
     const cepMatch = content.match(/\[ACTION_CEP_LOOKUP\]([\s\S]*?)\[\/ACTION_CEP_LOOKUP\]/);
