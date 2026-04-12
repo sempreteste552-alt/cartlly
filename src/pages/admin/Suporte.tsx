@@ -211,6 +211,16 @@ export default function Suporte() {
       )
       .on(
         "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_messages" },
+        (payload: any) => {
+          queryClient.setQueryData(["support_messages", payload.new.conversation_id], (old: Message[] | undefined) => {
+            if (!old) return old;
+            return old.map(m => m.id === payload.new.id ? payload.new : m);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations" },
         (payload: any) => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
