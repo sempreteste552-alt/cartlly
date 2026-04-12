@@ -7,11 +7,14 @@ export function useCustomerNotifications(storeUserId?: string) {
   const { user } = useCustomerAuth();
   const qc = useQueryClient();
 
+  const sessionId = localStorage.getItem("chat_session_id");
+
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ["customer_notifications", storeUserId, user?.id],
-    enabled: !!storeUserId, // Enabled for all users, even guest
+    queryKey: ["customer_notifications", storeUserId, user?.id, sessionId],
+    enabled: !!storeUserId,
     queryFn: async () => {
-      let query = supabase
+      // 1. Fetch tenant_messages (broadcasts/alerts)
+      let tmQuery = supabase
         .from("tenant_messages")
         .select("*")
         .eq("source_tenant_id", storeUserId!)
@@ -20,25 +23,62 @@ export function useCustomerNotifications(storeUserId?: string) {
         .limit(50);
 
       if (user) {
-        // Logged in: show global messages OR messages specifically for this user
-        query = query.in("audience_type", [
+        tmQuery = tmQuery.in("audience_type", [
           "tenant_admin_to_all_customers",
           "tenant_admin_to_one_customer",
           "tenant_admin_to_customer_segment",
         ]);
       } else {
-        // Guest: show ONLY global messages for all customers
-        query = query.eq("audience_type", "tenant_admin_to_all_customers");
+        tmQuery = tmQuery.eq("audience_type", "tenant_admin_to_all_customers");
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: tmData, error: tmError } = await tmQuery;
+      if (tmError) throw tmError;
 
-      const filtered = (data || []).filter(
+      const filteredTm = (tmData || []).filter(
         (m: any) => !m.target_user_id || (user && m.target_user_id === user.id)
       );
 
-      const ids = filtered.map((m: any) => m.id);
+      // 2. Fetch support_messages (personal chat replies)
+      let supportMsgs: any[] = [];
+      if (sessionId) {
+        const { data: conv } = await supabase
+          .from("support_conversations")
+          .select("id")
+          .eq("tenant_id", storeUserId!)
+          .eq("session_id", sessionId)
+          .maybeSingle();
+
+        if (conv) {
+          const { data: msgs } = await supabase
+            .from("support_messages")
+            .select("*")
+            .eq("conversation_id", conv.id)
+            .eq("sender_type", "admin")
+            .order("created_at", { ascending: false })
+            .limit(10);
+          
+          if (msgs) {
+            supportMsgs = msgs.map(m => ({
+              id: m.id,
+              title: "Nova mensagem do suporte",
+              body: m.body,
+              created_at: m.created_at,
+              message_type: "support",
+              read: !!m.read_at,
+              source_tenant_id: storeUserId,
+              is_chat: true // Tag to identify chat messages
+            }));
+          }
+        }
+      }
+
+      const allMessages = [
+        ...filteredTm.map(m => ({ ...m, is_chat: false })),
+        ...supportMsgs
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      const ids = allMessages.map((m: any) => m.id);
       if (ids.length === 0) return [];
 
       if (!user) {
