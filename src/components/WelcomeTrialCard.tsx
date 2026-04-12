@@ -155,7 +155,7 @@ export function WelcomeTrialCard() {
           </div>
           <div className="space-y-2">
             {CHECKLIST.map((item) => {
-              const done = item.check(pCount, settings);
+              const done = item.check(pCount, augmentedSettings);
               return (
                 <div key={item.key} className={`flex items-center gap-2.5 text-sm rounded-lg px-2.5 py-1.5 transition-colors ${done ? "bg-green-500/5" : "hover:bg-muted/50 cursor-pointer"}`} onClick={() => !done && navigate(item.key === 'ai' ? '/admin/cerebro' : '/admin/configuracoes')}>
                   {done
