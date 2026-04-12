@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
 import { ShippingZonesManager } from "@/components/ShippingZonesManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
