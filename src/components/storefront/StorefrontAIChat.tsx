@@ -595,11 +595,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           <p className="text-[11px] text-white/70 flex items-center gap-1">
             {isAdminTyping ? (
               <span className="text-white font-medium animate-pulse">{uiText.typing}</span>
-            ) : (
+            ) : getPresenceLabel(isAdminTyping, conversationUpdatedAt) === "Online" ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
-                {uiText.online}
+                {uiText.humanStatusOnline}
               </>
+            ) : (
+              getPresenceLabel(isAdminTyping, conversationUpdatedAt)
             )}
           </p>
         </div>
