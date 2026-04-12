@@ -11,7 +11,7 @@ import { useLojaContext } from "@/pages/loja/LojaLayout";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n";
-import { v4 as uuidv4 } from "uuid";
+import { getOrCreateChatSessionId } from "@/lib/chatSession";
 import { format } from "date-fns";
 
 type Msg = { 
@@ -66,14 +66,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   
   const [isHumanMode, setIsHumanMode] = useState(!isPremium);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [sessionId] = useState(() => {
-    let id = localStorage.getItem("chat_session_id");
-    if (!id) {
-      id = uuidv4();
-      localStorage.setItem("chat_session_id", id);
-    }
-    return id;
-  });
+  const [sessionId] = useState(() => getOrCreateChatSessionId());
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -212,6 +205,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               read_at: m.read_at,
               delivered_at: m.delivered_at
             })));
+
+            await supabase
+              .from("support_messages")
+              .update({ delivered_at: new Date().toISOString() })
+              .eq("conversation_id", currentConvId)
+              .eq("sender_type", "admin")
+              .is("delivered_at", null);
 
             await supabase
               .from("support_messages")
