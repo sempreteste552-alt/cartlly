@@ -67,6 +67,26 @@ serve(async (req) => {
       ? (aiConfig.store_knowledge as any).description || ""
       : "";
 
+    // Fetch RAG context for the merchant chat
+    const lastUserMessage = messages.slice().reverse().find((m: any) => m.role === "user")?.content || "";
+    let ragKnowledge: any[] = [];
+    try {
+      if (userId && lastUserMessage) {
+        const { data: ragRes } = await supabase.functions.invoke("ai-memory-manager", {
+          body: {
+            action: "retrieve-context",
+            tenantId: userId,
+            content: lastUserMessage
+          }
+        });
+        if (ragRes) {
+          ragKnowledge = ragRes.knowledge || [];
+        }
+      }
+    } catch (e) {
+      console.warn(`[ai-chat] RAG retrieval failed for ${userId}`, e);
+    }
+
     const brainBlock = aiConfig ? [
       "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
       aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
@@ -76,10 +96,15 @@ serve(async (req) => {
       aiConfig.writing_style ? `WRITING STYLE / ESTILO DE ESCRITA: ${aiConfig.writing_style}` : "",
       aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
       storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      
+      // Add RAG context
+      ragKnowledge.length > 0 ? `ADDITIONAL RELEVANT TRAINING / TREINAMENTOS RELEVANTES:\n${ragKnowledge.map(k => `[${k.category}] ${k.content}`).join("\n")}` : "",
+
       aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
       "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
+
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
