@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Check, CheckCheck, Send, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,6 +9,21 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+
+const SOUNDS = {
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
 
 export function AdminNotificationsBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useAdminNotifications();
