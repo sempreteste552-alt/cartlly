@@ -167,8 +167,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // === DEDUPLICATION: cooldown + exact duplicate + semantic similarity on last 15 ===
+    // Skip dedup entirely for chat/support messages — they are conversational and frequent
+    const chatTypes = ["support_message", "new_customer", "admin_message"];
+    const skipDedup = chatTypes.includes(type || "");
+
     const effectiveTarget = target_user_id || customer_id;
-    if (effectiveTarget) {
+    if (effectiveTarget && !skipDedup) {
       const { data: recentHistory } = await supabase
         .from("push_logs")
         .select("title, body, created_at")
@@ -236,7 +240,7 @@ Deno.serve(async (req) => {
     // Tenant isolation
     if (store_user_id) {
       query = query.or(`store_user_id.eq.${store_user_id},store_user_id.is.null`);
-      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight"];
+      const behaviorTypes = ["product_view", "abandoned_cart", "inactivity", "review_thankyou", "new_product", "new_coupon", "new_customer", "ceo_insight", "support_message"];
       if (target_user_id === store_user_id && !behaviorTypes.includes(type || "")) {
         return json({ sent: 0, total: 0, removed: 0, message: "Cannot send store promo push to store owner" });
       }

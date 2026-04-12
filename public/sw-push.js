@@ -65,14 +65,27 @@ self.addEventListener('notificationclick', function(event) {
     targetUrl = '/admin/pagamentos';
   }
 
+  // Build absolute URL relative to the SW origin
+  const absoluteUrl = new URL(targetUrl, self.location.origin).href;
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      // Try to find an existing window that can navigate
       for (const client of clientList) {
-        if (client.url.includes(targetUrl) && 'focus' in client) {
-          return client.focus();
+        if ('focus' in client) {
+          // If already on the target, just focus
+          if (client.url === absoluteUrl) {
+            return client.focus();
+          }
         }
       }
-      return clients.openWindow(targetUrl);
+      // Try to reuse the first available window
+      for (const client of clientList) {
+        if ('navigate' in client && 'focus' in client) {
+          return client.navigate(absoluteUrl).then(function(c) { return c.focus(); });
+        }
+      }
+      return clients.openWindow(absoluteUrl);
     })
   );
 });
