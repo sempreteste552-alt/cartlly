@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
-import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ export default function ResetPassword() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md border-border shadow-lg">
           <CardHeader className="text-center space-y-3">
-            <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="mx-auto h-16 w-auto" />
+            <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
             <CardTitle className="text-2xl font-bold tracking-tight">Link Inválido</CardTitle>
             <CardDescription>Este link de redefinição expirou ou é inválido.</CardDescription>
           </CardHeader>
@@ -85,7 +85,7 @@ export default function ResetPassword() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardHeader className="text-center space-y-3">
-          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="mx-auto h-16 w-auto" />
+          <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-bold tracking-tight">Nova Senha</CardTitle>
           <CardDescription>Digite sua nova senha abaixo</CardDescription>
         </CardHeader>

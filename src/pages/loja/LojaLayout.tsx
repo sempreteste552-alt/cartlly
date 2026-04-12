@@ -330,7 +330,7 @@ export default function LojaLayout() {
   const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
 
   usePwaManifest({
-    id: slug ? `msktelemarkting-store-${slug}` : undefined,
+    id: slug ? `cartlly-store-${slug}` : undefined,
     name: storeInstallName,
     shortName: storeInstallName?.slice(0, 12) || undefined,
     themeColor: settings?.primary_color || undefined,

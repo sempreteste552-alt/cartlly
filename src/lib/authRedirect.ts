@@ -1,4 +1,4 @@
-const FALLBACK_APP_ORIGIN = "https://www.msktelemarkting.shop";
+const FALLBACK_APP_ORIGIN = "https://www.cartlly.lovable.app";
 
 function isPreviewHost(hostname: string) {
   return (

@@ -10,7 +10,7 @@ const STOPWORDS = new Set([
   "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
   "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
   "mais", "muito", "muita", "hoje", "ontem", "amanha", "você", "voce", "pra", "pro", "como", "sua",
-  "loja", "msktelemarkting", "bom", "boa", "dia", "tarde", "noite", "madrugada", "aqui", "essa", "esse",
+  "loja", "cartlly", "bom", "boa", "dia", "tarde", "noite", "madrugada", "aqui", "essa", "esse",
 ]);
 
 const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
@@ -155,7 +155,7 @@ serve(async (req) => {
       "If generation conflicts with merchant training, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o assistente motivacional da plataforma MSK Telemarketing. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
 
 REGRAS DE FORMATO:
 - JSON: {"title": "...", "body": "..."}

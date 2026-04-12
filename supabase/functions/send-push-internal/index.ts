@@ -80,7 +80,7 @@ async function generateVapidAuthHeader(endpoint: string, vapidPublicKey: string,
 
   const header = { typ: "JWT", alg: "ES256" };
   const now = Math.floor(Date.now() / 1000);
-  const payload = { aud: audience, exp: now + 86400, sub: "mailto:noreply@www.msktelemarkting.shop" };
+  const payload = { aud: audience, exp: now + 86400, sub: "mailto:noreply@www.cartlly.lovable.app" };
 
   const headerB64 = b64url(enc.encode(JSON.stringify(header)));
   const payloadB64 = b64url(enc.encode(JSON.stringify(payload)));
@@ -402,7 +402,7 @@ const STOPWORDS = new Set([
   "a", "o", "as", "os", "de", "da", "do", "das", "dos", "e", "em", "para", "por", "com", "sem",
   "na", "no", "nas", "nos", "um", "uma", "uns", "umas", "que", "se", "sua", "seu", "suas", "seus",
   "mais", "muito", "muita", "hoje", "ontem", "amanha", "voce", "você", "pra", "pro", "como", "essa",
-  "esse", "bom", "boa", "dia", "tarde", "noite", "madrugada", "msktelemarkting", "loja",
+  "esse", "bom", "boa", "dia", "tarde", "noite", "madrugada", "cartlly", "loja",
 ]);
 
 const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [

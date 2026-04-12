@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.png";
 
 export default function Termos() {
   return (
@@ -11,7 +11,7 @@ export default function Termos() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-10 w-auto" />
+          <img src={cartlyLogo} alt="Cartlly" className="h-10 w-auto" />
         </div>
 
         <article className="prose prose-sm dark:prose-invert max-w-none space-y-6">
@@ -20,13 +20,13 @@ export default function Termos() {
 
           <h2>1. Aceitação dos Termos</h2>
           <p>
-            Ao criar uma conta na plataforma MSK Telemarketing, você concorda com estes Termos de Uso em sua totalidade. 
+            Ao criar uma conta na plataforma Cartlly, você concorda com estes Termos de Uso em sua totalidade. 
             Caso não concorde, não utilize nossos serviços.
           </p>
 
           <h2>2. Descrição do Serviço</h2>
           <p>
-            A MSK Telemarketing é uma plataforma SaaS (Software como Serviço) que permite a criação e gestão de lojas virtuais. 
+            A Cartlly é uma plataforma SaaS (Software como Serviço) que permite a criação e gestão de lojas virtuais. 
             Oferecemos ferramentas para cadastro de produtos, gestão de pedidos, integração com gateways de pagamento, 
             automação de marketing e personalização da loja.
           </p>
@@ -39,7 +39,7 @@ export default function Termos() {
 
           <h2>4. Planos e Pagamentos</h2>
           <p>
-            A MSK Telemarketing oferece planos gratuitos e pagos. Os valores e funcionalidades de cada plano estão disponíveis 
+            A Cartlly oferece planos gratuitos e pagos. Os valores e funcionalidades de cada plano estão disponíveis 
             na seção "Meu Plano" dentro do painel administrativo. Pagamentos são processados mensalmente e não são reembolsáveis, 
             exceto em casos previstos pelo Código de Defesa do Consumidor.
           </p>
@@ -56,7 +56,7 @@ export default function Termos() {
 
           <h2>6. Propriedade Intelectual</h2>
           <p>
-            Todo o conteúdo da plataforma (código, design, marcas e logos) pertence à MSK Telemarketing. 
+            Todo o conteúdo da plataforma (código, design, marcas e logos) pertence à Cartlly. 
             O conteúdo que você criar (produtos, imagens, textos da loja) permanece de sua propriedade.
           </p>
 
@@ -68,7 +68,7 @@ export default function Termos() {
 
           <h2>8. Limitação de Responsabilidade</h2>
           <p>
-            A MSK Telemarketing não se responsabiliza por perdas de vendas, dados ou lucros cessantes decorrentes 
+            A Cartlly não se responsabiliza por perdas de vendas, dados ou lucros cessantes decorrentes 
             de indisponibilidades temporárias, falhas de terceiros (gateways de pagamento, provedores de internet) 
             ou uso inadequado da plataforma.
           </p>
