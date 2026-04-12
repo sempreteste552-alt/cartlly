@@ -280,6 +280,7 @@ export default function LojaLayout() {
   const settings = settingsBySlug;
   const isLoading = slugLoading;
   const { data: smartSearchProducts } = usePublicProducts(settings?.user_id);
+  const { data: categories } = usePublicCategories(settings?.user_id);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
