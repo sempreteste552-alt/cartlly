@@ -570,7 +570,7 @@ export default function Cerebro() {
       messages.push({ role: "user", content });
 
       const { data, error } = await supabase.functions.invoke("ai-admin-assistant", {
-        body: { messages },
+        body: { messages, userId: user!.id },
       });
       if (error) throw error;
       return data;
