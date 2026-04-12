@@ -3,14 +3,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Send, User, Check, CheckCheck, MessageSquare, ArrowLeft, Phone, MoreVertical } from "lucide-react";
+import { Search, Send, Check, CheckCheck, MessageSquare, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday, isYesterday } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
@@ -46,6 +44,7 @@ type Conversation = {
   is_typing_admin: boolean;
   last_message_at: string;
   created_at: string;
+  updated_at: string | null;
   last_message?: string;
   unread_count?: number;
   customer?: {
@@ -56,11 +55,46 @@ type Conversation = {
   };
 };
 
-function formatConversationDate(dateStr: string) {
+function formatConversationDate(dateStr?: string | null) {
+  if (!dateStr) return "";
   const date = new Date(dateStr);
   if (isToday(date)) return format(date, "HH:mm");
   if (isYesterday(date)) return "Ontem";
   return format(date, "dd/MM/yy");
+}
+
+function getConversationPresenceAt(
+  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at"> | null
+) {
+  return conversation?.updated_at || conversation?.last_message_at || conversation?.created_at || null;
+}
+
+function isConversationOnline(
+  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
+) {
+  if (conversation?.is_typing_customer) return true;
+  const presenceAt = getConversationPresenceAt(conversation);
+  if (!presenceAt) return false;
+  return Date.now() - new Date(presenceAt).getTime() < 2 * 60 * 1000;
+}
+
+function formatCustomerPresence(
+  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
+) {
+  if (!conversation) return "Offline";
+  if (conversation.is_typing_customer) return "digitando...";
+  if (isConversationOnline(conversation)) return "Online";
+
+  const presenceAt = getConversationPresenceAt(conversation);
+  if (!presenceAt) return "Offline";
+
+  const diffMin = Math.max(1, Math.floor((Date.now() - new Date(presenceAt).getTime()) / 60000));
+  if (diffMin < 60) return `Visto há ${diffMin} min`;
+
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `Visto há ${diffH} h`;
+
+  return `Visto ${format(new Date(presenceAt), "dd/MM HH:mm")}`;
 }
 
 export default function Suporte() {
