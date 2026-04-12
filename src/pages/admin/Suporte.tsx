@@ -120,6 +120,18 @@ export default function Suporte() {
           body,
         });
       if (error) throw error;
+
+      // Send push notification to customer
+      if (selectedConversation.customer_id) {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            title: `Nova mensagem de ${user.email || "Suporte"}`,
+            body: body.length > 100 ? body.substring(0, 97) + "..." : body,
+            targetUserId: selectedConversation.customer_id,
+            url: `/loja/${selectedConversation.tenant_id}?chat=true`
+          }
+        });
+      }
     },
     onSuccess: () => {
       setNewMessage("");
