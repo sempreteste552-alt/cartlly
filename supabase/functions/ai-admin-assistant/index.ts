@@ -57,6 +57,23 @@ serve(async (req) => {
         supabase.from("customer_wishlist").select("customer_id, product_id, created_at").eq("store_user_id", user.id).order("created_at", { ascending: false }).limit(30),
         supabase.from("abandoned_carts").select("customer_id, items, total_amount, created_at").eq("store_user_id", user.id).order("created_at", { ascending: false }).limit(20)
       ]);
+    // Fetch RAG context from memory manager
+    let ragKnowledge: any[] = [];
+    try {
+      const lastMessage = messages[messages.length - 1]?.content || "";
+      const { data: ragRes } = await supabase.functions.invoke("ai-memory-manager", {
+        body: {
+          action: "retrieve-context",
+          tenantId: user.id,
+          content: lastMessage
+        }
+      });
+      if (ragRes) {
+        ragKnowledge = ragRes.knowledge || [];
+      }
+    } catch (e) {
+      console.warn("RAG failed for admin-assistant", e);
+    }
 
     const storeName = storeSettings?.store_name || "Sua Loja";
     const niche = aiConfig?.niche || storeSettings?.store_category || "Não definido";
@@ -67,7 +84,15 @@ serve(async (req) => {
     
     const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const hourBr = nowBrasilia.getHours();
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    
+    // Fallback if local time parsing fails (ensure it's around UTC-3)
+    const utcHour = new Date().getUTCHours();
+    const estHourBr = (utcHour - 3 + 24) % 24;
+    
+    // Use the explicit calculation for more reliability in serverless
+    const finalHourBr = hourBr !== undefined ? hourBr : estHourBr;
+    
+    const greetingBr = finalHourBr < 5 ? "Boa madrugada" : finalHourBr < 12 ? "Bom dia" : finalHourBr < 18 ? "Boa tarde" : "Boa noite";
 
     const personalityMap: Record<string, string> = {
       amigavel: "Amigável e próxima — como uma amiga empreendedora de confiança.",
@@ -93,12 +118,13 @@ serve(async (req) => {
       aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
       aiConfig.approved_examples ? `APPROVED MESSAGE EXAMPLES / EXEMPLOS APROVADOS:\n${aiConfig.approved_examples}` : "",
       storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      ragKnowledge.length > 0 ? `ADDITIONAL RELEVANT TRAINING / TREINAMENTOS RELEVANTES:\n${ragKnowledge.map(k => `[${k.category}] ${k.content}`).join("\n")}` : "",
       aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
       "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${hourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é a "Amiga CEO", o cérebro estratégico e braço direito do dono da loja "${storeName}". Agora são ${finalHourBr}h (horário de Brasília), então use "${greetingBr}" como saudação.
 Sua missão é ser uma "máquina de fazer dinheiro" e um suporte administrativo impecável.
 
 PERSONALIDADE: ${personalityDesc}
