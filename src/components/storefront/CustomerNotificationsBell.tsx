@@ -109,7 +109,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
           notifications.map((n: any) => (
             <div key={n.id}>
               <button
-                onClick={() => { if (!n.read) markAsRead(n.id); }}
+                onClick={() => { if (!n.read) markAsRead(n); }}
                 className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
               >
                 <div className="flex items-start gap-2">
