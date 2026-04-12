@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+
+const SOUNDS = {
+  SENT: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "SENT" | "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
 
 type Message = {
   id: string;
@@ -52,7 +67,7 @@ export default function Suporte() {
         .from("support_conversations")
         .select(`
           *,
-          messages:support_messages(body, created_at)
+          messages:support_messages(body, created_at, sender_type, read_at)
         `)
         .eq("tenant_id", user?.id)
         .order("last_message_at", { ascending: false });
@@ -61,8 +76,9 @@ export default function Suporte() {
       
       return data.map((conv: any) => ({
         ...conv,
-        last_message: conv.messages?.[0]?.body || "Nenhuma mensagem"
-      })) as Conversation[];
+        last_message: conv.messages?.[0]?.body || "Nenhuma mensagem",
+        unread_count: conv.messages?.filter((m: any) => m.sender_type === "customer" && !m.read_at).length || 0
+      })) as (Conversation & { unread_count: number })[];
     },
     enabled: !!user,
   });
@@ -104,6 +120,18 @@ export default function Suporte() {
           body,
         });
       if (error) throw error;
+
+      // Send push notification to customer
+      if (selectedConversation.customer_id) {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            title: `Nova mensagem de ${user.email || "Suporte"}`,
+            body: body.length > 100 ? body.substring(0, 97) + "..." : body,
+            targetUserId: selectedConversation.customer_id,
+            url: `/loja/${selectedConversation.tenant_id}?chat=true`
+          }
+        });
+      }
     },
     onSuccess: () => {
       setNewMessage("");
@@ -119,15 +147,22 @@ export default function Suporte() {
       .channel("support_realtime")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "support_messages" },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["support_messages"] });
+        { event: "INSERT", schema: "public", table: "support_messages" },
+        (payload: any) => {
+          if (payload.new.sender_type === "customer") {
+            playSound("RECEIVED");
+            // If it's a message from customer, also update notifications or bell count
+            // Actually the bell usually listens to admin_notifications, but let's just refresh conversations
+          } else {
+            playSound("SENT");
+          }
+          queryClient.invalidateQueries({ queryKey: ["support_messages", payload.new.conversation_id] });
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "support_conversations" },
+        { event: "UPDATE", schema: "public", table: "support_conversations" },
         () => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
@@ -219,8 +254,15 @@ export default function Suporte() {
                       {format(new Date(conv.last_message_at), "HH:mm", { locale: ptBR })}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
+                  <p className={`text-xs truncate ${conv.unread_count > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}>
+                    {conv.last_message}
+                  </p>
                 </div>
+                {conv.unread_count > 0 && (
+                  <span className="h-5 w-5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
+                    {conv.unread_count}
+                  </span>
+                )}
                 {conv.is_typing_customer && (
                   <span className="text-[10px] text-primary animate-pulse font-medium">Digitando...</span>
                 )}

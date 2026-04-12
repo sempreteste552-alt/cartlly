@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Send, Loader2, MessageCircle, Bot, User, Minimize2, ShoppingBag, ExternalLink, Headphones, Check, CheckCheck } from "lucide-react";
@@ -17,7 +17,8 @@ type Msg = {
   content: string; 
   created_at?: string; 
   read_at?: string | null; 
-  delivered_at?: string | null 
+  delivered_at?: string | null;
+  id?: string;
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-store-chat`;
@@ -39,6 +40,21 @@ interface StorefrontAIChatProps {
   primaryColor?: string;
   isPremium?: boolean;
 }
+
+const SOUNDS = {
+  SENT: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "SENT" | "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {}); // Browser might block auto-play
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
 
 export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium }: StorefrontAIChatProps) {
   const { locale } = useTranslation();
@@ -67,6 +83,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const { customer } = useCustomerAuth();
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
+
+  const unreadCount = useMemo(() => {
+    return messages.filter(m => m.role === "assistant" && !m.read_at).length;
+  }, [messages]);
 
   const displayName = aiName || "Assistente";
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -170,8 +190,17 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           (payload: any) => {
             if (payload.new.conversation_id === conversationId) {
               setMessages(prev => {
-                if (prev.some(m => m.content === payload.new.body && m.created_at === payload.new.created_at)) return prev;
+                const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && m.created_at === payload.new.created_at));
+                if (alreadyExists) return prev;
+                
+                if (payload.new.sender_type === "admin") {
+                  playSound("RECEIVED");
+                } else {
+                  playSound("SENT");
+                }
+
                 return [...prev, {
+                  id: payload.new.id,
                   role: payload.new.sender_type === "customer" ? "user" : "assistant",
                   content: payload.new.body,
                   created_at: payload.new.created_at,
@@ -180,7 +209,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 }];
               });
               
-              if (payload.new.sender_type === "admin") {
+              if (payload.new.sender_type === "admin" && open) {
                 supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
               }
             }
@@ -339,11 +368,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-36 md:bottom-[5.5rem] right-6 animate-fade-in"
+        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-36 md:bottom-[5.5rem] right-6 animate-fade-in group"
         style={{ backgroundColor: accentColor }}
         title={uiText.title}
       >
-        <MessageCircle className="h-6 w-6 text-white" />
+        <div className="relative">
+          <MessageCircle className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
+          {unreadCount > 0 && (
+            <span 
+              className="absolute -top-3 -right-3 bg-red-600 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce shadow-md"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
       </button>
     );
   }
