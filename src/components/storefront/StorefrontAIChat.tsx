@@ -143,6 +143,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     }
   }, []);
 
+  // Listen for custom event from notification bell to open chat
+  useEffect(() => {
+    const handler = () => {
+      setIsHumanMode(true);
+      setOpen(true);
+    };
+    window.addEventListener("open-support-chat", handler);
+    return () => window.removeEventListener("open-support-chat", handler);
+  }, []);
+
   useEffect(() => {
     if (isHumanMode && open) {
       const initSupport = async () => {
