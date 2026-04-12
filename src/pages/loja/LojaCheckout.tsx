@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save, Printer } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
