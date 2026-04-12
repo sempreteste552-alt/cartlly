@@ -424,9 +424,14 @@ export default function Suporte() {
                         {(conv.customer?.name || conv.session_id).slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    {conv.is_typing_customer && (
-                      <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-400 rounded-full border-2 border-background" />
-                    )}
+                    {(() => {
+                      const lastMsg = new Date(conv.last_message_at);
+                      const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
+                      const isOnline = conv.is_typing_customer || diffMin < 5;
+                      return (
+                        <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${isOnline ? "bg-green-400" : "bg-muted-foreground/30"}`} />
+                      );
+                    })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
