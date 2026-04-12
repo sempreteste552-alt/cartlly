@@ -3152,36 +3152,69 @@ export type Database = {
       tenant_ai_brain_config: {
         Row: {
           ai_name: string | null
+          approach_type: string | null
+          approved_examples: string | null
+          brand_identity: string | null
           created_at: string
           custom_instructions: string | null
+          emoji_usage: string | null
+          formality_level: string | null
           id: string
+          language_preferences: string | null
           niche: string | null
           personality: string | null
+          persuasion_style: string | null
+          prohibitions: string | null
+          sending_rules: string | null
           store_knowledge: Json | null
+          tone_of_voice: string | null
           updated_at: string
           user_id: string
+          writing_style: string | null
         }
         Insert: {
           ai_name?: string | null
+          approach_type?: string | null
+          approved_examples?: string | null
+          brand_identity?: string | null
           created_at?: string
           custom_instructions?: string | null
+          emoji_usage?: string | null
+          formality_level?: string | null
           id?: string
+          language_preferences?: string | null
           niche?: string | null
           personality?: string | null
+          persuasion_style?: string | null
+          prohibitions?: string | null
+          sending_rules?: string | null
           store_knowledge?: Json | null
+          tone_of_voice?: string | null
           updated_at?: string
           user_id: string
+          writing_style?: string | null
         }
         Update: {
           ai_name?: string | null
+          approach_type?: string | null
+          approved_examples?: string | null
+          brand_identity?: string | null
           created_at?: string
           custom_instructions?: string | null
+          emoji_usage?: string | null
+          formality_level?: string | null
           id?: string
+          language_preferences?: string | null
           niche?: string | null
           personality?: string | null
+          persuasion_style?: string | null
+          prohibitions?: string | null
+          sending_rules?: string | null
           store_knowledge?: Json | null
+          tone_of_voice?: string | null
           updated_at?: string
           user_id?: string
+          writing_style?: string | null
         }
         Relationships: []
       }
