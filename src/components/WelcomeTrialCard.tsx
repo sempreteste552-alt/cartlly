@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,7 @@ const CHECKLIST = [
   { key: "products", label: "Adicionar produtos", icon: Package, check: (p: number) => p > 0 },
   { key: "settings", label: "Configurar loja", icon: Settings, check: (_: number, s: any) => !!s?.store_name && s.store_name !== "Minha Loja" },
   { key: "design", label: "Personalizar visual", icon: Palette, check: (_: number, s: any) => s?.primary_color !== "#6d28d9" },
+  { key: "ai", label: "Treinar Cérebro IA", icon: Sparkles, check: (_: number, s: any) => !!s?.ai_trained },
   { key: "payment", label: "Configurar pagamento", icon: CreditCard, check: (_: number, s: any) => !!s?.payment_gateway },
 ];
 
@@ -51,7 +54,23 @@ export function WelcomeTrialCard() {
   if (!isNewTrial || dismissed) return null;
 
   const pCount = products?.length ?? 0;
-  const completed = CHECKLIST.filter((c) => c.check(pCount, settings)).length;
+  
+  // Extend settings with AI training status for checklist
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", ctx.userId],
+    queryFn: async () => {
+      const { data } = await supabase.from("tenant_ai_brain_config").select("niche").eq("user_id", ctx.userId!).maybeSingle();
+      return data;
+    },
+    enabled: !!ctx.userId,
+  });
+
+  const augmentedSettings = { 
+    ...settings, 
+    ai_trained: !!aiConfig?.niche 
+  };
+
+  const completed = CHECKLIST.filter((c) => c.check(pCount, augmentedSettings)).length;
   const progress = (completed / CHECKLIST.length) * 100;
 
   const handleDismiss = () => {
@@ -136,7 +155,7 @@ export function WelcomeTrialCard() {
             {CHECKLIST.map((item) => {
               const done = item.check(pCount, settings);
               return (
-                <div key={item.key} className={`flex items-center gap-2.5 text-sm rounded-lg px-2.5 py-1.5 transition-colors ${done ? "bg-green-500/5" : "hover:bg-muted/50 cursor-pointer"}`}>
+                <div key={item.key} className={`flex items-center gap-2.5 text-sm rounded-lg px-2.5 py-1.5 transition-colors ${done ? "bg-green-500/5" : "hover:bg-muted/50 cursor-pointer"}`} onClick={() => !done && navigate(item.key === 'ai' ? '/admin/cerebro' : '/admin/configuracoes')}>
                   {done
                     ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
                     : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />
