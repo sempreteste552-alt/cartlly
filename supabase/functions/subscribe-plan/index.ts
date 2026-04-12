@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     // Get tenant info
     const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user_id).single();
     const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
-    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
+    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@msktelemarkting.com`;
     const tenantName = profile?.display_name || "Tenant";
 
     const method = payment_method || "PIX";

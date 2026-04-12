@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogOut, Ban, ShieldOff, Wrench, MessageCircle } from "lucide-react";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
 
 export default function ContaEmAnalise() {
   const { user, signOut } = useAuth();
@@ -135,7 +135,7 @@ export default function ContaEmAnalise() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-          <img src={cartlyLogo} alt="MSK Telemarketing" className="h-12 w-auto" />
+          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-12 w-auto" />
 
           <div className={`flex h-20 w-20 items-center justify-center rounded-full ${content.iconBg}`}>
             {content.icon}

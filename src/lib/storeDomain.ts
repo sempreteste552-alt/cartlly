@@ -17,10 +17,10 @@ export function isPlatformHost(hostname?: string | null) {
     "127.0.0.1",
     "msktelemarkting.shop",
     "www.msktelemarkting.shop",
-    "cartlly.com",
-    "www.cartlly.com",
-    "cartlly.com.br",
-    "www.cartlly.com.br",
+    "msktelemarkting.com",
+    "www.msktelemarkting.com",
+    "msktelemarkting.com.br",
+    "www.msktelemarkting.com.br",
   ];
 
   if (platformDomains.includes(host)) return true;

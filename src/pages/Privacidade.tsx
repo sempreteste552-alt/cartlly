@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
 
 export default function Privacidade() {
   return (
@@ -11,7 +11,7 @@ export default function Privacidade() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={cartlyLogo} alt="MSK Telemarketing" className="h-10 w-auto" />
+          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-10 w-auto" />
         </div>
 
         <article className="prose prose-sm dark:prose-invert max-w-none space-y-6">
