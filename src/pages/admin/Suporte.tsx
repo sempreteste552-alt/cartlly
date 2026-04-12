@@ -134,15 +134,22 @@ export default function Suporte() {
       .channel("support_realtime")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "support_messages" },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["support_messages"] });
+        { event: "INSERT", schema: "public", table: "support_messages" },
+        (payload: any) => {
+          if (payload.new.sender_type === "customer") {
+            playSound("RECEIVED");
+            // If it's a message from customer, also update notifications or bell count
+            // Actually the bell usually listens to admin_notifications, but let's just refresh conversations
+          } else {
+            playSound("SENT");
+          }
+          queryClient.invalidateQueries({ queryKey: ["support_messages", payload.new.conversation_id] });
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "support_conversations" },
+        { event: "UPDATE", schema: "public", table: "support_conversations" },
         () => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
