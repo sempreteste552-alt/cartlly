@@ -23,6 +23,54 @@ function normalizeDnsValue(value: string) {
   return value.trim().toLowerCase().replace(/\.$/, "").replace(/"/g, "");
 }
 
+async function registerCloudflareCustomHostname(hostname: string) {
+  const token = Deno.env.get("CLOUDFLARE_API_TOKEN");
+  const zoneId = Deno.env.get("CLOUDFLARE_ZONE_ID");
+
+  if (!token || !zoneId) {
+    console.log(`Cloudflare config missing: TOKEN=${!!token}, ZONE_ID=${!!zoneId}`);
+    return { success: false, error: "Cloudflare configuration missing (TOKEN or ZONE_ID)" };
+  }
+
+  try {
+    console.log(`Registering Custom Hostname in Cloudflare: ${hostname}`);
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${zoneId}/custom_hostnames`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          hostname: hostname,
+          ssl: {
+            method: "http",
+            type: "dv",
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!data.success) {
+      // Check if it already exists (Error code 1406)
+      if (data.errors?.some((e: any) => e.code === 1406)) {
+        console.log(`Hostname ${hostname} already registered in Cloudflare.`);
+        return { success: true, already_exists: true };
+      }
+      console.error(`Cloudflare API Error:`, data.errors);
+      return { success: false, error: data.errors?.[0]?.message || "Cloudflare API Error" };
+    }
+
+    console.log(`Successfully registered ${hostname} in Cloudflare.`);
+    return { success: true, data: data.result };
+  } catch (e: any) {
+    console.error(`Cloudflare API Exception:`, e);
+    return { success: false, error: e.message };
+  }
+}
+
 async function checkHttps(domain: string) {
   try {
     const controller = new AbortController();
@@ -129,9 +177,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3. SSL Check (only if DNS/TXT are mostly okay)
+    // 3. Cloudflare & SSL Check
+    let cloudflareResult = null;
     let sslResult = { ready: false, error: "Aguardando verificação DNS e TXT" };
+
     if (dnsResults.txt.correct || dnsResults.cname.correct) {
+      // Register in Cloudflare SSL for SaaS if CNAME is pointing correctly
+      if (dnsResults.cname.correct) {
+        cloudflareResult = await registerCloudflareCustomHostname(hostname);
+      }
+      
       sslResult = await checkHttps(hostname);
     }
 
@@ -152,6 +207,10 @@ Deno.serve(async (req) => {
       sslStatus = "emitting";
     } else if (sslResult.error && !sslResult.error.includes("Aguardando")) {
       sslStatus = "failed";
+      // If Cloudflare failed, add it to the error
+      if (cloudflareResult && !cloudflareResult.success) {
+        sslResult.error = `${sslResult.error} (Cloudflare: ${cloudflareResult.error})`;
+      }
     }
 
     // Final Domain Status
