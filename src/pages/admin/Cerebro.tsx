@@ -220,12 +220,38 @@ function AITrainingPanel({ userId }: { userId: string }) {
   const [personality, setPersonality] = useState("amigavel");
   const [customInstructions, setCustomInstructions] = useState("");
   const [storeKnowledge, setStoreKnowledge] = useState("");
+  
+  // New behavioral fields
+  const [toneOfVoice, setToneOfVoice] = useState("");
+  const [writingStyle, setWritingStyle] = useState("");
+  const [approachType, setApproachType] = useState("");
+  const [sendingRules, setSendingRules] = useState("");
+  const [approvedExamples, setApprovedExamples] = useState("");
+  const [prohibitions, setProhibitions] = useState("");
+  const [languagePreferences, setLanguagePreferences] = useState("");
+  const [formalityLevel, setFormalityLevel] = useState("");
+  const [emojiUsage, setEmojiUsage] = useState("");
+  const [persuasionStyle, setPersuasionStyle] = useState("");
+  const [brandIdentity, setBrandIdentity] = useState("");
 
   useEffect(() => {
     if (config) {
       setNiche(config.niche || "");
       setPersonality(config.personality || "amigavel");
       setCustomInstructions(config.custom_instructions || "");
+      
+      setToneOfVoice(config.tone_of_voice || "");
+      setWritingStyle(config.writing_style || "");
+      setApproachType(config.approach_type || "");
+      setSendingRules(config.sending_rules || "");
+      setApprovedExamples(config.approved_examples || "");
+      setProhibitions(config.prohibitions || "");
+      setLanguagePreferences(config.language_preferences || "");
+      setFormalityLevel(config.formality_level || "");
+      setEmojiUsage(config.emoji_usage || "");
+      setPersuasionStyle(config.persuasion_style || "");
+      setBrandIdentity(config.brand_identity || "");
+
       const knowledge = config.store_knowledge;
       if (typeof knowledge === "string") {
         setStoreKnowledge(knowledge);
