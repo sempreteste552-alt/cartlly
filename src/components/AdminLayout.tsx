@@ -33,6 +33,7 @@ import { useLocation } from "react-router-dom";
 export function AdminLayout() {
   const location = useLocation();
   const isCerebroPage = location.pathname === "/admin/cerebro";
+  const isSuportePage = location.pathname === "/admin/suporte";
   const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
@@ -223,8 +224,8 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
-        {!isCerebroPage && <WhatsAppSupportBubble />}
-        {!isCerebroPage && <AIChatWidget />}
+        {!isCerebroPage && !isSuportePage && <WhatsAppSupportBubble />}
+        {!isCerebroPage && !isSuportePage && <AIChatWidget />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
