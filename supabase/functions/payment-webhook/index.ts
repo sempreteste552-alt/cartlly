@@ -133,6 +133,35 @@ async function handleMercadoPago(req: Request, supabase: any) {
 
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "pago" });
 
+      // 🧠 AI Continuous Learning: Learn from purchase
+      try {
+        const { data: customer } = await supabase.from("customers")
+          .select("id")
+          .eq("store_user_id", payment.user_id)
+          .eq("email", order?.customer_email)
+          .maybeSingle();
+
+        const { data: orderItems } = await supabase.from("order_items").select("product_name, quantity").eq("order_id", payment.order_id);
+        const productList = (orderItems || []).map((i: any) => `${i.quantity}x ${i.product_name}`).join(", ");
+        
+        if (customer?.id) {
+          await supabase.functions.invoke("ai-memory-manager", {
+            body: {
+              action: "learn-from-purchase",
+              tenantId: payment.user_id,
+              customerId: customer.id,
+              metadata: { 
+                orderId: payment.order_id, 
+                amount: orderTotal,
+                products: productList
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("AI learning failed for purchase:", e);
+      }
+
       // 🔔 Push: Payment approved
       await sendRichPush(payment.user_id, {
         title: "✅ Pagamento aprovado!",
