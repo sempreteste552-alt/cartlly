@@ -11,6 +11,9 @@ import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettin
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { toast } from "sonner";
+import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const RESPONSE_TEMPLATES = [
   { id: "greeting", label: "Saudação", example: "Olá! 👋 Bem-vindo à {loja}! Como posso te ajudar?" },
@@ -24,6 +27,15 @@ export default function WhatsAppIA() {
   const updateSettings = useUpdateStoreSettings();
   const { ctx } = useTenantContext();
   const locked = !canAccess("ai_tools", ctx);
+
+  const { data: aiConfig } = useQuery({
+    queryKey: ["tenant-ai-brain-config", settings?.user_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("tenant_ai_brain_config").select("niche").eq("user_id", settings!.user_id).maybeSingle();
+      return data;
+    },
+    enabled: !!settings?.user_id,
+  });
 
   const [enabled, setEnabled] = useState(false);
   const [autoReply, setAutoReply] = useState(true);
@@ -99,6 +111,10 @@ export default function WhatsAppIA() {
           {enabled ? "Ativo" : "Inativo"}
         </Badge>
       </div>
+
+      {!aiConfig?.niche && (
+        <AITrainingAlert />
+      )}
 
       {/* Status Card */}
       <Card className="border-green-500/20 bg-green-500/5">
