@@ -37,30 +37,30 @@ serve(async (req) => {
             .select("id, auth_user_id")
             .eq("store_user_id", task.user_id);
 
-          const customerIds = customers?.map(c => c.auth_user_id).filter(Boolean);
-          
-          if (customerIds && customerIds.length > 0) {
-            const { data: tokens } = await supabase
-              .from("push_subscriptions")
-              .select("*")
-              .in("user_id", customerIds);
+          if (customers && customers.length > 0) {
+            for (const customer of customers) {
+              const { data: tokens } = await supabase
+                .from("push_subscriptions")
+                .select("*")
+                .eq("user_id", customer.auth_user_id);
 
-            if (tokens && tokens.length > 0) {
-              // Send via send-push-notification internal logic (looping tokens)
-              for (const token of tokens) {
-                await supabase.functions.invoke("send-push-internal", {
-                  body: {
-                    target_user_id: token.user_id,
-                    title: task.payload.title,
-                    body: task.payload.body,
-                    type: "ceo_insight",
-                    store_user_id: task.user_id
-                  }
-                });
+              if (tokens && tokens.length > 0) {
+                for (const token of tokens) {
+                  await supabase.functions.invoke("send-push-internal", {
+                    body: {
+                      target_user_id: customer.auth_user_id,
+                      customer_id: customer.id,
+                      title: task.payload.title,
+                      body: task.payload.body,
+                      type: "ceo_insight",
+                      store_user_id: task.user_id
+                    }
+                  });
+                }
               }
             }
           }
-        } else if (task.task_type === "admin_reminder") {
+        } else if (task.task_type === "admin_reminder" || task.task_type === "reminder") {
           // Send push DIRECTLY TO THE OWNER (task.user_id)
           await supabase.functions.invoke("send-push-internal", {
             body: {
@@ -72,12 +72,16 @@ serve(async (req) => {
             }
           });
           
-          // Also update the specific reminder table
-          await supabase.from("store_ai_reminders")
-            .update({ status: "sent" })
-            .eq("user_id", task.user_id)
-            .eq("title", task.payload.title)
-            .eq("status", "pending");
+          // Also update the specific reminder table if it exists
+          try {
+            await supabase.from("store_ai_reminders")
+              .update({ status: "sent" })
+              .eq("user_id", task.user_id)
+              .eq("title", task.payload.title)
+              .eq("status", "pending");
+          } catch (e) {
+            // Silently ignore if table doesn't exist
+          }
         }
 
         await supabase.from("ai_scheduled_tasks").update({ status: "completed" }).eq("id", task.id);
