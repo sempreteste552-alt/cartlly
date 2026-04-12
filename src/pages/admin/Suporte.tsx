@@ -212,8 +212,11 @@ export default function Suporte() {
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations" },
-        () => {
+        (payload: any) => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
+          if (selectedConversation && payload.new.id === selectedConversation.id) {
+            setSelectedConversation(prev => prev ? { ...prev, is_typing_customer: payload.new.is_typing_customer } : null);
+          }
         }
       )
       .subscribe();
