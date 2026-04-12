@@ -146,13 +146,15 @@ export default function LojaHome() {
 
   return (
     <div className="space-y-6">
-      {categoriaParam && activeCategoryName && (
-        <div className="max-w-7xl mx-auto px-4 pt-4 flex items-center gap-2">
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            {activeCategoryName}
-          </Badge>
+      {(categoriaParam || searchParams.has("min_price") || searchParams.has("max_price") || Array.from(searchParams.keys()).some(k => k.startsWith("v_"))) && (
+        <div className="max-w-7xl mx-auto px-4 pt-4 flex flex-wrap items-center gap-2">
+          {activeCategoryName && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {activeCategoryName}
+            </Badge>
+          )}
           <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSearchParams({})}>
-            ✕ {locale === "pt" ? "Limpar filtro" : locale === "en" ? "Clear filter" : locale === "es" ? "Limpiar filtro" : "Effacer le filtre"}
+            ✕ {locale === "pt" ? "Limpar filtros" : locale === "en" ? "Clear filters" : locale === "es" ? "Limpiar filtros" : "Effacer les filtres"}
           </Button>
         </div>
       )}
