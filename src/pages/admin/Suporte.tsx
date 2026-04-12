@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+
+const SOUNDS = {
+  SENT: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
+  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
+};
+
+const playSound = (type: "SENT" | "RECEIVED") => {
+  try {
+    const audio = new Audio(SOUNDS[type]);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  } catch (err) {
+    console.error("Error playing sound:", err);
+  }
+};
 
 type Message = {
   id: string;
