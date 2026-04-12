@@ -1002,7 +1002,7 @@ export function AIChatWidget() {
 
         {/* Footer with Input */}
         {!aiLocked && (
-        <div className="p-3 bg-card border-t border-border">
+        <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-card border-t border-border">
           {pendingImages.length > 0 && !voiceRecorder.isRecording && (
             <div className="flex flex-wrap gap-2 mb-3">
               {pendingImages.map((img, idx) => (
