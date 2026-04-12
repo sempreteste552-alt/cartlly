@@ -97,7 +97,7 @@ export function useResolvedPublicStore(slug?: string) {
       if (shouldResolveByDomain) {
         // First try the new store_domains table
         const { data: domainData, error: domainError } = await supabase
-          .from("store_domains")
+          .from("store_domains_public")
           .select("store_id, is_primary, hostname")
           .eq("hostname", hostname)
           .maybeSingle();
@@ -108,7 +108,7 @@ export function useResolvedPublicStore(slug?: string) {
           // Check for redirection if not primary
           if (!domainData.is_primary) {
             const { data: primaryDomain } = await supabase
-              .from("store_domains")
+              .from("store_domains_public")
               .select("hostname")
               .eq("store_id", domainData.store_id)
               .eq("is_primary", true)
