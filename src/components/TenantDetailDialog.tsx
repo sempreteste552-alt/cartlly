@@ -480,12 +480,16 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                   </Button>
                   {storeSettings?.store_slug && (
                     <Button variant="outline" size="sm" onClick={() => {
-                      const cd = (storeSettings as any)?.custom_domain;
-                      const ds = (storeSettings as any)?.domain_status;
-                      const sslReady = Boolean((storeSettings as any)?.domain_verify_details?.sslReady);
-                      const url = (cd && ds === "verified" && sslReady) ? `https://${cd.replace(/^https?:\/\//, "")}` : `/loja/${storeSettings.store_slug}`;
+                      const url = buildStoreUrl({
+                        slug: storeSettings.store_slug,
+                        customDomain: storeSettings.custom_domain,
+                        domainStatus: storeSettings.domain_status,
+                        sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
+                      });
                       window.open(url, "_blank");
                     }}>
+                      <Eye className="mr-2 h-3 w-3" /> Ver Loja
+                    </Button>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja
                     </Button>
                   )}
