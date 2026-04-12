@@ -5,7 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_EDGE_CNAME = "edge.lovableproject.com";
+// This is the domain tenants should CNAME to. 
+// If using Cloudflare for SaaS, this should be the fallback domain.
+const RECOMMENDED_CNAME = "cartlly.lovable.app"; 
 
 async function resolveDns(name: string, type: string) {
   try {
@@ -24,7 +26,7 @@ function normalizeDnsValue(value: string) {
 async function checkHttps(domain: string) {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     
     const response = await fetch(`https://${domain}`, {
       method: "HEAD",
@@ -34,11 +36,13 @@ async function checkHttps(domain: string) {
     
     clearTimeout(timeoutId);
 
+    // If we get any response from the domain on HTTPS, it means SSL is at least somewhat working
     if (response.status >= 200 && response.status < 500) {
       return { ready: true, error: null };
     }
     return { ready: false, error: `Status ${response.status} returned` };
   } catch (error: any) {
+    // If we get a certificate error, it will show up here
     return { ready: false, error: error.message || "SSL certificate not active or unreachable" };
   }
 }
@@ -49,7 +53,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { settingsId, domain, domainId } = await req.json();
+    const body = await req.json();
+    const { settingsId, domain, domainId } = body;
+    
     if (!settingsId || (!domain && !domainId)) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
@@ -64,10 +70,10 @@ Deno.serve(async (req) => {
     // 1. Fetch domain record
     let domainRecord;
     if (domainId) {
-      const { data } = await supabase.from("store_domains").select("*").eq("id", domainId).single();
+      const { data } = await supabase.from("store_domains").select("*").eq("id", domainId).maybeSingle();
       domainRecord = data;
     } else {
-      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", domain).single();
+      const { data } = await supabase.from("store_domains").select("*").eq("store_id", settingsId).eq("hostname", domain).maybeSingle();
       domainRecord = data;
     }
 
@@ -81,10 +87,6 @@ Deno.serve(async (req) => {
     const hostname = domainRecord.hostname;
     const isWww = hostname.startsWith("www.");
     const apexDomain = isWww ? hostname.substring(4) : hostname;
-    const wwwDomain = isWww ? hostname : `www.${apexDomain}`;
-    
-    // We strictly enforce/recommend www for the CNAME
-    const targetHost = wwwDomain;
     const verificationHost = `_lovable.${apexDomain}`;
     const verificationToken = domainRecord.verification_token;
     const expectedTxt = `lovable_verify=${verificationToken}`;
@@ -93,17 +95,19 @@ Deno.serve(async (req) => {
     const dnsResults: any = {
       cname: { found: false, value: null, correct: false },
       txt: { found: false, value: [], correct: false },
+      a: { found: false, values: [] },
       conflicts: [],
     };
 
-    // A. Check CNAME for wwwDomain
-    const cnameData = await resolveDns(targetHost, "CNAME");
+    // A. Check CNAME for the actual hostname
+    const cnameData = await resolveDns(hostname, "CNAME");
     if (cnameData.Answer) {
       const record = cnameData.Answer.find((r: any) => r.type === 5);
       if (record) {
         dnsResults.cname.found = true;
         dnsResults.cname.value = normalizeDnsValue(record.data);
-        dnsResults.cname.correct = dnsResults.cname.value === LOVABLE_EDGE_CNAME;
+        // Accept either the recommended one or the project one
+        dnsResults.cname.correct = dnsResults.cname.value === RECOMMENDED_CNAME || dnsResults.cname.value.endsWith(".lovable.app");
       }
     }
 
@@ -113,48 +117,40 @@ Deno.serve(async (req) => {
       const records = txtData.Answer.filter((r: any) => r.type === 16).map((r: any) => normalizeDnsValue(r.data));
       dnsResults.txt.found = records.length > 0;
       dnsResults.txt.value = records;
-      dnsResults.txt.correct = records.some((r: string) => r.includes(expectedTxt));
+      dnsResults.txt.correct = records.some((r: string) => r.includes(expectedTxt) || r.includes(verificationToken));
     }
 
-    // C. Check for conflicts on Apex domain (A records pointing elsewhere)
-    const apexAData = await resolveDns(apexDomain, "A");
-    if (apexAData.Answer) {
-      const aRecords = apexAData.Answer.filter((r: any) => r.type === 1).map((r: any) => r.data);
-      if (aRecords.length > 0) {
-        dnsResults.conflicts.push({
-          type: "A",
-          host: apexDomain,
-          values: aRecords,
-          message: "Encontramos um apontamento A no domínio raiz que pode impedir a emissão do SSL.",
-        });
+    // C. Check for Apex domain A records (Conflicts for www)
+    if (isWww) {
+      const apexAData = await resolveDns(apexDomain, "A");
+      if (apexAData.Answer) {
+        dnsResults.a.values = apexAData.Answer.filter((r: any) => r.type === 1).map((r: any) => r.data);
+        dnsResults.a.found = dnsResults.a.values.length > 0;
       }
     }
 
-    // 3. SSL Check (only if DNS/TXT are good)
+    // 3. SSL Check (only if DNS/TXT are mostly okay)
     let sslResult = { ready: false, error: "Aguardando verificação DNS e TXT" };
-    if (dnsResults.cname.correct && dnsResults.txt.correct) {
-      sslResult = await checkHttps(targetHost);
+    if (dnsResults.txt.correct || dnsResults.cname.correct) {
+      sslResult = await checkHttps(hostname);
     }
 
     // 4. Update Statuses
-    // Verification status
     const txtStatus = dnsResults.txt.correct ? "verified" : "pending";
     
-    // DNS status
     let dnsStatus = "pending";
     if (dnsResults.cname.correct) {
-      dnsStatus = dnsResults.conflicts.length > 0 ? "conflict" : "propagated";
+      dnsStatus = "propagated";
     } else if (dnsResults.cname.found) {
-      dnsStatus = "failed"; // Found but incorrect
+      dnsStatus = "failed";
     }
 
-    // SSL status
     let sslStatus = "pending";
     if (sslResult.ready) {
       sslStatus = "active";
     } else if (dnsStatus === "propagated" && txtStatus === "verified") {
       sslStatus = "emitting";
-    } else if (sslResult.error && sslResult.error !== "Aguardando verificação DNS e TXT") {
+    } else if (sslResult.error && !sslResult.error.includes("Aguardando")) {
       sslStatus = "failed";
     }
 
@@ -173,7 +169,6 @@ Deno.serve(async (req) => {
       last_verified_at: new Date().toISOString(),
       dns_validation_details: dnsResults,
       ssl_validation_details: sslResult,
-      conflicting_records: dnsResults.conflicts,
       last_ssl_error: sslResult.error,
     };
 
@@ -184,7 +179,7 @@ Deno.serve(async (req) => {
       await supabase.from("store_settings").update({
         custom_domain: hostname,
         domain_status: "verified"
-      }).eq("id", settingsId);
+      } as any).eq("id", settingsId);
     }
 
     return new Response(
@@ -199,7 +194,7 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Error in verify-domain:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

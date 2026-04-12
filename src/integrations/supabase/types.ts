@@ -3767,6 +3767,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_pending_domains: { Args: never; Returns: undefined }
       create_default_segments: {
         Args: { _user_id: string }
         Returns: undefined
