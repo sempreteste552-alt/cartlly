@@ -119,6 +119,21 @@ function ChatPanel({ chatHistory, sendMessage, pendingActions, confirmAction, in
   chatHistory: any[]; sendMessage: any; pendingActions: Record<number, any[]>; confirmAction: (i: number, a: number) => void;
   input: string; setInput: (v: string) => void; handleSend: () => void; scrollRef: React.RefObject<HTMLDivElement>;
 }) {
+  const formatMessageContent = (content: string) => {
+    // Remove action tags for cleaner display
+    return content
+      .replace(/\[ACTION_SCHEDULE_TASK\][\s\S]*?\[\/ACTION_SCHEDULE_TASK\]/g, "")
+      .replace(/\[ACTION_CREATE_COUPON\][\s\S]*?\[\/ACTION_CREATE_COUPON\]/g, "")
+      .replace(/\[ACTION_UPDATE_STORE_SETTINGS\][\s\S]*?\[\/ACTION_UPDATE_STORE_SETTINGS\]/g, "")
+      .replace(/\[ACTION_UPDATE_MARKETING_CONFIG\][\s\S]*?\[\/ACTION_UPDATE_MARKETING_CONFIG\]/g, "")
+      .replace(/\[ACTION_UPDATE_STOCK\][\s\S]*?\[\/ACTION_UPDATE_STOCK\]/g, "")
+      .replace(/\[ACTION_UPDATE_PAGE\][\s\S]*?\[\/ACTION_UPDATE_PAGE\]/g, "")
+      .replace(/\[ACTION_SCHEDULE_REMINDER\][\s\S]*?\[\/ACTION_SCHEDULE_REMINDER\]/g, "")
+      .replace(/\[ACTION_UPDATE_AI_INSTRUCTIONS\][\s\S]*?\[\/ACTION_UPDATE_AI_INSTRUCTIONS\]/g, "")
+      .replace(/\[ACTION_GENERATE_PRODUCT_CONTENT\][\s\S]*?\[\/ACTION_GENERATE_PRODUCT_CONTENT\]/g, "")
+      .trim();
+  };
+
   return (
     <Card className="flex flex-col border-primary/20 bg-primary/5 h-[450px] sm:h-[500px]">
       <CardHeader className="py-2 border-b bg-card">
@@ -144,10 +159,10 @@ function ChatPanel({ chatHistory, sendMessage, pendingActions, confirmAction, in
             )}
             {chatHistory.map((msg: any, i: number) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
                   msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-card border shadow-sm rounded-tl-none'
                 }`}>
-                  {msg.content}
+                  {formatMessageContent(msg.content)}
                   {pendingActions[i]?.map((action: any, aidx: number) => (
                     <div key={aidx} className="mt-2 bg-muted/50 p-2 rounded-lg border border-border/50">
                       <span className="text-[11px] font-medium leading-tight text-foreground block mb-1">{action.label}</span>
