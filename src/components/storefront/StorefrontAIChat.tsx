@@ -368,11 +368,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-36 md:bottom-[5.5rem] right-6 animate-fade-in"
+        className="fixed z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center bottom-36 md:bottom-[5.5rem] right-6 animate-fade-in group"
         style={{ backgroundColor: accentColor }}
         title={uiText.title}
       >
-        <MessageCircle className="h-6 w-6 text-white" />
+        <div className="relative">
+          <MessageCircle className="h-6 w-6 text-white group-hover:scale-110 transition-transform" />
+          {unreadCount > 0 && (
+            <span 
+              className="absolute -top-3 -right-3 bg-red-600 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce shadow-md"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
       </button>
     );
   }
