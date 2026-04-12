@@ -1822,10 +1822,19 @@ async function generateAISequenceMessage(
     };
     
     tenantContext = `
+MANDATORY MERCHANT TRAINING (MAX PRIORITY):
+${aiConfig.brand_identity ? `IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : ""}
 PERSONALIDADE DA LOJA: ${personalityMap[personality] || personalityMap.educada}
-${configuredNiche ? `NICHO CONFIGURADO: ${configuredNiche}` : ""}
+${aiConfig.tone_of_voice ? `TOM DE VOZ: ${aiConfig.tone_of_voice}` : ""}
+${aiConfig.writing_style ? `ESTILO DE ESCRITA: ${aiConfig.writing_style}` : ""}
+${aiConfig.emoji_usage ? `USO DE EMOJIS: ${aiConfig.emoji_usage}` : ""}
+${aiConfig.prohibitions ? `PROIBIÇÕES: ${aiConfig.prohibitions}` : ""}
+${aiConfig.sending_rules ? `REGRAS DE ENVIO: ${aiConfig.sending_rules}` : ""}
+${configuredNiche ? `NICHO: ${configuredNiche}` : ""}
 ${storeKnowledge ? `SOBRE A LOJA: ${storeKnowledge}` : ""}
-${customInstructions ? `INSTRUÇÕES DO LOJISTA: ${customInstructions}` : ""}`;
+${customInstructions ? `INSTRUÇÕES EXTRAS: ${customInstructions}` : ""}
+HIERARQUIA: TREINAMENTO DO LOJISTA > CONTEXTO DO CLIENTE > OTIMIZAÇÃO DA IA.
+CORRIJA QUALQUER CONFLITO COM AS REGRAS ACIMA.`;
   }
 
   // Build anti-repetition context from customer's push history
