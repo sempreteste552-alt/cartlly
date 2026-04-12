@@ -110,6 +110,40 @@ export default function Suporte() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoSelectedConvRef = useRef<string | null>(null);
 
+  const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("support_messages")
+      .update({ delivered_at: now })
+      .eq("conversation_id", conversationId)
+      .eq("sender_type", "customer")
+      .is("delivered_at", null);
+
+    if (markAsRead) {
+      await supabase
+        .from("support_messages")
+        .update({ read_at: now })
+        .eq("conversation_id", conversationId)
+        .eq("sender_type", "customer")
+        .is("read_at", null);
+    }
+
+    queryClient.setQueryData(["support_messages", conversationId], (old: Message[] | undefined) =>
+      (old || []).map((message) =>
+        message.sender_type === "customer"
+          ? {
+              ...message,
+              delivered_at: message.delivered_at ?? now,
+              read_at: markAsRead ? message.read_at ?? now : message.read_at,
+            }
+          : message
+      )
+    );
+
+    return now;
+  };
+
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ["support_conversations", user?.id],
     queryFn: async () => {
@@ -174,28 +208,17 @@ export default function Suporte() {
 
       if (error) throw error;
 
-      const now = new Date().toISOString();
-
-      await supabase
-        .from("support_messages")
-        .update({ delivered_at: now })
-        .eq("conversation_id", selectedConversation.id)
-        .eq("sender_type", "customer")
-        .is("delivered_at", null);
-
-      await supabase
-        .from("support_messages")
-        .update({ read_at: now })
-        .eq("conversation_id", selectedConversation.id)
-        .eq("sender_type", "customer")
-        .is("read_at", null);
+      const now = await syncSelectedConversationReception(
+        selectedConversation.id,
+        document.visibilityState === "visible"
+      );
 
       return ((data || []) as Message[]).map((message) =>
         message.sender_type === "customer"
           ? {
               ...message,
               delivered_at: message.delivered_at ?? now,
-              read_at: message.read_at ?? now,
+              read_at: document.visibilityState === "visible" ? message.read_at ?? now : message.read_at,
             }
           : message
       );

@@ -93,6 +93,41 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
 
+  const syncIncomingAdminMessages = useCallback(async (markAsRead: boolean, targetConversationId?: string) => {
+    const activeConversationId = targetConversationId || conversationId;
+    if (!activeConversationId) return new Date().toISOString();
+
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("support_messages")
+      .update({ delivered_at: now })
+      .eq("conversation_id", activeConversationId)
+      .eq("sender_type", "admin")
+      .is("delivered_at", null);
+
+    if (markAsRead) {
+      await supabase
+        .from("support_messages")
+        .update({ read_at: now })
+        .eq("conversation_id", activeConversationId)
+        .eq("sender_type", "admin")
+        .is("read_at", null);
+    }
+
+    setMessages(prev => prev.map((message) =>
+      message.role === "assistant"
+        ? {
+            ...message,
+            delivered_at: message.delivered_at ?? now,
+            read_at: markAsRead ? message.read_at ?? now : message.read_at,
+          }
+        : message
+    ));
+
+    return now;
+  }, [conversationId]);
+
   const localUnreadCount = useMemo(() => {
     if (!open) return messages.filter(m => m.role === "assistant" && !m.read_at).length;
     return 0;
@@ -222,7 +257,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
             .eq("conversation_id", currentConvId)
             .order("created_at", { ascending: true });
 
-          const now = new Date().toISOString();
+          const now = await syncIncomingAdminMessages(true, currentConvId);
 
           if (msgs) {
             setMessages(msgs.map(m => ({
@@ -233,27 +268,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               read_at: m.sender_type === "admin" ? (m.read_at ?? now) : m.read_at,
               delivered_at: m.sender_type === "admin" ? (m.delivered_at ?? now) : m.delivered_at
             })));
-
-            await supabase
-              .from("support_messages")
-              .update({ delivered_at: now })
-              .eq("conversation_id", currentConvId)
-              .eq("sender_type", "admin")
-              .is("delivered_at", null);
-
-            await supabase
-              .from("support_messages")
-              .update({ read_at: now })
-              .eq("conversation_id", currentConvId)
-              .eq("sender_type", "admin")
-              .is("read_at", null);
           }
         }
       };
 
       initSupport();
     }
-  }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId]);
+  }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId, syncIncomingAdminMessages]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
@@ -275,14 +296,12 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 supabase.from("support_messages")
                   .update({ delivered_at: now })
                   .eq("id", payload.new.id)
-                  .is("delivered_at", null)
                   .then();
                 
                 if (open && document.visibilityState === "visible") {
                   supabase.from("support_messages")
                     .update({ read_at: now })
                     .eq("id", payload.new.id)
-                    .is("read_at", null)
                     .then();
                 }
               }
@@ -348,9 +367,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   }, [input, conversationId, isHumanMode, isTyping]);
 
   useEffect(() => {
-    if (!conversationId || !isHumanMode || !open) return;
+    if (!conversationId || !isHumanMode) return;
 
-    const touchPresence = () => {
+    const syncVisibleStatuses = () => {
+      const markAsRead = open && document.visibilityState === "visible";
+      syncIncomingAdminMessages(markAsRead).then();
       supabase
         .from("support_conversations")
         .update({ updated_at: new Date().toISOString() })
@@ -358,11 +379,24 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         .then();
     };
 
-    touchPresence();
-    const interval = window.setInterval(touchPresence, 30000);
+    syncVisibleStatuses();
+    document.addEventListener("visibilitychange", syncVisibleStatuses);
+    window.addEventListener("focus", syncVisibleStatuses);
 
-    return () => window.clearInterval(interval);
-  }, [conversationId, isHumanMode, open]);
+    const interval = window.setInterval(() => {
+      supabase
+        .from("support_conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .then();
+    }, 30000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", syncVisibleStatuses);
+      window.removeEventListener("focus", syncVisibleStatuses);
+      window.clearInterval(interval);
+    };
+  }, [conversationId, isHumanMode, open, syncIncomingAdminMessages]);
 
   const processActions = useCallback(async (content: string) => {
     const cepMatch = content.match(/\[ACTION_CEP_LOOKUP\]([\s\S]*?)\[\/ACTION_CEP_LOOKUP\]/);
