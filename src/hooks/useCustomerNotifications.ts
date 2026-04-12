@@ -54,44 +54,40 @@ export function useCustomerNotifications(storeUserId?: string) {
         (message: any) => !message.target_user_id || (user && message.target_user_id === user.id)
       );
 
-      const conversationRequests: Promise<any>[] = [];
+      const conversationMap = new Map<string, any>();
 
       if (customer?.id) {
-        conversationRequests.push(
-          supabase
-            .from("support_conversations")
-            .select(`
-              id,
-              customer_id,
-              session_id,
-              tenant:store_settings(store_name)
-            `)
-            .eq("tenant_id", storeUserId!)
-            .eq("customer_id", customer.id)
-        );
+        const { data, error } = await supabase
+          .from("support_conversations")
+          .select(`
+            id,
+            customer_id,
+            session_id,
+            tenant:store_settings(store_name)
+          `)
+          .eq("tenant_id", storeUserId!)
+          .eq("customer_id", customer.id);
+
+        if (error) throw error;
+        for (const conversation of data || []) {
+          conversationMap.set(conversation.id, conversation);
+        }
       }
 
       if (sessionId) {
-        conversationRequests.push(
-          supabase
-            .from("support_conversations")
-            .select(`
-              id,
-              customer_id,
-              session_id,
-              tenant:store_settings(store_name)
-            `)
-            .eq("tenant_id", storeUserId!)
-            .eq("session_id", sessionId)
-        );
-      }
+        const { data, error } = await supabase
+          .from("support_conversations")
+          .select(`
+            id,
+            customer_id,
+            session_id,
+            tenant:store_settings(store_name)
+          `)
+          .eq("tenant_id", storeUserId!)
+          .eq("session_id", sessionId);
 
-      const conversationResults = await Promise.all(conversationRequests);
-      const conversationMap = new Map<string, any>();
-
-      for (const result of conversationResults) {
-        if (result.error) throw result.error;
-        for (const conversation of result.data || []) {
+        if (error) throw error;
+        for (const conversation of data || []) {
           conversationMap.set(conversation.id, conversation);
         }
       }
