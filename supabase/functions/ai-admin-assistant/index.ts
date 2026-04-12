@@ -30,7 +30,7 @@ serve(async (req) => {
       });
     }
 
-    const { messages } = await req.json();
+    const { messages, clientTime } = await req.json();
 
     // 1. Fetch Store Config & Context (Expanded)
     const [
