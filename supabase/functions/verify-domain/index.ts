@@ -72,7 +72,28 @@ async function registerCloudflareCustomHostname(hostname: string) {
 }
 
 async function checkHttps(domain: string) {
-...
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
+    const response = await fetch(`https://${domain}`, {
+      method: "HEAD",
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+
+    // If we get any response from the domain on HTTPS, it means SSL is at least somewhat working
+    if (response.status >= 200 && response.status < 500) {
+      return { ready: true, error: null };
+    }
+    return { ready: false, error: `Status ${response.status} returned` };
+  } catch (error: any) {
+    // If we get a certificate error, it will show up here
+    return { ready: false, error: error.message || "SSL certificate not active or unreachable" };
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
