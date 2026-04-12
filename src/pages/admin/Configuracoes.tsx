@@ -918,6 +918,23 @@ export default function Configuracoes() {
           <GeneralSettingsTab />
         </TabsContent>
 
+        <TabsContent value="domain" className="mt-6">
+          <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Próprio">
+            <FeatureTutorialCard
+              id="domain_tutorial"
+              title="Domínio Próprio"
+              description="Conecte seu domínio oficial para profissionalizar sua loja e melhorar seu SEO."
+              steps={[
+                "Informe o endereço do seu domínio (ex: www.sualoja.com.br)",
+                "Adicione os registros TXT e CNAME no seu provedor DNS",
+                "Aguarde a propagação e a emissão automática do SSL",
+                "Pronto! Sua loja estará disponível no seu endereço oficial"
+              ]}
+            />
+            {settings && <DomainConnector settingsId={settings.id} storeSlug={settings.store_slug} />}
+          </LockedFeature>
+        </TabsContent>
+
         <TabsContent value="appearance" className="mt-6">
           <LockedFeature isLocked={!canAccess("appearance_settings", ctx)} featureName="Personalização de Aparência">
           <FeatureTutorialCard
