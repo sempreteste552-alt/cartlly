@@ -15,6 +15,7 @@ import { canAccess } from "@/lib/planPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { normalizeDomain } from "@/lib/storeDomain";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -196,6 +197,20 @@ export function AIChatWidget() {
     enabled: !!user,
   });
 
+  // Fetch domains
+  const { data: domains } = useQuery({
+    queryKey: ["store_domains_chat", settings?.id],
+    queryFn: async () => {
+      if (!settings?.id) return [];
+      const { data } = await supabase
+        .from("store_domains")
+        .select("*")
+        .eq("store_id", settings.id);
+      return data || [];
+    },
+    enabled: !!settings?.id,
+  });
+
   const aiName = (settings as any)?.ai_name || AI_SETTINGS_DEFAULT.name;
   const aiAvatarUrl = (settings as any)?.ai_avatar_url || AI_SETTINGS_DEFAULT.avatarUrl;
   const aiTone = (settings as any)?.ai_chat_tone || AI_SETTINGS_DEFAULT.tone;
@@ -260,6 +275,12 @@ export function AIChatWidget() {
     const approvedRevenue = approvedOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0);
     const avgTicket = approvedOrders.length > 0 ? approvedRevenue / approvedOrders.length : 0;
 
+    const domainList = (domains || []).map((d: any) => ({
+      hostname: d.hostname,
+      status: d.status,
+      is_primary: d.is_primary,
+    }));
+
     return {
       storeName: (settings as any)?.store_name || "",
       storeDescription: (settings as any)?.store_description || "",
@@ -300,8 +321,10 @@ export function AIChatWidget() {
       subscriptionStatus: ctx.subscriptionStatus,
       isTrial: ctx.isTrial,
       trialDaysLeft: ctx.trialDaysLeft,
+      domains: domainList,
+      primaryDomain: (domains || []).find((d: any) => d.is_primary)?.hostname || null,
     };
-  }, [products, categories, coupons, orders, settings, aiName, plans, ctx]);
+  }, [products, categories, coupons, orders, settings, aiName, plans, ctx, domains]);
 
   const handleSubscribe = async (planId: string, planName: string, document: string) => {
     if (!user) return;
@@ -411,6 +434,18 @@ export function AIChatWidget() {
     extractActions(/\[ACTION_REMINDER\]([\s\S]*?)\[\/ACTION_REMINDER\]/g, (payload) => ({
       type: "reminder",
       label: `⏰ Agendar Lembrete${payload.title ? `: ${payload.title}` : ""}`,
+      payload,
+    }));
+
+    extractActions(/\[ACTION_DOMAIN_CONNECT\]([\s\S]*?)\[\/ACTION_DOMAIN_CONNECT\]/g, (payload) => ({
+      type: "domain_connect",
+      label: `🌐 Conectar domínio ${payload.domain || ""}`,
+      payload,
+    }));
+
+    extractActions(/\[ACTION_DOMAIN_VERIFY\]([\s\S]*?)\[\/ACTION_DOMAIN_VERIFY\]/g, (payload) => ({
+      type: "domain_verify",
+      label: `🔍 Verificar domínio ${payload.domain || ""}`,
       payload,
     }));
 
@@ -551,6 +586,85 @@ export function AIChatWidget() {
         if (error) throw error;
         toast.success("✅ Lembrete agendado!");
         queryClient.invalidateQueries({ queryKey: ["ai-scheduled-tasks"] });
+      } else if (action.type === "domain_connect") {
+        if (!settings?.id) throw new Error("Configurações da loja não encontradas.");
+        
+        let cleanDomain = normalizeDomain(action.payload.domain);
+        if (!cleanDomain || !cleanDomain.includes(".")) {
+          throw new Error("Informe um domínio válido (ex: minhaloja.com.br)");
+        }
+
+        const { data: existing } = await supabase
+          .from("store_domains")
+          .select("id")
+          .eq("hostname", cleanDomain)
+          .maybeSingle();
+
+        if (existing) {
+          throw new Error("Este domínio já está vinculado a uma loja.");
+        }
+
+        const { error } = await supabase.from("store_domains").insert({
+          store_id: settings.id,
+          hostname: cleanDomain,
+          is_primary: (domains?.length || 0) === 0,
+          status: 'pending_dns'
+        });
+
+        if (error) throw error;
+
+        toast.success(`✅ Domínio ${cleanDomain} adicionado!`);
+        queryClient.invalidateQueries({ queryKey: ["store_domains_chat"] });
+        
+        // Fetch the domain record we just created to get the verification token
+        const { data: newDomainData } = await supabase
+          .from("store_domains")
+          .select("verification_token")
+          .eq("hostname", cleanDomain)
+          .single();
+
+        setMessages(prev => [...prev, { 
+          role: "assistant", 
+          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nAgora você precisa configurar os registros DNS no seu provedor:\n\n1. **Tipo: CNAME**\n   Nome/Host: **www**\n   Valor/Destino: **www.cartlly.lovable.app**\n\n2. **Tipo: TXT**\n   Nome/Host: **_lovable-verification**\n   Valor: \`${newDomainData?.verification_token || "(aguarde a geração do token)"}\`\n\nApós configurar, clique em verificar no painel de domínios ou me peça para verificar!` 
+        }]);
+      } else if (action.type === "domain_verify") {
+        if (!settings?.id) throw new Error("Configurações da loja não encontradas.");
+        
+        const cleanDomain = normalizeDomain(action.payload.domain);
+        const domainRecord = (domains || []).find((d: any) => d.hostname === cleanDomain);
+
+        if (!domainRecord) {
+          throw new Error("Este domínio não está vinculado a sua loja.");
+        }
+
+        toast.info(`Verificando domínio ${cleanDomain}...`);
+        
+        const { data, error } = await supabase.functions.invoke("verify-domain", {
+          body: { 
+            settingsId: settings.id, 
+            domain: cleanDomain,
+            domainId: domainRecord.id
+          },
+        });
+        
+        if (error) throw error;
+
+        if (data?.status === "active") {
+          toast.success(`🎉 Domínio ${cleanDomain} verificado e online!`);
+          setMessages(prev => [...prev, { 
+            role: "assistant", 
+            content: `🎉 **Boas notícias!** O domínio **${cleanDomain}** foi verificado com sucesso e já está online. Sua loja agora é acessível por este endereço profissional! 🚀` 
+          }]);
+        } else {
+          toast.warning("Status atualizado, mas ainda há pendências.");
+          setMessages(prev => [...prev, { 
+            role: "assistant", 
+            content: `⚠️ O domínio **${cleanDomain}** ainda não está totalmente ativo.\n\nStatus atual: **${data?.status || 'Processando'}**\n\nCertifique-se de que os registros DNS (CNAME e TXT) foram inseridos corretamente no seu provedor. A propagação pode levar de alguns minutos a 24 horas.` 
+          }]);
+        }
+        
+        queryClient.invalidateQueries({ queryKey: ["store_domains_chat"] });
+        queryClient.invalidateQueries({ queryKey: ["store_settings"] });
       }
 
       setPendingActions((prev) => {
