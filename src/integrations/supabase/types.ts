@@ -2448,8 +2448,10 @@ export type Database = {
       }
       store_domains: {
         Row: {
+          conflicting_records: Json | null
           created_at: string
           dns_status: string | null
+          dns_validation_details: Json | null
           hostname: string
           id: string
           is_primary: boolean | null
@@ -2458,6 +2460,7 @@ export type Database = {
           last_verified_at: string | null
           ssl_issued_at: string | null
           ssl_status: string | null
+          ssl_validation_details: Json | null
           status: string
           store_id: string
           txt_status: string | null
@@ -2465,8 +2468,10 @@ export type Database = {
           verification_token: string | null
         }
         Insert: {
+          conflicting_records?: Json | null
           created_at?: string
           dns_status?: string | null
+          dns_validation_details?: Json | null
           hostname: string
           id?: string
           is_primary?: boolean | null
@@ -2475,6 +2480,7 @@ export type Database = {
           last_verified_at?: string | null
           ssl_issued_at?: string | null
           ssl_status?: string | null
+          ssl_validation_details?: Json | null
           status?: string
           store_id: string
           txt_status?: string | null
@@ -2482,8 +2488,10 @@ export type Database = {
           verification_token?: string | null
         }
         Update: {
+          conflicting_records?: Json | null
           created_at?: string
           dns_status?: string | null
+          dns_validation_details?: Json | null
           hostname?: string
           id?: string
           is_primary?: boolean | null
@@ -2492,6 +2500,7 @@ export type Database = {
           last_verified_at?: string | null
           ssl_issued_at?: string | null
           ssl_status?: string | null
+          ssl_validation_details?: Json | null
           status?: string
           store_id?: string
           txt_status?: string | null
