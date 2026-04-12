@@ -219,3 +219,24 @@ export function usePublicProductPageConfig(storeUserId?: string) {
     },
   });
 }
+
+export function usePublicProductVariants(productIds: string[]) {
+  return useQuery({
+    queryKey: ["public_product_variants", productIds],
+    enabled: productIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_variants")
+        .select("*")
+        .in("product_id", productIds);
+      if (error) throw error;
+      
+      const map: Record<string, any[]> = {};
+      data?.forEach((v) => {
+        if (!map[v.product_id]) map[v.product_id] = [];
+        map[v.product_id].push(v);
+      });
+      return map;
+    },
+  });
+}
