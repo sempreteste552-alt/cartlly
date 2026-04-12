@@ -371,7 +371,7 @@ ${customerContext ? `\nCUSTOMER CONTEXT:\n${customerContext}` : ""}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-1.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
@@ -387,7 +387,7 @@ ${customerContext ? `\nCUSTOMER CONTEXT:\n${customerContext}` : ""}`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Serviço temporariamente indisponível." }), {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

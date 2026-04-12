@@ -297,7 +297,7 @@ REGRAS CRÍTICAS:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: hasImages ? "google/gemini-2.5-flash" : "google/gemini-2.5-flash",
+        model: "google/gemini-1.5-flash",
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
         temperature: 0.7,
@@ -317,7 +317,7 @@ REGRAS CRÍTICAS:
       }
 
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Os créditos do Lovable AI acabaram. Adicione créditos no workspace para continuar." }), {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação. Verifique seu plano ou adicione créditos." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
