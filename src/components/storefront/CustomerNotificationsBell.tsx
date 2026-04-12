@@ -112,13 +112,7 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
                 onClick={() => {
                   if (!n.read) markAsRead(n);
                   if (n.is_chat || n.message_type === "support") {
-                    // Add ?chat=true to current URL to open chat widget
-                    const url = new URL(window.location.href);
-                    url.searchParams.set("chat", "true");
-                    window.history.pushState({}, "", url.toString());
-                    window.dispatchEvent(new Event("popstate"));
-                    // Force reload the param check
-                    window.location.search = url.search;
+                    window.dispatchEvent(new CustomEvent("open-support-chat"));
                   }
                 }}
                 className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
