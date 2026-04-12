@@ -9,6 +9,7 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
+import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
