@@ -135,7 +135,7 @@ export function useCustomerNotifications(storeUserId?: string) {
         },
         () => {
           qc.invalidateQueries({ queryKey: ["customer_notifications", storeUserId, user?.id] });
-          playSound("RECEIVED");
+          playNotificationSound();
         }
       )
       .on(
@@ -151,7 +151,7 @@ export function useCustomerNotifications(storeUserId?: string) {
           // For simplicity, invalidate for all inserts since this is the customer's perspective.
           if (payload.new.sender_type === "admin") {
             qc.invalidateQueries({ queryKey: ["customer_notifications"] });
-            playSound("RECEIVED");
+            playNotificationSound();
           }
         }
       )

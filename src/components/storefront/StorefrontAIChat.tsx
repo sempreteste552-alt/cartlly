@@ -191,9 +191,9 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 if (alreadyExists) return prev;
                 
                 if (payload.new.sender_type === "admin") {
-                  playSound("RECEIVED");
+                  playNotificationSound();
                 } else {
-                  playSound("SENT");
+                  playNotificationSound();
                 }
 
                 return [...prev, {

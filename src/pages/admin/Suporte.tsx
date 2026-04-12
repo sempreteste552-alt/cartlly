@@ -147,11 +147,11 @@ export default function Suporte() {
         { event: "INSERT", schema: "public", table: "support_messages" },
         (payload: any) => {
           if (payload.new.sender_type === "customer") {
-            playSound("RECEIVED");
+            playNotificationSound();
             // If it's a message from customer, also update notifications or bell count
             // Actually the bell usually listens to admin_notifications, but let's just refresh conversations
           } else {
-            playSound("SENT");
+            playNotificationSound();
           }
           queryClient.invalidateQueries({ queryKey: ["support_messages", payload.new.conversation_id] });
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });

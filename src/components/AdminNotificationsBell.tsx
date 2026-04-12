@@ -53,7 +53,7 @@ export function AdminNotificationsBell() {
             .single();
 
           if (conv && conv.tenant_id === user.id) {
-            playSound("RECEIVED");
+            playNotificationSound();
             toast.info("Nova mensagem de suporte recebida!", {
               description: payload.new.body.substring(0, 50) + "..."
             });
