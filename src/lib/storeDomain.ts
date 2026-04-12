@@ -19,7 +19,9 @@ export function isPlatformHost(hostname?: string | null) {
     "www.cartlly.com",
     "cartlly.com.br",
     "www.cartlly.com.br",
-    "cartlly.lovable.app"
+    "cartlly.lovable.app",
+    "msktelemarkting.shop",
+    "www.msktelemarkting.shop"
   ];
 
   if (platformDomains.includes(host)) return true;
