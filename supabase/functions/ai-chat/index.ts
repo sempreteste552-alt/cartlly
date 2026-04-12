@@ -105,8 +105,10 @@ serve(async (req) => {
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    // Add current time context with robust Brasilia time calculation
-    const now = new Date();
+    // Add current time context with robust calculation
+    // Prefer clientTime if provided to synchronize with user's local experience
+    const now = clientTime ? new Date(clientTime) : new Date();
+    
     const formatter = new Intl.DateTimeFormat("pt-BR", {
       timeZone: "America/Sao_Paulo",
       hour: "numeric",
@@ -133,7 +135,8 @@ serve(async (req) => {
     const hourBr = parseInt(hour);
     const greetingBr = hourBr < 6 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
     
-    console.log(`[ai-chat] Contexto temporal: ${brTime} (${weekday}), ${brDate}. UTC: ${now.toISOString()}`);
+    console.log(`[ai-chat] Contexto temporal: ${brTime} (${weekday}), ${brDate}. UTC (Base): ${now.toISOString()}. Client-Sync: ${!!clientTime}`);
+
 
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
