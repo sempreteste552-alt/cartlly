@@ -93,22 +93,35 @@ serve(async (req) => {
       ? (aiConfig.store_knowledge as any).description || ""
       : "";
     
-    const formatter = new Intl.DateTimeFormat("en-US", {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("pt-BR", {
       timeZone: "America/Sao_Paulo",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
       hour: "numeric",
       minute: "numeric",
-      second: "numeric",
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
       hour12: false,
+      weekday: "long",
     });
-    const parts = formatter.formatToParts(new Date());
+    const parts = formatter.formatToParts(now);
     const d: any = {};
     parts.forEach(({ type, value }) => { d[type] = value; });
     
-    const finalHourBr = parseInt(d.hour);
-    const greetingBr = finalHourBr < 5 ? "Boa madrugada" : finalHourBr < 12 ? "Bom dia" : finalHourBr < 18 ? "Boa tarde" : "Boa noite";
+    const hour = d.hour.padStart(2, "0");
+    const minute = d.minute.padStart(2, "0");
+    const day = d.day.padStart(2, "0");
+    const month = d.month.padStart(2, "0");
+    const year = d.year;
+    const weekday = d.weekday;
+    
+    const brTime = `${hour}:${minute}`;
+    const brDate = `${day}/${month}/${year}`;
+    const hourBr = parseInt(hour);
+    const greetingBr = hourBr < 6 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    
+    console.log(`[ai-admin-assistant] Contexto temporal: ${brTime} (${weekday}), ${brDate}. UTC: ${now.toISOString()}`);
+
 
     const personalityMap: Record<string, string> = {
       amigavel: "Amigável e próxima — como uma amiga empreendedora de confiança.",
