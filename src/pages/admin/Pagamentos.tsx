@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export default function Pagamentos() {
   }
 
   return (
+    <PlanGate feature="payment_dashboard">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Pagamentos</h1>
@@ -103,5 +105,6 @@ export default function Pagamentos() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }

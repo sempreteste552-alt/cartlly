@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +95,7 @@ export default function Lucro() {
   if (!analysis) return null;
 
   return (
+    <PlanGate feature="profit_reports">
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -252,5 +254,6 @@ export default function Lucro() {
         </Card>
       )}
     </div>
+    </PlanGate>
   );
 }

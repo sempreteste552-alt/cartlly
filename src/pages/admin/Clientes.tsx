@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -167,6 +168,7 @@ export default function Clientes() {
   }
 
   return (
+    <PlanGate feature="customer_management">
     <div className="space-y-6">
       <div id="customers-header" className="flex items-center justify-between">
         <div>
@@ -380,5 +382,6 @@ export default function Clientes() {
         </DialogContent>
       </Dialog>
     </div>
+    </PlanGate>
   );
 }
