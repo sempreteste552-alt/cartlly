@@ -41,16 +41,13 @@ interface StorefrontAIChatProps {
   isPremium?: boolean;
 }
 
-const SOUNDS = {
-  SENT: "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3",
-  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
-};
+const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 
-const playSound = (type: "SENT" | "RECEIVED") => {
+const playNotificationSound = () => {
   try {
-    const audio = new Audio(SOUNDS[type]);
-    audio.volume = 0.5;
-    audio.play().catch(() => {}); // Browser might block auto-play
+    const audio = new Audio(NOTIFICATION_SOUND);
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
   } catch (err) {
     console.error("Error playing sound:", err);
   }

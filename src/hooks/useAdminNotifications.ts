@@ -3,14 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-const SOUNDS = {
-  RECEIVED: "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"
-};
+const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 
-const playSound = (type: "RECEIVED") => {
+const playNotificationSound = () => {
   try {
-    const audio = new Audio(SOUNDS[type]);
-    audio.volume = 0.5;
+    const audio = new Audio(NOTIFICATION_SOUND);
+    audio.volume = 0.6;
     audio.play().catch(() => {});
   } catch (err) {
     console.error("Error playing sound:", err);
