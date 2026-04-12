@@ -1128,6 +1128,16 @@ export default function LojaLayout() {
                   {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
                   {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
                   {settings?.store_address && <p>📍 {settings.store_address}</p>}
+                  {settings?.google_maps_url && (
+                    <a 
+                      href={settings.google_maps_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-1.5 text-primary hover:underline mt-1"
+                    >
+                      <MapPin className="h-3.5 w-3.5" /> Ver no Google Maps
+                    </a>
+                  )}
                 </div>
               </div>
               <div>
