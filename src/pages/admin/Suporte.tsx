@@ -130,14 +130,17 @@ export default function Suporte() {
         .eq("user_id", user.id)
         .single();
 
-      const { error } = await supabase
+      const { data: newMsg, error } = await supabase
         .from("support_messages")
         .insert({
           conversation_id: selectedConversation.id,
           sender_type: "admin",
           sender_id: user.id,
           body,
-        });
+        })
+        .select("*")
+        .single();
+
       if (error) throw error;
 
       if (selectedConversation.customer_id) {
@@ -150,10 +153,36 @@ export default function Suporte() {
           }
         });
       }
+
+      return newMsg;
     },
-    onSuccess: () => {
+    onMutate: async (body) => {
+      if (!selectedConversation) return;
+      
+      const optimisticMsg: Message = {
+        id: `temp-${Date.now()}`,
+        conversation_id: selectedConversation.id,
+        sender_type: "admin",
+        sender_id: user?.id || "",
+        body,
+        created_at: new Date().toISOString(),
+        delivered_at: null,
+        read_at: null
+      };
+
+      queryClient.setQueryData(["support_messages", selectedConversation.id], (old: Message[] | undefined) => {
+        return [...(old || []), optimisticMsg];
+      });
+
+      return { optimisticMsg };
+    },
+    onSuccess: (newMsg) => {
       setNewMessage("");
-      queryClient.invalidateQueries({ queryKey: ["support_messages", selectedConversation?.id] });
+      if (newMsg && selectedConversation) {
+        queryClient.setQueryData(["support_messages", selectedConversation.id], (old: Message[] | undefined) => {
+          return (old || []).map(m => m.id.startsWith("temp-") && m.body === newMsg.body ? newMsg : m);
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
     },
   });
@@ -170,7 +199,13 @@ export default function Suporte() {
           if (payload.new.sender_type === "customer") {
             playNotificationSound();
           }
-          queryClient.invalidateQueries({ queryKey: ["support_messages", payload.new.conversation_id] });
+          
+          queryClient.setQueryData(["support_messages", payload.new.conversation_id], (old: Message[] | undefined) => {
+            const alreadyExists = (old || []).some(m => m.id === payload.new.id || (m.body === payload.new.body && Math.abs(new Date(m.created_at).getTime() - new Date(payload.new.created_at).getTime()) < 2000));
+            if (alreadyExists) return old;
+            return [...(old || []), payload.new];
+          });
+
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
         }
       )
