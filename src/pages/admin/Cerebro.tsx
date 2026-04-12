@@ -276,6 +276,17 @@ function AITrainingPanel({ userId }: { userId: string }) {
           personality,
           custom_instructions: customInstructions,
           store_knowledge: { description: storeKnowledge } as any,
+          tone_of_voice: toneOfVoice,
+          writing_style: writingStyle,
+          approach_type: approachType,
+          sending_rules: sendingRules,
+          approved_examples: approvedExamples,
+          prohibitions: prohibitions,
+          language_preferences: languagePreferences,
+          formality_level: formalityLevel,
+          emoji_usage: emojiUsage,
+          persuasion_style: persuasionStyle,
+          brand_identity: brandIdentity,
         }, { onConflict: "user_id" });
       if (error) throw error;
     },
