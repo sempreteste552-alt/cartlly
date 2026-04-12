@@ -88,8 +88,27 @@ export default function LojaHome() {
     if (minP) result = result.filter((p) => p.price >= Number(minP));
     if (maxP) result = result.filter((p) => p.price <= Number(maxP));
 
+    // Filter by variants: v_Cor=Preto,Branco&v_Tamanho=P,M
+    const variantFilters: Record<string, string[]> = {};
+    searchParams.forEach((val, key) => {
+      if (key.startsWith("v_")) {
+        variantFilters[key.replace("v_", "")] = val.split(",");
+      }
+    });
+
+    if (Object.keys(variantFilters).length > 0 && productVariantsMap) {
+      result = result.filter((p) => {
+        const productVariants = productVariantsMap[p.id] || [];
+        // All filters must be satisfied
+        return Object.entries(variantFilters).every(([type, values]) => {
+          // If a product has ANY variant that matches ONE of the selected values for this type
+          return productVariants.some(v => v.variant_type === type && values.includes(v.variant_value));
+        });
+      });
+    }
+
     return result;
-  }, [products, searchTerm, categoriaParam, searchParams]);
+  }, [products, searchTerm, categoriaParam, searchParams, productVariantsMap]);
 
   const groupedByCategory = useMemo(() => {
     if (!filtered.length) return {};
