@@ -3259,6 +3259,86 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          is_active: boolean | null
+          is_typing_admin: boolean | null
+          is_typing_customer: boolean | null
+          last_message_at: string | null
+          session_id: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_typing_admin?: boolean | null
+          is_typing_customer?: boolean | null
+          last_message_at?: string | null
+          session_id: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_typing_admin?: boolean | null
+          is_typing_customer?: boolean | null
+          last_message_at?: string | null
+          session_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string | null
+          delivered_at: string | null
+          id: string
+          read_at: string | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string

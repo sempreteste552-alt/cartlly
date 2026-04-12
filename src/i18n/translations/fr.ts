@@ -88,6 +88,7 @@ export const fr: TranslationKeys = {
     profit: "Profit Réel",
     analytics: "Analytique",
     whatsappAi: "WhatsApp IA",
+    support: "Support",
     store: "Boutique",
     payments: "Paiements",
     gateway: "Passerelle",
@@ -343,6 +344,7 @@ export const fr: TranslationKeys = {
     promotions: "🏷️ Promotions",
     shippingInfo: "🚚 Livraison",
     placeOrder: "📦 Passer commande",
+    humanSupport: "🎧 Support Humain",
   },
   misc: {
     storeNotFound: "Boutique introuvable",

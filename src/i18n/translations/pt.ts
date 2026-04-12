@@ -91,6 +91,7 @@ export const pt = {
     profit: "Lucro Real",
     analytics: "Analytics Funil",
     whatsappAi: "WhatsApp IA",
+    support: "Suporte",
     store: "Loja",
     payments: "Pagamentos",
     gateway: "Gateway",
@@ -368,6 +369,7 @@ export const pt = {
     promotions: "🏷️ Promoções",
     shippingInfo: "🚚 Frete",
     placeOrder: "📦 Fazer pedido",
+    humanSupport: "🎧 Suporte Humano",
   },
 
   // ─── Misc UI ──────────────────
