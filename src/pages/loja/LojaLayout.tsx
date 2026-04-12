@@ -881,6 +881,39 @@ export default function LojaLayout() {
                 )}
               </div>
             )}
+            <div className="pt-2 pb-1">
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">{t.store.categories}</p>
+              <div className="flex flex-wrap gap-2 px-3 mb-4">
+                {categories?.map((cat, i) => (
+                  <Badge
+                    key={cat.id}
+                    variant="outline"
+                    className="shrink-0 cursor-pointer transition-all px-3 py-1 text-xs"
+                    style={{
+                      opacity: mobileMenu ? 1 : 0,
+                      transform: mobileMenu ? "translateY(0)" : "translateY(10px)",
+                      transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms`,
+                      borderColor: primaryColor,
+                      color: primaryColor,
+                    }}
+                    onClick={() => {
+                      setMobileMenu(false);
+                      const el = document.getElementById(`category-${cat.name}`);
+                      if (el) {
+                        const yOffset = -80;
+                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      } else {
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }
+                    }}
+                  >
+                    {cat.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
             {[
               { icon: Home, label: t.store.home, to: basePath },
               { icon: Package, label: t.sidebar.products, to: basePath },
