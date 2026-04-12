@@ -169,7 +169,7 @@ export const pt = {
     subtotal: "Subtotal",
     notes: "Observações",
     updateStatus: "Atualizar Status",
-    printReceipt: "Imprimir Comprovante",
+    printReceipt: "Imprimir Nota Fiscal",
     whatsappOrder: "Pedido via WhatsApp",
   },
 
