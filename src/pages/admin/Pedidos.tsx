@@ -599,22 +599,31 @@ export default function Pedidos() {
                     generateReceiptPdf({
                       orderId: selectedOrder.id,
                       date: format(new Date(selectedOrder.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR }),
-                      storeName: "Minha Loja",
+                      storeName: storeSettings?.store_name || "Loja",
+                      storeLogoUrl: storeSettings?.logo_url || undefined,
+                      storeAddress: storeSettings?.store_address || undefined,
+                      storePhone: storeSettings?.store_phone || storeSettings?.store_whatsapp || undefined,
                       customerName: selectedOrder.customer_name,
                       customerEmail: selectedOrder.customer_email || undefined,
                       customerPhone: selectedOrder.customer_phone || undefined,
                       customerAddress: selectedOrder.customer_address || undefined,
-                      items: orderItems?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+                      customerCpf: (selectedOrder as any).customer_cpf || undefined,
+                      items: orderItems?.map(i => ({ 
+                        name: i.product_name, 
+                        quantity: i.quantity, 
+                        price: i.unit_price 
+                      })) || [],
                       subtotal,
-                      discount: selectedOrder.discount_amount,
-                      shipping: selectedOrder.shipping_cost,
+                      discount: selectedOrder.discount_amount || 0,
+                      shipping: (selectedOrder as any).shipping_cost || 0,
                       total: selectedOrder.total,
                       paymentMethod: (selectedOrder as any).payments?.[0]?.method || (selectedOrder.whatsapp_order ? "WhatsApp" : "Online"),
+                      notes: selectedOrder.notes || undefined,
                     });
                   }}
                 >
-                  <FileText className="h-4 w-4" />
-                  Comprovante
+                  <Printer className="h-4 w-4" />
+                  Imprimir Nota
                 </Button>
                 <Button
                   variant="secondary"
