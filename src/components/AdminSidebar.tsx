@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useAdminSupportUnreadCount } from "@/hooks/useAdminSupportUnreadCount";
 import { isTenantActive, canAccess } from "@/lib/planPermissions";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -31,6 +32,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
   const { ctx } = useTenantContext();
+  const supportUnreadCount = useAdminSupportUnreadCount();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
   const adminSidebarText = {
@@ -60,7 +62,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.profit, url: "/admin/lucro", icon: DollarSign, isNew: true },
     { title: t.sidebar.analytics, url: "/admin/analytics", icon: BarChart3, isNew: true },
     { title: t.sidebar.whatsappAi, url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
-    { title: t.sidebar.support, url: "/admin/suporte", icon: MessageCircle, isNew: true },
+    { title: t.sidebar.support, url: "/admin/suporte", icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
   ];
 
   const configItems = [
@@ -125,12 +127,24 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg ${isReferral ? "sidebar-referral-item text-primary font-semibold" : ""}`}
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
-                        <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                        <div className="relative">
+                          <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                          {!!item.badgeCount && item.badgeCount > 0 && (
+                            <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
+                              {item.badgeCount > 9 ? "9+" : item.badgeCount}
+                            </span>
+                          )}
+                        </div>
                         {!collapsed && (
-                          <span className="flex items-center gap-2 flex-1">
-                            {item.title}
+                          <span className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="truncate">{item.title}</span>
                             {isReferral && <span className="referral-dot" />}
-                            {item.isNew && (
+                            {!!item.badgeCount && item.badgeCount > 0 && (
+                              <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+                                {item.badgeCount > 99 ? "99+" : item.badgeCount}
+                              </span>
+                            )}
+                            {!item.badgeCount && item.isNew && (
                               <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
                                 {adminSidebarText.new}
                               </span>
