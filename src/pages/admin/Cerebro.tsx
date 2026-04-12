@@ -284,19 +284,21 @@ function AITrainingPanel({ userId }: { userId: string }) {
     }
 
     setIsIngesting(true);
+    const content = newTrainingText;
+    setNewTrainingText("");
+    
     try {
       const { data, error } = await supabase.functions.invoke("ai-memory-manager", {
         body: {
           action: "ingest-tenant",
           tenantId: userId,
-          content: newTrainingText,
+          content: content,
           category: "training"
         }
       });
 
       if (error) throw error;
       toast.success("🧠 Treinamento memorizado com sucesso!");
-      setNewTrainingText("");
       queryClient.invalidateQueries({ queryKey: ["tenant-ai-knowledge-count"] });
     } catch (e: any) {
       toast.error("Erro ao memorizar: " + e.message);
