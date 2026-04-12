@@ -255,7 +255,6 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const authHeader = req.headers.get("Authorization");
     const isAdminCall = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "impossible-key");
 
     if (!isAdminCall) {

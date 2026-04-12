@@ -172,16 +172,45 @@ export default function Suporte() {
       if (error) throw error;
 
       const targetAuthUserId = selectedConversation.customer?.auth_user_id;
+      const pushTitle = storeSettings?.store_name || "Suporte da Loja";
+      const pushBody = body.length > 100 ? body.substring(0, 97) + "..." : body;
+      const pushUrl = storeSettings?.store_slug ? `/loja/${storeSettings.store_slug}?chat=true` : "/";
 
+      // Mirror to tenant_messages for notification bell
       if (targetAuthUserId) {
-        await supabase.functions.invoke("send-push", {
-          body: {
-            title: storeSettings?.store_name || "Suporte da Loja",
-            body: body.length > 100 ? body.substring(0, 97) + "..." : body,
-            targetUserId: targetAuthUserId,
-            url: storeSettings?.store_slug ? `/loja/${storeSettings.store_slug}?chat=true` : "/"
-          }
+        await supabase.from("tenant_messages").insert({
+          source_tenant_id: user.id,
+          target_user_id: targetAuthUserId,
+          target_area: "public_store",
+          audience_type: "tenant_admin_to_one_customer",
+          title: pushTitle,
+          body: pushBody,
+          message_type: "info",
+          status: "sent",
+          channel: "in_app",
+          sender_type: "tenant_admin",
+          sender_user_id: user.id,
+          is_global: false,
+          target_tenant_id: user.id,
         });
+      }
+
+      // Send push notification
+      if (targetAuthUserId) {
+        try {
+          await supabase.functions.invoke("send-push-internal", {
+            body: {
+              target_user_id: targetAuthUserId,
+              title: pushTitle,
+              body: pushBody,
+              url: pushUrl,
+              type: "tenant_message",
+              store_user_id: user.id,
+            }
+          });
+        } catch (e) {
+          console.error("Push notification error:", e);
+        }
       }
 
       return newMsg;
