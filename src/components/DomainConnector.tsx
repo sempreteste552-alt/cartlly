@@ -363,13 +363,13 @@ export default function DomainConnector({
                             {domain.dns_status === 'propagated' ? (
                               <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Configurado</Badge>
                             ) : domain.dns_status === 'failed' ? (
-                              <Badge variant="destructive">Erro de IP</Badge>
+                              <Badge variant="destructive">IP Incorreto</Badge>
                             ) : (
                               <Badge variant="secondary">Não configurado</Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            {domain.dns_status === 'propagated' ? 'Apontamento DNS correto para nossa rede.' : 'Seu domínio ainda não aponta para nossos servidores.'}
+                            {domain.dns_status === 'propagated' ? 'Apontamento DNS correto para nossa rede.' : domain.dns_status === 'failed' ? 'Detectamos um apontamento para o IP errado. Corrija no seu provedor.' : 'Seu domínio ainda não aponta para nossos servidores.'}
                           </p>
                         </div>
 
