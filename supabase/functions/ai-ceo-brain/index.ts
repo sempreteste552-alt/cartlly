@@ -88,6 +88,23 @@ Deno.serve(async (req) => {
 
         const frequentWords = [...new Set(historyTexts.flatMap((text) => tokenizeMeaningful(text)))].slice(0, 60).join(", ") || "nenhuma";
 
+        // Fetch RAG context for the CEO Brain
+        let ragKnowledge: any[] = [];
+        try {
+          const { data: ragRes } = await supabase.functions.invoke("ai-memory-manager", {
+            body: {
+              action: "retrieve-context",
+              tenantId: userId,
+              content: previousMessages.slice(0, 500) // Use recent history as context
+            }
+          });
+          if (ragRes) {
+            ragKnowledge = ragRes.knowledge || [];
+          }
+        } catch (e) {
+          console.warn(`[ai-ceo-brain] RAG failed for ${userId}`, e);
+        }
+
         const brainBlock = aiConfig ? [
           "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
           aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
@@ -98,10 +115,15 @@ Deno.serve(async (req) => {
           aiConfig.emoji_usage ? `EMOJI USAGE / USO DE EMOJIS: ${aiConfig.emoji_usage}` : "",
           aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
           storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+          
+          // Add RAG context
+          ragKnowledge.length > 0 ? `ADDITIONAL RELEVANT TRAINING / TREINAMENTOS RELEVANTES:\n${ragKnowledge.map(k => `[${k.category}] ${k.content}`).join("\n")}` : "",
+
           aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
           "\nCRITICAL HIERARCHY: 1. MERCHANT TRAINING > 2. DATA INSIGHTS > 3. AI OPTIMIZATIONS",
           "If any insight conflicts with the merchant's training above, YOU MUST CORRECT IT."
         ].filter(Boolean).join("\n") : "";
+
 
         const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o "Cérebro CEO", uma inteligência artificial de elite cujo único propósito é fazer os donos de loja ganharem muito dinheiro.
 
