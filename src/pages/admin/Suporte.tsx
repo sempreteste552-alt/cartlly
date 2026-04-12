@@ -79,6 +79,7 @@ export default function Suporte() {
         .from("support_conversations")
         .select(`
           *,
+          customer:customers(name, email, phone),
           messages:support_messages(body, created_at, sender_type, read_at)
         `)
         .eq("tenant_id", user?.id)
