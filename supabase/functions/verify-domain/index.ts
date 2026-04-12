@@ -145,6 +145,8 @@ Deno.serve(async (req) => {
     const dnsResults: any = {
       cname: { found: false, value: null, correct: false },
       txt: { found: false, value: [], correct: false },
+      a_records: [],
+      is_proxied: false,
       conflicts: [],
     };
 
@@ -158,6 +160,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Check A records for proxy detection (especially Cloudflare)
+    const aData = await resolveDns(hostname, "A");
+    if (aData.Answer) {
+      dnsResults.a_records = aData.Answer.filter((r: any) => r.type === 1).map((r: any) => r.data);
+      // Simple Cloudflare IP detection (not exhaustive, but good for common cases)
+      dnsResults.is_proxied = dnsResults.a_records.some((ip: string) => 
+        ip.startsWith("172.67.") || ip.startsWith("104.") || ip.startsWith("188.114.") || ip.startsWith("172.64.")
+      );
+    }
+
     const txtData = await resolveDns(verificationHost, "TXT");
     if (txtData.Answer) {
       const records = txtData.Answer.filter((r: any) => r.type === 16).map((r: any) => normalizeDnsValue(r.data));
@@ -169,7 +181,11 @@ Deno.serve(async (req) => {
     let cfResult = null;
     let sslResult = { ready: false, error: "Aguardando verificação DNS" };
 
-    if (dnsResults.txt.correct || dnsResults.cname.correct) {
+    // Ownership is proven if EITHER CNAME is correct OR TXT is correct
+    // For Cloudflare users with Proxy enabled, CNAME will be false but TXT should be true
+    const ownershipVerified = dnsResults.txt.correct || dnsResults.cname.correct;
+
+    if (ownershipVerified) {
       cfResult = await registerCloudflareCustomHostname(
         hostname, 
         domainRecord.cloudflare_api_token, 
@@ -180,15 +196,18 @@ Deno.serve(async (req) => {
 
     // 5. Calculate Statuses
     const txtStatus = dnsResults.txt.correct ? "verified" : "pending";
-    const dnsStatus = dnsResults.cname.correct ? "propagated" : (dnsResults.cname.found ? "failed" : "pending");
+    
+    // For DNS status, if it's Cloudflare and it's proxied, and ownership is verified, we consider it "propagated"
+    const dnsStatus = dnsResults.cname.correct || (dnsResults.is_proxied && dnsResults.txt.correct) ? "propagated" : (dnsResults.cname.found ? "failed" : "pending");
     
     let sslStatus = "pending";
     if (sslResult.ready) sslStatus = "active";
-    else if (dnsStatus === "propagated" && txtStatus === "verified") sslStatus = "emitting";
+    else if (ownershipVerified) sslStatus = "emitting";
     else if (sslResult.error && !sslResult.error.includes("Aguardando")) sslStatus = "failed";
 
     const finalStatus = sslStatus === "active" ? "active" : 
-                       (sslStatus === "emitting" || (txtStatus === "verified" && dnsStatus === "propagated") ? "pending_ssl" : "pending_dns");
+                       (sslStatus === "emitting" || ownershipVerified ? "pending_ssl" : "pending_dns");
+
 
     const updateData = {
       status: finalStatus,

@@ -391,14 +391,19 @@ export default function DomainConnector({
                               <Badge variant="outline" className="font-mono text-[9px]">Obrigatório</Badge>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-muted/20 p-2 rounded-md border border-border/50">
-                              <div className="sm:col-span-2">
+                              <div className="sm:col-span-3">
                                 <p className="text-[9px] text-muted-foreground">HOST</p>
-                                <p className="text-xs font-mono font-bold">www</p>
+                                <p className="text-xs font-mono font-bold">
+                                  {domain.hostname.split(".").length > 2 
+                                    ? domain.hostname.split(".").slice(0, -2).join(".") 
+                                    : "@"}
+                                </p>
                               </div>
-                              <div className="sm:col-span-8 overflow-hidden">
+                              <div className="sm:col-span-7 overflow-hidden">
                                 <p className="text-[9px] text-muted-foreground">VALOR / DESTINO</p>
                                 <p className="text-xs font-mono truncate">{PLATFORM_EDGE}</p>
                               </div>
+
                               <div className="sm:col-span-2 flex justify-end">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(PLATFORM_EDGE, `cname-${domain.id}`)}>
                                   {copied === `cname-${domain.id}` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
@@ -414,10 +419,15 @@ export default function DomainConnector({
                               <Badge variant="outline" className="font-mono text-[9px]">Obrigatório</Badge>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-muted/20 p-2 rounded-md border border-border/50">
-                              <div className="sm:col-span-2">
+                              <div className="sm:col-span-3">
                                 <p className="text-[9px] text-muted-foreground">HOST</p>
-                                <p className="text-xs font-mono font-bold">_lovable</p>
+                                <p className="text-xs font-mono font-bold">
+                                  {domain.hostname.split(".").length > 2 && !domain.hostname.startsWith("www.")
+                                    ? `_lovable.${domain.hostname.split(".").slice(0, -2).join(".")}`
+                                    : "_lovable"}
+                                </p>
                               </div>
+
                               <div className="sm:col-span-8 overflow-hidden">
                                 <p className="text-[9px] text-muted-foreground">VALOR</p>
                                 <p className="text-xs font-mono truncate">{domain.verification_token}</p>
