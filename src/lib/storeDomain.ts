@@ -10,17 +10,28 @@ export function normalizeDomain(value?: string | null) {
 
 export function isPlatformHost(hostname?: string | null) {
   const host = (hostname || "").toLowerCase();
+  
+  // Hardcoded platform domains
+  const platformDomains = [
+    "localhost",
+    "127.0.0.1",
+    "cartlly.com",
+    "www.cartlly.com",
+    "cartlly.com.br",
+    "www.cartlly.com.br",
+    "cartlly.lovable.app"
+  ];
+
+  if (platformDomains.includes(host)) return true;
+
+  // Lovable subdomains
   return (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
     host.endsWith(".lovable.app") ||
     host.endsWith(".lovableproject.com") ||
-    host === "cartlly.com" ||
-    host === "www.cartlly.com" ||
-    host === "cartlly.com.br" ||
-    host === "www.cartlly.com.br"
+    host.endsWith(".lovable.dev")
   );
 }
+
 
 export function getStoreBasePath(slug?: string | null) {
   return slug ? `/loja/${slug}` : "";
