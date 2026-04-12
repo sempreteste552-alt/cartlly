@@ -37,9 +37,10 @@ interface StorefrontAIChatProps {
   aiName?: string;
   aiAvatarUrl?: string;
   primaryColor?: string;
+  isPremium?: boolean;
 }
 
-export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor }: StorefrontAIChatProps) {
+export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium }: StorefrontAIChatProps) {
   const { locale } = useTranslation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -48,7 +49,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [whatsappRedirect, setWhatsappRedirect] = useState<{ phone: string; summary: string } | null>(null);
   
-  const [isHumanMode, setIsHumanMode] = useState(false);
+  const [isHumanMode, setIsHumanMode] = useState(!isPremium);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sessionId] = useState(() => {
     let id = localStorage.getItem("chat_session_id");
@@ -331,7 +332,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     { label: uiText.quickPromos, prompt: uiText.quickPromosPrompt },
     { label: uiText.quickShipping, prompt: uiText.quickShippingPrompt },
     { label: uiText.quickOrder, prompt: uiText.quickOrderPrompt },
-    { label: uiText.humanSupport, action: () => setIsHumanMode(true) },
+    ...(isPremium ? [{ label: uiText.humanSupport, action: () => setIsHumanMode(true) }] : []),
   ];
 
   if (!open) {
@@ -367,7 +368,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           </div>
         </div>
         <div className="flex gap-1">
-          {isHumanMode && (
+          {isHumanMode && isPremium && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => { setIsHumanMode(false); setMessages([]); }}>
               <Bot className="h-4 w-4" />
             </Button>

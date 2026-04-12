@@ -1244,17 +1244,18 @@ export default function LojaLayout() {
           </div>
         </nav>
 
-        {settings?.user_id && (settings as any).is_premium_plan && (
+        {settings?.user_id && ((settings as any).is_premium_plan || (settings as any).is_pro_plan) && (
           <StorefrontAIChat
             storeUserId={settings.user_id}
             storeName={settings.store_name || storeText.defaultStore}
             aiName={(settings as any).ai_name}
             aiAvatarUrl={(settings as any).ai_avatar_url}
             primaryColor={settings.primary_color}
+            isPremium={(settings as any).is_premium_plan}
           />
         )}
 
-        {settings?.store_whatsapp && (
+        {settings?.store_whatsapp && (settings as any).is_pro_plan && (
           <a
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
             target="_blank"

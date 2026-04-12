@@ -59,7 +59,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   manage_products:      { label: "Gerenciar Produtos", description: "Cadastrar e editar produtos", minPlan: "FREE", category: "basic" },
   manage_categories:    { label: "Categorias", description: "Organizar produtos por categorias", minPlan: "FREE", category: "basic" },
   manage_orders:        { label: "Gerenciar Pedidos", description: "Visualizar e gerenciar pedidos", minPlan: "FREE", category: "basic" },
-  whatsapp_sales:       { label: "Atendimento via WhatsApp", description: "Atendimento ao cliente via WhatsApp", minPlan: "FREE", category: "basic" },
+  whatsapp_sales:       { label: "Atendimento via WhatsApp", description: "Atendimento ao cliente via WhatsApp", minPlan: "PRO", category: "basic" },
   analytics_basic:      { label: "Analytics Básico", description: "Métricas simples da loja", minPlan: "FREE", category: "basic" },
 
   // STARTER
