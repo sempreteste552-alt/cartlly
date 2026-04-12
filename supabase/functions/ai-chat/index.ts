@@ -154,8 +154,8 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 [ACTION_SUBSCRIBE]{"plan_id": "UUID_DO_PLANO", "plan_name": "NOME_DO_PLANO", "document": "CPF_OU_CNPJ_SOMENTE_NUMEROS"}[/ACTION_SUBSCRIBE]
 
 4. Atualizar produto:
-   - Use `original_price` para o preço De (antes do desconto).
-   - Use `price` para o preço Por (preço atual de venda).
+   - Use 'original_price' para o preço De (antes do desconto).
+   - Use 'price' para o preço Por (preço atual de venda).
    - Se o lojista pedir desconto de X%, calcule os valores e envie ambos.
 [ACTION_UPDATE_PRODUCT]{"product_id": "ID_CURTO_DO_PRODUTO", "product_name": "NOME_EXATO_DO_PRODUTO", "updates": {"price": 99.90, "original_price": 120.00, "stock": 50, "stock_delta": -2, "name": "Novo Nome", "description": "Nova descrição", "published": true}}[/ACTION_UPDATE_PRODUCT]
 
