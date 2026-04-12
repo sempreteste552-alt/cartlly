@@ -3604,6 +3604,55 @@ export type Database = {
           },
         ]
       }
+      store_domains_public: {
+        Row: {
+          hostname: string | null
+          id: string | null
+          is_primary: boolean | null
+          is_published: boolean | null
+          status: string | null
+          store_id: string | null
+        }
+        Insert: {
+          hostname?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          is_published?: boolean | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Update: {
+          hostname?: string | null
+          id?: string | null
+          is_primary?: boolean | null
+          is_published?: boolean | null
+          status?: string | null
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_domains_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_settings_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_marketing_config_public: {
         Row: {
           announcement_bar_bg_color: string | null
