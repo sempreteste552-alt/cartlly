@@ -623,9 +623,10 @@ export function AIChatWidget() {
           .eq("hostname", cleanDomain)
           .single();
 
+        const verifyToken = newDomainData?.verification_token || settings.id || "(token pendente)";
         setMessages(prev => [...prev, { 
           role: "assistant", 
-          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nAgora você precisa configurar os registros DNS no seu provedor:\n\n1. **Tipo: CNAME**\n   Nome/Host: **www**\n   Valor/Destino: **www.cartlly.lovable.app**\n\n2. **Tipo: TXT**\n   Nome/Host: **_lovable-verification**\n   Valor: \`${newDomainData?.verification_token || "(aguarde a geração do token)"}\`\n\nApós configurar, clique em verificar no painel de domínios ou me peça para verificar!` 
+          content: `✅ **Domínio ${cleanDomain} adicionado com sucesso!**\n\nAgora configure os seguintes registros DNS no painel do seu provedor:\n\n📋 **Registros DNS necessários:**\n\n| Tipo | Nome/Host | Valor |\n|------|-----------|-------|\n| **CNAME** | www | www.cartlly.lovable.app |\n| **A** | @ | 185.158.133.1 |\n| **TXT** | _lovable | lovable_verify=${verifyToken} |\n\n**📖 Passo a passo:**\n1. Acesse o painel do seu provedor de domínio (Registro.br, GoDaddy, Hostinger, Cloudflare, etc)\n2. Vá em **"Gerenciar DNS"** ou **"Zona DNS"**\n3. Adicione cada registro acima exatamente como indicado\n4. Se já existir um registro CNAME ou A para www ou @, **edite-o**\n5. Salve as alterações\n6. Aguarde a propagação (5 min a 24h)\n7. Quando terminar, me avise aqui que eu verifico! 🔍\n\n⚠️ **Se usar Cloudflare**, deixe a nuvem **cinza** (DNS only, sem proxy).` 
         }]);
       } else if (action.type === "domain_verify") {
         if (!settings?.id) throw new Error("Configurações da loja não encontradas.");
