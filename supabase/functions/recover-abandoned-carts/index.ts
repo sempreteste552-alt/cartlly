@@ -5,6 +5,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Get current time in Brasília (UTC-3) */
+function getNowBrasilia() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  return new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -1270,32 +1297,7 @@ Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}`;
 
-/** Get current time in Brasília (UTC-3) */
-function getNowBrasilia() {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(now);
-  const d: any = {};
-  parts.forEach(({ type, value }) => { d[type] = value; });
-  
-  return new Date(
-    parseInt(d.year),
-    parseInt(d.month) - 1,
-    parseInt(d.day),
-    parseInt(d.hour),
-    parseInt(d.minute),
-    parseInt(d.second)
-  );
-}
+// getNowBrasilia moved to top level
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;
