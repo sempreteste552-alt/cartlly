@@ -233,6 +233,60 @@ function AITrainingPanel({ userId }: { userId: string }) {
   const [emojiUsage, setEmojiUsage] = useState("");
   const [persuasionStyle, setPersuasionStyle] = useState("");
   const [brandIdentity, setBrandIdentity] = useState("");
+  const [newTrainingText, setNewTrainingText] = useState("");
+  const [isIngesting, setIsIngesting] = useState(false);
+  
+  const { data: knowledgeCount = 0 } = useQuery({
+    queryKey: ["tenant-ai-knowledge-count", userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tenant_ai_knowledge")
+        .select("*", { count: 'exact', head: true })
+        .eq("tenant_id", userId);
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const { data: insightsCount = 0 } = useQuery({
+    queryKey: ["customer-ai-insights-count", userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("customer_ai_insights")
+        .select("*", { count: 'exact', head: true })
+        .eq("tenant_id", userId);
+      if (error) throw error;
+      return count || 0;
+    }
+  });
+
+  const handleIngestTraining = async () => {
+    if (!newTrainingText.trim()) {
+      toast.error("Digite o texto do treinamento");
+      return;
+    }
+
+    setIsIngesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-memory-manager", {
+        body: {
+          action: "ingest-tenant",
+          tenantId: userId,
+          content: newTrainingText,
+          category: "training"
+        }
+      });
+
+      if (error) throw error;
+      toast.success("🧠 Treinamento memorizado com sucesso!");
+      setNewTrainingText("");
+      queryClient.invalidateQueries({ queryKey: ["tenant-ai-knowledge-count"] });
+    } catch (e: any) {
+      toast.error("Erro ao memorizar: " + e.message);
+    } finally {
+      setIsIngesting(false);
+    }
+  };
 
   useEffect(() => {
     if (config) {
