@@ -81,8 +81,8 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   const startUrl = options.startUrl || currentPath;
   const scope = options.scope || currentPath;
   const manifestId = options.id || startUrl;
-  const appName = options.name || "Cartlly - Sua Loja Online";
-  const shortName = options.shortName || appName.slice(0, 12) || "Cartlly";
+  const appName = options.name || "MSK Telemarketing - Sua Loja Online";
+  const shortName = options.shortName || appName.slice(0, 12) || "MSK Telemarketing";
   const resolvedIconUrl = options.iconUrl
     ? withCacheBust(options.iconUrl, options.iconVersion)
     : undefined;

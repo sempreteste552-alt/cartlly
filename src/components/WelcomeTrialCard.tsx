@@ -77,7 +77,7 @@ export function WelcomeTrialCard() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-bold text-foreground">🎉 Bem-vindo ao Cartlly!</h2>
+              <h2 className="text-lg font-bold text-foreground">🎉 Bem-vindo ao MSK Telemarketing!</h2>
               <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] border-0 shadow-sm">
                 <Sparkles className="h-3 w-3 mr-1" /> PREMIUM
               </Badge>

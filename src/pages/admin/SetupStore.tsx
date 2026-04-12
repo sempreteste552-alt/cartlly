@@ -149,7 +149,7 @@ export default function SetupStore() {
         </div>
         <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardHeader className="text-center space-y-4 pt-8">
-            <img src={cartlyLogo} alt="Cartly" className="mx-auto h-20 w-auto drop-shadow-lg" />
+            <img src={cartlyLogo} alt="MSK Telemarketing" className="mx-auto h-20 w-auto drop-shadow-lg" />
             <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
               Configure sua Loja
             </CardTitle>
