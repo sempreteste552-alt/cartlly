@@ -588,7 +588,7 @@ Deno.serve(async (req) => {
     // ========== LOAD TENANT AI BRAIN CONFIG (per store) ==========
     const { data: allAiConfigs } = await supabase
       .from("tenant_ai_brain_config")
-      .select("user_id, niche, personality, store_knowledge, custom_instructions")
+      .select("user_id, niche, personality, store_knowledge, custom_instructions, tone_of_voice, writing_style, approach_type, sending_rules, approved_examples, prohibitions, language_preferences, formality_level, emoji_usage, persuasion_style, brand_identity")
       .in("user_id", allStoreUserIds.length > 0 ? allStoreUserIds : ["00000000-0000-0000-0000-000000000000"]);
     
     const tenantAiConfigMap = new Map<string, any>();
