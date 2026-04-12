@@ -26,11 +26,12 @@ export function isPlatformHost(hostname?: string | null) {
 
   if (platformDomains.includes(host)) return true;
 
-  // Lovable subdomains
+  // Platform-specific subdomains
   return (
     host.endsWith(".lovable.app") ||
     host.endsWith(".lovableproject.com") ||
-    host.endsWith(".lovable.dev")
+    host.endsWith(".lovable.dev") ||
+    host.endsWith(".msktelemarkting.shop")
   );
 }
 
