@@ -162,6 +162,7 @@ const App = () => {
                     <Route path="lucro" element={<Lucro />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="whatsapp-ia" element={<WhatsAppIA />} />
+                    <Route path="suporte" element={<Suporte />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
