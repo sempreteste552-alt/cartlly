@@ -104,7 +104,7 @@ serve(async (req) => {
 
     const { data: aiConfig } = await supabase
       .from("tenant_ai_brain_config")
-      .select("custom_instructions, niche, personality, store_knowledge")
+      .select("custom_instructions, niche, personality, store_knowledge, tone_of_voice, writing_style, approach_type, sending_rules, approved_examples, prohibitions, language_preferences, formality_level, emoji_usage, persuasion_style, brand_identity")
       .eq("user_id", user_id)
       .maybeSingle();
     const customInstructions = aiConfig?.custom_instructions || "";
