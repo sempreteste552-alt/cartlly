@@ -736,7 +736,55 @@ function GeneralSettingsTab() {
         </CardContent>
       </Card>
 
-      {/* Domain & Favicon moved to "Domínio" tab */}
+      {/* Favicon Upload */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Image className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Favicon</CardTitle>
+          </div>
+          <CardDescription>Ícone exibido na aba do navegador da sua loja</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {faviconUrl && (
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+              <img src={faviconUrl} alt="Favicon" className="h-8 w-8 rounded object-contain" />
+              <span className="text-xs text-muted-foreground truncate flex-1">{faviconUrl.split("/").pop()}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                const oldUrl = faviconUrl;
+                setFaviconUrl("");
+                if (settings) {
+                  if (oldUrl) {
+                    const oldPath = oldUrl.split("/store-assets/")[1];
+                    if (oldPath) {
+                      await supabase.storage.from("store-assets").remove([decodeURIComponent(oldPath)]);
+                    }
+                  }
+                  await supabase.from("store_settings").update({ favicon_url: null } as any).eq("id", settings.id);
+                  queryClient.invalidateQueries({ queryKey: ["store_settings"] });
+                  toast.success("Favicon removido!");
+                }
+              }}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <input
+              ref={faviconFileRef}
+              type="file"
+              accept="image/png,image/x-icon,image/svg+xml,image/jpeg"
+              className="hidden"
+              onChange={handleFaviconUpload}
+            />
+            <Button variant="outline" size="sm" onClick={() => faviconFileRef.current?.click()} disabled={uploadingFavicon}>
+              {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+              {faviconUrl ? "Alterar Favicon" : "Enviar Favicon"}
+            </Button>
+            <span className="text-xs text-muted-foreground">PNG, ICO ou SVG (máx. 512KB)</span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Welcome Coupon */}
       <LockedFeature isLocked={!canAccess("coupons", ctx)} featureName="Cupom de Boas-Vindas">
