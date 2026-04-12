@@ -81,7 +81,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                 fontFamily: "var(--store-font-body)"
               }}
             >
-              <div className="aspect-square overflow-hidden bg-muted">
+              <div className="aspect-square overflow-hidden bg-muted relative">
                 {product.image_url ? (
                   <img
                     src={product.image_url}
@@ -90,6 +90,13 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><span className="text-2xl">📦</span></div>
+                )}
+                
+                {/* Discount Badge */}
+                {product.original_price && product.original_price > product.price && (
+                  <div className="absolute top-2 right-2 bg-destructive text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10 animate-in fade-in zoom-in duration-300">
+                    {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
+                  </div>
                 )}
               </div>
               <div className="p-3">
@@ -100,9 +107,16 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                     <span>{product.views || 0}</span>
                   </div>
                 </div>
-                <p className="text-lg font-bold" style={{ color: primaryColor }}>
-                  {formatPrice(product.price)}
-                </p>
+                <div className="flex flex-wrap items-baseline gap-1.5">
+                  <p className="text-lg font-bold" style={{ color: primaryColor }}>
+                    {formatPrice(product.price)}
+                  </p>
+                  {product.original_price && product.original_price > product.price && (
+                    <p className="text-xs text-muted-foreground line-through opacity-70">
+                      {formatPrice(product.original_price)}
+                    </p>
+                  )}
+                </div>
                 <Button
                   className="w-full mt-2 transition-transform active:scale-95 text-[10px] xs:text-xs px-2 whitespace-nowrap"
                   size="sm"
