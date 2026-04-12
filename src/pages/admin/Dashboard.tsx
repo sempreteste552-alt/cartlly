@@ -60,6 +60,12 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { data: settings } = useStoreSettings();
+  const storeUrl = buildStoreUrl({
+    slug: settings?.store_slug,
+    customDomain: settings?.custom_domain,
+    domainStatus: settings?.domain_status,
+  });
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const { ctx } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
