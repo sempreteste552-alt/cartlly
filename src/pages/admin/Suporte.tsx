@@ -293,6 +293,15 @@ export default function Suporte() {
     },
     onMutate: async (body) => {
       if (!selectedConversation) return;
+
+      // Reset typing status immediately on send
+      setIsAdminTyping(false);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      supabase
+        .from("support_conversations")
+        .update({ is_typing_admin: false, updated_at: new Date().toISOString() })
+        .eq("id", selectedConversation.id)
+        .then();
       
       const optimisticMsg: Message = {
         id: `temp-${Date.now()}`,
