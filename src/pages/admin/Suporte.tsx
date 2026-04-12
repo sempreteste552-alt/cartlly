@@ -242,8 +242,15 @@ export default function Suporte() {
                       {format(new Date(conv.last_message_at), "HH:mm", { locale: ptBR })}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
+                  <p className={`text-xs truncate ${conv.unread_count > 0 ? "font-bold text-foreground" : "text-muted-foreground"}`}>
+                    {conv.last_message}
+                  </p>
                 </div>
+                {conv.unread_count > 0 && (
+                  <span className="h-5 w-5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
+                    {conv.unread_count}
+                  </span>
+                )}
                 {conv.is_typing_customer && (
                   <span className="text-[10px] text-primary animate-pulse font-medium">Digitando...</span>
                 )}
