@@ -677,7 +677,7 @@ export default function LojaCheckout() {
                 {(orderId?.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32)}
               </p>
               <p className="text-[9px] text-zinc-400 uppercase tracking-widest pt-2 opacity-50">
-                Comprovante gerado eletronicamente
+                Nota Fiscal gerada eletronicamente
               </p>
             </div>
           </div>
