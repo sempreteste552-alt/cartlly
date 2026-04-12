@@ -420,10 +420,10 @@ export default function DomainConnector({
                               </div>
                               <div className="sm:col-span-8 overflow-hidden">
                                 <p className="text-[9px] text-muted-foreground">VALOR</p>
-                                <p className="text-xs font-mono truncate">lovable_verify={domain.verification_token}</p>
+                                <p className="text-xs font-mono truncate">{domain.verification_token}</p>
                               </div>
                               <div className="sm:col-span-2 flex justify-end">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(`lovable_verify=${domain.verification_token}`, `txt-${domain.id}`)}>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(domain.verification_token, `txt-${domain.id}`)}>
                                   {copied === `txt-${domain.id}` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
                                 </Button>
                               </div>
