@@ -127,6 +127,8 @@ DADOS DA LOJA:
 - Venda via WhatsApp: ${storeContext?.sellViaWhatsapp ? "Sim" : "Não"}
 - PIX: ${storeContext?.paymentPix ? "Sim" : "Não"}
 - Cartão: ${storeContext?.paymentCreditCard ? "Sim" : "Não"}
+- Domínios: ${storeContext?.domains?.map((d: any) => `${d.hostname} (${d.status})`).join(", ") || "Nenhum"}
+- Domínio Principal: ${storeContext?.primaryDomain || "Nenhum"}
 
 IMPORTANTE SOBRE MÉTRICAS:
 - "Faturamento" e "Receita" = APENAS pedidos aprovados (não inclui cancelados, recusados ou expirados)
@@ -192,6 +194,12 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
 7. Agendar lembrete para o dono:
 [ACTION_REMINDER]{"title": "Lembrete", "body": "Descrição do que lembrar", "scheduled_at": "ISO_TIMESTAMP"}[/ACTION_REMINDER]
+
+8. Conectar um domínio:
+   - Se o lojista enviar um domínio (ex: minhaloja.com.br), verifique se ele já está conectado.
+   - Se não estiver, peça confirmação para conectar.
+   - Gere a ação para iniciar o processo de conexão.
+[ACTION_DOMAIN_CONNECT]{"domain": "www.minhaloja.com.br"}[/ACTION_DOMAIN_CONNECT]
 
 REGRAS CRÍTICAS:
 - Responda sempre em português do Brasil.
