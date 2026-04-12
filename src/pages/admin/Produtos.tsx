@@ -53,7 +53,7 @@ export default function Produtos() {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [aiImportOpen, setAiImportOpen] = useState(false);
-  const [variantsProductId, setVariantsProductId] = setVariantsProductId] = useState<string | null>(null);
+  const [variantsProductId, setVariantsProductId] = useState<string | null>(null);
   const { data: settings } = useStoreSettings();
 
   const getProductUrl = (product: any) => buildStoreUrl({
