@@ -455,17 +455,8 @@ export default function DomainConnector({
                           </p>
                         </div>
                       </div>
-                    </div>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(`lovable_verify=${domain.verification_token || settingsId}`, `${domain.id}-txt`)}>
-                                  {copied === `${domain.id}-txt` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
-                                </Button>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
 
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-4">
                         <Button
                           variant="default"
                           className="flex-1"
@@ -473,7 +464,7 @@ export default function DomainConnector({
                           disabled={verifyingId === domain.id}
                         >
                           {verifyingId === domain.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                          Verificar Configurações
+                          Atualizar Status
                         </Button>
                         {!domain.is_primary && domain.status === 'active' && (
                           <Button
@@ -483,18 +474,6 @@ export default function DomainConnector({
                           >
                             <Star className="h-4 w-4 mr-2" />
                             Definir como Principal
-                          </Button>
-                        )}
-                        {domain.status === 'active' && (
-                          <Button
-                            variant="secondary"
-                            className="flex-1"
-                            asChild
-                          >
-                            <a href={`https://${domain.hostname}`} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Abrir Loja
-                            </a>
                           </Button>
                         )}
                       </div>
