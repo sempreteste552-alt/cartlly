@@ -105,12 +105,36 @@ serve(async (req) => {
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
-    // Add current time context
+    // Add current time context with robust Brasilia time calculation
     const now = new Date();
-    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
-    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
-    const hourBr = parseInt(brTime.split(":")[0]);
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    const formatter = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "numeric",
+      minute: "numeric",
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+      hour12: false,
+      weekday: "long",
+    });
+    const parts = formatter.formatToParts(now);
+    const d: any = {};
+    parts.forEach(({ type, value }) => { d[type] = value; });
+    
+    const hour = d.hour.padStart(2, "0");
+    const minute = d.minute.padStart(2, "0");
+    const day = d.day.padStart(2, "0");
+    const month = d.month.padStart(2, "0");
+    const year = d.year;
+    const weekday = d.weekday;
+    
+    const brTime = `${hour}:${minute}`;
+    const brDate = `${day}/${month}/${year}`;
+    const hourBr = parseInt(hour);
+    const greetingBr = hourBr < 6 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    
+    console.log(`[ai-chat] Contexto temporal: ${brTime} (${weekday}), ${brDate}. UTC: ${now.toISOString()}`);
+
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
