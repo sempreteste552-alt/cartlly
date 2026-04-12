@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Send, User, Check, CheckCheck, MessageSquare, ArrowLeft, Phone, MoreVertical } from "lucide-react";
@@ -66,12 +67,14 @@ export default function Suporte() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSelectedConvRef = useRef<string | null>(null);
 
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ["support_conversations", user?.id],
@@ -335,6 +338,20 @@ export default function Suporte() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-select conversation from URL params (e.g. ?conv=xxx)
+  useEffect(() => {
+    const convId = searchParams.get("conv");
+    if (convId && conversations && conversations.length > 0 && autoSelectedConvRef.current !== convId) {
+      const found = conversations.find(c => c.id === convId);
+      if (found) {
+        setSelectedConversation(found);
+        autoSelectedConvRef.current = convId;
+        searchParams.delete("conv");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [searchParams, conversations, setSearchParams]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
