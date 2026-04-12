@@ -66,7 +66,7 @@ serve(async (req) => {
             body: {
               target_user_id: task.user_id,
               title: task.payload.title,
-              body: task.payload.body,
+              body: task.payload.body || task.payload.description || "",
               type: "ceo_insight",
               store_user_id: task.user_id
             }
