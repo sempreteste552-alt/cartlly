@@ -809,7 +809,7 @@ export function AIChatWidget() {
 
   return (
     <>
-      <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 w-full sm:w-[400px] h-full sm:h-[560px] sm:max-h-[560px] flex flex-col sm:rounded-2xl border-0 sm:border border-border bg-card shadow-2xl overflow-hidden">
+      <div className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 w-full sm:w-[400px] h-[100dvh] sm:h-[560px] sm:max-h-[560px] flex flex-col sm:rounded-2xl border-0 sm:border border-border bg-card shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
           <div className="flex items-center gap-3">
@@ -1002,7 +1002,7 @@ export function AIChatWidget() {
 
         {/* Footer with Input */}
         {!aiLocked && (
-        <div className="p-3 bg-card border-t border-border">
+        <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-card border-t border-border">
           {pendingImages.length > 0 && !voiceRecorder.isRecording && (
             <div className="flex flex-wrap gap-2 mb-3">
               {pendingImages.map((img, idx) => (

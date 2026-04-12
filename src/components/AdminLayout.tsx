@@ -28,8 +28,11 @@ import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { isLocale, useTranslation } from "@/i18n";
+import { useLocation } from "react-router-dom";
 
 export function AdminLayout() {
+  const location = useLocation();
+  const isCerebroPage = location.pathname === "/admin/cerebro";
   const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
@@ -220,8 +223,8 @@ export function AdminLayout() {
             <Outlet />
           </main>
         </div>
-        <WhatsAppSupportBubble />
-        <AIChatWidget />
+        {!isCerebroPage && <WhatsAppSupportBubble />}
+        {!isCerebroPage && <AIChatWidget />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>

@@ -118,7 +118,7 @@ function ChatPanel({ chatHistory, sendMessage, pendingActions, confirmAction, in
   input: string; setInput: (v: string) => void; handleSend: () => void; scrollRef: React.RefObject<HTMLDivElement>;
 }) {
   return (
-    <Card className="flex flex-col border-primary/20 bg-primary/5" style={{ height: "min(70vh, 500px)" }}>
+    <Card className="flex flex-col border-primary/20 bg-primary/5 h-[450px] sm:h-[500px]">
       <CardHeader className="py-2 border-b bg-card">
         <CardTitle className="text-sm flex items-center gap-2">
           <Bot className="h-4 w-4 text-primary" /> Conversa com Gerente IA
