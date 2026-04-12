@@ -969,7 +969,9 @@ export default function Cerebro() {
 
   const handleSend = () => {
     if (!input.trim() || sendMessage.isPending) return;
-    sendMessage.mutate(input);
+    const content = input;
+    setInput("");
+    sendMessage.mutate(content);
   };
 
   return (
