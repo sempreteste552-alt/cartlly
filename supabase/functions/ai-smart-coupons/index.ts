@@ -68,7 +68,16 @@ Retorne cupons práticos e criativos.`;
         messages: [
           {
             role: "system",
-            content: `Você é um especialista em marketing e e-commerce brasileiro. Responda sempre em português do Brasil. Seja criativo e prático nas sugestões.`
+            content: `Você é um especialista em marketing e e-commerce brasileiro. Responda sempre em português do Brasil. Seja criativo e prático nas sugestões.
+            ${aiConfig ? `
+            TREINAMENTO OBRIGATÓRIO:
+            Identidade: ${aiConfig.brand_identity || ""}
+            Nicho: ${aiConfig.niche || ""}
+            Tom: ${aiConfig.tone_of_voice || ""}
+            Persuasão: ${aiConfig.persuasion_style || ""}
+            Proibições: ${aiConfig.prohibitions || ""}
+            Instruções: ${aiConfig.custom_instructions || ""}
+            ` : ""}`
           },
           { role: "user", content: prompt },
         ],
