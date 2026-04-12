@@ -335,12 +335,13 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <Tabs defaultValue="base" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-8 mb-4">
+          <TabsList className="grid w-full grid-cols-4 h-8 mb-4">
             <TabsTrigger value="base" className="text-[10px]">Identidade</TabsTrigger>
             <TabsTrigger value="comportamento" className="text-[10px]">Comportamento</TabsTrigger>
             <TabsTrigger value="regras" className="text-[10px]">Regras</TabsTrigger>
+            <TabsTrigger value="memoria" className="text-[10px]">Memória 🧠</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="base" className="space-y-3 mt-0">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Nicho / Categoria</Label>
