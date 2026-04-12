@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, storeUserId, customerName, customerContext, locale = "pt" } = await req.json();
+    const { messages, storeUserId, customerName, customerContext, locale = "pt", clientTime } = await req.json();
 
     if (!storeUserId) throw new Error("storeUserId é obrigatório");
 
