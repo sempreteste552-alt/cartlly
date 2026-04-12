@@ -169,7 +169,18 @@ Forneça:
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: `${systemPrompt}
+            ${aiConfig ? `
+            TREINAMENTO OBRIGATÓRIO:
+            Identidade: ${aiConfig.brand_identity || ""}
+            Nicho: ${aiConfig.niche || ""}
+            Tom: ${aiConfig.tone_of_voice || ""}
+            Escrita: ${aiConfig.writing_style || ""}
+            Persuasão: ${aiConfig.persuasion_style || ""}
+            Proibições: ${aiConfig.prohibitions || ""}
+            Instruções: ${aiConfig.custom_instructions || ""}
+            ` : ""}`
+          },
           { role: "user", content: userContent },
         ],
         tools: [toolDef],
