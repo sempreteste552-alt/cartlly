@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts } from "@/hooks/usePublicStore";
+import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts, usePublicProductVariants } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
 import { useLojaContext } from "./LojaLayout";
@@ -48,6 +48,7 @@ export default function LojaHome() {
   const { data: ratings } = useAllProductReviews(productIds);
   const { data: productImagesMap } = usePublicProductImages(productIds);
   const { data: bestSellers } = useBestSellingProducts(storeUserId);
+  const { data: productVariantsMap } = usePublicProductVariants(productIds);
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
   const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
 
@@ -68,15 +69,46 @@ export default function LojaHome() {
   const filtered = useMemo(() => {
     if (!products) return [];
     let result = products;
+
+    // Filter by categories (comma-separated IDs)
     if (categoriaParam) {
-      result = result.filter((p) => p.category_id === categoriaParam);
+      const selectedCats = categoriaParam.split(",");
+      result = result.filter((p) => selectedCats.includes(p.category_id));
     }
+
+    // Filter by searchTerm
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
     }
+
+    // Filter by price range
+    const minP = searchParams.get("min_price");
+    const maxP = searchParams.get("max_price");
+    if (minP) result = result.filter((p) => p.price >= Number(minP));
+    if (maxP) result = result.filter((p) => p.price <= Number(maxP));
+
+    // Filter by variants: v_Cor=Preto,Branco&v_Tamanho=P,M
+    const variantFilters: Record<string, string[]> = {};
+    searchParams.forEach((val, key) => {
+      if (key.startsWith("v_")) {
+        variantFilters[key.replace("v_", "")] = val.split(",");
+      }
+    });
+
+    if (Object.keys(variantFilters).length > 0 && productVariantsMap) {
+      result = result.filter((p) => {
+        const productVariants = productVariantsMap[p.id] || [];
+        // All filters must be satisfied
+        return Object.entries(variantFilters).every(([type, values]) => {
+          // If a product has ANY variant that matches ONE of the selected values for this type
+          return productVariants.some(v => v.variant_type === type && values.includes(v.variant_value));
+        });
+      });
+    }
+
     return result;
-  }, [products, searchTerm, categoriaParam]);
+  }, [products, searchTerm, categoriaParam, searchParams, productVariantsMap]);
 
   const groupedByCategory = useMemo(() => {
     if (!filtered.length) return {};
@@ -114,13 +146,15 @@ export default function LojaHome() {
 
   return (
     <div className="space-y-6">
-      {categoriaParam && activeCategoryName && (
-        <div className="max-w-7xl mx-auto px-4 pt-4 flex items-center gap-2">
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            {activeCategoryName}
-          </Badge>
+      {(categoriaParam || searchParams.has("min_price") || searchParams.has("max_price") || Array.from(searchParams.keys()).some(k => k.startsWith("v_"))) && (
+        <div className="max-w-7xl mx-auto px-4 pt-4 flex flex-wrap items-center gap-2">
+          {activeCategoryName && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {activeCategoryName}
+            </Badge>
+          )}
           <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSearchParams({})}>
-            ✕ {locale === "pt" ? "Limpar filtro" : locale === "en" ? "Clear filter" : locale === "es" ? "Limpiar filtro" : "Effacer le filtre"}
+            ✕ {locale === "pt" ? "Limpar filtros" : locale === "en" ? "Clear filters" : locale === "es" ? "Limpiar filtros" : "Effacer les filtres"}
           </Button>
         </div>
       )}
@@ -149,7 +183,7 @@ export default function LojaHome() {
         </>
       )}
 
-      {!searchTerm.trim() && categories && categories.length > 0 && (
+      {categories && categories.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 mt-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (

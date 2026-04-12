@@ -9,8 +9,9 @@ import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/c
 import { RestockAlertCard } from "@/components/storefront/RestockAlertCard";
 import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
+import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -279,6 +280,7 @@ export default function LojaLayout() {
   const settings = settingsBySlug;
   const isLoading = slugLoading;
   const { data: smartSearchProducts } = usePublicProducts(settings?.user_id);
+  const { data: categories } = usePublicCategories(settings?.user_id);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
   const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
@@ -314,6 +316,7 @@ export default function LojaLayout() {
   const hasShippingZones = (shippingZonesData?.length ?? 0) > 0;
   const localizedStoreDescription = useLocalizedText(settings?.store_description);
   const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
+  const localizedCategoryNames = useLocalizedTextList(categories?.map((c) => c.name) || []);
 
   const storeInstallName = settings?.store_name?.trim()
     || slug
@@ -682,15 +685,20 @@ export default function LojaLayout() {
               </div>
             </Link>
 
-            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-3">
+            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-2">
               <SmartSearchBar
-                products={smartSearchProducts}
+                products={smartSearchProducts || []}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
                 primaryColor={primaryColor}
                 storeUserId={settings?.user_id}
                 className="flex-1"
+              />
+              <StoreFilter 
+                storeUserId={settings?.user_id || ""} 
+                primaryColor={primaryColor} 
+                products={smartSearchProducts || []} 
               />
             </div>
 
@@ -807,14 +815,20 @@ export default function LojaLayout() {
             </Sheet>
           </div>
 
-          <div className="sm:hidden px-4 pb-3">
+          <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
             <SmartSearchBar
-              products={smartSearchProducts}
+              products={smartSearchProducts || []}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
               primaryColor={primaryColor}
               storeUserId={settings?.user_id}
+              className="flex-1"
+            />
+            <StoreFilter 
+              storeUserId={settings?.user_id || ""} 
+              primaryColor={primaryColor} 
+              products={smartSearchProducts || []} 
             />
           </div>
 
@@ -868,6 +882,39 @@ export default function LojaLayout() {
                 )}
               </div>
             )}
+            <div className="pt-2 pb-1">
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">{t.store.categories}</p>
+              <div className="flex flex-wrap gap-2 px-3 mb-4">
+                {categories?.map((cat, i) => (
+                  <Badge
+                    key={cat.id}
+                    variant="outline"
+                    className="shrink-0 cursor-pointer transition-all px-3 py-1 text-xs"
+                    style={{
+                      opacity: mobileMenu ? 1 : 0,
+                      transform: mobileMenu ? "translateY(0)" : "translateY(10px)",
+                      transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms`,
+                      borderColor: primaryColor,
+                      color: primaryColor,
+                    }}
+                    onClick={() => {
+                      setMobileMenu(false);
+                      const el = document.getElementById(`category-${cat.name}`);
+                      if (el) {
+                        const yOffset = -80;
+                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      } else {
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }
+                    }}
+                  >
+                    {localizedCategoryNames[i] || cat.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
             {[
               { icon: Home, label: t.store.home, to: basePath },
               { icon: Package, label: t.sidebar.products, to: basePath },
