@@ -316,6 +316,7 @@ export default function LojaLayout() {
   const hasShippingZones = (shippingZonesData?.length ?? 0) > 0;
   const localizedStoreDescription = useLocalizedText(settings?.store_description);
   const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
+  const localizedCategoryNames = useLocalizedTextList(categories?.map((c) => c.name) || []);
 
   const storeInstallName = settings?.store_name?.trim()
     || slug
