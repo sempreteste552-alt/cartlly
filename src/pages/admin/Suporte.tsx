@@ -613,7 +613,6 @@ export default function Suporte() {
                       formatCustomerPresence(selectedConversation)
                     )}
                   </p>
-                  </p>
                 </div>
               </div>
 
