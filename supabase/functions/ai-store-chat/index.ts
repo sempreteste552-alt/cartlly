@@ -163,6 +163,28 @@ serve(async (req) => {
       ? "français"
       : "português do Brasil";
 
+    // Fetch RAG context from the new memory manager
+    const lastUserMessage = messages.slice().reverse().find((m: any) => m.role === "user")?.content || "";
+    let ragKnowledge: any[] = [];
+    let ragInsights: any[] = [];
+    
+    try {
+      const { data: ragRes, error: ragErr } = await supabase.functions.invoke("ai-memory-manager", {
+        body: {
+          action: "retrieve-context",
+          tenantId: storeUserId,
+          customerId: customerContext?.id, // Try to find customer ID from context
+          content: lastUserMessage || "Olá"
+        }
+      });
+      if (!ragErr && ragRes) {
+        ragKnowledge = ragRes.knowledge || [];
+        ragInsights = ragRes.insights || [];
+      }
+    } catch (e) {
+      console.warn("RAG retrieval failed, falling back to static brain config", e);
+    }
+
     const brainBlock = [
       "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO DO TENANT (MANDATORY PRIORITY):",
       brandIdentity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${brandIdentity}` : "",
@@ -178,10 +200,16 @@ serve(async (req) => {
       prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${prohibitions}` : "",
       approvedExamples ? `APPROVED MESSAGE EXAMPLES / EXEMPLOS APROVADOS:\n${approvedExamples}` : "",
       storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      
+      // Add RAG context here
+      ragKnowledge.length > 0 ? `ADDITIONAL RELEVANT TRAINING / TREINAMENTOS RELEVANTES:\n${ragKnowledge.map(k => `[${k.category}] ${k.content}`).join("\n")}` : "",
+      ragInsights.length > 0 ? `CUSTOMER SPECIFIC INSIGHTS / MEMÓRIA DO CLIENTE:\n${ragInsights.map(i => `[${i.category}] ${i.insight}`).join("\n")}` : "",
+
       customInstructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${customInstructions}` : "",
       "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CUSTOMER CONTEXT > 3. STORE EVENTS > 4. AI OPTIMIZATIONS",
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT to align with the training."
     ].filter(Boolean).join("\n");
+
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}You are "${aiName}", the soul of the store "${storeName}". The customer's visible replies must always be written in ${promptLanguage}. ${languageInstruction}
 
