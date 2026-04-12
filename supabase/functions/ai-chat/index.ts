@@ -63,7 +63,25 @@ serve(async (req) => {
         "Você é agora a Máquina de Inteligência de Vendas e Marketing (Cérebro CEO). Seu tom é de um consultor estratégico de elite. Seja direto, focado em ROI, faturamento, conversão e ticket médio. Proponha estratégias de marketing agressivas, analise dados com foco em lucro e fale como um CEO experiente que quer dominar o mercado.",
     };
 
-    const systemPrompt = `Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
+    const storeKnowledge = typeof aiConfig?.store_knowledge === "object" && aiConfig?.store_knowledge
+      ? (aiConfig.store_knowledge as any).description || ""
+      : "";
+
+    const brainBlock = aiConfig ? [
+      "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
+      aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
+      aiConfig.niche ? `STORE NICHE / NICHO: ${aiConfig.niche}` : "",
+      aiConfig.personality ? `DEFINED PERSONALITY / PERSONALIDADE: ${aiConfig.personality}` : "",
+      aiConfig.tone_of_voice ? `TONE OF VOICE / TOM DE VOZ: ${aiConfig.tone_of_voice}` : "",
+      aiConfig.writing_style ? `WRITING STYLE / ESTILO DE ESCRITA: ${aiConfig.writing_style}` : "",
+      aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
+      storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      aiConfig.custom_instructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${aiConfig.custom_instructions}` : "",
+      "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CONTEXT > 3. STORE EVENTS",
+      "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
+    ].filter(Boolean).join("\n") : "";
+
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
 
 DADOS DA LOJA:
