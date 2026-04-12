@@ -66,14 +66,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   
   const [isHumanMode, setIsHumanMode] = useState(!isPremium);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [sessionId] = useState(() => {
-    let id = localStorage.getItem("chat_session_id");
-    if (!id) {
-      id = uuidv4();
-      localStorage.setItem("chat_session_id", id);
-    }
-    return id;
-  });
+  const [sessionId] = useState(() => getOrCreateChatSessionId());
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);

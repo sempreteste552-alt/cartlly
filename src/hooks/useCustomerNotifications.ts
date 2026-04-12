@@ -19,7 +19,7 @@ const playNotificationSound = () => {
 export function useCustomerNotifications(storeUserId?: string) {
   const { user, customer } = useCustomerAuth();
   const qc = useQueryClient();
-  const sessionId = localStorage.getItem("chat_session_id");
+  const [sessionId] = useState(() => getOrCreateChatSessionId());
 
   const notificationQueryKey = useMemo(
     () => ["customer_notifications", storeUserId, user?.id ?? "guest", sessionId ?? "no-session"],

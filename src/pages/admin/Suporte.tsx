@@ -267,7 +267,6 @@ export default function Suporte() {
         (payload: any) => {
           if (payload.new.sender_type === "customer") {
             playNotificationSound();
-            // Auto-set delivered_at for customer messages arriving to admin
             supabase.from("support_messages")
               .update({ delivered_at: new Date().toISOString() })
               .eq("id", payload.new.id)
