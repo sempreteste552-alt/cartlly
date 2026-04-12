@@ -32,6 +32,7 @@ import Fidelidade from "./pages/admin/Fidelidade";
 import Lucro from "./pages/admin/Lucro";
 import Analytics from "./pages/admin/Analytics";
 import WhatsAppIA from "./pages/admin/WhatsAppIA";
+import Suporte from "./pages/admin/Suporte";
 import LojaPolitica from "./pages/loja/LojaPolitica";
 import LojaLayout from "./pages/loja/LojaLayout";
 import LojaHome from "./pages/loja/LojaHome";
