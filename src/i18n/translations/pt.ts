@@ -91,6 +91,7 @@ export const pt = {
     profit: "Lucro Real",
     analytics: "Analytics Funil",
     whatsappAi: "WhatsApp IA",
+    support: "Suporte",
     store: "Loja",
     payments: "Pagamentos",
     gateway: "Gateway",
