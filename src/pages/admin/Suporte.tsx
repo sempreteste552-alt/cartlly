@@ -191,7 +191,7 @@ export default function Suporte() {
     if (!user) return;
 
     const channel = supabase
-      .channel("support_realtime")
+      .channel(`support_realtime_${user.id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages" },
@@ -221,12 +221,22 @@ export default function Suporte() {
       )
       .on(
         "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_conversations" },
+        (payload: any) => {
+          queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
+        }
+      )
+      .on(
+        "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations" },
         (payload: any) => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
-          if (selectedConversation && payload.new.id === selectedConversation.id) {
-            setSelectedConversation(prev => prev ? { ...prev, is_typing_customer: payload.new.is_typing_customer } : null);
-          }
+          setSelectedConversation(prev => {
+            if (prev && payload.new.id === prev.id) {
+              return { ...prev, is_typing_customer: payload.new.is_typing_customer };
+            }
+            return prev;
+          });
         }
       )
       .subscribe();
