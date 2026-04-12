@@ -153,8 +153,9 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return () => window.removeEventListener("open-support-chat", handler);
   }, []);
 
+  // Init support conversation
   useEffect(() => {
-    if (isHumanMode && open) {
+    if (isHumanMode && open && !conversationId) {
       const initSupport = async () => {
         let currentConvId: string | null = null;
 
@@ -223,75 +224,77 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       };
 
       initSupport();
-
-      const channel = supabase
-        .channel(`support_storefront_${conversationId}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
-          (payload: any) => {
-              setMessages(prev => {
-                const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
-                if (alreadyExists) return prev;
-                
-                if (payload.new.sender_type === "admin") {
-                  playNotificationSound();
-                  // Auto-set delivered_at for admin messages arriving to customer
-                  supabase.from("support_messages")
-                    .update({ delivered_at: new Date().toISOString() })
-                    .eq("id", payload.new.id)
-                    .is("delivered_at", null)
-                    .then();
-                  
-                  // Auto-set read_at if chat is open
-                  if (open) {
-                    supabase.from("support_messages")
-                      .update({ read_at: new Date().toISOString() })
-                      .eq("id", payload.new.id)
-                      .is("read_at", null)
-                      .then();
-                  }
-                }
-
-                return [...prev, {
-                  id: payload.new.id,
-                  role: payload.new.sender_type === "customer" ? "user" : "assistant",
-                  content: payload.new.body,
-                  created_at: payload.new.created_at,
-                  read_at: open && payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.read_at,
-                  delivered_at: payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.delivered_at
-                }];
-              });
-              
-              if (payload.new.sender_type === "admin" && open) {
-                supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
-              }
-          }
-        )
-        .on(
-          "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
-          (payload: any) => {
-            // Reflect read_at / delivered_at changes in real-time
-            setMessages(prev => prev.map(m => 
-              m.id === payload.new.id 
-                ? { ...m, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
-                : m
-            ));
-          }
-        )
-        .on(
-          "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
-          (payload: any) => {
-            setIsAdminTyping(payload.new.is_typing_admin);
-          }
-        )
-        .subscribe();
-
-      return () => { supabase.removeChannel(channel); };
     }
   }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId]);
+
+  // Realtime channel for support messages
+  useEffect(() => {
+    if (!conversationId || !isHumanMode) return;
+
+    const channel = supabase
+      .channel(`support_storefront_${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload: any) => {
+            setMessages(prev => {
+              const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
+              if (alreadyExists) return prev;
+              
+              if (payload.new.sender_type === "admin") {
+                playNotificationSound();
+                supabase.from("support_messages")
+                  .update({ delivered_at: new Date().toISOString() })
+                  .eq("id", payload.new.id)
+                  .is("delivered_at", null)
+                  .then();
+                
+                if (open) {
+                  supabase.from("support_messages")
+                    .update({ read_at: new Date().toISOString() })
+                    .eq("id", payload.new.id)
+                    .is("read_at", null)
+                    .then();
+                }
+              }
+
+              return [...prev, {
+                id: payload.new.id,
+                role: payload.new.sender_type === "customer" ? "user" : "assistant",
+                content: payload.new.body,
+                created_at: payload.new.created_at,
+                read_at: open && payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.read_at,
+                delivered_at: payload.new.sender_type === "admin" ? new Date().toISOString() : payload.new.delivered_at
+              }];
+            });
+            
+            if (payload.new.sender_type === "admin" && open) {
+              supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
+            }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload: any) => {
+          setMessages(prev => prev.map(m => 
+            m.id === payload.new.id 
+              ? { ...m, read_at: payload.new.read_at, delivered_at: payload.new.delivered_at }
+              : m
+          ));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
+        (payload: any) => {
+          setIsAdminTyping(payload.new.is_typing_admin);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [conversationId, isHumanMode, open]);
 
   useEffect(() => {
     if (conversationId && isHumanMode) {
