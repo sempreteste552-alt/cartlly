@@ -683,15 +683,20 @@ export default function LojaLayout() {
               </div>
             </Link>
 
-            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-3">
+            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-2">
               <SmartSearchBar
-                products={smartSearchProducts}
+                products={smartSearchProducts || []}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
                 onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
                 primaryColor={primaryColor}
                 storeUserId={settings?.user_id}
                 className="flex-1"
+              />
+              <StoreFilter 
+                storeUserId={settings?.user_id || ""} 
+                primaryColor={primaryColor} 
+                products={smartSearchProducts || []} 
               />
             </div>
 
