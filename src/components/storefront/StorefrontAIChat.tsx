@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
+import { useCustomerNotifications } from "@/hooks/useCustomerNotifications";
 import { useLojaContext } from "@/pages/loja/LojaLayout";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -80,13 +81,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { customer } = useCustomerAuth();
+  const { chatUnreadCount } = useCustomerNotifications(storeUserId);
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
 
-  const unreadCount = useMemo(() => {
+  const localUnreadCount = useMemo(() => {
     if (!open) return messages.filter(m => m.role === "assistant" && !m.read_at).length;
     return 0;
   }, [messages, open]);
+
+  const unreadCount = Math.max(localUnreadCount, chatUnreadCount);
 
   const displayName = aiName || "Assistente";
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -128,16 +132,43 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   }, [open]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("chat") === "true") {
+      setIsHumanMode(true);
+      setOpen(true);
+      params.delete("chat");
+      const nextQuery = params.toString();
+      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash}`;
+      window.history.replaceState({}, "", nextUrl);
+    }
+  }, []);
+
+  useEffect(() => {
     if (isHumanMode && open) {
       const initSupport = async () => {
-        const { data: conv } = await supabase
-          .from("support_conversations")
-          .select("id")
-          .eq("tenant_id", storeUserId)
-          .eq("session_id", sessionId)
-          .maybeSingle();
+        let currentConvId: string | null = null;
 
-        let currentConvId = conv?.id;
+        if (customer?.id) {
+          const { data: customerConv } = await supabase
+            .from("support_conversations")
+            .select("id")
+            .eq("tenant_id", storeUserId)
+            .eq("customer_id", customer.id)
+            .maybeSingle();
+
+          currentConvId = customerConv?.id ?? null;
+        }
+
+        if (!currentConvId) {
+          const { data: conv } = await supabase
+            .from("support_conversations")
+            .select("id")
+            .eq("tenant_id", storeUserId)
+            .eq("session_id", sessionId)
+            .maybeSingle();
+
+          currentConvId = conv?.id ?? null;
+        }
 
         if (!currentConvId) {
           const { data: newConv } = await supabase
@@ -223,7 +254,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
       return () => { supabase.removeChannel(channel); };
     }
-  }, [isHumanMode, open, conversationId]);
+  }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId]);
 
   useEffect(() => {
     if (conversationId && isHumanMode) {

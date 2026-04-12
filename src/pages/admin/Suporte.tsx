@@ -51,6 +51,7 @@ type Conversation = {
     name: string | null;
     email: string | null;
     phone: string | null;
+    auth_user_id?: string | null;
   };
 };
 
@@ -92,7 +93,7 @@ export default function Suporte() {
       if (customerIds.length > 0) {
         const { data: customers, error: customersError } = await supabase
           .from("customers")
-          .select("id, name, email, phone")
+          .select("id, name, email, phone, auth_user_id")
           .in("id", customerIds);
 
         if (customersError) throw customersError;
@@ -102,6 +103,7 @@ export default function Suporte() {
             name: customer.name,
             email: customer.email,
             phone: customer.phone,
+            auth_user_id: customer.auth_user_id,
           }])
         );
       }
@@ -152,7 +154,7 @@ export default function Suporte() {
       
       const { data: storeSettings } = await supabase
         .from("store_settings")
-        .select("store_name")
+        .select("store_name, store_slug")
         .eq("user_id", user.id)
         .single();
 
@@ -169,13 +171,15 @@ export default function Suporte() {
 
       if (error) throw error;
 
-      if (selectedConversation.customer_id) {
+      const targetAuthUserId = selectedConversation.customer?.auth_user_id;
+
+      if (targetAuthUserId) {
         await supabase.functions.invoke("send-push", {
           body: {
             title: storeSettings?.store_name || "Suporte da Loja",
             body: body.length > 100 ? body.substring(0, 97) + "..." : body,
-            targetUserId: selectedConversation.customer_id,
-            url: `/loja/${selectedConversation.tenant_id}?chat=true`
+            targetUserId: targetAuthUserId,
+            url: storeSettings?.store_slug ? `/loja/${storeSettings.store_slug}?chat=true` : "/"
           }
         });
       }

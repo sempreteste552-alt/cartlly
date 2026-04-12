@@ -16,7 +16,7 @@ const playNotificationSound = () => {
 };
 
 export function useCustomerNotifications(storeUserId?: string) {
-  const { user } = useCustomerAuth();
+  const { user, customer } = useCustomerAuth();
   const qc = useQueryClient();
 
   const sessionId = localStorage.getItem("chat_session_id");
@@ -53,8 +53,24 @@ export function useCustomerNotifications(storeUserId?: string) {
 
       // 2. Fetch support_messages (personal chat replies)
       let supportMsgs: any[] = [];
-      if (sessionId) {
-        const { data: conv } = await supabase
+      let conv: any = null;
+
+      if (customer?.id) {
+        const { data } = await supabase
+          .from("support_conversations")
+          .select(`
+            id,
+            tenant:store_settings(store_name)
+          `)
+          .eq("tenant_id", storeUserId!)
+          .eq("customer_id", customer.id)
+          .maybeSingle();
+
+        conv = data;
+      }
+
+      if (!conv && sessionId) {
+        const { data } = await supabase
           .from("support_conversations")
           .select(`
             id,
@@ -64,28 +80,30 @@ export function useCustomerNotifications(storeUserId?: string) {
           .eq("session_id", sessionId)
           .maybeSingle();
 
-        if (conv) {
-          const { data: msgs } = await supabase
-            .from("support_messages")
-            .select("*")
-            .eq("conversation_id", conv.id)
-            .eq("sender_type", "admin")
-            .order("created_at", { ascending: false })
-            .limit(10);
-          
-          if (msgs) {
-            const storeName = (conv as any).tenant?.store_name || "Suporte";
-            supportMsgs = msgs.map(m => ({
-              id: m.id,
-              title: storeName,
-              body: m.body,
-              created_at: m.created_at,
-              message_type: "support",
-              read: !!m.read_at,
-              source_tenant_id: storeUserId,
-              is_chat: true // Tag to identify chat messages
-            }));
-          }
+        conv = data;
+      }
+
+      if (conv) {
+        const { data: msgs } = await supabase
+          .from("support_messages")
+          .select("*")
+          .eq("conversation_id", conv.id)
+          .eq("sender_type", "admin")
+          .order("created_at", { ascending: false })
+          .limit(10);
+        
+        if (msgs) {
+          const storeName = (conv as any).tenant?.store_name || "Suporte";
+          supportMsgs = msgs.map(m => ({
+            id: m.id,
+            title: storeName,
+            body: m.body,
+            created_at: m.created_at,
+            message_type: "support",
+            read: !!m.read_at,
+            source_tenant_id: storeUserId,
+            is_chat: true
+          }));
         }
       }
 
@@ -167,6 +185,7 @@ export function useCustomerNotifications(storeUserId?: string) {
   }, [storeUserId, user, qc, sessionId]);
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const chatUnreadCount = notifications.filter((n: any) => n.is_chat && !n.read).length;
 
   const markAsRead = async (message: any) => {
     if (message.is_chat) {
@@ -209,5 +228,5 @@ export function useCustomerNotifications(storeUserId?: string) {
     qc.invalidateQueries({ queryKey: ["customer_notifications"] });
   };
 
-  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead };
+  return { notifications, unreadCount, chatUnreadCount, isLoading, markAsRead, markAllAsRead };
 }
