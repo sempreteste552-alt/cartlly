@@ -940,6 +940,17 @@ export default function Cerebro() {
     if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, sendMessage.isPending]);
 
+  // Scan history for actions on load
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      chatHistory.forEach((msg, i) => {
+        if (msg.role === 'assistant' && !pendingActions[i]) {
+          processAIActions(msg.content, i);
+        }
+      });
+    }
+  }, [chatHistory]);
+
   const handleSend = () => {
     if (!input.trim() || sendMessage.isPending) return;
     sendMessage.mutate(input);
