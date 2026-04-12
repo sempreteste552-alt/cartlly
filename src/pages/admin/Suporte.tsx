@@ -47,6 +47,11 @@ type Conversation = {
   created_at: string;
   last_message?: string;
   unread_count?: number;
+  customer?: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+  };
 };
 
 function formatConversationDate(dateStr: string) {
