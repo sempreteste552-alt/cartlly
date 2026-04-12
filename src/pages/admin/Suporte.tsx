@@ -79,19 +79,45 @@ export default function Suporte() {
         .from("support_conversations")
         .select(`
           *,
-          customer:customers(name, email, phone),
           messages:support_messages(body, created_at, sender_type, read_at)
         `)
         .eq("tenant_id", user?.id)
         .order("last_message_at", { ascending: false });
 
       if (error) throw error;
+
+      const customerIds = [...new Set((data || []).map((conv: any) => conv.customer_id).filter(Boolean))];
+      let customerMap = new Map<string, { name: string | null; email: string | null; phone: string | null }>();
+
+      if (customerIds.length > 0) {
+        const { data: customers, error: customersError } = await supabase
+          .from("customers")
+          .select("id, name, email, phone")
+          .in("id", customerIds);
+
+        if (customersError) throw customersError;
+
+        customerMap = new Map(
+          (customers || []).map((customer: any) => [customer.id, {
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+          }])
+        );
+      }
       
-      return data.map((conv: any) => ({
-        ...conv,
-        last_message: conv.messages?.[0]?.body || "Nenhuma mensagem",
-        unread_count: conv.messages?.filter((m: any) => m.sender_type === "customer" && !m.read_at).length || 0
-      })) as Conversation[];
+      return (data || []).map((conv: any) => {
+        const orderedMessages = [...(conv.messages || [])].sort(
+          (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        return {
+          ...conv,
+          customer: conv.customer_id ? customerMap.get(conv.customer_id) : undefined,
+          last_message: orderedMessages[0]?.body || "Nenhuma mensagem",
+          unread_count: orderedMessages.filter((m: any) => m.sender_type === "customer" && !m.read_at).length || 0
+        };
+      }) as Conversation[];
     },
     enabled: !!user,
   });
