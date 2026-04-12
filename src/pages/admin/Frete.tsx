@@ -1,3 +1,4 @@
+import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
 import { ShippingZonesManager } from "@/components/ShippingZonesManager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ export default function Frete() {
   }
 
   return (
+    <PlanGate feature="shipping_zones">
     <>
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -107,5 +109,6 @@ export default function Frete() {
       </div>
     </div>
     </>
+    </PlanGate>
   );
 }

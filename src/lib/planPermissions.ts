@@ -71,7 +71,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   // STARTER
   gateway:              { label: "Gateway de Pagamento", description: "Aceitar pagamentos online", minPlan: "STARTER", category: "marketing" },
   coupons:              { label: "Cupons de Desconto", description: "Criar cupons e promoções", minPlan: "STARTER", category: "marketing" },
-  shipping_zones:       { label: "Zonas de Frete", description: "Configurar regiões de entrega", minPlan: "FREE", category: "basic" },
+  shipping_zones:       { label: "Zonas de Frete", description: "Configurar regiões de entrega", minPlan: "STARTER", category: "basic" },
   product_reviews:      { label: "Avaliações", description: "Avaliações de clientes", minPlan: "STARTER", category: "marketing" },
   reviews:              { label: "Sistema de Reviews", description: "Reviews completos", minPlan: "STARTER", category: "marketing" },
   seo_basic:            { label: "SEO Básico", description: "Meta tags e títulos", minPlan: "STARTER", category: "marketing" },
