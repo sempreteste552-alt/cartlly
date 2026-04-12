@@ -122,41 +122,37 @@ serve(async (req) => {
       ? (aiConfig.store_knowledge as any).description || ""
       : "";
 
-    const toneInstructions: Record<string, string> = {
-      educada: "Seja sempre educada, gentil e paciente. Use expressões cordiais como 'por favor', 'com prazer', 'ficamos felizes'. Transmita calma e acolhimento.",
-      profissional: "Mantenha um tom profissional, direto e eficiente. Sem informalidade excessiva. Use linguagem empresarial mas acessível.",
-      divertida: "Seja divertida, use emojis com frequência, gírias leves e tom descontraído. Faça o cliente se sentir à vontade com humor leve.",
-      formal: "Use linguagem formal e respeitosa. Trate o cliente por 'senhor(a)'. Evite gírias e abreviações. Mantenha elegância na comunicação.",
-      amigavel: "Seja como um amigo íntimo e atencioso. Use um tom caloroso, empático e extremamente pessoal. Chame pelo nome, use gírias leves se apropriado, e demonstre que você se importa genuinamente com a satisfação dele. Crie um vínculo real, não pareça um robô."
-    };
-
-    // Saudação baseada no horário de Brasília (UTC-3)
-    const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-    const hourBr = nowBrasilia.getHours();
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
-
-    const languageInstruction = locale === "en"
-      ? "ALWAYS reply in English."
-      : locale === "es"
-      ? "RESPONDE SIEMPRE en español."
-      : locale === "fr"
-      ? "RÉPONDS TOUJOURS en français."
-      : "SEMPRE responda em português do Brasil.";
-
-    const promptLanguage = locale === "en"
-      ? "English"
-      : locale === "es"
-      ? "español"
-      : locale === "fr"
-      ? "français"
-      : "português do Brasil";
+    // Advanced behavioral settings
+    const toneOfVoice = aiConfig?.tone_of_voice || "";
+    const writingStyle = aiConfig?.writing_style || "";
+    const approachType = aiConfig?.approach_type || "";
+    const sendingRules = aiConfig?.sending_rules || "";
+    const approvedExamples = aiConfig?.approved_examples || "";
+    const prohibitions = aiConfig?.prohibitions || "";
+    const formalityLevel = aiConfig?.formality_level || "";
+    const emojiUsage = aiConfig?.emoji_usage || "";
+    const persuasionStyle = aiConfig?.persuasion_style || "";
+    const brandIdentity = aiConfig?.brand_identity || "";
 
     const brainBlock = [
-      storeNiche ? `STORE NICHE / NICHO / NICHE: ${storeNiche}` : "",
-      storePersonality ? `STORE OWNER DEFINED PERSONALITY / PERSONALIDADE DEFINIDA PELO LOJISTA: ${storePersonality}` : "",
-      storeKnowledge ? `MANDATORY STORE KNOWLEDGE BASE / BASE OBRIGATÓRIA DA LOJA:\n${storeKnowledge}` : "",
-      customInstructions ? `STORE OWNER CUSTOM INSTRUCTIONS (MAX PRIORITY — NEVER IGNORE) / INSTRUÇÕES PERSONALIZADAS DO LOJISTA (PRIORIDADE MÁXIMA — NUNCA IGNORE):\n${customInstructions}` : "",
-    ].filter(Boolean).join("\n\n");
+      "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO DO TENANT (MANDATORY PRIORITY):",
+      brandIdentity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${brandIdentity}` : "",
+      storeNiche ? `STORE NICHE / NICHO: ${storeNiche}` : "",
+      storePersonality ? `DEFINED PERSONALITY / PERSONALIDADE: ${storePersonality}` : "",
+      toneOfVoice ? `TONE OF VOICE / TOM DE VOZ: ${toneOfVoice}` : "",
+      formalityLevel ? `FORMALITY LEVEL / FORMALIDADE: ${formalityLevel}` : "",
+      writingStyle ? `WRITING STYLE / ESTILO DE ESCRITA: ${writingStyle}` : "",
+      emojiUsage ? `EMOJI USAGE / USO DE EMOJIS: ${emojiUsage}` : "",
+      persuasionStyle ? `PERSUASION STYLE / PERSUASÃO: ${persuasionStyle}` : "",
+      approachType ? `APPROACH TYPE / ABORDAGEM: ${approachType}` : "",
+      sendingRules ? `SENDING RULES / REGRAS DE ENVIO: ${sendingRules}` : "",
+      prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${prohibitions}` : "",
+      approvedExamples ? `APPROVED MESSAGE EXAMPLES / EXEMPLOS APROVADOS:\n${approvedExamples}` : "",
+      storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      customInstructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${customInstructions}` : "",
+      "\nCRITICAL HIERARCHY OF DECISION: 1. MERCHANT RULES/TRAINING (ABOVE) > 2. CUSTOMER CONTEXT > 3. STORE EVENTS > 4. AI OPTIMIZATIONS",
+      "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT to align with the training."
+    ].filter(Boolean).join("\n");
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}You are "${aiName}", the soul of the store "${storeName}". The customer's visible replies must always be written in ${promptLanguage}. ${languageInstruction}
 
