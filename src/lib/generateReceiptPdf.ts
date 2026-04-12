@@ -10,6 +10,8 @@ interface ReceiptData {
   date: string;
   storeName: string;
   storeLogoUrl?: string;
+  storeAddress?: string;
+  storePhone?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -21,6 +23,7 @@ interface ReceiptData {
   shipping: number;
   total: number;
   paymentMethod: string;
+  notes?: string;
 }
 
 const formatPrice = (price: number) =>
