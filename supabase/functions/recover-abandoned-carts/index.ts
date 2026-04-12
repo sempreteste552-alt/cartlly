@@ -5,6 +5,33 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Get current time in Brasília (UTC-3) */
+function getNowBrasilia() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const d: any = {};
+  parts.forEach(({ type, value }) => { d[type] = value; });
+  
+  return new Date(
+    parseInt(d.year),
+    parseInt(d.month) - 1,
+    parseInt(d.day),
+    parseInt(d.hour),
+    parseInt(d.minute),
+    parseInt(d.second)
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -1096,29 +1123,53 @@ function getSpecialDateContext(): string {
   return parts.length > 0 ? parts.join("\n") : "Dia comum, sem data especial";
 }
 
+function detectGender(name: string): string {
+  if (!name) return "neutral";
+  const FEMALE_SUFFIXES = ["a", "ia", "na", "ne", "da", "ina", "ane", "ice", "ete", "ise", "ene", "ile"];
+  const MALE_SUFFIXES = ["o", "os", "son", "ton", "ro", "do", "go", "lo", "rdo", "ldo"];
+  const FEMALE_NAMES = new Set(["ana", "maria", "julia", "amanda", "bruna", "camila", "carla", "clara", "daniela", "débora", "eduarda", "fernanda", "gabriela", "helena", "isabela", "jéssica", "juliana", "larissa", "letícia", "luana", "mariana", "nathalia", "patricia", "priscila", "raquel", "renata", "sabrina", "tatiana", "vanessa", "vitória", "beatriz", "alice", "laura", "luiza", "valentina", "manuela", "sofia", "giovanna", "cecília", "lorena", "bianca"]);
+  const MALE_NAMES = new Set(["joão", "pedro", "lucas", "matheus", "rafael", "gabriel", "bruno", "carlos", "daniel", "diego", "eduardo", "felipe", "fernando", "guilherme", "gustavo", "henrique", "igor", "josé", "leonardo", "marcos", "miguel", "nicolas", "paulo", "ricardo", "rodrigo", "thiago", "vinicius", "anderson", "andre", "caio", "enzo", "arthur", "bernardo", "davi", "heitor", "theo", "samuel", "noah", "isaac"]);
+  
+  const first = name.trim().split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (FEMALE_NAMES.has(first)) return "female";
+  if (MALE_NAMES.has(first)) return "male";
+  for (const s of FEMALE_SUFFIXES) { if (first.endsWith(s) && first.length > 3) return "female"; }
+  for (const s of MALE_SUFFIXES) { if (first.endsWith(s) && first.length > 3) return "male"; }
+  return "neutral";
+}
+
 async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: string; body: string } | null> {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const greetings = ctx.hour < 6 ? "Boa madrugada" : ctx.hour < 12 ? "Bom dia" : ctx.hour < 18 ? "Boa tarde" : "Boa noite";
+  const hour = ctx.hour;
+  const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   const dayName = dayNames[ctx.dayOfWeek] || "hoje";
   const seed = `${new Date().toISOString().slice(0, 10)}-${ctx.type}-${ctx.storeName}-${ctx.customerName || ""}-${Date.now()}`;
   const specialDate = getSpecialDateContext();
 
-  const genderInfo = ctx.customerGender ? `O cliente se identifica como ${ctx.customerGender}. Adapte a linguagem se necessário (ex: amigão/amiga).` : "Gênero não informado, use linguagem neutra.";
+  // Enhanced gender detection
+  const detectedGender = ctx.customerGender || detectGender(ctx.customerName);
+  const genderInfo = detectedGender === "female" 
+    ? "A cliente é MULHER. Use 'amiga', 'querida', 'linda'. Greetings: 'Bom dia amiga', 'Olá querida'." 
+    : detectedGender === "male"
+    ? "O cliente é HOMEM. Use 'amigo', 'parceiro', 'campeão'. Greetings: 'Bom dia amigo', 'E aí amigão'."
+    : "Gênero neutro. Use linguagem universal.";
+
   const storeContext = `Esta é uma ${ctx.storeCategory || "loja"}. Use termos técnicos ou gírias apropriadas para esse nicho.`;
 
   let systemPrompt = "";
   let userPrompt = "";
 
-  const lateNightNote = ctx.hour >= 23 || ctx.hour < 6
+  const lateNightNote = hour >= 23 || hour < 6
     ? `\n- É madrugada/noite tardia. Pode usar tom leve como "pra quem está acordado" MAS apenas se não repetir o tema das últimas mensagens.`
     : `\n- NÃO use frases como "pra quem está acordado", "insônia", "coruja" — o horário é ${greetings}.`;
 
   const baseInstructions = `
 - Você é uma IA INTELIGENTE e AMIGÁVEL da loja "${ctx.storeName}". 
 - ${storeContext}
-- Sua missão é ser mais que uma assistente, seja uma AMIGA do cliente. 
+- Sua missão é ser mais que uma assistente, seja uma AMIGA/AMIGO do cliente. 
 - Use a rotina do cliente como gancho (ex: "descansando nesse ${dayName}?", "começando a semana?", "hora do café?").
 - Adapte sua fala: ${genderInfo}
+- FOCO EM GÊNERO: Se for mulher, diga "Bom dia amiga". Se for homem, diga "Bom dia amigo".
 ${lateNightNote}
 - REGRAS OBRIGATÓRIAS:
   - Responda APENAS com JSON: {"title": "...", "body": "..."}
@@ -1246,32 +1297,7 @@ Loja: ${ctx.storeName} (${ctx.storeCategory})
 Dia: ${dayName}
 Saudação: ${greetings}`;
 
-/** Get current time in Brasília (UTC-3) */
-function getNowBrasilia() {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(now);
-  const d: any = {};
-  parts.forEach(({ type, value }) => { d[type] = value; });
-  
-  return new Date(
-    parseInt(d.year),
-    parseInt(d.month) - 1,
-    parseInt(d.day),
-    parseInt(d.hour),
-    parseInt(d.minute),
-    parseInt(d.second)
-  );
-}
+// getNowBrasilia moved to top level
 
   } else if (ctx.type === "review_thankyou" && ctx._customSystemPrompt) {
     systemPrompt = ctx._customSystemPrompt;

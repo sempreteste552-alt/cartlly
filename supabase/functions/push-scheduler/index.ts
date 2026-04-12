@@ -1826,10 +1826,10 @@ async function generateAISequenceMessage(
   };
 
   const genderGuide = ctx.gender === "female"
-    ? "A cliente é MULHER. Use tom doce, empoderador e acolhedor. Emojis como 💕🌸✨💜🌷💃. Linguagem mais delicada e carinhosa."
+    ? "A cliente é MULHER. Use tom doce, empoderador e acolhedor. Diga 'Bom dia amiga' ou 'Oi querida'. Emojis como 💕🌸✨💜🌷💃. Linguagem mais delicada e carinhosa."
     : ctx.gender === "male"
-    ? "O cliente é HOMEM. Use tom direto, suave e prático. Emojis como 🔥💪😎🎯⚡. Linguagem mais objetiva sem ser fria."
-    : "Gênero neutro. Use tom universal e inclusivo.";
+    ? "O cliente é HOMEM. Use tom direto, suave e prático. Diga 'Bom dia amigo' ou 'E aí amigão'. Emojis como 🔥💪😎🎯⚡. Linguagem mais objetiva sem ser fria."
+    : "Gênero neutro. Use tom universal e inclusivo. Use saudações neutras como 'Olá' ou 'Tudo bem?'.";
 
   let typeGuide = "";
   if (ctx.sequenceType === "cart_abandonment") {
