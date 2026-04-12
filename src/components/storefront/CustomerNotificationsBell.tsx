@@ -105,16 +105,21 @@ function NotificationList({ notifications, unreadCount, markAsRead, markAllAsRea
             <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
             {uiText.empty}
           </div>
-        ) : (
+         ) : (
           notifications.map((n: any) => (
             <div key={n.id}>
               <button
-                onClick={() => { if (!n.read) markAsRead(n); }}
+                onClick={() => {
+                  if (!n.read) markAsRead(n);
+                  if (n.is_chat || n.message_type === "support") {
+                    window.dispatchEvent(new CustomEvent("open-support-chat"));
+                  }
+                }}
                 className={`w-full text-left p-3 hover:bg-muted/50 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
               >
                 <div className="flex items-start gap-2">
                   <span className="text-lg shrink-0 mt-0.5">
-                    {n.message_type === "promo" || n.message_type === "promotion" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
+                    {n.is_chat || n.message_type === "support" ? "💬" : n.message_type === "promo" || n.message_type === "promotion" ? "🎉" : n.message_type === "alert" ? "⚠️" : "📢"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
