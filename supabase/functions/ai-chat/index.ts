@@ -140,8 +140,11 @@ serve(async (req) => {
 ${toneMap[aiTone] || toneMap.educada}
 
 CONTEÚDO TEMPORAL:
-- Agora são ${brTime} do dia ${brDate} (Horário de Brasília).
+- Hoje é ${weekday}, dia ${brDate}.
+- Agora são ${brTime} (Horário de Brasília).
 - Use a saudação "${greetingBr}" se for iniciar a conversa agora.
+- O contexto de "${weekday}" é muito importante para a tom de voz e estratégias de marketing.
+
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}
