@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // The main platform domain for CNAMEs
-const RECOMMENDED_CNAME = "cartlly.lovable.app"; 
+const RECOMMENDED_CNAME = "www.msktelemarkting.shop"; 
 
 async function resolveDns(name: string, type: string) {
   try {

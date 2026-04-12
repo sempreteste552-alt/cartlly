@@ -48,8 +48,8 @@ interface PlatformConfig {
 }
 
 const defaultConfig: PlatformConfig = {
-  platform_name: "Cartlly",
-  platform_email: "",
+  platform_name: "MSK Telemarketing",
+  platform_email: "contato@msktelemarkting.shop",
   default_trial_days: 7,
   auto_confirm_emails: false,
   maintenance_mode: false,
@@ -170,7 +170,7 @@ export default function SuperAdminConfig() {
             </div>
             <div className="space-y-2">
               <Label>E-mail da Plataforma</Label>
-              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@cartlly.com" />
+              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@msktelemarkting.shop" />
             </div>
           </div>
           <div className="space-y-2">
@@ -209,7 +209,7 @@ export default function SuperAdminConfig() {
           <div className="space-y-2">
             <Label>Link do Botão "Saiba mais"</Label>
             <Input
-              placeholder="https://usecartlly.vercel.app/"
+              placeholder="https://usemsktelemarkting.vercel.app/"
               value={config.promo_banner_link}
               onChange={e => updateField("promo_banner_link", e.target.value)}
             />

@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FALLBACK_APP_ORIGIN = "https://cartlly.lovable.app";
+const FALLBACK_APP_ORIGIN = "https://www.msktelemarkting.shop";
 
 function getSafeAppOrigin(value?: string | null) {
   if (!value) return FALLBACK_APP_ORIGIN;

@@ -22,7 +22,7 @@ interface DomainConnectorProps {
   storeSlug?: string;
 }
 
-const PLATFORM_EDGE = "cartlly.lovable.app"; // The project's main domain for CNAMEs
+const PLATFORM_EDGE = "www.msktelemarkting.shop"; // The project's main domain for CNAMEs
 
 interface StoreDomain {
   id: string;

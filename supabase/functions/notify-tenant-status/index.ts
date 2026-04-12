@@ -45,7 +45,7 @@ serve(async (req) => {
         type: "magiclink",
         email: email!,
         options: {
-          redirectTo: `${req.headers.get("origin") || "https://cartlly.lovable.app"}/login`,
+          redirectTo: `${req.headers.get("origin") || "https://www.msktelemarkting.shop"}/login`,
         },
       });
 

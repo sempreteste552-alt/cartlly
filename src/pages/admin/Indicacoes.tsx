@@ -171,7 +171,7 @@ export default function Indicacoes() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
 
-  const PRODUCTION_ORIGIN = "https://cartlly.lovable.app";
+  const PRODUCTION_ORIGIN = "https://www.msktelemarkting.shop";
   const referralLink = code?.code ? `${PRODUCTION_ORIGIN}/login?ref=${code.code}` : "";
 
   const handleCopy = () => {

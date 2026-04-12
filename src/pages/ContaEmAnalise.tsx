@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogOut, Ban, ShieldOff, Wrench, MessageCircle } from "lucide-react";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import msktelemarktingLogo from "@/assets/msktelemarkting-logo.png";
 
 export default function ContaEmAnalise() {
   const { user, signOut } = useAuth();
@@ -135,7 +135,7 @@ export default function ContaEmAnalise() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-          <img src={cartlyLogo} alt="Cartly" className="h-12 w-auto" />
+          <img src={msktelemarktingLogo} alt="MSK Telemarketing" className="h-12 w-auto" />
 
           <div className={`flex h-20 w-20 items-center justify-center rounded-full ${content.iconBg}`}>
             {content.icon}
@@ -163,7 +163,7 @@ export default function ContaEmAnalise() {
             {platformSettings?.support_whatsapp_number && (
               <Button 
                 className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold"
-                onClick={() => window.open(`https://wa.me/${platformSettings.support_whatsapp_number}?text=Olá,%20preciso%20de%20ajuda%20com%20minha%20conta%20no%20Cartlly`, "_blank")}
+                onClick={() => window.open(`https://wa.me/${platformSettings.support_whatsapp_number}?text=Olá,%20preciso%20de%20ajuda%20com%20minha%20conta%20no%20MSK Telemarketing`, "_blank")}
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 Suporte via WhatsApp
