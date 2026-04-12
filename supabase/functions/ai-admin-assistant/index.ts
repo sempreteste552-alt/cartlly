@@ -67,7 +67,15 @@ serve(async (req) => {
     
     const nowBrasilia = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const hourBr = nowBrasilia.getHours();
-    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
+    
+    // Fallback if local time parsing fails (ensure it's around UTC-3)
+    const utcHour = new Date().getUTCHours();
+    const estHourBr = (utcHour - 3 + 24) % 24;
+    
+    // Use the explicit calculation for more reliability in serverless
+    const finalHourBr = hourBr !== undefined ? hourBr : estHourBr;
+    
+    const greetingBr = finalHourBr < 5 ? "Boa madrugada" : finalHourBr < 12 ? "Bom dia" : finalHourBr < 18 ? "Boa tarde" : "Boa noite";
 
     const personalityMap: Record<string, string> = {
       amigavel: "Amigável e próxima — como uma amiga empreendedora de confiança.",
