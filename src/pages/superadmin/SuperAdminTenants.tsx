@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
+import { buildStoreUrl } from "@/lib/storeDomain";
 
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
@@ -614,7 +615,15 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => { setDetailTenant(tenant); setDetailDialogOpen(true); }}>
                           <Settings className="mr-2 h-4 w-4" /> Ver Detalhes
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => window.open(tenant.store?.store_slug ? `/loja/${tenant.store.store_slug}` : "#", "_blank")}>
+                        <DropdownMenuItem onClick={() => {
+                          const url = buildStoreUrl({
+                            slug: tenant.store?.store_slug,
+                            customDomain: tenant.store?.custom_domain,
+                            domainStatus: tenant.store?.domain_status,
+                            sslReady: tenant.store?.domain_verify_details?.sslReady
+                          });
+                          window.open(url, "_blank");
+                        }}>
                           <Eye className="mr-2 h-4 w-4" /> Ver Loja
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
