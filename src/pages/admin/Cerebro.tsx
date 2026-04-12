@@ -389,6 +389,7 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 pb-4">
+        <AITrainingGuide />
         <Tabs defaultValue="base" className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-8 mb-4">
             <TabsTrigger value="base" className="text-[10px]">Identidade</TabsTrigger>
