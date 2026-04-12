@@ -184,12 +184,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       initSupport();
 
       const channel = supabase
-        .channel(`support_storefront_${sessionId}`)
+        .channel(`support_storefront_${conversationId}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "support_messages" },
+          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
           (payload: any) => {
-            if (payload.new.conversation_id === conversationId) {
               setMessages(prev => {
                 const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
                 if (alreadyExists) return prev;
@@ -211,7 +210,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               if (payload.new.sender_type === "admin" && open) {
                 supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", payload.new.id).then();
               }
-            }
           }
         )
         .on(
@@ -225,7 +223,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
       return () => { supabase.removeChannel(channel); };
     }
-  }, [isHumanMode, open, storeUserId, sessionId, conversationId, customer?.id]);
+  }, [isHumanMode, open, conversationId]);
 
   useEffect(() => {
     if (conversationId && isHumanMode) {
