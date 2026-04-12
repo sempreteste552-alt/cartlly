@@ -1255,7 +1255,7 @@ export default function LojaLayout() {
           />
         )}
 
-        {settings?.store_whatsapp && (
+        {settings?.store_whatsapp && (settings as any).is_pro_plan && (
           <a
             href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
             target="_blank"
