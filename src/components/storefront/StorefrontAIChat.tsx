@@ -387,7 +387,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed z-50 h-[60px] w-[60px] rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center bottom-36 md:bottom-24 right-6 group"
+        className="fixed z-50 h-[60px] w-[60px] rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center bottom-20 md:bottom-6 right-6 group"
         style={{ backgroundColor: accentColor, boxShadow: `0 8px 32px ${accentColor}44` }}
         title={uiText.title}
       >
