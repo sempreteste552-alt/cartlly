@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Globe, CheckCircle2, Clock, XCircle, Loader2, RefreshCw,
   ExternalLink, ArrowRight, Server, Copy, Check, AlertTriangle, HelpCircle, Trash2, ShieldCheck, Star, Shield,
-  ShieldAlert, Info, Lock
+  ShieldAlert, Info, Lock, Settings2
 } from "lucide-react";
 import { normalizeDomain } from "@/lib/storeDomain";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -41,6 +41,9 @@ interface StoreDomain {
   ssl_validation_details?: any;
   conflicting_records?: any[];
   last_ssl_error?: string;
+  detected_provider?: string;
+  cloudflare_zone_id?: string;
+  cloudflare_api_token?: string;
 }
 
 export default function DomainConnector({
@@ -52,6 +55,10 @@ export default function DomainConnector({
   const [isAdding, setIsAdding] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState<string | null>(null);
+  const [cfZoneId, setCfZoneId] = useState("");
+  const [cfToken, setCfToken] = useState("");
+  const [isUpdatingCf, setIsUpdatingCf] = useState(false);
 
   const { data: domains, isLoading, refetch } = useQuery({
     queryKey: ["store_domains", settingsId],
@@ -76,7 +83,6 @@ export default function DomainConnector({
       return;
     }
 
-    // Force/Suggest www
     if (!cleanDomain.startsWith("www.") && cleanDomain.split(".").length === 2) {
       if (confirm(`Recomendamos usar 'www.${cleanDomain}' para melhor estabilidade e SSL. Deseja adicionar com www?`)) {
         cleanDomain = `www.${cleanDomain}`;
@@ -145,6 +151,28 @@ export default function DomainConnector({
     }
   };
 
+  const handleUpdateCloudflare = async (domainId: string) => {
+    setIsUpdatingCf(true);
+    try {
+      const { error } = await supabase
+        .from("store_domains")
+        .update({
+          cloudflare_zone_id: cfZoneId,
+          cloudflare_api_token: cfToken
+        })
+        .eq("id", domainId);
+
+      if (error) throw error;
+      toast.success("Configurações Cloudflare salvas!");
+      setShowAdvanced(null);
+      refetch();
+    } catch (err: any) {
+      toast.error("Erro ao salvar: " + err.message);
+    } finally {
+      setIsUpdatingCf(false);
+    }
+  };
+
   const handleSetPrimary = async (domain: StoreDomain) => {
     try {
       await supabase.from("store_domains").update({ is_primary: false }).eq("store_id", settingsId);
@@ -180,12 +208,12 @@ export default function DomainConnector({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active': return <Badge className="bg-green-500 hover:bg-green-600">Ativo</Badge>;
-      case 'pending_ssl': case 'emitting': return <Badge variant="secondary" className="bg-blue-100 text-blue-700 animate-pulse">SSL Emitindo</Badge>;
-      case 'pending_verification': return <Badge variant="outline" className="text-amber-600 border-amber-600">Verificado</Badge>;
-      case 'pending_dns': return <Badge variant="outline">Aguardando DNS</Badge>;
-      case 'failed': return <Badge variant="destructive">Falhou</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
+      case 'active': return <Badge className="bg-green-500 hover:bg-green-600 text-[10px] h-5">Ativo</Badge>;
+      case 'pending_ssl': case 'emitting': return <Badge variant="secondary" className="bg-blue-100 text-blue-700 animate-pulse text-[10px] h-5">SSL Emitindo</Badge>;
+      case 'pending_verification': return <Badge variant="outline" className="text-amber-600 border-amber-600 text-[10px] h-5">Verificado</Badge>;
+      case 'pending_dns': return <Badge variant="outline" className="text-[10px] h-5">Aguardando DNS</Badge>;
+      case 'failed': return <Badge variant="destructive" className="text-[10px] h-5">Falhou</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] h-5">{status}</Badge>;
     }
   };
 
@@ -197,7 +225,7 @@ export default function DomainConnector({
             <Globe className="h-5 w-5 text-primary" />
             <div>
               <CardTitle className="text-lg">Domínio Próprio</CardTitle>
-              <CardDescription>Conecte seu domínio oficial à sua loja (ex: www.loja.com)</CardDescription>
+              <CardDescription>Conecte seu domínio oficial à sua loja</CardDescription>
             </div>
           </div>
           <ShieldCheck className="h-8 w-8 text-primary/20" />
@@ -220,9 +248,6 @@ export default function DomainConnector({
               {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : "Conectar"}
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2">
-            <strong>Dica:</strong> Recomendamos sempre usar o subdomínio <strong>www</strong> como principal.
-          </p>
         </div>
 
         {isLoading ? (
@@ -237,7 +262,7 @@ export default function DomainConnector({
             </div>
             <h3 className="font-medium text-foreground">Nenhum domínio conectado</h3>
             <p className="text-sm text-muted-foreground max-w-[280px]">
-              Sua loja está usando o endereço padrão. Adicione um domínio acima para profissionalizar seu negócio.
+              Adicione um domínio acima para profissionalizar seu negócio.
             </p>
           </div>
         ) : (
@@ -257,10 +282,10 @@ export default function DomainConnector({
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           {getStatusBadge(domain.status)}
-                          {domain.last_verified_at && (
-                            <span className="text-[10px] text-muted-foreground">
-                              Checado há {Math.round((new Date().getTime() - new Date(domain.last_verified_at).getTime()) / 60000)} min
-                            </span>
+                          {domain.detected_provider && (
+                            <Badge variant="outline" className="text-[9px] h-4 font-normal bg-muted/50">
+                              DNS: {domain.detected_provider}
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -276,7 +301,6 @@ export default function DomainConnector({
                         className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0"
                         onClick={() => handleVerify(domain)}
                         disabled={verifyingId === domain.id}
-                        title="Validar agora"
                       >
                         {verifyingId === domain.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                       </Button>
@@ -285,7 +309,6 @@ export default function DomainConnector({
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
                         onClick={() => handleRemove(domain)}
-                        title="Remover"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -294,199 +317,181 @@ export default function DomainConnector({
 
                   <AccordionContent className="px-4 pb-4">
                     <div className="space-y-6 pt-2">
-                      {/* Conflict Alerts */}
-                      {domain.conflicting_records && domain.conflicting_records.length > 0 && (
-                        <Alert variant="destructive" className="bg-destructive/5 border-destructive/20">
+                      {/* Provider Detection & Warning */}
+                      {domain.detected_provider === 'Cloudflare' && (
+                        <Alert className="bg-amber-50 border-amber-100">
+                          <AlertTriangle className="h-4 w-4 text-amber-600" />
+                          <AlertTitle className="text-amber-800 text-sm">Detectamos que você usa Cloudflare</AlertTitle>
+                          <AlertDescription className="text-amber-700 text-xs">
+                            Para evitar o <strong>Erro 1014/1034</strong>, desative o "Proxy" (nuvem laranja) para o CNAME 'www' e deixe apenas DNS (nuvem cinza).
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Diagnostic Alerts */}
+                      {(domain.status === 'failed' || domain.last_ssl_error) && (
+                        <Alert variant="destructive" className="bg-destructive/5">
                           <ShieldAlert className="h-4 w-4" />
-                          <AlertTitle>Conflito de DNS detectado</AlertTitle>
-                          <AlertDescription className="text-xs space-y-2">
-                            {domain.conflicting_records.map((conflict, idx) => (
-                              <p key={idx}>{conflict.message}</p>
-                            ))}
-                            <p className="font-bold">Remova os registros 'A' do domínio raiz ou configure redirecionamento.</p>
+                          <AlertTitle className="text-sm">Erro detectado</AlertTitle>
+                          <AlertDescription className="text-xs">
+                            {domain.last_ssl_error || "Houve um problema ao validar seu domínio. Verifique os registros DNS abaixo."}
                           </AlertDescription>
                         </Alert>
                       )}
 
-                      {/* SSL Error Diagnostics */}
-                      {(domain.ssl_status === 'failed' || domain.status === 'failed') && (
-                        <Alert variant="destructive" className="bg-destructive/5 border-destructive/20">
-                          <Lock className="h-4 w-4" />
-                          <AlertTitle>Erro de Conexão ou SSL (1014/1034)</AlertTitle>
-                          <AlertDescription className="text-xs space-y-2">
-                            <p>Se você vir um erro do Cloudflare (1014), certifique-se de que:</p>
-                            <ul className="list-disc pl-4 space-y-1">
-                              <li>O CNAME está apontando para <strong>{PLATFORM_EDGE}</strong></li>
-                              <li>O domínio não possui outros registros 'A' ou 'AAAA' conflitantes.</li>
-                              <li>O seu domínio <strong>não</strong> está com o "Proxy" (nuvem laranja) ativado no Cloudflare. Use "Somente DNS" (nuvem cinza).</li>
-                            </ul>
-                            <p className="font-semibold mt-2">Motivo técnico: {domain.last_ssl_error || "Certificado não pôde ser validado"}</p>
-                          </AlertDescription>
-                        </Alert>
-                      )}
-
-
-                      {/* Relationship with Tenant */}
-                      <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-medium text-primary uppercase tracking-wider mb-1">Status de Publicação</p>
-                          <div className="flex items-center gap-2">
-                            {domain.status === 'active' ? (
-                              <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
-                                <CheckCircle2 className="h-4 w-4" />
-                                Loja publicada em: https://{domain.hostname}
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 text-sm font-semibold text-amber-600">
-                                <Clock className="h-4 w-4" />
-                                Aguardando ativação final
-                              </div>
-                            )}
+                      {/* Step Status */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase">1. Verificação</p>
+                          <div className="flex items-center gap-1.5">
+                            {domain.txt_status === 'verified' ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Clock className="h-3.5 w-3.5 text-amber-500" />}
+                            <span className="text-xs font-medium">{domain.txt_status === 'verified' ? "OK" : "Pendente"}</span>
                           </div>
                         </div>
-                        {domain.status === 'active' ? (
-                          <Button size="sm" asChild>
-                            <a href={`https://${domain.hostname}`} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Acessar Domínio
-                            </a>
-                          </Button>
-                        ) : (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={`/loja/${storeSlug}`} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Ver Loja (Slug)
-                            </a>
-                          </Button>
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase">2. DNS (CNAME)</p>
+                          <div className="flex items-center gap-1.5">
+                            {domain.dns_status === 'propagated' ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <Clock className="h-3.5 w-3.5 text-amber-500" />}
+                            <span className="text-xs font-medium">{domain.dns_status === 'propagated' ? "Configurado" : "Aguardando"}</span>
+                          </div>
+                        </div>
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase">3. SSL</p>
+                          <div className="flex items-center gap-1.5">
+                            {domain.ssl_status === 'active' ? <Lock className="h-3.5 w-3.5 text-green-500" /> : <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin" />}
+                            <span className="text-xs font-medium">{domain.ssl_status === 'active' ? "Seguro" : "Emitindo..."}</span>
+                          </div>
+                        </div>
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                          <p className="text-[10px] font-bold text-muted-foreground mb-1 uppercase">4. Publicado</p>
+                          <div className="flex items-center gap-1.5">
+                            {domain.status === 'active' ? <ShieldCheck className="h-3.5 w-3.5 text-green-500" /> : <Clock className="h-3.5 w-3.5 text-muted-foreground" />}
+                            <span className="text-xs font-medium">{domain.status === 'active' ? "Online" : "Processando"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Instructions */}
+                      <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-muted/50 px-4 py-2 border-b border-border flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Server className="h-4 w-4 text-primary" />
+                            <h4 className="font-bold text-xs uppercase tracking-tight">Instruções de DNS</h4>
+                          </div>
+                          {domain.detected_provider && (
+                            <span className="text-[10px] text-muted-foreground">Provedor: <strong>{domain.detected_provider}</strong></span>
+                          )}
+                        </div>
+                        
+                        <div className="p-4 space-y-4">
+                          {/* CNAME */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px] uppercase text-muted-foreground font-bold">CNAME (Redirecionamento)</Label>
+                              <Badge variant="outline" className="font-mono text-[9px]">Obrigatório</Badge>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-muted/20 p-2 rounded-md border border-border/50">
+                              <div className="sm:col-span-2">
+                                <p className="text-[9px] text-muted-foreground">HOST</p>
+                                <p className="text-xs font-mono font-bold">www</p>
+                              </div>
+                              <div className="sm:col-span-8 overflow-hidden">
+                                <p className="text-[9px] text-muted-foreground">VALOR / DESTINO</p>
+                                <p className="text-xs font-mono truncate">{PLATFORM_EDGE}</p>
+                              </div>
+                              <div className="sm:col-span-2 flex justify-end">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(PLATFORM_EDGE, `cname-${domain.id}`)}>
+                                  {copied === `cname-${domain.id}` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* TXT */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px] uppercase text-muted-foreground font-bold">TXT (Verificação de Propriedade)</Label>
+                              <Badge variant="outline" className="font-mono text-[9px]">Obrigatório</Badge>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-muted/20 p-2 rounded-md border border-border/50">
+                              <div className="sm:col-span-2">
+                                <p className="text-[9px] text-muted-foreground">HOST</p>
+                                <p className="text-xs font-mono font-bold">_lovable</p>
+                              </div>
+                              <div className="sm:col-span-8 overflow-hidden">
+                                <p className="text-[9px] text-muted-foreground">VALOR</p>
+                                <p className="text-xs font-mono truncate">{domain.verification_token}</p>
+                              </div>
+                              <div className="sm:col-span-2 flex justify-end">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopy(domain.verification_token, `txt-${domain.id}`)}>
+                                  {copied === `txt-${domain.id}` ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Advanced Settings */}
+                      <div className="border-t border-border pt-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs gap-1 h-8 text-muted-foreground hover:text-primary px-0"
+                          onClick={() => {
+                            setShowAdvanced(showAdvanced === domain.id ? null : domain.id);
+                            setCfZoneId(domain.cloudflare_zone_id || "");
+                            setCfToken(domain.cloudflare_api_token || "");
+                          }}
+                        >
+                          <Settings2 className="h-3.5 w-3.5" />
+                          {showAdvanced === domain.id ? "Esconder" : "Configuração Avançada (Cloudflare)"}
+                        </Button>
+
+                        {showAdvanced === domain.id && (
+                          <div className="mt-4 p-4 bg-muted/20 border border-border rounded-lg space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-bold uppercase text-primary tracking-wider">Cloudflare Advanced</h5>
+                              <p className="text-[10px] text-muted-foreground">
+                                Use esta opção se seu domínio está no Cloudflare e você deseja integração automática via API.
+                              </p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase">Zone ID</Label>
+                                <Input
+                                  value={cfZoneId}
+                                  onChange={(e) => setCfZoneId(e.target.value)}
+                                  placeholder="Ex: d41d8cd98f00b204e9800998ecf8427e"
+                                  className="h-8 text-xs font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase">API Token</Label>
+                                <Input
+                                  type="password"
+                                  value={cfToken}
+                                  onChange={(e) => setCfToken(e.target.value)}
+                                  placeholder="Token com permissão de DNS"
+                                  className="h-8 text-xs font-mono"
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="w-full h-8 text-xs"
+                              disabled={isUpdatingCf}
+                              onClick={() => handleUpdateCloudflare(domain.id)}
+                            >
+                              {isUpdatingCf ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <CheckCircle2 className="h-3 w-3 mr-2" />}
+                              Salvar Credenciais
+                            </Button>
+                          </div>
                         )}
                       </div>
 
-                      {/* Step Status Indicator (4 Steps) */}
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* 1. Verificação */}
-                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">1. Verificação</span>
-                            {domain.txt_status === 'verified' ? (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">OK</Badge>
-                            ) : (
-                              <Badge variant="secondary" className="animate-pulse h-5 text-[10px]">Pendente</Badge>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">TXT _lovable verificado.</p>
-                        </div>
-
-                        {/* 2. DNS */}
-                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">2. DNS</span>
-                            {domain.dns_status === 'propagated' ? (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">Configurado</Badge>
-                            ) : domain.dns_status === 'conflict' ? (
-                              <Badge variant="destructive" className="h-5 text-[10px]">Conflito</Badge>
-                            ) : (
-                              <Badge variant="outline" className="h-5 text-[10px]">Aguardando</Badge>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">CNAME apontado p/ Lovable.</p>
-                        </div>
-
-                        {/* 3. SSL */}
-                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">3. SSL</span>
-                            {domain.ssl_status === 'active' ? (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">Ativo</Badge>
-                            ) : domain.ssl_status === 'emitting' ? (
-                              <Badge variant="secondary" className="bg-blue-50 text-blue-600 animate-pulse border-none h-5 text-[10px]">Emitindo</Badge>
-                            ) : (
-                              <Badge variant="outline" className="h-5 text-[10px]">Pendente</Badge>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">HTTPS seguro ativado.</p>
-                        </div>
-
-                        {/* 4. Publicação */}
-                        <div className="bg-background border border-border rounded-xl p-4 shadow-sm flex flex-col justify-between">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground">4. Publicação</span>
-                            {domain.status === 'active' ? (
-                              <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none h-5 text-[10px]">Publicado</Badge>
-                            ) : (
-                              <Badge variant="outline" className="h-5 text-[10px]">Aguardando</Badge>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">Domínio pronto para uso.</p>
-                        </div>
-                      </div>
-
-                      {/* DNS Table */}
-                      <div className="bg-muted/30 border border-border rounded-xl p-6 space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Server className="h-4 w-4 text-primary" />
-                          <h4 className="font-bold text-sm">Configuração Recomendada</h4>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Adicione os dois registros abaixo no seu provedor de domínio:
-                        </p>
-
-                        <div className="space-y-3">
-                          {/* CNAME RECORD */}
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-background p-4 rounded-lg border border-border shadow-sm">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Tipo</span>
-                              <Badge variant="outline" className="w-fit font-mono mt-1">CNAME</Badge>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Host / Nome</span>
-                              <span className="text-sm font-mono font-medium mt-1">www</span>
-                            </div>
-                            <div className="flex flex-col sm:col-span-1">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Valor / Destino</span>
-                              <span className="text-sm font-mono font-medium mt-1 text-primary truncate">{PLATFORM_EDGE}</span>
-                            </div>
-                            <div className="flex justify-end">
-                              <Button variant="secondary" size="sm" className="h-8 gap-2" onClick={() => handleCopy(PLATFORM_EDGE, `${domain.id}-cname`)}>
-                                {copied === `${domain.id}-cname` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                {copied === `${domain.id}-cname` ? 'Copiado' : 'Copiar'}
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* TXT RECORD */}
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center bg-background p-4 rounded-lg border border-border shadow-sm">
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Tipo</span>
-                              <Badge variant="outline" className="w-fit font-mono mt-1">TXT</Badge>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Host / Nome</span>
-                              <span className="text-sm font-mono font-medium mt-1">_lovable</span>
-                            </div>
-                            <div className="flex flex-col sm:col-span-1">
-                              <span className="text-[10px] text-muted-foreground font-bold uppercase">Valor</span>
-                              <span className="text-sm font-mono font-medium mt-1 text-primary truncate">lovable_verify={domain.verification_token}</span>
-                            </div>
-                            <div className="flex justify-end">
-                              <Button variant="secondary" size="sm" className="h-8 gap-2" onClick={() => handleCopy(`lovable_verify=${domain.verification_token}`, `${domain.id}-txt`)}>
-                                {copied === `${domain.id}-txt` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                {copied === `${domain.id}-txt` ? 'Copiado' : 'Copiar'}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3 pt-2">
-                          <Alert className="bg-blue-50/50 border-blue-100">
-                            <Info className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-[11px] text-blue-800">
-                              <strong>Atenção ao Domínio Raiz:</strong> Recomendamos configurar um <strong>redirecionamento</strong> no seu provedor do domínio principal (ex: dominio.com) para o <strong>www</strong> (www.dominio.com). Isso evita falhas de SSL e garante que todos os clientes acessem sua loja.
-                            </AlertDescription>
-                          </Alert>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                      {/* Final Actions */}
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Button
                           variant="default"
                           className="flex-1 h-11"
@@ -494,7 +499,7 @@ export default function DomainConnector({
                           disabled={verifyingId === domain.id}
                         >
                           {verifyingId === domain.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                          Validar e Atualizar Status
+                          Validar Agora
                         </Button>
                         {!domain.is_primary && domain.status === 'active' && (
                           <Button
@@ -503,7 +508,7 @@ export default function DomainConnector({
                             onClick={() => handleSetPrimary(domain)}
                           >
                             <Star className="h-4 w-4 mr-2" />
-                            Definir como Principal
+                            Tornar Principal
                           </Button>
                         )}
                       </div>

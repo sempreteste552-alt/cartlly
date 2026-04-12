@@ -869,6 +869,33 @@ function GeneralSettingsTab() {
   );
 }
 
+function DomainSettingsTab() {
+  const { data: settings, isLoading } = useStoreSettings();
+  const { ctx } = useTenantContext();
+
+  if (isLoading) return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!settings) return null;
+
+  return (
+    <div className="space-y-6">
+      <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Próprio">
+        <FeatureTutorialCard
+          id="domain_tutorial"
+          title="Domínio Próprio"
+          description="Conecte seu domínio oficial para profissionalizar sua loja e melhorar seu SEO."
+          steps={[
+            "Informe o endereço do seu domínio (ex: www.sualoja.com.br)",
+            "Adicione os registros TXT e CNAME no seu provedor DNS",
+            "Aguarde a propagação e a emissão automática do SSL",
+            "Pronto! Sua loja estará disponível no seu endereço oficial"
+          ]}
+        />
+        <DomainConnector settingsId={settings.id} storeSlug={settings.store_slug} />
+      </LockedFeature>
+    </div>
+  );
+}
+
 
 export default function Configuracoes() {
   const { ctx } = useTenantContext();
@@ -883,40 +910,43 @@ export default function Configuracoes() {
       </div>
 
       <Tabs defaultValue={initialTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 h-auto">
           <TabsTrigger value="general" className="flex items-center gap-1.5 text-xs py-2">
             <Store className="h-4 w-4" />
             <span className="hidden sm:inline">Geral</span>
           </TabsTrigger>
+          <TabsTrigger value="domain" className="flex items-center gap-1.5 text-xs py-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Domínio</span>
+          </TabsTrigger>
           <TabsTrigger value="appearance" className="flex items-center gap-1 text-xs py-2 relative">
             <Type className="h-4 w-4" />
             <span className="hidden sm:inline">Aparência</span>
-            <span className="absolute -top-1 -right-1 text-[7px] font-bold uppercase px-1 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
           </TabsTrigger>
           <TabsTrigger value="home" className="flex items-center gap-1 text-xs py-2 relative">
             <LayoutDashboard className="h-4 w-4" />
             <span className="hidden sm:inline">Home</span>
-            <span className="absolute -top-1 -right-1 text-[7px] font-bold uppercase px-1 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
           </TabsTrigger>
           <TabsTrigger value="product" className="flex items-center gap-1 text-xs py-2 relative">
             <ShoppingBag className="h-4 w-4" />
             <span className="hidden sm:inline">Produto</span>
-            <span className="absolute -top-1 -right-1 text-[7px] font-bold uppercase px-1 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
           </TabsTrigger>
           <TabsTrigger value="marketing" className="flex items-center gap-1 text-xs py-2 relative">
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Marketing</span>
-            <span className="absolute -top-1 -right-1 text-[7px] font-bold uppercase px-1 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
           </TabsTrigger>
           <TabsTrigger value="push" className="flex items-center gap-1 text-xs py-2 relative">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Push</span>
-            <span className="absolute -top-1 -right-1 text-[7px] font-bold uppercase px-1 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="mt-6">
           <GeneralSettingsTab />
+        </TabsContent>
+
+        <TabsContent value="domain" className="mt-6">
+          <DomainSettingsTab />
         </TabsContent>
 
         <TabsContent value="appearance" className="mt-6">

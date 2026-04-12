@@ -2448,8 +2448,11 @@ export type Database = {
       }
       store_domains: {
         Row: {
+          cloudflare_api_token: string | null
+          cloudflare_zone_id: string | null
           conflicting_records: Json | null
           created_at: string
+          detected_provider: string | null
           dns_status: string | null
           dns_validation_details: Json | null
           hostname: string
@@ -2468,8 +2471,11 @@ export type Database = {
           verification_token: string | null
         }
         Insert: {
+          cloudflare_api_token?: string | null
+          cloudflare_zone_id?: string | null
           conflicting_records?: Json | null
           created_at?: string
+          detected_provider?: string | null
           dns_status?: string | null
           dns_validation_details?: Json | null
           hostname: string
@@ -2488,8 +2494,11 @@ export type Database = {
           verification_token?: string | null
         }
         Update: {
+          cloudflare_api_token?: string | null
+          cloudflare_zone_id?: string | null
           conflicting_records?: Json | null
           created_at?: string
+          detected_provider?: string | null
           dns_status?: string | null
           dns_validation_details?: Json | null
           hostname?: string
