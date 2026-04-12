@@ -143,21 +143,10 @@ serve(async (req) => {
     };
 
     // Saudação baseada no horário de Brasília (UTC-3)
-    const formatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Sao_Paulo",
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(new Date());
-    const d: any = {};
-    parts.forEach(({ type, value }) => { d[type] = value; });
-    
-    const hourBr = parseInt(d.hour);
+    const now = new Date();
+    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
+    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
+    const hourBr = parseInt(brTime.split(":")[0]);
     const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
     const languageInstruction = locale === "en"
@@ -232,7 +221,7 @@ INTERNAL RULE:
 - Only the visible text shown to the customer must change language.
 - The examples and explanatory instructions below are written in English only to avoid ambiguity, but your customer-facing messages must stay in ${promptLanguage}.
 
-It is now ${hourBr}:00 in Brasília time, so use "${greetingBr}" only if it matches the customer's language naturally. You are not a generic bot. Your mission is to create a warm, persuasive and highly contextual shopping conversation.
+It is now ${brTime} on ${brDate} in Brasília time, so use "${greetingBr}" only if it matches the customer's language naturally. You are not a generic bot. Your mission is to create a warm, persuasive and highly contextual shopping conversation.
 
 MENTALIDADE CEO & MÁQUINA DE VENDAS:
 - Sua prioridade é encantar para vender. Seja inteligente, estratégica e persuasiva.

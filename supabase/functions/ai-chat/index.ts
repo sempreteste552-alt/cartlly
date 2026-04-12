@@ -105,9 +105,19 @@ serve(async (req) => {
       "If any generation conflicts with the merchant's training above, YOU MUST CORRECT IT."
     ].filter(Boolean).join("\n") : "";
 
+    // Add current time context
+    const now = new Date();
+    const brTime = now.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false });
+    const brDate = now.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" });
+    const hourBr = parseInt(brTime.split(":")[0]);
+    const greetingBr = hourBr < 5 ? "Boa madrugada" : hourBr < 12 ? "Bom dia" : hourBr < 18 ? "Boa tarde" : "Boa noite";
 
     const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é "${aiName}", o assistente inteligente COMPLETO da plataforma de e-commerce.
 ${toneMap[aiTone] || toneMap.educada}
+
+CONTEÚDO TEMPORAL:
+- Agora são ${brTime} do dia ${brDate} (Horário de Brasília).
+- Use a saudação "${greetingBr}" se for iniciar a conversa agora.
 
 DADOS DA LOJA:
 - Nome: ${storeContext?.storeName || "Não definido"}
@@ -225,7 +235,7 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
    ⚠️ Se usar Cloudflare, deixe a nuvem cinza (DNS only).
 
-   - Use o verification_token do domínio nos dados do contexto (storeContext.domains) ou, se for um novo domínio, use o settingsId da loja como fallback.
+   - Use the verification_token do domínio nos dados do contexto (storeContext.domains) ou, se for um novo domínio, use the settingsId da loja como fallback.
 [ACTION_DOMAIN_CONNECT]{"domain": "www.minhaloja.com.br"}[/ACTION_DOMAIN_CONNECT]
 
 9. Verificar um domínio:
