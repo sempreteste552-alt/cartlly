@@ -344,6 +344,7 @@ export const es: TranslationKeys = {
     promotions: "🏷️ Promociones",
     shippingInfo: "🚚 Envío",
     placeOrder: "📦 Hacer pedido",
+    humanSupport: "🎧 Soporte Humano",
   },
   misc: {
     storeNotFound: "Tienda no encontrada",
