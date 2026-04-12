@@ -140,7 +140,22 @@ serve(async (req) => {
     const greeting = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
     const dayOfWeek = nowBrasilia.toLocaleDateString("pt-BR", { weekday: "long" });
 
-    const systemPrompt = `Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
+    const brainBlock = aiConfig ? [
+      "MANDATORY TENANT-SPECIFIC TRAINING / TREINAMENTO OBRIGATÓRIO (MANDATORY PRIORITY):",
+      aiConfig.brand_identity ? `BRAND IDENTITY / IDENTIDADE DA MARCA: ${aiConfig.brand_identity}` : "",
+      storeNiche ? `STORE NICHE / NICHO: ${storeNiche}` : "",
+      aiConfig.personality ? `DEFINED PERSONALITY / PERSONALIDADE: ${aiConfig.personality}` : "",
+      aiConfig.tone_of_voice ? `TONE OF VOICE / TOM DE VOZ: ${aiConfig.tone_of_voice}` : "",
+      aiConfig.writing_style ? `WRITING STYLE / ESTILO DE ESCRITA: ${aiConfig.writing_style}` : "",
+      aiConfig.emoji_usage ? `EMOJI USAGE / USO DE EMOJIS: ${aiConfig.emoji_usage}` : "",
+      aiConfig.prohibitions ? `STRICT PROHIBITIONS / PROIBIÇÕES (NEVER DO THIS): ${aiConfig.prohibitions}` : "",
+      storeKnowledge ? `MANDATORY KNOWLEDGE BASE / BASE DE CONHECIMENTO:\n${storeKnowledge}` : "",
+      customInstructions ? `CUSTOM MERCHANT INSTRUCTIONS / INSTRUÇÕES DO LOJISTA:\n${customInstructions}` : "",
+      "\nCRITICAL HIERARCHY: 1. MERCHANT TRAINING > 2. CONTEXT > 3. AI OPTIMIZATIONS",
+      "If generation conflicts with merchant training, YOU MUST CORRECT IT."
+    ].filter(Boolean).join("\n") : "";
+
+    const systemPrompt = `${brainBlock ? `${brainBlock}\n\n---\n\n` : ""}Você é o assistente motivacional da plataforma Cartlly. Envie UMA mensagem curta, motivacional e persuasiva para o dono da loja.
 
 REGRAS DE FORMATO:
 - JSON: {"title": "...", "body": "..."}
