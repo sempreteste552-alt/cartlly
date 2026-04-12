@@ -909,7 +909,7 @@ export default function LojaLayout() {
                       }
                     }}
                   >
-                    {cat.name}
+                    {localizedCategoryNames[i] || cat.name}
                   </Badge>
                 ))}
               </div>
