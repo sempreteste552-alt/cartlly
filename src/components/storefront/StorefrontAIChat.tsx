@@ -225,10 +225,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       initSupport();
 
       const channel = supabase
-        .channel(`support_storefront_${conversationId || currentConvId}`)
+        .channel(`support_storefront_${conversationId}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId || currentConvId}` },
+          { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
           (payload: any) => {
               setMessages(prev => {
                 const alreadyExists = prev.some(m => m.id === payload.new.id || (m.content === payload.new.body && Math.abs(new Date(m.created_at || "").getTime() - new Date(payload.new.created_at).getTime()) < 2000));
@@ -270,7 +270,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         )
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId || currentConvId}` },
+          { event: "UPDATE", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
           (payload: any) => {
             // Reflect read_at / delivered_at changes in real-time
             setMessages(prev => prev.map(m => 
@@ -282,7 +282,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         )
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId || currentConvId}` },
+          { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
           (payload: any) => {
             setIsAdminTyping(payload.new.is_typing_admin);
           }
