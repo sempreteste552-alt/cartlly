@@ -483,6 +483,58 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
             </div>
           </TabsContent>
 
+          <TabsContent value="memoria" className="space-y-4 mt-0">
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className="bg-primary/5 p-3 rounded-lg border border-primary/10 flex flex-col items-center justify-center text-center">
+                <Brain className="h-5 w-5 text-primary mb-1" />
+                <span className="text-xl font-bold text-primary">{knowledgeCount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Treinamentos Salvos</span>
+              </div>
+              <div className="bg-secondary/10 p-3 rounded-lg border border-secondary/20 flex flex-col items-center justify-center text-center">
+                <Users className="h-5 w-5 text-secondary-foreground mb-1" />
+                <span className="text-xl font-bold text-secondary-foreground">{insightsCount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Memórias de Clientes</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" /> Novo Treinamento Persistente
+              </Label>
+              <Textarea
+                value={newTrainingText}
+                onChange={e => setNewTrainingText(e.target.value)}
+                placeholder="Ex: No Natal do ano passado vendemos muito panetone trufado. Sempre que um cliente perguntar sobre presentes em dezembro, sugira o kit com 3 unidades."
+                className="text-xs min-h-[100px] resize-none bg-muted/30"
+                rows={4}
+              />
+              <p className="text-[10px] text-muted-foreground italic">
+                Treinamentos de memória são permanentes e a IA os consulta usando busca vetorial (RAG) antes de cada resposta.
+              </p>
+              <Button 
+                onClick={handleIngestTraining} 
+                disabled={isIngesting || !newTrainingText.trim()}
+                className="w-full h-8 text-xs gap-2"
+              >
+                {isIngesting ? <Clock className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                Memorizar Treinamento
+              </Button>
+            </div>
+
+            <div className="p-3 rounded-lg border bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
+              <div className="flex gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-400">Aprendizado Evolutivo Ativado</p>
+                  <p className="text-[10px] text-amber-700 dark:text-amber-500">
+                    A IA está aprendendo automaticamente com o comportamento dos seus clientes. Clique em links e compras bem-sucedidas fortalecem a memória da IA.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
           <TabsContent value="regras" className="space-y-3 mt-0">
             <div className="space-y-1">
               <Label className="text-xs font-medium">Proibições (O que NÃO fazer)</Label>
