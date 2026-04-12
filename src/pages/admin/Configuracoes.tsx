@@ -724,7 +724,7 @@ function GeneralSettingsTab() {
       </Card>
 
       <LockedFeature isLocked={!canAccess("custom_domain", ctx)} featureName="Domínio Personalizado">
-        {settings?.id && <DomainConnector settingsId={settings.id} />}
+        {settings?.id && <DomainConnector settingsId={settings.id} storeSlug={settings.store_slug} />}
 
         {/* Favicon Upload */}
         <Card className="border-border mt-4">
