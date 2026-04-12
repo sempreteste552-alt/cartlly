@@ -584,9 +584,18 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                 {isHumanMode && msg.role === "user" && (
                   msg.read_at 
                     ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
-                    : <Check className="h-3.5 w-3.5 text-white/50" />
+                    : msg.delivered_at
+                      ? <CheckCheck className="h-3.5 w-3.5 text-white/50" />
+                      : <Check className="h-3.5 w-3.5 text-white/50" />
                 )}
               </div>
+              {isHumanMode && msg.role === "user" && (
+                <p className={`text-[9px] text-right mt-0.5 ${
+                  msg.read_at ? "text-blue-300" : "text-white/40"
+                }`}>
+                  {msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
+                </p>
+              )}
             </div>
           </div>
         ))}

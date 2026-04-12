@@ -477,7 +477,14 @@ export default function Suporte() {
                       {(selectedConversation.customer?.name || selectedConversation.session_id).slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-400 rounded-full border-2 border-background" />
+                  {(() => {
+                    const lastMsg = new Date(selectedConversation.last_message_at);
+                    const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
+                    const isOnline = selectedConversation.is_typing_customer || diffMin < 5;
+                    return (
+                      <span className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${isOnline ? "bg-green-400" : "bg-muted-foreground/40"}`} />
+                    );
+                  })()}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm text-foreground">
@@ -486,12 +493,20 @@ export default function Suporte() {
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     {selectedConversation.is_typing_customer ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
-                    ) : (
-                      <>
-                        <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
-                        Online
-                      </>
-                    )}
+                    ) : (() => {
+                      const lastMsg = new Date(selectedConversation.last_message_at);
+                      const diffMin = Math.floor((Date.now() - lastMsg.getTime()) / 60000);
+                      if (diffMin < 5) return (
+                        <>
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
+                          Online
+                        </>
+                      );
+                      if (diffMin < 60) return `Visto há ${diffMin}min`;
+                      const diffH = Math.floor(diffMin / 60);
+                      if (diffH < 24) return `Visto há ${diffH}h`;
+                      return `Visto ${format(lastMsg, "dd/MM HH:mm")}`;
+                    })()}
                   </p>
                 </div>
               </div>
@@ -531,13 +546,23 @@ export default function Suporte() {
                             {format(new Date(msg.created_at), "HH:mm")}
                           </span>
                           {msg.sender_type === "admin" && (
-                            msg.read_at 
-                              ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
-                              : msg.delivered_at 
-                                ? <CheckCheck className="h-3.5 w-3.5 opacity-60" /> 
-                                : <Check className="h-3.5 w-3.5 opacity-60" />
+                            <>
+                              {msg.read_at 
+                                ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
+                                : msg.delivered_at 
+                                  ? <CheckCheck className="h-3.5 w-3.5 opacity-60" /> 
+                                  : <Check className="h-3.5 w-3.5 opacity-60" />
+                              }
+                            </>
                           )}
                         </div>
+                        {msg.sender_type === "admin" && (
+                          <p className={`text-[9px] text-right mt-0.5 ${
+                            msg.read_at ? "text-blue-300" : "text-primary-foreground/40"
+                          }`}>
+                            {msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))
