@@ -125,7 +125,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes." }), {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação. Verifique seu plano." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

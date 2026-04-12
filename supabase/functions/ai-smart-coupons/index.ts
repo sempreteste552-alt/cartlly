@@ -127,7 +127,7 @@ Retorne cupons práticos e criativos.`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes." }), {
+        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
