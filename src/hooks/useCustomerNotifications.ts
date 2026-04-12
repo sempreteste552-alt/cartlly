@@ -123,6 +123,24 @@ export function useCustomerNotifications(storeUserId?: string) {
         },
         () => {
           qc.invalidateQueries({ queryKey: ["customer_notifications", storeUserId, user?.id] });
+          playSound("RECEIVED");
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "support_messages",
+        },
+        (payload: any) => {
+          // Only invalidate if the message is from admin and we don't know the conversation ID yet,
+          // or if we could check if it's for our session.
+          // For simplicity, invalidate for all inserts since this is the customer's perspective.
+          if (payload.new.sender_type === "admin") {
+            qc.invalidateQueries({ queryKey: ["customer_notifications"] });
+            playSound("RECEIVED");
+          }
         }
       )
       .subscribe();
@@ -130,19 +148,24 @@ export function useCustomerNotifications(storeUserId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [storeUserId, user, qc]);
+  }, [storeUserId, user, qc, sessionId]);
 
   const unreadCount = notifications.filter((n: any) => !n.read).length;
 
-  const markAsRead = async (messageId: string) => {
+  const markAsRead = async (message: any) => {
+    if (message.is_chat) {
+       await supabase.from("support_messages").update({ read_at: new Date().toISOString() }).eq("id", message.id);
+       qc.invalidateQueries({ queryKey: ["customer_notifications"] });
+       return;
+    }
+
     if (!user) {
-      // Guest: save the latest message ID to localStorage
-      localStorage.setItem(`last_notif_${storeUserId}`, messageId);
+      localStorage.setItem(`last_notif_${storeUserId}`, message.id);
       qc.invalidateQueries({ queryKey: ["customer_notifications", storeUserId, null] });
       return;
     }
     await supabase.from("customer_message_reads").upsert(
-      { message_id: messageId, user_id: user.id },
+      { message_id: message.id, user_id: user.id },
       { onConflict: "message_id,user_id" }
     );
     qc.invalidateQueries({ queryKey: ["customer_notifications"] });
@@ -150,16 +173,23 @@ export function useCustomerNotifications(storeUserId?: string) {
 
   const markAllAsRead = async () => {
     if (notifications.length === 0) return;
+    
+    // Mark support messages as read
+    const chatMsgIds = notifications.filter((n: any) => n.is_chat && !n.read).map((n: any) => n.id);
+    if (chatMsgIds.length > 0) {
+      await supabase.from("support_messages").update({ read_at: new Date().toISOString() }).in("id", chatMsgIds);
+    }
+
     if (!user) {
-      // Guest: mark latest as seen
       localStorage.setItem(`last_notif_${storeUserId}`, notifications[0].id);
       qc.invalidateQueries({ queryKey: ["customer_notifications", storeUserId, null] });
       return;
     }
-    const unread = notifications.filter((n: any) => !n.read);
-    if (unread.length === 0) return;
-    const rows = unread.map((n: any) => ({ message_id: n.id, user_id: user.id }));
-    await supabase.from("customer_message_reads").upsert(rows, { onConflict: "message_id,user_id" });
+    const unread = notifications.filter((n: any) => !n.read && !n.is_chat);
+    if (unread.length > 0) {
+      const rows = unread.map((n: any) => ({ message_id: n.id, user_id: user.id }));
+      await supabase.from("customer_message_reads").upsert(rows, { onConflict: "message_id,user_id" });
+    }
     qc.invalidateQueries({ queryKey: ["customer_notifications"] });
   };
 
