@@ -117,16 +117,21 @@ export function RouletteWheel({
       </div>
 
 
-      {/* Pointer */}
-      <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 z-30">
+      {/* Enhanced Pointer with 3D feel */}
+      <div className="absolute top-[-35px] left-1/2 -translate-x-1/2 z-40">
         <motion.div 
-          animate={isSpinning ? { rotate: [0, -10, 0] } : {}}
-          transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
-          className="w-10 h-12 bg-red-600 rounded-b-full shadow-lg relative flex items-center justify-center border-2 border-white"
+          animate={isSpinning ? { 
+            rotate: [0, -15, 5, -10, 0],
+            y: [0, -2, 0]
+          } : {}}
+          transition={{ duration: 0.15, repeat: isSpinning ? Infinity : 0 }}
+          className="w-12 h-16 bg-gradient-to-b from-red-500 to-red-700 rounded-b-2xl shadow-2xl relative flex items-center justify-center border-x-4 border-b-4 border-white/30"
         >
-          <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-white absolute -top-1" />
+          <div className="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[20px] border-t-white absolute -top-2 drop-shadow-lg" />
+          <div className="w-4 h-4 bg-white/20 rounded-full animate-ping" />
         </motion.div>
       </div>
+
 
       {/* Wheel Container with 3D shadow */}
       <div className="relative w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] rounded-full border-[16px] border-gray-950 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),inset_0_0_40px_rgba(0,0,0,0.8)] bg-gray-900 p-1 group-hover:scale-105 transition-transform duration-500">
