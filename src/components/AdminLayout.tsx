@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { AIChatWidget } from "@/components/AIChatWidget";
 import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
@@ -32,8 +32,9 @@ import { useLocation } from "react-router-dom";
 
 export function AdminLayout() {
   const location = useLocation();
-  const isCerebroPage = location.pathname === "/admin/cerebro";
-  const isSuportePage = location.pathname === "/admin/suporte";
+  const { slug: urlSlug } = useParams();
+  const isCerebroPage = location.pathname.includes("/cerebro");
+  const isSuportePage = location.pathname.includes("/suporte");
   const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
@@ -49,21 +50,18 @@ export function AdminLayout() {
   const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
 
   // Dynamic PWA manifest for admin context — only apply when we have confirmed tenant data
-  const storeSlug = (settings as any)?.store_slug;
-  const rawStoreName = (settings as any)?.store_name || "";
-  const adminName = storeSlug
-    ? `Painel ${rawStoreName}`.trim()
-    : "";
-  const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : undefined;
+  const storeSlug = (settings as any)?.store_slug || urlSlug;
+  const adminName = storeSlug ? `Painel ${storeSlug}` : "Painel Administrativo";
+  const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : "cartlly-admin-default";
   usePwaManifest({
     id: manifestId,
-    name: adminName || undefined,
-    shortName: adminName ? adminName.slice(0, 12) : undefined,
+    name: adminName,
+    shortName: adminName.slice(0, 12),
     themeColor: (settings as any)?.admin_primary_color || "#6d28d9",
     iconUrl: themeConfig?.favicon_url || (settings as any)?.favicon_url || (settings as any)?.logo_url || undefined,
     iconVersion: themeConfig?.updated_at || (settings as any)?.updated_at || undefined,
-    startUrl: `${window.location.origin}/admin/`,
-    scope: `${window.location.origin}/admin/`,
+    startUrl: storeSlug ? `${window.location.origin}/painel/${storeSlug}/` : `${window.location.origin}/admin/`,
+    scope: storeSlug ? `${window.location.origin}/painel/${storeSlug}/` : `${window.location.origin}/admin/`,
   });
 
   const { data: currentSub } = useQuery({

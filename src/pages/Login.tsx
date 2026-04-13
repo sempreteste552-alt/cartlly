@@ -230,7 +230,7 @@ export default function Login() {
         if (!store?.store_slug) {
           navigate("/setup-store", { replace: true });
         } else {
-          navigate("/admin", { replace: true });
+          navigate("/", { replace: true });
         }
       };
       
@@ -376,7 +376,7 @@ export default function Login() {
           if (!store?.store_slug) {
             navigate("/setup-store");
           } else {
-            navigate("/admin");
+            navigate("/");
           }
         }
       }

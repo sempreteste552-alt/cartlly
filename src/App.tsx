@@ -145,7 +145,8 @@ const App = () => {
                     <Route path="roulette" element={<SuperAdminRoulette />} />
                   </Route>
                   {/* Tenant Admin */}
-                  <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                  <Route path="/admin" element={<Navigate to="/" replace />} />
+                  <Route path="/painel/:slug" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                     <Route index element={<Dashboard />} />
                     <Route path="produtos" element={<Produtos />} />
                     <Route path="pedidos" element={<Pedidos />} />
