@@ -19,6 +19,7 @@ export default function SuperAdminRoulette() {
   const queryClient = useQueryClient();
   const [editPrize, setEditPrize] = useState<any>(null);
   const [prizeFormOpen, setPrizeFormOpen] = useState(false);
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
   
   // Prize Form State
   const [label, setLabel] = useState("");
