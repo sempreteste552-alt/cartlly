@@ -63,6 +63,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.analytics, url: "/admin/analytics", icon: BarChart3, isNew: true },
     { title: t.sidebar.whatsappAi, url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
     { title: t.sidebar.support, url: "/admin/suporte", icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
+    { title: t.sidebar.roulette, url: "/admin/roleta", icon: Gift, isNew: true },
   ];
 
   const configItems = [
