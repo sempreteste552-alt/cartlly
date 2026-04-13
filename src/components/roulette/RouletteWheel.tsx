@@ -11,6 +11,7 @@ interface Prize {
 interface RouletteWheelProps {
   prizes: Prize[];
   onFinish: (prize: Prize) => void;
+  onSpinStart?: () => Promise<Prize>;
   isSpinning?: boolean;
   spinningDuration?: number; // in seconds
 }
