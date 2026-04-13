@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle, Trophy, Ticket, Star, Heart } from "lucide-react";
+import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle, Trophy, Ticket, Star, Heart, Construction, HardHat, Wrench } from "lucide-react";
 import { RouletteWheel } from "@/components/roulette/RouletteWheel";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
