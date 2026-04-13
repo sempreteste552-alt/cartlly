@@ -158,20 +158,28 @@ export function RouletteWheel({
                 }}
               >
                 <div
-                  className="flex flex-col items-center justify-center text-white font-bold text-center"
+                  className="flex flex-col items-center justify-center text-white font-black text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                   style={{
-                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-40px)`,
-                    width: "120px",
+                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-45px)`,
+                    width: "130px",
                   }}
                 >
-                  <span className="text-[10px] sm:text-xs uppercase tracking-wider mb-1 opacity-80">Prêmio</span>
-                  <span className="text-xs sm:text-sm drop-shadow-md line-clamp-2 px-2 leading-tight">
+                  <span className="text-[10px] sm:text-[11px] uppercase tracking-tighter mb-0.5 opacity-90 font-bold bg-black/20 px-2 rounded-full">
+                    {prize.label.includes('%') ? 'Desconto' : prize.label === 'Não foi dessa vez' ? 'X' : 'Especial'}
+                  </span>
+                  <span className="text-xs sm:text-base drop-shadow-lg line-clamp-2 px-1 leading-none">
                     {prize.label}
                   </span>
                   {prize.label !== 'Não foi dessa vez' && (
-                    <Star className="w-3 h-3 mt-1 text-yellow-300 fill-yellow-300 animate-pulse" />
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Star className="w-4 h-4 mt-2 text-yellow-300 fill-yellow-300 shadow-xl" />
+                    </motion.div>
                   )}
                 </div>
+
               </div>
             );
           })}
