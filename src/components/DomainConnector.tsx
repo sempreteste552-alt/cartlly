@@ -409,6 +409,31 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
                         </div>
                       )}
 
+                      {/* Request Activation Button */}
+                      {!isActive(domain) && domain.status !== "pending_activation" && (
+                        <Button
+                          className="w-full text-xs h-9 bg-amber-600 hover:bg-amber-700 text-white"
+                          onClick={() => handleRequestActivation(domain)}
+                          disabled={requestingId === domain.id}
+                        >
+                          {requestingId === domain.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Bell className="h-4 w-4 mr-2" />
+                          )}
+                          Solicitar Ativação ao Suporte
+                        </Button>
+                      )}
+
+                      {domain.status === "pending_activation" && (
+                        <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                          <Clock className="h-4 w-4 text-amber-600" />
+                          <AlertDescription className="text-amber-700 dark:text-amber-400 text-xs">
+                            Solicitação enviada! O suporte irá ativar seu domínio em breve. Você receberá uma notificação quando estiver no ar.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                       {/* Actions */}
                       <div className="flex items-center gap-2 flex-wrap">
                         {!domain.is_primary && (
