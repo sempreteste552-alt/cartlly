@@ -89,6 +89,7 @@ export const en: TranslationKeys = {
     analytics: "Funnel Analytics",
     whatsappAi: "WhatsApp AI",
     support: "Support",
+    roulette: "Prize Roulette",
     store: "Store",
     payments: "Payments",
     gateway: "Gateway",
