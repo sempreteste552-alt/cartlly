@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Globe, CheckCircle2, Clock, Loader2, RefreshCw,
   ExternalLink, Server, Copy, Check, Trash2, ShieldCheck, Star,
-  ShieldAlert, Lock, Info
+  ShieldAlert, Lock, Info, Bell
 } from "lucide-react";
 import { normalizeDomain } from "@/lib/storeDomain";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -49,6 +49,7 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
   const [isAdding, setIsAdding] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [requestingId, setRequestingId] = useState<string | null>(null);
 
   const { data: domains, isLoading, refetch } = useQuery({
     queryKey: ["store_domains", settingsId],
