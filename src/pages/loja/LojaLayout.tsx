@@ -318,21 +318,17 @@ export default function LojaLayout() {
   const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
   const localizedCategoryNames = useLocalizedTextList(categories?.map((c) => c.name) || []);
 
-  const storeInstallName = settings?.store_name?.trim()
-    || slug
-      ?.replace(/[-_]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
-    || undefined;
-  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
-  const storeIconUrl = themeConfig?.favicon_url || settings?.favicon_url || settings?.logo_url || undefined;
-  const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
+  const storeInstallName = slug
+    ?.replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    || (settings?.store_name?.trim() || "Loja");
 
   usePwaManifest({
-    id: slug ? `cartlly-store-${slug}` : undefined,
+    id: slug ? `cartlly-store-${slug}` : "cartlly-store-default",
     name: storeInstallName,
-    shortName: storeInstallName?.slice(0, 12) || undefined,
+    shortName: storeInstallName.slice(0, 12),
     themeColor: settings?.primary_color || undefined,
     iconUrl: storeIconUrl,
     iconVersion: storeIconVersion,
