@@ -146,6 +146,7 @@ export default function MinhaRoleta() {
             <div className={!canSpin ? "opacity-50 grayscale pointer-events-none" : ""}>
               <RouletteWheel 
                 prizes={prizes || []} 
+                onSpinStart={handleSpinStart}
                 onFinish={handleFinish} 
               />
             </div>
