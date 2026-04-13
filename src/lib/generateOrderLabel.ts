@@ -45,16 +45,13 @@ export function generateOrderLabel(data: OrderLabelData): void {
   const shortId = data.orderId.slice(0, 8).toUpperCase();
   const logisticCode = "PLP:" + data.orderId.replace(/-/g, "").slice(0, 10).toUpperCase();
   const contractCode = "CMP" + data.orderId.replace(/-/g, "").slice(0, 14).toUpperCase();
-  const fullAddress = buildFullAddress(data);
   const cep = data.shippingCep ? formatCep(data.shippingCep) : "";
-  const rawCep = data.shippingCep?.replace(/\D/g, "") || "";
   const carrier = data.shippingMethod || "Transportadora";
-  const serviceType = data.shippingType || "";
+  const serviceType = data.shippingType || "Padrão";
   const tracking = data.trackingCode || "";
   const itemsSummary = data.items
-    .slice(0, 3)
-    .map((i) => `${i.quantity}x ${i.name.substring(0, 30)}${i.variation ? ` (${i.variation})` : ""}`)
-    .join(" | ");
+    .map((i) => `${i.quantity}x ${i.name.substring(0, 40)}${i.variation ? ` (${i.variation})` : ""}`)
+    .join("<br/>");
 
   const senderLocation = [data.storeCity, data.storeState].filter(Boolean).join(", ");
   const senderAddress = data.storeAddress || senderLocation;
@@ -63,204 +60,185 @@ export function generateOrderLabel(data: OrderLabelData): void {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Etiqueta #${shortId}</title>
+<title>Etiqueta de Envio #${shortId}</title>
 <style>
-@page{size:100mm 150mm;margin:0}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;width:100mm;height:150mm;padding:0;font-size:8px;line-height:1.25;color:#000;background:#fff}
-.label{border:1.5pt solid #000;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+@page { size: 100mm 150mm; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', Arial, sans-serif; width: 100mm; height: 150mm; padding: 0; font-size: 8px; line-height: 1.2; color: #000; background: #fff; }
+.label { border: 2pt solid #000; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 
 /* === HEADER === */
-.header{display:flex;align-items:stretch;border-bottom:1.5pt solid #000;min-height:18mm}
-.header-left{flex:1;display:flex;align-items:center;padding:2mm 3mm;border-right:1pt solid #000}
-.header-left .logo-area{display:flex;align-items:center;gap:2mm}
-.header-left .logo-area img{max-height:10mm;max-width:20mm}
-.header-left .logo-text{font-size:14px;font-weight:900;letter-spacing:-.5px}
-.header-center{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5mm;border-right:1pt solid #000}
-.header-center canvas{width:16mm;height:16mm}
-.header-right{flex:1;display:flex;flex-direction:column;justify-content:center;padding:2mm 3mm;font-size:7px}
-.header-right .plp{font-weight:700;font-size:8px}
+.header { display: flex; border-bottom: 2pt solid #000; height: 25mm; }
+.header-left { flex: 1.5; display: flex; flex-direction: column; justify-content: center; padding: 3mm; border-right: 1.5pt solid #000; }
+.store-logo { max-height: 12mm; max-width: 35mm; object-fit: contain; margin-bottom: 1mm; }
+.store-name { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
 
-/* === BARCODE AREA === */
-.barcode-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2mm 5mm;border-bottom:1.5pt solid #000;min-height:16mm}
-.barcode-area svg{width:85%;max-height:14mm}
-.barcode-text{font-size:9px;font-weight:700;letter-spacing:2px;font-family:'Courier New',monospace;margin-top:1mm}
-
-/* === CONTRACT LINE === */
-.contract-line{display:flex;justify-content:space-between;padding:1.5mm 3mm;border-bottom:1pt solid #000;font-size:7px;background:#f5f5f5}
-.contract-line b{font-size:8px}
-
-/* === RECIPIENT === */
-.recipient{padding:2.5mm 3mm;border-bottom:1.5pt solid #000;flex:0 0 auto}
-.section-label{font-size:6px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#666;margin-bottom:.5mm}
-.recipient-tag{display:flex;align-items:center;gap:2mm;margin-bottom:1.5mm;padding-bottom:1mm;border-bottom:1pt solid #ddd}
-.recipient-tag span{font-size:7px;font-weight:900;text-transform:uppercase;letter-spacing:1px;background:#000;color:#fff;padding:.5mm 2mm;display:inline-block}
-.recipient-name{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1mm}
-.recipient-addr{font-size:9px;line-height:1.5}
-.recipient-addr div{margin-bottom:.3mm}
-.recipient-cep-row{display:flex;align-items:center;justify-content:space-between;margin-top:2mm}
-.recipient-cep{font-size:20px;font-weight:900;letter-spacing:4px;font-family:'Courier New',monospace}
-.recipient-city{font-size:10px;font-weight:700;text-transform:uppercase}
-
-/* === SENDER === */
-.sender{padding:2mm 3mm;border-bottom:1pt solid #000;font-size:7.5px}
-.sender-row{display:flex;justify-content:space-between;align-items:flex-start}
-.sender-name{font-weight:700;font-size:8px}
-.sender-addr{color:#333;font-size:7px;line-height:1.4}
-.sender-cep{font-weight:900;font-size:12px;letter-spacing:2px;font-family:'Courier New',monospace;text-align:right}
-
-/* === ITEMS === */
-.items{padding:1.5mm 3mm;border-bottom:1pt solid #000;font-size:7px}
-.items-content{font-size:7.5px;line-height:1.3;color:#222}
+.header-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; background: #000; color: #fff; }
+.order-badge { font-size: 7px; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 1mm; }
+.order-id { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
 
 /* === SHIPPING INFO === */
-.shipping{display:flex;justify-content:space-between;align-items:center;padding:1.5mm 3mm;border-bottom:1pt solid #000;font-size:7.5px}
-.shipping-carrier{font-weight:900;font-size:10px;text-transform:uppercase}
-.shipping-type{font-size:8px;font-weight:700}
-.shipping-tracking{font-family:'Courier New',monospace;font-size:8px;letter-spacing:1px;background:#eee;padding:.5mm 2mm}
+.shipping-bar { display: flex; align-items: center; justify-content: space-between; background: #f0f0f0; padding: 2mm 4mm; border-bottom: 1.5pt solid #000; }
+.carrier-name { font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.service-type { font-size: 8px; font-weight: 700; border: 1pt solid #000; padding: 0.5mm 1.5mm; border-radius: 2px; }
 
-/* === FOOTER NOTICE === */
-.footer-notice{padding:1.5mm 3mm;font-size:5.5px;color:#888;text-align:center;line-height:1.3}
+/* === BARCODE AREA === */
+.barcode-section { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4mm; border-bottom: 2pt solid #000; flex: 0 0 auto; }
+.barcode-container { width: 100%; display: flex; justify-content: center; margin-bottom: 1mm; }
+.barcode-container svg { width: 90%; height: 15mm; }
+.tracking-code { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 900; letter-spacing: 3px; }
 
-@media print{
-  body{width:100mm;height:150mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .label{page-break-inside:avoid}
+/* === RECIPIENT === */
+.recipient-area { padding: 4mm; border-bottom: 1.5pt solid #000; flex: 1; position: relative; }
+.tag { font-size: 6px; font-weight: 900; text-transform: uppercase; background: #000; color: #fff; padding: 0.5mm 1.5mm; margin-bottom: 2mm; display: inline-block; border-radius: 1px; }
+.recipient-name { font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; line-height: 1; }
+.recipient-address { font-size: 10px; font-weight: 500; line-height: 1.4; color: #000; }
+.recipient-address b { font-weight: 800; }
+
+.cep-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 3mm; }
+.cep-value { font-size: 24px; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: 2px; line-height: 1; }
+.city-state { font-size: 10px; font-weight: 800; text-transform: uppercase; }
+
+/* === SENDER === */
+.sender-area { padding: 3mm 4mm; border-bottom: 1pt solid #000; background: #fafafa; }
+.sender-label { font-size: 6px; font-weight: 800; color: #666; margin-bottom: 1mm; text-transform: uppercase; }
+.sender-info { display: flex; justify-content: space-between; align-items: flex-start; }
+.sender-details { font-size: 8px; line-height: 1.3; }
+.sender-name { font-weight: 900; }
+.sender-cep { font-weight: 900; font-size: 10px; font-family: 'Courier New', monospace; }
+
+/* === CONTENT === */
+.content-area { padding: 3mm 4mm; flex: 0 0 auto; min-height: 20mm; }
+.content-label { font-size: 6px; font-weight: 800; color: #666; margin-bottom: 1.5mm; text-transform: uppercase; }
+.items-list { font-size: 8px; line-height: 1.4; color: #333; }
+.notes { margin-top: 2mm; padding-top: 1mm; border-top: 0.5pt dashed #ccc; font-style: italic; font-size: 7px; color: #666; }
+
+/* === FOOTER === */
+.footer { padding: 2mm; font-size: 6px; text-align: center; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+
+@media print {
+  body { width: 100mm; height: 150mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .label { page-break-inside: avoid; }
 }
 </style>
 </head>
 <body>
 <div class="label">
-
-  <!-- HEADER: Logo + QR + Order ID -->
   <div class="header">
     <div class="header-left">
-      <div class="logo-area">
-        ${data.storeLogo ? `<img src="${escapeHtml(data.storeLogo)}" alt="Logo" />` : `<span class="logo-text">${escapeHtml(data.storeName)}</span>`}
-      </div>
-    </div>
-    <div class="header-center">
-      <canvas id="qrcode"></canvas>
+      ${data.storeLogo ? `<img src="${escapeHtml(data.storeLogo)}" class="store-logo" />` : `<div class="store-name">${escapeHtml(data.storeName)}</div>`}
+      <div style="font-size: 7px; color: #666; margin-top: 1mm;">${escapeHtml(data.storeEmail || "")}</div>
     </div>
     <div class="header-right">
-      <div>Pedido:</div>
-      <div class="plp">${escapeHtml(shortId)}</div>
-      <div style="margin-top:1mm">${escapeHtml(logisticCode)}</div>
+      <div class="order-badge">Pedido</div>
+      <div class="order-id">#${escapeHtml(shortId)}</div>
+      <div style="font-size: 6px; opacity: 0.7; margin-top: 1mm;">${escapeHtml(data.date)}</div>
     </div>
   </div>
 
-  <!-- BARCODE -->
-  <div class="barcode-area">
-    <svg id="barcode"></svg>
-    <div class="barcode-text">${escapeHtml(contractCode)}</div>
+  <div class="shipping-bar">
+    <div class="carrier-name">${escapeHtml(carrier)}</div>
+    <div class="service-type">${escapeHtml(serviceType)}</div>
   </div>
 
-  <!-- CONTRACT LINE -->
-  <div class="contract-line">
-    <div>Contrato: <b>${escapeHtml(contractCode)}</b></div>
-    <div>${escapeHtml(data.date)}</div>
-  </div>
-
-  <!-- RECIPIENT -->
-  <div class="recipient">
-    <div class="recipient-tag">
-      <span>DESTINATÁRIO</span>
-      ${carrier ? `<span style="background:#555">${escapeHtml(carrier)}${serviceType ? ` / ${escapeHtml(serviceType)}` : ""}</span>` : ""}
+  <div class="barcode-section">
+    <div class="barcode-container">
+      <svg id="barcode"></svg>
     </div>
+    <div class="tracking-code">${escapeHtml(tracking || logisticCode)}</div>
+  </div>
+
+  <div class="recipient-area">
+    <div class="tag">Destinatário</div>
     <div class="recipient-name">${escapeHtml(data.customerName)}</div>
-    <div class="recipient-addr">
-      ${data.shippingStreet ? `<div>${escapeHtml(data.shippingStreet)}${data.shippingNumber ? `, ${escapeHtml(data.shippingNumber)}` : ""}</div>` : ""}
-      ${data.shippingComplement ? `<div>${escapeHtml(data.shippingComplement)}</div>` : ""}
-      ${data.shippingNeighborhood ? `<div>${escapeHtml(data.shippingNeighborhood)}</div>` : ""}
-      ${!data.shippingStreet && data.customerAddress ? `<div>${escapeHtml(data.customerAddress)}</div>` : ""}
+    <div class="recipient-address">
+      ${data.shippingStreet ? `<b>${escapeHtml(data.shippingStreet)}, ${escapeHtml(data.shippingNumber || "S/N")}</b>` : `<b>${escapeHtml(data.customerAddress || "")}</b>`}
+      ${data.shippingComplement ? `<br/>${escapeHtml(data.shippingComplement)}` : ""}
+      ${data.shippingNeighborhood ? `<br/>Bairro: ${escapeHtml(data.shippingNeighborhood)}` : ""}
+      ${data.customerPhone ? `<br/>Tel: ${escapeHtml(data.customerPhone)}` : ""}
     </div>
-    <div class="recipient-cep-row">
-      <div class="recipient-city">${[data.shippingCity, data.shippingState].filter(Boolean).map(s => escapeHtml(s!)).join(" - ")}</div>
-      ${cep ? `<div class="recipient-cep">${cep}</div>` : ""}
+    <div class="cep-row">
+      <div class="city-state">${[data.shippingCity, data.shippingState].filter(Boolean).map(s => escapeHtml(s!)).join(" / ")}</div>
+      <div class="cep-value">${cep}</div>
     </div>
-    ${data.customerPhone ? `<div style="font-size:7px;color:#555;margin-top:1mm">Tel: ${escapeHtml(data.customerPhone)}</div>` : ""}
   </div>
 
-  <!-- SENDER -->
-  <div class="sender">
-    <div class="section-label">REMETENTE</div>
-    <div class="sender-row">
-      <div>
+  <div class="sender-area">
+    <div class="sender-label">Remetente</div>
+    <div class="sender-info">
+      <div class="sender-details">
         <div class="sender-name">${escapeHtml(data.storeName)}</div>
-        <div class="sender-addr">${escapeHtml(senderAddress)}</div>
+        <div>${escapeHtml(senderAddress)}</div>
       </div>
-      ${data.storeCep ? `<div class="sender-cep">${formatCep(data.storeCep)}</div>` : ""}
+      <div class="sender-cep">${data.storeCep ? formatCep(data.storeCep) : ""}</div>
     </div>
   </div>
 
-  <!-- ITEMS -->
-  <div class="items">
-    <div class="section-label">CONTEÚDO (${data.items.reduce((s, i) => s + i.quantity, 0)} ${data.items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "itens"})</div>
-    <div class="items-content">${escapeHtml(itemsSummary)}</div>
-    ${data.notes ? `<div style="font-size:6.5px;color:#666;margin-top:.5mm;font-style:italic">OBS: ${escapeHtml(data.notes)}</div>` : ""}
+  <div class="content-area">
+    <div class="content-label">Conteúdo do Pacote</div>
+    <div class="items-list">${itemsSummary}</div>
+    ${data.notes ? `<div class="notes">Obs: ${escapeHtml(data.notes)}</div>` : ""}
   </div>
 
-  <!-- SHIPPING -->
-  ${tracking ? `
-  <div class="shipping">
-    <div>
-      <div class="shipping-carrier">${escapeHtml(carrier)}</div>
-      ${serviceType ? `<div class="shipping-type">${escapeHtml(serviceType)}</div>` : ""}
-    </div>
-    <div class="shipping-tracking">${escapeHtml(tracking)}</div>
-  </div>` : ""}
-
-  <!-- FOOTER -->
-  <div class="footer-notice">
-    Etiqueta gerada automaticamente. Documento sem valor fiscal. Proibida a violação desta embalagem.
+  <div class="footer">
+    Documento para fins de transporte. Gerado eletronicamente.
   </div>
-
 </div>
 
 <script>
 (function(){
-  // === CODE128B Barcode ===
+  // === Improved CODE128B Barcode Generation ===
   var C={START:[2,1,1,4,1,2],STOP:[2,3,3,1,1,1,2],P:[
-[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
-[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
-[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],
-[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],
-[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],
-[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
-[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],
-[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],
-[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],
-[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[3,1,3,1,2,1],[2,1,1,3,3,1],
-[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,3,1,1],[2,1,3,1,3,1],[3,1,1,1,2,3],
-[3,1,1,3,2,1],[3,3,1,1,2,1],[3,1,2,1,1,3],[3,1,2,3,1,1],[3,3,2,1,1,1],
-[3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],
-[1,2,1,1,2,4],[1,2,1,4,2,1],[1,4,1,1,2,2],[1,4,1,2,2,1],[1,1,2,2,1,4],
-[1,1,2,4,1,2],[1,2,2,1,1,4],[1,2,2,4,1,1],[1,4,2,1,1,2],[1,4,2,2,1,1],
-[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],
-[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,2,4,1],[1,1,4,2,1,2],[1,2,4,1,1,2],
-[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,2,1,4,1],
-[2,1,4,1,2,1],[4,1,2,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],
-[1,1,4,1,1,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[4,1,1,3,1,1],[1,1,3,1,4,1],
-[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,3,1]]};
-  function enc(t){var c=[],s=104;for(var i=0;i<t.length;i++){var v=t.charCodeAt(i)-32;if(v<0||v>94)v=0;c.push(v);s+=v*(i+1)}c.push(s%103);var b=C.START.slice();c.forEach(function(x){b=b.concat(C.P[x])});return b.concat(C.STOP)}
-  var t=${JSON.stringify(contractCode)};var b=enc(t);var svg=document.getElementById('barcode');
-  if(svg){var x=0,u=1,h=40,r='';b.forEach(function(w,i){if(i%2===0)r+='<rect x="'+x+'" y="0" width="'+(w*u)+'" height="'+h+'" fill="#000"/>';x+=w*u});svg.setAttribute('viewBox','0 0 '+x+' '+h);svg.innerHTML=r}
+    [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
+    [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
+    [2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],
+    [1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],
+    [2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],
+    [3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
+    [2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],
+    [1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],
+    [2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],
+    [1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[3,1,3,1,2,1],[2,1,1,3,3,1],
+    [2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,3,1,1],[2,1,3,1,3,1],[3,1,1,1,2,3],
+    [3,1,1,3,2,1],[3,3,1,1,2,1],[3,1,2,1,1,3],[3,1,2,3,1,1],[3,3,2,1,1,1],
+    [3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],
+    [1,2,1,1,2,4],[1,2,1,4,2,1],[1,4,1,1,2,2],[1,4,1,2,2,1],[1,1,2,2,1,4],
+    [1,1,2,4,1,2],[1,2,2,1,1,4],[1,2,2,4,1,1],[1,4,2,1,1,2],[1,4,2,2,1,1],
+    [2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],
+    [1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,2,4,1],[1,1,4,2,1,2],[1,2,4,1,1,2],
+    [1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,2,1,4,1],
+    [2,1,4,1,2,1],[4,1,2,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],
+    [1,1,4,1,1,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[4,1,1,3,1,1],[1,1,3,1,4,1],
+    [1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,3,1]
+  ]};
+  function enc(t){
+    var c=[],s=104;
+    for(var i=0;i<t.length;i++){
+      var v=t.charCodeAt(i)-32;
+      if(v<0||v>94)v=0;
+      c.push(v);
+      s+=v*(i+1);
+    }
+    c.push(s%103);
+    var b=C.START.slice();
+    c.forEach(function(x){ b=b.concat(C.P[x]); });
+    return b.concat(C.STOP);
+  }
+  var code = ${JSON.stringify(tracking || logisticCode)};
+  var b=enc(code);
+  var svg=document.getElementById('barcode');
+  if(svg){
+    var x=0,u=2,h=50,r='';
+    b.forEach(function(w,i){
+      if(i%2===0)r+='<rect x="'+x+'" y="0" width="'+(w*u)+'" height="'+h+'" fill="#000"/>';
+      x+=w*u;
+    });
+    svg.setAttribute('viewBox','0 0 '+x+' '+h);
+    svg.innerHTML=r;
+  }
 })();
-(function(){
-  // === QR Code (simplified pattern) ===
-  var c=document.getElementById('qrcode');if(!c)return;var x=c.getContext('2d'),s=120;c.width=s;c.height=s;
-  var id=${JSON.stringify(data.orderId)},g=21,cs=s/g;
-  x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle='#000';
-  function f(px,py){x.fillRect(px*cs,py*cs,7*cs,7*cs);x.fillStyle='#fff';x.fillRect((px+1)*cs,(py+1)*cs,5*cs,5*cs);x.fillStyle='#000';x.fillRect((px+2)*cs,(py+2)*cs,3*cs,3*cs)}
-  f(0,0);f(g-7,0);f(0,g-7);
-  // Alignment pattern
-  x.fillRect(g-9+4,g-9+4,1,1);
-  // Timing
-  for(var i=8;i<g-8;i++){if(i%2===0){x.fillRect(i*cs,6*cs,cs,cs);x.fillRect(6*cs,i*cs,cs,cs)}}
-  // Data
-  var h=0;for(var i=0;i<id.length;i++)h=((h<<5)-h)+id.charCodeAt(i);
-  for(var r=0;r<g;r++)for(var c2=0;c2<g;c2++){if((r<9&&c2<9)||(r<9&&c2>=g-8)||(r>=g-8&&c2<9))continue;if(r===6||c2===6)continue;if(((h>>((r*g+c2)%31))&1)===1)x.fillRect(c2*cs,r*cs,cs,cs)}
-})();
-window.onload=function(){setTimeout(function(){window.print()},400)};
+window.onload=function(){ setTimeout(function(){ window.print(); window.close(); }, 500); };
 </script>
 </body>
 </html>`;
@@ -284,18 +262,4 @@ function formatCep(cep: string): string {
   const clean = cep.replace(/\D/g, "");
   if (clean.length === 8) return clean.slice(0, 5) + "-" + clean.slice(5);
   return cep;
-}
-
-function buildFullAddress(data: OrderLabelData): string {
-  if (data.shippingStreet) {
-    const parts = [
-      data.shippingStreet,
-      data.shippingNumber ? `nº ${data.shippingNumber}` : "",
-      data.shippingComplement || "",
-      data.shippingNeighborhood || "",
-      [data.shippingCity, data.shippingState].filter(Boolean).join("/"),
-    ].filter(Boolean);
-    return parts.join(", ");
-  }
-  return data.customerAddress || "";
 }

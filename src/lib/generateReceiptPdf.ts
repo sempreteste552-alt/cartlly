@@ -1,3 +1,4 @@
+
 interface ReceiptItem {
   name: string;
   quantity: number;
@@ -30,200 +31,217 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
 
 export function generateReceiptPdf(data: ReceiptData): void {
-  const cleanCpf = data.customerCpf?.replace(/\D/g, "") || "";
-  const maskedCpf = cleanCpf.length === 11 
-    ? `***.***.${cleanCpf.slice(7, 9)}-${cleanCpf.slice(9)}` 
-    : data.customerCpf || "—";
-    
-  const authenticationCode = (data.orderId.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32);
-
-  const html = `
-<!DOCTYPE html>
+  const shortId = data.orderId.slice(0, 8).toUpperCase();
+  
+  const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Nota Fiscal - Pedido #${data.orderId.slice(0, 8)}</title>
+  <title>Recibo de Compra #${shortId}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: 'Inter', sans-serif; 
-      color: #000; 
-      padding: 10px;
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1a1a1a;
       background: #fff;
-      font-size: 10px;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 40px;
     }
-    .nf-container {
-      width: 100%;
+
+    .container {
       max-width: 800px;
       margin: 0 auto;
-      border: 1px solid #000;
-      padding: 5px;
     }
+
     .header {
       display: flex;
-      border-bottom: 1px solid #000;
-      margin-bottom: 5px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
     }
-    .logo-container {
-      width: 20%;
-      padding: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-right: 1px solid #000;
-    }
-    .store-info {
-      width: 50%;
-      padding: 5px;
-      border-right: 1px solid #000;
-    }
-    .nf-title {
-      width: 30%;
-      padding: 5px;
-      text-align: center;
+
+    .store-brand {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      gap: 10px;
     }
-    .nf-title h1 { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
-    .nf-title p { font-size: 9px; font-weight: 600; }
-    
-    .section {
-      border: 1px solid #000;
-      margin-bottom: 5px;
+
+    .logo {
+      max-height: 50px;
+      max-width: 200px;
+      object-fit: contain;
     }
-    .section-header {
-      background: #f0f0f0;
-      padding: 2px 5px;
+
+    .store-name {
+      font-size: 18px;
       font-weight: 800;
-      font-size: 9px;
-      border-bottom: 1px solid #000;
+      color: #000;
+    }
+
+    .receipt-info {
+      text-align: right;
+    }
+
+    .receipt-title {
+      font-size: 24px;
+      font-weight: 900;
       text-transform: uppercase;
+      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+      color: #000;
     }
-    .section-content {
-      padding: 5px;
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .field {
-      margin-right: 15px;
-      margin-bottom: 2px;
-    }
-    .field-label {
-      font-size: 8px;
+
+    .order-number {
+      font-size: 14px;
       font-weight: 600;
-      text-transform: uppercase;
-      display: block;
+      color: #666;
     }
-    .field-value {
+
+    .details-grid {
+      display: grid;
+      grid-template-cols: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .detail-section h3 {
       font-size: 10px;
-      font-weight: 400;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #999;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 5px;
+    }
+
+    .detail-item {
+      margin-bottom: 4px;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #444;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 5px;
+      margin-bottom: 30px;
     }
+
     th {
-      background: #f0f0f0;
       text-align: left;
-      padding: 3px 5px;
-      font-size: 9px;
-      border: 1px solid #000;
+      padding: 12px 8px;
+      background: #f9f9f9;
+      border-bottom: 2px solid #eee;
+      font-weight: 700;
       text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
     }
+
     td {
-      padding: 3px 5px;
-      border: 1px solid #000;
-      font-size: 9px;
+      padding: 12px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
     }
-    
-    .totals {
+
+    .item-name {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .totals-container {
       display: flex;
       justify-content: flex-end;
+      margin-top: 20px;
     }
+
     .totals-box {
-      width: 250px;
-      border: 1px solid #000;
+      width: 300px;
+      background: #fdfdfd;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #eee;
     }
+
     .total-row {
       display: flex;
       justify-content: space-between;
-      padding: 2px 5px;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 8px;
     }
-    .total-row:last-child {
-      border-bottom: none;
-      background: #f0f0f0;
-      font-weight: 800;
-      font-size: 11px;
+
+    .total-row.grand-total {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 2px solid #000;
+      font-size: 16px;
+      font-weight: 900;
+      color: #000;
     }
-    
+
+    .notes-section {
+      margin-top: 40px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border-left: 4px solid #eee;
+    }
+
     .footer {
-      margin-top: 10px;
-      font-size: 8px;
+      margin-top: 60px;
       text-align: center;
-      color: #666;
+      color: #aaa;
+      font-size: 9px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 20px;
     }
 
     @media print {
       body { padding: 0; }
-      .nf-container { border: 1px solid #000; width: 100%; max-width: none; }
+      .container { width: 100%; max-width: none; }
     }
   </style>
 </head>
 <body>
-  <div class="nf-container">
+  <div class="container">
     <div class="header">
-      <div class="logo-container">
-        ${data.storeLogoUrl ? `<img src="${data.storeLogoUrl}" alt="${data.storeName}" style="max-height:50px;max-width:100%;object-fit:contain;" />` : `<div style="font-weight:800;font-size:12px;">${data.storeName}</div>`}
+      <div class="store-brand">
+        ${data.storeLogoUrl ? `<img src="${data.storeLogoUrl}" class="logo" />` : `<div class="store-name">${data.storeName}</div>`}
+        <div class="detail-item">
+          <div class="detail-value">${data.storeAddress || ""}</div>
+          <div class="detail-value">${data.storePhone || ""}</div>
+        </div>
       </div>
-      <div class="store-info">
-        <div style="font-weight:800; font-size:11px;">${data.storeName}</div>
-        <div style="margin-top:2px;">${data.storeAddress || "Endereço não informado"}</div>
-        <div>Tel: ${data.storePhone || "Não informado"}</div>
-      </div>
-      <div class="nf-title">
-        <h1>DANFE</h1>
-        <p>Documento Auxiliar da Nota Fiscal Eletrônica</p>
-        <div style="margin-top:5px; font-weight:800;">Nº ${data.orderId.slice(0, 8).toUpperCase()}</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">Destinatário / Remetente</div>
-      <div class="section-content">
-        <div class="field" style="width: 60%;">
-          <span class="field-label">Nome / Razão Social</span>
-          <span class="field-value">${data.customerName}</span>
-        </div>
-        <div class="field" style="width: 35%;">
-          <span class="field-label">CPF / CNPJ</span>
-          <span class="field-value">${data.customerCpf || "—"}</span>
-        </div>
-        <div class="field" style="width: 60%;">
-          <span class="field-label">Endereço</span>
-          <span class="field-value">${data.customerAddress || "Retirada / Não informado"}</span>
-        </div>
-        <div class="field" style="width: 20%;">
-          <span class="field-label">Data de Emissão</span>
-          <span class="field-value">${data.date.split(" ")[0]}</span>
-        </div>
-        <div class="field" style="width: 15%;">
-          <span class="field-label">Hora</span>
-          <span class="field-value">${data.date.split(" ")[1] || ""}</span>
-        </div>
+      <div class="receipt-info">
+        <h1 class="receipt-title">RECIBO</h1>
+        <p class="order-number">Pedido #${shortId}</p>
+        <p style="margin-top: 5px; color: #888;">Emitido em ${data.date}</p>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-header">Dados do Pagamento</div>
-      <div class="section-content">
-        <div class="field">
-          <span class="field-label">Meio de Pagamento</span>
-          <span class="field-value">${data.paymentMethod}</span>
+    <div class="details-grid">
+      <div class="detail-section">
+        <h3>Cliente</h3>
+        <div class="detail-item">
+          <p class="item-name">${data.customerName}</p>
+          <p>${data.customerEmail || ""}</p>
+          <p>${data.customerPhone || ""}</p>
+          ${data.customerCpf ? `<p>CPF: ${data.customerCpf}</p>` : ""}
+        </div>
+      </div>
+      <div class="detail-section">
+        <h3>Entrega / Endereço</h3>
+        <div class="detail-item">
+          <p>${data.customerAddress || "Retirada em mãos"}</p>
+          <p style="margin-top: 10px;"><span class="detail-label">Pagamento:</span> ${data.paymentMethod}</p>
         </div>
       </div>
     </div>
@@ -231,18 +249,18 @@ export function generateReceiptPdf(data: ReceiptData): void {
     <table>
       <thead>
         <tr>
-          <th style="width: 10%;">CÓDIGO</th>
-          <th style="width: 45%;">DESCRIÇÃO DOS PRODUTOS/SERVIÇOS</th>
-          <th style="width: 10%;">QTD.</th>
-          <th style="width: 15%;">VLR. UNIT.</th>
-          <th style="width: 20%;">VLR. TOTAL</th>
+          <th style="width: 60%;">Descrição do Item</th>
+          <th style="width: 10%; text-align: center;">Qtd</th>
+          <th style="width: 15%; text-align: right;">Unitário</th>
+          <th style="width: 15%; text-align: right;">Total</th>
         </tr>
       </thead>
       <tbody>
-        ${data.items.map((item, index) => `
+        ${data.items.map(item => `
           <tr>
-            <td>${(index + 1).toString().padStart(3, "0")}</td>
-            <td>${item.name}</td>
+            <td>
+              <div class="item-name">${item.name}</div>
+            </td>
             <td style="text-align: center;">${item.quantity}</td>
             <td style="text-align: right;">${formatPrice(item.price)}</td>
             <td style="text-align: right;">${formatPrice(item.price * item.quantity)}</td>
@@ -251,45 +269,52 @@ export function generateReceiptPdf(data: ReceiptData): void {
       </tbody>
     </table>
 
-    <div style="display: flex; gap: 5px;">
-      <div class="section" style="flex: 1;">
-        <div class="section-header">Dados Adicionais</div>
-        <div class="section-content" style="font-size: 8px;">
-          <strong>Informações Complementares:</strong><br>
-          ${data.notes ? `Observações do Cliente: ${data.notes}<br>` : ""}
-          Pedido realizado via Loja Online. 
-          Este documento é uma representação simplificada de um pedido.
-        </div>
-      </div>
-      
+    <div class="totals-container">
       <div class="totals-box">
         <div class="total-row">
           <span>Subtotal:</span>
           <span>${formatPrice(data.subtotal)}</span>
         </div>
         ${data.shipping > 0 ? `
-        <div class="total-row">
-          <span>Frete:</span>
-          <span>${formatPrice(data.shipping)}</span>
-        </div>
+          <div class="total-row">
+            <span>Frete:</span>
+            <span>${formatPrice(data.shipping)}</span>
+          </div>
         ` : ""}
         ${data.discount > 0 ? `
-        <div class="total-row" style="color: green;">
-          <span>Desconto:</span>
-          <span>-${formatPrice(data.discount)}</span>
-        </div>
+          <div class="total-row" style="color: #10b981;">
+            <span>Desconto:</span>
+            <span>-${formatPrice(data.discount)}</span>
+          </div>
         ` : ""}
-        <div class="total-row">
-          <span>VALOR TOTAL:</span>
+        <div class="total-row grand-total">
+          <span>TOTAL:</span>
           <span>${formatPrice(data.total)}</span>
         </div>
       </div>
     </div>
 
+    ${data.notes ? `
+      <div class="notes-section">
+        <p style="font-weight: 800; font-size: 9px; text-transform: uppercase; color: #999; margin-bottom: 5px;">Observações:</p>
+        <p>${data.notes}</p>
+      </div>
+    ` : ""}
+
     <div class="footer">
-      Gerado eletronicamente por ${data.storeName} - Documento Auxiliar
+      Obrigado pela sua compra na ${data.storeName}!<br/>
+      Este documento não possui valor de Nota Fiscal Eletrônica oficial.
     </div>
   </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+        window.close();
+      }, 500);
+    }
+  </script>
 </body>
 </html>`;
 
@@ -297,9 +322,5 @@ export function generateReceiptPdf(data: ReceiptData): void {
   if (printWindow) {
     printWindow.document.write(html);
     printWindow.document.close();
-    setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-    }, 500);
   }
 }

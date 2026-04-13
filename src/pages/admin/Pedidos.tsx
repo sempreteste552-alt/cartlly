@@ -101,7 +101,7 @@ export default function Pedidos() {
 
   const handlePrintLabel = async (order: any) => {
     if (!canPrintLabel) {
-      toast.error("Imprimir nota está disponível a partir do plano Starter. Faça upgrade para desbloquear.");
+      toast.error("Imprimir etiqueta está disponível a partir do plano Starter. Faça upgrade para desbloquear.");
       return;
     }
     const pStatus = (order as any).payments?.[0]?.status || "pendente";
@@ -153,6 +153,46 @@ export default function Pedidos() {
     toast.promise(fetchItems(), {
       loading: "Preparando etiqueta...",
       success: "Etiqueta gerada!",
+      error: "Erro ao carregar itens do pedido."
+    });
+  };
+
+  const handlePrintReceipt = async (order: any) => {
+    const fetchItems = async () => {
+      const { data: items, error } = await supabase.from("order_items").select("*").eq("order_id", order.id);
+      if (error) throw error;
+      
+      const pStatus = (order as any).payments?.[0]?.status || "pendente";
+      const isPaid = pStatus === "approved" || pStatus === "paid";
+      const discountAmount = order.discount_amount || 0;
+      const subtotal = items?.reduce((acc, i) => acc + (i.unit_price * i.quantity), 0) || 0;
+
+      generateReceiptPdf({
+        orderId: order.id,
+        date: format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR }),
+        storeName: (storeSettings as any)?.store_name || "Minha Loja",
+        storeLogoUrl: (storeSettings as any)?.logo_url || undefined,
+        storeAddress: (storeSettings as any)?.store_address || undefined,
+        storePhone: (storeSettings as any)?.whatsapp_number || undefined,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email || undefined,
+        customerPhone: order.customer_phone || undefined,
+        customerAddress: order.customer_address || undefined,
+        customerCpf: order.customer_cpf || undefined,
+        items: items?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+        subtotal,
+        discount: discountAmount,
+        shipping: order.shipping_cost || 0,
+        total: order.total,
+        paymentMethod: (order as any).payments?.[0]?.method || (order.whatsapp_order ? "WhatsApp" : "Online"),
+        notes: order.notes || undefined,
+      });
+      return items;
+    };
+
+    toast.promise(fetchItems(), {
+      loading: "Gerando recibo...",
+      success: "Recibo gerado!",
       error: "Erro ao carregar itens do pedido."
     });
   };
@@ -544,9 +584,11 @@ export default function Pedidos() {
               {selectedOrder.notes && (
                 <>
                   <Separator />
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Observações</p>
-                    <p className="text-sm bg-muted/50 p-2 rounded italic">"{selectedOrder.notes}"</p>
+                  <div className="space-y-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">Notas / Observações</p>
+                    <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">
+                      "{selectedOrder.notes}"
+                    </p>
                   </div>
                 </>
               )}
@@ -615,28 +657,37 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              {/* Receipt */}
-              <div className="pt-4 flex gap-2">
+              {/* Actions */}
+              <div className="pt-6 grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
                   onClick={() => handlePrintLabel(selectedOrder)}
                 >
-                  <Printer className="h-4 w-4" />
-                  Imprimir Nota
+                  <Package className="h-4 w-4" />
+                  Etiqueta
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
+                  onClick={() => handlePrintReceipt(selectedOrder)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Recibo (Nota)
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="col-span-2 gap-2 h-10 font-semibold"
                   onClick={() => {
-                    const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na Minha Loja foi recebido.`;
+                    const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na ${storeSettings?.store_name || "nossa loja"} foi recebido e está sendo processado! 🚀`;
                     window.open(`https://wa.me/${selectedOrder.customer_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
                   }}
                 >
                   <Share2 className="h-4 w-4" />
-                  WhatsApp
+                  Enviar p/ WhatsApp
                 </Button>
               </div>
             </div>
