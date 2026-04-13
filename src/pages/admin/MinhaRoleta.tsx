@@ -76,31 +76,36 @@ export default function MinhaRoleta() {
 
   const canSpin = history ? history.length === 0 || (new Date().getTime() - new Date(history[0].created_at).getTime() > 24 * 60 * 60 * 1000) : true;
 
-  const handleFinish = async (prize: any) => {
+  const handleSpinStart = async () => {
     try {
-      const status = prize.manual_approval_required ? "pending_approval" : "won";
-      
-      const { error } = await supabase.from("roulette_spins").insert({
-        user_id: user!.id,
-        prize_id: prize.id,
-        status: status,
-      } as any);
+      const { data, error } = await supabase.functions.invoke("spin-roulette");
 
       if (error) throw error;
-
+      
+      const { prize, spin } = data;
       setLastWin(prize);
-      if (status === "won") {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
-        toast.success(`Parabéns! Você ganhou: ${prize.label}`);
-      } else {
-        toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["my_spin_history"] });
+      
+      return prize;
     } catch (e: any) {
-      toast.error("Erro ao registrar giro: " + e.message);
+      toast.error("Erro ao girar: " + (e.message || e.error));
+      throw e;
     }
+  };
+
+  const handleFinish = async (prize: any) => {
+    if (!prize) return;
+    
+    const status = prize.manual_approval_required ? "pending_approval" : "won";
+    
+    if (status === "won") {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+      toast.success(`Parabéns! Você ganhou: ${prize.label}`);
+    } else {
+      toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["my_spin_history"] });
   };
 
   if (subLoading || prizesLoading) return <Skeleton className="h-[600px] w-full" />;
