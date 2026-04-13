@@ -53,6 +53,11 @@ export default function MinhaRoleta() {
       const currentTierLevel = tierHierarchy[tier] || 0;
 
       return (data || []).filter(p => {
+        // Regra especial: Premium só ganha descontos ou "Não foi dessa vez"
+        if (tier === "PREMIUM") {
+          return p.label.includes('%') || p.label === 'Não foi dessa vez';
+        }
+        
         const minLevel = tierHierarchy[p.min_subscription_tier] || 0;
         return currentTierLevel >= minLevel;
       });
