@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { AIChatWidget } from "@/components/AIChatWidget";
 import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
