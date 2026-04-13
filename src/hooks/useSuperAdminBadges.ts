@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
 export interface SuperAdminBadges {
-  tenants: number;       // pending + blocked + trial expiring
-  solicitacoes: number;  // pending plan change requests
-  notificacoes: number;  // unread notifications
+  tenants: number;
+  solicitacoes: number;
+  notificacoes: number;
+  dominios: number;
   isLoading: boolean;
 }
 
@@ -27,6 +28,9 @@ export function useSuperAdminBadges(): SuperAdminBadges {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "tenant_subscriptions" }, () => {
         queryClient.invalidateQueries({ queryKey: ["sa_badge_tenants"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_domains" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["sa_badge_domains"] });
       })
       .subscribe();
 
@@ -103,10 +107,25 @@ export function useSuperAdminBadges(): SuperAdminBadges {
     refetchInterval: 15000,
   });
 
+  // Pending domain activations
+  const { data: domainBadge = 0, isLoading: l4 } = useQuery({
+    queryKey: ["sa_badge_domains"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("store_domains")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending_activation");
+      if (error) return 0;
+      return count || 0;
+    },
+    refetchInterval: 30000,
+  });
+
   return {
     tenants: tenantBadge,
     solicitacoes: requestBadge,
     notificacoes: notifBadge,
-    isLoading: l1 || l2 || l3,
+    dominios: domainBadge,
+    isLoading: l1 || l2 || l3 || l4,
   };
 }
