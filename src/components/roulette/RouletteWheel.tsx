@@ -128,15 +128,18 @@ export function RouletteWheel({
         </motion.div>
       </div>
 
-      {/* Wheel Container */}
-      <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full border-[12px] border-gray-900 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3),inset_0_0_20px_rgba(0,0,0,0.5)] bg-gray-900 p-1">
+      {/* Wheel Container with 3D shadow */}
+      <div className="relative w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] rounded-full border-[16px] border-gray-950 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),inset_0_0_40px_rgba(0,0,0,0.8)] bg-gray-900 p-1 group-hover:scale-105 transition-transform duration-500">
+        <div className="absolute inset-[-10px] rounded-full border-[10px] border-primary/20 animate-pulse pointer-events-none" />
         <div
-          className="absolute inset-0 transition-transform cubic-bezier(0.15, 0, 0.15, 1) rounded-full overflow-hidden"
+          className="absolute inset-0 transition-transform cubic-bezier(0.1, 0, 0, 1) rounded-full overflow-hidden"
           style={{
-            transform: `rotate(${rotation}deg)`,
+            transform: `rotate(${rotation}deg) translateZ(0)`,
             transitionDuration: `${spinningDuration}s`,
+            transformStyle: "preserve-3d"
           }}
         >
+
           {prizes.map((prize, i) => {
             const angle = 360 / prizes.length;
             const rotate = i * angle;
