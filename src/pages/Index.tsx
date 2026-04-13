@@ -22,9 +22,9 @@ const Index = () => {
             .maybeSingle();
           
           if (store?.store_slug) {
-            navigate("/admin");
+            navigate(`/painel/${store.store_slug}`);
           } else {
-            navigate("/login");
+            navigate("/setup-store");
           }
         };
         checkStore();
