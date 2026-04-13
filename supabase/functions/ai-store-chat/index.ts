@@ -371,7 +371,7 @@ ${customerContext ? `\nCUSTOMER CONTEXT:\n${customerContext}` : ""}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages,
