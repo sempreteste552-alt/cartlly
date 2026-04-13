@@ -2,19 +2,20 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 
   useEffect(() => {
     if (user) {
-      if (user.email === SUPER_ADMIN_EMAIL) {
-        navigate("/superadmin");
-      } else {
-        const checkStore = async () => {
+      const route = async () => {
+        const isAdmin = await checkIsSuperAdmin(user.id);
+        if (isAdmin) {
+          navigate("/superadmin");
+        } else {
           const { data: store } = await supabase
             .from("store_settings")
             .select("store_slug")
@@ -26,9 +27,9 @@ const Index = () => {
           } else {
             navigate("/setup-store");
           }
-        };
-        checkStore();
-      }
+        }
+      };
+      route();
     } else {
       navigate("/login");
     }
@@ -36,7 +37,6 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
-      {/* Background Decorative Elements */}
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />

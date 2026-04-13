@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,12 +20,11 @@ export default function SetupStore() {
   const [storeCategory, setStoreCategory] = useState("");
 
   useEffect(() => {
-    // If user already has a slug or is super admin, they shouldn't be here
     const checkSlug = async () => {
       if (!user) return;
       
-      const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
-      if (user.email === SUPER_ADMIN_EMAIL) {
+      const isAdmin = await checkIsSuperAdmin(user.id);
+      if (isAdmin) {
         navigate("/superadmin");
         return;
       }
@@ -60,7 +60,6 @@ export default function SetupStore() {
         return;
       }
 
-      // Check if slug is taken
       const { data: existingSlug } = await supabase
         .from("store_settings")
         .select("id")
@@ -73,7 +72,6 @@ export default function SetupStore() {
         return;
       }
 
-      // Update store settings
       const { error } = await supabase
         .from("store_settings")
         .upsert({
@@ -85,12 +83,10 @@ export default function SetupStore() {
 
       if (error) throw error;
 
-      // Process referral code for OAuth signups
       try {
         const ctxStr = localStorage.getItem("auth_context");
         const refCode = localStorage.getItem("referral_code") || (ctxStr ? JSON.parse(ctxStr)?.referral_code : null);
         if (refCode) {
-          // Look up the referral code
           const { data: refData } = await supabase
             .from("referral_codes")
             .select("tenant_id")
@@ -98,7 +94,6 @@ export default function SetupStore() {
             .maybeSingle();
 
           if (refData && refData.tenant_id !== user.id) {
-            // Check no existing referral for this user
             const { data: existing } = await supabase
               .from("referrals")
               .select("id")

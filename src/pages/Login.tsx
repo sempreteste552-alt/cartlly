@@ -16,8 +16,7 @@ import { SimpleVerification } from "@/components/SimpleVerification";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
-
-const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
+import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 
 const LOGIN_PHRASES = [
   "Bem-vindo ao Painel Administrativo 🔐",
@@ -114,8 +113,7 @@ export default function Login() {
     return false;
   });
 
-  const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
-  const showMaintenance = maintenanceMode && !isSuperAdmin;
+  const showMaintenance = maintenanceMode; // super admin bypass is handled in AuthContext
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
@@ -187,40 +185,37 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      // Check for super admin first
-      if (user.email === SUPER_ADMIN_EMAIL) {
-        navigate("/superadmin", { replace: true });
-        return;
-      }
-
-      // Check if it's a store customer — avoid redirecting to admin panel or setup-store
-      const isCustomer = user.user_metadata?.is_customer === true;
-      if (isCustomer) {
-        // If they are on /login, and they are a customer, send them back to where they came from
-        const authContextStr = localStorage.getItem("auth_context");
-        if (authContextStr) {
-          try {
-            const ctx = JSON.parse(authContextStr);
-            if (ctx.type === "store_customer" && ctx.redirect_back) {
-              window.location.href = ctx.redirect_back;
-              return;
-            }
-          } catch { /* ignore */ }
+      const routeUser = async () => {
+        const isAdmin = await checkIsSuperAdmin(user.id);
+        if (isAdmin) {
+          navigate("/superadmin", { replace: true });
+          return;
         }
-        
-        // If no context, redirect to their last visited store or home
-        const lastStore = localStorage.getItem("last_visited_store");
-        if (lastStore) {
-          navigate(`/loja/${lastStore}`, { replace: true });
-        } else {
-          // If no store found, stay on home but don't show onboarding
-          navigate("/", { replace: true });
-        }
-        return;
-      }
 
-      // If we're here, we're a potential merchant/tenant
-      const checkOnboarding = async () => {
+        // Check if it's a store customer
+        const isCustomer = user.user_metadata?.is_customer === true;
+        if (isCustomer) {
+          const authContextStr = localStorage.getItem("auth_context");
+          if (authContextStr) {
+            try {
+              const ctx = JSON.parse(authContextStr);
+              if (ctx.type === "store_customer" && ctx.redirect_back) {
+                window.location.href = ctx.redirect_back;
+                return;
+              }
+            } catch { /* ignore */ }
+          }
+          
+          const lastStore = localStorage.getItem("last_visited_store");
+          if (lastStore) {
+            navigate(`/loja/${lastStore}`, { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
+          return;
+        }
+
+        // Merchant/tenant
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
@@ -234,7 +229,7 @@ export default function Login() {
         }
       };
       
-      checkOnboarding();
+      routeUser();
     }
   }, [user, navigate]);
 
@@ -363,20 +358,23 @@ export default function Login() {
           }
           throw loginError;
         }
-        if (email === SUPER_ADMIN_EMAIL) {
-          navigate("/superadmin");
-        } else {
-          // Check for onboarding
-          const { data: store } = await supabase
-            .from("store_settings")
-            .select("store_slug")
-            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-            .maybeSingle();
-          
-          if (!store?.store_slug) {
-            navigate("/setup-store");
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        if (currentUser) {
+          const isAdmin = await checkIsSuperAdmin(currentUser.id);
+          if (isAdmin) {
+            navigate("/superadmin");
           } else {
-            navigate("/");
+            const { data: store } = await supabase
+              .from("store_settings")
+              .select("store_slug")
+              .eq("user_id", currentUser.id)
+              .maybeSingle();
+            
+            if (!store?.store_slug) {
+              navigate("/setup-store");
+            } else {
+              navigate("/");
+            }
           }
         }
       }
