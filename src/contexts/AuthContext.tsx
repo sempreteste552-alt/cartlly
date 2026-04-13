@@ -5,8 +5,7 @@ import { clearRuntimePwaManifest } from "@/lib/runtimePwaManifest";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
+import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 
 interface AuthContextType {
   session: Session | null;
@@ -24,11 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const queryClient = useQueryClient();
 
-  // Initialize tracking hook
   useUserTracking(session?.user ?? null);
 
   useEffect(() => {
-    // Initial maintenance check & session setup
     const initializeAuth = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -42,17 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isMaintenance = (data?.value as any)?.value === true;
         setMaintenanceMode(isMaintenance);
 
-        // If maintenance is on, and we have a session, check if we should kick them out immediately
-        if (isMaintenance && currentSession?.user?.email && currentSession.user.email !== SUPER_ADMIN_EMAIL) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setLoading(false);
-          return;
+        if (isMaintenance && currentSession?.user) {
+          const isAdmin = await checkIsSuperAdmin(currentSession.user.id);
+          if (!isAdmin) {
+            await supabase.auth.signOut();
+            setSession(null);
+            setLoading(false);
+            return;
+          }
         }
 
         setSession(currentSession);
         
-        // Setup inactivity timer if session exists
         if (currentSession && localStorage.getItem("stay_connected") !== "true") {
           const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
           let inactivityTimer: ReturnType<typeof setTimeout>;
@@ -80,13 +78,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        // On sign-out or user change, clear entire React Query cache to prevent
-        // stale tenant data from leaking to the next session
         if (_event === "SIGNED_OUT") {
           queryClient.clear();
-          // Clear PWA manifest to prevent cross-tenant leakage
           clearRuntimePwaManifest();
-          // Clean up any lingering CSS variables from admin theme
           document.documentElement.style.removeProperty("--primary");
           document.documentElement.style.removeProperty("--ring");
           document.documentElement.style.removeProperty("--sidebar-primary");
@@ -103,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setSession(session);
 
-        // After OAuth sign-in, inject referral_code into user metadata if present
         if (_event === "SIGNED_IN" && session?.user) {
           try {
             const ctxStr = localStorage.getItem("auth_context");
@@ -134,16 +127,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           table: "platform_settings",
           filter: "key=eq.maintenance_mode",
         },
-        (payload) => {
+        async (payload) => {
           const isMaintenance = (payload.new as any)?.value?.value === true;
           setMaintenanceMode(isMaintenance);
-          const userEmail = session?.user?.email;
           
-          if (isMaintenance && userEmail && userEmail !== SUPER_ADMIN_EMAIL) {
-            toast.error("O sistema entrou em manutenção. Você será desconectado.");
-            setTimeout(() => {
-              supabase.auth.signOut();
-            }, 1000);
+          if (isMaintenance && session?.user) {
+            const isAdmin = await checkIsSuperAdmin(session.user.id);
+            if (!isAdmin) {
+              toast.error("O sistema entrou em manutenção. Você será desconectado.");
+              setTimeout(() => {
+                supabase.auth.signOut();
+              }, 1000);
+            }
           }
         }
       )
@@ -153,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       supabase.removeChannel(maintenanceChannel);
     };
-  }, [session?.user?.email]);
+  }, [session?.user?.id]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -171,4 +166,3 @@ export function useAuth() {
   if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 }
-
