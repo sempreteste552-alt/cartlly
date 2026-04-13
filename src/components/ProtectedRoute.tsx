@@ -89,7 +89,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Super admin always has access
-  if (user?.email === SUPER_ADMIN_EMAIL) {
+  if (isSuperAdmin) {
     return <>{children}</>;
   }
 
