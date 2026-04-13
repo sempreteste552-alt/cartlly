@@ -317,8 +317,8 @@ REGRAS CRÍTICAS:
       }
 
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação. Verifique seu plano ou adicione créditos." }), {
-          status: 402,
+        return new Response(JSON.stringify({ error: "INSUFFICIENT_AI_CREDITS", message: "Créditos de IA insuficientes. Verifique seu plano ou adicione créditos.", fallback: true }), {
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

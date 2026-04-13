@@ -393,8 +393,8 @@ ${customerContext ? `\nCUSTOMER CONTEXT:\n${customerContext}` : ""}`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "INSUFFICIENT_AI_CREDITS", message: "Créditos de IA insuficientes.", fallback: true }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const errorText = await response.text();
