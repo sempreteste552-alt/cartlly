@@ -67,7 +67,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    const tier = sub?.tenant_plans?.name || 'FREE'
+    const tier = (sub?.tenant_plans?.name || 'FREE').toUpperCase()
 
     // 4. Fetch eligible prizes
     const { data: prizes } = await supabaseClient

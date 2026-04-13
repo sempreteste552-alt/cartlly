@@ -32,7 +32,7 @@ export default function MinhaRoleta() {
     },
   });
 
-  const tier = (subscription as any)?.tenant_plans?.name || "FREE";
+  const tier = ((subscription as any)?.tenant_plans?.name || "FREE").toUpperCase();
 
   // Fetch Eligible Prizes
   const { data: prizes, isLoading: prizesLoading } = useQuery({
