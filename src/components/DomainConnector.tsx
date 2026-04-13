@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Globe, CheckCircle2, Clock, Loader2, RefreshCw,
   ExternalLink, Server, Copy, Check, Trash2, ShieldCheck, Star,
-  ShieldAlert, Lock, Info
+  ShieldAlert, Lock, Info, Bell
 } from "lucide-react";
 import { normalizeDomain } from "@/lib/storeDomain";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -49,6 +49,7 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
   const [isAdding, setIsAdding] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [requestingId, setRequestingId] = useState<string | null>(null);
 
   const { data: domains, isLoading, refetch } = useQuery({
     queryKey: ["store_domains", settingsId],
@@ -152,6 +153,23 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
       queryClient.invalidateQueries({ queryKey: ["store_settings"] });
     } catch (err: any) {
       toast.error(err.message || "Erro ao remover domínio");
+    }
+  };
+
+  const handleRequestActivation = async (domain: StoreDomain) => {
+    setRequestingId(domain.id);
+    try {
+      const { error } = await supabase.from("store_domains").update({
+        status: "pending_activation",
+        activation_requested_at: new Date().toISOString(),
+      } as any).eq("id", domain.id);
+      if (error) throw error;
+      toast.success("Solicitação de ativação enviada! O suporte será notificado.");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao solicitar ativação");
+    } finally {
+      setRequestingId(null);
     }
   };
 
@@ -407,6 +425,31 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
                             </div>
                           </div>
                         </div>
+                      )}
+
+                      {/* Request Activation Button */}
+                      {!isActive(domain) && domain.status !== "pending_activation" && (
+                        <Button
+                          className="w-full text-xs h-9 bg-amber-600 hover:bg-amber-700 text-white"
+                          onClick={() => handleRequestActivation(domain)}
+                          disabled={requestingId === domain.id}
+                        >
+                          {requestingId === domain.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Bell className="h-4 w-4 mr-2" />
+                          )}
+                          Solicitar Ativação ao Suporte
+                        </Button>
+                      )}
+
+                      {domain.status === "pending_activation" && (
+                        <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                          <Clock className="h-4 w-4 text-amber-600" />
+                          <AlertDescription className="text-amber-700 dark:text-amber-400 text-xs">
+                            Solicitação enviada! O suporte irá ativar seu domínio em breve. Você receberá uma notificação quando estiver no ar.
+                          </AlertDescription>
+                        </Alert>
                       )}
 
                       {/* Actions */}

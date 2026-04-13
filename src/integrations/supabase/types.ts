@@ -2531,6 +2531,9 @@ export type Database = {
       }
       store_domains: {
         Row: {
+          activated_at: string | null
+          activated_by: string | null
+          activation_requested_at: string | null
           cloudflare_api_token: string | null
           cloudflare_zone_id: string | null
           conflicting_records: Json | null
@@ -2554,6 +2557,9 @@ export type Database = {
           verification_token: string | null
         }
         Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          activation_requested_at?: string | null
           cloudflare_api_token?: string | null
           cloudflare_zone_id?: string | null
           conflicting_records?: Json | null
@@ -2577,6 +2583,9 @@ export type Database = {
           verification_token?: string | null
         }
         Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          activation_requested_at?: string | null
           cloudflare_api_token?: string | null
           cloudflare_zone_id?: string | null
           conflicting_records?: Json | null

@@ -52,6 +52,7 @@ import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import SuperAdminIndicacoes from "./pages/superadmin/SuperAdminIndicacoes";
 import SuperAdminBanners from "./pages/superadmin/SuperAdminBanners";
 import SuperAdminRoulette from "./pages/superadmin/SuperAdminRoulette";
+import SuperAdminDominios from "./pages/superadmin/SuperAdminDominios";
 import MinhaRoleta from "./pages/admin/MinhaRoleta";
 import ResetPassword from "./pages/ResetPassword";
 import Termos from "./pages/Termos";
@@ -143,6 +144,7 @@ const App = () => {
                     <Route path="banners" element={<SuperAdminBanners />} />
                     <Route path="config" element={<SuperAdminConfig />} />
                     <Route path="roulette" element={<SuperAdminRoulette />} />
+                    <Route path="dominios" element={<SuperAdminDominios />} />
                   </Route>
                   {/* Tenant Admin */}
                   <Route path="/admin" element={<Navigate to="/" replace />} />
