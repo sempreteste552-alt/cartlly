@@ -70,7 +70,7 @@ export default function SuperAdminRoulette() {
       
       const payoutsSetting = data?.find(s => s.key === "roulette_payouts_enabled");
       if (payoutsSetting) {
-        setPayoutsEnabled(payoutsSetting.value?.value === true);
+        setPayoutsEnabled((payoutsSetting.value as any)?.value === true);
       }
       return data;
     },
