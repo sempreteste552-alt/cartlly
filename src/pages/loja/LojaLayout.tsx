@@ -325,6 +325,10 @@ export default function LojaLayout() {
     .replace(/\b\w/g, (char) => char.toUpperCase())
     || (settings?.store_name?.trim() || "Loja");
 
+  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeIconUrl = themeConfig?.favicon_url || settings?.favicon_url || settings?.logo_url || undefined;
+  const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
+
   usePwaManifest({
     id: slug ? `cartlly-store-${slug}` : "cartlly-store-default",
     name: storeInstallName,
