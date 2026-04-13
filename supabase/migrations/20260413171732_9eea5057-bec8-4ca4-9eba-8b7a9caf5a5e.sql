@@ -1,0 +1,2 @@
+ALTER TABLE public.store_domains DROP CONSTRAINT store_domains_status_check;
+ALTER TABLE public.store_domains ADD CONSTRAINT store_domains_status_check CHECK (status = ANY (ARRAY['pending_dns'::text, 'pending_verification'::text, 'pending_ssl'::text, 'pending_activation'::text, 'active'::text, 'failed'::text]));
