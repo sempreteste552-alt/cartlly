@@ -688,10 +688,10 @@ export default function LojaCheckout() {
         {/* Main Actions */}
         <div className="grid grid-cols-1 gap-3 sm:px-4">
           <Button 
-            className="w-full h-12 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 transition-opacity font-bold rounded-xl"
+            className="w-full h-12 bg-primary text-primary-foreground hover:opacity-90 transition-all font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.01]"
             onClick={handleDownloadReceipt}
           >
-            <Printer className="mr-2 h-4 w-4" /> Imprimir Nota Fiscal
+            <Printer className="h-5 w-5" /> Imprimir Recibo Profissional
           </Button>
           
           <div className="grid grid-cols-2 gap-3">
