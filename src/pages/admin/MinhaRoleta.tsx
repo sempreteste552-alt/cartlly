@@ -125,7 +125,62 @@ export default function MinhaRoleta() {
   if (subLoading || prizesLoading) return <Skeleton className="h-[600px] w-full" />;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8 relative">
+    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8 relative min-h-[600px]">
+      <div className="absolute inset-0 z-[50] backdrop-blur-md bg-white/40 flex flex-col items-center justify-center rounded-3xl overflow-hidden border-2 border-dashed border-primary/30">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white/90 p-10 rounded-3xl shadow-2xl border-2 border-primary/20 flex flex-col items-center gap-6 text-center max-w-md mx-4"
+        >
+          <div className="relative">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+              <Construction className="w-12 h-12 text-primary" />
+            </div>
+            <motion.div 
+              animate={{ rotate: [0, -10, 10, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute -top-2 -right-2 bg-yellow-500 p-2 rounded-lg shadow-lg"
+            >
+              <HardHat className="w-6 h-6 text-white" />
+            </motion.div>
+          </div>
+          
+          <div className="space-y-3">
+            <h2 className="text-3xl font-black text-primary tracking-tighter">EM BREVE</h2>
+            <p className="text-lg font-medium text-muted-foreground">
+              Estamos preparando uma experiência incrível com prêmios exclusivos!
+            </p>
+          </div>
+
+          <div className="flex gap-4 items-center">
+            <div className="flex -space-x-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center border-2 border-white">
+                <Wrench className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white">
+                <HardHat className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border-2 border-white">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Sob Construção</span>
+          </div>
+
+          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: "0%" }}
+              animate={{ width: "75%" }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="bg-primary h-full"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground font-mono">Status: 75% concluído</p>
+        </motion.div>
+      </div>
+
+      <div className="opacity-40 grayscale pointer-events-none filter blur-[2px]">
+
       <AnimatePresence>
         {showWinAnimation && lastWin && (
           <motion.div
