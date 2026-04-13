@@ -52,6 +52,7 @@ import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import SuperAdminIndicacoes from "./pages/superadmin/SuperAdminIndicacoes";
 import SuperAdminBanners from "./pages/superadmin/SuperAdminBanners";
 import SuperAdminRoulette from "./pages/superadmin/SuperAdminRoulette";
+import SuperAdminDominios from "./pages/superadmin/SuperAdminDominios";
 import MinhaRoleta from "./pages/admin/MinhaRoleta";
 import ResetPassword from "./pages/ResetPassword";
 import Termos from "./pages/Termos";
