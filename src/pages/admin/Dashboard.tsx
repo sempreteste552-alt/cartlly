@@ -73,6 +73,7 @@ export default function Dashboard() {
   const hasStarterAnalytics = canAccess("coupons", ctx);
   const hasProAnalytics = canAccess("restock_alerts", ctx);
   const hasPremiumAnalytics = canAccess("analytics_advanced", ctx);
+  const hasAiTools = canAccess("ai_tools", ctx);
 
   // Optimized metrics fetch via RPC
   const { data: dashboardStats, isLoading: loadingStats } = useQuery({
@@ -260,7 +261,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <WelcomeTrialCard />
 
-      {(!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
+      {hasAiTools && (!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
         <AITrainingAlert />
       )}
 

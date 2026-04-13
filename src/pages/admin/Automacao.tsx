@@ -24,6 +24,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlanGate } from "@/components/PlanGate";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { canAccess } from "@/lib/planPermissions";
 
 interface AutomationRule {
   id: string;
@@ -141,6 +143,8 @@ function CartStatusBadge({ cart, waitMinutes }: { cart: AbandonedCart; waitMinut
 export default function Automacao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { ctx } = useTenantContext();
+  const hasAiTools = canAccess("ai_tools", ctx);
   const [editingRule, setEditingRule] = useState<string | null>(null);
   const [ruleEdits, setRuleEdits] = useState<Record<string, Partial<AutomationRule>>>({});
 
@@ -394,7 +398,7 @@ export default function Automacao() {
         </div>
       </div>
 
-      {!aiConfig?.niche && (
+      {hasAiTools && !aiConfig?.niche && (
         <AITrainingAlert />
       )}
 
