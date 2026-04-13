@@ -51,6 +51,8 @@ import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
 import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
 import SuperAdminIndicacoes from "./pages/superadmin/SuperAdminIndicacoes";
 import SuperAdminBanners from "./pages/superadmin/SuperAdminBanners";
+import SuperAdminRoulette from "./pages/superadmin/SuperAdminRoulette";
+import MinhaRoleta from "./pages/admin/MinhaRoleta";
 import ResetPassword from "./pages/ResetPassword";
 import Termos from "./pages/Termos";
 import Privacidade from "./pages/Privacidade";
@@ -140,6 +142,7 @@ const App = () => {
                     <Route path="indicacoes" element={<SuperAdminIndicacoes />} />
                     <Route path="banners" element={<SuperAdminBanners />} />
                     <Route path="config" element={<SuperAdminConfig />} />
+                    <Route path="roulette" element={<SuperAdminRoulette />} />
                   </Route>
                   {/* Tenant Admin */}
                   <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -163,6 +166,7 @@ const App = () => {
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="whatsapp-ia" element={<WhatsAppIA />} />
                     <Route path="suporte" element={<Suporte />} />
+                    <Route path="roleta" element={<MinhaRoleta />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />

@@ -92,6 +92,7 @@ export const pt = {
     analytics: "Analytics Funil",
     whatsappAi: "WhatsApp IA",
     support: "Suporte",
+    roulette: "Roleta de Prêmios",
     store: "Loja",
     payments: "Pagamentos",
     gateway: "Gateway",

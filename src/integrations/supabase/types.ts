@@ -2177,6 +2177,89 @@ export type Database = {
         }
         Relationships: []
       }
+      roulette_prizes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          manual_approval_required: boolean | null
+          min_subscription_tier: string | null
+          prize_type: string
+          prize_value: number | null
+          probability: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          manual_approval_required?: boolean | null
+          min_subscription_tier?: string | null
+          prize_type?: string
+          prize_value?: number | null
+          probability?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          manual_approval_required?: boolean | null
+          min_subscription_tier?: string | null
+          prize_type?: string
+          prize_value?: number | null
+          probability?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      roulette_spins: {
+        Row: {
+          coupon_code: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          prize_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_code?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          prize_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          prize_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roulette_spins_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "roulette_prizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_customer_data: {
         Row: {
           card_brand: string | null
