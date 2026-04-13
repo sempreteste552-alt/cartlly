@@ -318,12 +318,7 @@ export default function LojaLayout() {
   const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
   const localizedCategoryNames = useLocalizedTextList(categories?.map((c) => c.name) || []);
 
-  const storeInstallName = slug
-    ?.replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-    || (settings?.store_name?.trim() || "Loja");
+  const storeInstallName = slug || settings?.store_name?.trim() || "Loja";
 
   const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
   const storeIconUrl = themeConfig?.favicon_url || settings?.favicon_url || settings?.logo_url || undefined;
