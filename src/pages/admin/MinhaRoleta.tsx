@@ -94,14 +94,24 @@ export default function MinhaRoleta() {
   const handleFinish = async (prize: any) => {
     if (!prize) return;
     
-    const status = prize.manual_approval_required ? "pending_approval" : "won";
-    
-    if (status === "won") {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-      toast.success(`Parabéns! Você ganhou: ${prize.label}`);
+    if (prize.label === 'Não foi dessa vez') {
+      toast.error("Não foi dessa vez! Tente novamente amanhã.");
     } else {
-      toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
+      const isPending = prize.manual_approval_required;
+      
+      if (!isPending) {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#6d28d9", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"],
+        });
+        setShowWinAnimation(true);
+        setTimeout(() => setShowWinAnimation(false), 5000);
+        toast.success(`Parabéns! Você ganhou: ${prize.label}`);
+      } else {
+        toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
+      }
     }
 
     queryClient.invalidateQueries({ queryKey: ["my_spin_history"] });
