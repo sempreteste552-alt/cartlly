@@ -156,6 +156,22 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
     }
   };
 
+  const handleRequestActivation = async (domain: StoreDomain) => {
+    setRequestingId(domain.id);
+    try {
+      const { error } = await supabase.from("store_domains").update({
+        status: "pending_activation",
+        activation_requested_at: new Date().toISOString(),
+      } as any).eq("id", domain.id);
+      if (error) throw error;
+      toast.success("Solicitação de ativação enviada! O suporte será notificado.");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao solicitar ativação");
+    } finally {
+      setRequestingId(null);
+    }
+
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
