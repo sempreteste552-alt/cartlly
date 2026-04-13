@@ -74,14 +74,10 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
 
     setIsAdding(true);
     try {
-      const { data: existing } = await supabase
-        .from("store_domains")
-        .select("id")
-        .eq("hostname", cleanDomain)
-        .maybeSingle();
-
-      if (existing) {
-        toast.error("Este domínio já está vinculado a outra loja.");
+      // Check if this domain already belongs to THIS store
+      const existingInStore = domains?.find(d => d.hostname === cleanDomain);
+      if (existingInStore) {
+        toast.error("Este domínio já está cadastrado na sua loja.");
         return;
       }
 
@@ -92,7 +88,15 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
         status: "pending_dns",
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle unique constraint violation gracefully
+        if (error.message?.includes("duplicate key") || error.code === "23505") {
+          toast.error("Este domínio já está em uso por outra loja. Se é seu, entre em contato com o suporte.");
+          return;
+        }
+        throw error;
+      }
+
       toast.success("Domínio registrado! Agora configure o DNS e solicite a ativação.");
       setNewDomain("");
       refetch();
