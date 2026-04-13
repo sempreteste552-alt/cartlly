@@ -113,8 +113,7 @@ export default function Login() {
     return false;
   });
 
-  const isSuperAdmin = email === SUPER_ADMIN_EMAIL || user?.email === SUPER_ADMIN_EMAIL;
-  const showMaintenance = maintenanceMode && !isSuperAdmin;
+  const showMaintenance = maintenanceMode; // super admin bypass is handled in AuthContext
 
   const loginText = useTypewriter(LOGIN_PHRASES);
   const registerText = useTypewriter(REGISTER_PHRASES);
@@ -186,11 +185,13 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      // Check for super admin first
-      if (user.email === SUPER_ADMIN_EMAIL) {
-        navigate("/superadmin", { replace: true });
-        return;
-      }
+      // Check for super admin first via role table
+      const routeUser = async () => {
+        const isAdmin = await checkIsSuperAdmin(user.id);
+        if (isAdmin) {
+          navigate("/superadmin", { replace: true });
+          return;
+        }
 
       // Check if it's a store customer — avoid redirecting to admin panel or setup-store
       const isCustomer = user.user_metadata?.is_customer === true;
