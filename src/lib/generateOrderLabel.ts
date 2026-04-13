@@ -13,7 +13,6 @@ interface OrderLabelData {
   customerPhone?: string;
   customerCpf?: string;
   customerEmail?: string;
-  // Address fields
   customerAddress?: string;
   shippingStreet?: string;
   shippingNumber?: string;
@@ -22,7 +21,6 @@ interface OrderLabelData {
   shippingCity?: string;
   shippingState?: string;
   shippingCep?: string;
-  // Sender
   storeName: string;
   storeLogo?: string;
   storeCity?: string;
@@ -30,13 +28,11 @@ interface OrderLabelData {
   storePhone?: string;
   storeEmail?: string;
   storeCep?: string;
-  // Order
   items: OrderLabelItem[];
   total: number;
   paymentMethod: string;
   paymentStatus: string;
   notes?: string;
-  // Shipping
   shippingMethod?: string;
   shippingType?: string;
   trackingCode?: string;
@@ -45,426 +41,174 @@ interface OrderLabelData {
 }
 
 export function generateOrderLabel(data: OrderLabelData): void {
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price);
-
   const shortId = data.orderId.slice(0, 8).toUpperCase();
-  const barcodeValue = data.orderId.replace(/-/g, "").slice(0, 20);
-
+  const logisticId = data.orderId.replace(/-/g, "").slice(0, 20).toUpperCase();
   const fullAddress = buildFullAddress(data);
-  const maskedCpf = data.customerCpf
-    ? data.customerCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4")
-    : "";
+  const cep = data.shippingCep ? formatCep(data.shippingCep) : "";
+  const itemsSummary = data.items
+    .slice(0, 3)
+    .map((i) => `${i.quantity}x ${i.name.substring(0, 35)}${i.variation ? ` (${i.variation})` : ""}`)
+    .join(" | ");
+  const carrier = data.shippingMethod || "PADRÃO";
+  const serviceType = data.shippingType || "";
+  const tracking = data.trackingCode || "";
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Etiqueta de Envio #${shortId}</title>
-  <style>
-    @page { size: 148mm 105mm; margin: 0; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Courier New', Courier, monospace;
-      width: 148mm;
-      min-height: 105mm;
-      padding: 4mm;
-      font-size: 10px;
-      line-height: 1.3;
-      color: #000;
-      background: #fff;
-    }
-    .label-container {
-      border: 2px solid #000;
-      width: 100%;
-      min-height: 97mm;
-    }
+<meta charset="UTF-8">
+<title>Etiqueta #${shortId}</title>
+<style>
+@page{size:100mm 150mm;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',Courier,monospace;width:100mm;height:150mm;padding:3mm;font-size:9px;line-height:1.3;color:#000;background:#fff}
+.label{border:1.5pt solid #000;width:100%;height:100%;display:flex;flex-direction:column}
 
-    /* ── HEADER ── */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 3mm 4mm;
-      border-bottom: 2px solid #000;
-      background: #f5f5f5;
-    }
-    .header-left { display: flex; align-items: center; gap: 6px; }
-    .header-logo { max-height: 22px; max-width: 80px; object-fit: contain; }
-    .header-store { font-weight: bold; font-size: 12px; text-transform: uppercase; }
-    .header-right { text-align: right; }
-    .header-order {
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      background: #000;
-      color: #fff;
-      padding: 2px 8px;
-      display: inline-block;
-      margin-bottom: 2px;
-    }
-    .header-date { font-size: 9px; color: #444; }
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:2mm 3mm;border-bottom:1.5pt solid #000}
+.hdr-id{font-size:18px;font-weight:900;letter-spacing:1px}
+.hdr-meta{text-align:right;font-size:7px;color:#333}
+.hdr-meta b{font-size:8px;display:block}
 
-    /* ── BODY GRID ── */
-    .body-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      min-height: 58mm;
-    }
+/* DEST */
+.dest{padding:2.5mm 3mm;border-bottom:1pt solid #000;flex:0 0 auto}
+.dest-tag{font-size:6.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:1mm}
+.dest-name{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1mm}
+.dest-addr{font-size:9px;line-height:1.45}
+.dest-cep{font-size:22px;font-weight:900;letter-spacing:3px;margin-top:2mm;border:1.5pt solid #000;display:inline-block;padding:0.5mm 3mm}
+.dest-phone{font-size:8px;margin-top:1.5mm;color:#333}
 
-    /* ── DESTINATÁRIO ── */
-    .dest-section {
-      padding: 3mm 4mm;
-      border-right: 1px dashed #999;
-    }
-    .section-label {
-      font-size: 8px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #666;
-      margin-bottom: 2px;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 1px;
-    }
-    .dest-name {
-      font-size: 13px;
-      font-weight: 900;
-      text-transform: uppercase;
-      margin: 3px 0 2px;
-    }
-    .dest-address {
-      font-size: 10px;
-      margin-top: 2px;
-      line-height: 1.4;
-    }
-    .dest-cep {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      margin-top: 4px;
-      background: #000;
-      color: #fff;
-      display: inline-block;
-      padding: 1px 8px;
-    }
-    .dest-phone { font-size: 9px; margin-top: 3px; }
-    .dest-cpf { font-size: 9px; color: #666; }
+/* SENDER */
+.sender{display:flex;justify-content:space-between;padding:2mm 3mm;border-bottom:1pt solid #000;font-size:8px}
+.sender-tag{font-size:6.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:.5mm}
+.sender-col{flex:1}
+.sender-name{font-weight:700;font-size:9px;text-transform:uppercase}
+.sender-info{color:#444}
 
-    /* ── RIGHT COLUMN ── */
-    .right-col { display: flex; flex-direction: column; }
+/* ITEMS */
+.items{padding:2mm 3mm;border-bottom:1pt solid #000;font-size:8px;flex:0 0 auto}
+.items-tag{font-size:6.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:.5mm}
+.items-list{font-size:8px;line-height:1.4}
+.items-note{font-size:7px;color:#555;margin-top:1mm;font-style:italic}
 
-    /* ── REMETENTE ── */
-    .sender-section {
-      padding: 3mm 4mm;
-      border-bottom: 1px dashed #999;
-      flex: 0 0 auto;
-    }
-    .sender-name { font-weight: bold; font-size: 10px; text-transform: uppercase; }
-    .sender-info { font-size: 9px; color: #444; }
+/* SHIPPING */
+.ship{display:flex;justify-content:space-between;padding:2mm 3mm;border-bottom:1pt solid #000;font-size:8px}
+.ship-tag{font-size:6.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:.5mm}
+.ship-carrier{font-weight:900;font-size:11px;text-transform:uppercase}
+.ship-type{font-size:9px;font-weight:700}
+.ship-tracking{font-family:monospace;font-size:9px;letter-spacing:1px;background:#eee;padding:1mm 2mm;margin-top:1mm;display:inline-block}
 
-    /* ── ENVIO ── */
-    .shipping-section {
-      padding: 3mm 4mm;
-      border-bottom: 1px dashed #999;
-      flex: 0 0 auto;
-    }
-    .shipping-method {
-      font-weight: bold;
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-    .shipping-detail { font-size: 9px; color: #444; }
-    .tracking-code {
-      font-family: monospace;
-      font-size: 11px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      background: #eee;
-      padding: 2px 6px;
-      margin-top: 2px;
-      display: inline-block;
-    }
+/* CODES */
+.codes{flex:1;display:flex;align-items:stretch;min-height:30mm}
+.codes-bar{flex:1.5;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2mm;border-right:1pt dashed #999}
+.codes-bar svg{width:90%;max-height:35px}
+.codes-bar-text{font-size:7px;letter-spacing:2px;margin-top:1mm;font-family:monospace}
+.codes-qr{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2mm}
+.codes-qr canvas{width:22mm;height:22mm}
+.codes-qr-text{font-size:6px;color:#666;margin-top:1mm;text-align:center}
 
-    /* ── ITEMS ── */
-    .items-section {
-      padding: 3mm 4mm;
-      flex: 1 1 auto;
-    }
-    .items-table { width: 100%; font-size: 9px; border-collapse: collapse; }
-    .items-table th {
-      text-align: left;
-      font-size: 8px;
-      border-bottom: 1px solid #999;
-      padding-bottom: 1px;
-    }
-    .items-table td { padding: 1px 0; vertical-align: top; }
-    .items-total {
-      font-weight: bold;
-      font-size: 11px;
-      text-align: right;
-      margin-top: 3px;
-      padding-top: 2px;
-      border-top: 1px solid #999;
-    }
-
-    /* ── FOOTER (BARCODE + QR + NOTES) ── */
-    .footer {
-      display: flex;
-      align-items: stretch;
-      border-top: 2px solid #000;
-      min-height: 22mm;
-    }
-    .footer-barcode {
-      flex: 1;
-      padding: 2mm 4mm;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-right: 1px dashed #999;
-    }
-    .barcode-svg { width: 100%; max-height: 28px; }
-    .barcode-text { font-size: 8px; letter-spacing: 2px; margin-top: 2px; }
-    .footer-qr {
-      flex: 0 0 22mm;
-      padding: 2mm;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-right: 1px dashed #999;
-    }
-    .qr-canvas { width: 18mm; height: 18mm; }
-    .footer-notes {
-      flex: 1;
-      padding: 2mm 4mm;
-      font-size: 8px;
-      color: #444;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .footer-notes .note-warn {
-      font-weight: bold;
-      text-transform: uppercase;
-      color: #000;
-      font-size: 9px;
-    }
-    .footer-notes .note-support {
-      font-size: 7px;
-      color: #888;
-      margin-top: 3px;
-    }
-    .payment-badge {
-      font-size: 9px;
-      padding: 1px 6px;
-      border: 1px solid #000;
-      display: inline-block;
-      margin-top: 2px;
-    }
-
-    @media print {
-      body { width: 148mm; min-height: 105mm; }
-    }
-  </style>
+@media print{body{width:100mm;height:150mm}}
+</style>
 </head>
 <body>
-  <div class="label-container">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="header-left">
-        ${data.storeLogo ? `<img src="${data.storeLogo}" class="header-logo" alt="" />` : ""}
-        <span class="header-store">${data.storeName}</span>
-      </div>
-      <div class="header-right">
-        <div class="header-order">#${shortId}</div>
-        <div class="header-date">${data.date}</div>
-      </div>
-    </div>
+<div class="label">
 
-    <!-- BODY -->
-    <div class="body-grid">
-      <!-- DESTINATÁRIO -->
-      <div class="dest-section">
-        <div class="section-label">📍 Destinatário</div>
-        <div class="dest-name">${data.customerName}</div>
-        ${maskedCpf ? `<div class="dest-cpf">CPF: ${maskedCpf}</div>` : ""}
-        ${data.customerPhone ? `<div class="dest-phone">☎ ${data.customerPhone}</div>` : ""}
-        <div class="dest-address">${fullAddress || "Endereço não informado"}</div>
-        ${data.shippingCep ? `<div class="dest-cep">${formatCep(data.shippingCep)}</div>` : ""}
-      </div>
-
-      <!-- RIGHT COLUMN -->
-      <div class="right-col">
-        <!-- REMETENTE -->
-        <div class="sender-section">
-          <div class="section-label">🏪 Remetente</div>
-          <div class="sender-name">${data.storeName}</div>
-          ${data.storeCity || data.storeState ? `<div class="sender-info">${[data.storeCity, data.storeState].filter(Boolean).join(" / ")}</div>` : ""}
-          ${data.storeCep ? `<div class="sender-info">CEP: ${formatCep(data.storeCep)}</div>` : ""}
-          ${data.storePhone ? `<div class="sender-info">☎ ${data.storePhone}</div>` : ""}
-          ${data.storeEmail ? `<div class="sender-info">✉ ${data.storeEmail}</div>` : ""}
-        </div>
-
-        <!-- ENVIO -->
-        <div class="shipping-section">
-          <div class="section-label">🚚 Envio</div>
-          ${data.shippingMethod ? `<div class="shipping-method">${data.shippingMethod}${data.shippingType ? ` — ${data.shippingType}` : ""}</div>` : `<div class="shipping-method">PADRÃO</div>`}
-          ${data.trackingCode ? `<div class="tracking-code">${data.trackingCode}</div>` : ""}
-          ${data.estimatedDelivery ? `<div class="shipping-detail">Prazo: ${data.estimatedDelivery}</div>` : ""}
-          ${data.shippingCost != null && data.shippingCost > 0 ? `<div class="shipping-detail">Frete: ${formatPrice(data.shippingCost)}</div>` : ""}
-          <div class="payment-badge">${data.paymentMethod.toUpperCase()} • ${data.paymentStatus.toUpperCase()}</div>
-        </div>
-
-        <!-- ITENS -->
-        <div class="items-section">
-          <div class="section-label">📦 Itens (${data.items.reduce((s, i) => s + i.quantity, 0)})</div>
-          <table class="items-table">
-            <thead><tr><th>Qtd</th><th>Produto</th><th style="text-align:right">Valor</th></tr></thead>
-            <tbody>
-              ${data.items.map(i => `
-                <tr>
-                  <td>${i.quantity}x</td>
-                  <td>${i.name.substring(0, 30)}${i.variation ? ` (${i.variation})` : ""}</td>
-                  <td style="text-align:right">${formatPrice(i.price * i.quantity)}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-          <div class="items-total">TOTAL: ${formatPrice(data.total)}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="footer">
-      <div class="footer-barcode">
-        <svg class="barcode-svg" id="barcode"></svg>
-        <div class="barcode-text">${barcodeValue}</div>
-      </div>
-      <div class="footer-qr">
-        <canvas class="qr-canvas" id="qrcode"></canvas>
-      </div>
-      <div class="footer-notes">
-        ${data.notes ? `<div class="note-warn">⚠ ${data.notes}</div>` : `<div class="note-warn">⚠ Manuseie com cuidado</div>`}
-        <div class="note-support">Em caso de problemas, entre em contato com o vendedor ou suporte da plataforma.</div>
-      </div>
+  <div class="hdr">
+    <div class="hdr-id">#${shortId}</div>
+    <div class="hdr-meta">
+      <b>${logisticId}</b>
+      ${data.date}
     </div>
   </div>
 
-  <script>
-    // ── Simple Code128B barcode generator ──
-    (function() {
-      const CODE128B = {
-        START: [2,1,1,4,1,2],
-        STOP: [2,3,3,1,1,1,2],
-        PATTERNS: [
-          [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
-          [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
-          [2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],
-          [1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],
-          [2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],
-          [3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
-          [2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],
-          [1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],
-          [2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],
-          [1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[3,1,3,1,2,1],[2,1,1,3,3,1],
-          [2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,3,1,1],[2,1,3,1,3,1],[3,1,1,1,2,3],
-          [3,1,1,3,2,1],[3,3,1,1,2,1],[3,1,2,1,1,3],[3,1,2,3,1,1],[3,3,2,1,1,1],
-          [3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],
-          [1,2,1,1,2,4],[1,2,1,4,2,1],[1,4,1,1,2,2],[1,4,1,2,2,1],[1,1,2,2,1,4],
-          [1,1,2,4,1,2],[1,2,2,1,1,4],[1,2,2,4,1,1],[1,4,2,1,1,2],[1,4,2,2,1,1],
-          [2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],
-          [1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,2,4,1],[1,1,4,2,1,2],[1,2,4,1,1,2],
-          [1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,2,1,4,1],
-          [2,1,4,1,2,1],[4,1,2,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],
-          [1,1,4,1,1,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[4,1,1,3,1,1],[1,1,3,1,4,1],
-          [1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,3,1]
-        ]
-      };
+  <div class="dest">
+    <div class="dest-tag">DESTINATÁRIO</div>
+    <div class="dest-name">${escapeHtml(data.customerName)}</div>
+    <div class="dest-addr">${escapeHtml(fullAddress || "Endereço não informado")}</div>
+    ${cep ? `<div class="dest-cep">${cep}</div>` : ""}
+    ${data.customerPhone ? `<div class="dest-phone">TEL: ${escapeHtml(data.customerPhone)}</div>` : ""}
+  </div>
 
-      function encode(text) {
-        let codes = [];
-        let checksum = 104; // START B
-        for (let i = 0; i < text.length; i++) {
-          let v = text.charCodeAt(i) - 32;
-          if (v < 0 || v > 94) v = 0;
-          codes.push(v);
-          checksum += v * (i + 1);
-        }
-        codes.push(checksum % 103);
-        
-        let bars = CODE128B.START.slice();
-        codes.forEach(c => bars = bars.concat(CODE128B.PATTERNS[c]));
-        bars = bars.concat(CODE128B.STOP);
-        return bars;
-      }
+  <div class="sender">
+    <div class="sender-col">
+      <div class="sender-tag">REMETENTE</div>
+      <div class="sender-name">${escapeHtml(data.storeName)}</div>
+      ${data.storeCity || data.storeState ? `<div class="sender-info">${[data.storeCity, data.storeState].filter(Boolean).join(" / ")}</div>` : ""}
+      ${data.storeCep ? `<div class="sender-info">CEP ${formatCep(data.storeCep)}</div>` : ""}
+    </div>
+    ${data.storePhone ? `<div class="sender-info" style="text-align:right">TEL: ${escapeHtml(data.storePhone)}</div>` : ""}
+  </div>
 
-      const text = ${JSON.stringify(barcodeValue)};
-      const bars = encode(text);
-      const svg = document.getElementById('barcode');
-      if (svg) {
-        let x = 0;
-        const unitW = 1.2;
-        const h = 28;
-        let rects = '';
-        bars.forEach((w, i) => {
-          if (i % 2 === 0) {
-            rects += '<rect x="'+x+'" y="0" width="'+(w*unitW)+'" height="'+h+'" fill="#000"/>';
-          }
-          x += w * unitW;
-        });
-        svg.setAttribute('viewBox', '0 0 ' + x + ' ' + h);
-        svg.innerHTML = rects;
-      }
-    })();
+  <div class="items">
+    <div class="items-tag">CONTEÚDO (${data.items.reduce((s, i) => s + i.quantity, 0)} itens)</div>
+    <div class="items-list">${escapeHtml(itemsSummary)}</div>
+    ${data.notes ? `<div class="items-note">OBS: ${escapeHtml(data.notes)}</div>` : ""}
+  </div>
 
-    // ── Simple QR code (fallback: text block) ──
-    (function() {
-      const canvas = document.getElementById('qrcode');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const size = 120;
-      canvas.width = size;
-      canvas.height = size;
+  <div class="ship">
+    <div>
+      <div class="ship-tag">ENVIO</div>
+      <div class="ship-carrier">${escapeHtml(carrier)}</div>
+      ${serviceType ? `<div class="ship-type">${escapeHtml(serviceType)}</div>` : ""}
+    </div>
+    <div style="text-align:right">
+      ${tracking ? `<div class="ship-tracking">${escapeHtml(tracking)}</div>` : ""}
+      ${data.estimatedDelivery ? `<div style="font-size:7px;margin-top:1mm;color:#555">Prazo: ${escapeHtml(data.estimatedDelivery)}</div>` : ""}
+    </div>
+  </div>
 
-      // Simple visual QR-like pattern based on order ID
-      const id = ${JSON.stringify(data.orderId)};
-      const grid = 15;
-      const cellSize = size / grid;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, size, size);
-      ctx.fillStyle = '#000';
+  <div class="codes">
+    <div class="codes-bar">
+      <svg id="barcode"></svg>
+      <div class="codes-bar-text">${logisticId}</div>
+    </div>
+    <div class="codes-qr">
+      <canvas id="qrcode"></canvas>
+      <div class="codes-qr-text">SCAN P/ RASTREIO</div>
+    </div>
+  </div>
 
-      // Finder patterns
-      function drawFinder(x, y) {
-        ctx.fillRect(x * cellSize, y * cellSize, 7 * cellSize, 7 * cellSize);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect((x+1) * cellSize, (y+1) * cellSize, 5 * cellSize, 5 * cellSize);
-        ctx.fillStyle = '#000';
-        ctx.fillRect((x+2) * cellSize, (y+2) * cellSize, 3 * cellSize, 3 * cellSize);
-      }
-      drawFinder(0, 0);
-      drawFinder(grid - 7, 0);
-      drawFinder(0, grid - 7);
+</div>
 
-      // Data area
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash) + id.charCodeAt(i);
-      for (let r = 0; r < grid; r++) {
-        for (let c = 0; c < grid; c++) {
-          if ((r < 8 && c < 8) || (r < 8 && c >= grid-8) || (r >= grid-8 && c < 8)) continue;
-          if (((hash >> ((r * grid + c) % 31)) & 1) === 1) {
-            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-          }
-        }
-      }
-    })();
-
-    window.onload = () => {
-      setTimeout(() => { window.print(); }, 400);
-    };
-  </script>
+<script>
+(function(){
+  var C={START:[2,1,1,4,1,2],STOP:[2,3,3,1,1,1,2],P:[
+[2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
+[1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
+[2,2,1,3,1,2],[2,3,1,2,1,2],[1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],
+[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],[2,2,3,2,1,1],[2,2,1,1,3,2],
+[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],[3,1,1,2,2,2],
+[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
+[2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],
+[1,3,1,3,2,1],[1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],
+[2,3,1,1,1,3],[2,3,1,3,1,1],[1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],
+[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],[3,1,3,1,2,1],[2,1,1,3,3,1],
+[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,3,1,1],[2,1,3,1,3,1],[3,1,1,1,2,3],
+[3,1,1,3,2,1],[3,3,1,1,2,1],[3,1,2,1,1,3],[3,1,2,3,1,1],[3,3,2,1,1,1],
+[3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],
+[1,2,1,1,2,4],[1,2,1,4,2,1],[1,4,1,1,2,2],[1,4,1,2,2,1],[1,1,2,2,1,4],
+[1,1,2,4,1,2],[1,2,2,1,1,4],[1,2,2,4,1,1],[1,4,2,1,1,2],[1,4,2,2,1,1],
+[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],[2,4,1,1,1,2],[1,3,4,1,1,1],
+[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,2,4,1],[1,1,4,2,1,2],[1,2,4,1,1,2],
+[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,2,1,4,1],
+[2,1,4,1,2,1],[4,1,2,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],
+[1,1,4,1,1,3],[1,1,4,3,1,1],[4,1,1,1,1,3],[4,1,1,3,1,1],[1,1,3,1,4,1],
+[1,1,4,1,3,1],[3,1,1,1,4,1],[4,1,1,1,3,1]]};
+  function enc(t){var c=[],s=104;for(var i=0;i<t.length;i++){var v=t.charCodeAt(i)-32;if(v<0||v>94)v=0;c.push(v);s+=v*(i+1)}c.push(s%103);var b=C.START.slice();c.forEach(function(x){b=b.concat(C.P[x])});return b.concat(C.STOP)}
+  var t=${JSON.stringify(logisticId)};var b=enc(t);var svg=document.getElementById('barcode');
+  if(svg){var x=0,u=1,h=35,r='';b.forEach(function(w,i){if(i%2===0)r+='<rect x="'+x+'" y="0" width="'+(w*u)+'" height="'+h+'" fill="#000"/>';x+=w*u});svg.setAttribute('viewBox','0 0 '+x+' '+h);svg.innerHTML=r}
+})();
+(function(){
+  var c=document.getElementById('qrcode');if(!c)return;var x=c.getContext('2d'),s=120;c.width=s;c.height=s;
+  var id=${JSON.stringify(data.orderId)},g=15,cs=s/g;
+  x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle='#000';
+  function f(px,py){x.fillRect(px*cs,py*cs,7*cs,7*cs);x.fillStyle='#fff';x.fillRect((px+1)*cs,(py+1)*cs,5*cs,5*cs);x.fillStyle='#000';x.fillRect((px+2)*cs,(py+2)*cs,3*cs,3*cs)}
+  f(0,0);f(g-7,0);f(0,g-7);
+  var h=0;for(var i=0;i<id.length;i++)h=((h<<5)-h)+id.charCodeAt(i);
+  for(var r=0;r<g;r++)for(var c2=0;c2<g;c2++){if((r<8&&c2<8)||(r<8&&c2>=g-8)||(r>=g-8&&c2<8))continue;if(((h>>((r*g+c2)%31))&1)===1)x.fillRect(c2*cs,r*cs,cs,cs)}
+})();
+window.onload=function(){setTimeout(function(){window.print()},400)};
+</script>
 </body>
 </html>`;
 
@@ -473,6 +217,14 @@ export function generateOrderLabel(data: OrderLabelData): void {
     printWindow.document.write(html);
     printWindow.document.close();
   }
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function formatCep(cep: string): string {
