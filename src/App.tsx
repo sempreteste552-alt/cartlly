@@ -144,6 +144,7 @@ const App = () => {
                     <Route path="banners" element={<SuperAdminBanners />} />
                     <Route path="config" element={<SuperAdminConfig />} />
                     <Route path="roulette" element={<SuperAdminRoulette />} />
+                    <Route path="dominios" element={<SuperAdminDominios />} />
                   </Route>
                   {/* Tenant Admin */}
                   <Route path="/admin" element={<Navigate to="/" replace />} />
