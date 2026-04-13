@@ -171,6 +171,7 @@ export default function DomainConnector({ settingsId, storeSlug }: DomainConnect
     } finally {
       setRequestingId(null);
     }
+  };
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
