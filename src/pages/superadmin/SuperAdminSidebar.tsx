@@ -51,6 +51,7 @@ export function SuperAdminSidebar() {
     { title: "Dashboard", url: "/superadmin", icon: LayoutDashboard, badge: 0 },
     { title: "Tenants", url: "/superadmin/tenants", icon: Users, badge: badges.tenants },
     { title: "Solicitações", url: "/superadmin/solicitacoes", icon: FileText, badge: badges.solicitacoes },
+    { title: "Domínios", url: "/superadmin/dominios", icon: Globe, badge: badges.dominios || 0 },
     { title: "Planos", url: "/superadmin/planos", icon: CreditCard, badge: 0 },
     { title: "Notificações", url: "/superadmin/notificacoes", icon: Bell, badge: badges.notificacoes },
     { title: "Logs de Auditoria", url: "/superadmin/audit-logs", icon: ClipboardList, badge: 0 },
