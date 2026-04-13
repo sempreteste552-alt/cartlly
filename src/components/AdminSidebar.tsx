@@ -26,6 +26,7 @@ import { normalizeDomain, buildStoreUrl } from "@/lib/storeDomain";
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
   const { t, locale } = useTranslation();
+  const { slug: urlSlug } = useParams();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,6 +36,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const supportUnreadCount = useAdminSupportUnreadCount();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
+  
+  const storeSlug = settings?.store_slug || urlSlug;
+  const adminBasePath = storeSlug ? `/painel/${storeSlug}` : "/admin";
+
   const adminSidebarText = {
     pt: { defaultStore: "Minha Loja", new: "Novo", push: "Push" },
     en: { defaultStore: "My Store", new: "New", push: "Push" },
@@ -48,30 +53,30 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   });
 
   const mainItems = [
-    { title: t.sidebar.dashboard, url: "/admin", icon: LayoutDashboard, isNew: false },
-    { title: t.sidebar.products, url: "/admin/produtos", icon: Package, isNew: false },
-    { title: t.sidebar.orders, url: "/admin/pedidos", icon: ShoppingCart, isNew: false },
-    { title: t.sidebar.customers, url: "/admin/clientes", icon: Users, isNew: false },
-    { title: t.sidebar.aiBrain, url: "/admin/cerebro", icon: Bot, isNew: true },
-    { title: t.sidebar.coupons, url: "/admin/cupons", icon: Ticket, isNew: false },
-    { title: t.sidebar.pages, url: "/admin/paginas", icon: FileText, isNew: false },
-    { title: t.sidebar.automation, url: "/admin/automacao", icon: Zap, isNew: true },
-    { title: t.sidebar.referrals, url: "/admin/indicacoes", icon: Gift, isNew: true },
-    { title: t.sidebar.policies, url: "/admin/politicas", icon: Shield, isNew: false },
-    { title: t.sidebar.loyalty, url: "/admin/fidelidade", icon: Award, isNew: true },
-    { title: t.sidebar.profit, url: "/admin/lucro", icon: DollarSign, isNew: true },
-    { title: t.sidebar.analytics, url: "/admin/analytics", icon: BarChart3, isNew: true },
-    { title: t.sidebar.whatsappAi, url: "/admin/whatsapp-ia", icon: MessageCircle, isNew: true },
-    { title: t.sidebar.support, url: "/admin/suporte", icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
-    { title: t.sidebar.roulette, url: "/admin/roleta", icon: Gift, isNew: true },
+    { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false },
+    { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false },
+    { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false },
+    { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false },
+    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true },
+    { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false },
+    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false },
+    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true },
+    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true },
+    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
+    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true },
+    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: true },
+    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: true },
+    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
+    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
+    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
   ];
 
   const configItems = [
-    { title: t.sidebar.store, url: "/admin/config", icon: Settings, feature: null },
-    { title: t.sidebar.payments, url: "/admin/pagamentos", icon: CreditCard, feature: "gateway" as const },
-    { title: t.sidebar.gateway, url: "/admin/gateway", icon: Zap, feature: "gateway" as const },
-    { title: t.sidebar.shipping, url: "/admin/frete", icon: Truck, feature: null },
-    { title: t.sidebar.myPlan, url: "/admin/plano", icon: Crown, feature: null },
+    { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null },
+    { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const },
+    { title: t.sidebar.gateway, url: `${adminBasePath}/gateway`, icon: Zap, feature: "gateway" as const },
+    { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null },
+    { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null },
   ];
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   }, [location.pathname, isMobile, setOpenMobile]);
 
   const isActive = (path: string) => {
-    if (path === "/admin") return location.pathname === "/admin";
+    if (path === adminBasePath) return location.pathname === adminBasePath;
     return location.pathname.startsWith(path);
   };
 
