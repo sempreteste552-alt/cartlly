@@ -845,7 +845,24 @@ export function AIChatWidget() {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: "Erro de conexão" }));
-        throw new Error(err.error || `Erro ${resp.status}`);
+        const errMsg = err.error || `Erro ${resp.status}`;
+        toast.error(errMsg);
+        setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${errMsg}` }]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle graceful fallback responses (e.g. insufficient credits)
+      const contentType = resp.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const jsonResp = await resp.json();
+        if (jsonResp.fallback || jsonResp.error) {
+          const msg = jsonResp.message || jsonResp.error || "Erro desconhecido";
+          toast.error(msg);
+          setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${msg}` }]);
+          setIsLoading(false);
+          return;
+        }
       }
 
       if (!resp.body) throw new Error("Sem resposta do servidor");
