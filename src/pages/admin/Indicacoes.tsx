@@ -505,6 +505,5 @@ export default function Indicacoes() {
         </TabsContent>
       </Tabs>
     </div>
-    </PlanGate>
   );
 }
