@@ -67,6 +67,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: true },
     { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: true },
     { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
+    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: true },
     { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
     { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
   ];
