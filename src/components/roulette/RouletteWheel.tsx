@@ -72,47 +72,50 @@ export function RouletteWheel({
   };
 
   const getPrizeColor = (index: number) => {
-    if (prizes[index].label === 'Não foi dessa vez') return "bg-slate-400";
+    if (prizes[index].label === 'Não foi dessa vez') return "bg-slate-500/90";
     
     const colors = [
-      "bg-primary",
-      "bg-secondary",
-      "bg-accent",
-      "bg-purple-500",
-      "bg-blue-500",
-      "bg-emerald-500",
-      "bg-pink-500",
-      "bg-indigo-500",
+      "bg-gradient-to-br from-primary to-primary/80",
+      "bg-gradient-to-br from-purple-600 to-purple-400",
+      "bg-gradient-to-br from-pink-600 to-pink-400",
+      "bg-gradient-to-br from-amber-500 to-amber-300",
+      "bg-gradient-to-br from-emerald-600 to-emerald-400",
+      "bg-gradient-to-br from-blue-600 to-blue-400",
+      "bg-gradient-to-br from-indigo-600 to-indigo-400",
+      "bg-gradient-to-br from-rose-600 to-rose-400",
     ];
     return prizes[index].color || colors[index % colors.length];
   };
 
   return (
-    <div className="relative flex flex-col items-center">
-      {/* Decorative Lights */}
-      <div className="absolute inset-0 -m-8 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
+    <div className="relative flex flex-col items-center group perspective-1000">
+      {/* 3D Container with Rotation */}
+      <div className="absolute inset-0 -m-12 pointer-events-none">
+        {[...Array(24)].map((_, i) => (
           <motion.div
             key={i}
             animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.2, 1],
+              opacity: [0.2, 1, 0.2],
+              scale: [1, 1.4, 1],
+              rotate: [0, 360],
             }}
             transition={{
-              duration: 2,
+              duration: 3,
               repeat: Infinity,
-              delay: i * 0.2,
+              delay: i * 0.1,
+              rotate: { duration: 20, repeat: Infinity, ease: "linear" }
             }}
-            className="absolute w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]"
+            className="absolute w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_15px_rgba(250,204,21,1)]"
             style={{
               top: '50%',
               left: '50%',
-              transform: `rotate(${i * 30}deg) translate(165px, -50%)`,
-              sm: { transform: `rotate(${i * 30}deg) translate(215px, -50%)` }
+              transform: `rotate(${i * 15}deg) translate(200px, -50%)`,
+              sm: { transform: `rotate(${i * 15}deg) translate(250px, -50%)` }
             } as any}
           />
         ))}
       </div>
+
 
       {/* Pointer */}
       <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 z-30">
