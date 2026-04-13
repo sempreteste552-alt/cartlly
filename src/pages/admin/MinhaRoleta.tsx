@@ -180,135 +180,135 @@ export default function MinhaRoleta() {
       </div>
 
       <div className="opacity-40 grayscale pointer-events-none filter blur-[2px]">
+        <AnimatePresence>
+          {showWinAnimation && lastWin && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.5, y: -20 }}
+              className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none"
+            >
+              <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-primary/20 flex flex-col items-center gap-4 text-center">
+                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Trophy className="w-12 h-12 text-primary animate-bounce" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-2xl font-black text-primary">PARABÉNS!</h2>
+                  <p className="text-xl font-bold">Você ganhou: {lastWin.label}</p>
+                  <p className="text-sm text-muted-foreground">O prêmio foi adicionado à sua conta!</p>
+                </div>
+                <div className="flex gap-2">
+                  <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+                  <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-75" />
+                  <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-150" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {showWinAnimation && lastWin && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: -20 }}
-            className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none"
-          >
-            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-primary/20 flex flex-col items-center gap-4 text-center">
-              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                <Trophy className="w-12 h-12 text-primary animate-bounce" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-primary">PARABÉNS!</h2>
-                <p className="text-xl font-bold">Você ganhou: {lastWin.label}</p>
-                <p className="text-sm text-muted-foreground">O prêmio foi adicionado à sua conta!</p>
-              </div>
-              <div className="flex gap-2">
-                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
-                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-75" />
-                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-150" />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
-          <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-        </div>
-        <h1 className="text-4xl font-extrabold tracking-tight">Roleta de Prêmios</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Tente a sorte e ganhe descontos exclusivos na sua assinatura ou brindes especiais!
-        </p>
-        <div className="flex justify-center gap-2">
-          <Badge variant="outline" className="px-4 py-1 text-sm">
-            Seu Plano: {tier}
-          </Badge>
-          {!canSpin && (
-            <Badge variant="secondary" className="px-4 py-1 text-sm bg-amber-100 text-amber-700 border-amber-200">
-              Próximo giro em 24h
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
+            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+          </div>
+          <h1 className="text-4xl font-extrabold tracking-tight">Roleta de Prêmios</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Tente a sorte e ganhe descontos exclusivos na sua assinatura ou brindes especiais!
+          </p>
+          <div className="flex justify-center gap-2">
+            <Badge variant="outline" className="px-4 py-1 text-sm">
+              Seu Plano: {tier}
             </Badge>
-          )}
+            {!canSpin && (
+              <Badge variant="secondary" className="px-4 py-1 text-sm bg-amber-100 text-amber-700 border-amber-200">
+                Próximo giro em 24h
+              </Badge>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="grid md:grid-cols-5 gap-8 items-start">
-        <Card className="md:col-span-3 overflow-hidden border-2 border-primary/20 shadow-xl bg-gradient-to-b from-white to-gray-50/50">
-          <CardHeader className="text-center">
-            <CardTitle>Gire a Roda</CardTitle>
-            <CardDescription>
-              {canSpin ? "Você tem 1 giro disponível!" : "Você já girou recentemente. Volte amanhã!"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center pb-12">
-            <div className={!canSpin ? "opacity-50 grayscale pointer-events-none" : ""}>
-              <RouletteWheel 
-                prizes={prizes || []} 
-                onSpinStart={handleSpinStart}
-                onFinish={handleFinish} 
-              />
-            </div>
-          </CardContent>
-          {!canSpin && (
-            <div className="bg-amber-50 p-4 border-t border-amber-100 flex items-center gap-3 text-amber-800">
-              <AlertCircle className="h-5 w-5 shrink-0" />
-              <p className="text-sm font-medium">Você já utilizou seu giro diário. Tente novamente amanhã!</p>
-            </div>
-          )}
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <History className="h-5 w-5 text-muted-foreground" />
-              Seu Histórico
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {historyLoading ? (
-              <Skeleton className="h-40 w-full" />
-            ) : history && history.length > 0 ? (
-              <div className="space-y-3">
-                {history.map((spin: any) => (
-                  <div key={spin.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-bold">{spin.roulette_prizes?.label}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(spin.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {spin.status === "won" && (
-                      <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" /> Ganhou</Badge>
-                    )}
-                    {spin.status === "pending_approval" && (
-                      <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
-                        <Clock className="h-3 w-3 mr-1" /> Pendente
-                      </Badge>
-                    )}
-                    {spin.status === "rejected" && (
-                      <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Recusado</Badge>
-                    )}
-                  </div>
-                ))}
+        <div className="grid md:grid-cols-5 gap-8 items-start">
+          <Card className="md:col-span-3 overflow-hidden border-2 border-primary/20 shadow-xl bg-gradient-to-b from-white to-gray-50/50">
+            <CardHeader className="text-center">
+              <CardTitle>Gire a Roda</CardTitle>
+              <CardDescription>
+                {canSpin ? "Você tem 1 giro disponível!" : "Você já girou recentemente. Volte amanhã!"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center pb-12">
+              <div className={!canSpin ? "opacity-50 grayscale pointer-events-none" : ""}>
+                <RouletteWheel 
+                  prizes={prizes || []} 
+                  onSpinStart={handleSpinStart}
+                  onFinish={handleFinish} 
+                />
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Gift className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                <p className="text-sm">Nenhum giro registrado ainda.</p>
+            </CardContent>
+            {!canSpin && (
+              <div className="bg-amber-50 p-4 border-t border-amber-100 flex items-center gap-3 text-amber-800">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <p className="text-sm font-medium">Você já utilizou seu giro diário. Tente novamente amanhã!</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </Card>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        {prizes?.slice(0, 3).map((p) => (
-          <div key={p.id} className="p-4 border rounded-xl bg-white flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
-            <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
-              <Gift className="h-5 w-5" />
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <History className="h-5 w-5 text-muted-foreground" />
+                Seu Histórico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <Skeleton className="h-40 w-full" />
+              ) : history && history.length > 0 ? (
+                <div className="space-y-3">
+                  {history.map((spin: any) => (
+                    <div key={spin.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold">{spin.roulette_prizes?.label}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(spin.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {spin.status === "won" && (
+                        <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" /> Ganhou</Badge>
+                      )}
+                      {spin.status === "pending_approval" && (
+                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                          <Clock className="h-3 w-3 mr-1" /> Pendente
+                        </Badge>
+                      )}
+                      {spin.status === "rejected" && (
+                        <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Recusado</Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Gift className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm">Nenhum giro registrado ainda.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-4">
+          {prizes?.slice(0, 3).map((p) => (
+            <div key={p.id} className="p-4 border rounded-xl bg-white flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
+              <div className="h-10 w-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+                <Gift className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">{p.label}</p>
+                <p className="text-[10px] text-muted-foreground line-clamp-1">{p.description}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold">{p.label}</p>
-              <p className="text-[10px] text-muted-foreground line-clamp-1">{p.description}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
