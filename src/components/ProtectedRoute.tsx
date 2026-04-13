@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
-const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
-
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading, maintenanceMode } = useAuth();
 
@@ -17,13 +15,14 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         .from("user_roles")
         .select("role")
         .eq("user_id", user!.id)
+        .eq("role", "super_admin")
         .maybeSingle();
       if (error) throw error;
       return data;
     },
   });
 
-  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL || roleData?.role === "super_admin";
+  const isSuperAdmin = roleData?.role === "super_admin";
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile_status", user?.id],

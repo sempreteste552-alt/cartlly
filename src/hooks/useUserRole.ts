@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 
-const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
-
 export function useUserRole() {
   const { user } = useAuth();
 
@@ -21,7 +19,7 @@ export function useUserRole() {
     },
   });
 
-  const isSuperAdmin = roles?.includes("super_admin") || user?.email === SUPER_ADMIN_EMAIL;
+  const isSuperAdmin = roles?.includes("super_admin") ?? false;
   const isCustomer = user?.user_metadata?.is_customer === true;
   const isTenant = !isSuperAdmin && !isCustomer && !!user;
 
