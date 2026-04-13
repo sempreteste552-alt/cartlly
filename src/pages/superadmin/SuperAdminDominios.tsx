@@ -107,7 +107,7 @@ export default function SuperAdminDominios() {
         try {
           await supabase.functions.invoke("send-push-internal", {
             body: {
-              userId: storeInfo.user_id,
+              target_user_id: storeInfo.user_id,
               title: "🚀 Domínio No Ar!",
               body: `Seu site ${domain.hostname} está online! Compartilhe com seus clientes.`,
               url: `https://${domain.hostname}`,
