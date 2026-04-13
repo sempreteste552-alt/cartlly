@@ -185,7 +185,6 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      // Check for super admin first via role table
       const routeUser = async () => {
         const isAdmin = await checkIsSuperAdmin(user.id);
         if (isAdmin) {
@@ -193,34 +192,30 @@ export default function Login() {
           return;
         }
 
-      // Check if it's a store customer — avoid redirecting to admin panel or setup-store
-      const isCustomer = user.user_metadata?.is_customer === true;
-      if (isCustomer) {
-        // If they are on /login, and they are a customer, send them back to where they came from
-        const authContextStr = localStorage.getItem("auth_context");
-        if (authContextStr) {
-          try {
-            const ctx = JSON.parse(authContextStr);
-            if (ctx.type === "store_customer" && ctx.redirect_back) {
-              window.location.href = ctx.redirect_back;
-              return;
-            }
-          } catch { /* ignore */ }
+        // Check if it's a store customer
+        const isCustomer = user.user_metadata?.is_customer === true;
+        if (isCustomer) {
+          const authContextStr = localStorage.getItem("auth_context");
+          if (authContextStr) {
+            try {
+              const ctx = JSON.parse(authContextStr);
+              if (ctx.type === "store_customer" && ctx.redirect_back) {
+                window.location.href = ctx.redirect_back;
+                return;
+              }
+            } catch { /* ignore */ }
+          }
+          
+          const lastStore = localStorage.getItem("last_visited_store");
+          if (lastStore) {
+            navigate(`/loja/${lastStore}`, { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
+          return;
         }
-        
-        // If no context, redirect to their last visited store or home
-        const lastStore = localStorage.getItem("last_visited_store");
-        if (lastStore) {
-          navigate(`/loja/${lastStore}`, { replace: true });
-        } else {
-          // If no store found, stay on home but don't show onboarding
-          navigate("/", { replace: true });
-        }
-        return;
-      }
 
-      // If we're here, we're a potential merchant/tenant
-      const checkOnboarding = async () => {
+        // Merchant/tenant
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
@@ -234,7 +229,7 @@ export default function Login() {
         }
       };
       
-      checkOnboarding();
+      routeUser();
     }
   }, [user, navigate]);
 
