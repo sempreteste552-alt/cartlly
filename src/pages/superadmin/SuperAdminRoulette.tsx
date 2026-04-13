@@ -58,6 +58,40 @@ export default function SuperAdminRoulette() {
     },
   });
 
+  // Fetch Global Settings
+  const { data: globalSettings } = useQuery({
+    queryKey: ["superadmin_roulette_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("*")
+        .in("key", ["roulette_payouts_enabled"]);
+      if (error) throw error;
+      
+      const payoutsSetting = data?.find(s => s.key === "roulette_payouts_enabled");
+      if (payoutsSetting) {
+        setPayoutsEnabled(payoutsSetting.value?.value === true);
+      }
+      return data;
+    },
+  });
+
+  const togglePayouts = async (enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("platform_settings")
+        .upsert({ 
+          key: "roulette_payouts_enabled", 
+          value: { value: enabled } 
+        });
+      if (error) throw error;
+      setPayoutsEnabled(enabled);
+      toast.success(enabled ? "Pagamentos da roleta habilitados!" : "Pagamentos da roleta desabilitados (Todos perderão).");
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+  };
+
   const handleSavePrize = async () => {
     const payload = {
       label,
