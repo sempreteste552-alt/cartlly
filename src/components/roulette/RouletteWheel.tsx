@@ -31,20 +31,31 @@ export function RouletteWheel({
     }
   }, [controlledIsSpinning]);
 
-  const spin = () => {
+  const spin = async () => {
     if (isSpinning || prizes.length === 0) return;
 
     setIsSpinning(true);
     
-    // Choose a random prize
-    const prizeIndex = Math.floor(Math.random() * prizes.length);
-    const degreesPerPrize = 360 / prizes.length;
+    let targetPrize: Prize;
     
-    // Calculate new rotation:
-    // Current rotation + some full spins (5-10) + offset to land on the prize
-    // The pointer is usually at the top (0 deg). 
-    // Prize 0 is at [0, degreesPerPrize]
-    // To land on prize index i, the wheel needs to be at -(i * degreesPerPrize + offset)
+    if (onSpinStart) {
+      try {
+        targetPrize = await onSpinStart();
+      } catch (e) {
+        setIsSpinning(false);
+        return;
+      }
+    } else {
+      targetPrize = prizes[Math.floor(Math.random() * prizes.length)];
+    }
+
+    const prizeIndex = prizes.findIndex(p => p.id === targetPrize.id);
+    if (prizeIndex === -1) {
+      setIsSpinning(false);
+      return;
+    }
+
+    const degreesPerPrize = 360 / prizes.length;
     const extraSpins = 5 + Math.floor(Math.random() * 5);
     const prizeOffset = Math.random() * (degreesPerPrize * 0.8) + (degreesPerPrize * 0.1);
     const finalRotation = rotation + (extraSpins * 360) + (360 - (prizeIndex * degreesPerPrize + prizeOffset));
@@ -53,7 +64,7 @@ export function RouletteWheel({
 
     setTimeout(() => {
       setIsSpinning(false);
-      onFinish(prizes[prizeIndex]);
+      onFinish(targetPrize);
     }, spinningDuration * 1000);
   };
 
