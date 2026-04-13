@@ -32,7 +32,7 @@ export default function MinhaRoleta() {
     },
   });
 
-  const tier = (subscription as any)?.tenant_plans?.name || "FREE";
+  const tier = ((subscription as any)?.tenant_plans?.name || "FREE").toUpperCase();
 
   // Fetch Eligible Prizes
   const { data: prizes, isLoading: prizesLoading } = useQuery({
@@ -53,6 +53,11 @@ export default function MinhaRoleta() {
       const currentTierLevel = tierHierarchy[tier] || 0;
 
       return (data || []).filter(p => {
+        // Regra especial: Premium só ganha descontos ou "Não foi dessa vez"
+        if (tier === "PREMIUM") {
+          return p.label.includes('%') || p.label === 'Não foi dessa vez';
+        }
+        
         const minLevel = tierHierarchy[p.min_subscription_tier] || 0;
         return currentTierLevel >= minLevel;
       });
