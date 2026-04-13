@@ -163,16 +163,16 @@ export function RouletteWheel({
                 }}
               >
                 <div
-                  className="flex flex-col items-center justify-center text-white font-black text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                  className="flex flex-col items-center justify-center text-white font-black text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]"
                   style={{
-                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-45px)`,
-                    width: "130px",
+                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-50px)`,
+                    width: "140px",
                   }}
                 >
-                  <span className="text-[10px] sm:text-[11px] uppercase tracking-tighter mb-0.5 opacity-90 font-bold bg-black/20 px-2 rounded-full">
+                  <span className="text-[11px] sm:text-[12px] uppercase tracking-tighter mb-1 opacity-100 font-bold bg-black/50 px-3 py-0.5 rounded-full border border-white/20">
                     {prize.label.includes('%') ? 'Desconto' : prize.label === 'Não foi dessa vez' ? 'X' : 'Especial'}
                   </span>
-                  <span className="text-xs sm:text-base drop-shadow-lg line-clamp-2 px-1 leading-none">
+                  <span className="text-sm sm:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] line-clamp-2 px-1 leading-tight font-black">
                     {prize.label}
                   </span>
                   {prize.label !== 'Não foi dessa vez' && (
