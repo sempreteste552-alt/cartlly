@@ -101,7 +101,7 @@ export default function Pedidos() {
 
   const handlePrintLabel = async (order: any) => {
     if (!canPrintLabel) {
-      toast.error("Imprimir nota está disponível a partir do plano Starter. Faça upgrade para desbloquear.");
+      toast.error("Imprimir etiqueta está disponível a partir do plano Starter. Faça upgrade para desbloquear.");
       return;
     }
     const pStatus = (order as any).payments?.[0]?.status || "pendente";
@@ -153,6 +153,46 @@ export default function Pedidos() {
     toast.promise(fetchItems(), {
       loading: "Preparando etiqueta...",
       success: "Etiqueta gerada!",
+      error: "Erro ao carregar itens do pedido."
+    });
+  };
+
+  const handlePrintReceipt = async (order: any) => {
+    const fetchItems = async () => {
+      const { data: items, error } = await supabase.from("order_items").select("*").eq("order_id", order.id);
+      if (error) throw error;
+      
+      const pStatus = (order as any).payments?.[0]?.status || "pendente";
+      const isPaid = pStatus === "approved" || pStatus === "paid";
+      const discountAmount = order.discount_amount || 0;
+      const subtotal = items?.reduce((acc, i) => acc + (i.unit_price * i.quantity), 0) || 0;
+
+      generateReceiptPdf({
+        orderId: order.id,
+        date: format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR }),
+        storeName: (storeSettings as any)?.store_name || "Minha Loja",
+        storeLogoUrl: (storeSettings as any)?.logo_url || undefined,
+        storeAddress: (storeSettings as any)?.store_address || undefined,
+        storePhone: (storeSettings as any)?.whatsapp_number || undefined,
+        customerName: order.customer_name,
+        customerEmail: order.customer_email || undefined,
+        customerPhone: order.customer_phone || undefined,
+        customerAddress: order.customer_address || undefined,
+        customerCpf: order.customer_cpf || undefined,
+        items: items?.map(i => ({ name: i.product_name, quantity: i.quantity, price: i.unit_price })) || [],
+        subtotal,
+        discount: discountAmount,
+        shipping: order.shipping_cost || 0,
+        total: order.total,
+        paymentMethod: (order as any).payments?.[0]?.method || (order.whatsapp_order ? "WhatsApp" : "Online"),
+        notes: order.notes || undefined,
+      });
+      return items;
+    };
+
+    toast.promise(fetchItems(), {
+      loading: "Gerando recibo...",
+      success: "Recibo gerado!",
       error: "Erro ao carregar itens do pedido."
     });
   };
