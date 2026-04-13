@@ -19,6 +19,7 @@ interface RouletteWheelProps {
 export function RouletteWheel({
   prizes,
   onFinish,
+  onSpinStart,
   isSpinning: controlledIsSpinning,
   spinningDuration = 5,
 }: RouletteWheelProps) {
