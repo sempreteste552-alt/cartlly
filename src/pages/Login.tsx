@@ -16,8 +16,7 @@ import { SimpleVerification } from "@/components/SimpleVerification";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
-
-const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
+import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 
 const LOGIN_PHRASES = [
   "Bem-vindo ao Painel Administrativo 🔐",
