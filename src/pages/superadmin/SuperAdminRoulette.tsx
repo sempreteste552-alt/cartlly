@@ -19,6 +19,7 @@ export default function SuperAdminRoulette() {
   const queryClient = useQueryClient();
   const [editPrize, setEditPrize] = useState<any>(null);
   const [prizeFormOpen, setPrizeFormOpen] = useState(false);
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
   
   // Prize Form State
   const [label, setLabel] = useState("");
@@ -56,6 +57,40 @@ export default function SuperAdminRoulette() {
       return data;
     },
   });
+
+  // Fetch Global Settings
+  const { data: globalSettings } = useQuery({
+    queryKey: ["superadmin_roulette_settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("*")
+        .in("key", ["roulette_payouts_enabled"]);
+      if (error) throw error;
+      
+      const payoutsSetting = data?.find(s => s.key === "roulette_payouts_enabled");
+      if (payoutsSetting) {
+        setPayoutsEnabled((payoutsSetting.value as any)?.value === true);
+      }
+      return data;
+    },
+  });
+
+  const togglePayouts = async (enabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("platform_settings")
+        .upsert({ 
+          key: "roulette_payouts_enabled", 
+          value: { value: enabled } 
+        });
+      if (error) throw error;
+      setPayoutsEnabled(enabled);
+      toast.success(enabled ? "Pagamentos da roleta habilitados!" : "Pagamentos da roleta desabilitados (Todos perderão).");
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+  };
 
   const handleSavePrize = async () => {
     const payload = {
@@ -151,9 +186,16 @@ export default function SuperAdminRoulette() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Roleta de Prêmios</h1>
           <p className="text-muted-foreground">Gerencie prêmios, probabilidades e aprovações de giros.</p>
         </div>
-        <Button onClick={openNewPrize}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Prêmio
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-muted p-2 px-3 rounded-lg border">
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs font-bold">Pagamentos Ativos</span>
+            <Switch checked={payoutsEnabled} onCheckedChange={togglePayouts} />
+          </div>
+          <Button onClick={openNewPrize}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Prêmio
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="prizes" className="w-full">

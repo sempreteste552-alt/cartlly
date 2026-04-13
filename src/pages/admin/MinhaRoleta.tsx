@@ -5,19 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle, Trophy, Ticket, Star, Heart } from "lucide-react";
 import { RouletteWheel } from "@/components/roulette/RouletteWheel";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
+import confetti from "canvas-confetti";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function MinhaRoleta() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { width, height } = useWindowSize();
-  const [showConfetti, setShowConfetti] = useState(false);
   const [lastWin, setLastWin] = useState<any>(null);
+  const [showWinAnimation, setShowWinAnimation] = useState(false);
 
   // Fetch Tenant Subscription
   const { data: subscription, isLoading: subLoading } = useQuery({
@@ -95,14 +94,24 @@ export default function MinhaRoleta() {
   const handleFinish = async (prize: any) => {
     if (!prize) return;
     
-    const status = prize.manual_approval_required ? "pending_approval" : "won";
-    
-    if (status === "won") {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-      toast.success(`Parabéns! Você ganhou: ${prize.label}`);
+    if (prize.label === 'Não foi dessa vez') {
+      toast.error("Não foi dessa vez! Tente novamente amanhã.");
     } else {
-      toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
+      const isPending = prize.manual_approval_required;
+      
+      if (!isPending) {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#6d28d9", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"],
+        });
+        setShowWinAnimation(true);
+        setTimeout(() => setShowWinAnimation(false), 5000);
+        toast.success(`Parabéns! Você ganhou: ${prize.label}`);
+      } else {
+        toast.info(`Você ganhou ${prize.label}! Aguardando aprovação do admin.`);
+      }
     }
 
     queryClient.invalidateQueries({ queryKey: ["my_spin_history"] });
@@ -111,8 +120,33 @@ export default function MinhaRoleta() {
   if (subLoading || prizesLoading) return <Skeleton className="h-[600px] w-full" />;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8">
-      {showConfetti && <Confetti width={width} height={height} recycle={false} />}
+    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8 relative">
+      <AnimatePresence>
+        {showWinAnimation && lastWin && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: -20 }}
+            className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-primary/20 flex flex-col items-center gap-4 text-center">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                <Trophy className="w-12 h-12 text-primary animate-bounce" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-2xl font-black text-primary">PARABÉNS!</h2>
+                <p className="text-xl font-bold">Você ganhou: {lastWin.label}</p>
+                <p className="text-sm text-muted-foreground">O prêmio foi adicionado à sua conta!</p>
+              </div>
+              <div className="flex gap-2">
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-75" />
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-150" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="text-center space-y-4">
         <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
