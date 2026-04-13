@@ -218,6 +218,5 @@ export default function Fidelidade() {
         </Card>
       )}
     </div>
-    </PlanGate>
   );
 }
