@@ -32,6 +32,7 @@ import Fidelidade from "./pages/admin/Fidelidade";
 import Lucro from "./pages/admin/Lucro";
 import Analytics from "./pages/admin/Analytics";
 import WhatsAppIA from "./pages/admin/WhatsAppIA";
+import Notificacoes from "./pages/admin/Notificacoes";
 import Suporte from "./pages/admin/Suporte";
 import LojaPolitica from "./pages/loja/LojaPolitica";
 import LojaLayout from "./pages/loja/LojaLayout";
@@ -168,6 +169,7 @@ const App = () => {
                     <Route path="lucro" element={<Lucro />} />
                     <Route path="analytics" element={<Analytics />} />
                     <Route path="whatsapp-ia" element={<WhatsAppIA />} />
+                    <Route path="notificacoes" element={<Notificacoes />} />
                     <Route path="suporte" element={<Suporte />} />
                     <Route path="roleta" element={<MinhaRoleta />} />
                   </Route>
