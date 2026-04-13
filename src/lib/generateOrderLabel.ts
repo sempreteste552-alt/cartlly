@@ -44,151 +44,241 @@ interface OrderLabelData {
 export function generateOrderLabel(data: OrderLabelData): void {
   const shortId = data.orderId.slice(0, 8).toUpperCase();
   const logisticCode = "PLP:" + data.orderId.replace(/-/g, "").slice(0, 10).toUpperCase();
-  const contractCode = "CMP" + data.orderId.replace(/-/g, "").slice(0, 14).toUpperCase();
   const cep = data.shippingCep ? formatCep(data.shippingCep) : "";
   const carrier = data.shippingMethod || "Transportadora";
   const serviceType = data.shippingType || "Padrão";
-  const tracking = data.trackingCode || "";
-  const itemsSummary = data.items
-    .map((i) => `${i.quantity}x ${i.name.substring(0, 40)}${i.variation ? ` (${i.variation})` : ""}`)
-    .join("<br/>");
+  const tracking = data.trackingCode || logisticCode;
+  
+  const itemsTable = data.items
+    .map((i, index) => `
+      <tr>
+        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${index + 1}</td>
+        <td style="border: 1px solid #000; padding: 4px;">${escapeHtml(i.name)}${i.variation ? ` (${escapeHtml(i.variation)})` : ""}</td>
+        <td style="border: 1px solid #000; padding: 4px; text-align: center;">Un</td>
+        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i.quantity}</td>
+        <td style="border: 1px solid #000; padding: 4px; text-align: right;">R$ ${i.price.toFixed(2)}</td>
+        <td style="border: 1px solid #000; padding: 4px; text-align: right;">R$ ${(i.price * i.quantity).toFixed(2)}</td>
+      </tr>
+    `)
+    .join("");
 
-  const senderLocation = [data.storeCity, data.storeState].filter(Boolean).join(", ");
-  const senderAddress = data.storeAddress || senderLocation;
+  const senderFullAddress = data.storeAddress || [data.storeCity, data.storeState].filter(Boolean).join(", ");
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Etiqueta de Envio #${shortId}</title>
+<title>Etiqueta e Declaração #${shortId}</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-@page { size: 100mm 150mm; margin: 0; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@page { size: A4; margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', Arial, sans-serif; width: 100mm; height: 150mm; padding: 0; font-size: 8px; line-height: 1.2; color: #000; background: #fff; }
-.label { border: 2pt solid #000; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #000; padding: 20px; }
 
-/* === HEADER === */
-.header { display: flex; border-bottom: 2pt solid #000; height: 25mm; }
-.header-left { flex: 1.5; display: flex; flex-direction: column; justify-content: center; padding: 3mm; border-right: 1.5pt solid #000; }
-.store-logo { max-height: 12mm; max-width: 35mm; object-fit: contain; margin-bottom: 1mm; }
-.store-name { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; }
+/* === ETIQUETA === */
+.label-container {
+  width: 100mm;
+  height: 150mm;
+  border: 1px solid #000;
+  padding: 10px;
+  margin-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
 
-.header-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; background: #000; color: #fff; }
-.order-badge { font-size: 7px; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 1mm; }
-.order-id { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+.label-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
 
-/* === SHIPPING INFO === */
-.shipping-bar { display: flex; align-items: center; justify-content: space-between; background: #f0f0f0; padding: 2mm 4mm; border-bottom: 1.5pt solid #000; }
-.carrier-name { font-size: 10px; font-weight: 900; text-transform: uppercase; }
-.service-type { font-size: 8px; font-weight: 700; border: 1pt solid #000; padding: 0.5mm 1.5mm; border-radius: 2px; }
+.label-header img { max-height: 40px; max-width: 120px; object-fit: contain; }
+.label-header .carrier-info { text-align: right; }
+.label-header .carrier-info h2 { font-size: 14px; font-weight: 900; }
+.label-header .carrier-info p { font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-/* === BARCODE AREA === */
-.barcode-section { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4mm; border-bottom: 2pt solid #000; flex: 0 0 auto; }
-.barcode-container { width: 100%; display: flex; justify-content: center; margin-bottom: 1mm; }
-.barcode-container svg { width: 90%; height: 15mm; }
-.tracking-code { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 900; letter-spacing: 3px; }
+.tracking-section {
+  text-align: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #000;
+}
+.barcode-svg { width: 100%; height: 60px; }
+.tracking-number { font-size: 14px; font-weight: 800; letter-spacing: 2px; margin-top: 5px; font-family: 'Courier New', monospace; }
 
-/* === RECIPIENT === */
-.recipient-area { padding: 4mm; border-bottom: 1.5pt solid #000; flex: 1; position: relative; }
-.tag { font-size: 6px; font-weight: 900; text-transform: uppercase; background: #000; color: #fff; padding: 0.5mm 1.5mm; margin-bottom: 2mm; display: inline-block; border-radius: 1px; }
-.recipient-name { font-size: 14px; font-weight: 900; text-transform: uppercase; margin-bottom: 2mm; line-height: 1; }
-.recipient-address { font-size: 10px; font-weight: 500; line-height: 1.4; color: #000; }
+.recipient-section {
+  padding: 10px 0;
+  flex-grow: 1;
+}
+.section-title {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: #000;
+  color: #fff;
+  padding: 2px 5px;
+  display: inline-block;
+  margin-bottom: 5px;
+}
+.recipient-name { font-size: 16px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+.recipient-address { font-size: 12px; line-height: 1.4; }
 .recipient-address b { font-weight: 800; }
 
-.cep-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 3mm; }
-.cep-value { font-size: 24px; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: 2px; line-height: 1; }
-.city-state { font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.cep-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 10px;
+}
+.cep-text { font-size: 28px; font-weight: 900; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+.city-state { font-size: 12px; font-weight: 700; text-transform: uppercase; }
 
-/* === SENDER === */
-.sender-area { padding: 3mm 4mm; border-bottom: 1pt solid #000; background: #fafafa; }
-.sender-label { font-size: 6px; font-weight: 800; color: #666; margin-bottom: 1mm; text-transform: uppercase; }
-.sender-info { display: flex; justify-content: space-between; align-items: flex-start; }
-.sender-details { font-size: 8px; line-height: 1.3; }
-.sender-name { font-weight: 900; }
-.sender-cep { font-weight: 900; font-size: 10px; font-family: 'Courier New', monospace; }
+.sender-section {
+  border-top: 1px solid #000;
+  padding-top: 10px;
+  font-size: 9px;
+}
+.sender-details { line-height: 1.3; }
 
-/* === CONTENT === */
-.content-area { padding: 3mm 4mm; flex: 0 0 auto; min-height: 20mm; }
-.content-label { font-size: 6px; font-weight: 800; color: #666; margin-bottom: 1.5mm; text-transform: uppercase; }
-.items-list { font-size: 8px; line-height: 1.4; color: #333; }
-.notes { margin-top: 2mm; padding-top: 1mm; border-top: 0.5pt dashed #ccc; font-style: italic; font-size: 7px; color: #666; }
+/* === DECLARAÇÃO DE CONTEÚDO === */
+.declaration-container {
+  width: 210mm;
+  padding: 20px;
+  font-size: 11px;
+  border: 1px solid #000;
+  background: #fff;
+}
+.declaration-title { text-align: center; font-size: 16px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
 
-/* === FOOTER === */
-.footer { padding: 2mm; font-size: 6px; text-align: center; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+.declaration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+.declaration-box { border: 1px solid #000; padding: 8px; }
+.box-header { font-weight: 800; text-transform: uppercase; font-size: 10px; margin-bottom: 5px; background: #f0f0f0; padding: 2px 5px; }
+
+.items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+.items-table th { border: 1px solid #000; background: #f0f0f0; padding: 5px; font-size: 10px; text-transform: uppercase; }
+
+.declaration-footer { margin-top: 20px; font-size: 10px; }
+.declaration-footer p { margin-bottom: 10px; }
+.signature-box { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+.signature-line { border-top: 1px solid #000; width: 250px; text-align: center; padding-top: 5px; }
 
 @media print {
-  body { width: 100mm; height: 150mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .label { page-break-inside: avoid; }
+  body { padding: 0; }
+  .label-container { page-break-after: always; border: 2pt solid #000; }
+  .declaration-container { border: 2pt solid #000; }
 }
 </style>
 </head>
 <body>
-<div class="label">
-  <div class="header">
-    <div class="header-left">
-      ${data.storeLogo ? `<img src="${escapeHtml(data.storeLogo)}" class="store-logo" />` : `<div class="store-name">${escapeHtml(data.storeName)}</div>`}
-      <div style="font-size: 7px; color: #666; margin-top: 1mm;">${escapeHtml(data.storeEmail || "")}</div>
-    </div>
-    <div class="header-right">
-      <div class="order-badge">Pedido</div>
-      <div class="order-id">#${escapeHtml(shortId)}</div>
-      <div style="font-size: 6px; opacity: 0.7; margin-top: 1mm;">${escapeHtml(data.date)}</div>
-    </div>
-  </div>
 
-  <div class="shipping-bar">
-    <div class="carrier-name">${escapeHtml(carrier)}</div>
-    <div class="service-type">${escapeHtml(serviceType)}</div>
-  </div>
-
-  <div class="barcode-section">
-    <div class="barcode-container">
-      <svg id="barcode"></svg>
-    </div>
-    <div class="tracking-code">${escapeHtml(tracking || logisticCode)}</div>
-  </div>
-
-  <div class="recipient-area">
-    <div class="tag">Destinatário</div>
-    <div class="recipient-name">${escapeHtml(data.customerName)}</div>
-    <div class="recipient-address">
-      ${data.shippingStreet ? `<b>${escapeHtml(data.shippingStreet)}, ${escapeHtml(data.shippingNumber || "S/N")}</b>` : `<b>${escapeHtml(data.customerAddress || "")}</b>`}
-      ${data.shippingComplement ? `<br/>${escapeHtml(data.shippingComplement)}` : ""}
-      ${data.shippingNeighborhood ? `<br/>Bairro: ${escapeHtml(data.shippingNeighborhood)}` : ""}
-      ${data.customerPhone ? `<br/>Tel: ${escapeHtml(data.customerPhone)}` : ""}
-    </div>
-    <div class="cep-row">
-      <div class="city-state">${[data.shippingCity, data.shippingState].filter(Boolean).map(s => escapeHtml(s!)).join(" / ")}</div>
-      <div class="cep-value">${cep}</div>
-    </div>
-  </div>
-
-  <div class="sender-area">
-    <div class="sender-label">Remetente</div>
-    <div class="sender-info">
-      <div class="sender-details">
-        <div class="sender-name">${escapeHtml(data.storeName)}</div>
-        <div>${escapeHtml(senderAddress)}</div>
+  <!-- ETIQUETA DE ENVIO -->
+  <div class="label-container">
+    <div class="label-header">
+      ${data.storeLogo ? `<img src="${escapeHtml(data.storeLogo)}" />` : `<div style="font-weight: 900; font-size: 18px;">${escapeHtml(data.storeName)}</div>`}
+      <div class="carrier-info">
+        <h2>${escapeHtml(carrier)}</h2>
+        <p>${escapeHtml(serviceType)}</p>
       </div>
-      <div class="sender-cep">${data.storeCep ? formatCep(data.storeCep) : ""}</div>
+    </div>
+
+    <div class="tracking-section">
+      <svg id="barcode-label" class="barcode-svg"></svg>
+      <div class="tracking-number">${escapeHtml(tracking)}</div>
+    </div>
+
+    <div class="recipient-section">
+      <div class="section-title">Destinatário</div>
+      <div class="recipient-name">${escapeHtml(data.customerName)}</div>
+      <div class="recipient-address">
+        ${data.shippingStreet ? `<b>${escapeHtml(data.shippingStreet)}, ${escapeHtml(data.shippingNumber || "S/N")}</b>` : `<b>${escapeHtml(data.customerAddress || "")}</b>`}
+        ${data.shippingComplement ? `<br/>${escapeHtml(data.shippingComplement)}` : ""}
+        ${data.shippingNeighborhood ? `<br/>Bairro: ${escapeHtml(data.shippingNeighborhood)}` : ""}
+      </div>
+      <div class="cep-section">
+        <div class="city-state">${[data.shippingCity, data.shippingState].filter(Boolean).map(s => escapeHtml(s!)).join(" / ")}</div>
+        <div class="cep-text">${cep}</div>
+      </div>
+    </div>
+
+    <div class="sender-section">
+      <div class="section-title" style="background: #fff; color: #000; border: 1px solid #000;">Remetente</div>
+      <div class="sender-details">
+        <strong>${escapeHtml(data.storeName)}</strong><br/>
+        ${escapeHtml(senderFullAddress)} - CEP: ${data.storeCep ? formatCep(data.storeCep) : ""}
+      </div>
+    </div>
+    
+    <div style="position: absolute; bottom: 10px; right: 10px; font-size: 8px; color: #666;">
+      Pedido #${shortId}
     </div>
   </div>
 
-  <div class="content-area">
-    <div class="content-label">Conteúdo do Pacote</div>
-    <div class="items-list">${itemsSummary}</div>
-    ${data.notes ? `<div class="notes">Obs: ${escapeHtml(data.notes)}</div>` : ""}
-  </div>
+  <!-- DECLARAÇÃO DE CONTEÚDO -->
+  <div class="declaration-container">
+    <div class="declaration-title">Declaração de Conteúdo</div>
+    
+    <div class="declaration-grid">
+      <div class="declaration-box">
+        <div class="box-header">Remetente</div>
+        <strong>Nome:</strong> ${escapeHtml(data.storeName)}<br/>
+        <strong>Endereço:</strong> ${escapeHtml(senderFullAddress)}<br/>
+        <strong>Cidade/UF:</strong> ${escapeHtml(data.storeCity || "")} / ${escapeHtml(data.storeState || "")}<br/>
+        <strong>CEP:</strong> ${data.storeCep ? formatCep(data.storeCep) : ""}<br/>
+        <strong>Email/Tel:</strong> ${escapeHtml(data.storeEmail || "")} / ${escapeHtml(data.storePhone || "")}
+      </div>
+      <div class="declaration-box">
+        <div class="box-header">Destinatário</div>
+        <strong>Nome:</strong> ${escapeHtml(data.customerName)}<br/>
+        <strong>Endereço:</strong> ${data.shippingStreet ? `${escapeHtml(data.shippingStreet)}, ${escapeHtml(data.shippingNumber || "S/N")} ${escapeHtml(data.shippingComplement || "")}` : escapeHtml(data.customerAddress || "")}<br/>
+        <strong>Bairro:</strong> ${escapeHtml(data.shippingNeighborhood || "")}<br/>
+        <strong>Cidade/UF:</strong> ${escapeHtml(data.shippingCity || "")} / ${escapeHtml(data.shippingState || "")}<br/>
+        <strong>CEP:</strong> ${cep}
+      </div>
+    </div>
 
-  <div class="footer">
-    Documento para fins de transporte. Gerado eletronicamente.
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Conteúdo</th>
+          <th>Unid.</th>
+          <th>Qtd.</th>
+          <th>Vlr. Unit.</th>
+          <th>Vlr. Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsTable}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5" style="border: 1px solid #000; padding: 5px; text-align: right; font-weight: 800;">TOTAL</td>
+          <td style="border: 1px solid #000; padding: 5px; text-align: right; font-weight: 800;">R$ ${data.total.toFixed(2)}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="declaration-footer">
+      <div class="declaration-box" style="margin-bottom: 15px;">
+        <div class="box-header">Declaração</div>
+        <p>Declaro que não me enquadro no conceito de contribuinte previsto no art. 4º da Lei Complementar nº 87/1996, logo não estou obrigado à emissão de nota fiscal na operação e prestação que realizo, bem como que a mercadoria acima descrita é objeto de venda eventual, não caracterizando intuito comercial, e que os dados acima são a expressão da verdade.</p>
+      </div>
+      
+      <p style="text-align: right; margin-top: 20px;">${escapeHtml(data.shippingCity || "")}, ${new Date().toLocaleDateString('pt-BR')}</p>
+      
+      <div class="signature-box">
+        <div class="signature-line">Assinatura do Remetente</div>
+        <div style="font-size: 9px; text-align: right; width: 300px;">
+          <strong>Atenção:</strong> O remetente é responsável pelas informações declaradas. A falsidade desta declaração sujeita o infrator às sanções previstas em lei.
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
 <script>
 (function(){
-  // === Improved CODE128B Barcode Generation ===
   var C={START:[2,1,1,4,1,2],STOP:[2,3,3,1,1,1,2],P:[
     [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
     [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],
@@ -225,20 +315,24 @@ body { font-family: 'Inter', Arial, sans-serif; width: 100mm; height: 150mm; pad
     c.forEach(function(x){ b=b.concat(C.P[x]); });
     return b.concat(C.STOP);
   }
-  var code = ${JSON.stringify(tracking || logisticCode)};
-  var b=enc(code);
-  var svg=document.getElementById('barcode');
-  if(svg){
-    var x=0,u=2,h=50,r='';
-    b.forEach(function(w,i){
-      if(i%2===0)r+='<rect x="'+x+'" y="0" width="'+(w*u)+'" height="'+h+'" fill="#000"/>';
-      x+=w*u;
-    });
-    svg.setAttribute('viewBox','0 0 '+x+' '+h);
-    svg.innerHTML=r;
+  
+  function drawBarcode(id, text) {
+    var b=enc(text);
+    var svg=document.getElementById(id);
+    if(svg){
+      var x=0,u=2,h=50,r='';
+      b.forEach(function(w,i){
+        if(i%2===0)r+='<rect x="'+x+'" y="0" width="'+(w*u)+'" height="'+h+'" fill="#000"/>';
+        x+=w*u;
+      });
+      svg.setAttribute('viewBox','0 0 '+x+' '+h);
+      svg.innerHTML=r;
+    }
   }
+
+  drawBarcode('barcode-label', ${JSON.stringify(tracking)});
 })();
-window.onload=function(){ setTimeout(function(){ window.print(); window.close(); }, 500); };
+window.onload=function(){ setTimeout(function(){ window.print(); window.close(); }, 800); };
 </script>
 </body>
 </html>`;
@@ -251,7 +345,8 @@ window.onload=function(){ setTimeout(function(){ window.print(); window.close();
 }
 
 function escapeHtml(str: string): string {
-  return str
+  if (!str) return "";
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -259,6 +354,7 @@ function escapeHtml(str: string): string {
 }
 
 function formatCep(cep: string): string {
+  if (!cep) return "";
   const clean = cep.replace(/\D/g, "");
   if (clean.length === 8) return clean.slice(0, 5) + "-" + clean.slice(5);
   return cep;
