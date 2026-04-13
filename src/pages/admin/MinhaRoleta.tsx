@@ -120,8 +120,33 @@ export default function MinhaRoleta() {
   if (subLoading || prizesLoading) return <Skeleton className="h-[600px] w-full" />;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8">
-      {showConfetti && <Confetti width={width} height={height} recycle={false} />}
+    <div className="max-w-4xl mx-auto space-y-8 p-4 sm:p-8 relative">
+      <AnimatePresence>
+        {showWinAnimation && lastWin && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: -20 }}
+            className="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none"
+          >
+            <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border-4 border-primary/20 flex flex-col items-center gap-4 text-center">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                <Trophy className="w-12 h-12 text-primary animate-bounce" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-2xl font-black text-primary">PARABÉNS!</h2>
+                <p className="text-xl font-bold">Você ganhou: {lastWin.label}</p>
+                <p className="text-sm text-muted-foreground">O prêmio foi adicionado à sua conta!</p>
+              </div>
+              <div className="flex gap-2">
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse" />
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-75" />
+                <Sparkles className="w-6 h-6 text-yellow-500 animate-pulse delay-150" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="text-center space-y-4">
         <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
