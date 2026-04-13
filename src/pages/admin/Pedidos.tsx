@@ -584,9 +584,11 @@ export default function Pedidos() {
               {selectedOrder.notes && (
                 <>
                   <Separator />
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Observações</p>
-                    <p className="text-sm bg-muted/50 p-2 rounded italic">"{selectedOrder.notes}"</p>
+                  <div className="space-y-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">Notas / Observações</p>
+                    <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">
+                      "{selectedOrder.notes}"
+                    </p>
                   </div>
                 </>
               )}
