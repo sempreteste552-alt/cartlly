@@ -70,7 +70,7 @@ export function SuperAdminSidebar() {
     if (isMobile) setOpenMobile(false);
   };
 
-  const totalBadges = badges.tenants + badges.solicitacoes + badges.notificacoes;
+  const totalBadges = badges.tenants + badges.solicitacoes + badges.notificacoes + (badges.dominios || 0);
 
   return (
     <Sidebar collapsible="icon">
