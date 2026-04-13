@@ -8,7 +8,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/i18n";
 import { NavLink } from "@/components/NavLink";
 import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -197,7 +197,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
               {pushNotifs.isSupported && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => navigate("/admin/config?tab=push")}
+                    onClick={() => navigate(`${adminBasePath}/config?tab=push`)}
                     className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
                   >
                      <div className="flex items-center gap-2 flex-1">
