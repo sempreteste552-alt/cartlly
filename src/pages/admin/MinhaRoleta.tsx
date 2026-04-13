@@ -15,9 +15,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function MinhaRoleta() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { width, height } = useWindowSize();
-  const [showConfetti, setShowConfetti] = useState(false);
   const [lastWin, setLastWin] = useState<any>(null);
+  const [showWinAnimation, setShowWinAnimation] = useState(false);
 
   // Fetch Tenant Subscription
   const { data: subscription, isLoading: subLoading } = useQuery({
