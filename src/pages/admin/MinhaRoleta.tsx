@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
+import { Gift, Sparkles, History, CheckCircle, Clock, XCircle, AlertCircle, Trophy, Ticket, Star, Heart } from "lucide-react";
 import { RouletteWheel } from "@/components/roulette/RouletteWheel";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Confetti from "react-confetti";
-import { useWindowSize } from "react-use";
+import confetti from "canvas-confetti";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function MinhaRoleta() {
   const { user } = useAuth();
