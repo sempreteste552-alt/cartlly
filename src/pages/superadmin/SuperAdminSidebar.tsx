@@ -15,6 +15,7 @@ import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSuperAdminBadges } from "@/hooks/useSuperAdminBadges";
+import { useEffect } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -47,6 +48,12 @@ export function SuperAdminSidebar() {
   const { signOut, user } = useAuth();
   const badges = useSuperAdminBadges();
 
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
+
   const menuItems = [
     { title: "Dashboard", url: "/superadmin", icon: LayoutDashboard, badge: 0 },
     { title: "Tenants", url: "/superadmin/tenants", icon: Users, badge: badges.tenants },
@@ -66,20 +73,16 @@ export function SuperAdminSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const handleMenuClick = () => {
-    if (isMobile) setOpenMobile(false);
-  };
-
   const totalBadges = badges.tenants + badges.solicitacoes + badges.notificacoes + (badges.dominios || 0);
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm">
             <ShieldCheck className="h-5 w-5" />
             {collapsed && totalBadges > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground border-2 border-sidebar shadow-sm">
                 {totalBadges > 99 ? "99+" : totalBadges}
               </span>
             )}
@@ -87,17 +90,17 @@ export function SuperAdminSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">Super Admin</span>
-              <span className="text-xs text-sidebar-foreground/60">Cartlly</span>
+              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-medium">Cartlly Platform</span>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="opacity-50" />
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold opacity-40">Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -106,21 +109,20 @@ export function SuperAdminSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/superadmin"}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      onClick={handleMenuClick}
+                      className="hover:bg-sidebar-accent/50 transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                     >
-                      <div className="relative">
+                      <div className="relative flex items-center">
                         <item.icon className="h-4 w-4" />
                         {collapsed && item.badge > 0 && (
-                          <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-destructive-foreground">
+                          <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-destructive-foreground border border-sidebar shadow-sm">
                             {item.badge > 9 ? "9+" : item.badge}
                           </span>
                         )}
                       </div>
                       {!collapsed && (
                         <>
-                          <span className="flex-1">{item.title}</span>
+                          <span className="flex-1 truncate">{item.title}</span>
                           <BadgeCount count={item.badge} />
                         </>
                       )}
@@ -133,11 +135,11 @@ export function SuperAdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="opacity-50" />
 
       <SidebarFooter className="p-3">
         {!collapsed && (
-          <p className="mb-2 truncate px-2 text-xs text-sidebar-foreground/60">
+          <p className="mb-2 truncate px-2 text-[11px] text-sidebar-foreground/40 font-medium">
             {user?.email}
           </p>
         )}
@@ -145,10 +147,10 @@ export function SuperAdminSidebar() {
           variant="ghost"
           size={collapsed ? "icon" : "sm"}
           onClick={signOut}
-          className="w-full justify-start text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="w-full justify-start text-sidebar-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sair</span>}
+          {!collapsed && <span className="ml-2 font-medium">Sair</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

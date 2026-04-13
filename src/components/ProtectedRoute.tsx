@@ -9,9 +9,25 @@ const SUPER_ADMIN_EMAIL = "evelynesantoscruivinel@gmail.com";
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading, maintenanceMode } = useAuth();
 
+  const { data: roleData, isLoading: roleLoading } = useQuery({
+    queryKey: ["user_role", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL || roleData?.role === "super_admin";
+
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile_status", user?.id],
-    enabled: !!user && user.email !== SUPER_ADMIN_EMAIL,
+    enabled: !!user && !isSuperAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -25,7 +41,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   const { data: storeSettings, isLoading: storeLoading } = useQuery({
     queryKey: ["store_admin_blocked", user?.id],
-    enabled: !!user && user.email !== SUPER_ADMIN_EMAIL,
+    enabled: !!user && !isSuperAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("store_settings")
@@ -37,8 +53,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const isNonSuperAdmin = !!user && user.email !== SUPER_ADMIN_EMAIL;
-  const isStillLoading = loading || (isNonSuperAdmin && (profileLoading || storeLoading));
+  const isStillLoading = loading || roleLoading || (!isSuperAdmin && (profileLoading || storeLoading));
 
   if (isStillLoading) {
     return (
@@ -74,7 +89,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Super admin always has access
-  if (user?.email === SUPER_ADMIN_EMAIL) {
+  if (isSuperAdmin) {
     return <>{children}</>;
   }
 
