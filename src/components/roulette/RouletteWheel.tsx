@@ -72,68 +72,79 @@ export function RouletteWheel({
   };
 
   const getPrizeColor = (index: number) => {
-    if (prizes[index].label === 'Não foi dessa vez') return "bg-slate-400";
+    if (prizes[index].label === 'Não foi dessa vez') return "bg-slate-500/90";
     
     const colors = [
-      "bg-primary",
-      "bg-secondary",
-      "bg-accent",
-      "bg-purple-500",
-      "bg-blue-500",
-      "bg-emerald-500",
-      "bg-pink-500",
-      "bg-indigo-500",
+      "bg-gradient-to-br from-primary to-primary/80",
+      "bg-gradient-to-br from-purple-600 to-purple-400",
+      "bg-gradient-to-br from-pink-600 to-pink-400",
+      "bg-gradient-to-br from-amber-500 to-amber-300",
+      "bg-gradient-to-br from-emerald-600 to-emerald-400",
+      "bg-gradient-to-br from-blue-600 to-blue-400",
+      "bg-gradient-to-br from-indigo-600 to-indigo-400",
+      "bg-gradient-to-br from-rose-600 to-rose-400",
     ];
     return prizes[index].color || colors[index % colors.length];
   };
 
   return (
-    <div className="relative flex flex-col items-center">
-      {/* Decorative Lights */}
-      <div className="absolute inset-0 -m-8 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
+    <div className="relative flex flex-col items-center group perspective-1000">
+      {/* 3D Container with Rotation */}
+      <div className="absolute inset-0 -m-12 pointer-events-none">
+        {[...Array(24)].map((_, i) => (
           <motion.div
             key={i}
             animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.2, 1],
+              opacity: [0.2, 1, 0.2],
+              scale: [1, 1.4, 1],
+              rotate: [0, 360],
             }}
             transition={{
-              duration: 2,
+              duration: 3,
               repeat: Infinity,
-              delay: i * 0.2,
+              delay: i * 0.1,
+              rotate: { duration: 20, repeat: Infinity, ease: "linear" }
             }}
-            className="absolute w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]"
+            className="absolute w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_15px_rgba(250,204,21,1)]"
             style={{
               top: '50%',
               left: '50%',
-              transform: `rotate(${i * 30}deg) translate(165px, -50%)`,
-              sm: { transform: `rotate(${i * 30}deg) translate(215px, -50%)` }
+              transform: `rotate(${i * 15}deg) translate(200px, -50%)`,
+              sm: { transform: `rotate(${i * 15}deg) translate(250px, -50%)` }
             } as any}
           />
         ))}
       </div>
 
-      {/* Pointer */}
-      <div className="absolute top-[-25px] left-1/2 -translate-x-1/2 z-30">
+
+      {/* Enhanced Pointer with 3D feel */}
+      <div className="absolute top-[-35px] left-1/2 -translate-x-1/2 z-40">
         <motion.div 
-          animate={isSpinning ? { rotate: [0, -10, 0] } : {}}
-          transition={{ duration: 0.1, repeat: isSpinning ? Infinity : 0 }}
-          className="w-10 h-12 bg-red-600 rounded-b-full shadow-lg relative flex items-center justify-center border-2 border-white"
+          animate={isSpinning ? { 
+            rotate: [0, -15, 5, -10, 0],
+            y: [0, -2, 0]
+          } : {}}
+          transition={{ duration: 0.15, repeat: isSpinning ? Infinity : 0 }}
+          className="w-12 h-16 bg-gradient-to-b from-red-500 to-red-700 rounded-b-2xl shadow-2xl relative flex items-center justify-center border-x-4 border-b-4 border-white/30"
         >
-          <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-white absolute -top-1" />
+          <div className="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[20px] border-t-white absolute -top-2 drop-shadow-lg" />
+          <div className="w-4 h-4 bg-white/20 rounded-full animate-ping" />
         </motion.div>
       </div>
 
-      {/* Wheel Container */}
-      <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full border-[12px] border-gray-900 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3),inset_0_0_20px_rgba(0,0,0,0.5)] bg-gray-900 p-1">
+
+      {/* Wheel Container with 3D shadow */}
+      <div className="relative w-[320px] h-[320px] sm:w-[420px] sm:h-[420px] rounded-full border-[16px] border-gray-950 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),inset_0_0_40px_rgba(0,0,0,0.8)] bg-gray-900 p-1 group-hover:scale-105 transition-transform duration-500">
+        <div className="absolute inset-[-10px] rounded-full border-[10px] border-primary/20 animate-pulse pointer-events-none" />
         <div
-          className="absolute inset-0 transition-transform cubic-bezier(0.15, 0, 0.15, 1) rounded-full overflow-hidden"
+          className="absolute inset-0 transition-transform cubic-bezier(0.1, 0, 0, 1) rounded-full overflow-hidden"
           style={{
-            transform: `rotate(${rotation}deg)`,
+            transform: `rotate(${rotation}deg) translateZ(0)`,
             transitionDuration: `${spinningDuration}s`,
+            transformStyle: "preserve-3d"
           }}
         >
+
           {prizes.map((prize, i) => {
             const angle = 360 / prizes.length;
             const rotate = i * angle;
@@ -152,52 +163,62 @@ export function RouletteWheel({
                 }}
               >
                 <div
-                  className="flex flex-col items-center justify-center text-white font-bold text-center"
+                  className="flex flex-col items-center justify-center text-white font-black text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                   style={{
-                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-40px)`,
-                    width: "120px",
+                    transform: `skewY(${skew}deg) rotate(${angle / 2}deg) translateY(-45px)`,
+                    width: "130px",
                   }}
                 >
-                  <span className="text-[10px] sm:text-xs uppercase tracking-wider mb-1 opacity-80">Prêmio</span>
-                  <span className="text-xs sm:text-sm drop-shadow-md line-clamp-2 px-2 leading-tight">
+                  <span className="text-[10px] sm:text-[11px] uppercase tracking-tighter mb-0.5 opacity-90 font-bold bg-black/20 px-2 rounded-full">
+                    {prize.label.includes('%') ? 'Desconto' : prize.label === 'Não foi dessa vez' ? 'X' : 'Especial'}
+                  </span>
+                  <span className="text-xs sm:text-base drop-shadow-lg line-clamp-2 px-1 leading-none">
                     {prize.label}
                   </span>
                   {prize.label !== 'Não foi dessa vez' && (
-                    <Star className="w-3 h-3 mt-1 text-yellow-300 fill-yellow-300 animate-pulse" />
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Star className="w-4 h-4 mt-2 text-yellow-300 fill-yellow-300 shadow-xl" />
+                    </motion.div>
                   )}
                 </div>
+
               </div>
             );
           })}
         </div>
 
-        {/* Center Circle */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-gray-900 rounded-full border-4 border-gray-700 z-20 shadow-2xl flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/40 to-transparent animate-spin-slow" />
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-full border-2 border-white/20 z-10 shadow-inner flex items-center justify-center">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
+        {/* Premium Center Circle */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-900 to-black rounded-full border-4 border-primary/50 z-20 shadow-[0_0_30px_rgba(var(--primary),0.4)] flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/30 via-transparent to-primary/10 animate-spin-slow" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-primary to-primary-foreground rounded-full border-2 border-white/20 z-10 shadow-2xl flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-white animate-pulse drop-shadow-[0_0_10px_white]" />
           </div>
         </div>
       </div>
 
-      <div className="mt-12 relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+      <div className="mt-16 relative group">
+        <div className="absolute -inset-2 bg-gradient-to-r from-primary via-purple-600 to-primary rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-500 animate-pulse" />
         <Button
-          className="relative px-12 py-8 text-2xl font-black rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 bg-gray-900 border-2 border-primary text-white"
+          className="relative px-16 py-10 text-3xl font-black rounded-full shadow-3xl hover:scale-110 active:scale-90 transition-all duration-500 bg-gray-950 border-4 border-primary/50 text-white hover:text-primary hover:border-primary overflow-hidden"
           onClick={spin}
           disabled={isSpinning || prizes.length === 0}
         >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
           {isSpinning ? (
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-75" />
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
+            <span className="flex items-center gap-3">
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce" />
             </span>
           ) : (
-            "GIRAR AGORA!"
+            <span className="relative z-10 tracking-widest uppercase">GIRAR!</span>
           )}
         </Button>
       </div>
+
       
       <p className="mt-4 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">
         Boa sorte • Tente ganhar • Prêmios VIP
