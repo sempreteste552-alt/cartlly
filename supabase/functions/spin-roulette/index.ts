@@ -47,7 +47,20 @@ serve(async (req) => {
       }
     }
 
-    // 2. Get user tier
+    // 2. Get platform settings for roulette
+    const { data: platformSettings } = await supabaseClient
+      .from('platform_settings')
+      .select('key, value')
+      .in('key', ['roulette_payouts_enabled', 'roulette_lose_probability'])
+
+    const settings = platformSettings?.reduce((acc: any, curr: any) => {
+      acc[curr.key] = curr.value?.value;
+      return acc;
+    }, {}) || { roulette_payouts_enabled: false, roulette_lose_probability: 0.5 };
+
+    const payoutsEnabled = settings.roulette_payouts_enabled === true;
+
+    // 3. Get user tier
     const { data: sub } = await supabaseClient
       .from('tenant_subscriptions')
       .select('*, tenant_plans(name)')
@@ -56,7 +69,7 @@ serve(async (req) => {
 
     const tier = sub?.tenant_plans?.name || 'FREE'
 
-    // 3. Fetch eligible prizes
+    // 4. Fetch eligible prizes
     const { data: prizes } = await supabaseClient
       .from('roulette_prizes')
       .select('*')
@@ -65,7 +78,7 @@ serve(async (req) => {
     const tierHierarchy: Record<string, number> = { 'FREE': 0, 'STARTER': 1, 'PRO': 2, 'PREMIUM': 3 }
     const currentTierLevel = tierHierarchy[tier] || 0
 
-    const eligiblePrizes = (prizes || []).filter(p => {
+    let eligiblePrizes = (prizes || []).filter(p => {
       const minLevel = tierHierarchy[p.min_subscription_tier] || 0
       return currentTierLevel >= minLevel
     })
@@ -77,21 +90,32 @@ serve(async (req) => {
       })
     }
 
-    // 4. Weighted random selection
-    const totalWeight = eligiblePrizes.reduce((sum, p) => sum + p.probability, 0)
-    let random = Math.random() * totalWeight
-    let selectedPrize = eligiblePrizes[0]
+    // 5. Decide if it's a win or loss
+    let selectedPrize;
+    const losePrize = eligiblePrizes.find(p => p.label === 'Não foi dessa vez');
+    
+    if (!payoutsEnabled && losePrize) {
+      // Force loss if payouts are disabled
+      selectedPrize = losePrize;
+    } else {
+      // Weighted random selection
+      const totalWeight = eligiblePrizes.reduce((sum, p) => sum + p.probability, 0)
+      let random = Math.random() * totalWeight
+      selectedPrize = eligiblePrizes[0]
 
-    for (const p of eligiblePrizes) {
-      if (random < p.probability) {
-        selectedPrize = p
-        break
+      for (const p of eligiblePrizes) {
+        if (random < p.probability) {
+          selectedPrize = p
+          break
+        }
+        random -= p.probability
       }
-      random -= p.probability
     }
 
-    // 5. Record the spin
-    const status = selectedPrize.manual_approval_required ? 'pending_approval' : 'won'
+    // 6. Record the spin
+    const status = selectedPrize.manual_approval_required ? 'pending_approval' : 
+                   selectedPrize.label === 'Não foi dessa vez' ? 'lost' : 'won'
+    
     const { data: spin, error: insertError } = await supabaseClient
       .from('roulette_spins')
       .insert({
