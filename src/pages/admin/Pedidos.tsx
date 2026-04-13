@@ -657,28 +657,37 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              {/* Receipt */}
-              <div className="pt-4 flex gap-2">
+              {/* Actions */}
+              <div className="pt-6 grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
                   onClick={() => handlePrintLabel(selectedOrder)}
                 >
-                  <Printer className="h-4 w-4" />
-                  Imprimir Nota
+                  <Package className="h-4 w-4" />
+                  Etiqueta
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
+                  onClick={() => handlePrintReceipt(selectedOrder)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Recibo (Nota)
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="col-span-2 gap-2 h-10 font-semibold"
                   onClick={() => {
-                    const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na Minha Loja foi recebido.`;
+                    const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na ${storeSettings?.store_name || "nossa loja"} foi recebido e está sendo processado! 🚀`;
                     window.open(`https://wa.me/${selectedOrder.customer_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
                   }}
                 >
                   <Share2 className="h-4 w-4" />
-                  WhatsApp
+                  Enviar p/ WhatsApp
                 </Button>
               </div>
             </div>
