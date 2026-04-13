@@ -358,20 +358,23 @@ export default function Login() {
           }
           throw loginError;
         }
-        if (email === SUPER_ADMIN_EMAIL) {
-          navigate("/superadmin");
-        } else {
-          // Check for onboarding
-          const { data: store } = await supabase
-            .from("store_settings")
-            .select("store_slug")
-            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-            .maybeSingle();
-          
-          if (!store?.store_slug) {
-            navigate("/setup-store");
+        const currentUser = (await supabase.auth.getUser()).data.user;
+        if (currentUser) {
+          const isAdmin = await checkIsSuperAdmin(currentUser.id);
+          if (isAdmin) {
+            navigate("/superadmin");
           } else {
-            navigate("/");
+            const { data: store } = await supabase
+              .from("store_settings")
+              .select("store_slug")
+              .eq("user_id", currentUser.id)
+              .maybeSingle();
+            
+            if (!store?.store_slug) {
+              navigate("/setup-store");
+            } else {
+              navigate("/");
+            }
           }
         }
       }
