@@ -190,33 +190,35 @@ export function RouletteWheel({
           })}
         </div>
 
-        {/* Center Circle */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 bg-gray-900 rounded-full border-4 border-gray-700 z-20 shadow-2xl flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/40 to-transparent animate-spin-slow" />
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-full border-2 border-white/20 z-10 shadow-inner flex items-center justify-center">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
+        {/* Premium Center Circle */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-900 to-black rounded-full border-4 border-primary/50 z-20 shadow-[0_0_30px_rgba(var(--primary),0.4)] flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/30 via-transparent to-primary/10 animate-spin-slow" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-primary to-primary-foreground rounded-full border-2 border-white/20 z-10 shadow-2xl flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-white animate-pulse drop-shadow-[0_0_10px_white]" />
           </div>
         </div>
       </div>
 
-      <div className="mt-12 relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+      <div className="mt-16 relative group">
+        <div className="absolute -inset-2 bg-gradient-to-r from-primary via-purple-600 to-primary rounded-full blur-xl opacity-75 group-hover:opacity-100 transition duration-500 animate-pulse" />
         <Button
-          className="relative px-12 py-8 text-2xl font-black rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 bg-gray-900 border-2 border-primary text-white"
+          className="relative px-16 py-10 text-3xl font-black rounded-full shadow-3xl hover:scale-110 active:scale-90 transition-all duration-500 bg-gray-950 border-4 border-primary/50 text-white hover:text-primary hover:border-primary overflow-hidden"
           onClick={spin}
           disabled={isSpinning || prizes.length === 0}
         >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
           {isSpinning ? (
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-75" />
-              <span className="w-2 h-2 bg-white rounded-full animate-bounce delay-150" />
+            <span className="flex items-center gap-3">
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-3 h-3 bg-primary rounded-full animate-bounce" />
             </span>
           ) : (
-            "GIRAR AGORA!"
+            <span className="relative z-10 tracking-widest uppercase">GIRAR!</span>
           )}
         </Button>
       </div>
+
       
       <p className="mt-4 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">
         Boa sorte • Tente ganhar • Prêmios VIP
