@@ -72,15 +72,17 @@ export function RouletteWheel({
   };
 
   const getPrizeColor = (index: number) => {
+    if (prizes[index].label === 'Não foi dessa vez') return "bg-slate-400";
+    
     const colors = [
       "bg-primary",
       "bg-secondary",
       "bg-accent",
-      "bg-muted",
-      "bg-destructive",
+      "bg-purple-500",
       "bg-blue-500",
-      "bg-green-500",
-      "bg-orange-500",
+      "bg-emerald-500",
+      "bg-pink-500",
+      "bg-indigo-500",
     ];
     return prizes[index].color || colors[index % colors.length];
   };
