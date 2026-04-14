@@ -10,7 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useCustomerLoyaltyPoints, useLoyaltyConfig } from "@/hooks/useLoyalty";
 import { Link } from "react-router-dom";
+import { Award, Star, TrendingUp, Gift, Share2, Copy, Check } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface CustomerProfileModalProps {
   open: boolean;
@@ -23,6 +26,8 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
   const { wishlistIds, wishlistProducts, toggleWishlist } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
+  const { data: loyaltyPoints } = useCustomerLoyaltyPoints(customer?.id, storeUserId);
+  const { data: loyaltyConfig } = useLoyaltyConfig();
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -126,9 +131,12 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
           </DialogTitle>
         </DialogHeader>
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Meus Dados</TabsTrigger>
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
+            <TabsTrigger value="loyalty" className="flex items-center gap-1">
+              <Award className="h-3 w-3" /> Fidelidade
+            </TabsTrigger>
             <TabsTrigger value="wishlist" className="flex items-center gap-1">
               <Heart className="h-3 w-3" /> Favoritos
               {wishlistIds.size > 0 && (
@@ -246,6 +254,80 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
             </div>
           </TabsContent>
 
+          <TabsContent value="loyalty">
+            <div className="space-y-6 pt-4 pb-2">
+              <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 text-center border border-primary/20">
+                <Award className="h-10 w-10 text-primary mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Seu Saldo</p>
+                <p className="text-4xl font-black text-primary mt-1">
+                  {loyaltyPoints?.points_balance || 0} <span className="text-lg">pts</span>
+                </p>
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span>Progresso para resgate</span>
+                    <span>{loyaltyPoints?.points_balance || 0} / {loyaltyConfig?.min_redemption || 100} pts</span>
+                  </div>
+                  <Progress value={Math.min(100, ((loyaltyPoints?.points_balance || 0) / (loyaltyConfig?.min_redemption || 100)) * 100)} className="h-2" />
+                  { (loyaltyPoints?.points_balance || 0) >= (loyaltyConfig?.min_redemption || 100) ? (
+                    <p className="text-xs text-green-600 font-bold flex items-center justify-center gap-1 mt-2">
+                      <Check className="h-3 w-3" /> Você já pode resgatar descontos!
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Faltam {Math.max(0, (loyaltyConfig?.min_redemption || 100) - (loyaltyPoints?.points_balance || 0))} pontos para o próximo resgate
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                  <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground mb-1">
+                    <Star className="h-3 w-3" /> TOTAL GANHO
+                  </div>
+                  <p className="text-xl font-bold">{loyaltyPoints?.lifetime_points || 0}</p>
+                </div>
+                <div className="bg-muted/50 rounded-xl p-3 border border-border">
+                  <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground mb-1">
+                    <TrendingUp className="h-3 w-3" /> VALOR ESTIMADO
+                  </div>
+                  <p className="text-xl font-bold">R$ {((loyaltyPoints?.points_balance || 0) * (loyaltyConfig?.redemption_rate || 0.01)).toFixed(2)}</p>
+                </div>
+              </div>
+
+              {loyaltyConfig?.referral_enabled && (
+                <div className="bg-yellow-500/5 rounded-2xl p-5 border border-yellow-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                      <Gift className="h-4 w-4 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Indique e Ganhe!</p>
+                      <p className="text-xs text-muted-foreground">Ganhe {loyaltyConfig.referral_reward_points} pontos por cada amigo!</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-white border rounded-lg px-3 py-2 text-xs font-mono truncate select-all">
+                      {window.location.origin}{basePath}?ref={customer?.referral_code}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-9 gap-1.5"
+                      onClick={() => {
+                        const url = `${window.location.origin}${basePath}?ref=${customer?.referral_code}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link de indicação copiado!");
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
           <TabsContent value="wishlist">
             <div className="py-4">
               {wishlistIds.size === 0 ? (

@@ -910,6 +910,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          referral_code: string | null
           routine_notes: string | null
           state: string | null
           store_user_id: string
@@ -927,6 +928,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          referral_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id: string
@@ -944,6 +946,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          referral_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id?: string
@@ -1115,6 +1118,8 @@ export type Database = {
           min_redemption: number
           points_per_real: number
           redemption_rate: number
+          referral_enabled: boolean | null
+          referral_reward_points: number | null
           store_user_id: string
           updated_at: string
         }
@@ -1125,6 +1130,8 @@ export type Database = {
           min_redemption?: number
           points_per_real?: number
           redemption_rate?: number
+          referral_enabled?: boolean | null
+          referral_reward_points?: number | null
           store_user_id: string
           updated_at?: string
         }
@@ -1135,6 +1142,8 @@ export type Database = {
           min_redemption?: number
           points_per_real?: number
           redemption_rate?: number
+          referral_enabled?: boolean | null
+          referral_reward_points?: number | null
           store_user_id?: string
           updated_at?: string
         }

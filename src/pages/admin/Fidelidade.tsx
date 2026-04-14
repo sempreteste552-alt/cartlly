@@ -1,5 +1,6 @@
 import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { Award, Gift, Star, TrendingUp, Users, Loader2 } from "lucide-react";
 import { useLoyaltyConfig, useUpsertLoyaltyConfig, useLoyaltyPoints, useLoyaltyTransactions } from "@/hooks/useLoyalty";
 import { toast } from "sonner";
@@ -21,6 +23,8 @@ export default function Fidelidade() {
   const [pointsPerReal, setPointsPerReal] = useState("1");
   const [redemptionRate, setRedemptionRate] = useState("0.01");
   const [minRedemption, setMinRedemption] = useState("100");
+  const [referralEnabled, setReferralEnabled] = useState(false);
+  const [referralPoints, setReferralPoints] = useState("50");
 
   useEffect(() => {
     if (config) {
@@ -28,6 +32,8 @@ export default function Fidelidade() {
       setPointsPerReal(String(config.points_per_real));
       setRedemptionRate(String(config.redemption_rate));
       setMinRedemption(String(config.min_redemption));
+      setReferralEnabled(config.referral_enabled || false);
+      setReferralPoints(String(config.referral_reward_points || 50));
     }
   }, [config]);
 
@@ -38,6 +44,8 @@ export default function Fidelidade() {
         points_per_real: Number(pointsPerReal),
         redemption_rate: Number(redemptionRate),
         min_redemption: Number(minRedemption),
+        referral_enabled: referralEnabled,
+        referral_reward_points: Number(referralPoints),
       },
       { onSuccess: () => toast.success("Configurações de fidelidade salvas!") }
     );
@@ -64,6 +72,15 @@ export default function Fidelidade() {
           Programa de Fidelidade
         </h1>
         <p className="text-muted-foreground">Configure cashback e pontos para seus clientes</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/admin/indicacoes">
+            <Gift className="h-4 w-4 mr-2" />
+            Minhas Indicações (Programa de Afiliados)
+          </Link>
+        </Button>
       </div>
 
       {/* Stats */}
@@ -159,7 +176,36 @@ export default function Fidelidade() {
               <p className="text-xs text-muted-foreground">
                 Pontos mínimos para resgatar desconto
               </p>
+          </div>
+          
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-medium">Recompensa por Indicação</Label>
+                <p className="text-sm text-muted-foreground">Clientes ganham pontos ao indicar novos clientes</p>
+              </div>
+              <Switch checked={referralEnabled} onCheckedChange={setReferralEnabled} />
             </div>
+
+            {referralEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Pontos por indicação</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={referralPoints}
+                    onChange={(e) => setReferralPoints(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ex: 50 = cliente ganha 50 pontos por cada indicação que realizar uma compra
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
           </div>
 
           {enabled && (

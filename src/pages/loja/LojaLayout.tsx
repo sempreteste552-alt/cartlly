@@ -345,6 +345,16 @@ export default function LojaLayout() {
   }, [slug]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      localStorage.setItem(`store_referral_${slug}`, ref);
+      // Remove ref from URL to keep it clean
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [slug]);
+
+  useEffect(() => {
     if (searchTerm.trim().length > 2 && settings?.user_id) {
       const timer = setTimeout(async () => {
         try {
