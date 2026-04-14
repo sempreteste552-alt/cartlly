@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check, Package } from "lucide-react";
+import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check, Package, ShoppingCart } from "lucide-react";
 import { useCustomerReferrals, useCustomerReferralStats } from "@/hooks/useCustomerReferrals";
 import { useLoyaltyConfig, useUpsertLoyaltyConfig } from "@/hooks/useLoyalty";
 import { useProducts, useUpdateProduct } from "@/hooks/useProducts";
@@ -139,8 +139,8 @@ export default function CustomerReferrals() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="completed">Finalizada</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="completed">Completos (Pagos/Ativos)</SelectItem>
+                  <SelectItem value="pending">Pendentes (Só Cadastro)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
