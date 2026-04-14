@@ -57,15 +57,17 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false },
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false },
     { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false },
+    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false },
+    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount },
+  ];
+
+  const marketingItems = [
     { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true },
     { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true },
-    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
     { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true },
     { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
-    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: true },
-    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
     { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
   ];
 
@@ -77,6 +79,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const },
     { title: t.sidebar.gateway, url: `${adminBasePath}/gateway`, icon: Zap, feature: "gateway" as const },
     { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null },
+    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
     { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null },
   ];
 
