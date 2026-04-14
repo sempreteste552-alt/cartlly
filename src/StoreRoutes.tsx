@@ -13,7 +13,7 @@ const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
 export default function StoreRoutes() {
   return (
     <CustomerAuthProvider>
-      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">...</div>}>
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
       <Routes>
         <Route element={<LojaLayout />}>
           <Route index element={<LojaHome />} />
