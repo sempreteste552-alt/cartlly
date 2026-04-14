@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { isPlatformHost, normalizeDomain } from "@/lib/storeDomain";
+import { isPlatformHost, normalizeDomain, getSlugFromHostname } from "@/lib/storeDomain";
 
 export function usePublicProducts(storeUserId?: string) {
   return useQuery({
@@ -79,18 +79,20 @@ export function usePublicStoreBySlug(slug: string | undefined) {
 
 export function useResolvedPublicStore(slug?: string) {
   const hostname = typeof window !== "undefined" ? normalizeDomain(window.location.hostname) : "";
-  const shouldResolveByDomain = !slug && hostname && !isPlatformHost(hostname);
+  const hostnameSlug = !slug ? getSlugFromHostname(hostname) : null;
+  const resolvedSlug = slug || hostnameSlug;
+  const shouldResolveByDomain = !resolvedSlug && hostname && !isPlatformHost(hostname);
 
   return useQuery({
-    queryKey: ["public_store_settings_resolved", slug, hostname],
-    enabled: !!slug || shouldResolveByDomain,
+    queryKey: ["public_store_settings_resolved", resolvedSlug, hostname],
+    enabled: !!resolvedSlug || shouldResolveByDomain,
     queryFn: async () => {
-      // 1. Resolve by slug (explicit)
-      if (slug) {
+      // 1. Resolve by slug (explicit or subdomain)
+      if (resolvedSlug) {
         const { data, error } = await supabase
           .from("store_settings_public")
           .select("*")
-          .eq("store_slug", slug)
+          .eq("store_slug", resolvedSlug)
           .maybeSingle();
         if (error) throw error;
         return data;
