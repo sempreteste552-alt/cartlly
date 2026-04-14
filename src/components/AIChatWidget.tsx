@@ -135,6 +135,7 @@ function PixQrCard({ data, onCopy }: { data: PixQrData; onCopy: () => void }) {
 }
 
 export function AIChatWidget() {
+  const { slug } = useParams();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -1008,7 +1009,7 @@ export function AIChatWidget() {
                     Sem IA você responde no braço, demora para agir e deixa venda escapar. No <strong>Premium</strong> isso vira atendimento rápido, análise esperta e ação automática.
                   </p>
                 </div>
-                <Button size="sm" className="mt-4 gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
+                <Button size="sm" className="mt-4 gap-2" onClick={() => window.location.assign(`/painel/${slug}/plano?upgrade=PREMIUM`)}>
                   <Sparkles className="h-3.5 w-3.5" /> Fazer upgrade para liberar
                 </Button>
               </div>

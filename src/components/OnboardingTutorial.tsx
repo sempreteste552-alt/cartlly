@@ -36,7 +36,7 @@ export const OnboardingTutorial = () => {
       },
     };
 
-    if (currentPath === "/admin") {
+    if (currentPath === `/painel/${slug}`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -74,7 +74,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/produtos");
+             navigate(`/painel/${slug}/produtos`);
            }, { once: true });
         }
       });
@@ -84,7 +84,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/produtos") {
+    if (currentPath === `/painel/${slug}/produtos`) {
        const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -122,7 +122,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/pedidos");
+             navigate(`/painel/${slug}/pedidos`);
            }, { once: true });
         }
       });
@@ -132,7 +132,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/pedidos") {
+    if (currentPath === `/painel/${slug}/pedidos`) {
        const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -161,7 +161,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/clientes");
+             navigate(`/painel/${slug}/clientes`);
            }, { once: true });
         }
       });
@@ -171,7 +171,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/clientes") {
+    if (currentPath === `/painel/${slug}/clientes`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -200,7 +200,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
           doneBtn.addEventListener("click", () => {
-            navigate("/admin/cupons");
+            navigate(`/painel/${slug}/cupons`);
           }, { once: true });
         }
       });
@@ -210,7 +210,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/cupons") {
+    if (currentPath === `/painel/${slug}/cupons`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -239,7 +239,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
           doneBtn.addEventListener("click", () => {
-            navigate("/admin/config");
+            navigate(`/painel/${slug}/config`);
           }, { once: true });
         }
       });
@@ -249,7 +249,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/config") {
+    if (currentPath === `/painel/${slug}/config`) {
       const driverObj = driver({
         ...commonConfig,
         doneBtnText: "Concluir",

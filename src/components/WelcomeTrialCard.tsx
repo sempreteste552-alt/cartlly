@@ -24,7 +24,7 @@ const CHECKLIST = [
   { key: "payment", label: "Configurar pagamento", icon: CreditCard, check: (_: number, s: any) => !!s?.payment_gateway },
 ];
 
-export function WelcomeTrialCard() {
+const { slug } = useParams();
   const { user } = useAuth();
   const { ctx } = useTenantContext();
   const { data: products } = useProducts();
@@ -174,10 +174,10 @@ export function WelcomeTrialCard() {
 
         {/* CTA */}
         <div className="flex gap-3">
-          <Button size="sm" onClick={() => navigate("/admin/produtos")} className="flex-1 gap-1.5">
+          <Button size="sm" onClick={() => navigate(`/painel/${slug}/produtos`)} className="flex-1 gap-1.5">
             <Package className="h-3.5 w-3.5" /> Adicionar Produtos
           </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate("/admin/plano")} className="gap-1.5 shrink-0">
+          <Button size="sm" variant="outline" onClick={() => navigate(`/painel/${slug}/plano`)} className="gap-1.5 shrink-0">
             <Crown className="h-3.5 w-3.5" /> Ver Planos
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>

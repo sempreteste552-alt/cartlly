@@ -23,6 +23,7 @@ const RESPONSE_TEMPLATES = [
 ];
 
 export default function WhatsAppIA() {
+  const { slug } = useParams();
   const { data: settings } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const { ctx } = useTenantContext();
@@ -87,7 +88,7 @@ export default function WhatsAppIA() {
               Enquanto você responde manual, seus concorrentes vendem no automático 24h. 
               Desbloqueie a IA para nunca mais perder um cliente no WhatsApp.
             </p>
-            <Button className="gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
+            <Button className="gap-2" onClick={() => window.location.assign(`/painel/${slug}/plano?upgrade=PREMIUM`)}>
               <ArrowRight className="h-4 w-4" /> Desbloquear agora
             </Button>
           </CardContent>
