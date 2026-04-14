@@ -7,6 +7,7 @@ import { Crown, Clock, Sparkles, ArrowRight, Lock } from "lucide-react";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 export function TrialBanner() {
+  const { slug } = useParams();
   const { subscription } = usePlanFeatures();
   const navigate = useNavigate();
 

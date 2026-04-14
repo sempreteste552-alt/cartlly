@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Bot, Zap, Settings, CheckCircle2, Loader2, ArrowRight, Lock } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";

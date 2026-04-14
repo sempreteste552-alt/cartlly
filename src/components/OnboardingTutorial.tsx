@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export const OnboardingTutorial = () => {
   const location = useLocation();
