@@ -17,15 +17,20 @@ export function isPlatformHost(hostname?: string | null) {
     "127.0.0.1",
     "cartlly.lovable.app",
     "www.cartlly.lovable.app",
+    "cartlly.com.br",
+    "www.cartlly.com.br",
   ];
 
   if (platformDomains.includes(host)) return true;
 
-  // Lovable subdomains
+  // ONLY treat specific platform subdomains as platform
+  // Don't treat ALL .lovable.app subdomains as platform, 
+  // as they are used for tenant stores (e.g. store-slug.lovable.app)
   return (
-    host.endsWith(".lovable.app") ||
-    host.endsWith(".lovableproject.com") ||
-    host.endsWith(".lovable.dev")
+    host === "lovable.app" ||
+    host === "www.lovable.app" ||
+    host === "lovableproject.com" ||
+    host === "lovable.dev"
   );
 }
 

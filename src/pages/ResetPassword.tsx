@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import cartlyLogo from "@/assets/cartly-logo.png";
+import { isPlatformHost } from "@/lib/storeDomain";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function ResetPassword() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.user_metadata?.is_customer) {
         const lastStore = localStorage.getItem("last_visited_store");
-        if (lastStore) {
+        if (lastStore && !isPlatformHost(window.location.hostname)) {
           navigate(`/loja/${lastStore}`, { replace: true });
         } else {
           navigate("/", { replace: true });

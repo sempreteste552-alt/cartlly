@@ -6,10 +6,12 @@ import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (loading) return;
+
     if (user) {
       const route = async () => {
         const isAdmin = await checkIsSuperAdmin(user.id);
@@ -25,6 +27,10 @@ const Index = () => {
           if (store?.store_slug) {
             navigate(`/painel/${store.store_slug}`);
           } else {
+            // Even if it's a customer, we don't automatically redirect them 
+            // to their last visited store from the platform root to avoid "trapping" them.
+            // If they are a customer trying to access the platform root, they will go to setup-store
+            // where ProtectedRoute will correctly show them an "Access Restricted" screen if they are not a merchant.
             navigate("/setup-store");
           }
         }
@@ -33,7 +39,7 @@ const Index = () => {
     } else {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
