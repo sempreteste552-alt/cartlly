@@ -261,8 +261,8 @@ export default function LojaLayout() {
   const { data: smartSearchProducts } = usePublicProducts(settings?.user_id);
   const { data: categories } = usePublicCategories(settings?.user_id);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
-  const { data: marketingConfig } = usePublicMarketingConfig(settings?.user_id);
-  const { data: themeConfig } = usePublicThemeConfig(settings?.user_id);
+  const { data: marketingConfig, refetch: refetchMarketing } = usePublicMarketingConfig(settings?.user_id);
+  const { data: themeConfig, refetch: refetchTheme } = usePublicThemeConfig(settings?.user_id);
   const { data: productPageConfig } = usePublicProductPageConfig(settings?.user_id);
   const { data: storePages } = useQuery({
     queryKey: ["store_pages_public", settings?.user_id],
