@@ -1348,6 +1348,54 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_sales: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          items: Json
+          notes: string | null
+          payment_method: string
+          sale_date: string
+          status: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string
+          sale_date?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          payment_method?: string
+          sale_date?: string
+          status?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_delivery_logs: {
         Row: {
           channel: string
