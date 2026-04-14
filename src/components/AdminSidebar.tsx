@@ -132,10 +132,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
-                        end={item.url === "/admin"}
+                        end={item.url === adminBasePath}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                         className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        onClick={() => isMobile && setOpenMobile(false)}
                       >
                         <div className="relative">
                           <item.icon className="h-4 w-4" />
@@ -182,7 +182,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       to={item.url}
                       id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={() => isMobile && setOpenMobile(false)}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && (
@@ -216,7 +216,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       to={item.url}
                       id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={() => isMobile && setOpenMobile(false)}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -234,7 +234,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
               {pushNotifs.isSupported && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => navigate(`${adminBasePath}/config?tab=push`)}
+                    onClick={() => {
+                      navigate(`${adminBasePath}/config?tab=push`);
+                      if (isMobile) setOpenMobile(false);
+                    }}
                     className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
                   >
                      <div className="flex items-center gap-2 flex-1">
