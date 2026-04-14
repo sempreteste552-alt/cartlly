@@ -242,28 +242,40 @@ export default function SuperAdminIndicacoes() {
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
 
-  // Stats
-  const totalReferrals = referrals?.length || 0;
-  const totalClicked = referrals?.filter((r: any) => r.status === "clicked").length || 0;
-  const totalRegistered = referrals?.filter((r: any) => r.status !== "clicked").length || 0;
-  const totalSubscribed = referrals?.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length || 0;
-  const totalApproved = referrals?.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length || 0;
-  const totalNotCounted = referrals?.filter((r: any) => r.payment_status === "not_counted").length || 0;
-  const totalFlagged = referrals?.filter((r: any) => r.flagged).length || 0;
-  const totalCancelled = referrals?.filter((r: any) => r.status === "cancelled").length || 0;
-  const totalDiscountValue = discounts?.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) || 0;
-  const totalClicks = codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
+  // Stats calculated from filtered list
+  const totalReferrals = filtered.length;
+  const totalClicked = filtered.filter((r: any) => r.status === "clicked").length;
+  const totalRegistered = filtered.filter((r: any) => r.status !== "clicked").length;
+  const totalSubscribed = filtered.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length;
+  const totalApproved = filtered.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length;
+  const totalNotCounted = filtered.filter((r: any) => r.payment_status === "not_counted").length;
+  const totalFlagged = filtered.filter((r: any) => r.flagged).length;
+  const totalCancelled = filtered.filter((r: any) => r.status === "cancelled").length;
+  const totalDiscountValue = filtered.reduce((sum: number, r: any) => {
+    // Only sum discount if it's approved and not flagged as not_counted
+    if (["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted") {
+      return sum + Number(r.discount_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  // We still use totalClicks from code for overall rate if no tenant filter is active
+  // but if tenantSearch is active, we might want to adjust. For now, let's keep it simple.
+  const totalClicks = tenantSearch.trim() 
+    ? filtered.filter((r: any) => r.status === "clicked").length // approximation
+    : codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
+    
   const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
   const subRate = totalRegistered > 0 ? ((totalSubscribed / totalRegistered) * 100).toFixed(1) : "0";
 
   const deviceBreakdown = useMemo(() => {
     const map = { Mobile: 0, Desktop: 0, Tablet: 0, Desconhecido: 0 };
-    (referrals || []).forEach((r: any) => {
+    filtered.forEach((r: any) => {
       const { device } = parseDevice(r.user_agent);
       map[device as keyof typeof map] = (map[device as keyof typeof map] || 0) + 1;
     });
     return map;
-  }, [referrals]);
+  }, [filtered]);
 
   const topReferrers = useMemo(() => {
     if (!referrals) return [];
