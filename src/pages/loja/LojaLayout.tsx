@@ -371,10 +371,13 @@ export default function LojaLayout() {
     const ref = params.get("ref");
     if (ref) {
       localStorage.setItem(`store_referral_${slug}`, ref);
+      if (settings?.user_id) {
+        localStorage.setItem(`store_referral_${settings.user_id}`, ref);
+      }
       // Remove ref from URL to keep it clean
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [slug]);
+  }, [slug, settings?.user_id]);
 
   useEffect(() => {
     if (searchTerm.trim().length > 2 && settings?.user_id) {

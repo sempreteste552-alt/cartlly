@@ -4422,6 +4422,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_ai_work_summary: { Args: { p_user_id: string }; Returns: Json }
       get_best_selling_products: {
         Args: { _limit?: number; _store_user_id: string }
