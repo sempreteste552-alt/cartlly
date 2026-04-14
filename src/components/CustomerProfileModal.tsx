@@ -303,7 +303,11 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
                     </div>
                     <div>
                       <p className="font-bold text-sm">Indique e Ganhe!</p>
-                      <p className="text-xs text-muted-foreground">Ganhe {loyaltyConfig.referral_reward_points} pontos por cada amigo!</p>
+                      <p className="text-xs text-muted-foreground">
+                        {loyaltyConfig.referral_reward_type === "points" 
+                          ? `Ganhe ${loyaltyConfig.referral_reward_points} pontos por cada amigo!` 
+                          : `Recompensa: ${loyaltyConfig.referral_reward_description}`}
+                      </p>
                     </div>
                   </div>
                   

@@ -741,6 +741,73 @@ export type Database = {
           },
         ]
       }
+      customer_referrals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          order_id: string | null
+          referred_id: string
+          referrer_id: string
+          reward_description: string | null
+          reward_type: string
+          reward_value: number | null
+          status: string
+          store_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referred_id: string
+          referrer_id: string
+          reward_description?: string | null
+          reward_type?: string
+          reward_value?: number | null
+          status?: string
+          store_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          referred_id?: string
+          referrer_id?: string
+          reward_description?: string | null
+          reward_type?: string
+          reward_value?: number | null
+          status?: string
+          store_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_segments: {
         Row: {
           auto_update: boolean
@@ -1119,7 +1186,9 @@ export type Database = {
           points_per_real: number
           redemption_rate: number
           referral_enabled: boolean | null
+          referral_reward_description: string | null
           referral_reward_points: number | null
+          referral_reward_type: string | null
           store_user_id: string
           updated_at: string
         }
@@ -1131,7 +1200,9 @@ export type Database = {
           points_per_real?: number
           redemption_rate?: number
           referral_enabled?: boolean | null
+          referral_reward_description?: string | null
           referral_reward_points?: number | null
+          referral_reward_type?: string | null
           store_user_id: string
           updated_at?: string
         }
@@ -1143,7 +1214,9 @@ export type Database = {
           points_per_real?: number
           redemption_rate?: number
           referral_enabled?: boolean | null
+          referral_reward_description?: string | null
           referral_reward_points?: number | null
+          referral_reward_type?: string | null
           store_user_id?: string
           updated_at?: string
         }

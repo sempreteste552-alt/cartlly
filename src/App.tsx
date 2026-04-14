@@ -29,7 +29,8 @@ const Paginas = lazy(() => import("./pages/admin/Paginas"));
 const Automacao = lazy(() => import("./pages/admin/Automacao"));
 const SetupStore = lazy(() => import("./pages/admin/SetupStore"));
 const Cerebro = lazy(() => import("./pages/admin/Cerebro"));
-const Indicacoes = lazy(() => import("./pages/admin/Indicacoes"));
+const PlatformReferrals = lazy(() => import("./pages/admin/PlatformReferrals"));
+const CustomerReferrals = lazy(() => import("./pages/admin/CustomerReferrals"));
 const Politicas = lazy(() => import("./pages/admin/Politicas"));
 const Fidelidade = lazy(() => import("./pages/admin/Fidelidade"));
 const Lucro = lazy(() => import("./pages/admin/Lucro"));
@@ -168,8 +169,8 @@ const App = () => {
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
                     <Route path="cerebro" element={<Cerebro />} />
-                    <Route path="indicacoes" element={<Indicacoes />} />
-                    <Route path="politicas" element={<Politicas />} />
+                    <Route path="indicacoes" element={<CustomerReferrals />} />
+                    <Route path="indicacoes-plataforma" element={<PlatformReferrals />} />
                     <Route path="fidelidade" element={<Fidelidade />} />
                     <Route path="lucro" element={<Lucro />} />
                     <Route path="analytics" element={<Analytics />} />
