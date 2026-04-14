@@ -788,16 +788,3 @@ export default function Pedidos() {
   );
 }
 
-// Helper switch for printer config (not imported from UI)
-function Switch({ id, defaultChecked, checked, onCheckedChange }: any) {
-  return (
-    <input
-      type="checkbox"
-      id={id}
-      checked={checked}
-      defaultChecked={defaultChecked}
-      onChange={(e) => onCheckedChange?.(e.target.checked)}
-      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-    />
-  );
-}
