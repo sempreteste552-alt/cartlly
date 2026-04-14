@@ -10,7 +10,7 @@ export function normalizeDomain(value?: string | null) {
 }
 
 export function isPlatformHost(hostname?: string | null) {
-  const host = (hostname || "").toLowerCase();
+  const host = normalizeDomain(hostname);
   
   // Hardcoded platform domains
   const platformDomains = [
