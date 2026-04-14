@@ -181,11 +181,23 @@ export default function CustomerReferrals() {
                             <span className="text-xs text-muted-foreground">{r.referred?.email}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">{format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</TableCell>
+                        <TableCell className="text-sm">{format(new Date(r.created_at), "dd/MM/yy HH:mm")}</TableCell>
                         <TableCell>
                           <Badge variant={r.status === "completed" ? "default" : "secondary"}>
-                            {r.status === "completed" ? "Finalizada" : "Pendente"}
+                            {r.status === "completed" 
+                              ? (config?.referral_reward_condition === "sale" ? "Compra Paga" : "Cadastro Realizado") 
+                              : "Pendente"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {r.order_id ? (
+                            <div className="flex items-center gap-1 font-mono text-xs">
+                              <ShoppingCart className="h-3 w-3" />
+                              #{r.order_id.slice(0, 8)}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm">
                           {r.reward_type === "points" ? `${r.reward_value} pts` : r.reward_description}
