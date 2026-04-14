@@ -397,10 +397,7 @@ export default function Pedidos() {
                             Indicação: {order.referral_code}
                           </div>
                         )}
-                      </div>
-                    </TableCell>
-                        <span>{order.customer_name}</span>
-                        {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
+                        {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
                       </div>
                     </TableCell>
                     <TableCell>{formatPrice(order.total)}</TableCell>
