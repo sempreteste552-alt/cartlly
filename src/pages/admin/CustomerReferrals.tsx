@@ -151,8 +151,9 @@ export default function CustomerReferrals() {
                   <TableRow>
                     <TableHead>Quem Indicou</TableHead>
                     <TableHead>Quem foi Indicado</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Data Cadastro</TableHead>
+                    <TableHead>Status / Evento</TableHead>
+                    <TableHead>Pedido Vinculado</TableHead>
                     <TableHead>Recompensa</TableHead>
                   </TableRow>
                 </TableHeader>
