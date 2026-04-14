@@ -328,6 +328,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
               )}
             </div>
           </TabsContent>
+          <TabsContent value="wishlist">
             <div className="py-4">
               {wishlistIds.size === 0 ? (
                 <div className="text-center text-sm text-muted-foreground">
