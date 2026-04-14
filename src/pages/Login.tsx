@@ -17,6 +17,7 @@ import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
+import { isPlatformHost } from "@/lib/storeDomain";
 
 const LOGIN_PHRASES = [
   "Bem-vindo ao Painel Administrativo 🔐",
