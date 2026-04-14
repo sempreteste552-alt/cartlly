@@ -66,6 +66,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true },
     { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true },
+    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true },
     { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true },
     { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
     { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
