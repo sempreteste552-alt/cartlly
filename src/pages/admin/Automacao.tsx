@@ -588,6 +588,19 @@ export default function Automacao() {
                                 {cart.reminder_sent_count}/5
                               </Badge>
                             </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1.5">
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-7 w-7 text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700" 
+                                  onClick={() => handleManualWhatsApp(customer, cart)}
+                                  title="WhatsApp Manual"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
                         );
                       })}
