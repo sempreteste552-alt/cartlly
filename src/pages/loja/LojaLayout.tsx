@@ -555,11 +555,18 @@ export default function LojaLayout() {
 
   if (!slug && !settingsBySlug && !isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <div className="text-center space-y-4 p-8">
-          <div className="text-6xl">🔍</div>
-          <h1 className="text-3xl font-bold">{t.misc.storeNotFound}</h1>
-          <p className="text-muted-foreground">{storeText.accessStore}</p>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground p-4">
+        <div className="text-center space-y-6 max-w-md animate-in fade-in zoom-in duration-500">
+          <div className="mx-auto w-20 h-20 bg-muted rounded-full flex items-center justify-center">
+            <Search className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">{t.misc.storeNotFound}</h1>
+            <p className="text-muted-foreground text-lg">{storeText.accessStore}</p>
+          </div>
+          <Button asChild variant="default" size="lg" className="w-full">
+            <Link to="/">{locale === 'pt' ? 'Ir para o Início' : 'Go to Home'}</Link>
+          </Button>
         </div>
       </div>
     );
