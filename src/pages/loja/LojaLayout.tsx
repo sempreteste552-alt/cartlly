@@ -968,7 +968,7 @@ export default function LojaLayout() {
                     </div>
                   );
 
-                  const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 transition-colors duration-300";
+                  const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 active:opacity-70 transition-all duration-300 focus:outline-none select-none touch-manipulation";
 
                   return (
                     <div
