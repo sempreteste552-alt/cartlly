@@ -197,7 +197,8 @@ export default function Clientes() {
         (c: any) =>
           c.name?.toLowerCase().includes(term) ||
           c.email?.toLowerCase().includes(term) ||
-          c.phone?.includes(term)
+          c.phone?.includes(term) ||
+          c.referred_by_code?.toLowerCase().includes(term)
       );
     }
 

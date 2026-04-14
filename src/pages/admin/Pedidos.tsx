@@ -77,7 +77,8 @@ export default function Pedidos() {
 
       const matchesSearch = searchTerm === "" || 
         o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+        o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (o.referral_code && o.referral_code.toLowerCase().includes(searchTerm.toLowerCase()));
 
       let matchesDate = true;
       if (dateRange.from && dateRange.to) {
