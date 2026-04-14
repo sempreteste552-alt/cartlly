@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, Users, Mail, Phone, MapPin, MoreVertical, 
-  Edit2, Lock, TrendingUp, ShoppingBag, Filter, Bell
+  Edit2, Lock, TrendingUp, ShoppingBag, Filter, Bell, Gift, CheckCircle
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { 
