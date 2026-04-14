@@ -1029,6 +1029,7 @@ export type Database = {
           name: string
           phone: string | null
           referral_code: string | null
+          referred_by_code: string | null
           routine_notes: string | null
           state: string | null
           store_user_id: string
@@ -1047,6 +1048,7 @@ export type Database = {
           name: string
           phone?: string | null
           referral_code?: string | null
+          referred_by_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id: string
@@ -1065,6 +1067,7 @@ export type Database = {
           name?: string
           phone?: string | null
           referral_code?: string | null
+          referred_by_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id?: string
@@ -1493,6 +1496,7 @@ export type Database = {
           discount_amount: number
           id: string
           notes: string | null
+          referral_code: string | null
           shipping_cep: string | null
           shipping_city: string | null
           shipping_complement: string | null
@@ -1520,6 +1524,7 @@ export type Database = {
           discount_amount?: number
           id?: string
           notes?: string | null
+          referral_code?: string | null
           shipping_cep?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
@@ -1547,6 +1552,7 @@ export type Database = {
           discount_amount?: number
           id?: string
           notes?: string | null
+          referral_code?: string | null
           shipping_cep?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
