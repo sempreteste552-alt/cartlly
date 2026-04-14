@@ -12,6 +12,7 @@ import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
+import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -297,14 +298,33 @@ export default function LojaLayout() {
   const localizedStorePageTitles = useLocalizedTextList(storePages?.map((p) => p.title) || []);
   const localizedCategoryNames = useLocalizedTextList(categories?.map((c) => c.name) || []);
 
-  const storeInstallName = slug || settings?.store_name?.trim() || "Loja";
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const isCustomDomain = !slug && hostname && !isPlatformHost(hostname);
+  
+  const storeInstallName = useMemo(() => {
+    if (slug) return slug.split('-')[0];
+    if (isCustomDomain) return hostname.split('.')[0];
+    return settings?.store_name?.trim() || "Loja";
+  }, [slug, hostname, isCustomDomain, settings?.store_name]);
 
-  const storeStartUrl = slug ? `${window.location.origin}/loja/${slug}/` : undefined;
+  const storeStartUrl = useMemo(() => {
+    if (slug) return `${window.location.origin}/loja/${slug}/`;
+    if (isCustomDomain) return `${window.location.origin}/`;
+    return undefined;
+  }, [slug, hostname, isCustomDomain]);
+
   const storeIconUrl = themeConfig?.favicon_url || settings?.favicon_url || settings?.logo_url || undefined;
   const storeIconVersion = themeConfig?.updated_at || settings?.updated_at || undefined;
 
+  const manifestId = useMemo(() => {
+    if (slug) return `cartlly-store-${slug}`;
+    if (isCustomDomain) return `cartlly-store-domain-${hostname}`;
+    if (settings?.id) return `cartlly-store-id-${settings.id}`;
+    return "cartlly-store-default";
+  }, [slug, hostname, isCustomDomain, settings?.id]);
+
   usePwaManifest({
-    id: slug ? `cartlly-store-${slug}` : "cartlly-store-default",
+    id: manifestId,
     name: storeInstallName,
     shortName: storeInstallName.slice(0, 12),
     themeColor: settings?.primary_color || undefined,
