@@ -242,64 +242,6 @@ export default function SuperAdminIndicacoes() {
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
 
-  // Stats calculated from filtered list
-  const totalReferrals = filtered.length;
-  const totalClicked = filtered.filter((r: any) => r.status === "clicked").length;
-  const totalRegistered = filtered.filter((r: any) => r.status !== "clicked").length;
-  const totalSubscribed = filtered.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length;
-  const totalApproved = filtered.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length;
-  const totalNotCounted = filtered.filter((r: any) => r.payment_status === "not_counted").length;
-  const totalFlagged = filtered.filter((r: any) => r.flagged).length;
-  const totalCancelled = filtered.filter((r: any) => r.status === "cancelled").length;
-  const totalDiscountValue = filtered.reduce((sum: number, r: any) => {
-    // Only sum discount if it's approved and not flagged as not_counted
-    if (["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted") {
-      return sum + Number(r.discount_amount || 0);
-    }
-    return sum;
-  }, 0);
-
-  // We still use totalClicks from code for overall rate if no tenant filter is active
-  // but if tenantSearch is active, we might want to adjust. For now, let's keep it simple.
-  const totalClicks = tenantSearch.trim() 
-    ? filtered.filter((r: any) => r.status === "clicked").length // approximation
-    : codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
-    
-  const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
-  const subRate = totalRegistered > 0 ? ((totalSubscribed / totalRegistered) * 100).toFixed(1) : "0";
-
-  const deviceBreakdown = useMemo(() => {
-    const map = { Mobile: 0, Desktop: 0, Tablet: 0, Desconhecido: 0 };
-    filtered.forEach((r: any) => {
-      const { device } = parseDevice(r.user_agent);
-      map[device as keyof typeof map] = (map[device as keyof typeof map] || 0) + 1;
-    });
-    return map;
-  }, [filtered]);
-
-  const topReferrers = useMemo(() => {
-    if (!referrals) return [];
-    const map: Record<string, { count: number; approved: number; notCounted: number; storeName: string; storeSlug: string; revenue: number }> = {};
-    referrals.forEach((r: any) => {
-      const id = r.referrer_tenant_id;
-      if (!map[id]) {
-        map[id] = {
-          count: 0, approved: 0, notCounted: 0, revenue: 0,
-          storeName: r.referrer_store?.store_name || id.substring(0, 8),
-          storeSlug: r.referrer_store?.store_slug || ""
-        };
-      }
-      map[id].count++;
-      if (r.payment_status === "not_counted") {
-        map[id].notCounted++;
-      } else if (["payment_approved", "active"].includes(r.status)) {
-        map[id].approved++;
-        map[id].revenue += Number(r.discount_amount || 0);
-      }
-    });
-    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 6);
-  }, [referrals]);
-
   const filtered = useMemo(() => {
     let list = referrals || [];
     if (statusFilter !== "all") list = list.filter((r: any) => r.status === statusFilter);
@@ -329,6 +271,61 @@ export default function SuperAdminIndicacoes() {
     }
     return list;
   }, [referrals, statusFilter, paymentFilter, fraudFilter, deviceFilter, emailSearch, tenantSearch]);
+
+  // Stats calculated from filtered list
+  const totalReferrals = filtered.length;
+  const totalClicked = filtered.filter((r: any) => r.status === "clicked").length;
+  const totalRegistered = filtered.filter((r: any) => r.status !== "clicked").length;
+  const totalSubscribed = filtered.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length;
+  const totalApproved = filtered.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length;
+  const totalNotCounted = filtered.filter((r: any) => r.payment_status === "not_counted").length;
+  const totalFlagged = filtered.filter((r: any) => r.flagged).length;
+  const totalCancelled = filtered.filter((r: any) => r.status === "cancelled").length;
+  
+  const totalDiscountValue = filtered.reduce((sum: number, r: any) => {
+    if (["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted") {
+      return sum + Number(r.discount_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  const totalClicks = tenantSearch.trim() 
+    ? filtered.filter((r: any) => r.status === "clicked").length 
+    : codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
+    
+  const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
+  const subRate = totalRegistered > 0 ? ((totalSubscribed / totalRegistered) * 100).toFixed(1) : "0";
+
+  const deviceBreakdown = useMemo(() => {
+    const map = { Mobile: 0, Desktop: 0, Tablet: 0, Desconhecido: 0 };
+    filtered.forEach((r: any) => {
+      const { device } = parseDevice(r.user_agent);
+      map[device as keyof typeof map] = (map[device as keyof typeof map] || 0) + 1;
+    });
+    return map;
+  }, [filtered]);
+
+  const topReferrers = useMemo(() => {
+    const map: Record<string, { count: number; approved: number; notCounted: number; storeName: string; storeSlug: string; revenue: number }> = {};
+    filtered.forEach((r: any) => {
+      const id = r.referrer_tenant_id;
+      if (!map[id]) {
+        map[id] = {
+          count: 0, approved: 0, notCounted: 0, revenue: 0,
+          storeName: r.referrer_store?.store_name || id.substring(0, 8),
+          storeSlug: r.referrer_store?.store_slug || ""
+        };
+      }
+      map[id].count++;
+      if (r.payment_status === "not_counted") {
+        map[id].notCounted++;
+      } else if (["payment_approved", "active"].includes(r.status)) {
+        map[id].approved++;
+        map[id].revenue += Number(r.discount_amount || 0);
+      }
+    });
+    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 6);
+  }, [filtered]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
