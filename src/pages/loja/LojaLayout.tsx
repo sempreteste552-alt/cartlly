@@ -665,7 +665,7 @@ export default function LojaLayout() {
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            <Link to={basePath} className="flex items-center gap-2 shrink-0">
+            <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
               <div className="relative inline-flex items-center">
                 {settings?.logo_url ? (
                   <div className="relative">
@@ -879,8 +879,8 @@ export default function LojaLayout() {
             </div>
 
             {[
-              { icon: Home, label: t.store.home, to: basePath },
-              { icon: Package, label: t.sidebar.products, to: basePath },
+              { icon: Home, label: t.store.home, to: basePath || "/" },
+              { icon: Package, label: t.sidebar.products, to: basePath || "/" },
               { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
               { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
               ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
