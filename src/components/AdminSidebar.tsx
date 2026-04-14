@@ -126,7 +126,6 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => {
-                const isReferral = item.url === "/admin/indicacoes";
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
@@ -134,7 +133,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         to={item.url}
                         end={item.url === "/admin"}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg ${isReferral ? "sidebar-referral-item text-primary font-semibold" : ""}`}
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <div className="relative">
