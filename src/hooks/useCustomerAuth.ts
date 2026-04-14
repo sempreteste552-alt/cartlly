@@ -287,14 +287,36 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user) {
-      const { error: customerErr } = await supabase.from("customers").insert({
+      const { data: newCustomer, error: customerErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
         name,
         email: normalizedEmail,
-      } as any);
+      } as any).select().single();
 
       if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
+      
+      if (newCustomer) {
+        const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
+        if (referralCode) {
+          const { data: referrer } = await supabase
+            .from("customers")
+            .select("id")
+            .eq("referral_code", referralCode)
+            .eq("store_user_id", storeUserId)
+            .maybeSingle();
+          
+          if (referrer) {
+            await supabase.from("customer_referrals").insert({
+              store_user_id: storeUserId,
+              referrer_id: referrer.id,
+              referred_id: newCustomer.id,
+              status: "pending"
+            });
+            localStorage.removeItem(`store_referral_${storeUserId}`);
+          }
+        }
+      }
       await generateWelcomeCoupon(storeUserId, name);
     }
 
