@@ -391,6 +391,15 @@ export default function Pedidos() {
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <span>{order.customer_name}</span>
+                        {order.referral_code && (
+                          <div className="flex items-center gap-1 text-[10px] text-primary font-medium mt-0.5">
+                            <Gift className="h-3 w-3" />
+                            Indicação: {order.referral_code}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                        <span>{order.customer_name}</span>
                         {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
                       </div>
                     </TableCell>

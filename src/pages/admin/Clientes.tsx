@@ -310,6 +310,11 @@ export default function Clientes() {
                               <TrendingUp className="mr-1 h-3 w-3" /> VIP
                             </Badge>
                           )}
+                          {customer.referred_by_code && (
+                            <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-medium border-primary/30 text-primary">
+                              <Gift className="mr-1 h-3 w-3" /> Indicação: {customer.referred_by_code}
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1.5">
