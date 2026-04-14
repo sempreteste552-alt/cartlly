@@ -17,9 +17,10 @@ export function isPlatformHost(hostname?: string | null) {
     "localhost",
     "127.0.0.1",
     "cartlly.lovable.app",
-    "www.cartlly.lovable.app",
     "cartlly.com.br",
-    "www.cartlly.com.br",
+    "cartlly.com",
+    "app.cartlly.com.br",
+    "app.cartlly.com",
   ];
 
   if (platformDomains.includes(host)) return true;
