@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone, Trash2, RotateCcw, FileText, Mic, MicOff } from "lucide-react";
@@ -135,6 +136,7 @@ function PixQrCard({ data, onCopy }: { data: PixQrData; onCopy: () => void }) {
 }
 
 export function AIChatWidget() {
+  const { slug } = useParams();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -1008,7 +1010,7 @@ export function AIChatWidget() {
                     Sem IA você responde no braço, demora para agir e deixa venda escapar. No <strong>Premium</strong> isso vira atendimento rápido, análise esperta e ação automática.
                   </p>
                 </div>
-                <Button size="sm" className="mt-4 gap-2" onClick={() => window.location.assign("/admin/plano?upgrade=PREMIUM")}>
+                <Button size="sm" className="mt-4 gap-2" onClick={() => window.location.assign(`/painel/${slug}/plano?upgrade=PREMIUM`)}>
                   <Sparkles className="h-3.5 w-3.5" /> Fazer upgrade para liberar
                 </Button>
               </div>

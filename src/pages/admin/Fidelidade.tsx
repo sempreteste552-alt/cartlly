@@ -1,6 +1,6 @@
 import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useLoyaltyConfig, useUpsertLoyaltyConfig, useLoyaltyPoints, useLoyaltyT
 import { toast } from "sonner";
 
 export default function Fidelidade() {
+  const { slug } = useParams();
   const { data: config, isLoading } = useLoyaltyConfig();
   const { data: points } = useLoyaltyPoints();
   const { data: transactions } = useLoyaltyTransactions();
@@ -76,7 +77,7 @@ export default function Fidelidade() {
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link to="/admin/indicacoes">
+          <Link to={`/painel/${slug}/indicacoes`}>
             <Gift className="h-4 w-4 mr-2" />
             Minhas Indicações (Programa de Afiliados)
           </Link>

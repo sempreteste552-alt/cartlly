@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Brain, Sparkles, AlertTriangle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function AITrainingAlert() {
+  const { slug } = useParams();
   const navigate = useNavigate();
 
   return (
@@ -27,7 +28,7 @@ export function AITrainingAlert() {
         </div>
         <Button 
           size="sm" 
-          onClick={() => navigate("/admin/cerebro")}
+          onClick={() => navigate(`/painel/${slug}/cerebro`)}
           className="bg-amber-600 hover:bg-amber-700 text-white border-0 gap-2 whitespace-nowrap"
         >
           <Brain className="h-4 w-4" />

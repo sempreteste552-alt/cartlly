@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export const OnboardingTutorial = () => {
+  const { slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -13,7 +14,10 @@ export const OnboardingTutorial = () => {
     const tutorialActive = sessionStorage.getItem("onboarding_tutorial_active");
 
     // Automatically activate tutorial for new users on their first visit to dashboard, but only up to 1 time
-    if (!tutorialCompleted && !tutorialActive && location.pathname === "/admin" && tutorialViews < 1) {
+    // We check for /painel/:slug
+    const isDashboard = location.pathname === `/painel/${slug}` || location.pathname === `/painel/${slug}/`;
+
+    if (!tutorialCompleted && !tutorialActive && isDashboard && tutorialViews < 1) {
       sessionStorage.setItem("onboarding_tutorial_active", "true");
       localStorage.setItem("onboarding_tutorial_views", (tutorialViews + 1).toString());
     }
@@ -36,7 +40,7 @@ export const OnboardingTutorial = () => {
       },
     };
 
-    if (currentPath === "/admin") {
+    if (currentPath === `/painel/${slug}` || currentPath === `/painel/${slug}/`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -74,7 +78,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/produtos");
+             navigate(`/painel/${slug}/produtos`);
            }, { once: true });
         }
       });
@@ -84,7 +88,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/produtos") {
+    if (currentPath === `/painel/${slug}/produtos`) {
        const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -122,7 +126,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/pedidos");
+             navigate(`/painel/${slug}/pedidos`);
            }, { once: true });
         }
       });
@@ -132,7 +136,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/pedidos") {
+    if (currentPath === `/painel/${slug}/pedidos`) {
        const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -161,7 +165,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
            doneBtn.addEventListener("click", () => {
-             navigate("/admin/clientes");
+             navigate(`/painel/${slug}/clientes`);
            }, { once: true });
         }
       });
@@ -171,7 +175,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/clientes") {
+    if (currentPath === `/painel/${slug}/clientes`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -200,7 +204,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
           doneBtn.addEventListener("click", () => {
-            navigate("/admin/cupons");
+            navigate(`/painel/${slug}/cupons`);
           }, { once: true });
         }
       });
@@ -210,7 +214,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/cupons") {
+    if (currentPath === `/painel/${slug}/cupons`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -239,7 +243,7 @@ export const OnboardingTutorial = () => {
         const doneBtn = document.querySelector(".driver-popover-footer button:last-child");
         if (doneBtn && doneBtn.textContent === "Próximo Passo") {
           doneBtn.addEventListener("click", () => {
-            navigate("/admin/config");
+            navigate(`/painel/${slug}/config`);
           }, { once: true });
         }
       });
@@ -249,7 +253,7 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-    if (currentPath === "/admin/config") {
+    if (currentPath === `/painel/${slug}/config`) {
       const driverObj = driver({
         ...commonConfig,
         doneBtnText: "Concluir",
@@ -290,12 +294,12 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, slug]);
 
   return null;
 };
 
 export const startTutorial = () => {
   sessionStorage.setItem("onboarding_tutorial_active", "true");
-  window.location.href = "/admin"; // Force reload to start from dashboard
+  window.location.href = "/"; // Navigate to home to restart
 };

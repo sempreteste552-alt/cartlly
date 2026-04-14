@@ -24,7 +24,7 @@ import { PlanGate } from "@/components/PlanGate";
 import { Progress } from "@/components/ui/progress";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } from "@/lib/planPermissions";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
 import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
@@ -33,6 +33,7 @@ import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 
 export default function Produtos() {
+  const { slug } = useParams();
   const { data: products, isLoading } = useProducts();
   const { data: categories } = useCategories();
   const createProduct = useCreateProduct();
@@ -193,7 +194,7 @@ export default function Produtos() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => aiAvailable ? setAiImportOpen(true) : navigate("/admin/plano")}
+            onClick={() => aiAvailable ? setAiImportOpen(true) : navigate(`/painel/${slug}/plano`)}
             className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
           >
             {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
@@ -245,7 +246,7 @@ export default function Produtos() {
                 <Lock className="h-4 w-4 text-amber-600" />
                 <p className="text-sm text-amber-700 font-medium">{productLimitMsg}</p>
               </div>
-              <Button size="sm" variant="outline" className="border-primary/30 text-primary gap-1 text-xs" onClick={() => navigate("/admin/plano")}>
+              <Button size="sm" variant="outline" className="border-primary/30 text-primary gap-1 text-xs" onClick={() => navigate(`/painel/${slug}/plano`)}>
                 <Crown className="h-3 w-3" /> Upgrade
               </Button>
             </div>

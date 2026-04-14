@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { useAllPlans } from "@/hooks/useUserRole";
@@ -28,6 +28,7 @@ const CATEGORY_ICONS: Record<string, any> = {
 };
 
 export default function MeuPlano() {
+  const { slug } = useParams();
   const { user } = useAuth();
   const { ctx, subscription, plan: currentPlan } = useTenantContext();
   const { data: allPlans } = useAllPlans();
@@ -138,7 +139,7 @@ export default function MeuPlano() {
       </div>
 
       {/* Referral Card - TOP */}
-      <Card className="referral-glow-card border-0 cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-r from-primary/5 to-accent/5" onClick={() => navigate("/admin/indicacoes")}>
+      <Card className="referral-glow-card border-0 cursor-pointer hover:shadow-lg transition-shadow bg-gradient-to-r from-primary/5 to-accent/5" onClick={() => navigate(`/painel/${slug}/indicacoes`)}>
         <CardContent className="p-5 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
             <Gift className="h-6 w-6 text-primary" />

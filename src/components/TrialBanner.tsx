@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Crown, Clock, Sparkles, ArrowRight, Lock } from "lucide-react";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 
 export function TrialBanner() {
+  const { slug } = useParams();
   const { subscription } = usePlanFeatures();
   const navigate = useNavigate();
 
@@ -39,7 +40,7 @@ export function TrialBanner() {
                 </p>
               </div>
             </div>
-            <Button size="sm" onClick={() => navigate("/admin/plano")} className="gap-1.5 shrink-0">
+            <Button size="sm" onClick={() => navigate(`/painel/${slug}/plano`)} className="gap-1.5 shrink-0">
               <Crown className="h-3.5 w-3.5" />
               Ativar Plano
               <ArrowRight className="h-3.5 w-3.5" />
@@ -71,7 +72,7 @@ export function TrialBanner() {
               </p>
             </div>
           </div>
-          <Button size="sm" onClick={() => navigate("/admin/plano")} className="gap-1.5 shrink-0 bg-destructive hover:bg-destructive/90">
+          <Button size="sm" onClick={() => navigate(`/painel/${slug}/plano`)} className="gap-1.5 shrink-0 bg-destructive hover:bg-destructive/90">
             <Crown className="h-3.5 w-3.5" />
             Ativar Plano
           </Button>

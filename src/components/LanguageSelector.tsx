@@ -1,4 +1,5 @@
 import { useTranslation, LOCALE_OPTIONS, type Locale } from "@/i18n";
+import { useParams } from "react-router-dom";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess, type FeatureKey } from "@/lib/planPermissions";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
@@ -16,6 +17,7 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ className, compact = false, skipGate = false }: LanguageSelectorProps) {
+  const { slug } = useParams();
   const { locale, setLocale, t } = useTranslation();
   const { ctx } = useTenantContext();
   const { data: settings } = useStoreSettings();
@@ -30,7 +32,7 @@ export function LanguageSelector({ className, compact = false, skipGate = false 
       toast.error(t.settings.premiumOnly, {
         action: {
           label: t.plan.upgradePlan,
-          onClick: () => window.location.assign("/admin/plano?upgrade=PREMIUM"),
+          onClick: () => window.location.assign(`/painel/${slug}/plano?upgrade=PREMIUM`),
         },
       });
       return;

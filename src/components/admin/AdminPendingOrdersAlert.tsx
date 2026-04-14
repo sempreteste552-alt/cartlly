@@ -3,10 +3,11 @@ import { useOrders } from "@/hooks/useOrders";
 import { AlertCircle, ArrowRight, Package, Truck, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 export function AdminPendingOrdersAlert() {
+  const { slug } = useParams();
   const { data: orders } = useOrders();
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const lastAlertTime = useRef<number>(0);
@@ -34,7 +35,7 @@ export function AdminPendingOrdersAlert() {
           duration: 15000, // Show for 15 seconds
           action: {
             label: "Ver Pedidos",
-            onClick: () => window.location.href = "/admin/pedidos"
+            onClick: () => window.location.href = `/painel/${slug}/pedidos`
           }
         });
         
@@ -83,7 +84,7 @@ export function AdminPendingOrdersAlert() {
                 size="sm" 
                 className="bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-md hover:scale-105 transition-transform"
               >
-                <Link to="/admin/pedidos" className="flex items-center gap-2">
+                <Link to={`/painel/${slug}/pedidos`} className="flex items-center gap-2">
                   <Truck className="h-4 w-4" />
                   Ver Pedidos
                   <ArrowRight className="h-4 w-4" />
