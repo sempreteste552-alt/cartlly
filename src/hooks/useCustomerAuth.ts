@@ -1,5 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { awardReferralReward } from "@/lib/loyalty";
 import { Session, User } from "@supabase/supabase-js";
 import { getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 
@@ -109,6 +110,7 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                           status: "pending"
                         });
                         localStorage.removeItem(`store_referral_${storeUserId}`);
+                        await awardReferralReward(storeUserId, newCustomer.id, "lead");
                       }
                     }
                   }
@@ -311,9 +313,10 @@ function useCustomerAuthState(): CustomerAuthContextValue {
               store_user_id: storeUserId,
               referrer_id: referrer.id,
               referred_id: newCustomer.id,
-              status: "pending"
+               status: "pending"
             });
             localStorage.removeItem(`store_referral_${storeUserId}`);
+            await awardReferralReward(storeUserId, newCustomer.id, "lead");
           }
         }
       }
