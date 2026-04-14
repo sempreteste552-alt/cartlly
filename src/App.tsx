@@ -1,12 +1,27 @@
 import React, { Suspense, lazy } from "react";
-// ... keep existing code
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { I18nProvider } from "@/i18n";
+import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import ScrollToTop from "@/components/ScrollToTop";
+import { Loader2 } from "lucide-react";
+
+const AdminLayout = lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const Login = lazy(() => import("./pages/Login"));
+const Index = lazy(() => import("./pages/Index"));
+const ContaEmAnalise = lazy(() => import("./pages/ContaEmAnalise"));
+
+// Admin pages
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Produtos = lazy(() => import("./pages/admin/Produtos"));
 const Pedidos = lazy(() => import("./pages/admin/Pedidos"));
 const Configuracoes = lazy(() => import("./pages/admin/Configuracoes"));
-
 const Cupons = lazy(() => import("./pages/admin/Cupons"));
-
 const Frete = lazy(() => import("./pages/admin/Frete"));
 const Clientes = lazy(() => import("./pages/admin/Clientes"));
 const Pagamentos = lazy(() => import("./pages/admin/Pagamentos"));
@@ -24,6 +39,9 @@ const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const WhatsAppIA = lazy(() => import("./pages/admin/WhatsAppIA"));
 const Notificacoes = lazy(() => import("./pages/admin/Notificacoes"));
 const Suporte = lazy(() => import("./pages/admin/Suporte"));
+const MinhaRoleta = lazy(() => import("./pages/admin/MinhaRoleta"));
+
+// Store/Shop pages
 const LojaPolitica = lazy(() => import("./pages/loja/LojaPolitica"));
 const LojaLayout = lazy(() => import("./pages/loja/LojaLayout"));
 const LojaHome = lazy(() => import("./pages/loja/LojaHome"));
@@ -32,6 +50,8 @@ const LojaCheckout = lazy(() => import("./pages/loja/LojaCheckout"));
 const LojaRastreio = lazy(() => import("./pages/loja/LojaRastreio"));
 const LojaCupons = lazy(() => import("./pages/loja/LojaCupons"));
 const LojaPagina = lazy(() => import("./pages/loja/LojaPagina"));
+
+// SuperAdmin pages
 const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
 const SuperAdminDashboard = lazy(() => import("./pages/superadmin/SuperAdminDashboard"));
 const SuperAdminTenants = lazy(() => import("./pages/superadmin/SuperAdminTenants"));
@@ -44,7 +64,7 @@ const SuperAdminIndicacoes = lazy(() => import("./pages/superadmin/SuperAdminInd
 const SuperAdminBanners = lazy(() => import("./pages/superadmin/SuperAdminBanners"));
 const SuperAdminRoulette = lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
 const SuperAdminDominios = lazy(() => import("./pages/superadmin/SuperAdminDominios"));
-const MinhaRoleta = lazy(() => import("./pages/admin/MinhaRoleta"));
+
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
@@ -62,8 +82,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simple error boundary to catch and show something if it crashes
-// React import moved to top
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
     super(props);
@@ -74,12 +92,12 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-white p-8 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-background p-8 text-center">
           <div className="max-w-md space-y-4">
             <div className="text-6xl">⚠️</div>
             <h1 className="text-2xl font-bold">Ocorreu um erro inesperado</h1>
-            <p className="text-gray-500">Tente recarregar a página ou entre em contato com o suporte.</p>
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-black text-white rounded-md">
+            <p className="text-muted-foreground">Tente recarregar a página ou entre em contato com o suporte.</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
               Recarregar Página
             </button>
           </div>
@@ -89,8 +107,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return this.props.children;
   }
 }
-
-
 
 const App = () => {
   const isPlatform = isPlatformHost(window.location.hostname);
@@ -147,7 +163,6 @@ const App = () => {
                     <Route path="pedidos" element={<Pedidos />} />
                     <Route path="cupons" element={<Cupons />} />
                     <Route path="config" element={<Configuracoes />} />
-                    
                     <Route path="frete" element={<Frete />} />
                     <Route path="pagamentos" element={<Pagamentos />} />
                     <Route path="clientes" element={<Clientes />} />
