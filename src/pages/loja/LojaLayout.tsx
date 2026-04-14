@@ -1001,15 +1001,19 @@ export default function LojaLayout() {
               </>
             )}
 
-            <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
-              <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
-              <span className="text-sm" style={{ color: headerTextColor }}>{t.settings.darkMode}</span>
-            </div>
+            {!isMinimalMenu && (
+              <>
+                <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
+                  <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
+                  <span className="text-sm" style={{ color: headerTextColor }}>{t.settings.darkMode}</span>
+                </div>
 
-            {settings?.is_premium_plan && (
-              <div className="px-3 py-2 border-t border-border flex items-center gap-2">
-                <LanguageSelector skipGate />
-              </div>
+                {settings?.is_premium_plan && (
+                  <div className="px-3 py-2 border-t border-border flex items-center gap-2">
+                    <LanguageSelector skipGate />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="px-3 py-2">
