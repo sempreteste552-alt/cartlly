@@ -9,7 +9,7 @@ import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Loader2 } from "lucide-react";
-const AdminLayout = React.lazy(() => import("./components/AdminLayout"));
+const AdminLayout = React.lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
 const Login = React.lazy(() => import("./pages/Login"));
 const Index = React.lazy(() => import("./pages/Index"));
 const ContaEmAnalise = React.lazy(() => import("./pages/ContaEmAnalise"));
