@@ -910,6 +910,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          referral_code: string | null
           routine_notes: string | null
           state: string | null
           store_user_id: string
@@ -927,6 +928,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          referral_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id: string
@@ -944,6 +946,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          referral_code?: string | null
           routine_notes?: string | null
           state?: string | null
           store_user_id?: string
