@@ -63,7 +63,8 @@ const LojaContext = createContext<LojaContextType | null>(null);
 export const useLojaContext = () => useContext(LojaContext)!;
 
 export default function LojaLayout() {
-  const { slug } = useParams();
+  const { slug: rawSlug } = useParams();
+  const slug = rawSlug?.toLowerCase();
   const { t, locale, setLocale } = useTranslation();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
