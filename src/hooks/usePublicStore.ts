@@ -79,11 +79,13 @@ export function usePublicStoreBySlug(slug: string | undefined) {
 
 export function useResolvedPublicStore(slug?: string) {
   const hostname = typeof window !== "undefined" ? normalizeDomain(window.location.hostname) : "";
-  const shouldResolveByDomain = !slug && hostname && !isPlatformHost(hostname);
+  const hostnameSlug = !slug ? getSlugFromHostname(hostname) : null;
+  const resolvedSlug = slug || hostnameSlug;
+  const shouldResolveByDomain = !resolvedSlug && hostname && !isPlatformHost(hostname);
 
   return useQuery({
-    queryKey: ["public_store_settings_resolved", slug, hostname],
-    enabled: !!slug || shouldResolveByDomain,
+    queryKey: ["public_store_settings_resolved", resolvedSlug, hostname],
+    enabled: !!resolvedSlug || shouldResolveByDomain,
     queryFn: async () => {
       // 1. Resolve by slug (explicit)
       if (slug) {
