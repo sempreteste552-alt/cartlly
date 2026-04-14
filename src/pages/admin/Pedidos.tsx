@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, 
   XCircle, Copy, FileText, Download, Search, Calendar as CalendarIcon, Printer,
-  Filter, FileSpreadsheet, FileJson, Share2, Info
+  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift
 } from "lucide-react";
 import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
