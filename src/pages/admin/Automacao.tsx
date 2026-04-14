@@ -145,6 +145,7 @@ export default function Automacao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { ctx } = useTenantContext();
+  const { data: storeSettings } = useStoreSettings();
   const hasAiTools = canAccess("ai_tools", ctx);
   const [editingRule, setEditingRule] = useState<string | null>(null);
   const [ruleEdits, setRuleEdits] = useState<Record<string, Partial<AutomationRule>>>({});
