@@ -234,28 +234,41 @@ export default function LojaLayout() {
   };
 
   const detectMyLocation = async () => {
-    try {
-      toast.info(locale === "pt" ? "📍 Detectando sua localização..." : locale === "en" ? "📍 Detecting your location..." : locale === "es" ? "📍 Detectando tu ubicación..." : "📍 Détection de votre position...");
-      const response = await fetch("https://ipapi.co/json/");
-      const data = await response.json();
-      if (data && data.postal) {
-        const cleanCep = data.postal.replace(/\D/g, "");
-        if (cleanCep.length === 8) {
-          setGlobalCep(cleanCep);
-          localStorage.setItem("global_cep", cleanCep);
-          const cityName = data.city ? `${data.city} - ${data.region_code || ""}` : "";
-          if (cityName) {
-            setGlobalCity(cityName);
-            localStorage.setItem("global_city", cityName);
-          }
-          toast.success(`📍 ${data.city || "Localização detectada"}`);
-        }
-      } else {
-        toast.error(locale === "pt" ? "Não foi possível detectar sua localização" : locale === "en" ? "Could not detect your location" : locale === "es" ? "No se pudo detectar tu ubicación" : "Impossible de détecter votre position");
+    const msgDetecting = locale === "pt" ? "📍 Detectando sua localização..." : locale === "en" ? "📍 Detecting your location..." : locale === "es" ? "📍 Detectando tu ubicación..." : "📍 Détection de votre position...";
+    const msgFail = locale === "pt" ? "Não foi possível detectar sua localização" : locale === "en" ? "Could not detect your location" : locale === "es" ? "No se pudo detectar tu ubicación" : "Impossible de détecter votre position";
+    toast.info(msgDetecting);
+
+    const applyCep = (cep: string, city: string) => {
+      setGlobalCep(cep);
+      localStorage.setItem("global_cep", cep);
+      if (city) {
+        setGlobalCity(city);
+        localStorage.setItem("global_city", city);
       }
-    } catch {
-      toast.error(locale === "pt" ? "Erro ao detectar localização" : locale === "en" ? "Error detecting location" : locale === "es" ? "Error al detectar la ubicación" : "Erreur lors de la détection de la position");
-    }
+      toast.success(`📍 ${city || (locale === "pt" ? "Localização detectada" : "Location detected")}`);
+    };
+
+    // Try ipapi.co
+    try {
+      const r = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      if (d?.postal) {
+        const c = d.postal.replace(/\D/g, "");
+        if (c.length === 8) { applyCep(c, d.city ? `${d.city} - ${d.region_code || ""}` : ""); return; }
+      }
+    } catch { /* fallback */ }
+
+    // Try ip-api.com
+    try {
+      const r = await fetch("https://ip-api.com/json/?fields=zip,city,regionName", { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      if (d?.zip) {
+        const c = d.zip.replace(/\D/g, "");
+        if (c.length === 8) { applyCep(c, d.city ? `${d.city} - ${d.regionName || ""}` : ""); return; }
+      }
+    } catch { /* fallback */ }
+
+    toast.error(msgFail);
   };
 
   const settings = settingsBySlug;
