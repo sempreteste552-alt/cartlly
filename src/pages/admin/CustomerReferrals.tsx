@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "@/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,8 +41,18 @@ export default function CustomerReferrals() {
 
   const filteredReferrals = (referrals || []).filter(r => 
     r.referrer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    r.referred?.name?.toLowerCase().includes(search.toLowerCase())
+    r.referred?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.referrer?.email?.toLowerCase().includes(search.toLowerCase()) ||
+    r.referred?.email?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const localStats = useMemo(() => {
+    return {
+      total: filteredReferrals.length,
+      completed: filteredReferrals.filter(r => r.status === "completed").length,
+      pending: filteredReferrals.filter(r => r.status === "pending").length,
+    };
+  }, [filteredReferrals]);
 
   return (
     <PlanGate feature="referral_program">
@@ -63,7 +73,7 @@ export default function CustomerReferrals() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total de Indicações</p>
-                  <h3 className="text-2xl font-bold">{stats?.total || 0}</h3>
+                  <h3 className="text-2xl font-bold">{localStats.total}</h3>
                 </div>
                 <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
                   <Users className="h-6 w-6 text-primary" />
@@ -75,8 +85,8 @@ export default function CustomerReferrals() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
-                  <h3 className="text-2xl font-bold text-green-600">{stats?.completed || 0}</h3>
+                  <p className="text-sm font-medium text-muted-foreground">Cadastros / Compras Indicadas</p>
+                  <h3 className="text-2xl font-bold text-green-600">{localStats.completed}</h3>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-green-600" />
@@ -88,8 +98,8 @@ export default function CustomerReferrals() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pendentes</p>
-                  <h3 className="text-2xl font-bold text-yellow-600">{stats?.pending || 0}</h3>
+                  <p className="text-sm font-medium text-muted-foreground">Indicações Pendentes</p>
+                  <h3 className="text-2xl font-bold text-yellow-600">{localStats.pending}</h3>
                 </div>
                 <div className="h-12 w-12 bg-yellow-100 rounded-full flex items-center justify-center">
                   <Filter className="h-6 w-6 text-yellow-600" />
