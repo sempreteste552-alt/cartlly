@@ -21,16 +21,18 @@ interface CustomerProfileModalProps {
   onOpenChange: (open: boolean) => void;
   storeUserId: string;
   basePath?: string;
+  isPremium?: boolean;
 }
 
-export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath }: CustomerProfileModalProps) {
+export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath, isPremium }: CustomerProfileModalProps) {
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
   const { wishlistIds, wishlistProducts, toggleWishlist } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
   const { data: loyaltyPoints } = useCustomerLoyaltyPoints(customer?.id, storeUserId);
-  const { data: loyaltyConfig } = useLoyaltyConfig();
+  const { data: loyaltyConfig } = useLoyaltyConfig(storeUserId);
   const { data: referrals } = useStoreCustomerReferrals(customer?.id, storeUserId);
   const [loading, setLoading] = useState(false);
+  const [showReferralRules, setShowReferralRules] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -128,10 +130,52 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" /> Minha Conta
+          <DialogTitle className="flex items-center justify-between pr-8">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5" /> Minha Conta
+            </div>
+            {isPremium && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => setShowReferralRules(!showReferralRules)}
+              >
+                <Gift className="h-5 w-5" />
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
+
+        {showReferralRules && isPremium && (
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <Gift className="h-5 w-5 text-primary" />
+              <h3 className="font-bold text-sm">Indique e Ganhe!</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              {loyaltyConfig?.referral_reward_description || "Compartilhe seu link exclusivo com amigos e ganhe recompensas especiais em cada compra realizada por eles!"}
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-white border rounded-lg px-3 py-2 text-[10px] font-mono truncate select-all">
+                {window.location.origin}{basePath}?ref={customer?.referral_code}
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-9 px-3 gap-1.5 shrink-0"
+                onClick={() => {
+                  const url = `${window.location.origin}${basePath}?ref=${customer?.referral_code}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success("Link de indicação copiado!");
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span className="text-xs">Copiar</span>
+              </Button>
+            </div>
+          </div>
+        )}
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Meus Dados</TabsTrigger>
