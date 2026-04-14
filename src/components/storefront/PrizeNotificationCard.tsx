@@ -107,7 +107,7 @@ export function PrizeNotificationCard({ customer, storeUserId, settings }: Prize
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm"
+        className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm"
       >
         <Card className="p-6 border-2 border-primary/20 shadow-2xl bg-card relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-2">
