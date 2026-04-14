@@ -539,6 +539,7 @@ export default function Automacao() {
                         <TableHead>Abandonado há</TableHead>
                         <TableHead>Status IA</TableHead>
                         <TableHead>Lembretes</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
