@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check } from "lucide-react";
+import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check, Package } from "lucide-react";
 import { useCustomerReferrals, useCustomerReferralStats } from "@/hooks/useCustomerReferrals";
 import { useLoyaltyConfig, useUpsertLoyaltyConfig } from "@/hooks/useLoyalty";
+import { useProducts, useUpdateProduct } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PlanGate } from "@/components/PlanGate";
@@ -24,6 +25,8 @@ export default function CustomerReferrals() {
   const { data: stats } = useCustomerReferralStats();
   const { data: config } = useLoyaltyConfig();
   const upsertConfig = useUpsertLoyaltyConfig();
+  const { data: products } = useProducts();
+  const updateProduct = useUpdateProduct();
 
   const [search, setSearch] = useState("");
   const [copied, setCopied] = useState(false);
@@ -100,6 +103,7 @@ export default function CustomerReferrals() {
           <TabsList>
             <TabsTrigger value="referrals">Indicados</TabsTrigger>
             <TabsTrigger value="config">Configurar Regras</TabsTrigger>
+            <TabsTrigger value="prizes">Produtos de Brinde / Prêmios</TabsTrigger>
           </TabsList>
 
           <TabsContent value="referrals" className="space-y-4 pt-4">
@@ -278,6 +282,70 @@ export default function CustomerReferrals() {
                     )}
                   </ul>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="prizes" className="pt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-primary" />
+                  Produtos de Brinde / Prêmios
+                </CardTitle>
+                <CardDescription>
+                  Selecione quais produtos são brindes ou prêmios. Produtos marcados ficam ocultos na loja, 
+                  disponíveis apenas para resgate de prêmios.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Preço</TableHead>
+                      <TableHead className="text-right">É um Prêmio?</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {!products || products.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                          Nenhum produto cadastrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      products.map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {product.image_url ? (
+                                <img src={product.image_url} alt={product.name} className="h-10 w-10 rounded-md object-cover" />
+                              ) : (
+                                <div className="h-10 w-10 bg-muted rounded-md flex items-center justify-center">
+                                  <Package className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-medium">{product.name}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">{product.description}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Switch 
+                              checked={!!product.is_prize} 
+                              onCheckedChange={(checked) => updateProduct.mutate({ id: product.id, is_prize: checked })}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
