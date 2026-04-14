@@ -58,7 +58,7 @@ export default function Pagamentos() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1" /> Transações</TabsTrigger>
-          <TabsTrigger value="config"><CreditCard className="h-4 w-4 mr-1" /> Métodos</TabsTrigger>
+          <TabsTrigger value="config"><CreditCard className="h-4 w-4 mr-1" /> Métodos Aceitos</TabsTrigger>
           <TabsTrigger value="gateway"><Zap className="h-4 w-4 mr-1" /> Gateway</TabsTrigger>
         </TabsList>
 
