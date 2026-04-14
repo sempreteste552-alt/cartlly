@@ -30,6 +30,7 @@ interface ProductFormProps {
     additionalImages?: string[];
     cost_price?: number;
     min_stock_alert?: number;
+    is_prize?: boolean;
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
