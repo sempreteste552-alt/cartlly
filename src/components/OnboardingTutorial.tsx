@@ -4,6 +4,7 @@ import "driver.js/dist/driver.css";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export const OnboardingTutorial = () => {
+  const { slug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -13,7 +14,10 @@ export const OnboardingTutorial = () => {
     const tutorialActive = sessionStorage.getItem("onboarding_tutorial_active");
 
     // Automatically activate tutorial for new users on their first visit to dashboard, but only up to 1 time
-    if (!tutorialCompleted && !tutorialActive && location.pathname === "/admin" && tutorialViews < 1) {
+    // We check for /painel/:slug
+    const isDashboard = location.pathname === `/painel/${slug}` || location.pathname === `/painel/${slug}/`;
+
+    if (!tutorialCompleted && !tutorialActive && isDashboard && tutorialViews < 1) {
       sessionStorage.setItem("onboarding_tutorial_active", "true");
       localStorage.setItem("onboarding_tutorial_views", (tutorialViews + 1).toString());
     }
@@ -36,7 +40,7 @@ export const OnboardingTutorial = () => {
       },
     };
 
-    if (currentPath === `/painel/${slug}`) {
+    if (currentPath === `/painel/${slug}` || currentPath === `/painel/${slug}/`) {
       const driverObj = driver({
         ...commonConfig,
         steps: [
@@ -290,12 +294,12 @@ export const OnboardingTutorial = () => {
       return () => observer.disconnect();
     }
 
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, slug]);
 
   return null;
 };
 
 export const startTutorial = () => {
   sessionStorage.setItem("onboarding_tutorial_active", "true");
-  window.location.href = "/admin"; // Force reload to start from dashboard
+  window.location.href = "/"; // Navigate to home to restart
 };
