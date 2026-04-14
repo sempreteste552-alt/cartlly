@@ -87,12 +87,12 @@ export function useResolvedPublicStore(slug?: string) {
     queryKey: ["public_store_settings_resolved", resolvedSlug, hostname],
     enabled: !!resolvedSlug || shouldResolveByDomain,
     queryFn: async () => {
-      // 1. Resolve by slug (explicit)
-      if (slug) {
+      // 1. Resolve by slug (explicit or subdomain)
+      if (resolvedSlug) {
         const { data, error } = await supabase
           .from("store_settings_public")
           .select("*")
-          .eq("store_slug", slug)
+          .eq("store_slug", resolvedSlug)
           .maybeSingle();
         if (error) throw error;
         return data;
