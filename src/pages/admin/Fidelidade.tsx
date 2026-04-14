@@ -21,6 +21,8 @@ export default function Fidelidade() {
   const [pointsPerReal, setPointsPerReal] = useState("1");
   const [redemptionRate, setRedemptionRate] = useState("0.01");
   const [minRedemption, setMinRedemption] = useState("100");
+  const [referralEnabled, setReferralEnabled] = useState(false);
+  const [referralPoints, setReferralPoints] = useState("50");
 
   useEffect(() => {
     if (config) {
