@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProducts } from "@/hooks/useProducts";
@@ -58,6 +58,7 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
 }
 
 export default function Dashboard() {
+  const { slug } = useParams();
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -366,7 +367,7 @@ export default function Dashboard() {
                 {metrics.outOfStock.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                    onClick={() => navigate(`/painel/${slug}/produtos`, { state: { editProductId: p.id } })}
                     className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left w-full"
                   >
                     {p.image_url ? (
@@ -385,7 +386,7 @@ export default function Dashboard() {
                 {metrics.lowStock.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}
+                    onClick={() => navigate(`/painel/${slug}/produtos`, { state: { editProductId: p.id } })}
                     className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left w-full"
                   >
                     {p.image_url ? (
@@ -593,7 +594,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate("/admin/produtos", { state: { editProductId: p.id } })}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => navigate(`/painel/${slug}/produtos`, { state: { editProductId: p.id } })}>
                         <TrendingUp className="h-3 w-3 text-muted-foreground" />
                       </Button>
                     </div>
