@@ -29,6 +29,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
   const [tab, setTab] = useState("profile");
   const { data: loyaltyPoints } = useCustomerLoyaltyPoints(customer?.id, storeUserId);
   const { data: loyaltyConfig } = useLoyaltyConfig();
+  const { data: referrals } = useStoreCustomerReferrals(customer?.id, storeUserId);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
