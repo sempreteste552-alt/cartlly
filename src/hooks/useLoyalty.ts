@@ -30,6 +30,8 @@ export function useUpsertLoyaltyConfig() {
       min_redemption: number;
       referral_enabled?: boolean;
       referral_reward_points?: number;
+      referral_reward_type?: string;
+      referral_reward_description?: string;
     }) => {
       const { data: existing } = await supabase
         .from("loyalty_config" as any)
