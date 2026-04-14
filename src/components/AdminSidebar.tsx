@@ -231,27 +231,6 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {pushNotifs.isSupported && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => {
-                      navigate(`${adminBasePath}/config?tab=push`);
-                      if (isMobile) setOpenMobile(false);
-                    }}
-                    className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
-                  >
-                     <div className="flex items-center gap-2 flex-1">
-                       <Bell className="h-4 w-4" />
-                       {!collapsed && <span>Push</span>}
-                       {!collapsed && (
-                         <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
-                           Novo
-                         </span>
-                       )}
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a
