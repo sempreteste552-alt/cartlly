@@ -32,6 +32,7 @@ interface ExtractedProduct {
   stock: number;
   variants?: ExtractedVariant[];
   selected: boolean;
+  image_index?: number;
 }
 
 export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
@@ -141,6 +142,10 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
       let variantsCreated = 0;
       for (const p of selected) {
         const categoryId = catMap[p.category.toLowerCase()] || null;
+        const imageUrl = p.image_index !== undefined && p.image_index >= 0 && imagePreviews[p.image_index] 
+          ? imagePreviews[p.image_index] 
+          : null;
+
         const { data: createdProduct, error } = await supabase.from("products").insert({
           name: p.name,
           description: p.description,
@@ -149,6 +154,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
           category_id: categoryId,
           user_id: user!.id,
           published: true,
+          image_url: imageUrl,
         }).select().single();
 
         if (!error && createdProduct) {
