@@ -345,6 +345,19 @@ export default function Automacao() {
     },
   });
 
+  const handleManualWhatsApp = (customer: any, cart: AbandonedCart) => {
+    if (!customer?.phone) {
+      toast.error("Cliente sem telefone cadastrado.");
+      return;
+    }
+    const storeName = (storeSettings as any)?.store_name || "nossa loja";
+    const items = Array.isArray(cart.items) ? cart.items : [];
+    const itemNames = items.slice(0, 2).map((i: any) => i.name).join(", ");
+    const text = `Olá ${customer.name}! Aqui é da ${storeName}. Notamos que você deixou alguns produtos no carrinho (${itemNames}). Gostaria de finalizar sua compra ou tirar alguma dúvida?`;
+    const phone = customer.phone.replace(/\D/g, "");
+    window.open(`https://wa.me/${phone.startsWith('55') ? phone : '55' + phone}?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
   // === HELPERS ===
 
   const statusColor = (s: string) => s === "sent" ? "default" : s === "failed" ? "destructive" : s === "skipped" ? "outline" : "secondary";
