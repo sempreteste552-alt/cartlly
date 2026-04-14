@@ -234,7 +234,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
               {pushNotifs.isSupported && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => navigate(`${adminBasePath}/config?tab=push`)}
+                    onClick={() => {
+                      navigate(`${adminBasePath}/config?tab=push`);
+                      if (isMobile) setOpenMobile(false);
+                    }}
                     className="hover:bg-sidebar-accent/60 transition-colors rounded-lg flex flex-col items-start gap-1 h-auto py-2"
                   >
                      <div className="flex items-center gap-2 flex-1">
