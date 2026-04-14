@@ -73,6 +73,15 @@ export default function Fidelidade() {
         <p className="text-muted-foreground">Configure cashback e pontos para seus clientes</p>
       </div>
 
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/admin/indicacoes">
+            <Gift className="h-4 w-4 mr-2" />
+            Minhas Indicações (Programa de Afiliados)
+          </Link>
+        </Button>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
