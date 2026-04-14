@@ -141,11 +141,14 @@ export default function LojaLayout() {
   }, [(settingsBySlug as any)?.language, locale, setLocale]);
 
   // Real-time store status monitoring
+  const { refetch: refetchTheme } = usePublicThemeConfig(settingsBySlug?.user_id);
+  const { refetch: refetchMarketing } = usePublicMarketingConfig(settingsBySlug?.user_id);
+
   useEffect(() => {
-    if (!settingsBySlug?.id) return;
+    if (!settingsBySlug?.id || !settingsBySlug?.user_id) return;
 
     const channel = supabase
-      .channel(`store-status-${settingsBySlug.id}`)
+      .channel(`store-updates-${settingsBySlug.id}`)
       .on(
         "postgres_changes",
         {
@@ -155,7 +158,34 @@ export default function LojaLayout() {
           filter: `id=eq.${settingsBySlug.id}`,
         },
         () => {
+          console.log("Store settings updated, refetching...");
           refetchSettings();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "store_theme_config",
+          filter: `user_id=eq.${settingsBySlug.user_id}`,
+        },
+        () => {
+          console.log("Theme config updated, refetching...");
+          refetchTheme();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "store_marketing_config",
+          filter: `user_id=eq.${settingsBySlug.user_id}`,
+        },
+        () => {
+          console.log("Marketing config updated, refetching...");
+          refetchMarketing();
         }
       )
       .subscribe();
@@ -163,7 +193,7 @@ export default function LojaLayout() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [settingsBySlug?.id, refetchSettings]);
+  }, [settingsBySlug?.id, settingsBySlug?.user_id, refetchSettings, refetchTheme, refetchMarketing]);
 
   const lookupCepCity = async (cepVal: string) => {
     try {
