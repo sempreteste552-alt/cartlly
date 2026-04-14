@@ -443,7 +443,105 @@ export default function Pedidos() {
                             <Gift className="h-3 w-3" />
                             Indicação: {order.referral_code}
                           </div>
-                        )}
+        </TabsContent>
+
+        <TabsContent value="carrinhos" className="space-y-6 animate-in fade-in-50 duration-300">
+          <Card className="border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                Recuperação de Vendas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!abandonedCarts?.length ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <CheckCircle className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground">Tudo limpo!</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">Não há carrinhos abandonados no momento. Bom trabalho!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cliente</TableHead>
+                        <TableHead>Produtos</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Abandonado em</TableHead>
+                        <TableHead>Lembretes</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {abandonedCarts.map((cart: any) => {
+                        const customer = (customerData as any)?.[cart.customer_id];
+                        const items = Array.isArray(cart.items) ? cart.items : [];
+                        const timeSince = formatDistanceToNow(new Date(cart.abandoned_at), { locale: ptBR, addSuffix: true });
+                        
+                        return (
+                          <TableRow key={cart.id}>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{customer?.name || "Cliente"}</span>
+                                <span className="text-[10px] text-muted-foreground">{customer?.phone || customer?.email || "—"}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs">{items.length} item(s)</span>
+                              <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                                {items.slice(0, 2).map((i: any) => i.name).join(", ")}
+                              </p>
+                            </TableCell>
+                            <TableCell className="font-medium text-sm">{formatPrice(cart.total)}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{timeSince}</TableCell>
+                            <TableCell>
+                              <Badge variant={cart.reminder_sent_count > 0 ? "default" : "outline"} className="text-[10px]">
+                                {cart.reminder_sent_count}/5
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1.5">
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-8 w-8 text-green-600 border-green-200 bg-green-50 hover:bg-green-100" 
+                                  onClick={() => {
+                                    if (!customer?.phone) {
+                                      toast.error("Cliente sem telefone.");
+                                      return;
+                                    }
+                                    const storeName = storeSettings?.store_name || "nossa loja";
+                                    const itemNames = items.slice(0, 2).map((i: any) => i.name).join(", ");
+                                    const text = `Olá ${customer.name}! Notamos que você deixou alguns itens no carrinho na ${storeName} (${itemNames}). Gostaria de finalizar sua compra?`;
+                                    window.open(`https://wa.me/${customer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+                                  }}
+                                  title="Recuperar via WhatsApp"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                                  // Reuse the selectedOrder state but adapted for cart? 
+                                  // Or just use a simple alert/toast for now.
+                                  toast.info(`Itens: ${items.map((i: any) => `${i.quantity}x ${i.name}`).join(", ")}`);
+                                }}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
                         {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
                       </div>
                     </TableCell>
