@@ -50,6 +50,7 @@ export interface LojaContextType {
   searchTerm: string;
   setSearchTerm: (s: string) => void;
   storeUserId?: string;
+  customer?: any;
   openCart: () => void;
   basePath: string;
   globalCep: string;
