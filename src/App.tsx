@@ -40,6 +40,7 @@ const WhatsAppIA = lazy(() => import("./pages/admin/WhatsAppIA"));
 const Notificacoes = lazy(() => import("./pages/admin/Notificacoes"));
 const Suporte = lazy(() => import("./pages/admin/Suporte"));
 const MinhaRoleta = lazy(() => import("./pages/admin/MinhaRoleta"));
+const VendasExternas = lazy(() => import("./pages/admin/VendasExternas"));
 
 // Store/Shop pages
 const LojaPolitica = lazy(() => import("./pages/loja/LojaPolitica"));
@@ -179,6 +180,7 @@ const App = () => {
                     <Route path="notificacoes" element={<Notificacoes />} />
                     <Route path="suporte" element={<Suporte />} />
                     <Route path="roleta" element={<MinhaRoleta />} />
+                    <Route path="vendas-externas" element={<VendasExternas />} />
                   </Route>
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
