@@ -1,35 +1,7 @@
-import { useEffect, useLayoutEffect, useState, useMemo, type CSSProperties } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useMotivationalPush } from "@/hooks/useMotivationalPush";
-import { AdminSidebar } from "@/components/AdminSidebar";
-import { Outlet, useParams } from "react-router-dom";
-import { useStoreSettings } from "@/hooks/useStoreSettings";
-import { AIChatWidget } from "@/components/AIChatWidget";
-import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
-import { WelcomeConfetti } from "@/components/WelcomeConfetti";
-import { AdminNotificationsBell } from "@/components/AdminNotificationsBell";
-import { AdminPendingOrdersAlert } from "@/components/admin/AdminPendingOrdersAlert";
-import { AdminPushBanner } from "@/components/AdminPushBanner";
-import { TrialBanner } from "@/components/TrialBanner";
-import { AdminAnnouncementBanner } from "@/components/admin/AdminAnnouncementBanner";
-import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePwaManifest } from "@/hooks/usePwaManifest";
-import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
-import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
-import { Badge } from "@/components/ui/badge";
-import { usePlanFeatures } from "@/hooks/usePlanFeatures";
-import { useTenantContext } from "@/hooks/useTenantContext";
-import { canAccess } from "@/lib/planPermissions";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Crown, Clock, HelpCircle } from "lucide-react";
-import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { isLocale, useTranslation } from "@/i18n";
-import { isPlatformHost } from "@/lib/storeDomain";
-import { useLocation } from "react-router-dom";
+import { useEffect, useLayoutEffect, useState, useMemo, Suspense, type CSSProperties } from "react";
+// ... keep existing code
+import { useLocation, Outlet, useParams } from "react-router-dom";
+
 
 export function AdminLayout() {
   const location = useLocation();
