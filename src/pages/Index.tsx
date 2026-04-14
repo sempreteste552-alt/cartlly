@@ -27,17 +27,11 @@ const Index = () => {
           if (store?.store_slug) {
             navigate(`/painel/${store.store_slug}`);
           } else {
-            // Check if it's a customer
-            if (user.user_metadata?.is_customer) {
-              const lastStore = localStorage.getItem("last_visited_store");
-              if (lastStore) {
-                navigate(`/loja/${lastStore}`);
-              } else {
-                navigate("/login");
-              }
-            } else {
-              navigate("/setup-store");
-            }
+            // Even if it's a customer, we don't automatically redirect them 
+            // to their last visited store from the platform root to avoid "trapping" them.
+            // If they are a customer trying to access the platform root, they will go to setup-store
+            // where ProtectedRoute will correctly show them an "Access Restricted" screen if they are not a merchant.
+            navigate("/setup-store");
           }
         }
       };
