@@ -121,6 +121,68 @@ export default function Clientes() {
     onSuccess: () => toast.success("Notificação enviada ao painel do admin!"),
     onError: (e) => toast.error("Erro: " + e.message),
   });
+  
+  const { data: prizeProducts } = useQuery({
+    queryKey: ["prize_products", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, price")
+        .eq("user_id", user!.id)
+        .eq("is_prize", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: customerPrizes, refetch: refetchCustomerPrizes } = useQuery({
+    queryKey: ["customer_prizes_admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_prizes")
+        .select("*, products(name, image_url), customers(name, email)")
+        .eq("store_user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const releasePrizeMutation = useMutation({
+    mutationFn: async ({ customerId, productId }: { customerId: string; productId: string }) => {
+      const { error } = await supabase.from("customer_prizes").insert({
+        customer_id: customerId,
+        product_id: productId,
+        store_user_id: user!.id,
+        status: "released",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchCustomerPrizes();
+      setIsPrizeDialogOpen(false);
+      setPrizeProductId("");
+      toast.success("Prêmio liberado com sucesso!");
+    },
+    onError: (e) => toast.error("Erro ao liberar prêmio: " + e.message),
+  });
+
+  const markPrizeAsDeliveredMutation = useMutation({
+    mutationFn: async (prizeId: string) => {
+      const { error } = await supabase
+        .from("customer_prizes")
+        .update({ status: "delivered", delivered_at: new Date().toISOString() })
+        .eq("id", prizeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchCustomerPrizes();
+      toast.success("Prêmio marcado como entregue!");
+    },
+    onError: (e) => toast.error("Erro ao atualizar prêmio: " + e.message),
+  });
 
   const filtered = useMemo(() => {
     if (!customers) return [];
