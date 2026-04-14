@@ -257,6 +257,7 @@ export default function Indicacoes() {
   }, [referrals, statusFilter, paymentFilter, emailSearch]);
 
   return (
+    <PlanGate feature="referral_program">
     <div className="space-y-6">
       {/* Aggressive Hero */}
       <MotivationalHero
@@ -505,5 +506,6 @@ export default function Indicacoes() {
         </TabsContent>
       </Tabs>
     </div>
+    </PlanGate>
   );
 }
