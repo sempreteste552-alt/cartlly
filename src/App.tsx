@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,58 +10,59 @@ import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Loader2 } from "lucide-react";
-const AdminLayout = React.lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
-const Login = React.lazy(() => import("./pages/Login"));
-const Index = React.lazy(() => import("./pages/Index"));
-const ContaEmAnalise = React.lazy(() => import("./pages/ContaEmAnalise"));
-const Dashboard = React.lazy(() => import("./pages/admin/Dashboard"));
-const Produtos = React.lazy(() => import("./pages/admin/Produtos"));
-const Pedidos = React.lazy(() => import("./pages/admin/Pedidos"));
-const Configuracoes = React.lazy(() => import("./pages/admin/Configuracoes"));
-const Cupons = React.lazy(() => import("./pages/admin/Cupons"));
-const Gateway = React.lazy(() => import("./pages/admin/Gateway"));
-const Frete = React.lazy(() => import("./pages/admin/Frete"));
-const Clientes = React.lazy(() => import("./pages/admin/Clientes"));
-const Pagamentos = React.lazy(() => import("./pages/admin/Pagamentos"));
-const MeuPlano = React.lazy(() => import("./pages/admin/MeuPlano"));
-const Paginas = React.lazy(() => import("./pages/admin/Paginas"));
-const Automacao = React.lazy(() => import("./pages/admin/Automacao"));
-const SetupStore = React.lazy(() => import("./pages/admin/SetupStore"));
-const Cerebro = React.lazy(() => import("./pages/admin/Cerebro"));
-const Indicacoes = React.lazy(() => import("./pages/admin/Indicacoes"));
-const Politicas = React.lazy(() => import("./pages/admin/Politicas"));
-const Fidelidade = React.lazy(() => import("./pages/admin/Fidelidade"));
-const Lucro = React.lazy(() => import("./pages/admin/Lucro"));
-const Analytics = React.lazy(() => import("./pages/admin/Analytics"));
-const WhatsAppIA = React.lazy(() => import("./pages/admin/WhatsAppIA"));
-const Notificacoes = React.lazy(() => import("./pages/admin/Notificacoes"));
-const Suporte = React.lazy(() => import("./pages/admin/Suporte"));
-const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
-const LojaLayout = React.lazy(() => import("./pages/loja/LojaLayout"));
-const LojaHome = React.lazy(() => import("./pages/loja/LojaHome"));
-const LojaProduto = React.lazy(() => import("./pages/loja/LojaProduto"));
-const LojaCheckout = React.lazy(() => import("./pages/loja/LojaCheckout"));
-const LojaRastreio = React.lazy(() => import("./pages/loja/LojaRastreio"));
-const LojaCupons = React.lazy(() => import("./pages/loja/LojaCupons"));
-const LojaPagina = React.lazy(() => import("./pages/loja/LojaPagina"));
-const SuperAdminLayout = React.lazy(() => import("./pages/superadmin/SuperAdminLayout"));
-const SuperAdminDashboard = React.lazy(() => import("./pages/superadmin/SuperAdminDashboard"));
-const SuperAdminTenants = React.lazy(() => import("./pages/superadmin/SuperAdminTenants"));
-const SuperAdminPlanos = React.lazy(() => import("./pages/superadmin/SuperAdminPlanos"));
-const SuperAdminNotificacoes = React.lazy(() => import("./pages/superadmin/SuperAdminNotificacoes"));
-const SuperAdminConfig = React.lazy(() => import("./pages/superadmin/SuperAdminConfig"));
-const SuperAdminSolicitacoes = React.lazy(() => import("./pages/superadmin/SuperAdminSolicitacoes"));
-const SuperAdminAuditLogs = React.lazy(() => import("./pages/superadmin/SuperAdminAuditLogs"));
-const SuperAdminIndicacoes = React.lazy(() => import("./pages/superadmin/SuperAdminIndicacoes"));
-const SuperAdminBanners = React.lazy(() => import("./pages/superadmin/SuperAdminBanners"));
-const SuperAdminRoulette = React.lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
-const SuperAdminDominios = React.lazy(() => import("./pages/superadmin/SuperAdminDominios"));
-const MinhaRoleta = React.lazy(() => import("./pages/admin/MinhaRoleta"));
-const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
-const Termos = React.lazy(() => import("./pages/Termos"));
-const Privacidade = React.lazy(() => import("./pages/Privacidade"));
-const NotFound = React.lazy(() => import("./pages/NotFound"));
-const StoreRoutes = React.lazy(() => import("./StoreRoutes"));
+
+const AdminLayout = lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
+const Login = lazy(() => import("./pages/Login"));
+const Index = lazy(() => import("./pages/Index"));
+const ContaEmAnalise = lazy(() => import("./pages/ContaEmAnalise"));
+const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
+const Produtos = lazy(() => import("./pages/admin/Produtos"));
+const Pedidos = lazy(() => import("./pages/admin/Pedidos"));
+const Configuracoes = lazy(() => import("./pages/admin/Configuracoes"));
+const Cupons = lazy(() => import("./pages/admin/Cupons"));
+const Gateway = lazy(() => import("./pages/admin/Gateway"));
+const Frete = lazy(() => import("./pages/admin/Frete"));
+const Clientes = lazy(() => import("./pages/admin/Clientes"));
+const Pagamentos = lazy(() => import("./pages/admin/Pagamentos"));
+const MeuPlano = lazy(() => import("./pages/admin/MeuPlano"));
+const Paginas = lazy(() => import("./pages/admin/Paginas"));
+const Automacao = lazy(() => import("./pages/admin/Automacao"));
+const SetupStore = lazy(() => import("./pages/admin/SetupStore"));
+const Cerebro = lazy(() => import("./pages/admin/Cerebro"));
+const Indicacoes = lazy(() => import("./pages/admin/Indicacoes"));
+const Politicas = lazy(() => import("./pages/admin/Politicas"));
+const Fidelidade = lazy(() => import("./pages/admin/Fidelidade"));
+const Lucro = lazy(() => import("./pages/admin/Lucro"));
+const Analytics = lazy(() => import("./pages/admin/Analytics"));
+const WhatsAppIA = lazy(() => import("./pages/admin/WhatsAppIA"));
+const Notificacoes = lazy(() => import("./pages/admin/Notificacoes"));
+const Suporte = lazy(() => import("./pages/admin/Suporte"));
+const LojaPolitica = lazy(() => import("./pages/loja/LojaPolitica"));
+const LojaLayout = lazy(() => import("./pages/loja/LojaLayout"));
+const LojaHome = lazy(() => import("./pages/loja/LojaHome"));
+const LojaProduto = lazy(() => import("./pages/loja/LojaProduto"));
+const LojaCheckout = lazy(() => import("./pages/loja/LojaCheckout"));
+const LojaRastreio = lazy(() => import("./pages/loja/LojaRastreio"));
+const LojaCupons = lazy(() => import("./pages/loja/LojaCupons"));
+const LojaPagina = lazy(() => import("./pages/loja/LojaPagina"));
+const SuperAdminLayout = lazy(() => import("./pages/superadmin/SuperAdminLayout"));
+const SuperAdminDashboard = lazy(() => import("./pages/superadmin/SuperAdminDashboard"));
+const SuperAdminTenants = lazy(() => import("./pages/superadmin/SuperAdminTenants"));
+const SuperAdminPlanos = lazy(() => import("./pages/superadmin/SuperAdminPlanos"));
+const SuperAdminNotificacoes = lazy(() => import("./pages/superadmin/SuperAdminNotificacoes"));
+const SuperAdminConfig = lazy(() => import("./pages/superadmin/SuperAdminConfig"));
+const SuperAdminSolicitacoes = lazy(() => import("./pages/superadmin/SuperAdminSolicitacoes"));
+const SuperAdminAuditLogs = lazy(() => import("./pages/superadmin/SuperAdminAuditLogs"));
+const SuperAdminIndicacoes = lazy(() => import("./pages/superadmin/SuperAdminIndicacoes"));
+const SuperAdminBanners = lazy(() => import("./pages/superadmin/SuperAdminBanners"));
+const SuperAdminRoulette = lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
+const SuperAdminDominios = lazy(() => import("./pages/superadmin/SuperAdminDominios"));
+const MinhaRoleta = lazy(() => import("./pages/admin/MinhaRoleta"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Termos = lazy(() => import("./pages/Termos"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const StoreRoutes = lazy(() => import("./StoreRoutes"));
 
 import { isPlatformHost } from "./lib/storeDomain";
 
@@ -74,7 +76,7 @@ const queryClient = new QueryClient({
 });
 
 // Simple error boundary to catch and show something if it crashes
-import React from "react";
+// React import moved to top
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
     super(props);
@@ -114,7 +116,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>}>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>}>
             <ScrollToTop />
             <AuthProvider>
               {!isPlatform ? (
@@ -192,7 +194,7 @@ const App = () => {
                 </Routes>
               )}
             </AuthProvider>
-            </React.Suspense>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
