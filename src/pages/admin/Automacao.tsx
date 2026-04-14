@@ -882,6 +882,42 @@ export default function Automacao() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!selectedCartItems} onOpenChange={(o) => !o && setSelectedCartItems(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-primary" /> Itens no Carrinho
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {selectedCartItems?.map((item: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 border-b pb-3 last:border-0 last:pb-0">
+                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Package className="h-6 w-6 text-muted-foreground/40" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">R$ {Number(item.price).toFixed(2)} x {item.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-primary">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+            <div className="pt-2 flex justify-between items-center border-t">
+              <span className="text-sm font-medium">Total do Carrinho</span>
+              <span className="text-lg font-bold text-primary">
+                R$ {selectedCartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     </PlanGate>
   );
