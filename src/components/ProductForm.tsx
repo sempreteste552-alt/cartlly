@@ -78,6 +78,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       setBadge((initialData as any)?.badge ?? "");
       setCostPrice((initialData as any)?.cost_price?.toString() ?? "");
       setMinStockAlert((initialData as any)?.min_stock_alert?.toString() ?? "5");
+      setIsPrize((initialData as any)?.is_prize ?? false);
     }
   }, [initialData]);
 
