@@ -54,7 +54,7 @@ export async function awardReferralReward(
         .select("*")
         .eq("customer_id", referrerId)
         .eq("store_user_id", storeUserId)
-        .maybeSingle();
+        .maybeSingle() as any;
 
       if (existingPoints) {
         await supabase
