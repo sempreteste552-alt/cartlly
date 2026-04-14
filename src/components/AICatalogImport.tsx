@@ -405,11 +405,19 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                   }`}>
                     {product.selected && <Check className="h-3 w-3" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                    </div>
+                  <div className="flex-1 min-w-0 flex gap-3">
+                    {product.image_index !== undefined && product.image_index >= 0 && imagePreviews[product.image_index] && (
+                      <img 
+                        src={imagePreviews[product.image_index]} 
+                        alt={product.name} 
+                        className="h-16 w-16 rounded object-cover border border-border shrink-0" 
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      </div>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.description}</p>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
