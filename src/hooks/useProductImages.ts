@@ -39,6 +39,7 @@ export function usePublicProductImages(productIds: string[]) {
         if (!map[img.product_id].includes(img.image_url)) map[img.product_id].push(img.image_url);
       });
       return map;
+    },
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
