@@ -242,6 +242,9 @@ export default function Clientes() {
           <p className="text-muted-foreground">{t.customers.totalCustomers}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setIsManagePrizesOpen(true)}>
+            <Gift className="mr-1.5 h-4 w-4" /> Prêmios Liberados
+          </Button>
           <Badge variant="secondary" className="px-3 py-1">
             <Users className="mr-1.5 h-4 w-4" /> {customers?.length || 0}
           </Badge>
