@@ -19,7 +19,7 @@ interface Props {
   onAddToCart?: (name: string, image?: string | null) => void;
 }
 
-export function GenericProductSection({ section, products, cart, basePath = "/loja", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
+export function GenericProductSection({ section, products, cart, basePath = "", primaryColor, buttonColor, buttonTextColor, onAddToCart }: Props) {
   const { locale } = useTranslation();
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(locale === "en" ? "en-US" : locale === "es" ? "es-ES" : locale === "fr" ? "fr-FR" : "pt-BR", { style: "currency", currency: "BRL" }).format(price);
@@ -59,6 +59,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
   return (
     <SectionWrapper section={section} primaryColor={primaryColor}>
       <div 
+        id={`grid-${section.id}`}
         className="grid" 
         style={{ 
           gridTemplateColumns: `repeat(var(--store-grid-cols-mobile, 2), 1fr)`,
@@ -68,7 +69,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
       >
         <style>{`
           @media (min-width: 640px) {
-            .grid { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
+            #grid-${section.id} { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
           }
         `}</style>
         {filteredProducts.map((product, index) => (
@@ -124,6 +125,7 @@ export function GenericProductSection({ section, products, cart, basePath = "/lo
                   disabled={product.stock <= 0 && !product.made_to_order}
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     cart?.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
                     onAddToCart?.(product.name, product.image_url);
                   }}
