@@ -28,7 +28,7 @@ export default function LojaHome() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useTranslation();
-  const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, searchTerm, settings, storeUserId, openCart, basePath, customer } = useLojaContext();
   const localeTag = getLocaleTag(locale);
   const storeText = {
     pt: { other: "Outros" },
