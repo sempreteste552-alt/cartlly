@@ -665,7 +665,7 @@ export default function LojaLayout() {
               {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            <Link to={basePath} className="flex items-center gap-2 shrink-0">
+            <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
               <div className="relative inline-flex items-center">
                 {settings?.logo_url ? (
                   <div className="relative">

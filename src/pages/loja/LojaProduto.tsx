@@ -370,7 +370,7 @@ export default function LojaProduto() {
         .pdp-reveal-d4 { animation-delay: 0.35s; }
         .pdp-reveal-d5 { animation-delay: 0.45s; }
       `}</style>
-      <Link to={basePath} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 pdp-reveal">
+      <Link to={basePath || "/"} className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 pdp-reveal">
         <ArrowLeft className="h-4 w-4 mr-1" /> {t.common.back}
       </Link>
 
