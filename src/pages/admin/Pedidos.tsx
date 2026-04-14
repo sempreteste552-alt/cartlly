@@ -266,8 +266,8 @@ export default function Pedidos() {
     <div className="space-y-4 sm:space-y-6">
       <div id="orders-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Pedidos</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe e gerencie os pedidos da loja</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Vendas e Carrinhos</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
@@ -291,7 +291,25 @@ export default function Pedidos() {
         </div>
       </div>
 
-      <Card className="border-border">
+      <Tabs defaultValue="pedidos" className="space-y-6">
+        <TabsList className="bg-muted/50 p-1">
+          <TabsTrigger value="pedidos" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Package className="h-4 w-4" />
+            Pedidos
+          </TabsTrigger>
+          <TabsTrigger value="carrinhos" className="gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <ShoppingCart className="h-4 w-4" />
+            Carrinhos Abandonados
+            {abandonedCarts && abandonedCarts.length > 0 && (
+              <Badge variant="secondary" className="h-5 px-1.5 ml-1 text-[10px] bg-primary/10 text-primary border-0">
+                {abandonedCarts.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pedidos" className="space-y-6 animate-in fade-in-50 duration-300">
+          <Card className="border-border">
         <CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
