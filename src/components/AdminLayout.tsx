@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, useMemo, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
