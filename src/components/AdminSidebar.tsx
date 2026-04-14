@@ -132,10 +132,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
-                        end={item.url === "/admin"}
+                        end={item.url === adminBasePath}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                         className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        onClick={() => isMobile && setOpenMobile(false)}
                       >
                         <div className="relative">
                           <item.icon className="h-4 w-4" />
