@@ -16,6 +16,8 @@ export function usePublicProducts(storeUserId?: string) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
   });
 }
 
@@ -34,7 +36,7 @@ export function usePublicStoreSettings() {
       if (error) throw error;
       return data;
     },
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -161,6 +163,8 @@ export function usePublicCategories(storeUserId?: string) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 }
 
@@ -186,6 +190,7 @@ export function useAllProductReviews(productIds: string[]) {
       });
       return result;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 }
 
@@ -201,6 +206,7 @@ export function useBestSellingProducts(storeUserId?: string) {
       if (error) throw error;
       return new Set((data as any[])?.map((d: any) => d.product_id) ?? []);
     },
+    staleTime: 1000 * 60 * 30, // 30 minutes
   });
 }
 
@@ -238,5 +244,6 @@ export function usePublicProductVariants(productIds: string[]) {
       });
       return map;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }

@@ -28,6 +28,7 @@ export function useProductVariants(productId: string | undefined) {
       return data as ProductVariant[];
     },
     enabled: !!productId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 

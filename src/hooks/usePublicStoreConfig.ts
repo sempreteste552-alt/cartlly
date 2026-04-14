@@ -19,6 +19,7 @@ export function usePublicHomeSections(storeUserId?: string) {
       if (error) throw error;
       return (data || []) as unknown as StoreHomeSection[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -35,6 +36,7 @@ export function usePublicThemeConfig(storeUserId?: string) {
       if (error) throw error;
       return data as unknown as StoreThemeConfig | null;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
@@ -51,6 +53,7 @@ export function usePublicMarketingConfig(storeUserId?: string) {
       if (error) throw error;
       return data as unknown as StoreMarketingConfig | null;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
@@ -67,5 +70,6 @@ export function usePublicProductPageConfig(storeUserId?: string) {
       if (error) throw error;
       return data as unknown as StoreProductPageConfig | null;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }

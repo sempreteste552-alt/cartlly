@@ -1,5 +1,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts, usePublicProductVariants } from "@/hooks/usePublicStore";
 import { usePublicBanners } from "@/hooks/useStoreBanners";
 import { usePublicProductImages } from "@/hooks/useProductImages";
@@ -327,7 +329,29 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   productNameMap?: Record<string, string>;
 }) {
   const { t, locale } = useTranslation();
+  const queryClient = useQueryClient();
   const { ref, getItemStyle } = useStaggeredReveal(products.length, 70);
+  
+  const prefetchProduct = (productId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ["product_images", productId],
+      queryFn: async () => {
+        const { data, error } = await supabase.from("product_images").select("*").eq("product_id", productId).order("sort_order");
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 1000 * 60 * 10,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["product_variants", productId],
+      queryFn: async () => {
+        const { data, error } = await supabase.from("product_variants").select("*").eq("product_id", productId).order("variant_type", { ascending: true });
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 1000 * 60 * 10,
+    });
+  };
   const uiText = {
     pt: { shareLead: "Confira", copied: "Link copiado!", favorite: "Favoritar", share: "Compartilhar", new: "NOVO", recommended: "RECOMENDADO", or: "ou", cash: "à vista", inStock: "Em estoque" },
     en: { shareLead: "Check out", copied: "Link copied!", favorite: "Favorite", share: "Share", new: "NEW", recommended: "RECOMMENDED", or: "or", cash: "cash price", inStock: "In stock" },
@@ -372,7 +396,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
           ? additionalImages 
           : additionalImages.slice(1);
         return (
-          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group" style={{ ...getItemStyle(index), fontFamily: "var(--store-font-body)" }}>
+          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group" onMouseEnter={() => prefetchProduct(product.id)} style={{ ...getItemStyle(index), fontFamily: "var(--store-font-body)" }}>
             <Card 
               className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
               style={{ 

@@ -1,17 +1,19 @@
 import { Route, Routes } from "react-router-dom";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
-import LojaLayout from "./pages/loja/LojaLayout";
-import LojaHome from "./pages/loja/LojaHome";
-import LojaProduto from "./pages/loja/LojaProduto";
-import LojaCheckout from "./pages/loja/LojaCheckout";
-import LojaRastreio from "./pages/loja/LojaRastreio";
-import LojaCupons from "./pages/loja/LojaCupons";
-import LojaPagina from "./pages/loja/LojaPagina";
-import LojaPolitica from "./pages/loja/LojaPolitica";
+import React from "react";
+const LojaLayout = React.lazy(() => import("./pages/loja/LojaLayout"));
+const LojaHome = React.lazy(() => import("./pages/loja/LojaHome"));
+const LojaProduto = React.lazy(() => import("./pages/loja/LojaProduto"));
+const LojaCheckout = React.lazy(() => import("./pages/loja/LojaCheckout"));
+const LojaRastreio = React.lazy(() => import("./pages/loja/LojaRastreio"));
+const LojaCupons = React.lazy(() => import("./pages/loja/LojaCupons"));
+const LojaPagina = React.lazy(() => import("./pages/loja/LojaPagina"));
+const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
 
 export default function StoreRoutes() {
   return (
     <CustomerAuthProvider>
+      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">...</div>}>
       <Routes>
         <Route element={<LojaLayout />}>
           <Route index element={<LojaHome />} />
@@ -24,6 +26,7 @@ export default function StoreRoutes() {
           <Route path="legal/:policySlug" element={<LojaPolitica />} />
         </Route>
       </Routes>
+      </React.Suspense>
     </CustomerAuthProvider>
   );
 }

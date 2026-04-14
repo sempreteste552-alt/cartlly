@@ -17,6 +17,7 @@ export function useProductImages(productId: string | undefined) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -39,6 +40,7 @@ export function usePublicProductImages(productIds: string[]) {
       });
       return map;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
