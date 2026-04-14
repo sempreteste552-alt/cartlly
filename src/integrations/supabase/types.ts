@@ -1186,9 +1186,12 @@ export type Database = {
           points_per_real: number
           redemption_rate: number
           referral_enabled: boolean | null
+          referral_goal: number | null
+          referral_reward_condition: string | null
           referral_reward_description: string | null
           referral_reward_points: number | null
           referral_reward_type: string | null
+          referral_show_pending: boolean | null
           store_user_id: string
           updated_at: string
         }
@@ -1200,9 +1203,12 @@ export type Database = {
           points_per_real?: number
           redemption_rate?: number
           referral_enabled?: boolean | null
+          referral_goal?: number | null
+          referral_reward_condition?: string | null
           referral_reward_description?: string | null
           referral_reward_points?: number | null
           referral_reward_type?: string | null
+          referral_show_pending?: boolean | null
           store_user_id: string
           updated_at?: string
         }
@@ -1214,9 +1220,12 @@ export type Database = {
           points_per_real?: number
           redemption_rate?: number
           referral_enabled?: boolean | null
+          referral_goal?: number | null
+          referral_reward_condition?: string | null
           referral_reward_description?: string | null
           referral_reward_points?: number | null
           referral_reward_type?: string | null
+          referral_show_pending?: boolean | null
           store_user_id?: string
           updated_at?: string
         }
