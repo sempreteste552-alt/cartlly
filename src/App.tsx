@@ -20,7 +20,7 @@ const Produtos = lazy(() => import("./pages/admin/Produtos"));
 const Pedidos = lazy(() => import("./pages/admin/Pedidos"));
 const Configuracoes = lazy(() => import("./pages/admin/Configuracoes"));
 const Cupons = lazy(() => import("./pages/admin/Cupons"));
-const Gateway = lazy(() => import("./pages/admin/Gateway"));
+
 const Frete = lazy(() => import("./pages/admin/Frete"));
 const Clientes = lazy(() => import("./pages/admin/Clientes"));
 const Pagamentos = lazy(() => import("./pages/admin/Pagamentos"));
