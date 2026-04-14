@@ -34,6 +34,10 @@ export default function Clientes() {
   const [sortBy, setSortBy] = useState<"name" | "orders" | "spent">("name");
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPrizeDialogOpen, setIsPrizeDialogOpen] = useState(false);
+  const [selectedCustomerForPrize, setSelectedCustomerForPrize] = useState<any>(null);
+  const [prizeProductId, setPrizeProductId] = useState<string>("");
+  const [isManagePrizesOpen, setIsManagePrizesOpen] = useState(false);
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ["customers", user?.id],
