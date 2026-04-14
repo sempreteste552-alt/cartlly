@@ -12,7 +12,7 @@ export async function awardReferralReward(
       .from("loyalty_config" as any)
       .select("*")
       .eq("store_user_id", storeUserId)
-      .maybeSingle();
+      .maybeSingle() as any;
 
     if (!config || !config.referral_enabled) return;
     
