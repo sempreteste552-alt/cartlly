@@ -12,6 +12,7 @@ export function usePublicProducts(storeUserId?: string) {
         .select("*, categories(name)")
         .eq("published", true)
         .eq("user_id", storeUserId!)
+        .or("is_prize.is.null,is_prize.eq.false")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
