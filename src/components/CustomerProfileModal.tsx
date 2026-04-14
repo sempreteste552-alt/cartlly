@@ -11,8 +11,9 @@ import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCustomerLoyaltyPoints, useLoyaltyConfig } from "@/hooks/useLoyalty";
+import { useStoreCustomerReferrals } from "@/hooks/useCustomerReferrals";
 import { Link } from "react-router-dom";
-import { Award, Star, TrendingUp, Gift, Share2, Copy, Check } from "lucide-react";
+import { Award, Star, TrendingUp, Gift, Share2, Copy, Check, Users as UsersIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface CustomerProfileModalProps {
