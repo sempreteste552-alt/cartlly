@@ -194,7 +194,7 @@ const App = () => {
                 </Routes>
               )}
             </AuthProvider>
-            </React.Suspense>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
