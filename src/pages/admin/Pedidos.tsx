@@ -68,6 +68,19 @@ export default function Pedidos() {
   const { data: statusHistory } = useOrderStatusHistory(selectedOrderId);
   const { data: orderPayment } = useOrderPayment(selectedOrderId);
 
+  const customerIds = useMemo(() => [...new Set(abandonedCarts?.map(c => (c as any).customer_id).filter(Boolean) || [])], [abandonedCarts]);
+  const { data: customerData } = useQuery({
+    queryKey: ["abandoned_customer_names", customerIds.join(",")],
+    queryFn: async () => {
+      if (customerIds.length === 0) return {};
+      const { data } = await supabase.from("customers").select("id, name, email, phone").in("id", customerIds as string[]);
+      const map: Record<string, any> = {};
+      (data || []).forEach(c => { map[c.id] = c; });
+      return map;
+    },
+    enabled: customerIds.length > 0,
+  });
+
   // Realtime for orders
   useEffect(() => {
     const channel = supabase
