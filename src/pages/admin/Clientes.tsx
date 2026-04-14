@@ -369,6 +369,15 @@ export default function Clientes() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedCustomerForPrize(customer);
+                              setIsPrizeDialogOpen(true);
+                            }}
+                            className="text-amber-600 font-medium"
+                          >
+                            <Gift className="mr-2 h-4 w-4" /> Liberar Prêmio / Brinde
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
                             onClick={() => notifyAdminMutation.mutate(customer)}
                             className="text-primary font-medium"
                           >
