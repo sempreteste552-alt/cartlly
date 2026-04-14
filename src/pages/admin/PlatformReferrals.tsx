@@ -176,6 +176,31 @@ export default function Indicacoes() {
   const PRODUCTION_ORIGIN = "https://www.cartlly.lovable.app";
   const referralLink = code?.code ? `${PRODUCTION_ORIGIN}/login?ref=${code.code}` : "";
 
+  const filteredReferrals = useMemo(() => {
+    let list = (referrals || []).filter((r: any) => r.status !== "clicked");
+    if (statusFilter !== "all") list = list.filter((r: any) => r.status === statusFilter);
+    if (paymentFilter !== "all") {
+      if (paymentFilter === "approved") list = list.filter((r: any) => r.payment_status === "approved");
+      else if (paymentFilter === "pending") list = list.filter((r: any) => !r.payment_status || r.payment_status === "pending");
+      else if (paymentFilter === "refused") list = list.filter((r: any) => r.payment_status === "refused");
+    }
+    if (emailSearch.trim()) {
+      const q = emailSearch.toLowerCase();
+      list = list.filter((r: any) => r.referred_email?.toLowerCase().includes(q));
+    }
+    return list;
+  }, [referrals, statusFilter, paymentFilter, emailSearch]);
+
+  const localStats = useMemo(() => {
+    const clicks = stats.clicks; 
+    const registered = filteredReferrals.length;
+    const approved = filteredReferrals.filter((r: any) => ['payment_approved', 'active'].includes(r.status)).length;
+    const activeDiscounts = filteredReferrals.filter((r: any) => r.discount_applied && r.status !== 'cancelled').length;
+    const flagged = filteredReferrals.filter((r: any) => r.flagged).length;
+    const totalDiscount = filteredReferrals.reduce((sum: number, r: any) => sum + (Number(r.discount_amount) || 0), 0);
+    return { clicks, registered, approved, activeDiscounts, flagged, totalDiscount };
+  }, [filteredReferrals, stats.clicks]);
+
   const fireMoneyEmojis = useCallback(() => {
     const emojis = ["💵", "💰", "🤑", "💲", "💸"];
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
@@ -241,27 +266,12 @@ export default function Indicacoes() {
     }
   };
 
-  const filteredReferrals = useMemo(() => {
-    let list = (referrals || []).filter((r: any) => r.status !== "clicked");
-    if (statusFilter !== "all") list = list.filter((r: any) => r.status === statusFilter);
-    if (paymentFilter !== "all") {
-      if (paymentFilter === "approved") list = list.filter((r: any) => r.payment_status === "approved");
-      else if (paymentFilter === "pending") list = list.filter((r: any) => !r.payment_status || r.payment_status === "pending");
-      else if (paymentFilter === "refused") list = list.filter((r: any) => r.payment_status === "refused");
-    }
-    if (emailSearch.trim()) {
-      const q = emailSearch.toLowerCase();
-      list = list.filter((r: any) => r.referred_email?.toLowerCase().includes(q));
-    }
-    return list;
-  }, [referrals, statusFilter, paymentFilter, emailSearch]);
-
   return (
     <PlanGate feature="referral_program">
     <div className="space-y-6">
       {/* Aggressive Hero */}
       <MotivationalHero
-        stats={stats}
+        stats={localStats}
         referralLink={referralLink}
         handleCopy={handleCopy}
         handleShare={handleShare}
@@ -277,25 +287,25 @@ export default function Indicacoes() {
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
               <MousePointerClick className="h-3.5 w-3.5" /> Cliques
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.clicks}</p>
+            <p className="text-2xl font-bold text-foreground">{localStats.clicks}</p>
             <p className="text-[10px] text-muted-foreground">Pessoas acessaram seu link</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-              <Users className="h-3.5 w-3.5" /> Cadastros
+              <Users className="h-3.5 w-3.5" /> Cadastros Indicados
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.registered}</p>
+            <p className="text-2xl font-bold text-foreground">{localStats.registered}</p>
             <p className="text-[10px] text-muted-foreground">Se cadastraram</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4 pb-3 px-4">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-              <CreditCard className="h-3.5 w-3.5" /> Pagos
+              <CreditCard className="h-3.5 w-3.5" /> Compras Indicadas
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.approved}</p>
+            <p className="text-2xl font-bold text-foreground">{localStats.approved}</p>
             <p className="text-[10px] text-muted-foreground">Pagamento aprovado ✅</p>
           </CardContent>
         </Card>
@@ -304,7 +314,7 @@ export default function Indicacoes() {
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
               <TrendingUp className="h-3.5 w-3.5" /> Ativos
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.activeDiscounts}</p>
+            <p className="text-2xl font-bold text-foreground">{localStats.activeDiscounts}</p>
             <p className="text-[10px] text-muted-foreground">Gerando desconto</p>
           </CardContent>
         </Card>
@@ -313,7 +323,7 @@ export default function Indicacoes() {
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
               <AlertTriangle className="h-3.5 w-3.5" /> Suspeitos
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.flagged}</p>
+            <p className="text-2xl font-bold text-foreground">{localStats.flagged}</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 shadow-sm">
@@ -322,7 +332,7 @@ export default function Indicacoes() {
               <Gift className="h-3.5 w-3.5" /> Seu Desconto
             </div>
             <p className="text-2xl font-black text-primary">
-              R$ {stats.totalDiscount.toFixed(2).replace(".", ",")}
+              R$ {localStats.totalDiscount.toFixed(2).replace(".", ",")}
             </p>
             <p className="text-[10px] text-primary/70 font-medium">Economizado 🎉</p>
           </CardContent>
@@ -330,7 +340,7 @@ export default function Indicacoes() {
       </div>
 
       {/* Milestones */}
-      <MilestoneCards stats={stats} />
+      <MilestoneCards stats={localStats} />
 
       {/* How it works mini-guide */}
       <Card className="border-dashed border-2 border-primary/20 bg-primary/[0.02]">

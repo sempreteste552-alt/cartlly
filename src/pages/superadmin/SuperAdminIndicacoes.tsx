@@ -242,52 +242,6 @@ export default function SuperAdminIndicacoes() {
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
 
-  // Stats
-  const totalReferrals = referrals?.length || 0;
-  const totalClicked = referrals?.filter((r: any) => r.status === "clicked").length || 0;
-  const totalRegistered = referrals?.filter((r: any) => r.status !== "clicked").length || 0;
-  const totalSubscribed = referrals?.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length || 0;
-  const totalApproved = referrals?.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length || 0;
-  const totalNotCounted = referrals?.filter((r: any) => r.payment_status === "not_counted").length || 0;
-  const totalFlagged = referrals?.filter((r: any) => r.flagged).length || 0;
-  const totalCancelled = referrals?.filter((r: any) => r.status === "cancelled").length || 0;
-  const totalDiscountValue = discounts?.reduce((sum: number, d: any) => sum + (d.amount || 0), 0) || 0;
-  const totalClicks = codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
-  const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
-  const subRate = totalRegistered > 0 ? ((totalSubscribed / totalRegistered) * 100).toFixed(1) : "0";
-
-  const deviceBreakdown = useMemo(() => {
-    const map = { Mobile: 0, Desktop: 0, Tablet: 0, Desconhecido: 0 };
-    (referrals || []).forEach((r: any) => {
-      const { device } = parseDevice(r.user_agent);
-      map[device as keyof typeof map] = (map[device as keyof typeof map] || 0) + 1;
-    });
-    return map;
-  }, [referrals]);
-
-  const topReferrers = useMemo(() => {
-    if (!referrals) return [];
-    const map: Record<string, { count: number; approved: number; notCounted: number; storeName: string; storeSlug: string; revenue: number }> = {};
-    referrals.forEach((r: any) => {
-      const id = r.referrer_tenant_id;
-      if (!map[id]) {
-        map[id] = {
-          count: 0, approved: 0, notCounted: 0, revenue: 0,
-          storeName: r.referrer_store?.store_name || id.substring(0, 8),
-          storeSlug: r.referrer_store?.store_slug || ""
-        };
-      }
-      map[id].count++;
-      if (r.payment_status === "not_counted") {
-        map[id].notCounted++;
-      } else if (["payment_approved", "active"].includes(r.status)) {
-        map[id].approved++;
-        map[id].revenue += Number(r.discount_amount || 0);
-      }
-    });
-    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 6);
-  }, [referrals]);
-
   const filtered = useMemo(() => {
     let list = referrals || [];
     if (statusFilter !== "all") list = list.filter((r: any) => r.status === statusFilter);
@@ -318,6 +272,61 @@ export default function SuperAdminIndicacoes() {
     return list;
   }, [referrals, statusFilter, paymentFilter, fraudFilter, deviceFilter, emailSearch, tenantSearch]);
 
+  // Stats calculated from filtered list
+  const totalReferrals = filtered.length;
+  const totalClicked = filtered.filter((r: any) => r.status === "clicked").length;
+  const totalRegistered = filtered.filter((r: any) => r.status !== "clicked").length;
+  const totalSubscribed = filtered.filter((r: any) => ["subscribed", "payment_pending", "payment_approved", "active"].includes(r.status)).length;
+  const totalApproved = filtered.filter((r: any) => ["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted").length;
+  const totalNotCounted = filtered.filter((r: any) => r.payment_status === "not_counted").length;
+  const totalFlagged = filtered.filter((r: any) => r.flagged).length;
+  const totalCancelled = filtered.filter((r: any) => r.status === "cancelled").length;
+  
+  const totalDiscountValue = filtered.reduce((sum: number, r: any) => {
+    if (["payment_approved", "active"].includes(r.status) && r.payment_status !== "not_counted") {
+      return sum + Number(r.discount_amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  const totalClicks = tenantSearch.trim() 
+    ? filtered.filter((r: any) => r.status === "clicked").length 
+    : codes?.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0) || 0;
+    
+  const conversionRate = totalClicks > 0 ? ((totalRegistered / totalClicks) * 100).toFixed(1) : "0";
+  const subRate = totalRegistered > 0 ? ((totalSubscribed / totalRegistered) * 100).toFixed(1) : "0";
+
+  const deviceBreakdown = useMemo(() => {
+    const map = { Mobile: 0, Desktop: 0, Tablet: 0, Desconhecido: 0 };
+    filtered.forEach((r: any) => {
+      const { device } = parseDevice(r.user_agent);
+      map[device as keyof typeof map] = (map[device as keyof typeof map] || 0) + 1;
+    });
+    return map;
+  }, [filtered]);
+
+  const topReferrers = useMemo(() => {
+    const map: Record<string, { count: number; approved: number; notCounted: number; storeName: string; storeSlug: string; revenue: number }> = {};
+    filtered.forEach((r: any) => {
+      const id = r.referrer_tenant_id;
+      if (!map[id]) {
+        map[id] = {
+          count: 0, approved: 0, notCounted: 0, revenue: 0,
+          storeName: r.referrer_store?.store_name || id.substring(0, 8),
+          storeSlug: r.referrer_store?.store_slug || ""
+        };
+      }
+      map[id].count++;
+      if (r.payment_status === "not_counted") {
+        map[id].notCounted++;
+      } else if (["payment_approved", "active"].includes(r.status)) {
+        map[id].approved++;
+        map[id].revenue += Number(r.discount_amount || 0);
+      }
+    });
+    return Object.entries(map).sort((a, b) => b[1].count - a[1].count).slice(0, 6);
+  }, [filtered]);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
@@ -332,12 +341,12 @@ export default function SuperAdminIndicacoes() {
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalClicks}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Cadastrados</div>
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Cadastros Indicados</div>
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalRegistered}</p>
           <p className="text-[9px] sm:text-[10px] text-muted-foreground">{conversionRate}% conv.</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Pagos</div>
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Compras Indicadas</div>
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalApproved}</p>
         </CardContent></Card>
         <Card className="border-destructive/20 bg-destructive/5"><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
