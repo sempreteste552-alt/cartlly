@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { awardReferralReward } from "@/lib/loyalty";
 import { toast } from "sonner";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
@@ -90,6 +91,28 @@ export function useUpdateOrderStatus() {
         .update({ status })
         .eq("id", orderId);
       if (updateErr) throw updateErr;
+
+      // Handle referral rewards if order is delivered
+      if (status === "entregue") {
+        const { data: order } = await supabase
+          .from("orders")
+          .select("customer_email, user_id, id")
+          .eq("id", orderId)
+          .single();
+
+        if (order) {
+          const { data: customer } = await supabase
+            .from("customers")
+            .select("id")
+            .eq("email", order.customer_email)
+            .eq("store_user_id", order.user_id)
+            .maybeSingle();
+
+          if (customer) {
+            await awardReferralReward(order.user_id, customer.id, "sale", order.id);
+          }
+        }
+      }
 
       const { error: histErr } = await supabase
         .from("order_status_history")

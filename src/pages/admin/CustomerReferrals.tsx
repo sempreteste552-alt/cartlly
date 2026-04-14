@@ -72,7 +72,7 @@ export default function CustomerReferrals() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Concluídas (Vendas)</p>
+                  <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
                   <h3 className="text-2xl font-bold text-green-600">{stats?.completed || 0}</h3>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -187,6 +187,33 @@ export default function CustomerReferrals() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                   <div className="space-y-2">
+                    <Label>Condição da Recompensa</Label>
+                    <Select 
+                      value={config?.referral_reward_condition || "sale"} 
+                      onValueChange={(val) => upsertConfig.mutate({ ...config, referral_reward_condition: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Quando o cliente ganha?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lead">Apenas Cadastro (Lead)</SelectItem>
+                        <SelectItem value="sale">Compra Aprovada (Venda)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Meta de Indicações (Progresso)</Label>
+                    <Input 
+                      type="number" 
+                      value={config?.referral_goal || 5}
+                      onChange={(e) => upsertConfig.mutate({ ...config, referral_goal: Number(e.target.value) })}
+                      placeholder="Ex: 5"
+                    />
+                    <p className="text-xs text-muted-foreground">Define o objetivo final da barra de progresso do cliente</p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>Tipo de Recompensa</Label>
                     <Select 
                       value={config?.referral_reward_type || "points"} 
@@ -219,18 +246,36 @@ export default function CustomerReferrals() {
                       <Input 
                         value={config?.referral_reward_description || ""}
                         onChange={(e) => upsertConfig.mutate({ ...config, referral_reward_description: e.target.value })}
-                        placeholder="Ex: Cupom de 10% OFF ou 1 Hamburguer Grátis"
+                        placeholder="Ex: Cupom de 10% OFF"
                       />
                     </div>
                   )}
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Ocultar Indicações Pendentes</Label>
+                    <p className="text-sm text-muted-foreground">Mostra indicações para os clientes apenas quando forem finalizadas (cadastradas ou pagas)</p>
+                  </div>
+                  <Switch 
+                    checked={!(config?.referral_show_pending ?? true)} 
+                    onCheckedChange={(checked) => upsertConfig.mutate({ ...config, referral_show_pending: !checked })} 
+                  />
                 </div>
 
                 <div className="bg-muted p-4 rounded-lg">
                   <h4 className="text-sm font-bold mb-2">Como funciona?</h4>
                   <ul className="text-xs text-muted-foreground space-y-2 list-disc pl-4">
                     <li>O cliente acessa o painel dele na vitrine e copia o link de indicação único.</li>
-                    <li>Um amigo se cadastra e faz a primeira compra.</li>
-                    <li>Quando o status do pedido for "Entregue" ou "Concluído", a recompensa é liberada automaticamente.</li>
+                    <li>Um amigo se cadastra usando o link de indicação.</li>
+                    {config?.referral_reward_condition === "lead" ? (
+                      <li>A recompensa é liberada imediatamente após o cadastro do amigo ser confirmado.</li>
+                    ) : (
+                      <>
+                        <li>O amigo faz a primeira compra na vitrine.</li>
+                        <li>Quando o status do pedido for "Entregue", a recompensa é liberada automaticamente.</li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </CardContent>
