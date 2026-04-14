@@ -30,6 +30,7 @@ interface ProductFormProps {
     additionalImages?: string[];
     cost_price?: number;
     min_stock_alert?: number;
+    is_prize?: boolean;
   }) => void;
   initialData?: Product | null;
   loading?: boolean;
@@ -48,6 +49,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [costPrice, setCostPrice] = useState("");
   const [additionalImages, setAdditionalImages] = useState<string[]>([]);
   const [minStockAlert, setMinStockAlert] = useState("5");
+  const [isPrize, setIsPrize] = useState(false);
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
@@ -76,6 +78,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       setBadge((initialData as any)?.badge ?? "");
       setCostPrice((initialData as any)?.cost_price?.toString() ?? "");
       setMinStockAlert((initialData as any)?.min_stock_alert?.toString() ?? "5");
+      setIsPrize((initialData as any)?.is_prize ?? false);
     }
   }, [initialData]);
 
@@ -160,6 +163,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       additionalImages: [...additionalImages, ...additionalVideos],
       cost_price: parseFloat(costPrice) || 0,
       min_stock_alert: parseInt(minStockAlert) || 5,
+      is_prize: isPrize,
     });
   };
 
@@ -349,6 +353,14 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
               <p className="text-xs text-muted-foreground">Produto vendido sob encomenda (não sai do ar quando estoque zera)</p>
             </div>
             <Switch id="made_to_order" checked={madeToOrder} onCheckedChange={setMadeToOrder} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label htmlFor="is_prize" className="text-sm font-medium">Produto de Brinde / Prêmio</Label>
+              <p className="text-xs text-muted-foreground">Oculto na loja, disponível apenas para resgate de prêmios</p>
+            </div>
+            <Switch id="is_prize" checked={isPrize} onCheckedChange={setIsPrize} />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">

@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
+import { 
   Search, Users, Mail, Phone, MapPin, MoreVertical, 
-  Edit2, Lock, TrendingUp, ShoppingBag, Filter, Bell
+  Edit2, Lock, TrendingUp, ShoppingBag, Filter, Bell, Gift, CheckCircle
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { 
@@ -34,6 +37,10 @@ export default function Clientes() {
   const [sortBy, setSortBy] = useState<"name" | "orders" | "spent">("name");
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPrizeDialogOpen, setIsPrizeDialogOpen] = useState(false);
+  const [selectedCustomerForPrize, setSelectedCustomerForPrize] = useState<any>(null);
+  const [prizeProductId, setPrizeProductId] = useState<string>("");
+  const [isManagePrizesOpen, setIsManagePrizesOpen] = useState(false);
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ["customers", user?.id],
@@ -117,6 +124,68 @@ export default function Clientes() {
     onSuccess: () => toast.success("Notificação enviada ao painel do admin!"),
     onError: (e) => toast.error("Erro: " + e.message),
   });
+  
+  const { data: prizeProducts } = useQuery({
+    queryKey: ["prize_products", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, price")
+        .eq("user_id", user!.id)
+        .eq("is_prize", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: customerPrizes, refetch: refetchCustomerPrizes } = useQuery({
+    queryKey: ["customer_prizes_admin", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_prizes")
+        .select("*, products(name, image_url), customers(name, email)")
+        .eq("store_user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const releasePrizeMutation = useMutation({
+    mutationFn: async ({ customerId, productId }: { customerId: string; productId: string }) => {
+      const { error } = await supabase.from("customer_prizes").insert({
+        customer_id: customerId,
+        product_id: productId,
+        store_user_id: user!.id,
+        status: "released",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchCustomerPrizes();
+      setIsPrizeDialogOpen(false);
+      setPrizeProductId("");
+      toast.success("Prêmio liberado com sucesso!");
+    },
+    onError: (e) => toast.error("Erro ao liberar prêmio: " + e.message),
+  });
+
+  const markPrizeAsDeliveredMutation = useMutation({
+    mutationFn: async (prizeId: string) => {
+      const { error } = await supabase
+        .from("customer_prizes")
+        .update({ status: "delivered", delivered_at: new Date().toISOString() })
+        .eq("id", prizeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refetchCustomerPrizes();
+      toast.success("Prêmio marcado como entregue!");
+    },
+    onError: (e) => toast.error("Erro ao atualizar prêmio: " + e.message),
+  });
 
   const filtered = useMemo(() => {
     if (!customers) return [];
@@ -176,6 +245,9 @@ export default function Clientes() {
           <p className="text-muted-foreground">{t.customers.totalCustomers}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setIsManagePrizesOpen(true)}>
+            <Gift className="mr-1.5 h-4 w-4" /> Prêmios Liberados
+          </Button>
           <Badge variant="secondary" className="px-3 py-1">
             <Users className="mr-1.5 h-4 w-4" /> {customers?.length || 0}
           </Badge>
@@ -300,6 +372,15 @@ export default function Clientes() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedCustomerForPrize(customer);
+                              setIsPrizeDialogOpen(true);
+                            }}
+                            className="text-amber-600 font-medium"
+                          >
+                            <Gift className="mr-2 h-4 w-4" /> Liberar Prêmio / Brinde
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
                             onClick={() => notifyAdminMutation.mutate(customer)}
                             className="text-primary font-medium"
                           >
@@ -382,6 +463,103 @@ export default function Clientes() {
         </DialogContent>
       </Dialog>
     </div>
+
+    {/* Release Prize Dialog */}
+    <Dialog open={isPrizeDialogOpen} onOpenChange={setIsPrizeDialogOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Liberar Prêmio para {selectedCustomerForPrize?.name}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-4">
+          <Label>Selecione o Produto (apenas itens marcados como Prêmio)</Label>
+          <Select value={prizeProductId} onValueChange={setPrizeProductId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um produto..." />
+            </SelectTrigger>
+            <SelectContent>
+              {prizeProducts?.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name} (R$ {p.price})</SelectItem>
+              ))}
+              {(!prizeProducts || prizeProducts.length === 0) && (
+                <SelectItem value="none" disabled>Nenhum produto de prêmio encontrado</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            O cliente verá um card de parabéns na loja e poderá resgatar via WhatsApp.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsPrizeDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={() => releasePrizeMutation.mutate({ customerId: selectedCustomerForPrize.id, productId: prizeProductId })}
+            disabled={!prizeProductId || releasePrizeMutation.isPending}
+          >
+            Liberar Prêmio
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Manage Prizes Dialog */}
+    <Dialog open={isManagePrizesOpen} onOpenChange={setIsManagePrizesOpen}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5" /> Prêmios Liberados
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Produto</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customerPrizes?.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <div className="font-medium">{(p.customers as any)?.name}</div>
+                    <div className="text-xs text-muted-foreground">{(p.customers as any)?.email}</div>
+                  </TableCell>
+                  <TableCell>{(p.products as any)?.name}</TableCell>
+                  <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Badge variant={p.status === "delivered" ? "outline" : "default"}>
+                      {p.status === "released" ? "Pendente" : p.status === "claimed" ? "Clicou WhatsApp" : "Entregue"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {p.status !== "delivered" && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 text-green-600 hover:text-green-700"
+                        onClick={() => markPrizeAsDeliveredMutation.mutate(p.id)}
+                      >
+                        <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Entregar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!customerPrizes || customerPrizes.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Nenhum prêmio liberado ainda.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>
     </PlanGate>
   );
 }

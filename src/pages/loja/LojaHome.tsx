@@ -19,6 +19,7 @@ import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
+import { PrizeNotificationCard } from "@/components/storefront/PrizeNotificationCard";
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
@@ -27,7 +28,7 @@ export default function LojaHome() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useTranslation();
-  const { cart, searchTerm, settings, storeUserId, openCart, basePath } = useLojaContext();
+  const { cart, searchTerm, settings, storeUserId, openCart, basePath, customer } = useLojaContext();
   const localeTag = getLocaleTag(locale);
   const storeText = {
     pt: { other: "Outros" },
@@ -261,6 +262,14 @@ export default function LojaHome() {
           buttonTextColor={buttonTextColor}
           onClose={cartNotif.hide}
           onOpenCart={openCart}
+        />
+      )}
+
+      {customer && (
+        <PrizeNotificationCard 
+          customer={customer} 
+          storeUserId={storeUserId!} 
+          settings={settings} 
         />
       )}
     </div>

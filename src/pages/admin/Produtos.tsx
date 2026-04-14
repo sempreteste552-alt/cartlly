@@ -342,6 +342,9 @@ export default function Produtos() {
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
+                    {(product as any).is_prize && (
+                      <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-200">Prêmio</Badge>
+                    )}
                   </TableCell>
                   <TableCell>{formatPrice(product.price)}</TableCell>
                   <TableCell>

@@ -50,6 +50,7 @@ export interface LojaContextType {
   searchTerm: string;
   setSearchTerm: (s: string) => void;
   storeUserId?: string;
+  customer?: any;
   openCart: () => void;
   basePath: string;
   globalCep: string;
@@ -565,7 +566,7 @@ export default function LojaLayout() {
   const isCheckout = location.pathname.includes("/checkout");
 
   return (
-    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
+    <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}

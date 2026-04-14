@@ -706,6 +706,57 @@ export type Database = {
           },
         ]
       }
+      customer_prizes: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          delivered_at: string | null
+          id: string
+          product_id: string
+          released_at: string | null
+          status: string | null
+          store_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          delivered_at?: string | null
+          id?: string
+          product_id: string
+          released_at?: string | null
+          status?: string | null
+          store_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          delivered_at?: string | null
+          id?: string
+          product_id?: string
+          released_at?: string | null
+          status?: string | null
+          store_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_prizes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_prizes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_push_tokens: {
         Row: {
           created_at: string | null
@@ -1841,6 +1892,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_archived: boolean
+          is_prize: boolean | null
           made_to_order: boolean
           min_stock_alert: number
           name: string
@@ -1861,6 +1913,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_archived?: boolean
+          is_prize?: boolean | null
           made_to_order?: boolean
           min_stock_alert?: number
           name: string
@@ -1881,6 +1934,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_archived?: boolean
+          is_prize?: boolean | null
           made_to_order?: boolean
           min_stock_alert?: number
           name?: string
@@ -2280,6 +2334,7 @@ export type Database = {
           prize_type: string
           prize_value: number | null
           probability: number
+          product_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -2293,6 +2348,7 @@ export type Database = {
           prize_type?: string
           prize_value?: number | null
           probability?: number
+          product_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -2306,14 +2362,25 @@ export type Database = {
           prize_type?: string
           prize_value?: number | null
           probability?: number
+          product_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "roulette_prizes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roulette_spins: {
         Row: {
           coupon_code: string | null
           created_at: string | null
+          delivered_at: string | null
+          delivered_by: string | null
           id: string
           metadata: Json | null
           prize_id: string | null
@@ -2324,6 +2391,8 @@ export type Database = {
         Insert: {
           coupon_code?: string | null
           created_at?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
           id?: string
           metadata?: Json | null
           prize_id?: string | null
@@ -2334,6 +2403,8 @@ export type Database = {
         Update: {
           coupon_code?: string | null
           created_at?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
           id?: string
           metadata?: Json | null
           prize_id?: string | null
