@@ -565,7 +565,7 @@ export default function LojaLayout() {
             <p className="text-muted-foreground text-lg">{storeText.accessStore}</p>
           </div>
           <Button asChild variant="default" size="lg" className="w-full">
-            <Link to="/">{locale === 'pt' ? 'Ir para o Início' : 'Go to Home'}</Link>
+            <Link to="/">{t.misc.returnHome}</Link>
           </Button>
         </div>
       </div>
