@@ -821,7 +821,7 @@ export default function LojaLayout() {
             style={{ backgroundColor: headerBgColor, color: headerTextColor }}
           >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {(settings?.instagram_url || settings?.facebook_url || settings?.tiktok_url || settings?.youtube_url || settings?.store_whatsapp) && (
+            {settings?.instagram_url && (
               <div
                 className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
                 style={{
@@ -830,31 +830,9 @@ export default function LojaLayout() {
                   transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 0ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 0ms",
                 }}
               >
-                {settings?.instagram_url && (
-                  <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={iconInstagram} alt="Instagram" className="h-7 w-7 rounded-lg" />
-                  </a>
-                )}
-                {settings?.facebook_url && (
-                  <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={iconFacebook} alt="Facebook" className="h-7 w-7 rounded-lg" />
-                  </a>
-                )}
-                {settings?.tiktok_url && (
-                  <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={iconTiktok} alt="TikTok" className="h-7 w-7 rounded-lg" />
-                  </a>
-                )}
-                {(settings as any)?.youtube_url && (
-                  <a href={(settings as any).youtube_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={iconYoutube} alt="YouTube" className="h-7 w-7 rounded-lg" />
-                  </a>
-                )}
-                {settings?.store_whatsapp && (
-                  <a href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={whatsappIcon} alt="WhatsApp" className="h-7 w-7 rounded-lg" />
-                  </a>
-                )}
+                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <img src={iconInstagram} alt="Instagram" className="h-7 w-7 rounded-lg" />
+                </a>
               </div>
             )}
             <div className="pt-2 pb-1">
@@ -897,7 +875,6 @@ export default function LojaLayout() {
               { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
               ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
               ...(user ? [{ icon: LogOut, label: t.auth.logout, to: "#", onClick: () => signOut() }] : []),
-              ...(settings?.store_whatsapp ? [{ icon: MessageCircle, label: "WhatsApp", to: `https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}`, external: true }] : []),
             ].map((item: any, i) => {
               const content = (
                 <div className="flex items-center gap-3 w-full">
