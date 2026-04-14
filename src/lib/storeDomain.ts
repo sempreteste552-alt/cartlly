@@ -25,8 +25,13 @@ export function isPlatformHost(hostname?: string | null) {
 
   if (platformDomains.includes(host)) return true;
 
-  // Handle Lovable Cloud preview domains
+  // Handle Lovable Cloud preview/dev domains
   if (host.includes(".lovable.app") && (host.includes("-preview-") || host.includes("--"))) {
+    return true;
+  }
+
+  // Handle lovableproject.com subdomains (dev/preview environments)
+  if (host.endsWith(".lovableproject.com")) {
     return true;
   }
 
