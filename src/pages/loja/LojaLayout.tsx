@@ -91,7 +91,7 @@ export default function LojaLayout() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const basePath = slug ? `/loja/${slug}` : "/loja";
+  const basePath = slug ? `/loja/${slug}` : "";
   const localeTag = getLocaleTag(locale);
   const storeText = {
     pt: {
