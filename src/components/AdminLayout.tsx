@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, useMemo, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -28,6 +28,7 @@ import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { isLocale, useTranslation } from "@/i18n";
+import { isPlatformHost } from "@/lib/storeDomain";
 import { useLocation } from "react-router-dom";
 
 export function AdminLayout() {
@@ -51,8 +52,22 @@ export function AdminLayout() {
 
   // Dynamic PWA manifest for admin context — only apply when we have confirmed tenant data
   const storeSlug = (settings as any)?.store_slug || urlSlug;
-  const adminName = storeSlug ? `Painel ${storeSlug}` : "Painel Administrativo";
-  const manifestId = storeSlug ? `cartlly-admin-${storeSlug}` : "cartlly-admin-default";
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const isCustomDomain = !storeSlug && hostname && !isPlatformHost(hostname);
+
+  const adminName = useMemo(() => {
+    if (storeSlug) return `Painel ${storeSlug.split('-')[0]}`;
+    if (isCustomDomain) return `Painel ${hostname.split('.')[0]}`;
+    return "Painel Administrativo";
+  }, [storeSlug, hostname, isCustomDomain]);
+
+  const manifestId = useMemo(() => {
+    if (storeSlug) return `cartlly-admin-${storeSlug}`;
+    if (isCustomDomain) return `cartlly-admin-domain-${hostname}`;
+    if ((settings as any)?.id) return `cartlly-admin-id-${(settings as any).id}`;
+    return "cartlly-admin-default";
+  }, [storeSlug, hostname, isCustomDomain, (settings as any)?.id]);
+
   usePwaManifest({
     id: manifestId,
     name: adminName,
