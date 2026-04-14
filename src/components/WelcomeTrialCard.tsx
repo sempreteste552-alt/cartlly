@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +24,8 @@ const CHECKLIST = [
   { key: "payment", label: "Configurar pagamento", icon: CreditCard, check: (_: number, s: any) => !!s?.payment_gateway },
 ];
 
-const { slug } = useParams();
+export function WelcomeTrialCard() {
+  const { slug } = useParams();
   const { user } = useAuth();
   const { ctx } = useTenantContext();
   const { data: products } = useProducts();
