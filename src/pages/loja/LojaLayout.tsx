@@ -316,6 +316,7 @@ export default function LojaLayout() {
 
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
+  const isMinimalMenu = themeConfig?.header_style === 'minimal';
 
   useEffect(() => {
     if (!settingsBySlug?.id || !settingsBySlug?.user_id) return;
