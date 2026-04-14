@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
