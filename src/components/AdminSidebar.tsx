@@ -56,6 +56,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false },
     { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false },
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false },
+    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true },
     { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false },
     { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false },
     { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount },
