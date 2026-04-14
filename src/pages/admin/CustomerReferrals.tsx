@@ -29,6 +29,7 @@ export default function CustomerReferrals() {
   const updateProduct = useUpdateProduct();
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -39,12 +40,17 @@ export default function CustomerReferrals() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filteredReferrals = (referrals || []).filter(r => 
-    r.referrer?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    r.referred?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    r.referrer?.email?.toLowerCase().includes(search.toLowerCase()) ||
-    r.referred?.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredReferrals = (referrals || []).filter(r => {
+    const matchesSearch = 
+      r.referrer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.referred?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.referrer?.email?.toLowerCase().includes(search.toLowerCase()) ||
+      r.referred?.email?.toLowerCase().includes(search.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const localStats = useMemo(() => {
     return {
@@ -117,8 +123,8 @@ export default function CustomerReferrals() {
           </TabsList>
 
           <TabsContent value="referrals" className="space-y-4 pt-4">
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Buscar por nome de cliente..." 
@@ -127,6 +133,16 @@ export default function CustomerReferrals() {
                   className="pl-9"
                 />
               </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="completed">Finalizada</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Card>
