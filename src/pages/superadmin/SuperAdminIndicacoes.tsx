@@ -341,12 +341,12 @@ export default function SuperAdminIndicacoes() {
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalClicks}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Cadastrados</div>
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Cadastros Indicados</div>
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalRegistered}</p>
           <p className="text-[9px] sm:text-[10px] text-muted-foreground">{conversionRate}% conv.</p>
         </CardContent></Card>
         <Card><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Pagos</div>
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] sm:text-xs mb-1"><CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Compras Indicadas</div>
           <p className="text-lg sm:text-2xl font-bold text-foreground">{totalApproved}</p>
         </CardContent></Card>
         <Card className="border-destructive/20 bg-destructive/5"><CardContent className="pt-3 pb-2 px-3 sm:pt-4 sm:pb-3 sm:px-4">
