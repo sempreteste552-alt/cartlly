@@ -66,7 +66,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-1.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userContent },
@@ -103,6 +103,7 @@ Se a entrada for uma imagem, faça OCR/leitura visual para extrair todos os prod
                             required: ["variant_type", "variant_value", "stock", "price_modifier"],
                           },
                         },
+                        image_index: { type: "number", description: "Index of the image in the catalogImages array that represents this product (0-indexed). Use -1 if not clear." },
                       },
                       required: ["name", "description", "price", "category", "stock"],
                     },

@@ -59,7 +59,7 @@ Não seja invasivo, apenas um "mimo" para eles se sentirem valorizados.`;
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "google/gemini-1.5-flash",
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: `Gere uma mensagem curta de encorajamento para ${tenant.display_name || "Lojista"} que teve ${count} vendas hoje, totalizando R$ ${totalSales.toFixed(2)}.` }

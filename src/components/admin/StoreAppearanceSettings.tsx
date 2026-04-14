@@ -91,6 +91,21 @@ export default function StoreAppearanceSettings() {
     }
   }, [config]);
 
+  useEffect(() => {
+    // Load Google Fonts dynamically for the preview
+    const fontsToLoad = new Set([fontHeading, fontBody].filter(f => f && f !== "Inter"));
+    fontsToLoad.forEach((font) => {
+      const linkId = `gfont-${font.replace(/\s+/g, "-")}`;
+      if (!document.getElementById(linkId)) {
+        const link = document.createElement("link");
+        link.id = linkId;
+        link.rel = "stylesheet";
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@300;400;500;600;700;800&display=swap`;
+        document.head.appendChild(link);
+      }
+    });
+  }, [fontHeading, fontBody]);
+
   const handleFaviconUpload = async (file: File) => {
     setUploadingFavicon(true);
     try {

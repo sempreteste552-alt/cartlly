@@ -32,6 +32,7 @@ interface ExtractedProduct {
   stock: number;
   variants?: ExtractedVariant[];
   selected: boolean;
+  image_index?: number;
 }
 
 export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
@@ -141,6 +142,10 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
       let variantsCreated = 0;
       for (const p of selected) {
         const categoryId = catMap[p.category.toLowerCase()] || null;
+        const imageUrl = p.image_index !== undefined && p.image_index >= 0 && imagePreviews[p.image_index] 
+          ? imagePreviews[p.image_index] 
+          : null;
+
         const { data: createdProduct, error } = await supabase.from("products").insert({
           name: p.name,
           description: p.description,
@@ -149,6 +154,7 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
           category_id: categoryId,
           user_id: user!.id,
           published: true,
+          image_url: imageUrl,
         }).select().single();
 
         if (!error && createdProduct) {
@@ -399,26 +405,35 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                   }`}>
                     {product.selected && <Check className="h-3 w-3" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.description}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
-                      <span>Estoque: {product.stock}</span>
-                    </div>
-                    {/* Show variants */}
-                    {product.variants && product.variants.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {product.variants.map((v, vi) => (
-                          <Badge key={vi} variant="outline" className="text-[10px]">
-                            {v.variant_type}: {v.variant_value}
-                          </Badge>
-                        ))}
-                      </div>
+                  <div className="flex-1 min-w-0 flex gap-3">
+                    {product.image_index !== undefined && product.image_index >= 0 && imagePreviews[product.image_index] && (
+                      <img 
+                        src={imagePreviews[product.image_index]} 
+                        alt={product.name} 
+                        className="h-16 w-16 rounded object-cover border border-border shrink-0" 
+                      />
                     )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.description}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
+                        <span>Estoque: {product.stock}</span>
+                      </div>
+                      {/* Show variants */}
+                      {product.variants && product.variants.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {product.variants.map((v, vi) => (
+                            <Badge key={vi} variant="outline" className="text-[10px]">
+                              {v.variant_type}: {v.variant_value}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
