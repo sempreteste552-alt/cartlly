@@ -432,10 +432,12 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                           </Badge>
                         ))}
                       </div>
+                      </div>
                     )}
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
             </div>
 
             <div className="flex justify-between">
