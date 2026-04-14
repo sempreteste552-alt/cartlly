@@ -16,6 +16,8 @@ export function usePublicProducts(storeUserId?: string) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
   });
 }
 
@@ -34,7 +36,7 @@ export function usePublicStoreSettings() {
       if (error) throw error;
       return data;
     },
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -161,6 +163,8 @@ export function usePublicCategories(storeUserId?: string) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
   });
 }
 

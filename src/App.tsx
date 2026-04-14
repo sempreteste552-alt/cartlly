@@ -8,59 +8,60 @@ import { I18nProvider } from "@/i18n";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
-import { AdminLayout } from "@/components/AdminLayout";
-import Login from "./pages/Login";
-import Index from "./pages/Index";
-import ContaEmAnalise from "./pages/ContaEmAnalise";
-import Dashboard from "./pages/admin/Dashboard";
-import Produtos from "./pages/admin/Produtos";
-import Pedidos from "./pages/admin/Pedidos";
-import Configuracoes from "./pages/admin/Configuracoes";
-import Cupons from "./pages/admin/Cupons";
-import Gateway from "./pages/admin/Gateway";
-import Frete from "./pages/admin/Frete";
-import Clientes from "./pages/admin/Clientes";
-import Pagamentos from "./pages/admin/Pagamentos";
-import MeuPlano from "./pages/admin/MeuPlano";
-import Paginas from "./pages/admin/Paginas";
-import Automacao from "./pages/admin/Automacao";
-import SetupStore from "./pages/admin/SetupStore";
-import Cerebro from "./pages/admin/Cerebro";
-import Indicacoes from "./pages/admin/Indicacoes";
-import Politicas from "./pages/admin/Politicas";
-import Fidelidade from "./pages/admin/Fidelidade";
-import Lucro from "./pages/admin/Lucro";
-import Analytics from "./pages/admin/Analytics";
-import WhatsAppIA from "./pages/admin/WhatsAppIA";
-import Notificacoes from "./pages/admin/Notificacoes";
-import Suporte from "./pages/admin/Suporte";
-import LojaPolitica from "./pages/loja/LojaPolitica";
-import LojaLayout from "./pages/loja/LojaLayout";
-import LojaHome from "./pages/loja/LojaHome";
-import LojaProduto from "./pages/loja/LojaProduto";
-import LojaCheckout from "./pages/loja/LojaCheckout";
-import LojaRastreio from "./pages/loja/LojaRastreio";
-import LojaCupons from "./pages/loja/LojaCupons";
-import LojaPagina from "./pages/loja/LojaPagina";
-import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
-import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
-import SuperAdminTenants from "./pages/superadmin/SuperAdminTenants";
-import SuperAdminPlanos from "./pages/superadmin/SuperAdminPlanos";
-import SuperAdminNotificacoes from "./pages/superadmin/SuperAdminNotificacoes";
-import SuperAdminConfig from "./pages/superadmin/SuperAdminConfig";
-import SuperAdminSolicitacoes from "./pages/superadmin/SuperAdminSolicitacoes";
-import SuperAdminAuditLogs from "./pages/superadmin/SuperAdminAuditLogs";
-import SuperAdminIndicacoes from "./pages/superadmin/SuperAdminIndicacoes";
-import SuperAdminBanners from "./pages/superadmin/SuperAdminBanners";
-import SuperAdminRoulette from "./pages/superadmin/SuperAdminRoulette";
-import SuperAdminDominios from "./pages/superadmin/SuperAdminDominios";
-import MinhaRoleta from "./pages/admin/MinhaRoleta";
-import ResetPassword from "./pages/ResetPassword";
-import Termos from "./pages/Termos";
-import Privacidade from "./pages/Privacidade";
-import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
+const Login = React.lazy(() => import("./pages/Login"));
+const Index = React.lazy(() => import("./pages/Index"));
+const ContaEmAnalise = React.lazy(() => import("./pages/ContaEmAnalise"));
+const Dashboard = React.lazy(() => import("./pages/admin/Dashboard"));
+const Produtos = React.lazy(() => import("./pages/admin/Produtos"));
+const Pedidos = React.lazy(() => import("./pages/admin/Pedidos"));
+const Configuracoes = React.lazy(() => import("./pages/admin/Configuracoes"));
+const Cupons = React.lazy(() => import("./pages/admin/Cupons"));
+const Gateway = React.lazy(() => import("./pages/admin/Gateway"));
+const Frete = React.lazy(() => import("./pages/admin/Frete"));
+const Clientes = React.lazy(() => import("./pages/admin/Clientes"));
+const Pagamentos = React.lazy(() => import("./pages/admin/Pagamentos"));
+const MeuPlano = React.lazy(() => import("./pages/admin/MeuPlano"));
+const Paginas = React.lazy(() => import("./pages/admin/Paginas"));
+const Automacao = React.lazy(() => import("./pages/admin/Automacao"));
+const SetupStore = React.lazy(() => import("./pages/admin/SetupStore"));
+const Cerebro = React.lazy(() => import("./pages/admin/Cerebro"));
+const Indicacoes = React.lazy(() => import("./pages/admin/Indicacoes"));
+const Politicas = React.lazy(() => import("./pages/admin/Politicas"));
+const Fidelidade = React.lazy(() => import("./pages/admin/Fidelidade"));
+const Lucro = React.lazy(() => import("./pages/admin/Lucro"));
+const Analytics = React.lazy(() => import("./pages/admin/Analytics"));
+const WhatsAppIA = React.lazy(() => import("./pages/admin/WhatsAppIA"));
+const Notificacoes = React.lazy(() => import("./pages/admin/Notificacoes"));
+const Suporte = React.lazy(() => import("./pages/admin/Suporte"));
+const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
+const LojaLayout = React.lazy(() => import("./pages/loja/LojaLayout"));
+const LojaHome = React.lazy(() => import("./pages/loja/LojaHome"));
+const LojaProduto = React.lazy(() => import("./pages/loja/LojaProduto"));
+const LojaCheckout = React.lazy(() => import("./pages/loja/LojaCheckout"));
+const LojaRastreio = React.lazy(() => import("./pages/loja/LojaRastreio"));
+const LojaCupons = React.lazy(() => import("./pages/loja/LojaCupons"));
+const LojaPagina = React.lazy(() => import("./pages/loja/LojaPagina"));
+const SuperAdminLayout = React.lazy(() => import("./pages/superadmin/SuperAdminLayout"));
+const SuperAdminDashboard = React.lazy(() => import("./pages/superadmin/SuperAdminDashboard"));
+const SuperAdminTenants = React.lazy(() => import("./pages/superadmin/SuperAdminTenants"));
+const SuperAdminPlanos = React.lazy(() => import("./pages/superadmin/SuperAdminPlanos"));
+const SuperAdminNotificacoes = React.lazy(() => import("./pages/superadmin/SuperAdminNotificacoes"));
+const SuperAdminConfig = React.lazy(() => import("./pages/superadmin/SuperAdminConfig"));
+const SuperAdminSolicitacoes = React.lazy(() => import("./pages/superadmin/SuperAdminSolicitacoes"));
+const SuperAdminAuditLogs = React.lazy(() => import("./pages/superadmin/SuperAdminAuditLogs"));
+const SuperAdminIndicacoes = React.lazy(() => import("./pages/superadmin/SuperAdminIndicacoes"));
+const SuperAdminBanners = React.lazy(() => import("./pages/superadmin/SuperAdminBanners"));
+const SuperAdminRoulette = React.lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
+const SuperAdminDominios = React.lazy(() => import("./pages/superadmin/SuperAdminDominios"));
+const MinhaRoleta = React.lazy(() => import("./pages/admin/MinhaRoleta"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const Termos = React.lazy(() => import("./pages/Termos"));
+const Privacidade = React.lazy(() => import("./pages/Privacidade"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const StoreRoutes = React.lazy(() => import("./StoreRoutes"));
+
 import { isPlatformHost } from "./lib/storeDomain";
-import StoreRoutes from "./StoreRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +113,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>}>
             <ScrollToTop />
             <AuthProvider>
               {!isPlatform ? (
@@ -189,6 +191,7 @@ const App = () => {
                 </Routes>
               )}
             </AuthProvider>
+            </React.Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
