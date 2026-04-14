@@ -98,6 +98,7 @@ export const es: TranslationKeys = {
     myPlan: "Mi Plan",
     openStore: "Abrir Tienda",
     management: "Gestión",
+    marketing: "Marketing",
     settings: "Configuración",
     appearance: "Apariencia",
   },

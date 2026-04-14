@@ -233,22 +233,12 @@ html {
   50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4), 0 0 40px hsl(var(--primary) / 0.1); }
 }
 
-/* Sidebar referral sparkle */
-@keyframes sidebar-sparkle {
-  0%, 100% { text-shadow: 0 0 4px hsl(var(--primary) / 0.3); }
-  50% { text-shadow: 0 0 10px hsl(var(--primary) / 0.6), 0 0 20px hsl(var(--primary) / 0.2); }
-}
-
-.sidebar-referral-item {
-  animation: sidebar-sparkle 4s ease-in-out infinite;
-}
-
+/* Removed sidebar referral sparkle for professional look */
 .sidebar-referral-item .referral-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: hsl(var(--primary));
-  animation: referral-pulse 3s ease-in-out infinite;
   display: inline-block;
 }
 

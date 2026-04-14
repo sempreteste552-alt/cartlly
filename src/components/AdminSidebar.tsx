@@ -57,26 +57,29 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false },
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false },
     { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false },
+    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false },
+    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount },
+  ];
+
+  const marketingItems = [
     { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false },
-    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true },
     { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true },
-    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
     { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true },
-    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: true },
-    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: true },
     { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
-    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: true },
-    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: true, badgeCount: supportUnreadCount },
     { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
   ];
 
   const configItems = [
     { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null },
+    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false },
+    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false },
+    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false },
     { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const },
     { title: t.sidebar.gateway, url: `${adminBasePath}/gateway`, icon: Zap, feature: "gateway" as const },
     { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null },
+    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
     { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null },
   ];
 
@@ -123,7 +126,6 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => {
-                const isReferral = item.url === "/admin/indicacoes";
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
@@ -131,11 +133,11 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         to={item.url}
                         end={item.url === "/admin"}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg ${isReferral ? "sidebar-referral-item text-primary font-semibold" : ""}`}
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <div className="relative">
-                          <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                          <item.icon className="h-4 w-4" />
                           {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
                             <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                               {item.badgeCount > 9 ? "9+" : item.badgeCount}
@@ -145,7 +147,6 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         {!collapsed && (
                           <span className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="truncate">{item.title}</span>
-                            {isReferral && <span className="referral-dot" />}
                             {!!item.badgeCount && item.badgeCount > 0 && (
                               <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
                                 {item.badgeCount > 99 ? "99+" : item.badgeCount}
@@ -163,6 +164,40 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                   </SidebarMenuItem>
                 );
               })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+            {t.sidebar.marketing}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {marketingItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                    <NavLink
+                      to={item.url}
+                      id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && (
+                        <span className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className="truncate">{item.title}</span>
+                          {item.isNew && (
+                            <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                              {adminSidebarText.new}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
