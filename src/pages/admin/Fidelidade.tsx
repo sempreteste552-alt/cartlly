@@ -42,6 +42,8 @@ export default function Fidelidade() {
         points_per_real: Number(pointsPerReal),
         redemption_rate: Number(redemptionRate),
         min_redemption: Number(minRedemption),
+        referral_enabled: referralEnabled,
+        referral_reward_points: Number(referralPoints),
       },
       { onSuccess: () => toast.success("Configurações de fidelidade salvas!") }
     );
