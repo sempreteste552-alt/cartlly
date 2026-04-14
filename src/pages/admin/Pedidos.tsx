@@ -16,7 +16,7 @@ import {
 import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { supabase } from "@/integrations/supabase/client";
-import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
@@ -38,20 +38,22 @@ export default function Pedidos() {
 
   const { data: orders, isLoading } = useOrders();
   const { data: storeSettings } = useStoreSettings();
-  const { data: abandonedCarts, isLoading: loadingAbandoned } = useQuery({
-    queryKey: ["abandoned_carts_admin"],
+  
+  const { data: abandonedCarts } = useQuery({
+    queryKey: ["abandoned_carts_admin", storeSettings?.user_id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("abandoned_carts")
         .select("*")
-        .eq("user_id", (storeSettings as any)?.user_id)
+        .eq("user_id", storeSettings?.user_id)
         .eq("recovered", false)
         .order("abandoned_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!(storeSettings as any)?.user_id,
+    enabled: !!storeSettings?.user_id,
   });
+
   const updateStatus = useUpdateOrderStatus();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -310,139 +312,182 @@ export default function Pedidos() {
 
         <TabsContent value="pedidos" className="space-y-6 animate-in fade-in-50 duration-300">
           <Card className="border-border">
-        <CardContent className="p-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar pedido ou cliente..."
-                className="pl-9 h-9 text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex flex-col gap-1.5">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Status Pedido" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  {Object.entries(ORDER_STATUS_MAP).map(([key, val]) => (
-                    <SelectItem key={key} value={key}>{val.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Payment Filter */}
-            <div className="flex flex-col gap-1.5">
-              <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Pagamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Pagamentos</SelectItem>
-                  <SelectItem value="paid">✅ Aprovado</SelectItem>
-                  <SelectItem value="pending">⏳ Pendente</SelectItem>
-                  <SelectItem value="failed">❌ Recusado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date Picker */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={`h-9 text-sm justify-start font-normal ${!dateRange.from && "text-muted-foreground"}`}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "dd/MM", { locale: ptBR })} - {format(dateRange.to, "dd/MM", { locale: ptBR })}
-                      </>
-                    ) : (
-                      format(dateRange.from, "dd/MM", { locale: ptBR })
-                    )
-                  ) : (
-                    <span>Filtrar por data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange.from}
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })}
-                  numberOfMonths={1}
-                />
-                <div className="p-2 border-t border-border flex justify-end">
-                  <Button variant="ghost" size="sm" onClick={() => setDateRange({ from: undefined, to: undefined })}>Limpar</Button>
+            <CardContent className="p-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar pedido ou cliente..."
+                    className="pl-9 h-9 text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs">{filteredOrders?.length ?? 0} pedidos encontrados</Badge>
-            {searchTerm || filterStatus !== "all" || paymentStatusFilter !== "all" || dateRange.from ? (
-              <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => {
-                setSearchTerm("");
-                setFilterStatus("all");
-                setPaymentStatusFilter("all");
-                setDateRange({ from: undefined, to: undefined });
-              }}>
-                Limpar filtros
-              </Button>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
 
-      {!filteredOrders?.length ? (
-        <Card className="border-border">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShoppingCart className="h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mt-4 text-lg font-medium text-foreground">Nenhum pedido</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Tente ajustar seus filtros para encontrar o que procura</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card id="orders-table" className="border-border overflow-hidden">
-          <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pedido</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Pagamento</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrders.map((order) => {
-                const statusInfo = ORDER_STATUS_MAP[order.status as OrderStatus] || ORDER_STATUS_MAP.pendente;
-                const pStatus = (order as any).payments?.[0]?.status || "pendente";
-                const isPaid = pStatus === "approved" || pStatus === "paid";
-                
-                return (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-mono text-xs">#{order.id.slice(0, 8)}</TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{order.customer_name}</span>
-                        {order.referral_code && (
-                          <div className="flex items-center gap-1 text-[10px] text-primary font-medium mt-0.5">
-                            <Gift className="h-3 w-3" />
-                            Indicação: {order.referral_code}
-                          </div>
+                {/* Status Filter */}
+                <div className="flex flex-col gap-1.5">
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Status Pedido" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Status</SelectItem>
+                      {Object.entries(ORDER_STATUS_MAP).map(([key, val]) => (
+                        <SelectItem key={key} value={key}>{val.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payment Filter */}
+                <div className="flex flex-col gap-1.5">
+                  <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos Pagamentos</SelectItem>
+                      <SelectItem value="paid">✅ Aprovado</SelectItem>
+                      <SelectItem value="pending">⏳ Pendente</SelectItem>
+                      <SelectItem value="failed">❌ Recusado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Date Picker */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={`h-9 text-sm justify-start font-normal ${!dateRange.from && "text-muted-foreground"}`}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "dd/MM", { locale: ptBR })} - {format(dateRange.to, "dd/MM", { locale: ptBR })}
+                          </>
+                        ) : (
+                          format(dateRange.from, "dd/MM", { locale: ptBR })
+                        )
+                      ) : (
+                        <span>Filtrar por data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange.from}
+                      selected={{ from: dateRange.from, to: dateRange.to }}
+                      onSelect={(range: any) => setDateRange({ from: range?.from, to: range?.to })}
+                      numberOfMonths={1}
+                    />
+                    <div className="p-2 border-t border-border flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setDateRange({ from: undefined, to: undefined })}>Limpar</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">{filteredOrders?.length ?? 0} pedidos encontrados</Badge>
+                {searchTerm || filterStatus !== "all" || paymentStatusFilter !== "all" || dateRange.from ? (
+                  <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => {
+                    setSearchTerm("");
+                    setFilterStatus("all");
+                    setPaymentStatusFilter("all");
+                    setDateRange({ from: undefined, to: undefined });
+                  }}>
+                    Limpar filtros
+                  </Button>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          {!filteredOrders?.length ? (
+            <Card className="border-border">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <ShoppingCart className="h-12 w-12 text-muted-foreground/40" />
+                <h3 className="mt-4 text-lg font-medium text-foreground">Nenhum pedido</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Tente ajustar seus filtros para encontrar o que procura</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card id="orders-table" className="border-border overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pedido</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Pagamento</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOrders.map((order) => {
+                      const statusInfo = ORDER_STATUS_MAP[order.status as OrderStatus] || ORDER_STATUS_MAP.pendente;
+                      const pStatus = (order as any).payments?.[0]?.status || "pendente";
+                      const isPaid = pStatus === "approved" || pStatus === "paid";
+                      
+                      return (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-xs">#{order.id.slice(0, 8)}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex flex-col">
+                              <span>{order.customer_name}</span>
+                              {order.referral_code && (
+                                <div className="flex items-center gap-1 text-[10px] text-primary font-medium mt-0.5">
+                                  <Gift className="h-3 w-3" />
+                                  Indicação: {order.referral_code}
+                                </div>
+                              )}
+                              {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatPrice(order.total)}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="gap-1 text-[10px] h-5">
+                              <span className={`h-1.5 w-1.5 rounded-full ${statusInfo.color}`} />
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={isPaid ? "default" : "secondary"} className="text-[10px] h-5">
+                              {isPaid ? "Pago" : "Pendente"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrderId(order.id)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className={`h-8 w-8 ${isPaid ? "text-primary hover:text-primary hover:bg-primary/10" : "text-muted-foreground opacity-30"}`}
+                                disabled={!isPaid}
+                                onClick={() => handlePrintLabel(order)}
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="carrinhos" className="space-y-6 animate-in fade-in-50 duration-300">
@@ -523,8 +568,6 @@ export default function Pedidos() {
                                   <MessageSquare className="h-4 w-4" />
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                                  // Reuse the selectedOrder state but adapted for cart? 
-                                  // Or just use a simple alert/toast for now.
                                   toast.info(`Itens: ${items.map((i: any) => `${i.quantity}x ${i.name}`).join(", ")}`);
                                 }}>
                                   <Eye className="h-4 w-4" />
@@ -542,48 +585,6 @@ export default function Pedidos() {
           </Card>
         </TabsContent>
       </Tabs>
-                        {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
-                      </div>
-                    </TableCell>
-                    <TableCell>{formatPrice(order.total)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="gap-1 text-[10px] h-5">
-                        <span className={`h-1.5 w-1.5 rounded-full ${statusInfo.color}`} />
-                        {statusInfo.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={isPaid ? "default" : "secondary"} className="text-[10px] h-5">
-                        {isPaid ? "Pago" : "Pendente"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {format(new Date(order.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedOrderId(order.id)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={`h-8 w-8 ${isPaid ? "text-primary hover:text-primary hover:bg-primary/10" : "text-muted-foreground opacity-30"}`}
-                          disabled={!isPaid}
-                          onClick={() => handlePrintLabel(order)}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          </div>
-        </Card>
-      )}
 
       {/* Printer Configuration Dialog */}
       <Dialog open={isPrinterDialogOpen} onOpenChange={setIsPrinterDialogOpen}>
@@ -599,253 +600,202 @@ export default function Pedidos() {
                 <p className="text-muted-foreground">O sistema utiliza o driver de impressão do seu dispositivo. Você pode usar qualquer impressora térmica (80mm ou 58mm) ou impressora comum.</p>
               </div>
             </div>
-            
             <div className="space-y-3">
-              <p className="text-sm font-medium">Instruções:</p>
-              <ol className="text-sm space-y-2 list-decimal list-inside text-muted-foreground">
-                <li>Conecte sua impressora ao computador ou celular.</li>
-                <li>Certifique-se de que os drivers estão instalados.</li>
-                <li>Ao clicar em <span className="text-foreground font-medium">Imprimir</span>, o sistema abrirá a janela de impressão do navegador.</li>
-                <li>Selecione sua impressora e ajuste o tamanho do papel (ex: 80mm x Receipt).</li>
-              </ol>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="auto-print">Impressão automática</Label>
+                <Switch id="auto-print" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="print-label">Sempre gerar etiqueta</Label>
+                <Switch id="print-label" defaultChecked />
+              </div>
             </div>
-
-            <Button className="w-full" onClick={() => setIsPrinterDialogOpen(false)}>Entendi</Button>
+            <Button className="w-full" variant="outline">Detectar Impressoras</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Order Detail Dialog */}
+      {/* Order Details Dialog */}
       <Dialog open={!!selectedOrderId} onOpenChange={(open) => !open && setSelectedOrderId(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-auto">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0">
-            <DialogTitle>Pedido #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
-            {selectedOrder && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2"
-                disabled={((selectedOrder as any).payments?.[0]?.status !== "approved" && (selectedOrder as any).payments?.[0]?.status !== "paid")}
-                onClick={() => handlePrintLabel(selectedOrder)}
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir
-              </Button>
-            )}
-          </DialogHeader>
-
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedOrder && (
-            <div className="space-y-4 mt-4">
-              {/* Customer info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cliente</p>
-                  <p className="text-sm font-medium">{selectedOrder.customer_name}</p>
-                  {selectedOrder.customer_email && <p className="text-xs text-muted-foreground">{selectedOrder.customer_email}</p>}
-                  {selectedOrder.customer_phone && <p className="text-xs text-muted-foreground">{selectedOrder.customer_phone}</p>}
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Pedido #{selectedOrder.id.slice(0, 8)}
+                  </DialogTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePrintLabel(selectedOrder)}
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Etiqueta
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePrintReceipt(selectedOrder)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Recibo
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Data do Pedido</p>
-                  <p className="text-sm">{format(new Date(selectedOrder.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-                </div>
-              </div>
+              </DialogHeader>
 
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Endereço de Entrega</p>
-                <p className="text-sm">{selectedOrder.customer_address || "Não informado"}</p>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                {/* Customer Info */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Cliente</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <p className="font-semibold">{selectedOrder.customer_name}</p>
+                    <p className="text-muted-foreground">{selectedOrder.customer_email || "—"}</p>
+                    <p className="text-muted-foreground">{selectedOrder.customer_phone || "—"}</p>
+                    <p className="text-muted-foreground">{selectedOrder.customer_cpf || "—"}</p>
+                  </CardContent>
+                </Card>
 
-              <Separator />
+                {/* Shipping Info */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Entrega</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <p>{selectedOrder.shipping_street}, {selectedOrder.shipping_number}</p>
+                    <p>{selectedOrder.shipping_neighborhood}, {selectedOrder.shipping_city} - {selectedOrder.shipping_state}</p>
+                    <p>{selectedOrder.shipping_cep}</p>
+                    {selectedOrder.shipping_complement && <p className="text-xs text-muted-foreground">({selectedOrder.shipping_complement})</p>}
+                    <Badge variant="outline" className="mt-2">{selectedOrder.shipping_method}</Badge>
+                  </CardContent>
+                </Card>
 
-              {/* Payment Info */}
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">Pagamento</p>
-                {orderPayment ? (
-                  <div className="flex items-center gap-3 rounded-md border border-border p-3 bg-muted/30">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <Badge variant={orderPayment.status === "approved" || orderPayment.status === "paid" ? "default" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "destructive" : "secondary"}>
-                          {orderPayment.status === "approved" || orderPayment.status === "paid" ? "✅ Pago" : orderPayment.status === "refused" || orderPayment.status === "failed" ? "❌ Recusado" : "⏳ Pendente"}
-                        </Badge>
-                        <span className="text-xs font-medium text-muted-foreground uppercase">{orderPayment.gateway}</span>
+                {/* Payment Info */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Pagamento</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <span>{formatPrice(selectedOrder.total - (selectedOrder.shipping_cost || 0) + (selectedOrder.discount_amount || 0))}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Frete:</span>
+                      <span>{formatPrice(selectedOrder.shipping_cost || 0)}</span>
+                    </div>
+                    {selectedOrder.discount_amount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span className="text-muted-foreground">Desconto:</span>
+                        <span>-{formatPrice(selectedOrder.discount_amount)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Método: <span className="font-medium text-foreground">
-                          {orderPayment.method === "pix" ? "PIX" : orderPayment.method === "credit_card" ? "Cartão de Crédito" : orderPayment.method === "debit_card" ? "Cartão de Débito" : orderPayment.method === "boleto" ? "Boleto" : orderPayment.method}
-                        </span>
-                        {orderPayment.card_brand && ` • ${orderPayment.card_brand}`}
-                        {orderPayment.card_last_four && ` •••• ${orderPayment.card_last_four}`}
-                      </p>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Total:</span>
+                      <span className="text-primary">{formatPrice(selectedOrder.total)}</span>
                     </div>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-md border border-dashed border-border text-center">
-                    <p className="text-xs text-muted-foreground">Nenhum pagamento registrado</p>
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Items */}
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">Itens do Pedido</p>
-                <div className="space-y-2">
-                  {orderItems?.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 rounded-md border border-border p-2">
-                      {item.product_image ? (
-                        <img src={item.product_image} alt={item.product_name} className="h-10 w-10 rounded object-cover" />
-                      ) : (
-                        <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                          <Package className="h-5 w-5 text-muted-foreground/40" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product_name}</p>
-                        <p className="text-xs text-muted-foreground">{item.quantity}x {formatPrice(item.unit_price)}</p>
-                      </div>
-                      <p className="text-sm font-medium">{formatPrice(item.quantity * item.unit_price)}</p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Badge variant={(orderPayment as any)?.status === "approved" || (orderPayment as any)?.status === "paid" ? "default" : "secondary"}>
+                        {(orderPayment as any)?.status === "approved" || (orderPayment as any)?.status === "paid" ? "✅ Aprovado" : "⏳ Pendente"}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{(orderPayment as any)?.method || "—"}</span>
                     </div>
-                  ))}
-                </div>
-                
-                <div className="space-y-1.5 pt-2">
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(orderItems?.reduce((acc, i) => acc + (i.quantity * i.unit_price), 0) || 0)}</span>
-                  </div>
-                  {(selectedOrder as any).shipping_cost > 0 && (
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Frete ({(selectedOrder as any).shipping_method || "Padrão"})</span>
-                      <span>{formatPrice((selectedOrder as any).shipping_cost)}</span>
-                    </div>
-                  )}
-                  {selectedOrder.discount_amount > 0 && (
-                    <div className="flex justify-between text-xs text-green-600">
-                      <span>Desconto {selectedOrder.coupon_code && `(${selectedOrder.coupon_code})`}</span>
-                      <span>-{formatPrice(selectedOrder.discount_amount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t border-border">
-                    <span className="text-sm font-bold">Total</span>
-                    <span className="text-lg font-bold text-primary">{formatPrice(selectedOrder.total)}</span>
-                  </div>
-                </div>
-              </div>
+                  </CardContent>
+                </Card>
 
-              {selectedOrder.notes && (
-                <>
-                  <Separator />
-                  <div className="space-y-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.1em]">Notas / Observações</p>
-                    <p className="text-sm text-foreground/80 font-medium italic leading-relaxed">
-                      "{selectedOrder.notes}"
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <Separator />
-
-              {/* Status Progress */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold">Progresso do Pedido</p>
-                {selectedOrder.status === "cancelado" ? (
-                  <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-2 rounded-md">
-                    <XCircle className="h-5 w-5" />
-                    <span className="text-sm font-medium">Pedido Cancelado</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between relative px-2 py-4">
-                    <div className="absolute top-8 left-6 right-6 h-0.5 bg-muted rounded-full">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all duration-700"
-                        style={{ width: `${Math.max(0, (STATUS_STEPS.indexOf(selectedOrder.status as OrderStatus) / (STATUS_STEPS.length - 1)) * 100)}%` }}
-                      />
-                    </div>
-                    {STATUS_STEPS.map((step, i) => {
-                      const info = ORDER_STATUS_MAP[step];
-                      const Icon = STATUS_ICONS[step] || Clock;
-                      const stepIdx = STATUS_STEPS.indexOf(selectedOrder.status as OrderStatus);
-                      const isCompleted = i <= stepIdx;
-                      const isCurrent = i === stepIdx;
-                      return (
-                        <div key={step} className="flex flex-col items-center relative z-10">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                            isCompleted ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                          } ${isCurrent ? "ring-2 ring-primary/30 scale-110" : ""}`}>
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <span className={`text-[10px] mt-2 ${isCompleted ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                {/* Internal Actions */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Status & Ações</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(ORDER_STATUS_MAP).map(([status, info]) => {
+                        const isCurrent = selectedOrder.status === status;
+                        return (
+                          <Button
+                            key={status}
+                            variant={isCurrent ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 text-xs"
+                            disabled={isCurrent || updateStatus.isPending}
+                            onClick={() => updateStatus.mutate({ orderId: selectedOrder.id, status: status as OrderStatus })}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${info.color}`} />
                             {info.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Atualizar Status</p>
-                <div className="flex gap-2 flex-wrap">
-                  {(Object.keys(ORDER_STATUS_MAP) as OrderStatus[]).map((status) => {
-                    const info = ORDER_STATUS_MAP[status];
-                    const isCurrent = selectedOrder.status === status;
-                    return (
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <div className="pt-2">
                       <Button
-                        key={status}
-                        variant={isCurrent ? "default" : "outline"}
-                        size="sm"
-                        className="h-8 text-xs"
-                        disabled={isCurrent || updateStatus.isPending}
-                        onClick={() => updateStatus.mutate({ orderId: selectedOrder.id, status })}
+                        variant="secondary"
+                        className="w-full gap-2 h-10 font-semibold"
+                        onClick={() => {
+                          const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na ${storeSettings?.store_name || "nossa loja"} foi recebido e está sendo processado! 🚀`;
+                          window.open(`https://wa.me/${selectedOrder.customer_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+                        }}
                       >
-                        <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${info.color}`} />
-                        {info.label}
+                        <MessageSquare className="h-4 w-4" />
+                        Avisar no WhatsApp
                       </Button>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* Actions */}
-              <div className="pt-6 grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
-                  onClick={() => handlePrintLabel(selectedOrder)}
-                >
-                  <Package className="h-4 w-4" />
-                  Etiqueta
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 h-10 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-semibold"
-                  onClick={() => handlePrintReceipt(selectedOrder)}
-                >
-                  <FileText className="h-4 w-4" />
-                  Recibo (Nota)
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="col-span-2 gap-2 h-10 font-semibold"
-                  onClick={() => {
-                    const text = `Olá ${selectedOrder.customer_name}! Seu pedido #${selectedOrder.id.slice(0, 8)} na ${storeSettings?.store_name || "nossa loja"} foi recebido e está sendo processado! 🚀`;
-                    window.open(`https://wa.me/${selectedOrder.customer_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
-                  }}
-                >
-                  <Share2 className="h-4 w-4" />
-                  Enviar p/ WhatsApp
-                </Button>
-              </div>
-            </div>
+              {/* Order Items */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium">Itens do Pedido</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Qtd</TableHead>
+                        <TableHead>Preço</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {orderItems?.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="text-sm font-medium">{item.product_name}</TableCell>
+                          <TableCell className="text-sm">{item.quantity}</TableCell>
+                          <TableCell className="text-sm">{formatPrice(item.unit_price)}</TableCell>
+                          <TableCell className="text-right text-sm font-bold">{formatPrice(item.unit_price * item.quantity)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
           )}
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Helper switch for printer config (not imported from UI)
+function Switch({ id, defaultChecked, checked, onCheckedChange }: any) {
+  return (
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked}
+      defaultChecked={defaultChecked}
+      onChange={(e) => onCheckedChange?.(e.target.checked)}
+      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+    />
   );
 }
