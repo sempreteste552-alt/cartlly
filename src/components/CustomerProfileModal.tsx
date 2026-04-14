@@ -26,6 +26,8 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
   const { customer, signOut, updateProfile, getOrders } = useCustomerAuth();
   const { wishlistIds, wishlistProducts, toggleWishlist } = useWishlist(storeUserId);
   const [tab, setTab] = useState("profile");
+  const { data: loyaltyPoints } = useCustomerLoyaltyPoints(customer?.id, storeUserId);
+  const { data: loyaltyConfig } = useLoyaltyConfig();
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
