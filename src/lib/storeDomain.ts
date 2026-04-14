@@ -23,6 +23,11 @@ export function isPlatformHost(hostname?: string | null) {
 
   if (platformDomains.includes(host)) return true;
 
+  // Handle Lovable Cloud preview domains
+  if (host.includes(".lovable.app") && (host.includes("-preview-") || host.includes("--"))) {
+    return true;
+  }
+
   // ONLY treat specific platform subdomains as platform
   // Don't treat ALL .lovable.app subdomains as platform, 
   // as they are used for tenant stores (e.g. store-slug.lovable.app)
@@ -32,6 +37,24 @@ export function isPlatformHost(hostname?: string | null) {
     host === "lovableproject.com" ||
     host === "lovable.dev"
   );
+}
+
+export function getSlugFromHostname(hostname: string) {
+  const host = hostname.toLowerCase();
+  const platformDomains = ["cartlly.com", "cartlly.com.br", "lovable.app", "lovableproject.com"];
+  
+  // Only proceed if it ends with one of our platform domains
+  const baseDomain = platformDomains.find(d => host.endsWith("." + d));
+  if (!baseDomain) return null;
+
+  const subdomain = host.replace("." + baseDomain, "");
+  // Ignore 'www' and other platform-reserved subdomains
+  if (["www", "cartlly", "admin", "app"].includes(subdomain)) return null;
+
+  // Don't treat preview URLs as slugs
+  if (subdomain.includes("-preview-") || subdomain.includes("--")) return null;
+
+  return subdomain;
 }
 
 
