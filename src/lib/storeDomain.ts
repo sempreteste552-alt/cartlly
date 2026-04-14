@@ -41,7 +41,7 @@ export function isPlatformHost(hostname?: string | null) {
 }
 
 export function getSlugFromHostname(hostname: string) {
-  const host = hostname.toLowerCase();
+  const host = normalizeDomain(hostname);
   const platformDomains = ["cartlly.com", "cartlly.com.br", "lovable.app", "lovableproject.com"];
   
   // Only proceed if it ends with one of our platform domains
