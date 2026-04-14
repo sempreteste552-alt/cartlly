@@ -355,13 +355,6 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             <Switch id="made_to_order" checked={madeToOrder} onCheckedChange={setMadeToOrder} />
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <div>
-              <Label htmlFor="is_prize" className="text-sm font-medium">Produto de Brinde / Prêmio</Label>
-              <p className="text-xs text-muted-foreground">Oculto na loja, disponível apenas para resgate de prêmios</p>
-            </div>
-            <Switch id="is_prize" checked={isPrize} onCheckedChange={setIsPrize} />
-          </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
