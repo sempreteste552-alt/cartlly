@@ -318,10 +318,52 @@ export default function LojaLayout() {
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
 
   useEffect(() => {
-    if (slug) {
-      localStorage.setItem("last_visited_store", slug);
-    }
-  }, [slug]);
+    if (!settingsBySlug?.id || !settingsBySlug?.user_id) return;
+
+    const channel = supabase
+      .channel(`store-updates-rt-${settingsBySlug.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "store_settings",
+          filter: `id=eq.${settingsBySlug.id}`,
+        },
+        () => {
+          refetchSettings();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "store_theme_config",
+          filter: `user_id=eq.${settingsBySlug.user_id}`,
+        },
+        () => {
+          refetchTheme();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "store_marketing_config",
+          filter: `user_id=eq.${settingsBySlug.user_id}`,
+        },
+        () => {
+          refetchMarketing();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [settingsBySlug?.id, settingsBySlug?.user_id, refetchSettings, refetchTheme, refetchMarketing]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
