@@ -101,6 +101,7 @@ export const pt = {
     myPlan: "Meu Plano",
     openStore: "Abrir Loja",
     management: "Gestão",
+    marketing: "Marketing",
     settings: "Configurações",
     appearance: "Aparência",
   },
