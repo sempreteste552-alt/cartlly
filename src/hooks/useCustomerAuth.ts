@@ -315,11 +315,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user) {
+      const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
       const { data: newCustomer, error: customerErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
         name,
         email: normalizedEmail,
+        referred_by_code: referralCode || null,
       } as any).select().single();
 
       if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;
