@@ -163,6 +163,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
       additionalImages: [...additionalImages, ...additionalVideos],
       cost_price: parseFloat(costPrice) || 0,
       min_stock_alert: parseInt(minStockAlert) || 5,
+      is_prize: isPrize,
     });
   };
 
