@@ -165,7 +165,36 @@ export default function Fidelidade() {
               <p className="text-xs text-muted-foreground">
                 Pontos mínimos para resgatar desconto
               </p>
+          </div>
+          
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-medium">Recompensa por Indicação</Label>
+                <p className="text-sm text-muted-foreground">Clientes ganham pontos ao indicar novos clientes</p>
+              </div>
+              <Switch checked={referralEnabled} onCheckedChange={setReferralEnabled} />
             </div>
+
+            {referralEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Pontos por indicação</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={referralPoints}
+                    onChange={(e) => setReferralPoints(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ex: 50 = cliente ganha 50 pontos por cada indicação que realizar uma compra
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
           </div>
 
           {enabled && (
