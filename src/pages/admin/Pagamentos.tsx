@@ -107,7 +107,12 @@ export default function Pagamentos() {
             </Button>
           </div>
         </TabsContent>
+
+        <TabsContent value="gateway" className="mt-4 max-w-2xl">
+          <GatewaySettings />
+        </TabsContent>
       </Tabs>
+
     </div>
     </PlanGate>
   );
