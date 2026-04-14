@@ -190,6 +190,7 @@ export function useAllProductReviews(productIds: string[]) {
       });
       return result;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 }
 
@@ -205,6 +206,7 @@ export function useBestSellingProducts(storeUserId?: string) {
       if (error) throw error;
       return new Set((data as any[])?.map((d: any) => d.product_id) ?? []);
     },
+    staleTime: 1000 * 60 * 30, // 30 minutes
   });
 }
 
@@ -242,5 +244,6 @@ export function usePublicProductVariants(productIds: string[]) {
       });
       return map;
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
