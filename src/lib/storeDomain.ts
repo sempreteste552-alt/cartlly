@@ -3,6 +3,7 @@ export function normalizeDomain(value?: string | null) {
     .trim()
     .toLowerCase()
     .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "") // Remove 'www.' prefix
     .replace(/\/.*$/, "")
     .replace(/\.$/, "")
     .replace(/:\d+$/, "");
