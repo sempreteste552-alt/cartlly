@@ -376,6 +376,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
   return (
     <div 
       ref={ref} 
+      id="main-product-grid"
       className="grid" 
       style={{ 
         gridTemplateColumns: `repeat(var(--store-grid-cols-mobile, 2), 1fr)`,
@@ -385,7 +386,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
     >
       <style>{`
         @media (min-width: 640px) {
-          .grid { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
+          #main-product-grid { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
         }
       `}</style>
       {products.map((product, index) => {
