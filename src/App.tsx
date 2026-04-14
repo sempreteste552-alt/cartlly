@@ -169,8 +169,8 @@ const App = () => {
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
                     <Route path="cerebro" element={<Cerebro />} />
-                    <Route path="indicacoes" element={<Indicacoes />} />
-                    <Route path="politicas" element={<Politicas />} />
+                    <Route path="afiliados" element={<CustomerReferrals />} />
+                    <Route path="indicacoes-plataforma" element={<PlatformReferrals />} />
                     <Route path="fidelidade" element={<Fidelidade />} />
                     <Route path="lucro" element={<Lucro />} />
                     <Route path="analytics" element={<Analytics />} />
