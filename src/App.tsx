@@ -1,24 +1,10 @@
 import React, { Suspense, lazy } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { I18nProvider } from "@/i18n";
-import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import ScrollToTop from "@/components/ScrollToTop";
-import { Loader2 } from "lucide-react";
-
-const AdminLayout = lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
-const Login = lazy(() => import("./pages/Login"));
-const Index = lazy(() => import("./pages/Index"));
-const ContaEmAnalise = lazy(() => import("./pages/ContaEmAnalise"));
+// ... keep existing code
 const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
 const Produtos = lazy(() => import("./pages/admin/Produtos"));
 const Pedidos = lazy(() => import("./pages/admin/Pedidos"));
 const Configuracoes = lazy(() => import("./pages/admin/Configuracoes"));
+
 const Cupons = lazy(() => import("./pages/admin/Cupons"));
 
 const Frete = lazy(() => import("./pages/admin/Frete"));
