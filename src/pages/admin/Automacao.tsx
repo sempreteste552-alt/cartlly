@@ -600,6 +600,15 @@ export default function Automacao() {
                                 >
                                   <MessageCircle className="h-3.5 w-3.5" />
                                 </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-7 w-7" 
+                                  onClick={() => setSelectedCartItems(items)}
+                                  title="Ver Itens"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
