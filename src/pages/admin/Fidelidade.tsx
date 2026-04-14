@@ -30,6 +30,8 @@ export default function Fidelidade() {
       setPointsPerReal(String(config.points_per_real));
       setRedemptionRate(String(config.redemption_rate));
       setMinRedemption(String(config.min_redemption));
+      setReferralEnabled(config.referral_enabled || false);
+      setReferralPoints(String(config.referral_reward_points || 50));
     }
   }, [config]);
 
