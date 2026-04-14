@@ -59,19 +59,13 @@ export function GenericProductSection({ section, products, cart, basePath = "", 
   return (
     <SectionWrapper section={section} primaryColor={primaryColor}>
       <div 
-        id={`grid-${section.id}`}
-        className="grid" 
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         style={{ 
-          gridTemplateColumns: `repeat(var(--store-grid-cols-mobile, 2), 1fr)`,
-          gap: `var(--store-grid-gap, 16px)`,
-          "--desktop-cols": `var(--store-grid-cols-desktop, 4)`,
-        } as any}
+          gridTemplateColumns: section.section_type === 'collections' || section.section_type === 'categories' 
+            ? 'repeat(auto-fill, minmax(140px, 1fr))' 
+            : undefined
+        }}
       >
-        <style>{`
-          @media (min-width: 640px) {
-            #grid-${section.id} { grid-template-columns: repeat(var(--desktop-cols), 1fr) !important; }
-          }
-        `}</style>
         {filteredProducts.map((product, index) => (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card 
