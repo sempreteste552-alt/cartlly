@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Bot, ShoppingCart, Bell, History, Zap, RefreshCw, Send, Users, BellRing, Heart,
   Clock, TrendingUp, AlertTriangle, Settings2, Timer, CheckCircle2, XCircle, Eye,
-  Sparkles, MessageCircle, Gift, UserPlus, Hourglass
+  Sparkles, MessageCircle, Gift, UserPlus, Hourglass, Package
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
