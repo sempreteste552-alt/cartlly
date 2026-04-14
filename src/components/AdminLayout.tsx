@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useState, useMemo, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useState, useMemo, Suspense, type CSSProperties } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useMotivationalPush } from "@/hooks/useMotivationalPush";
 import { AdminSidebar } from "@/components/AdminSidebar";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useParams, useLocation } from "react-router-dom";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { AIChatWidget } from "@/components/AIChatWidget";
 import { WhatsAppSupportBubble } from "@/components/WhatsAppSupportBubble";
@@ -29,7 +29,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { isLocale, useTranslation } from "@/i18n";
 import { isPlatformHost } from "@/lib/storeDomain";
-import { useLocation } from "react-router-dom";
 
 export function AdminLayout() {
   const location = useLocation();
@@ -234,7 +233,13 @@ export function AdminLayout() {
           <main className="flex-1 overflow-auto p-4 sm:p-6">
             <OnboardingTutorial />
             <TrialBanner />
-            <Outlet />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-64">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            }>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
         {!isCerebroPage && !isSuportePage && <WhatsAppSupportBubble />}
