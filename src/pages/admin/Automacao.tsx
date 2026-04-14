@@ -25,6 +25,7 @@ import { ptBR } from "date-fns/locale";
 import { PlanGate } from "@/components/PlanGate";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { canAccess } from "@/lib/planPermissions";
 
 interface AutomationRule {
