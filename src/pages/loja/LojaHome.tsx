@@ -264,6 +264,14 @@ export default function LojaHome() {
           onOpenCart={openCart}
         />
       )}
+
+      {customer && (
+        <PrizeNotificationCard 
+          customer={customer} 
+          storeUserId={storeUserId!} 
+          settings={settings} 
+        />
+      )}
     </div>
   );
 }
