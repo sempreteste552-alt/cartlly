@@ -149,6 +149,7 @@ export default function Automacao() {
   const hasAiTools = canAccess("ai_tools", ctx);
   const [editingRule, setEditingRule] = useState<string | null>(null);
   const [ruleEdits, setRuleEdits] = useState<Record<string, Partial<AutomationRule>>>({});
+  const [selectedCartItems, setSelectedCartItems] = useState<any[] | null>(null);
 
   // === DATA QUERIES ===
 
