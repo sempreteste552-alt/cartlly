@@ -206,10 +206,14 @@ export default function Login() {
             } catch { /* ignore */ }
           }
           
+          // We only automatically redirect to last_visited_store if we are NOT on the platform domains
+          // OR if there's an explicit redirect_back context.
+          // This avoids the "cache" problem where users are stuck on a previous store.
           const lastStore = localStorage.getItem("last_visited_store");
-          if (lastStore) {
+          if (lastStore && !isPlatformHost(window.location.hostname)) {
             navigate(`/loja/${lastStore}`, { replace: true });
           } else {
+            // Stay at root or let them sign out
             navigate("/", { replace: true });
           }
           return;
