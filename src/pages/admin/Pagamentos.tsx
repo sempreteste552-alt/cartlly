@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CreditCard, MessageCircle, BarChart3 } from "lucide-react";
+import { Loader2, CreditCard, MessageCircle, BarChart3, Zap } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
+import { GatewaySettings } from "@/components/admin/GatewaySettings";
+
 
 export default function Pagamentos() {
   const { data: settings, isLoading } = useStoreSettings();
