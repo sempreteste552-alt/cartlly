@@ -77,7 +77,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false },
     { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false },
     { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const },
-    { title: t.sidebar.gateway, url: `${adminBasePath}/gateway`, icon: Zap, feature: "gateway" as const },
+
     { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null },
     { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
     { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null },
