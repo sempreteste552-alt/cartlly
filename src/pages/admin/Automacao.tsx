@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -18,13 +19,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Bot, ShoppingCart, Bell, History, Zap, RefreshCw, Send, Users, BellRing, Heart,
   Clock, TrendingUp, AlertTriangle, Settings2, Timer, CheckCircle2, XCircle, Eye,
-  Sparkles, MessageCircle, Gift, UserPlus, Hourglass
+  Sparkles, MessageCircle, Gift, UserPlus, Hourglass, Package
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlanGate } from "@/components/PlanGate";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { canAccess } from "@/lib/planPermissions";
 
 interface AutomationRule {
@@ -144,9 +146,11 @@ export default function Automacao() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { ctx } = useTenantContext();
+  const { data: storeSettings } = useStoreSettings();
   const hasAiTools = canAccess("ai_tools", ctx);
   const [editingRule, setEditingRule] = useState<string | null>(null);
   const [ruleEdits, setRuleEdits] = useState<Record<string, Partial<AutomationRule>>>({});
+  const [selectedCartItems, setSelectedCartItems] = useState<any[] | null>(null);
 
   // === DATA QUERIES ===
 
@@ -237,9 +241,9 @@ export default function Automacao() {
     queryFn: async () => {
       if (customerIds.length === 0) return {};
       const { data } = await supabase
-        .from("customers").select("id, name, email").in("id", customerIds as string[]);
-      const map: Record<string, { name: string; email: string }> = {};
-      (data || []).forEach((c: any) => { map[c.id] = { name: c.name, email: c.email }; });
+        .from("customers").select("id, name, email, phone").in("id", customerIds as string[]);
+      const map: Record<string, { name: string; email: string; phone: string }> = {};
+      (data || []).forEach((c: any) => { map[c.id] = { name: c.name, email: c.email, phone: c.phone }; });
       return map;
     },
     enabled: customerIds.length > 0,
@@ -342,6 +346,19 @@ export default function Automacao() {
       toast.error("Erro ao executar: " + (err.message || "Erro desconhecido"));
     },
   });
+
+  const handleManualWhatsApp = (customer: any, cart: AbandonedCart) => {
+    if (!customer?.phone) {
+      toast.error("Cliente sem telefone cadastrado.");
+      return;
+    }
+    const storeName = (storeSettings as any)?.store_name || "nossa loja";
+    const items = Array.isArray(cart.items) ? cart.items : [];
+    const itemNames = items.slice(0, 2).map((i: any) => i.name).join(", ");
+    const text = `Olá ${customer.name}! Aqui é da ${storeName}. Notamos que você deixou alguns produtos no carrinho (${itemNames}). Gostaria de finalizar sua compra ou tirar alguma dúvida?`;
+    const phone = customer.phone.replace(/\D/g, "");
+    window.open(`https://wa.me/${phone.startsWith('55') ? phone : '55' + phone}?text=${encodeURIComponent(text)}`, "_blank");
+  };
 
   // === HELPERS ===
 
@@ -539,6 +556,7 @@ export default function Automacao() {
                         <TableHead>Abandonado há</TableHead>
                         <TableHead>Status IA</TableHead>
                         <TableHead>Lembretes</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -571,6 +589,28 @@ export default function Automacao() {
                               <Badge variant={cart.reminder_sent_count > 0 ? "default" : "outline"} className="text-[10px]">
                                 {cart.reminder_sent_count}/5
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1.5">
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-7 w-7 text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700" 
+                                  onClick={() => handleManualWhatsApp(customer, cart)}
+                                  title="WhatsApp Manual"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-7 w-7" 
+                                  onClick={() => setSelectedCartItems(items)}
+                                  title="Ver Itens"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -842,6 +882,42 @@ export default function Automacao() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!selectedCartItems} onOpenChange={(o) => !o && setSelectedCartItems(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-primary" /> Itens no Carrinho
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {selectedCartItems?.map((item: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3 border-b pb-3 last:border-0 last:pb-0">
+                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Package className="h-6 w-6 text-muted-foreground/40" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">R$ {Number(item.price).toFixed(2)} x {item.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-primary">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+            <div className="pt-2 flex justify-between items-center border-t">
+              <span className="text-sm font-medium">Total do Carrinho</span>
+              <span className="text-lg font-bold text-primary">
+                R$ {selectedCartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     </PlanGate>
   );
