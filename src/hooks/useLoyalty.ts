@@ -2,16 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export function useLoyaltyConfig() {
+export function useLoyaltyConfig(storeUserId?: string) {
   const { user } = useAuth();
+  const uid = storeUserId || user?.id;
   return useQuery({
-    queryKey: ["loyalty_config", user?.id],
-    enabled: !!user,
+    queryKey: ["loyalty_config", uid],
+    enabled: !!uid,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("loyalty_config" as any)
         .select("*")
-        .eq("store_user_id", user!.id)
+        .eq("store_user_id", uid!)
         .maybeSingle();
       if (error) throw error;
       return data as any;
