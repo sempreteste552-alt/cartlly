@@ -418,26 +418,25 @@ export function AICatalogImport({ open, onOpenChange }: AICatalogImportProps) {
                         <p className="font-medium text-sm">{product.name}</p>
                         <Badge variant="secondary" className="text-xs">{product.category}</Badge>
                       </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.description}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
-                      <span>Estoque: {product.stock}</span>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{product.description}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">{formatPrice(product.price)}</span>
+                        <span>Estoque: {product.stock}</span>
+                      </div>
+                      {/* Show variants */}
+                      {product.variants && product.variants.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {product.variants.map((v, vi) => (
+                            <Badge key={vi} variant="outline" className="text-[10px]">
+                              {v.variant_type}: {v.variant_value}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {/* Show variants */}
-                    {product.variants && product.variants.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {product.variants.map((v, vi) => (
-                          <Badge key={vi} variant="outline" className="text-[10px]">
-                            {v.variant_type}: {v.variant_value}
-                          </Badge>
-                        ))}
-                      </div>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
             </div>
 
             <div className="flex justify-between">
