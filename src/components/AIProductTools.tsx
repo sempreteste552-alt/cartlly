@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,7 @@ export function AIProductTools({
   name, description, price, category, imageUrl,
   onApplyDescription, onApplyName, onApplyPrice, onApplyBadge, locked = false,
 }: AIProductToolsProps) {
+  const { slug } = useParams();
   const aiEnhance = useAIProductEnhance();
   const [seoResult, setSeoResult] = useState<SEOResult | null>(null);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
@@ -91,7 +93,7 @@ export function AIProductTools({
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
   const isLoading = aiEnhance.isPending;
-  const handleUpgrade = () => window.location.assign("/admin/plano");
+  const handleUpgrade = () => window.location.assign(`/painel/${slug}/plano`);
 
   return (
     <div className="space-y-3">
