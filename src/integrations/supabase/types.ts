@@ -706,6 +706,57 @@ export type Database = {
           },
         ]
       }
+      customer_prizes: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          delivered_at: string | null
+          id: string
+          product_id: string
+          released_at: string | null
+          status: string | null
+          store_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          delivered_at?: string | null
+          id?: string
+          product_id: string
+          released_at?: string | null
+          status?: string | null
+          store_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          delivered_at?: string | null
+          id?: string
+          product_id?: string
+          released_at?: string | null
+          status?: string | null
+          store_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_prizes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_prizes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_push_tokens: {
         Row: {
           created_at: string | null
