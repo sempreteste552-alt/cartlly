@@ -72,7 +72,7 @@ export default function CustomerReferrals() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Concluídas (Vendas)</p>
+                  <p className="text-sm font-medium text-muted-foreground">Concluídas</p>
                   <h3 className="text-2xl font-bold text-green-600">{stats?.completed || 0}</h3>
                 </div>
                 <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -267,8 +267,15 @@ export default function CustomerReferrals() {
                   <h4 className="text-sm font-bold mb-2">Como funciona?</h4>
                   <ul className="text-xs text-muted-foreground space-y-2 list-disc pl-4">
                     <li>O cliente acessa o painel dele na vitrine e copia o link de indicação único.</li>
-                    <li>Um amigo se cadastra e faz a primeira compra.</li>
-                    <li>Quando o status do pedido for "Entregue" ou "Concluído", a recompensa é liberada automaticamente.</li>
+                    <li>Um amigo se cadastra usando o link de indicação.</li>
+                    {config?.referral_reward_condition === "lead" ? (
+                      <li>A recompensa é liberada imediatamente após o cadastro do amigo ser confirmado.</li>
+                    ) : (
+                      <>
+                        <li>O amigo faz a primeira compra na vitrine.</li>
+                        <li>Quando o status do pedido for "Entregue", a recompensa é liberada automaticamente.</li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </CardContent>
