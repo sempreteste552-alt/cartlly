@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ const GATEWAYS = [
 
 type TestStatus = "idle" | "testing" | "success" | "error";
 
-export default function Gateway() {
+export function GatewaySettings() {
   const { data: settings, isLoading } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const { isLocked } = usePlanFeatures();
@@ -47,7 +47,6 @@ export default function Gateway() {
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
-      // Gateway is active if it has a gateway selected and keys configured
       setGatewayActive(!!(settings.payment_gateway && settings.gateway_public_key && (settings as any).gateway_secret_key));
     }
   }, [settings]);
@@ -67,7 +66,6 @@ export default function Gateway() {
       toast.error("Usuário não autenticado.");
       return;
     }
-    // Ensure settings are saved before testing
     toast.info("Salve as configurações antes de testar. Testando com dados salvos...");
     setTestStatus("testing");
     setTestMessage("");
@@ -123,19 +121,14 @@ export default function Gateway() {
 
   return (
     <LockedFeature isLocked={gatewayLocked} featureName="Gateway de Pagamento" logoUrl={settings?.logo_url || undefined}>
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Gateway de Pagamento</h1>
-        <p className="text-muted-foreground">Configure seu gateway para processar pagamentos</p>
-      </div>
-
+    <div className="space-y-6">
       {/* Gateway Status Card with Toggle */}
       <Card className={`border-border ${paymentGateway ? "border-l-4" : ""}`} style={paymentGateway && selectedGateway ? { borderLeftColor: selectedGateway.color } : {}}>
         <CardContent className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <Power className={`h-5 w-5 ${gatewayActive ? "text-green-500" : "text-muted-foreground"}`} />
             <div>
-              <p className="font-medium">Gateway de Pagamento</p>
+              <p className="font-medium">Status do Gateway</p>
               <p className="text-xs text-muted-foreground">
                 {paymentGateway ? `${selectedGateway?.name} - ${gatewayEnvironment === "production" ? "Produção" : "Sandbox"}` : "Nenhum gateway configurado"}
               </p>
@@ -273,7 +266,7 @@ export default function Gateway() {
             <CardDescription>Verifique se as credenciais estão funcionando</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-border p-3">
                 <p className="text-xs text-muted-foreground">Gateway</p>
                 <p className="font-medium">{selectedGateway.name}</p>
@@ -325,7 +318,7 @@ export default function Gateway() {
       <div className="flex justify-end pb-6">
         <Button onClick={handleSave} disabled={updateSettings.isPending} size="lg">
           {updateSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Salvar Gateway
+          Salvar Configurações do Gateway
         </Button>
       </div>
     </div>

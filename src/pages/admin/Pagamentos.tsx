@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CreditCard, MessageCircle, BarChart3 } from "lucide-react";
+import { Loader2, CreditCard, MessageCircle, BarChart3, Zap } from "lucide-react";
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
+import { GatewaySettings } from "@/components/admin/GatewaySettings";
+
 
 export default function Pagamentos() {
   const { data: settings, isLoading } = useStoreSettings();
@@ -56,8 +58,10 @@ export default function Pagamentos() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1" /> Transações</TabsTrigger>
-          <TabsTrigger value="config"><CreditCard className="h-4 w-4 mr-1" /> Configurações</TabsTrigger>
+          <TabsTrigger value="config"><CreditCard className="h-4 w-4 mr-1" /> Métodos Aceitos</TabsTrigger>
+          <TabsTrigger value="gateway"><Zap className="h-4 w-4 mr-1" /> Gateway</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="dashboard" className="mt-4">
           <PaymentsDashboard />
@@ -103,7 +107,12 @@ export default function Pagamentos() {
             </Button>
           </div>
         </TabsContent>
+
+        <TabsContent value="gateway" className="mt-4 max-w-2xl">
+          <GatewaySettings />
+        </TabsContent>
       </Tabs>
+
     </div>
     </PlanGate>
   );
