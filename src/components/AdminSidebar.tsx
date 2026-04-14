@@ -137,7 +137,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <div className="relative">
-                          <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                          <item.icon className="h-4 w-4" />
                           {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
                             <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                               {item.badgeCount > 9 ? "9+" : item.badgeCount}
@@ -147,7 +147,6 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                         {!collapsed && (
                           <span className="flex items-center gap-2 flex-1 min-w-0">
                             <span className="truncate">{item.title}</span>
-                            {isReferral && <span className="referral-dot" />}
                             {!!item.badgeCount && item.badgeCount > 0 && (
                               <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
                                 {item.badgeCount > 99 ? "99+" : item.badgeCount}
