@@ -176,30 +176,34 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {marketingItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && (
-                        <span className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="truncate">{item.title}</span>
-                          {item.isNew && (
-                            <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
-                              {adminSidebarText.new}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {marketingItems.map((item) => {
+                const isReferral = item.url.includes("/indicacoes");
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink
+                        to={item.url}
+                        id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                        className={`hover:bg-sidebar-accent/60 transition-colors rounded-lg ${isReferral ? "sidebar-referral-item text-primary font-semibold" : ""}`}
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className={`h-4 w-4 ${isReferral ? "text-primary" : ""}`} />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="truncate">{item.title}</span>
+                            {isReferral && <span className="referral-dot" />}
+                            {item.isNew && (
+                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                                {adminSidebarText.new}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
