@@ -6,10 +6,12 @@ import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import cartlyLogo from "@/assets/cartly-logo.png";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (loading) return;
+
     if (user) {
       const route = async () => {
         const isAdmin = await checkIsSuperAdmin(user.id);
@@ -25,7 +27,17 @@ const Index = () => {
           if (store?.store_slug) {
             navigate(`/painel/${store.store_slug}`);
           } else {
-            navigate("/setup-store");
+            // Check if it's a customer
+            if (user.user_metadata?.is_customer) {
+              const lastStore = localStorage.getItem("last_visited_store");
+              if (lastStore) {
+                navigate(`/loja/${lastStore}`);
+              } else {
+                navigate("/login");
+              }
+            } else {
+              navigate("/setup-store");
+            }
           }
         }
       };
@@ -33,7 +45,7 @@ const Index = () => {
     } else {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
