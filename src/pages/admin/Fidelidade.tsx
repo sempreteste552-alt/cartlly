@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import { Award, Gift, Star, TrendingUp, Users, Loader2 } from "lucide-react";
 import { useLoyaltyConfig, useUpsertLoyaltyConfig, useLoyaltyPoints, useLoyaltyTransactions } from "@/hooks/useLoyalty";
 import { toast } from "sonner";
