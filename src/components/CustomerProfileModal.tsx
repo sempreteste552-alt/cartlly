@@ -330,6 +330,49 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </div>
+                  
+                  {referrals && referrals.length > 0 && (
+                    <div className="mt-6 space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Progresso de Indicações</span>
+                          <span>{referrals.filter(r => r.status === "completed").length} / {loyaltyConfig?.referral_goal || 1}</span>
+                        </div>
+                        <Progress 
+                          value={Math.min(100, (referrals.filter(r => r.status === "completed").length / (loyaltyConfig?.referral_goal || 1)) * 100)} 
+                          className="h-2 bg-yellow-500/10" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                          <UsersIcon className="h-3.5 w-3.5" /> Suas Indicações
+                        </p>
+                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                          {referrals
+                            .filter(r => loyaltyConfig?.referral_show_pending || r.status === "completed")
+                            .map((r: any) => (
+                              <div key={r.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-border shadow-sm">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-medium truncate max-w-[120px]">
+                                    {r.referred?.name || "Amigo Indicado"}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(r.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <Badge 
+                                  variant={r.status === "completed" ? "default" : "secondary"}
+                                  className={`text-[9px] h-5 px-1.5 ${r.status === "completed" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}`}
+                                >
+                                  {r.status === "completed" ? "Concluída" : "Pendente"}
+                                </Badge>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
