@@ -76,7 +76,7 @@ export function CookieConsent({ basePath, storeUserId, primaryColor, buttonColor
   const resolvedBtnText = buttonTextColor || "#ffffff";
 
   return (
-    <div className="fixed bottom-0 md:bottom-4 left-0 right-0 z-[9999] p-4 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed bottom-20 md:bottom-4 left-0 right-0 z-[100] p-4 animate-in slide-in-from-bottom-4 duration-500">
       <div className="max-w-xl mx-auto bg-card border border-border rounded-xl shadow-2xl p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div
