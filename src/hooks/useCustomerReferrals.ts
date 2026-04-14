@@ -44,3 +44,23 @@ export function useCustomerReferralStats() {
     },
   });
 }
+
+export function useStoreCustomerReferrals(customerId?: string, storeUserId?: string) {
+  return useQuery({
+    queryKey: ["store_customer_referrals", customerId, storeUserId],
+    enabled: !!customerId && !!storeUserId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_referrals")
+        .select(`
+          *,
+          referred:referred_id (name, email)
+        `)
+        .eq("referrer_id", customerId!)
+        .eq("store_user_id", storeUserId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+}
