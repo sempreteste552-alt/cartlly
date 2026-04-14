@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { isPlatformHost, normalizeDomain } from "@/lib/storeDomain";
+import { isPlatformHost, normalizeDomain, getSlugFromHostname } from "@/lib/storeDomain";
 
 export function usePublicProducts(storeUserId?: string) {
   return useQuery({
