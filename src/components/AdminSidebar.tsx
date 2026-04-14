@@ -182,7 +182,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       to={item.url}
                       id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={() => isMobile && setOpenMobile(false)}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && (
@@ -216,7 +216,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       to={item.url}
                       id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                       className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      onClick={() => isMobile && setOpenMobile(false)}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
