@@ -145,11 +145,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                   .maybeSingle();
 
                 if (!existing) {
+                  const referralCode = localStorage.getItem(`store_referral_${pending.store_user_id}`);
                   const { data: newCustomer } = await supabase.from("customers").insert({
                     auth_user_id: u.id,
                     store_user_id: pending.store_user_id,
                     name: pending.name || u.user_metadata?.display_name || u.email?.split("@")[0] || "Cliente",
                     email: u.email || "",
+                    referred_by_code: referralCode || null,
                   } as any).select().single();
 
                   if (newCustomer) {
