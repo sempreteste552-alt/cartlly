@@ -125,6 +125,7 @@ export function GenericProductSection({ section, products, cart, basePath = "", 
                   disabled={product.stock <= 0 && !product.made_to_order}
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     cart?.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
                     onAddToCart?.(product.name, product.image_url);
                   }}
