@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check, Package } from "lucide-react";
+import { Users, Gift, TrendingUp, Search, Filter, Share2, Copy, Check, Package, ShoppingCart } from "lucide-react";
 import { useCustomerReferrals, useCustomerReferralStats } from "@/hooks/useCustomerReferrals";
 import { useLoyaltyConfig, useUpsertLoyaltyConfig } from "@/hooks/useLoyalty";
 import { useProducts, useUpdateProduct } from "@/hooks/useProducts";
@@ -139,8 +139,8 @@ export default function CustomerReferrals() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="completed">Finalizada</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="completed">Completos (Pagos/Ativos)</SelectItem>
+                  <SelectItem value="pending">Pendentes (Só Cadastro)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -151,8 +151,9 @@ export default function CustomerReferrals() {
                   <TableRow>
                     <TableHead>Quem Indicou</TableHead>
                     <TableHead>Quem foi Indicado</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Data Cadastro</TableHead>
+                    <TableHead>Status / Evento</TableHead>
+                    <TableHead>Pedido Vinculado</TableHead>
                     <TableHead>Recompensa</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -180,11 +181,23 @@ export default function CustomerReferrals() {
                             <span className="text-xs text-muted-foreground">{r.referred?.email}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">{format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</TableCell>
+                        <TableCell className="text-sm">{format(new Date(r.created_at), "dd/MM/yy HH:mm")}</TableCell>
                         <TableCell>
                           <Badge variant={r.status === "completed" ? "default" : "secondary"}>
-                            {r.status === "completed" ? "Finalizada" : "Pendente"}
+                            {r.status === "completed" 
+                              ? (config?.referral_reward_condition === "sale" ? "Compra Paga" : "Cadastro Realizado") 
+                              : "Pendente"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {r.order_id ? (
+                            <div className="flex items-center gap-1 font-mono text-xs">
+                              <ShoppingCart className="h-3 w-3" />
+                              #{r.order_id.slice(0, 8)}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm">
                           {r.reward_type === "points" ? `${r.reward_value} pts` : r.reward_description}

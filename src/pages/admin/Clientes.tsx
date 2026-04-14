@@ -197,7 +197,8 @@ export default function Clientes() {
         (c: any) =>
           c.name?.toLowerCase().includes(term) ||
           c.email?.toLowerCase().includes(term) ||
-          c.phone?.includes(term)
+          c.phone?.includes(term) ||
+          c.referred_by_code?.toLowerCase().includes(term)
       );
     }
 
@@ -307,6 +308,11 @@ export default function Clientes() {
                           {isVip && (
                             <Badge variant="default" className="bg-primary text-[10px] h-5 px-1.5 font-bold animate-pulse">
                               <TrendingUp className="mr-1 h-3 w-3" /> VIP
+                            </Badge>
+                          )}
+                          {customer.referred_by_code && (
+                            <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-medium border-primary/30 text-primary">
+                              <Gift className="mr-1 h-3 w-3" /> Indicação: {customer.referred_by_code}
                             </Badge>
                           )}
                         </div>

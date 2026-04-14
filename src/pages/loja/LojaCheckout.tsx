@@ -222,6 +222,7 @@ export default function LojaCheckout() {
 
     const orderId = globalThis.crypto?.randomUUID?.() ?? "00000000-0000-4000-8000-000000000000";
 
+    const referralCode = localStorage.getItem(`store_referral_${userId}`);
     const { error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -247,6 +248,7 @@ export default function LojaCheckout() {
         status: "pendente",
         coupon_code: appliedCoupon?.code || null,
         discount_amount: discountAmount,
+        referral_code: referralCode || null,
       } as any)
     if (orderErr) throw orderErr;
 

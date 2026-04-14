@@ -389,13 +389,23 @@ export default function LojaLayout() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
+    
     if (ref) {
       localStorage.setItem(`store_referral_${slug}`, ref);
       if (settings?.user_id) {
         localStorage.setItem(`store_referral_${settings.user_id}`, ref);
       }
-      // Remove ref from URL to keep it clean
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Remove ref from URL but keep other params
+      params.delete("ref");
+      const newSearch = params.toString();
+      const newPath = window.location.pathname + (newSearch ? `?${newSearch}` : "") + window.location.hash;
+      window.history.replaceState({}, document.title, newPath);
+    } else if (settings?.user_id) {
+      // If no ref in URL, check if we have a saved ref for this slug to sync with user_id
+      const savedRef = localStorage.getItem(`store_referral_${slug}`);
+      if (savedRef) {
+        localStorage.setItem(`store_referral_${settings.user_id}`, savedRef);
+      }
     }
   }, [slug, settings?.user_id]);
 

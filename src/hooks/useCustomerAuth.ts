@@ -85,11 +85,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                   .maybeSingle();
 
                 if (!existing) {
+                  const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
                   const { data: newCustomer } = await supabase.from("customers").insert({
                     auth_user_id: u.id,
                     store_user_id: storeUserId,
                     name: u.user_metadata?.display_name || u.user_metadata?.full_name || u.email?.split("@")[0] || "Cliente",
                     email: u.email || "",
+                    referred_by_code: referralCode || null,
                   } as any).select().single();
 
                   if (newCustomer) {
@@ -143,12 +145,38 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                   .maybeSingle();
 
                 if (!existing) {
-                  await supabase.from("customers").insert({
+                  const referralCode = localStorage.getItem(`store_referral_${pending.store_user_id}`);
+                  const { data: newCustomer } = await supabase.from("customers").insert({
                     auth_user_id: u.id,
                     store_user_id: pending.store_user_id,
                     name: pending.name || u.user_metadata?.display_name || u.email?.split("@")[0] || "Cliente",
                     email: u.email || "",
-                  } as any);
+                    referred_by_code: referralCode || null,
+                  } as any).select().single();
+
+                  if (newCustomer) {
+                    const storeUserId = pending.store_user_id;
+                    const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
+                    if (referralCode) {
+                      const { data: referrer } = await supabase
+                        .from("customers")
+                        .select("id")
+                        .eq("referral_code", referralCode)
+                        .eq("store_user_id", storeUserId)
+                        .maybeSingle();
+                      
+                      if (referrer) {
+                        await supabase.from("customer_referrals").insert({
+                          store_user_id: storeUserId,
+                          referrer_id: referrer.id,
+                          referred_id: newCustomer.id,
+                          status: "pending"
+                        });
+                        localStorage.removeItem(`store_referral_${storeUserId}`);
+                        await awardReferralReward(storeUserId, newCustomer.id, "lead");
+                      }
+                    }
+                  }
                   await generateWelcomeCoupon(pending.store_user_id, pending.name || "Cliente");
                 }
 
@@ -289,11 +317,13 @@ function useCustomerAuthState(): CustomerAuthContextValue {
     }
 
     if (data.user) {
+      const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
       const { data: newCustomer, error: customerErr } = await supabase.from("customers").insert({
         auth_user_id: data.user.id,
         store_user_id: storeUserId,
         name,
         email: normalizedEmail,
+        referred_by_code: referralCode || null,
       } as any).select().single();
 
       if (customerErr && !customerErr.message.includes("duplicate")) throw customerErr;

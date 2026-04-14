@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { 
   ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, 
   XCircle, Copy, FileText, Download, Search, Calendar as CalendarIcon, Printer,
-  Filter, FileSpreadsheet, FileJson, Share2, Info
+  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift
 } from "lucide-react";
 import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
@@ -77,7 +77,8 @@ export default function Pedidos() {
 
       const matchesSearch = searchTerm === "" || 
         o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.customer_name.toLowerCase().includes(searchTerm.toLowerCase());
+        o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (o.referral_code && o.referral_code.toLowerCase().includes(searchTerm.toLowerCase()));
 
       let matchesDate = true;
       if (dateRange.from && dateRange.to) {
@@ -390,7 +391,13 @@ export default function Pedidos() {
                     <TableCell className="font-medium">
                       <div className="flex flex-col">
                         <span>{order.customer_name}</span>
-                        {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
+                        {order.referral_code && (
+                          <div className="flex items-center gap-1 text-[10px] text-primary font-medium mt-0.5">
+                            <Gift className="h-3 w-3" />
+                            Indicação: {order.referral_code}
+                          </div>
+                        )}
+                        {order.whatsapp_order && <span className="text-[10px] text-green-600 flex items-center gap-1 mt-0.5"><MessageSquare className="h-2 w-2" /> WhatsApp</span>}
                       </div>
                     </TableCell>
                     <TableCell>{formatPrice(order.total)}</TableCell>
