@@ -237,9 +237,9 @@ export default function Automacao() {
     queryFn: async () => {
       if (customerIds.length === 0) return {};
       const { data } = await supabase
-        .from("customers").select("id, name, email").in("id", customerIds as string[]);
-      const map: Record<string, { name: string; email: string }> = {};
-      (data || []).forEach((c: any) => { map[c.id] = { name: c.name, email: c.email }; });
+        .from("customers").select("id, name, email, phone").in("id", customerIds as string[]);
+      const map: Record<string, { name: string; email: string; phone: string }> = {};
+      (data || []).forEach((c: any) => { map[c.id] = { name: c.name, email: c.email, phone: c.phone }; });
       return map;
     },
     enabled: customerIds.length > 0,
