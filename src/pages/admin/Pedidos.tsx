@@ -37,6 +37,20 @@ export default function Pedidos() {
 
   const { data: orders, isLoading } = useOrders();
   const { data: storeSettings } = useStoreSettings();
+  const { data: abandonedCarts, isLoading: loadingAbandoned } = useQuery({
+    queryKey: ["abandoned_carts_admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("abandoned_carts")
+        .select("*")
+        .eq("user_id", (storeSettings as any)?.user_id)
+        .eq("recovered", false)
+        .order("abandoned_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!(storeSettings as any)?.user_id,
+  });
   const updateStatus = useUpdateOrderStatus();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
