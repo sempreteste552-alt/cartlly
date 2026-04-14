@@ -460,6 +460,103 @@ export default function Clientes() {
         </DialogContent>
       </Dialog>
     </div>
+
+    {/* Release Prize Dialog */}
+    <Dialog open={isPrizeDialogOpen} onOpenChange={setIsPrizeDialogOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Liberar Prêmio para {selectedCustomerForPrize?.name}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-4">
+          <Label>Selecione o Produto (apenas itens marcados como Prêmio)</Label>
+          <Select value={prizeProductId} onValueChange={setPrizeProductId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione um produto..." />
+            </SelectTrigger>
+            <SelectContent>
+              {prizeProducts?.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name} (R$ {p.price})</SelectItem>
+              ))}
+              {(!prizeProducts || prizeProducts.length === 0) && (
+                <SelectItem value="none" disabled>Nenhum produto de prêmio encontrado</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            O cliente verá um card de parabéns na loja e poderá resgatar via WhatsApp.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsPrizeDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={() => releasePrizeMutation.mutate({ customerId: selectedCustomerForPrize.id, productId: prizeProductId })}
+            disabled={!prizeProductId || releasePrizeMutation.isPending}
+          >
+            Liberar Prêmio
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Manage Prizes Dialog */}
+    <Dialog open={isManagePrizesOpen} onOpenChange={setIsManagePrizesOpen}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5" /> Prêmios Liberados
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Produto</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customerPrizes?.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <div className="font-medium">{(p.customers as any)?.name}</div>
+                    <div className="text-xs text-muted-foreground">{(p.customers as any)?.email}</div>
+                  </TableCell>
+                  <TableCell>{(p.products as any)?.name}</TableCell>
+                  <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Badge variant={p.status === "delivered" ? "outline" : "default"}>
+                      {p.status === "released" ? "Pendente" : p.status === "claimed" ? "Clicou WhatsApp" : "Entregue"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {p.status !== "delivered" && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 text-green-600 hover:text-green-700"
+                        onClick={() => markPrizeAsDeliveredMutation.mutate(p.id)}
+                      >
+                        <CheckCircle className="mr-1.5 h-3.5 w-3.5" /> Entregar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!customerPrizes || customerPrizes.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Nenhum prêmio liberado ainda.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>
     </PlanGate>
   );
 }
