@@ -389,17 +389,21 @@ export default function Produtos() {
                         </Button>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
-                            <Layers className="h-4 w-4" />
-                          </Button>
+                          {!isViewer && (
+                            <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
+                              <Layers className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
-                            <Pencil className="h-4 w-4" />
+                            {isViewer ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                           </Button>
                         </>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isViewer && (
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
