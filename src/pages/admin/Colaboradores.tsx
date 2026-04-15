@@ -29,7 +29,7 @@ export default function Colaboradores() {
   const [inviteRole, setInviteRole] = useState("viewer");
   const [isInviting, setIsInviting] = useState(false);
 
-  const { data: collaborators, isLoading } = useQuery({
+  const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
     queryKey: ["store_collaborators", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,9 +53,28 @@ export default function Colaboradores() {
     enabled: !!user?.id,
   });
 
+  const { data: invitations, isLoading: isLoadingInvites } = useQuery({
+    queryKey: ["store_invitations", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_invitations")
+        .select("*")
+        .eq("store_owner_id", user?.id)
+        .is("accepted_at", null);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isLoading = isLoadingCollabs || isLoadingInvites;
+
   const inviteMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
       if (!user?.id) throw new Error("Unauthorized");
+
+      const normalizedEmail = email.toLowerCase().trim();
 
       // 1. Check if the input is an email or a UUID
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
@@ -63,21 +82,19 @@ export default function Colaboradores() {
       let profileData;
       
       if (isUUID) {
-        // Try to find by user_id
         const { data, error } = await supabase
           .from("profiles")
-          .select("user_id")
+          .select("user_id, email")
           .eq("user_id", email)
           .maybeSingle();
         
         if (error) throw error;
         profileData = data;
       } else {
-        // Try to find by email
         const { data, error } = await supabase
           .from("profiles")
-          .select("user_id")
-          .eq("email", email.toLowerCase().trim())
+          .select("user_id, email")
+          .eq("email", normalizedEmail)
           .maybeSingle();
         
         if (error) throw error;
@@ -85,9 +102,30 @@ export default function Colaboradores() {
       }
         
       if (!profileData) {
-        throw new Error(locale === 'pt' 
-          ? "Usuário não encontrado. Verifique se o e-mail ou ID estão corretos." 
-          : "User not found. Please check if the email or ID is correct.");
+        // Invite by email (even if user doesn't exist)
+        // Check if already invited
+        const { data: existingInvite } = await supabase
+          .from("store_invitations")
+          .select("id")
+          .eq("store_owner_id", user.id)
+          .eq("email", normalizedEmail)
+          .is("accepted_at", null)
+          .maybeSingle();
+
+        if (existingInvite) {
+          throw new Error(locale === 'pt' ? "Este e-mail já possui um convite pendente." : "This email already has a pending invitation.");
+        }
+
+        const { error: inviteError } = await supabase
+          .from("store_invitations")
+          .insert({
+            store_owner_id: user.id,
+            email: normalizedEmail,
+            role: role
+          });
+
+        if (inviteError) throw inviteError;
+        return { type: 'invite' };
       }
 
       // 2. Check if already a collaborator
@@ -112,10 +150,15 @@ export default function Colaboradores() {
         });
 
       if (insertError) throw insertError;
+      return { type: 'collab' };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
-      toast.success(locale === 'pt' ? "Colaborador adicionado!" : "Collaborator added!");
+      queryClient.invalidateQueries({ queryKey: ["store_invitations"] });
+      const msg = result.type === 'invite' 
+        ? (locale === 'pt' ? "Convite enviado por e-mail!" : "Invitation sent by email!")
+        : (locale === 'pt' ? "Colaborador adicionado!" : "Collaborator added!");
+      toast.success(msg);
       setInviteEmail("");
     },
     onError: (error: any) => {
@@ -134,6 +177,20 @@ export default function Colaboradores() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
       toast.success(locale === 'pt' ? "Colaborador removido." : "Collaborator removed.");
+    }
+  });
+
+  const removeInviteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("store_invitations")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store_invitations"] });
+      toast.success(locale === 'pt' ? "Convite cancelado." : "Invitation cancelled.");
     }
   });
 
@@ -212,7 +269,7 @@ export default function Colaboradores() {
           <CardHeader>
             <CardTitle>{locale === 'pt' ? "Equipe Atual" : "Current Team"}</CardTitle>
             <CardDescription>
-              {collaborators?.length || 0} {locale === 'pt' ? "membros ativos" : "active members"}
+              {(collaborators?.length || 0) + (invitations?.length || 0)} {locale === 'pt' ? "membros no total" : "total members"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -220,17 +277,18 @@ export default function Colaboradores() {
               <div className="flex justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : collaborators && collaborators.length > 0 ? (
+            ) : (collaborators && collaborators.length > 0) || (invitations && invitations.length > 0) ? (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{locale === 'pt' ? "Usuário" : "User"}</TableHead>
+                    <TableHead>{locale === 'pt' ? "Usuário / E-mail" : "User / Email"}</TableHead>
                     <TableHead>{locale === 'pt' ? "Acesso" : "Access"}</TableHead>
+                    <TableHead>{locale === 'pt' ? "Status" : "Status"}</TableHead>
                     <TableHead className="text-right">{locale === 'pt' ? "Ações" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {collaborators.map((collab: any) => (
+                  {collaborators?.map((collab: any) => (
                     <TableRow key={collab.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -248,12 +306,48 @@ export default function Colaboradores() {
                         </div>
                       </TableCell>
                       <TableCell>{getRoleBadge(collab.role)}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                          {locale === 'pt' ? "Ativo" : "Active"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => removeMutation.mutate(collab.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {invitations?.map((invite: any) => (
+                    <TableRow key={invite.id} className="opacity-70">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-muted-foreground">{invite.email}</span>
+                            <span className="text-xs text-muted-foreground italic">{locale === 'pt' ? "Convite pendente" : "Pending invitation"}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getRoleBadge(invite.role)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="border-yellow-200 text-yellow-700 bg-yellow-50">
+                          {locale === 'pt' ? "Pendente" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeInviteMutation.mutate(invite.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

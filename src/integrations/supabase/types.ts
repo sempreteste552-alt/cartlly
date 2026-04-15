@@ -3003,6 +3003,41 @@ export type Database = {
         }
         Relationships: []
       }
+      store_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          role: string
+          store_owner_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          role?: string
+          store_owner_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string
+          store_owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_invitations_store_owner_id_fkey"
+            columns: ["store_owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       store_marketing_config: {
         Row: {
           announcement_bar_bg_color: string
