@@ -41,7 +41,8 @@ export default function Colaboradores() {
           collaborator:profiles!collaborator_id(
             display_name,
             avatar_url,
-            user_id
+            user_id,
+            email
           )
         `)
         .eq("store_owner_id", user?.id);
@@ -54,28 +55,63 @@ export default function Colaboradores() {
 
   const inviteMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
-      // 1. Find user by email in profiles
-      // Note: This requires profiles to have an email or a way to lookup.
-      // In some setups, profiles don't have email for privacy, but let's check.
-      // If no email in profiles, we might need a different approach.
-      // For now, let's assume we can search by email if we added it to profiles or use a RPC.
+      if (!user?.id) throw new Error("Unauthorized");
+
+      // 1. Check if the input is an email or a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
       
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .filter("display_name", "ilike", email) // fallback if no email field
-        .limit(1)
-        .single();
+      let profileData;
+      
+      if (isUUID) {
+        // Try to find by user_id
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", email)
+          .maybeSingle();
         
-      // Actually, let's look for a better way to find users.
-      // Many apps use a specific RPC for this.
-      
-      // If we can't find by email directly, we might need the user to provide their User ID for now,
-      // or implement a search.
-      
-      // Let's try a direct insert if we had the ID, but here we only have email.
-      // I'll implement a simple "mock" logic for now that warns if user not found.
-      throw new Error(locale === 'pt' ? "Funcionalidade de busca por e-mail em implementação. Por favor, use o ID do usuário." : "Email search implementation in progress. Please use User ID.");
+        if (error) throw error;
+        profileData = data;
+      } else {
+        // Try to find by email
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("email", email.toLowerCase().trim())
+          .maybeSingle();
+        
+        if (error) throw error;
+        profileData = data;
+      }
+        
+      if (!profileData) {
+        throw new Error(locale === 'pt' 
+          ? "Usuário não encontrado. Verifique se o e-mail ou ID estão corretos." 
+          : "User not found. Please check if the email or ID is correct.");
+      }
+
+      // 2. Check if already a collaborator
+      const { data: existingCollab } = await supabase
+        .from("store_collaborators")
+        .select("id")
+        .eq("store_owner_id", user.id)
+        .eq("collaborator_id", profileData.user_id)
+        .maybeSingle();
+
+      if (existingCollab) {
+        throw new Error(locale === 'pt' ? "Este usuário já é um colaborador." : "This user is already a collaborator.");
+      }
+
+      // 3. Add as collaborator
+      const { error: insertError } = await supabase
+        .from("store_collaborators")
+        .insert({
+          store_owner_id: user.id,
+          collaborator_id: profileData.user_id,
+          role: role
+        });
+
+      if (insertError) throw insertError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
@@ -207,7 +243,7 @@ export default function Colaboradores() {
                           </div>
                           <div className="flex flex-col">
                             <span className="font-medium">{collab.collaborator?.display_name || "Usuário"}</span>
-                            <span className="text-xs text-muted-foreground">{collab.collaborator?.user_id?.substring(0, 8)}...</span>
+                            <span className="text-xs text-muted-foreground">{collab.collaborator?.email || collab.collaborator?.user_id?.substring(0, 8) + "..."}</span>
                           </div>
                         </div>
                       </TableCell>

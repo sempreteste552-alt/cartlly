@@ -2015,6 +2015,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
           is_online: boolean | null
           last_seen: string | null
@@ -2026,6 +2027,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
@@ -2037,6 +2039,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
