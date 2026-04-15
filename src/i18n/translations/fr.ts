@@ -78,6 +78,7 @@ export const fr: TranslationKeys = {
     products: "Produits",
     orders: "Commandes",
     customers: "Clients",
+    collaborators: "Collaborateurs",
     aiBrain: "Cerveau IA",
     coupons: "Coupons",
     pages: "Pages",
