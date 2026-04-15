@@ -30,8 +30,10 @@ import { useTranslation } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useRolePermissions } from "@/components/RoleGate";
 
 export default function Pedidos() {
+  const { isViewer } = useRolePermissions();
   const { t } = useTranslation();
   const STATUS_ICONS: Record<string, any> = {
     pendente: Clock, processando: Package, enviado: Truck, entregue: CheckCircle, cancelado: XCircle,
