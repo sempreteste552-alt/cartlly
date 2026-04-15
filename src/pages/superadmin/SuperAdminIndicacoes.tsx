@@ -417,7 +417,8 @@ export default function SuperAdminIndicacoes() {
 
       <Tabs defaultValue="referrals">
         <TabsList className="w-full sm:w-auto flex overflow-x-auto">
-          <TabsTrigger value="referrals" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações ({totalReferrals})</TabsTrigger>
+          <TabsTrigger value="referrals" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações (Platform) ({totalReferrals})</TabsTrigger>
+          <TabsTrigger value="vitrine" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações (Vitrine) ({customerReferrals?.length || 0})</TabsTrigger>
           <TabsTrigger value="discounts" className="text-xs sm:text-sm flex-1 sm:flex-none">Descontos ({discounts?.length || 0})</TabsTrigger>
           <TabsTrigger value="codes" className="text-xs sm:text-sm flex-1 sm:flex-none">Códigos ({codes?.length || 0})</TabsTrigger>
         </TabsList>
