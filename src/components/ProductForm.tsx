@@ -56,7 +56,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const videoFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
-  const { ctx } = useTenantContext();
+  const { ctx, role } = useTenantContext();
+  const isViewer = role === "viewer";
   const aiLocked = !canAccess("ai_tools", ctx);
   const canVideo = canAccess("product_video", ctx);
   const maxImages = getMaxProductImages(ctx);
