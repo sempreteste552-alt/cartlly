@@ -608,19 +608,19 @@ export default function Login() {
               </div>
             )}
             <form onSubmit={handleSubmit} className="space-y-3">
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
                   <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
                   <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeCategory">Nicho da Loja</Label>
                   <Select value={storeCategory} onValueChange={setStoreCategory}>
@@ -641,7 +641,7 @@ export default function Login() {
                   </Select>
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
                   <div className="flex items-center gap-0">
@@ -651,7 +651,7 @@ export default function Login() {
                   <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
               )}
-              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && signupCouponConfig.auto_show && signupCouponConfig.code && (
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && signupCouponConfig.auto_show && signupCouponConfig.code && !window.location.search.includes("type=invite") && (
                 <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <Ticket className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -665,7 +665,7 @@ export default function Login() {
                   </div>
                 </div>
               )}
-              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && (
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="couponCode">Cupom de Desconto (opcional)</Label>
                   <Input
@@ -676,6 +676,12 @@ export default function Login() {
                     className="h-9 border-border/50 focus:border-green-500 transition-colors font-mono"
                   />
                   <p className="text-xs text-muted-foreground">Se tiver um cupom, insira aqui. Caso contrário, deixe em branco.</p>
+                </div>
+              )}
+              {isRegister && window.location.search.includes("type=invite") && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Seu Nome</Label>
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               <div className="space-y-2">
