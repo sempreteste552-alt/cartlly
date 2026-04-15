@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { CSSProperties } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, ShoppingBag, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, BellOff, Crown, FileText, Bot, BadgeCheck, Lock, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2
+  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2
 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/i18n";
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { normalizeDomain, buildStoreUrl } from "@/lib/storeDomain";
+import { buildStoreUrl } from "@/lib/storeDomain";
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
@@ -32,7 +32,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
-  const { ctx } = useTenantContext();
+  const { ctx, role } = useTenantContext();
   const supportUnreadCount = useAdminSupportUnreadCount();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
@@ -46,45 +46,50 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     es: { defaultStore: "Mi Tienda", new: "Nuevo", push: "Push" },
     fr: { defaultStore: "Ma Boutique", new: "Nouveau", push: "Push" },
   }[locale];
+
   const storeUrl = buildStoreUrl({
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,
   });
 
+  const isViewer = role === "viewer";
+  const isEditor = role === "editor";
+  const isOwner = role === "owner";
+  const isAdmin = role === "admin" || isOwner;
+
   const mainItems = [
-    { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false },
-    { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false },
-    { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false },
-    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true },
-    { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false },
-    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: Users, isNew: true },
-    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false },
-    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount },
-  ];
+    { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false, show: isAdmin || isViewer },
+    { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false, show: isAdmin || isEditor || isViewer },
+    { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false, show: isAdmin || isEditor || isViewer },
+    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false, show: isAdmin || isEditor || isViewer },
+    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: Users, isNew: true, show: isAdmin },
+    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false, show: isAdmin || isEditor },
+    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount, show: isAdmin || isEditor },
+  ].filter(i => i.show !== false);
 
   const marketingItems = [
-    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true },
-    { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false },
-    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true },
-    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true },
-    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true },
-    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true },
-    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true },
-    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true },
-  ];
+    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: isAdmin || isEditor },
+    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: isAdmin || isEditor },
+    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true, show: isAdmin || isEditor },
+  ].filter(i => i.show !== false);
 
   const configItems = [
-    { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null },
-    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false },
-    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false },
-    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false },
-    { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const },
-
-    { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null },
-    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false },
-    { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null },
-  ];
+    { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null, show: isAdmin || isEditor },
+    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false, show: isAdmin || isEditor },
+    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false, show: isAdmin || isViewer },
+    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false, show: isAdmin || isViewer },
+    { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const, show: isAdmin },
+    { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null, show: isAdmin || isEditor },
+    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false, show: isAdmin || isEditor },
+    { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null, show: isAdmin },
+  ].filter(i => i.show !== false);
 
   useEffect(() => {
     if (isMobile) setOpenMobile(false);
@@ -122,14 +127,14 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            {t.sidebar.management}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => {
-                return (
+        {mainItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+              {t.sidebar.management}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {mainItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
@@ -165,70 +170,74 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            {t.sidebar.marketing}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {marketingItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      onClick={() => isMobile && setOpenMobile(false)}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && (
-                        <span className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="truncate">{item.title}</span>
-                          {item.isNew && (
-                            <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
-                              {adminSidebarText.new}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {marketingItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+              {t.sidebar.marketing}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {marketingItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink
+                        to={item.url}
+                        id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        onClick={() => isMobile && setOpenMobile(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="truncate">{item.title}</span>
+                            {item.isNew && (
+                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                                {adminSidebarText.new}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            {t.sidebar.settings}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {configItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink
-                      to={item.url}
-                      id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                      className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
-                      onClick={() => isMobile && setOpenMobile(false)}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {configItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+              {t.sidebar.settings}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {configItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                      <NavLink
+                        to={item.url}
+                        id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        onClick={() => isMobile && setOpenMobile(false)}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         <SidebarGroup>
           <SidebarGroupContent>
