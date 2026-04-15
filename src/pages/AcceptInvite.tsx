@@ -144,7 +144,7 @@ export default function AcceptInvite() {
           <div className="space-y-3">
             <Button 
               className="w-full h-11" 
-              onClick={() => navigate(`/login?type=invite&id=${inviteId}&redirect=/accept-invite?id=${inviteId}`)}
+              onClick={() => navigate(`/login?type=invite&id=${inviteId}&email=${inviteData?.email || ""}&redirect=/accept-invite?id=${inviteId}`)}
             >
               Aceitar Convite
             </Button>
