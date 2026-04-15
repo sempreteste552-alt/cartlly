@@ -177,11 +177,14 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
           </div>
         )}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Meus Dados</TabsTrigger>
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
             <TabsTrigger value="loyalty" className="flex items-center gap-1">
               <Award className="h-3 w-3" /> Fidelidade
+            </TabsTrigger>
+            <TabsTrigger value="referrals" className="flex items-center gap-1">
+              <UsersIcon className="h-3 w-3" /> Indicados
             </TabsTrigger>
             <TabsTrigger value="wishlist" className="flex items-center gap-1">
               <Heart className="h-3 w-3" /> Favoritos
@@ -340,87 +343,96 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
                   <p className="text-xl font-bold">R$ {((loyaltyPoints?.points_balance || 0) * (loyaltyConfig?.redemption_rate || 0.01)).toFixed(2)}</p>
                 </div>
               </div>
-
-              {loyaltyConfig?.referral_enabled && (
-                <div className="bg-yellow-500/5 rounded-2xl p-5 border border-yellow-500/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-8 w-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                      <Gift className="h-4 w-4 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Indique e Ganhe!</p>
-                      <p className="text-xs text-muted-foreground">
-                        {loyaltyConfig.referral_reward_type === "points" 
-                          ? `Ganhe ${loyaltyConfig.referral_reward_points} pontos por cada amigo!` 
-                          : `Recompensa: ${loyaltyConfig.referral_reward_description}`}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-white border rounded-lg px-3 py-2 text-xs font-mono truncate select-all">
-                      {window.location.origin}{basePath}?ref={customer?.referral_code}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="h-9 gap-1.5"
-                      onClick={() => {
-                        const url = `${window.location.origin}${basePath}?ref=${customer?.referral_code}`;
-                        navigator.clipboard.writeText(url);
-                        toast.success("Link de indicação copiado!");
-                      }}
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  
-                  {referrals && referrals.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                          <span className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Progresso de Indicações</span>
-                          <span>{referrals.filter(r => r.status === "completed").length} / {loyaltyConfig?.referral_goal || 1}</span>
-                        </div>
-                        <Progress 
-                          value={Math.min(100, (referrals.filter(r => r.status === "completed").length / (loyaltyConfig?.referral_goal || 1)) * 100)} 
-                          className="h-2 bg-yellow-500/10" 
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                          <UsersIcon className="h-3.5 w-3.5" /> Suas Indicações
-                        </p>
-                        <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
-                          {referrals
-                            .filter(r => loyaltyConfig?.referral_show_pending || r.status === "completed")
-                            .map((r: any) => (
-                              <div key={r.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-border shadow-sm">
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-medium truncate max-w-[120px]">
-                                    {r.referred?.name || "Amigo Indicado"}
-                                  </span>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {new Date(r.created_at).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <Badge 
-                                  variant={r.status === "completed" ? "default" : "secondary"}
-                                  className={`text-[9px] h-5 px-1.5 ${r.status === "completed" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}`}
-                                >
-                                  {r.status === "completed" ? "Concluída" : "Pendente"}
-                                </Badge>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </TabsContent>
+
+          <TabsContent value="referrals">
+            <div className="space-y-6 pt-4 pb-2">
+              <div className="bg-yellow-500/5 rounded-2xl p-5 border border-yellow-500/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-8 w-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                    <Gift className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Indique e Ganhe!</p>
+                    <p className="text-xs text-muted-foreground">
+                      {loyaltyConfig?.referral_reward_type === "points" 
+                        ? `Ganhe ${loyaltyConfig.referral_reward_points} pontos por cada amigo!` 
+                        : `Recompensa: ${loyaltyConfig?.referral_reward_description || "Brinde Especial"}`}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white border rounded-lg px-3 py-2 text-xs font-mono truncate select-all">
+                    {window.location.origin}{basePath}?ref={customer?.referral_code}
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-9 gap-1.5"
+                    onClick={() => {
+                      const url = `${window.location.origin}${basePath}?ref=${customer?.referral_code}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Link de indicação copiado!");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                
+                {referrals && referrals.length > 0 ? (
+                  <div className="mt-6 space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" /> Progresso de Indicações</span>
+                        <span>{referrals.filter(r => r.status === "completed").length} / {loyaltyConfig?.referral_goal || 1}</span>
+                      </div>
+                      <Progress 
+                        value={Math.min(100, (referrals.filter(r => r.status === "completed").length / (loyaltyConfig?.referral_goal || 1)) * 100)} 
+                        className="h-2 bg-yellow-500/10" 
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                        <UsersIcon className="h-3.5 w-3.5" /> Suas Indicações
+                      </p>
+                      <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
+                        {referrals
+                          .filter(r => loyaltyConfig?.referral_show_pending || r.status === "completed")
+                          .map((r: any) => (
+                            <div key={r.id} className="flex items-center justify-between p-2 rounded-lg bg-white border border-border shadow-sm">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-medium truncate max-w-[120px]">
+                                  {r.referred?.name || "Amigo Indicado"}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(r.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <Badge 
+                                variant={r.status === "completed" ? "default" : "secondary"}
+                                className={`text-[9px] h-5 px-1.5 ${r.status === "completed" ? "bg-green-100 text-green-700 hover:bg-green-100" : ""}`}
+                              >
+                                {r.status === "completed" ? "Concluída" : "Pendente"}
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 text-center py-4 bg-muted/20 rounded-xl border border-dashed">
+                    <UsersIcon className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Você ainda não tem indicações.</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">Compartilhe seu link para começar a ganhar!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="wishlist">
             <div className="py-4">
               {wishlistIds.size === 0 ? (
