@@ -134,7 +134,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
             <div className="flex items-center gap-2">
               <User className="h-5 w-5" /> Minha Conta
             </div>
-            {isPremium && (
+            {(isPremium || loyaltyConfig?.referral_enabled) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -147,7 +147,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
           </DialogTitle>
         </DialogHeader>
 
-        {showReferralRules && isPremium && (
+        {showReferralRules && (isPremium || loyaltyConfig?.referral_enabled) && (
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2 mb-2">
               <Gift className="h-5 w-5 text-primary" />

@@ -12,7 +12,7 @@ import {
   Smartphone, Monitor, Laptop, Timer, ArrowRightLeft, Mail, DollarSign, BarChart3,
   EyeOff, Eye
 } from "lucide-react";
-import { useAllReferrals, useAllReferralCodes, useAllReferralDiscounts, useFlagReferral, useInvalidateDiscount, useOverrideReferralPayment } from "@/hooks/useReferrals";
+import { useAllReferrals, useAllReferralCodes, useAllReferralDiscounts, useFlagReferral, useInvalidateDiscount, useOverrideReferralPayment, useAllCustomerReferrals } from "@/hooks/useReferrals";
 import { format, differenceInHours, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -231,6 +231,7 @@ export default function SuperAdminIndicacoes() {
   const { data: referrals, isLoading } = useEnrichedReferrals();
   const { data: codes } = useAllReferralCodes();
   const { data: discounts } = useAllReferralDiscounts();
+  const { data: customerReferrals, isLoading: customerLoading } = useAllCustomerReferrals();
   const flagMutation = useFlagReferral();
   const invalidateDiscountMutation = useInvalidateDiscount();
   const overrideMutation = useOverrideReferralPayment();
@@ -241,6 +242,7 @@ export default function SuperAdminIndicacoes() {
   const [deviceFilter, setDeviceFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
 
   const filtered = useMemo(() => {
     let list = referrals || [];
@@ -415,7 +417,8 @@ export default function SuperAdminIndicacoes() {
 
       <Tabs defaultValue="referrals">
         <TabsList className="w-full sm:w-auto flex overflow-x-auto">
-          <TabsTrigger value="referrals" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações ({totalReferrals})</TabsTrigger>
+          <TabsTrigger value="referrals" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações (Platform) ({totalReferrals})</TabsTrigger>
+          <TabsTrigger value="vitrine" className="text-xs sm:text-sm flex-1 sm:flex-none">Indicações (Vitrine) ({customerReferrals?.length || 0})</TabsTrigger>
           <TabsTrigger value="discounts" className="text-xs sm:text-sm flex-1 sm:flex-none">Descontos ({discounts?.length || 0})</TabsTrigger>
           <TabsTrigger value="codes" className="text-xs sm:text-sm flex-1 sm:flex-none">Códigos ({codes?.length || 0})</TabsTrigger>
         </TabsList>
@@ -694,6 +697,95 @@ export default function SuperAdminIndicacoes() {
                   </Table>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="vitrine" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Gift className="h-4 w-4 text-primary" />
+                Indicações de Vitrine (Clientes indicando amigos)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 sm:p-6 sm:pt-0">
+              <div className="p-4 border-b space-y-3">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por cliente, indicado ou loja..."
+                      className="pl-9 h-9 text-xs sm:text-sm"
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="text-[10px] sm:text-xs">
+                      <TableHead>Loja</TableHead>
+                      <TableHead>Quem Indicou</TableHead>
+                      <TableHead>Indicado</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Recompensa</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customerLoading ? (
+                      <TableRow><TableCell colSpan={6} className="text-center py-10">Carregando...</TableCell></TableRow>
+                    ) : !customerReferrals || customerReferrals.length === 0 ? (
+                      <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhuma indicação de vitrine encontrada.</TableCell></TableRow>
+                    ) : (
+                      customerReferrals
+                        .filter((r: any) => {
+                          if (!customerSearch) return true;
+                          const q = customerSearch.toLowerCase();
+                          return (
+                            (r.store_name || "").toLowerCase().includes(q) ||
+                            (r.referrer?.name || "").toLowerCase().includes(q) ||
+                            (r.referrer?.email || "").toLowerCase().includes(q) ||
+                            (r.referred?.name || "").toLowerCase().includes(q) ||
+                            (r.referred?.email || "").toLowerCase().includes(q)
+                          );
+                        })
+                        .map((r: any) => (
+                        <TableRow key={r.id} className="text-[10px] sm:text-xs">
+                          <TableCell className="font-medium">{r.store_name || "—"}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-bold">{r.referrer?.name || "—"}</span>
+                              <span className="text-[9px] sm:text-[10px] text-muted-foreground">{r.referrer?.email || "—"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-bold">{r.referred?.name || "—"}</span>
+                              <span className="text-[9px] sm:text-[10px] text-muted-foreground">{r.referred?.email || "—"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={r.status === 'completed' ? 'default' : 'secondary'} className="text-[9px] sm:text-[10px] px-1.5 py-0">
+                              {r.status === 'completed' ? 'Concluído' : 'Pendente'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {r.reward_type === 'points' ? `${r.reward_value} pts` : r.reward_description || '—'}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
+                            {format(new Date(r.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

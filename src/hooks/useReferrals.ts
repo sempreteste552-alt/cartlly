@@ -158,6 +158,39 @@ export function useAllReferralDiscounts() {
   });
 }
 
+export function useAllCustomerReferrals() {
+  return useQuery({
+    queryKey: ["all_customer_referrals_admin"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_referrals")
+        .select(`
+          *,
+          referrer:referrer_id (name, email),
+          referred:referred_id (name, email)
+        `)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      // Enrich with store names
+      const storeUserIds = [...new Set((data || []).map((r: any) => r.store_user_id).filter(Boolean))];
+      let storeMap: Record<string, string> = {};
+      if (storeUserIds.length > 0) {
+        const { data: stores } = await supabase
+          .from("store_settings")
+          .select("user_id, store_name")
+          .in("user_id", storeUserIds);
+        (stores || []).forEach((s: any) => { storeMap[s.user_id] = s.store_name || ""; });
+      }
+
+      return (data || []).map((r: any) => ({
+        ...r,
+        store_name: storeMap[r.store_user_id] || null,
+      })) as any[];
+    },
+  });
+}
+
 export function useFlagReferral() {
   const qc = useQueryClient();
   return useMutation({

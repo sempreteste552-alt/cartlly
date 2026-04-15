@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { canAccess, getBlockedReason, FEATURE_CATALOG, PLAN_INFO, type FeatureKey } from "@/lib/planPermissions";
 
 interface PlanGateProps {
@@ -13,9 +14,10 @@ interface PlanGateProps {
 
 export function PlanGate({ feature, children, inline }: PlanGateProps) {
   const { ctx } = useTenantContext();
+  const { isSuperAdmin } = useUserRole();
   const navigate = useNavigate();
 
-  const hasAccess = canAccess(feature, ctx);
+  const hasAccess = canAccess(feature, ctx) || isSuperAdmin;
   if (hasAccess) return <>{children}</>;
 
   const meta = FEATURE_CATALOG[feature];
