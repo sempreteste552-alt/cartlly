@@ -69,7 +69,7 @@ export default function Dashboard() {
     domainStatus: settings?.domain_status,
   });
   const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const { ctx } = useTenantContext();
+  const { ctx, effectiveId } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
   const hasStarterAnalytics = canAccess("coupons", ctx);
   const hasProAnalytics = canAccess("restock_alerts", ctx);
@@ -78,13 +78,13 @@ export default function Dashboard() {
 
   // Optimized metrics fetch via RPC
   const { data: dashboardStats, isLoading: loadingStats } = useQuery({
-    queryKey: ["dashboard_stats", user?.id],
+    queryKey: ["dashboard_stats", effectiveId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_dashboard_stats", { p_user_id: user!.id });
+      const { data, error } = await supabase.rpc("get_dashboard_stats", { p_user_id: effectiveId });
       if (error) throw error;
       return data as any;
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 
   // Optimized rich insights fetch via RPC
