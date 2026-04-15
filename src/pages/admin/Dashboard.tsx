@@ -20,6 +20,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { useTranslation } from "@/i18n";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
+import { useRolePermissions } from "@/components/RoleGate";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
