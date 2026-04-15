@@ -116,6 +116,7 @@ export default function Pagamentos() {
       </Tabs>
 
     </div>
-    </PlanGate>
+      </PlanGate>
+    </RoleGate>
   );
 }
