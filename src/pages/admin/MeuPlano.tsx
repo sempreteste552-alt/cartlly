@@ -1,3 +1,4 @@
+import { RoleGate } from "@/components/RoleGate";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
