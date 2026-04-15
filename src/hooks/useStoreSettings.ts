@@ -4,16 +4,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import { useParams } from "react-router-dom";
 
 export type StoreSettings = Tables<"store_settings">;
 export type StoreSettingsUpdate = TablesUpdate<"store_settings">;
 
 export function useStoreSettings() {
   const { user } = useAuth();
+  const { slug: urlSlug } = useParams();
+  
   useRealtimeSync("store_settings", [["store_settings", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
+  
   return useQuery({
-    queryKey: ["store_settings", user?.id],
+    queryKey: ["store_settings", user?.id, urlSlug],
     queryFn: async () => {
+      // 1. Try to fetch by slug first (useful for collaborators)
+      if (urlSlug) {
+        const { data: storeBySlug, error: slugError } = await supabase
+          .from("store_settings")
+          .select("*")
+          .eq("store_slug", urlSlug)
+          .maybeSingle();
+        
+        if (storeBySlug) return storeBySlug as StoreSettings;
+      }
+
+      // 2. Fallback to user's own store
       const { data, error } = await supabase
         .from("store_settings")
         .select("*")
@@ -21,9 +37,11 @@ export function useStoreSettings() {
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      
       if (error) throw error;
+      
       // Auto-create if not exists (fallback if trigger fails)
-      if (!data && user) {
+      if (!data && user && !urlSlug) {
         const { data: created, error: createErr } = await supabase
           .from("store_settings")
           .insert({ 
