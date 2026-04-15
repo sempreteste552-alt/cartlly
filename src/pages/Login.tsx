@@ -187,6 +187,13 @@ export default function Login() {
   useEffect(() => {
     if (user) {
       const routeUser = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const redirectPath = params.get("redirect");
+        if (redirectPath) {
+          navigate(redirectPath, { replace: true });
+          return;
+        }
+
         const isAdmin = await checkIsSuperAdmin(user.id);
         if (isAdmin) {
           navigate("/superadmin", { replace: true });
