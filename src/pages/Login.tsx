@@ -70,7 +70,10 @@ export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showEmailSent, setShowEmailSent] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("email") || "";
+  });
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -269,31 +272,37 @@ export default function Login() {
           setAlertCard({ type: "success", message: "Link de redefinição enviado! Verifique sua caixa de entrada e o spam." });
           setIsForgotPassword(false);
       } else if (isRegister) {
+        const isInvite = window.location.search.includes("type=invite");
+        
         if (!acceptedTerms) {
           setAlertCard({ type: "error", message: "Você precisa aceitar os Termos de Uso para criar sua conta." });
           setLoading(false);
           return;
         }
-        if (!storeCategory) {
-          setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
-          setLoading(false);
-          return;
-        }
-        const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-        if (!slug) {
-          setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
-          setLoading(false);
-          return;
-        }
-        const { data: existingSlug } = await supabase
-          .from("store_settings")
-          .select("id")
-          .eq("store_slug", slug)
-          .maybeSingle();
-        if (existingSlug) {
-          setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
-          setLoading(false);
-          return;
+
+        let slug = null;
+        if (!isInvite) {
+          if (!storeCategory) {
+            setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
+            setLoading(false);
+            return;
+          }
+          slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+          if (!slug) {
+            setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
+            setLoading(false);
+            return;
+          }
+          const { data: existingSlug } = await supabase
+            .from("store_settings")
+            .select("id")
+            .eq("store_slug", slug)
+            .maybeSingle();
+          if (existingSlug) {
+            setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
+            setLoading(false);
+            return;
+          }
         }
         if (!displayName.trim()) {
           setAlertCard({ type: "error", message: "Informe seu nome completo." });
@@ -311,11 +320,12 @@ export default function Login() {
           options: {
             data: { 
               display_name: displayName,
-              store_name: storeName.trim(),
-              store_slug: slug,
-              store_category: storeCategory,
+              store_name: isInvite ? "" : storeName.trim(),
+              store_slug: isInvite ? "" : slug,
+              store_category: isInvite ? "" : storeCategory,
               referral_code: refCode || undefined,
               signup_coupon: couponCode.trim() || undefined,
+              is_invitee: isInvite,
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
@@ -505,7 +515,9 @@ export default function Login() {
   }
 
   const getTitle = () => {
+    const isInvite = window.location.search.includes("type=invite");
     if (isForgotPassword) return "Redefinir Senha";
+    if (isInvite) return isRegister ? "Criar Perfil de Colaborador" : "Entrar como Colaborador";
     if (isRegister) return "Criar Conta";
     return "Painel Administrativo";
   };
@@ -608,19 +620,19 @@ export default function Login() {
               </div>
             )}
             <form onSubmit={handleSubmit} className="space-y-3">
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
                   <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
                   <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeCategory">Nicho da Loja</Label>
                   <Select value={storeCategory} onValueChange={setStoreCategory}>
@@ -641,7 +653,7 @@ export default function Login() {
                   </Select>
                 </div>
               )}
-              {isRegister && !isForgotPassword && (
+              {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
                   <div className="flex items-center gap-0">
@@ -651,7 +663,7 @@ export default function Login() {
                   <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
               )}
-              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && signupCouponConfig.auto_show && signupCouponConfig.code && (
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && signupCouponConfig.auto_show && signupCouponConfig.code && !window.location.search.includes("type=invite") && (
                 <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <Ticket className="h-4 w-4 text-green-600 dark:text-green-400" />
@@ -665,7 +677,7 @@ export default function Login() {
                   </div>
                 </div>
               )}
-              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && (
+              {isRegister && !isForgotPassword && signupCouponConfig?.enabled && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="couponCode">Cupom de Desconto (opcional)</Label>
                   <Input
@@ -676,6 +688,12 @@ export default function Login() {
                     className="h-9 border-border/50 focus:border-green-500 transition-colors font-mono"
                   />
                   <p className="text-xs text-muted-foreground">Se tiver um cupom, insira aqui. Caso contrário, deixe em branco.</p>
+                </div>
+              )}
+              {isRegister && window.location.search.includes("type=invite") && (
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Seu Nome</Label>
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
                 </div>
               )}
               <div className="space-y-2">

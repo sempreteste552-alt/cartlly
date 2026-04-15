@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -11,27 +11,20 @@ export default function AcceptInvite() {
   const inviteId = searchParams.get("id");
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "not_logged_in">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error" | "not_logged_in" | "fetching_invite">("fetching_invite");
   const [errorMsg, setErrorMsg] = useState("");
   const [storeSlug, setStoreSlug] = useState("");
+  const [inviteData, setInviteData] = useState<any>(null);
 
   useEffect(() => {
-    if (authLoading) return;
+    const fetchInvite = async () => {
+      if (!inviteId) {
+        setStatus("error");
+        setErrorMsg("ID do convite inválido.");
+        return;
+      }
 
-    if (!user) {
-      setStatus("not_logged_in");
-      return;
-    }
-
-    if (!inviteId) {
-      setStatus("error");
-      setErrorMsg("ID do convite inválido.");
-      return;
-    }
-
-    const processInvite = async () => {
       try {
-        // 1. Get invitation details
         const { data: invite, error: inviteError } = await supabase
           .from("store_invitations")
           .select("*")
@@ -42,8 +35,30 @@ export default function AcceptInvite() {
         if (!invite) throw new Error("Convite não encontrado.");
         if (invite.accepted_at) throw new Error("Este convite já foi utilizado.");
 
+        setInviteData(invite);
+        
+        if (!user && !authLoading) {
+          setStatus("not_logged_in");
+        } else if (user) {
+          setStatus("loading");
+        }
+      } catch (err: any) {
+        console.error("Error fetching invite:", err);
+        setStatus("error");
+        setErrorMsg(err.message || "Erro ao carregar convite.");
+      }
+    };
+
+    fetchInvite();
+  }, [inviteId, user, authLoading]);
+
+  useEffect(() => {
+    if (status !== "loading" || !user || !inviteData) return;
+
+    const processInvite = async () => {
+      try {
         // Check if the email matches (optional, but good for security)
-        if (invite.email.toLowerCase() !== user.email?.toLowerCase()) {
+        if (inviteData.email.toLowerCase() !== user.email?.toLowerCase()) {
            // We could allow different emails if we want, but usually it should match
            // throw new Error("Este convite foi enviado para outro e-mail.");
         }
@@ -52,15 +67,15 @@ export default function AcceptInvite() {
         const { error: collabError } = await supabase
           .from("store_collaborators")
           .insert({
-            store_owner_id: invite.store_owner_id,
+            store_owner_id: inviteData.store_owner_id,
             collaborator_id: user.id,
-            role: invite.role
+            role: inviteData.role
           });
 
         if (collabError) {
           // Check if already a collaborator
           if (collabError.code === "23505") {
-            // Already a collaborator, just proceed to mark invite as accepted
+            // Already a collaborator, just proceed
           } else {
             throw collabError;
           }
@@ -76,14 +91,13 @@ export default function AcceptInvite() {
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
-          .eq("user_id", invite.store_owner_id)
+          .eq("user_id", inviteData.store_owner_id)
           .maybeSingle();
 
         if (store?.store_slug) {
           setStoreSlug(store.store_slug);
           setStatus("success");
           toast.success("Convite aceito com sucesso!");
-          // Wait a bit and redirect
           setTimeout(() => {
             navigate(`/painel/${store.store_slug}`);
           }, 2000);
@@ -100,9 +114,9 @@ export default function AcceptInvite() {
     };
 
     processInvite();
-  }, [user, inviteId, authLoading, navigate]);
+  }, [user, inviteId, inviteData, status, navigate]);
 
-  if (status === "loading" || authLoading) {
+  if (status === "fetching_invite" || (status === "loading" && !storeSlug)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
@@ -115,16 +129,29 @@ export default function AcceptInvite() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
         <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-border">
-          <h1 className="text-2xl font-bold mb-4">Você recebeu um convite!</h1>
-          <p className="text-muted-foreground mb-8">
-            Para aceitar o convite e acessar o painel administrativo, você precisa estar conectado.
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-6">
+            <UserPlus className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-4">Você foi convidado!</h1>
+          <p className="text-muted-foreground mb-6">
+            Você recebeu um convite para colaborar em uma loja na Cartlly.
           </p>
-          <Button 
-            className="w-full" 
-            onClick={() => navigate(`/login?redirect=/accept-invite?id=${inviteId}`)}
-          >
-            Fazer Login
-          </Button>
+          <div className="bg-muted/50 rounded-lg p-4 mb-8 text-left">
+            <p className="text-sm font-medium text-foreground mb-1">Convite enviado para:</p>
+            <p className="text-sm text-muted-foreground truncate">{inviteData?.email}</p>
+          </div>
+          
+          <div className="space-y-3">
+            <Button 
+              className="w-full h-11" 
+              onClick={() => navigate(`/login?type=invite&id=${inviteId}&email=${inviteData?.email || ""}&redirect=/accept-invite?id=${inviteId}`)}
+            >
+              Aceitar Convite
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Ao clicar em aceitar, você poderá entrar em sua conta ou criar uma nova.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -154,7 +181,7 @@ export default function AcceptInvite() {
           Agora você é um colaborador oficial.
         </p>
         <p className="text-sm text-muted-foreground">
-          Redirecionando para o painel de <strong>{storeSlug}</strong>...
+          Redirecionando para o painel administrativo...
         </p>
       </div>
     </div>
