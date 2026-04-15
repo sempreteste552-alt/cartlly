@@ -269,31 +269,37 @@ export default function Login() {
           setAlertCard({ type: "success", message: "Link de redefinição enviado! Verifique sua caixa de entrada e o spam." });
           setIsForgotPassword(false);
       } else if (isRegister) {
+        const isInvite = window.location.search.includes("type=invite");
+        
         if (!acceptedTerms) {
           setAlertCard({ type: "error", message: "Você precisa aceitar os Termos de Uso para criar sua conta." });
           setLoading(false);
           return;
         }
-        if (!storeCategory) {
-          setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
-          setLoading(false);
-          return;
-        }
-        const slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-        if (!slug) {
-          setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
-          setLoading(false);
-          return;
-        }
-        const { data: existingSlug } = await supabase
-          .from("store_settings")
-          .select("id")
-          .eq("store_slug", slug)
-          .maybeSingle();
-        if (existingSlug) {
-          setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
-          setLoading(false);
-          return;
+
+        let slug = null;
+        if (!isInvite) {
+          if (!storeCategory) {
+            setAlertCard({ type: "error", message: "Escolha o nicho da sua loja." });
+            setLoading(false);
+            return;
+          }
+          slug = storeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+          if (!slug) {
+            setAlertCard({ type: "error", message: "Defina um slug válido para sua loja." });
+            setLoading(false);
+            return;
+          }
+          const { data: existingSlug } = await supabase
+            .from("store_settings")
+            .select("id")
+            .eq("store_slug", slug)
+            .maybeSingle();
+          if (existingSlug) {
+            setAlertCard({ type: "error", message: "Este slug já está em uso. Escolha outro." });
+            setLoading(false);
+            return;
+          }
         }
         if (!displayName.trim()) {
           setAlertCard({ type: "error", message: "Informe seu nome completo." });
