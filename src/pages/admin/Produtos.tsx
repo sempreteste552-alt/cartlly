@@ -367,7 +367,12 @@ export default function Produtos() {
                     {(product as any).is_archived ? (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Arquivado</Badge>
                     ) : (
-                      <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
+                      <Switch 
+                        checked={product.published} 
+                        onCheckedChange={() => handleTogglePublished(product)} 
+                        aria-label="Publicar"
+                        disabled={isViewer}
+                      />
                     )}
                   </TableCell>
                   <TableCell>
