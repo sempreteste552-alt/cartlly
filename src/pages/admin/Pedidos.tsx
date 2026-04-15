@@ -276,10 +276,12 @@ export default function Pedidos() {
           <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">Configurar Impressora</span>
-          </Button>
+          {!isViewer && (
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurar Impressora</span>
+            </Button>
+          )}
           <div className="flex gap-1">
             <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
               <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
