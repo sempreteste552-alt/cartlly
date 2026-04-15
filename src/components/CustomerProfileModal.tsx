@@ -134,7 +134,7 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
             <div className="flex items-center gap-2">
               <User className="h-5 w-5" /> Minha Conta
             </div>
-            {isPremium && (
+            {(isPremium || loyaltyConfig?.referral_enabled) && (
               <Button
                 variant="ghost"
                 size="icon"
