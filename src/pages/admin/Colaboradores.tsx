@@ -243,7 +243,7 @@ export default function Colaboradores() {
                           </div>
                           <div className="flex flex-col">
                             <span className="font-medium">{collab.collaborator?.display_name || "Usuário"}</span>
-                            <span className="text-xs text-muted-foreground">{collab.collaborator?.user_id?.substring(0, 8)}...</span>
+                            <span className="text-xs text-muted-foreground">{collab.collaborator?.email || collab.collaborator?.user_id?.substring(0, 8) + "..."}</span>
                           </div>
                         </div>
                       </TableCell>
