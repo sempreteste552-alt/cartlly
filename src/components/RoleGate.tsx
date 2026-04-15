@@ -51,6 +51,10 @@ export function useRolePermissions() {
   const isViewer = role === "viewer";
 
   return {
+    isAdmin,
+    isEditor,
+    isViewer,
+    isOwner,
     canManageTeam: isAdmin,
     canManagePayments: isAdmin,
     canManagePlan: isAdmin,
@@ -60,7 +64,6 @@ export function useRolePermissions() {
     canManageCustomers: isEditor,
     canManageMarketing: isEditor,
     canManageSettings: isEditor,
-    isViewer,
     role
   };
 }
