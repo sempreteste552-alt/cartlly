@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffectiveUser } from "@/hooks/useEffectiveUser";
 import type { TenantContext, PlanSlug, SubscriptionStatus } from "@/lib/planPermissions";
 
 const VALID_SLUGS: PlanSlug[] = ["FREE", "STARTER", "PRO", "PREMIUM"];
@@ -11,15 +12,16 @@ const VALID_SLUGS: PlanSlug[] = ["FREE", "STARTER", "PRO", "PREMIUM"];
  */
 export function useTenantContext() {
   const { user } = useAuth();
+  const { effectiveId, role, isCollaborator, isLoading: effectiveUserLoading } = useEffectiveUser();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["tenant_context", user?.id],
-    enabled: !!user,
+  const { data, isLoading: queryLoading } = useQuery({
+    queryKey: ["tenant_context", effectiveId],
+    enabled: !!effectiveId,
     queryFn: async () => {
       const { data: sub } = await supabase
         .from("tenant_subscriptions")
         .select("*, tenant_plans(*)")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveId)
         .in("status", ["active", "trial", "trial_expired", "past_due", "canceled", "suspended"])
         .order("updated_at", { ascending: false })
         .limit(1)
@@ -28,7 +30,7 @@ export function useTenantContext() {
       const { count: productCount } = await supabase
         .from("products")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id);
+        .eq("user_id", effectiveId);
 
       const plan = sub?.tenant_plans as any;
       const planFeatures = (typeof plan?.features === "object" && !Array.isArray(plan?.features))
@@ -81,6 +83,9 @@ export function useTenantContext() {
     ctx: data?.ctx ?? defaultCtx,
     subscription: data?.subscription,
     plan: data?.plan,
-    isLoading,
+    role,
+    isCollaborator,
+    effectiveId,
+    isLoading: effectiveUserLoading || queryLoading,
   };
 }
