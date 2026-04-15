@@ -4597,7 +4597,7 @@ export type Database = {
             Returns: boolean
           }
       is_collaborator: {
-        Args: { owner_id: string; required_role?: string }
+        Args: { owner_id: string; required_roles?: string[] }
         Returns: boolean
       }
       match_customer_insights: {

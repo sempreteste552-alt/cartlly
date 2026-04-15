@@ -69,7 +69,7 @@ export default function Dashboard() {
     domainStatus: settings?.domain_status,
   });
   const [statusFilter, setStatusFilter] = useState<string>("todos");
-  const { ctx } = useTenantContext();
+  const { ctx, effectiveId } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
   const hasStarterAnalytics = canAccess("coupons", ctx);
   const hasProAnalytics = canAccess("restock_alerts", ctx);
@@ -78,60 +78,60 @@ export default function Dashboard() {
 
   // Optimized metrics fetch via RPC
   const { data: dashboardStats, isLoading: loadingStats } = useQuery({
-    queryKey: ["dashboard_stats", user?.id],
+    queryKey: ["dashboard_stats", effectiveId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_dashboard_stats", { p_user_id: user!.id });
+      const { data, error } = await supabase.rpc("get_dashboard_stats", { p_user_id: effectiveId });
       if (error) throw error;
       return data as any;
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 
   // Optimized rich insights fetch via RPC
   const { data: insights, isLoading: loadingInsights } = useQuery({
-    queryKey: ["store_rich_insights", user?.id],
+    queryKey: ["store_rich_insights", effectiveId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_store_rich_insights", { p_user_id: user!.id });
+      const { data, error } = await supabase.rpc("get_store_rich_insights", { p_user_id: effectiveId });
       if (error) throw error;
       return data as any;
     },
-    enabled: !!user && hasPremiumAnalytics,
+    enabled: !!effectiveId && hasPremiumAnalytics,
   });
 
   const { data: aiConfig } = useQuery({
-    queryKey: ["tenant-ai-brain-config", user?.id],
+    queryKey: ["tenant-ai-brain-config", effectiveId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tenant_ai_brain_config")
         .select("*")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveId)
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 
   const { data: products } = useProducts();
   const { data: orders } = useOrders();
 
   const { data: payments } = useQuery({
-    queryKey: ["dashboard_payments", user?.id],
+    queryKey: ["dashboard_payments", effectiveId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payments").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await supabase.from("payments").select("*").eq("user_id", effectiveId).order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 
   const { data: topSearches } = useQuery({
-    queryKey: ["top_searches", user?.id],
+    queryKey: ["top_searches", effectiveId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("search_logs")
         .select("term")
-        .eq("user_id", user!.id);
+        .eq("user_id", effectiveId);
       
       if (error) throw error;
       
@@ -145,7 +145,7 @@ export default function Dashboard() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 
   const formatCurrency = (v: number) =>

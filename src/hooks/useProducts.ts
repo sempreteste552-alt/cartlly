@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffectiveUser } from "@/hooks/useEffectiveUser";
 import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -10,40 +10,40 @@ export type ProductInsert = TablesInsert<"products">;
 export type ProductUpdate = TablesUpdate<"products">;
 
 export function useProducts() {
-  const { user } = useAuth();
-  useRealtimeSync("products", [["products", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
+  const { effectiveId, isLoading: userLoading } = useEffectiveUser();
+  useRealtimeSync("products", [["products", effectiveId || ""]], effectiveId ? `user_id=eq.${effectiveId}` : undefined);
 
   return useQuery({
-    queryKey: ["products", user?.id],
+    queryKey: ["products", effectiveId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
         .select("*, categories(name)")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Product[];
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 }
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { effectiveId } = useEffectiveUser();
 
   return useMutation({
     mutationFn: async (product: Omit<ProductInsert, "user_id">) => {
       const { data, error } = await supabase
         .from("products")
-        .insert({ ...product, user_id: user!.id })
+        .insert({ ...product, user_id: effectiveId! })
         .select()
         .single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products", effectiveId] });
       toast.success("Produto criado com sucesso!");
     },
     onError: (error) => {
@@ -54,6 +54,7 @@ export function useCreateProduct() {
 
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
+  const { effectiveId } = useEffectiveUser();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ProductUpdate & { id: string }) => {
@@ -67,7 +68,7 @@ export function useUpdateProduct() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products", effectiveId] });
       toast.success("Produto atualizado!");
     },
     onError: (error) => {
@@ -78,6 +79,7 @@ export function useUpdateProduct() {
 
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
+  const { effectiveId } = useEffectiveUser();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -85,7 +87,7 @@ export function useDeleteProduct() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["products", effectiveId] });
       toast.success("Produto removido!");
     },
     onError: (error) => {

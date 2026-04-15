@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
 import { 
   Users, UserPlus, Shield, Trash2, Mail, 
-  CheckCircle2, AlertCircle, Loader2 
+  CheckCircle2, AlertCircle, Loader2, Copy, Check 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export default function Colaboradores() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
-  const [isInviting, setIsInviting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
     queryKey: ["store_collaborators", user?.id],
@@ -75,80 +75,32 @@ export default function Colaboradores() {
       if (!user?.id) throw new Error("Unauthorized");
 
       const normalizedEmail = email.toLowerCase().trim();
-
-      // 1. Check if the input is an email or a UUID
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
       
       let profileData;
-      
       if (isUUID) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("user_id, email")
-          .eq("user_id", email)
-          .maybeSingle();
-        
+        const { data, error } = await supabase.from("profiles").select("user_id, email").eq("user_id", email).maybeSingle();
         if (error) throw error;
         profileData = data;
       } else {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("user_id, email")
-          .eq("email", normalizedEmail)
-          .maybeSingle();
-        
+        const { data, error } = await supabase.from("profiles").select("user_id, email").eq("email", normalizedEmail).maybeSingle();
         if (error) throw error;
         profileData = data;
       }
         
       if (!profileData) {
-        // Invite by email (even if user doesn't exist)
-        // Check if already invited
-        const { data: existingInvite } = await supabase
-          .from("store_invitations")
-          .select("id")
-          .eq("store_owner_id", user.id)
-          .eq("email", normalizedEmail)
-          .is("accepted_at", null)
-          .maybeSingle();
+        const { data: existingInvite } = await supabase.from("store_invitations").select("id").eq("store_owner_id", user.id).eq("email", normalizedEmail).is("accepted_at", null).maybeSingle();
+        if (existingInvite) throw new Error(locale === 'pt' ? "Este e-mail já possui um convite pendente." : "This email already has a pending invitation.");
 
-        if (existingInvite) {
-          throw new Error(locale === 'pt' ? "Este e-mail já possui um convite pendente." : "This email already has a pending invitation.");
-        }
-
-        const { error: inviteError } = await supabase
-          .from("store_invitations")
-          .insert({
-            store_owner_id: user.id,
-            email: normalizedEmail,
-            role: role
-          });
-
+        const { error: inviteError } = await supabase.from("store_invitations").insert({ store_owner_id: user.id, email: normalizedEmail, role: role });
         if (inviteError) throw inviteError;
         return { type: 'invite' };
       }
 
-      // 2. Check if already a collaborator
-      const { data: existingCollab } = await supabase
-        .from("store_collaborators")
-        .select("id")
-        .eq("store_owner_id", user.id)
-        .eq("collaborator_id", profileData.user_id)
-        .maybeSingle();
+      const { data: existingCollab } = await supabase.from("store_collaborators").select("id").eq("store_owner_id", user.id).eq("collaborator_id", profileData.user_id).maybeSingle();
+      if (existingCollab) throw new Error(locale === 'pt' ? "Este usuário já é um colaborador." : "This user is already a collaborator.");
 
-      if (existingCollab) {
-        throw new Error(locale === 'pt' ? "Este usuário já é um colaborador." : "This user is already a collaborator.");
-      }
-
-      // 3. Add as collaborator
-      const { error: insertError } = await supabase
-        .from("store_collaborators")
-        .insert({
-          store_owner_id: user.id,
-          collaborator_id: profileData.user_id,
-          role: role
-        });
-
+      const { error: insertError } = await supabase.from("store_collaborators").insert({ store_owner_id: user.id, collaborator_id: profileData.user_id, role: role });
       if (insertError) throw insertError;
       return { type: 'collab' };
     },
@@ -156,22 +108,17 @@ export default function Colaboradores() {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
       queryClient.invalidateQueries({ queryKey: ["store_invitations"] });
       const msg = result.type === 'invite' 
-        ? (locale === 'pt' ? "Convite enviado por e-mail!" : "Invitation sent by email!")
+        ? (locale === 'pt' ? "Convite gerado! Copie o link abaixo." : "Invitation generated! Copy the link below.")
         : (locale === 'pt' ? "Colaborador adicionado!" : "Collaborator added!");
       toast.success(msg);
       setInviteEmail("");
     },
-    onError: (error: any) => {
-      toast.error(error.message);
-    }
+    onError: (error: any) => toast.error(error.message)
   });
 
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("store_collaborators")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("store_collaborators").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -182,10 +129,7 @@ export default function Colaboradores() {
 
   const removeInviteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("store_invitations")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("store_invitations").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -193,6 +137,14 @@ export default function Colaboradores() {
       toast.success(locale === 'pt' ? "Convite cancelado." : "Invitation cancelled.");
     }
   });
+
+  const copyInviteLink = (id: string) => {
+    const link = `${window.location.origin}/accept-invite?id=${id}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(id);
+    toast.success(locale === 'pt' ? "Link de convite copiado!" : "Invite link copied!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -342,7 +294,15 @@ export default function Colaboradores() {
                           {locale === 'pt' ? "Pendente" : "Pending"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-primary hover:text-primary hover:bg-primary/10"
+                          onClick={() => copyInviteLink(invite.id)}
+                        >
+                          {copiedId === invite.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -379,15 +339,15 @@ export default function Colaboradores() {
           <div className="grid gap-4 md:grid-cols-3 text-sm">
             <div className="space-y-1">
               <p className="font-bold text-primary">Admin</p>
-              <p className="text-muted-foreground">{locale === 'pt' ? "Acesso total, pode gerenciar colaboradores e excluir a loja." : "Full access, can manage collaborators and delete the store."}</p>
+              <p className="text-muted-foreground">{locale === 'pt' ? "Acesso total, pode gerenciar colaboradores e visualizar todos os relatórios." : "Full access, can manage collaborators and view all reports."}</p>
             </div>
             <div className="space-y-1">
               <p className="font-bold text-primary">Editor</p>
-              <p className="text-muted-foreground">{locale === 'pt' ? "Pode gerenciar produtos e pedidos, mas não configurações sensíveis." : "Can manage products and orders, but not sensitive settings."}</p>
+              <p className="text-muted-foreground">{locale === 'pt' ? "Pode gerenciar produtos, pedidos e configurações da loja." : "Can manage products, orders, and store settings."}</p>
             </div>
             <div className="space-y-1">
               <p className="font-bold text-primary">Viewer</p>
-              <p className="text-muted-foreground">{locale === 'pt' ? "Apenas visualização de dados e relatórios." : "Only view data and reports."}</p>
+              <p className="text-muted-foreground">{locale === 'pt' ? "Apenas visualização de produtos, pedidos e relatórios de lucro/analytics." : "Only view products, orders, and profit/analytics reports."}</p>
             </div>
           </div>
         </CardContent>
