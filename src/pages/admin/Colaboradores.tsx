@@ -20,6 +20,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { RoleGate } from "@/components/RoleGate";
 
 export default function Colaboradores() {
   const { user } = useAuth();
