@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { CSSProperties } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, ShoppingBag, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2
+  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2, Crown
 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/i18n";
