@@ -193,36 +193,40 @@ export default function Produtos() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => aiAvailable ? setAiImportOpen(true) : navigate(`/painel/${slug}/plano`)}
-            className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
-          >
-            {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}</span>
-            <span className="sm:hidden">IA</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setCatDialogOpen(true)} className="text-xs sm:text-sm">
-            <Tag className="mr-1.5 h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Categorias</span>
-            <span className="sm:hidden">Cat.</span>
-          </Button>
-          <Button
-            id="new-product-btn"
-            size="sm"
-            className="text-xs sm:text-sm"
-            onClick={() => {
-              if (!canCreate) {
-                toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
-                return;
-              }
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Novo
-          </Button>
+          {!isViewer && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => aiAvailable ? setAiImportOpen(true) : navigate(`/painel/${slug}/plano`)}
+                className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
+              >
+                {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}</span>
+                <span className="sm:hidden">IA</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCatDialogOpen(true)} className="text-xs sm:text-sm">
+                <Tag className="mr-1.5 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Categorias</span>
+                <span className="sm:hidden">Cat.</span>
+              </Button>
+              <Button
+                id="new-product-btn"
+                size="sm"
+                className="text-xs sm:text-sm"
+                onClick={() => {
+                  if (!canCreate) {
+                    toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
+                    return;
+                  }
+                  setFormOpen(true);
+                }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Novo
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
