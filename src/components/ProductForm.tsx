@@ -366,11 +366,15 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading || uploadImage.isPending}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {initialData ? "Salvar" : "Criar Produto"}
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {isViewer ? "Fechar" : "Cancelar"}
             </Button>
+            {!isViewer && (
+              <Button type="submit" disabled={loading || uploadImage.isPending}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {initialData ? "Salvar" : "Criar Produto"}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>
