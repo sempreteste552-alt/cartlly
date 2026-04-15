@@ -231,6 +231,7 @@ export default function SuperAdminIndicacoes() {
   const { data: referrals, isLoading } = useEnrichedReferrals();
   const { data: codes } = useAllReferralCodes();
   const { data: discounts } = useAllReferralDiscounts();
+  const { data: customerReferrals, isLoading: customerLoading } = useAllCustomerReferrals();
   const flagMutation = useFlagReferral();
   const invalidateDiscountMutation = useInvalidateDiscount();
   const overrideMutation = useOverrideReferralPayment();
@@ -241,6 +242,7 @@ export default function SuperAdminIndicacoes() {
   const [deviceFilter, setDeviceFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
   const [tenantSearch, setTenantSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
 
   const filtered = useMemo(() => {
     let list = referrals || [];
