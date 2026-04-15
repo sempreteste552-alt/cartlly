@@ -29,7 +29,7 @@ export default function Colaboradores() {
   const [inviteRole, setInviteRole] = useState("viewer");
   const [isInviting, setIsInviting] = useState(false);
 
-  const { data: collaborators, isLoading } = useQuery({
+  const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
     queryKey: ["store_collaborators", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -52,6 +52,23 @@ export default function Colaboradores() {
     },
     enabled: !!user?.id,
   });
+
+  const { data: invitations, isLoading: isLoadingInvites } = useQuery({
+    queryKey: ["store_invitations", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_invitations")
+        .select("*")
+        .eq("store_owner_id", user?.id)
+        .is("accepted_at", null);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isLoading = isLoadingCollabs || isLoadingInvites;
 
   const inviteMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
