@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Palette, Ruler, Box } from "lucide-react";
+import { Plus, Trash2, Palette, Ruler, Box, Tag } from "lucide-react";
 import { useProductVariants, useCreateVariant, useDeleteVariant, type ProductVariant } from "@/hooks/useProductVariants";
 
 const VARIANT_TYPES = [
   { value: "color", label: "Cor", icon: Palette },
   { value: "size", label: "Tamanho", icon: Ruler },
   { value: "model", label: "Modelo", icon: Box },
+  { value: "ns", label: "NS", icon: Tag },
 ];
 
 interface Props {
