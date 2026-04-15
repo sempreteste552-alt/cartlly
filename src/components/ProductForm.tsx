@@ -364,7 +364,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
               <p className="text-xs text-muted-foreground">Produto visível na loja</p>
             </div>
             <Switch id="published" checked={published} onCheckedChange={setPublished} />
-          </fieldset>
+          </div>
+        </fieldset>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
