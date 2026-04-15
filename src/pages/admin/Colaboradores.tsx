@@ -354,6 +354,7 @@ export default function Colaboradores() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </RoleGate>
   );
 }
