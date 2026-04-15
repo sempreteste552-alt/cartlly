@@ -1,3 +1,4 @@
+import { RoleGate } from "@/components/RoleGate";
 import { PlanGate } from "@/components/PlanGate";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
