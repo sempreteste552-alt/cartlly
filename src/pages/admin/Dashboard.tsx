@@ -58,6 +58,7 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
 }
 
 export default function Dashboard() {
+  const { isViewer, isAdmin } = useRolePermissions();
   const { slug } = useParams();
   const { user } = useAuth();
   const { t } = useTranslation();
