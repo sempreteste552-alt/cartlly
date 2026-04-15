@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEffectiveUser } from "@/hooks/useEffectiveUser";
 import { awardReferralReward } from "@/lib/loyalty";
 import { toast } from "sonner";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -16,20 +16,21 @@ export const ORDER_STATUS_MAP: Record<OrderStatus, { label: string; color: strin
 };
 
 export function useOrders() {
-  const { user } = useAuth();
-  useRealtimeSync("orders", [["orders", user?.id || ""]], user ? `user_id=eq.${user.id}` : undefined);
+  const { effectiveId, isLoading: userLoading } = useEffectiveUser();
+  useRealtimeSync("orders", [["orders", effectiveId || ""]], effectiveId ? `user_id=eq.${effectiveId}` : undefined);
+  
   return useQuery({
-    queryKey: ["orders", user?.id],
+    queryKey: ["orders", effectiveId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*, payments(status, method)")
-        .eq("user_id", user!.id)
+        .eq("user_id", effectiveId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!effectiveId,
   });
 }
 
@@ -84,6 +85,8 @@ export function useOrderPayment(orderId: string | null) {
 
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
+  const { effectiveId } = useEffectiveUser();
+
   return useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
       const { error: updateErr } = await supabase
@@ -120,7 +123,7 @@ export function useUpdateOrderStatus() {
       if (histErr) throw histErr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", effectiveId] });
       queryClient.invalidateQueries({ queryKey: ["order_status_history"] });
       toast.success("Status atualizado!");
     },
