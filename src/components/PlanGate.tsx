@@ -1,8 +1,9 @@
 import { Lock, ArrowUpCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-id";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { canAccess, getBlockedReason, FEATURE_CATALOG, PLAN_INFO, type FeatureKey } from "@/lib/planPermissions";
 
 interface PlanGateProps {
