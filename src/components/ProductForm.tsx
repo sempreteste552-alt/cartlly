@@ -183,6 +183,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           <DialogTitle>{initialData ? "Editar Produto" : "Novo Produto"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <fieldset disabled={isViewer} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} placeholder="Nome do produto" />
