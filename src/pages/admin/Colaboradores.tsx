@@ -269,7 +269,7 @@ export default function Colaboradores() {
           <CardHeader>
             <CardTitle>{locale === 'pt' ? "Equipe Atual" : "Current Team"}</CardTitle>
             <CardDescription>
-              {collaborators?.length || 0} {locale === 'pt' ? "membros ativos" : "active members"}
+              {(collaborators?.length || 0) + (invitations?.length || 0)} {locale === 'pt' ? "membros no total" : "total members"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -277,17 +277,18 @@ export default function Colaboradores() {
               <div className="flex justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : collaborators && collaborators.length > 0 ? (
+            ) : (collaborators && collaborators.length > 0) || (invitations && invitations.length > 0) ? (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{locale === 'pt' ? "Usuário" : "User"}</TableHead>
+                    <TableHead>{locale === 'pt' ? "Usuário / E-mail" : "User / Email"}</TableHead>
                     <TableHead>{locale === 'pt' ? "Acesso" : "Access"}</TableHead>
+                    <TableHead>{locale === 'pt' ? "Status" : "Status"}</TableHead>
                     <TableHead className="text-right">{locale === 'pt' ? "Ações" : "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {collaborators.map((collab: any) => (
+                  {collaborators?.map((collab: any) => (
                     <TableRow key={collab.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -305,12 +306,48 @@ export default function Colaboradores() {
                         </div>
                       </TableCell>
                       <TableCell>{getRoleBadge(collab.role)}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                          {locale === 'pt' ? "Ativo" : "Active"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => removeMutation.mutate(collab.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {invitations?.map((invite: any) => (
+                    <TableRow key={invite.id} className="opacity-70">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-muted-foreground">{invite.email}</span>
+                            <span className="text-xs text-muted-foreground italic">{locale === 'pt' ? "Convite pendente" : "Pending invitation"}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getRoleBadge(invite.role)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="border-yellow-200 text-yellow-700 bg-yellow-50">
+                          {locale === 'pt' ? "Pendente" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => removeInviteMutation.mutate(invite.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
