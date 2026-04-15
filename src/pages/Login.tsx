@@ -317,11 +317,12 @@ export default function Login() {
           options: {
             data: { 
               display_name: displayName,
-              store_name: storeName.trim(),
-              store_slug: slug,
-              store_category: storeCategory,
+              store_name: isInvite ? "" : storeName.trim(),
+              store_slug: isInvite ? "" : slug,
+              store_category: isInvite ? "" : storeCategory,
               referral_code: refCode || undefined,
               signup_coupon: couponCode.trim() || undefined,
+              is_invitee: isInvite,
             },
             emailRedirectTo: getAuthRedirectOrigin(),
           },
