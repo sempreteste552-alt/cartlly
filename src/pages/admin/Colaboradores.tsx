@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
 import { 
   Users, UserPlus, Shield, Trash2, Mail, 
-  CheckCircle2, AlertCircle, Loader2 
+  CheckCircle2, AlertCircle, Loader2, Copy, Check 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function Colaboradores() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
   const [isInviting, setIsInviting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
     queryKey: ["store_collaborators", user?.id],
@@ -69,6 +70,14 @@ export default function Colaboradores() {
   });
 
   const isLoading = isLoadingCollabs || isLoadingInvites;
+
+  const copyInviteLink = (id: string) => {
+    const link = `${window.location.origin}/accept-invite?id=${id}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(id);
+    toast.success(locale === 'pt' ? "Link de convite copiado!" : "Invite link copied!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const inviteMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
