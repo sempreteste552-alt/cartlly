@@ -177,11 +177,14 @@ export function CustomerProfileModal({ open, onOpenChange, storeUserId, basePath
           </div>
         )}
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Meus Dados</TabsTrigger>
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
             <TabsTrigger value="loyalty" className="flex items-center gap-1">
               <Award className="h-3 w-3" /> Fidelidade
+            </TabsTrigger>
+            <TabsTrigger value="referrals" className="flex items-center gap-1">
+              <UsersIcon className="h-3 w-3" /> Indicados
             </TabsTrigger>
             <TabsTrigger value="wishlist" className="flex items-center gap-1">
               <Heart className="h-3 w-3" /> Favoritos
