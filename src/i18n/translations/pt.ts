@@ -81,6 +81,7 @@ export const pt = {
     products: "Produtos",
     orders: "Pedidos",
     customers: "Clientes",
+    collaborators: "Colaboradores",
     aiBrain: "Cérebro IA",
     coupons: "Cupons",
     pages: "Páginas",

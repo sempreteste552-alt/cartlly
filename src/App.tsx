@@ -167,6 +167,7 @@ const App = () => {
                     <Route path="frete" element={<Frete />} />
                     <Route path="pagamentos" element={<Pagamentos />} />
                     <Route path="clientes" element={<Clientes />} />
+                    <Route path="colaboradores" element={<Colaboradores />} />
                     <Route path="plano" element={<MeuPlano />} />
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
