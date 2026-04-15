@@ -2745,6 +2745,30 @@ export type Database = {
           },
         ]
       }
+      store_collaborators: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          id: string
+          role: string
+          store_owner_id: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          id?: string
+          role: string
+          store_owner_id: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          store_owner_id?: string
+        }
+        Relationships: []
+      }
       store_domains: {
         Row: {
           activated_at: string | null
@@ -4534,6 +4558,10 @@ export type Database = {
             Args: { _code: string; _ip?: string; _ua?: string }
             Returns: boolean
           }
+      is_collaborator: {
+        Args: { owner_id: string; required_role?: string }
+        Returns: boolean
+      }
       match_customer_insights: {
         Args: {
           match_count?: number

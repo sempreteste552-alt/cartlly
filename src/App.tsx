@@ -24,6 +24,7 @@ const Configuracoes = lazy(() => import("./pages/admin/Configuracoes"));
 const Cupons = lazy(() => import("./pages/admin/Cupons"));
 const Frete = lazy(() => import("./pages/admin/Frete"));
 const Clientes = lazy(() => import("./pages/admin/Clientes"));
+const Colaboradores = lazy(() => import("./pages/admin/Colaboradores"));
 const Pagamentos = lazy(() => import("./pages/admin/Pagamentos"));
 const MeuPlano = lazy(() => import("./pages/admin/MeuPlano"));
 const Paginas = lazy(() => import("./pages/admin/Paginas"));
@@ -167,6 +168,7 @@ const App = () => {
                     <Route path="frete" element={<Frete />} />
                     <Route path="pagamentos" element={<Pagamentos />} />
                     <Route path="clientes" element={<Clientes />} />
+                    <Route path="colaboradores" element={<Colaboradores />} />
                     <Route path="plano" element={<MeuPlano />} />
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
