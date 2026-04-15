@@ -70,7 +70,10 @@ export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showEmailSent, setShowEmailSent] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("email") || "";
+  });
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [storeName, setStoreName] = useState("");
