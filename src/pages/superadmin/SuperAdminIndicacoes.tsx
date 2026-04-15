@@ -12,7 +12,7 @@ import {
   Smartphone, Monitor, Laptop, Timer, ArrowRightLeft, Mail, DollarSign, BarChart3,
   EyeOff, Eye
 } from "lucide-react";
-import { useAllReferrals, useAllReferralCodes, useAllReferralDiscounts, useFlagReferral, useInvalidateDiscount, useOverrideReferralPayment } from "@/hooks/useReferrals";
+import { useAllReferrals, useAllReferralCodes, useAllReferralDiscounts, useFlagReferral, useInvalidateDiscount, useOverrideReferralPayment, useAllCustomerReferrals } from "@/hooks/useReferrals";
 import { format, differenceInHours, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
