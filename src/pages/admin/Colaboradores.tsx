@@ -74,27 +74,27 @@ export default function Colaboradores() {
     mutationFn: async ({ email, role }: { email: string; role: string }) => {
       if (!user?.id) throw new Error("Unauthorized");
 
+      const normalizedEmail = email.toLowerCase().trim();
+
       // 1. Check if the input is an email or a UUID
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
       
       let profileData;
       
       if (isUUID) {
-        // Try to find by user_id
         const { data, error } = await supabase
           .from("profiles")
-          .select("user_id")
+          .select("user_id, email")
           .eq("user_id", email)
           .maybeSingle();
         
         if (error) throw error;
         profileData = data;
       } else {
-        // Try to find by email
         const { data, error } = await supabase
           .from("profiles")
-          .select("user_id")
-          .eq("email", email.toLowerCase().trim())
+          .select("user_id, email")
+          .eq("email", normalizedEmail)
           .maybeSingle();
         
         if (error) throw error;
@@ -102,9 +102,30 @@ export default function Colaboradores() {
       }
         
       if (!profileData) {
-        throw new Error(locale === 'pt' 
-          ? "Usuário não encontrado. Verifique se o e-mail ou ID estão corretos." 
-          : "User not found. Please check if the email or ID is correct.");
+        // Invite by email (even if user doesn't exist)
+        // Check if already invited
+        const { data: existingInvite } = await supabase
+          .from("store_invitations")
+          .select("id")
+          .eq("store_owner_id", user.id)
+          .eq("email", normalizedEmail)
+          .is("accepted_at", null)
+          .maybeSingle();
+
+        if (existingInvite) {
+          throw new Error(locale === 'pt' ? "Este e-mail já possui um convite pendente." : "This email already has a pending invitation.");
+        }
+
+        const { error: inviteError } = await supabase
+          .from("store_invitations")
+          .insert({
+            store_owner_id: user.id,
+            email: normalizedEmail,
+            role: role
+          });
+
+        if (inviteError) throw inviteError;
+        return { type: 'invite' };
       }
 
       // 2. Check if already a collaborator
@@ -129,10 +150,15 @@ export default function Colaboradores() {
         });
 
       if (insertError) throw insertError;
+      return { type: 'collab' };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
-      toast.success(locale === 'pt' ? "Colaborador adicionado!" : "Collaborator added!");
+      queryClient.invalidateQueries({ queryKey: ["store_invitations"] });
+      const msg = result.type === 'invite' 
+        ? (locale === 'pt' ? "Convite enviado por e-mail!" : "Invitation sent by email!")
+        : (locale === 'pt' ? "Colaborador adicionado!" : "Collaborator added!");
+      toast.success(msg);
       setInviteEmail("");
     },
     onError: (error: any) => {
@@ -151,6 +177,20 @@ export default function Colaboradores() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["store_collaborators"] });
       toast.success(locale === 'pt' ? "Colaborador removido." : "Collaborator removed.");
+    }
+  });
+
+  const removeInviteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("store_invitations")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store_invitations"] });
+      toast.success(locale === 'pt' ? "Convite cancelado." : "Invitation cancelled.");
     }
   });
 
