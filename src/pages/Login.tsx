@@ -512,7 +512,9 @@ export default function Login() {
   }
 
   const getTitle = () => {
+    const isInvite = window.location.search.includes("type=invite");
     if (isForgotPassword) return "Redefinir Senha";
+    if (isInvite) return isRegister ? "Criar Perfil de Colaborador" : "Entrar como Colaborador";
     if (isRegister) return "Criar Conta";
     return "Painel Administrativo";
   };
