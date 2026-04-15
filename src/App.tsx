@@ -72,6 +72,7 @@ const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const StoreRoutes = lazy(() => import("./StoreRoutes"));
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 
 import { isPlatformHost } from "./lib/storeDomain";
 
