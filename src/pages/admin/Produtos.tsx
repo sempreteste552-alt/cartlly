@@ -31,8 +31,10 @@ import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 import { useTranslation } from "@/i18n";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useRolePermissions } from "@/components/RoleGate";
 
 export default function Produtos() {
+  const { isViewer } = useRolePermissions();
   const { slug } = useParams();
   const { data: products, isLoading } = useProducts();
   const { data: categories } = useCategories();
