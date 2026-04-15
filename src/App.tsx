@@ -142,6 +142,7 @@ const App = () => {
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/termos" element={<Termos />} />
                   <Route path="/privacidade" element={<Privacidade />} />
+                  <Route path="/accept-invite" element={<AcceptInvite />} />
                   <Route path="/setup-store" element={<ProtectedRoute><SetupStore /></ProtectedRoute>} />
                   <Route path="/conta-em-analise" element={<ContaEmAnalise />} />
                   {/* Super Admin */}
