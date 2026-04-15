@@ -1329,7 +1329,7 @@ export default function LojaLayout() {
               onOpenChange={setProfileModalOpen} 
               storeUserId={settings?.user_id} 
               basePath={basePath} 
-              isPremium={settings?.is_premium_plan} 
+              isPremium={settings?.is_premium_plan || settings?.is_pro_plan} 
             />
           </>
         )}
