@@ -364,6 +364,7 @@ export default function MeuPlano() {
           availableMethods={gatewayInfo?.methods || ["PIX"]}
         />
       )}
-    </div>
+      </div>
+    </RoleGate>
   );
 }
