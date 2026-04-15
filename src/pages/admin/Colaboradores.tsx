@@ -41,7 +41,8 @@ export default function Colaboradores() {
           collaborator:profiles!collaborator_id(
             display_name,
             avatar_url,
-            user_id
+            user_id,
+            email
           )
         `)
         .eq("store_owner_id", user?.id);
