@@ -252,17 +252,21 @@ export default function LojaCheckout() {
       } as any)
     if (orderErr) throw orderErr;
 
+    // Validate UUIDs to prevent "invalid input syntax for type uuid" error
+    const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const cartItemIds = cart.items.map(i => i.id).filter(isUUID);
+
     // Get valid product IDs for this store to prevent foreign key violations
     const { data: validProducts } = await supabase
       .from("products")
       .select("id")
-      .in("id", cart.items.map(i => i.id));
+      .in("id", cartItemIds);
     
     const validIds = new Set((validProducts || []).map(p => p.id));
 
     const items = cart.items.map((i) => ({
       order_id: orderId,
-      product_id: validIds.has(i.id) ? i.id : null,
+      product_id: isUUID(i.id) && validIds.has(i.id) ? i.id : null,
       product_name: i.name,
       product_image: i.image_url,
       quantity: i.quantity,
