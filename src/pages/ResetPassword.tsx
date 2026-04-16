@@ -24,7 +24,6 @@ export default function ResetPassword() {
     if (hash && hash.includes("type=recovery")) {
       setReady(true);
     } else {
-      // Listen for PASSWORD_RECOVERY event
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") {
           setReady(true);
@@ -67,9 +66,19 @@ export default function ResetPassword() {
   if (!ready) {
     return (
       <MarketingBackground>
-        <Card className="w-full max-w-md border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/5 dark:bg-black/5 backdrop-blur-xl">
-...
-      <Card className="w-full max-w-md border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/5 dark:bg-black/5 backdrop-blur-xl">
+        <Card className="w-full max-w-md border border-white/10 shadow-2xl rounded-[2.5rem] bg-black/10 dark:bg-black/40 backdrop-blur-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-4 text-muted-foreground">Verificando link de recuperação...</p>
+          </CardContent>
+        </Card>
+      </MarketingBackground>
+    );
+  }
+
+  return (
+    <MarketingBackground>
+      <Card className="w-full max-w-md border border-white/10 shadow-2xl rounded-[2.5rem] bg-black/10 dark:bg-black/40 backdrop-blur-md">
         <CardHeader className="text-center space-y-3">
           <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-bold tracking-tight">Nova Senha</CardTitle>
