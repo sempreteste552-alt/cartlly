@@ -323,20 +323,30 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {kpiCards.map((s) => {
+        {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow h-full`}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm">
-                  <s.icon className={`h-4 w-4 ${s.iconColor}`} />
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+              {/* Subtle background glow */}
+              <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
+              
+              <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{s.label}</CardTitle>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-[360deg]`}>
+                  <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{s.value}</div>
-                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              <CardContent className="z-10 relative">
+                <div className="flex items-baseline gap-1">
+                  <div className="text-3xl font-black text-foreground tracking-tighter tabular-nums drop-shadow-sm">{s.value}</div>
+                  {idx === 2 && <ChevronUp className="h-4 w-4 text-emerald-500" />}
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-1 w-12 rounded-full bg-primary/20 overflow-hidden">
+                    <div className="h-full bg-primary animate-progress-line" style={{ width: '60%' }} />
+                  </div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{s.desc}</p>
+                </div>
               </CardContent>
             </Card>
           );
