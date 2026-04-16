@@ -500,8 +500,6 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     );
   };
 
-  const [loadingLocal, setLoading] = useState(false);
-  const setLoadingActual = (val: boolean) => setLoading(val);
 
   const copyPixCode = () => {
     const code = paymentData?.paymentResult?.pix_qr_code || paymentData?.payment?.pix_qr_code;
