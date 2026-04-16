@@ -385,9 +385,21 @@ export function AIProductTools({
                 <div className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1">
                   <ImageIcon className="h-3.5 w-3.5" /> Sugestão de Arte
                 </div>
-                <p className="text-xs text-muted-foreground bg-background/50 p-3 rounded-md border border-border border-dashed italic leading-relaxed">
-                  {socialResult.art_suggestion}
-                </p>
+                <div className="relative group">
+                  <p className="text-xs text-muted-foreground bg-background/50 p-3 rounded-md border border-border border-dashed italic leading-relaxed">
+                    {socialResult.art_suggestion}
+                  </p>
+                  <Button 
+                    type="button" variant="outline" size="sm" 
+                    className="absolute top-2 right-2 h-6 px-2 text-[9px] gap-1 bg-background/80 backdrop-blur-sm border-primary/20 hover:bg-primary/10 transition-all"
+                    onClick={() => {
+                      navigator.clipboard.writeText(socialResult.art_suggestion);
+                      toast.success("Sugestão de arte copiada!");
+                    }}
+                  >
+                    <Copy className="h-2.5 w-2.5" /> Copiar Arte
+                  </Button>
+                </div>
               </div>
             </div>
 
