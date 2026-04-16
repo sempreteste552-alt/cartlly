@@ -14,10 +14,12 @@ import {
   Users, DollarSign, AlertTriangle, Package, ShoppingCart, Clock,
   ArrowUpRight, CheckCircle2, ArrowUp, TrendingUp, Zap,
   Crown, Ban, Timer, CreditCard, Percent, Shield, Bell, Sparkles, Send,
-  Activity, Globe, Server, Database, ShieldAlert, Filter, Calendar, RefreshCw
+  Activity, Globe, Server, Database, ShieldAlert, Filter, Calendar, RefreshCw,
+  Layers, Cpu, BarChart3, LineChart
 } from "lucide-react";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
 import { motion, AnimatePresence } from "framer-motion";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function SuperAdminDashboard() {
   const { data: tenants, isLoading } = useAllTenants();
