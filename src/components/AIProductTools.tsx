@@ -53,6 +53,7 @@ export function AIProductTools({
       productDescription: description,
       productPrice: parseFloat(price) || undefined,
       productCategory: category,
+      userId: effectiveId,
     });
     setSeoResult(result as SEOResult);
     setActiveAction(null);
@@ -66,6 +67,7 @@ export function AIProductTools({
       productDescription: description,
       productPrice: parseFloat(price) || undefined,
       productCategory: category,
+      userId: effectiveId,
     });
     setPriceResult(result as PriceResult);
     setActiveAction(null);
@@ -77,6 +79,7 @@ export function AIProductTools({
     const result = await aiEnhance.mutateAsync({
       action: "analyze_image",
       imageUrl,
+      userId: effectiveId,
     });
     setImageResult(result as ImageAnalysisResult);
     setActiveAction(null);
@@ -88,6 +91,7 @@ export function AIProductTools({
       action: "generate_restock_phrases",
       productName: name,
       productCategory: category,
+      userId: effectiveId,
     });
     setRestockResult(result as RestockPhrasesResult);
     setActiveAction(null);
@@ -100,6 +104,7 @@ export function AIProductTools({
       productName: name,
       productDescription: description,
       productCategory: category,
+      userId: effectiveId,
     });
     setSocialResult(result as SocialPostResult);
     setActiveAction(null);
