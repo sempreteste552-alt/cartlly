@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useTranslation } from "@/i18n";
+import { useLojaContext } from "./LojaLayout";
 
 const STATUS_ICONS: Record<string, any> = {
   pendente: Clock,
