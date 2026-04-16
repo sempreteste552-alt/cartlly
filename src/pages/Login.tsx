@@ -540,26 +540,6 @@ export default function Login() {
   return (
     <MarketingBackground>
       <div className="relative w-full">
-        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden hidden md:block">
-          <div
-            className="absolute inset-0 animate-spin"
-            style={{
-              background: "conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8, #3b82f6)",
-              animationDuration: "8s",
-            }}
-          />
-        </div>
-        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse hidden md:block" style={{ animationDuration: "4s" }} />
-        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
-          <div
-            className="absolute inset-0 animate-spin"
-            style={{
-              background: "conic-gradient(from 0deg, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8, #3b82f6)",
-              animationDuration: "8s",
-            }}
-          />
-        </div>
-        <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" style={{ animationDuration: "4s" }} />
 
         <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
