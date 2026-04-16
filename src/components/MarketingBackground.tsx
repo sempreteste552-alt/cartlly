@@ -1,6 +1,7 @@
 import React from 'react';
 import cartlyLogo from '@/assets/cartly-logo.png';
 import loginBg from '@/assets/login-bg.png';
+import loginBgMobile from '@/assets/login-bg-mobile.png';
 
 interface MarketingBackgroundProps {
   children: React.ReactNode;
@@ -9,39 +10,51 @@ interface MarketingBackgroundProps {
 export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-[#020817]">
-      {/* Background Composition */}
-      <div className="fixed inset-0 flex w-full h-full">
-        {/* Left Side: Woman holding tablet (Asset placeholder) */}
-        <div className="relative hidden lg:block w-1/2 h-full overflow-hidden">
-          <div 
+      {/* Mobile Background (only visible on mobile) */}
+      <div className="lg:hidden fixed inset-0 w-full h-full">
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${loginBgMobile})`,
+            filter: 'contrast(1.05) brightness(0.55)',
+          }}
+        />
+        {/* Cinematic dark overlays for legibility on mobile */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/70 via-[#020817]/40 to-[#020817]/90" />
+        <div className="absolute inset-0 bg-[#020817]/30" />
+        {/* Neon glows */}
+        <div className="absolute top-1/4 right-0 w-72 h-72 bg-blue-500/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/15 rounded-full blur-[100px]" />
+      </div>
+
+      {/* Desktop Background Composition */}
+      <div className="fixed inset-0 hidden lg:flex w-full h-full">
+        {/* Left Side: Woman holding tablet */}
+        <div className="relative w-1/2 h-full overflow-hidden">
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
-            style={{ 
+            style={{
               backgroundImage: `url(${loginBg})`,
-              filter: 'contrast(1.1) brightness(0.7)'
+              filter: 'contrast(1.1) brightness(0.7)',
             }}
           />
-          {/* Cinematic Overlays */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#020817]/60 via-transparent to-[#020817]" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/20 via-transparent to-[#020817]/60" />
-          
-          {/* Neon Accents / Glows */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-cyan-400/5 rounded-full blur-[100px]" />
         </div>
 
         {/* Right Side: UI Space (Gradient) */}
-        <div className="w-full lg:w-1/2 h-full bg-gradient-to-br from-[#020817] via-[#020817] to-[#0f172a] relative">
+        <div className="w-1/2 h-full bg-gradient-to-br from-[#020817] via-[#020817] to-[#0f172a] relative">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-          
-          {/* Subtle Neon Accents for Right Side */}
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] hidden lg:block" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]" />
         </div>
       </div>
 
       {/* Content Container */}
       <div className="relative z-10 flex w-full">
-        {/* Left Side Content (Optional) */}
+        {/* Left Side Content (Desktop only) */}
         <div className="hidden lg:flex w-1/2 items-end p-12 pb-20">
           <div className="max-w-md space-y-4 animate-fade-in-up">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-sm">
