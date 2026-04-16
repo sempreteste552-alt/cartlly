@@ -47,7 +47,14 @@ export interface RestockPhrasesResult {
   phrases: string[];
 }
 
-export type AIResult = SEOResult | PriceResult | ImageAnalysisResult | RestockPhrasesResult;
+export interface SocialPostResult {
+  action: "generate_social_post";
+  instagram_caption: string;
+  tiktok_caption: string;
+  art_suggestion: string;
+}
+
+export type AIResult = SEOResult | PriceResult | ImageAnalysisResult | RestockPhrasesResult | SocialPostResult;
 
 export function useAIProductEnhance() {
   return useMutation({
