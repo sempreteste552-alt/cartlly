@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AIEnhanceParams {
-  action: "generate_description" | "suggest_price" | "analyze_image" | "generate_restock_phrases";
+  action: "generate_description" | "suggest_price" | "analyze_image" | "generate_restock_phrases" | "generate_social_post";
   productName?: string;
   productDescription?: string;
   productPrice?: number;
   productCategory?: string;
   imageUrl?: string;
+  platform?: string;
+  userId?: string;
 }
 
 export interface SEOResult {
