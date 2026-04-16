@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff } from "lucide-react";
-import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult } from "@/hooks/useAIProductEnhance";
+import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff, Share2, Instagram, Music2 } from "lucide-react";
+import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult, type SocialPostResult } from "@/hooks/useAIProductEnhance";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useTenantContext } from "@/hooks/useTenantContext";
 
 interface AIProductToolsProps {
   name: string;
@@ -25,11 +27,13 @@ export function AIProductTools({
   onApplyDescription, onApplyName, onApplyPrice, onApplyBadge, locked = false,
 }: AIProductToolsProps) {
   const { slug } = useParams();
+  const { effectiveId } = useTenantContext();
   const aiEnhance = useAIProductEnhance();
   const [seoResult, setSeoResult] = useState<SEOResult | null>(null);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [imageResult, setImageResult] = useState<ImageAnalysisResult | null>(null);
   const [restockResult, setRestockResult] = useState<RestockPhrasesResult | null>(null);
+  const [socialResult, setSocialResult] = useState<SocialPostResult | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [voiceText, setVoiceText] = useState("");
 
@@ -49,6 +53,7 @@ export function AIProductTools({
       productDescription: description,
       productPrice: parseFloat(price) || undefined,
       productCategory: category,
+      userId: effectiveId,
     });
     setSeoResult(result as SEOResult);
     setActiveAction(null);
@@ -62,6 +67,7 @@ export function AIProductTools({
       productDescription: description,
       productPrice: parseFloat(price) || undefined,
       productCategory: category,
+      userId: effectiveId,
     });
     setPriceResult(result as PriceResult);
     setActiveAction(null);
@@ -73,6 +79,7 @@ export function AIProductTools({
     const result = await aiEnhance.mutateAsync({
       action: "analyze_image",
       imageUrl,
+      userId: effectiveId,
     });
     setImageResult(result as ImageAnalysisResult);
     setActiveAction(null);
@@ -84,8 +91,22 @@ export function AIProductTools({
       action: "generate_restock_phrases",
       productName: name,
       productCategory: category,
+      userId: effectiveId,
     });
     setRestockResult(result as RestockPhrasesResult);
+    setActiveAction(null);
+  };
+
+  const handleGenerateSocialPost = async () => {
+    setActiveAction("social");
+    const result = await aiEnhance.mutateAsync({
+      action: "generate_social_post",
+      productName: name,
+      productDescription: description,
+      productCategory: category,
+      userId: effectiveId,
+    });
+    setSocialResult(result as SocialPostResult);
     setActiveAction(null);
   };
 
@@ -134,6 +155,14 @@ export function AIProductTools({
         >
           {activeAction === "restock" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
           Gerar Frases de Destaque
+        </Button>
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={handleGenerateSocialPost}
+          disabled={locked || isLoading || !name}
+        >
+          {activeAction === "social" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+          Gerar Post Redes Sociais
         </Button>
         {voiceRecorder.isSupported && (
           <Button
@@ -301,6 +330,77 @@ export function AIProductTools({
               ))}
             </div>
             <p className="text-[10px] text-muted-foreground italic">Clique em uma frase para usar como selo/destaque do produto.</p>
+          </CardContent>
+        </Card>
+      )}
+      {/* Social Post Result */}
+      {socialResult && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-3 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-primary uppercase">Post para Redes Sociais</span>
+              <Button type="button" variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setSocialResult(null)}>Fechar</Button>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1">
+                  <Instagram className="h-3.5 w-3.5" /> Instagram
+                </div>
+                <div className="relative group">
+                  <p className="text-sm bg-background p-3 rounded-md border border-border whitespace-pre-wrap">{socialResult.instagram_caption}</p>
+                  <Button 
+                    type="button" variant="ghost" size="icon" 
+                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      navigator.clipboard.writeText(socialResult.instagram_caption);
+                      toast.success("Legenda copiada!");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1">
+                  <Music2 className="h-3.5 w-3.5" /> TikTok / Reels
+                </div>
+                <div className="relative group">
+                  <p className="text-sm bg-background p-3 rounded-md border border-border whitespace-pre-wrap">{socialResult.tiktok_caption}</p>
+                  <Button 
+                    type="button" variant="ghost" size="icon" 
+                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      navigator.clipboard.writeText(socialResult.tiktok_caption);
+                      toast.success("Legenda copiada!");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1">
+                  <ImageIcon className="h-3.5 w-3.5" /> Sugestão de Arte
+                </div>
+                <p className="text-xs text-muted-foreground bg-background/50 p-3 rounded-md border border-border border-dashed italic leading-relaxed">
+                  {socialResult.art_suggestion}
+                </p>
+              </div>
+            </div>
+
+            <Button 
+              type="button" variant="outline" size="sm" className="w-full gap-2 border-primary/30 text-primary"
+              onClick={() => {
+                const text = `Post para ${name}\n\nInstagram:\n${socialResult.instagram_caption}\n\nTikTok:\n${socialResult.tiktok_caption}\n\nSugestão de Arte:\n${socialResult.art_suggestion}`;
+                navigator.clipboard.writeText(text);
+                toast.success("Conteúdo completo copiado!");
+              }}
+            >
+              <Copy className="h-3.5 w-3.5" /> Copiar Tudo
+            </Button>
           </CardContent>
         </Card>
       )}

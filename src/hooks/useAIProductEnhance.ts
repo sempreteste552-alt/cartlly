@@ -3,12 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AIEnhanceParams {
-  action: "generate_description" | "suggest_price" | "analyze_image" | "generate_restock_phrases";
+  action: "generate_description" | "suggest_price" | "analyze_image" | "generate_restock_phrases" | "generate_social_post";
   productName?: string;
   productDescription?: string;
   productPrice?: number;
   productCategory?: string;
   imageUrl?: string;
+  platform?: string;
+  userId?: string;
 }
 
 export interface SEOResult {
@@ -45,7 +47,14 @@ export interface RestockPhrasesResult {
   phrases: string[];
 }
 
-export type AIResult = SEOResult | PriceResult | ImageAnalysisResult | RestockPhrasesResult;
+export interface SocialPostResult {
+  action: "generate_social_post";
+  instagram_caption: string;
+  tiktok_caption: string;
+  art_suggestion: string;
+}
+
+export type AIResult = SEOResult | PriceResult | ImageAnalysisResult | RestockPhrasesResult | SocialPostResult;
 
 export function useAIProductEnhance() {
   return useMutation({

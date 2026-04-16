@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt, userId } = await req.json();
+    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt, userId, platform } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -151,6 +151,32 @@ Forneça:
               phrases: { type: "array", items: { type: "string" }, description: "5 catchy sales/restock phrases" },
             },
             required: ["phrases"],
+          },
+        },
+      };
+    } else if (action === "generate_social_post") {
+      systemPrompt = `Você é um especialista em social media marketing para o mercado brasileiro. Gere legendas criativas e persuasivas para redes sociais.
+Regras:
+- Gere uma legenda para Instagram (com emojis e hashtags)
+- Gere uma legenda para TikTok/Reels (curta, dinâmica e com call-to-action)
+- Forneça uma sugestão detalhada de arte/imagem para o post (o que deve conter na imagem, cores, textos sobrepostos)
+- O tom deve ser de acordo com as configurações do cérebro da loja se disponíveis.`;
+
+      userContent = [{ type: "text", text: `Produto: ${productName}\nCategoria: ${productCategory || "Geral"}\nDescrição: ${productDescription || "Sem descrição"}\nPlataforma solicitada: ${platform || "Instagram e TikTok"}` }];
+      toolName = "generate_social_content";
+      toolDef = {
+        type: "function",
+        function: {
+          name: toolName,
+          description: "Generate social media captions and art suggestions",
+          parameters: {
+            type: "object",
+            properties: {
+              instagram_caption: { type: "string", description: "Creative caption for Instagram" },
+              tiktok_caption: { type: "string", description: "Short, punchy caption for TikTok/Reels" },
+              art_suggestion: { type: "string", description: "Detailed suggestion for the post art/visual" },
+            },
+            required: ["instagram_caption", "tiktok_caption", "art_suggestion"],
           },
         },
       };
