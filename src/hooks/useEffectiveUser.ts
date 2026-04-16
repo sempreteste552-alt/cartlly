@@ -31,8 +31,18 @@ export function useEffectiveUser() {
 
       if (storeError) throw storeError;
       
-      // If store not found or it belongs to the user
-      if (!store || store.user_id === user!.id) {
+      // If store not found (could be RLS) or it belongs to the user
+      if (!store) {
+        // If we are at /painel/:slug but store not found, we shouldn't be "owner" of it
+        return { 
+          effectiveId: user!.id, 
+          role: "viewer" as const,
+          isCollaborator: false,
+          notFound: true
+        };
+      }
+
+      if (store.user_id === user!.id) {
         return { 
           effectiveId: user!.id, 
           role: "owner" as const,
