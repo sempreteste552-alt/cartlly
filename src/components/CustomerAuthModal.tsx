@@ -414,6 +414,7 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
               Entrar com Apple
             </Button>
           </div>
+        </Tabs>
           </motion.div>
         </AnimatePresence>
       </DialogContent>
