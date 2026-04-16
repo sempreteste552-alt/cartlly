@@ -44,17 +44,17 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
         {/* Left Side Content (Optional) */}
         <div className="hidden lg:flex w-1/2 items-end p-12 pb-20">
           <div className="max-w-md space-y-4 animate-fade-in-up">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold tracking-wider uppercase">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold tracking-wider uppercase backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
               </span>
               <span>Marketing Automation</span>
             </div>
-            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
+            <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight drop-shadow-2xl">
               Escale sua loja com <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Inteligência</span>
             </h1>
-            <p className="text-lg text-slate-400 font-light">
+            <p className="text-lg text-slate-200 font-normal drop-shadow-lg bg-[#020817]/20 backdrop-blur-[2px] p-2 -ml-2 rounded-lg">
               A plataforma completa para gerenciar, escalar e automatizar seu e-commerce do zero ao milhão.
             </p>
           </div>
