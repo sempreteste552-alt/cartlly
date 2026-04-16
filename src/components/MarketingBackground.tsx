@@ -17,14 +17,12 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
             style={{ 
               backgroundImage: `url(${loginBg})`,
-              filter: 'contrast(1.1) brightness(0.9)'
+              filter: 'contrast(1.1) brightness(0.7)'
             }}
           />
-          {/* Removed Tablet Logo Overlay as it was specific to the previous background image */}
-          
           {/* Cinematic Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#020817]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020817]/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#020817]/60 via-transparent to-[#020817]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/20 via-transparent to-[#020817]/60" />
           
           {/* Neon Accents / Glows */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
