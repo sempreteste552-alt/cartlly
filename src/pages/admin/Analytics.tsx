@@ -370,5 +370,6 @@ export default function Analytics() {
       )}
     </div>
     </PlanGate>
+    </RoleGate>
   );
 }
