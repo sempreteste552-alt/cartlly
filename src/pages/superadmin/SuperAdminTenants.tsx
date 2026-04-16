@@ -46,6 +46,11 @@ export default function SuperAdminTenants() {
   const [detailTenant, setDetailTenant] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingTenant, setDeletingTenant] = useState<any>(null);
+  const [msgDialogOpen, setMsgDialogOpen] = useState(false);
+  const [msgTenant, setMsgTenant] = useState<any>(null);
+  const [msgTitle, setMsgTitle] = useState("Aviso da Plataforma");
+  const [msgBody, setMsgBody] = useState("");
+  const [msgSending, setMsgSending] = useState(false);
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
