@@ -43,6 +43,7 @@ import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
+import { VideoShopping } from "@/components/storefront/VideoShopping";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
