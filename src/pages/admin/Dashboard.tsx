@@ -251,8 +251,10 @@ export default function Dashboard() {
 
   const kpiCards = [
     { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
-    { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
-    ...(hasGateway && isAdmin ? [
+    ...(canViewMetrics ? [
+      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
+    ] : []),
+    ...(hasGateway && canViewMetrics ? [
       { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
       { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ] : []),
