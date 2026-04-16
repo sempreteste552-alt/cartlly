@@ -319,7 +319,7 @@ export default function Dashboard() {
       </div>
 
       {/* Payment Summary - only for plans with gateway and admins */}
-      {hasGateway && isAdmin && (
+      {hasGateway && canViewMetrics && (
         <div className="grid gap-3 sm:grid-cols-4">
           <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
             <CardContent className="p-3">
