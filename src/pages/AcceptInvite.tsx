@@ -152,7 +152,7 @@ export default function AcceptInvite() {
   if (status === "error") {
     return (
       <MarketingBackground>
-        <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-destructive/30 text-center">
+        <div className="bg-black/10 dark:bg-black/40 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-destructive/30 text-center">
           <XCircle className="h-16 w-16 text-destructive mb-4 mx-auto" />
           <h1 className="text-2xl font-bold mb-2 text-white">Ops! Algo deu errado</h1>
           <p className="text-white/80 mb-6">{errorMsg}</p>
