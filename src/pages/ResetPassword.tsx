@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { MarketingBackground } from "@/components/MarketingBackground";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import { isPlatformHost } from "@/lib/storeDomain";
 
