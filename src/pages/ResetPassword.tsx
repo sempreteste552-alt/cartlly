@@ -66,7 +66,7 @@ export default function ResetPassword() {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <MarketingBackground>
         <Card className="w-full max-w-md border-border shadow-lg">
           <CardHeader className="text-center space-y-3">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
@@ -79,12 +79,12 @@ export default function ResetPassword() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </MarketingBackground>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <MarketingBackground>
       <Card className="w-full max-w-md border-border shadow-lg">
         <CardHeader className="text-center space-y-3">
           <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
@@ -132,6 +132,6 @@ export default function ResetPassword() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </MarketingBackground>
   );
 }
