@@ -817,6 +817,43 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Send Message Dialog */}
+      <Dialog open={msgDialogOpen} onOpenChange={setMsgDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-primary" />
+              Enviar Mensagem Direta
+            </DialogTitle>
+            <DialogDescription>
+              A mensagem será enviada como notificação push e aparecerá no painel do tenant.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Para</Label>
+              <Input value={msgTenant?.display_name || msgTenant?.store?.store_name || "Tenant"} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} placeholder="Título da mensagem" />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <Textarea
+                value={msgBody}
+                onChange={(e) => setMsgBody(e.target.value)}
+                placeholder="Escreva sua mensagem aqui..."
+                rows={4}
+              />
+            </div>
+            <Button className="w-full" onClick={handleSendMessage} disabled={msgSending || !msgBody.trim()}>
+              {msgSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {msgSending ? "Enviando..." : "Enviar Agora"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
