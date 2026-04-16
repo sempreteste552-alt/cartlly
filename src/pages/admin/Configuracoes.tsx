@@ -836,24 +836,29 @@ function GeneralSettingsTab() {
         </Card>
       </LockedFeature>
 
-      {/* Account */}
-      <Card className="border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Conta e Segurança</CardTitle></div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg border border-border p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">E-mail atual</span>
+      {/* Account - Only for Owners */}
+      {!isCollaborator && (
+        <Card className="border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Conta e Segurança</CardTitle>
             </div>
-            <p className="text-sm text-muted-foreground ml-6">{user?.email || "—"}</p>
-          </div>
-          <AccountEmailChanger />
-          <Separator />
-          <AccountPasswordChanger />
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">E-mail atual</span>
+              </div>
+              <p className="text-sm text-muted-foreground ml-6">{user?.email || "—"}</p>
+            </div>
+            <AccountEmailChanger />
+            <Separator />
+            <AccountPasswordChanger />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-end pb-6">
         <Button onClick={handleSave} disabled={updateSettings.isPending} size="lg">
