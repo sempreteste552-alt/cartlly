@@ -218,20 +218,15 @@ export default function Login() {
             } catch { /* ignore */ }
           }
           
-          // We only automatically redirect to last_visited_store if we are NOT on the platform domains
-          // OR if there's an explicit redirect_back context.
-          // This avoids the "cache" problem where users are stuck on a previous store.
           const lastStore = localStorage.getItem("last_visited_store");
           if (lastStore && !isPlatformHost(window.location.hostname)) {
             navigate(`/loja/${lastStore}`, { replace: true });
           } else {
-            // Stay at root or let them sign out
             navigate("/", { replace: true });
           }
           return;
         }
 
-        // Merchant/tenant or collaborator
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
@@ -243,7 +238,6 @@ export default function Login() {
           return;
         }
 
-        // If no owner store, check if they are a collaborator
         const { data: collab } = await supabase
           .from("store_collaborators")
           .select("store_owner_id")
@@ -278,7 +272,6 @@ export default function Login() {
     try {
       setAlertCard(null);
 
-      // Validate Turnstile captcha for login and register (not forgot password)
       if (!isForgotPassword) {
         if (!isVerified) {
           setAlertCard({ type: "error", message: "Responda corretamente ao desafio de segurança." });
@@ -371,12 +364,10 @@ export default function Login() {
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
-        // Store creation is now handled by database trigger handle_new_user_setup
         localStorage.removeItem("referral_code");
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {
-        // Save stay connected preference
         localStorage.setItem("stay_connected", stayConnected ? "true" : "false");
         if (!email.trim() || !email.includes("@")) {
           setAlertCard({ type: "error", message: "Informe um e-mail válido." });
@@ -430,36 +421,21 @@ export default function Login() {
     }
   };
 
-  // Maintenance mode screen
   if (showMaintenance) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-24 w-auto drop-shadow-lg" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
               <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Sistema em Manutenção
-              </h1>
-              <p className="text-muted-foreground leading-relaxed">
-                Estamos realizando melhorias programadas em nossa infraestrutura para oferecer uma experiência ainda melhor.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                O acesso ao painel administrativo e a criação de novas lojas estão temporariamente suspensos. Suas lojas continuam funcionando normalmente (exceto se houver aviso específico).
-              </p>
+              <h1 className="text-2xl font-bold text-foreground">Plataforma em Manutenção</h1>
+              <p className="text-muted-foreground">Estamos realizando melhorias em nosso sistema. Voltamos em breve!</p>
             </div>
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 w-full">
-              <p className="text-sm text-primary font-medium">🛠️ Previsão de retorno: Em breve</p>
-            </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.reload()}
-            >
-              Recarregar Página
+            <Button onClick={() => window.location.reload()} className="w-full">
+              Tentar Novamente
             </Button>
           </CardContent>
         </Card>
@@ -467,62 +443,22 @@ export default function Login() {
     );
   }
 
-  // Email verification success screen
   if (showEmailSent) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
               <Mail className="h-10 w-10 text-green-500" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Verifique seu E-mail
-              </h1>
-              <p className="text-muted-foreground leading-relaxed">
-                Enviamos um link de verificação para <strong className="text-foreground">{email}</strong>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Clique no link do e-mail para ativar sua conta automaticamente. Após a verificação, você já pode fazer login.
-              </p>
+              <h2 className="text-2xl font-bold text-foreground">Verifique seu E-mail</h2>
+              <p className="text-muted-foreground">Enviamos um link de confirmação para <strong>{email}</strong>. Verifique sua caixa de entrada e spam.</p>
             </div>
-            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 w-full">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                <p className="text-sm font-medium">Conta criada com sucesso! Verifique seu e-mail.</p>
-              </div>
-            </div>
-            <div className="space-y-2 w-full">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setShowEmailSent(false);
-                  setIsRegister(false);
-                }}
-              >
-                Voltar ao Login
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Não recebeu? Verifique a pasta de spam ou{" "}
-                <button
-                  onClick={async () => {
-                    try {
-                      const { error } = await supabase.auth.resend({ type: "signup", email });
-                      if (error) throw error;
-                      toast.success("E-mail reenviado!");
-                    } catch (err: any) {
-                      toast.error(err.message || "Erro ao reenviar");
-                    }
-                  }}
-                  className="text-blue-500 hover:underline font-medium"
-                >
-                  reenvie o e-mail
-                </button>
-              </p>
-            </div>
+            <Button onClick={() => setShowEmailSent(false)} variant="outline" className="w-full">
+              Voltar ao Login
+            </Button>
           </CardContent>
         </Card>
       </MarketingBackground>
@@ -530,18 +466,15 @@ export default function Login() {
   }
 
   const getTitle = () => {
-    const isInvite = window.location.search.includes("type=invite");
-    if (isForgotPassword) return "Redefinir Senha";
-    if (isInvite) return isRegister ? "Criar Perfil de Colaborador" : "Entrar como Colaborador";
-    if (isRegister) return "Criar Conta";
-    return "Painel Administrativo";
+    if (isForgotPassword) return "Recuperar Senha";
+    if (isRegister) return "Criar sua Loja";
+    return "Acessar Painel";
   };
 
   return (
     <MarketingBackground>
       <div className="relative w-full">
-
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-12 md:h-16 object-contain" />
@@ -773,7 +706,6 @@ export default function Login() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      // Mark this as an admin/tenant OAuth flow, include referral if present
                       const savedRef = refCode || localStorage.getItem("referral_code") || undefined;
                       localStorage.setItem("auth_context", JSON.stringify({ type: "admin", referral_code: savedRef }));
                       const { error } = await lovable.auth.signInWithOAuth("google", {
