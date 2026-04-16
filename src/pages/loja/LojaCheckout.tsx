@@ -252,9 +252,17 @@ export default function LojaCheckout() {
       } as any)
     if (orderErr) throw orderErr;
 
+    // Get valid product IDs for this store to prevent foreign key violations
+    const { data: validProducts } = await supabase
+      .from("products")
+      .select("id")
+      .in("id", cart.items.map(i => i.id));
+    
+    const validIds = new Set((validProducts || []).map(p => p.id));
+
     const items = cart.items.map((i) => ({
       order_id: orderId,
-      product_id: i.id,
+      product_id: validIds.has(i.id) ? i.id : null,
       product_name: i.name,
       product_image: i.image_url,
       quantity: i.quantity,
