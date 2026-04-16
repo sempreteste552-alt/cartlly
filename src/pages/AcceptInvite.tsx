@@ -131,7 +131,7 @@ export default function AcceptInvite() {
   if (status === "not_logged_in") {
     return (
       <MarketingBackground>
-        <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-white/20">
+        <div className="bg-black/10 dark:bg-black/40 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-white/10">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-6">
             <UserPlus className="h-8 w-8 text-primary" />
           </div>
