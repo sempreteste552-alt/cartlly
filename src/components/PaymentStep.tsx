@@ -79,16 +79,27 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const createPayment = useCreatePayment();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Card form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cardInstallments, setCardInstallments] = useState("1");
+  const [cardCpf, setCardCpf] = useState(initialCpf || "");
+  const [saveCard, setSaveCard] = useState(false);
+  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [mpIssuerId, setMpIssuerId] = useState<string>("");
+  const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
+  const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
+
+  // PIX/Boleto CPF
+  const [payerCpf, setPayerCpf] = useState(initialCpf || "");
+
   useEffect(() => {
     if (settings?.payment_gateway === "stripe" && settings?.gateway_public_key) {
       setStripePromise(loadStripe(settings.gateway_public_key));
     }
   }, [settings]);
-
-  // ... state ...
-  const [cardNumber, setCardNumber] = useState("");
-  // ... other card states ...
-  const [payerCpf, setPayerCpf] = useState(initialCpf || "");
 
   // Realtime order status tracking
   useEffect(() => {
