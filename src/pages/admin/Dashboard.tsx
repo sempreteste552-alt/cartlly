@@ -77,6 +77,7 @@ export default function Dashboard() {
     domainStatus: settings?.domain_status,
   });
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [timeRange, setTimeRange] = useState<string>("30d");
   const { ctx, effectiveId } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
   const hasStarterAnalytics = canAccess("coupons", ctx);
