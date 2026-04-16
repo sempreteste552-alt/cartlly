@@ -367,32 +367,61 @@ export default function Dashboard() {
 
       {/* Payment Summary - only for plans with gateway and admins */}
       {hasGateway && canViewMetrics && (
-        <div className="grid gap-3 sm:grid-cols-4">
-          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-xs text-muted-foreground">Aprovados</span></div>
-              <p className="text-xl font-bold text-green-600 mt-1">{paymentMetrics.approved}</p>
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Card className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-emerald-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aprovados</span>
+                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <p className="text-2xl font-black text-emerald-500 mt-1 tabular-nums">{paymentMetrics.approved}</p>
             </CardContent>
           </Card>
-          <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-yellow-600" /><span className="text-xs text-muted-foreground">Pendentes</span></div>
-              <p className="text-xl font-bold text-yellow-600 mt-1">{paymentMetrics.pending}</p>
+          
+          <Card className="border-amber-500/20 bg-amber-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-amber-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-amber-500/10 rounded-lg">
+                    <CreditCard className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pendentes</span>
+                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              </div>
+              <p className="text-2xl font-black text-amber-500 mt-1 tabular-nums">{paymentMetrics.pending}</p>
             </CardContent>
           </Card>
-          <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-600" /><span className="text-xs text-muted-foreground">Recusados</span></div>
-              <p className="text-xl font-bold text-red-600 mt-1">{paymentMetrics.rejected}</p>
+          
+          <Card className="border-rose-500/20 bg-rose-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-rose-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-rose-500/10 rounded-lg">
+                    <XCircle className="h-4 w-4 text-rose-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Falhas</span>
+                </div>
+              </div>
+              <p className="text-2xl font-black text-rose-500 mt-1 tabular-nums">{paymentMetrics.rejected}</p>
             </CardContent>
           </Card>
-          <Card className="border-border shadow-sm">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground mb-1">Por Método</p>
-              <div className="flex gap-2 text-xs">
-                <Badge variant="outline" className="text-[10px] px-1.5">💰 {paymentMetrics.byMethod.pix}</Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5">💳 {paymentMetrics.byMethod.credit_card}</Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5">📄 {paymentMetrics.byMethod.boleto}</Badge>
+          
+          <Card className="border-primary/10 bg-primary/5 backdrop-blur-sm shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-1 opacity-20">
+              <Layers className="h-12 w-12 text-primary rotate-12" />
+            </div>
+            <CardContent className="p-4 relative z-10">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Distribuição</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-emerald-500/20 text-emerald-500">PIX: {paymentMetrics.byMethod.pix}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-blue-500/20 text-blue-500">CARD: {paymentMetrics.byMethod.credit_card}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-slate-500/20 text-slate-400">BOL: {paymentMetrics.byMethod.boleto}</Badge>
               </div>
             </CardContent>
           </Card>
