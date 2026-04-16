@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SimpleVerification } from "@/components/SimpleVerification";
 import { MarketingBackground } from "@/components/MarketingBackground";
 import cartlyLogo from "@/assets/cartly-logo.png";
@@ -472,8 +473,15 @@ export default function Login() {
 
   return (
     <MarketingBackground>
-      <div className="relative w-full">
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full perspective-[1000px]">
+        <motion.div
+          key={isRegister ? "register" : "login"}
+          initial={{ rotateY: isRegister ? -90 : 90, opacity: 0 }}
+          animate={{ rotateY: 0, opacity: 1 }}
+          exit={{ rotateY: isRegister ? 90 : -90, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+        >
+          <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
@@ -777,6 +785,7 @@ export default function Login() {
             </div>
           </CardContent>
         </Card>
+        </motion.div>
       </div>
     </MarketingBackground>
   );

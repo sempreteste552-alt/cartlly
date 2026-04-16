@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Eye, EyeOff, Loader2, Mail, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SimpleVerification } from "@/components/SimpleVerification";
 import { toast } from "sonner";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
@@ -264,10 +265,18 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
 
   return (
     <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) clearAlerts(); }}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Minha Conta</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto perspective-[1000px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ rotateY: -90, opacity: 0 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            exit={{ rotateY: 90, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <DialogHeader>
+              <DialogTitle>Minha Conta</DialogTitle>
+            </DialogHeader>
 
         <AlertCard />
         <EmailConfirmCard />
@@ -405,7 +414,8 @@ export function CustomerAuthModal({ open, onOpenChange, storeUserId }: CustomerA
               Entrar com Apple
             </Button>
           </div>
-        </Tabs>
+          </motion.div>
+        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );
