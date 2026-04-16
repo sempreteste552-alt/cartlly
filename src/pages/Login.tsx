@@ -111,7 +111,7 @@ export default function Login() {
   // Per-device dark mode for login page
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme_login");
+      const stored = localStorage.getItem("theme_admin");
       if (stored) return stored === "dark";
       return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
     }
@@ -172,12 +172,9 @@ export default function Login() {
     fetchCouponConfig();
   }, []);
 
-  // Reset any leaked tenant/store theme colors and apply login dark mode
+  // Apply dark mode based on theme_admin
   useEffect(() => {
     const root = document.documentElement;
-    const propsToReset = ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring", "--accent-foreground",
-      "--store-primary", "--store-secondary", "--store-accent", "--store-button-bg", "--store-button-text", "--store-bg-base", "--store-text-base"];
-    propsToReset.forEach(prop => root.style.removeProperty(prop));
     if (dark) {
       root.classList.add("dark");
     } else {
@@ -424,7 +421,7 @@ export default function Login() {
   if (showMaintenance) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/10 backdrop-blur-sm z-10">
+        <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-24 w-auto drop-shadow-lg" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
@@ -446,7 +443,7 @@ export default function Login() {
   if (showEmailSent) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/10 backdrop-blur-sm z-10">
+        <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
@@ -481,7 +478,7 @@ export default function Login() {
           exit={{ rotateY: isRegister ? 90 : -90, opacity: 0 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/10 backdrop-blur-sm z-10 max-h-[90vh] overflow-y-auto">
+          <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
@@ -490,9 +487,9 @@ export default function Login() {
 
             {!isForgotPassword && (
               <div className="h-6 flex items-center justify-center">
-                <p className="text-xs font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                <p className="text-xs font-medium bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   {isRegister ? registerText : loginText}
-                  <span className="inline-block w-0.5 h-3 bg-blue-500 ml-0.5 animate-pulse align-middle" />
+                  <span className="inline-block w-0.5 h-3 bg-primary ml-0.5 animate-pulse align-middle" />
                 </p>
               </div>
             )}
@@ -536,7 +533,7 @@ export default function Login() {
                         toast.error(err.message || "Erro ao reenviar");
                       }
                     }}
-                    className="mt-2 text-xs text-blue-500 hover:underline font-medium ml-6"
+                    className="mt-2 text-xs text-primary hover:underline font-medium ml-6"
                   >
                     Reenviar e-mail de verificação
                   </button>
@@ -547,20 +544,20 @@ export default function Login() {
               {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeName">Nome da Loja</Label>
-                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="storeName" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="Ex: Moda Fashion" required className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
               )}
               {isRegister && !isForgotPassword && !window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="storeCategory">Nicho da Loja</Label>
                   <Select value={storeCategory} onValueChange={setStoreCategory}>
-                    <SelectTrigger id="storeCategory" className="h-9 border-border/50 focus:border-blue-500 transition-colors">
+                    <SelectTrigger id="storeCategory" className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors">
                       <SelectValue placeholder="Selecione o nicho da sua loja" />
                     </SelectTrigger>
                     <SelectContent>
@@ -582,7 +579,7 @@ export default function Login() {
                   <Label htmlFor="storeSlug">URL da Loja (slug)</Label>
                   <div className="flex items-center gap-0">
                     <span className="inline-flex h-11 items-center rounded-l-md border border-r-0 border-border/50 bg-muted px-3 text-xs text-muted-foreground">/loja/</span>
-                    <Input id="storeSlug" value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="moda-fashion" required className="h-11 rounded-l-none border-border/50 focus:border-blue-500 transition-colors" />
+                    <Input id="storeSlug" value={storeSlug} onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} placeholder="moda-fashion" required className="h-11 rounded-l-none border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
                   </div>
                   <p className="text-xs text-muted-foreground">Esse será o endereço da sua loja online</p>
                 </div>
@@ -617,18 +614,18 @@ export default function Login() {
               {isRegister && window.location.search.includes("type=invite") && (
                 <div className="space-y-2">
                   <Label htmlFor="displayName">Seu Nome</Label>
-                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Seu nome completo" required className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@loja.com" required className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
               </div>
               {!isForgotPassword && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-9 border-border/50 focus:border-blue-500 transition-colors" />
+                    <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} className="h-9 border-border/50 focus:ring-1 focus:ring-primary focus:border-primary transition-colors" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -648,7 +645,7 @@ export default function Login() {
                     </div>
                   )}
                   {!isRegister && (
-                    <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-blue-500 hover:underline">
+                    <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-primary hover:underline">
                       Esqueceu sua senha?
                     </button>
                   )}
@@ -659,9 +656,9 @@ export default function Login() {
                   <Checkbox id="terms" checked={acceptedTerms} onCheckedChange={(checked) => setAcceptedTerms(checked === true)} />
                   <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight cursor-pointer">
                     Li e aceito os{" "}
-                    <a href="/termos" target="_blank" className="text-blue-500 hover:underline font-medium">Termos de Uso</a>{" "}
+                    <a href="/termos" target="_blank" className="text-primary hover:underline font-medium">Termos de Uso</a>{" "}
                     e a{" "}
-                    <a href="/privacidade" target="_blank" className="text-blue-500 hover:underline font-medium">Política de Privacidade</a>
+                    <a href="/privacidade" target="_blank" className="text-primary hover:underline font-medium">Política de Privacidade</a>
                   </label>
                 </div>
               )}
@@ -686,7 +683,7 @@ export default function Login() {
               )}
               <Button
                 type="submit"
-                className="w-full h-9 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg transition-all duration-300"
                 disabled={loading || (isRegister && !acceptedTerms) || (!isForgotPassword && !isVerified)}
               >
                 {loading ? "Carregando..." : isForgotPassword ? "Enviar Link" : isRegister ? "Criar Conta" : "Entrar"}
@@ -765,7 +762,7 @@ export default function Login() {
             )}
             <div className="mt-4 text-center text-sm text-muted-foreground">
               {isForgotPassword ? (
-                <button onClick={() => setIsForgotPassword(false)} className="font-medium text-blue-500 hover:underline">
+                <button onClick={() => setIsForgotPassword(false)} className="font-medium text-primary hover:underline">
                   Voltar ao login
                 </button>
               ) : (
@@ -776,7 +773,7 @@ export default function Login() {
                       setIsRegister(!isRegister);
                       setAcceptedTerms(false);
                     }}
-                    className="font-medium text-blue-500 hover:underline"
+                    className="font-medium text-primary hover:underline"
                   >
                     {isRegister ? "Fazer login" : "Criar conta"}
                   </button>
