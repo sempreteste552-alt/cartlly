@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface PaymentRequest {
   order_id: string;
-  method: "pix" | "credit_card" | "boleto" | "debit_card";
+  method: "pix" | "credit_card" | "boleto" | "debit_card" | "express";
   card_token?: string;
   card_type?: "credit" | "debit";
   installments?: number;
