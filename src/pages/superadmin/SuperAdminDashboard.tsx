@@ -7,14 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Users, DollarSign, AlertTriangle, Package, ShoppingCart, Clock,
   ArrowUpRight, CheckCircle2, ArrowUp, TrendingUp, Zap,
-  Crown, Ban, Timer, CreditCard, Percent, Shield, Bell, Sparkles, Send
+  Crown, Ban, Timer, CreditCard, Percent, Shield, Bell, Sparkles, Send,
+  Activity, Globe, Server, Database, ShieldAlert, Filter, Calendar, RefreshCw
 } from "lucide-react";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SuperAdminDashboard() {
   const { data: tenants, isLoading } = useAllTenants();
