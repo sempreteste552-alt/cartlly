@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff, Share2, Instagram, Music2 } from "lucide-react";
 import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult, type SocialPostResult } from "@/hooks/useAIProductEnhance";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useTenantContext } from "@/hooks/useTenantContext";
 
 interface AIProductToolsProps {
   name: string;
