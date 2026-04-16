@@ -8,11 +8,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search, Lock, Sparkles, ExternalLink } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, 
+  Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search, 
+  Lock, Sparkles, ExternalLink, Calendar, Filter, Activity, Cpu, 
+  Layers, Zap, RefreshCw, ChevronUp, ChevronDown
+} from "lucide-react";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
 import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
@@ -71,6 +77,7 @@ export default function Dashboard() {
     domainStatus: settings?.domain_status,
   });
   const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [timeRange, setTimeRange] = useState<string>("30d");
   const { ctx, effectiveId } = useTenantContext();
   const hasGateway = canAccess("gateway", ctx);
   const hasStarterAnalytics = canAccess("coupons", ctx);
@@ -250,16 +257,16 @@ export default function Dashboard() {
   }, [payments]);
 
   const kpiCards = [
-    { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+    { label: "Produtos", value: String(metrics.totalProducts), icon: Layers, desc: "Ecossistema de itens", gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ...(canViewMetrics ? [
-      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
+      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `Fluxo: ${metrics.totalOrders} total`, gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
     ] : []),
     ...(hasGateway && canViewMetrics ? [
-      { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
-      { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Faturamento", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: "Capital processado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Eficiência/Ticket", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Média por conversão", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ] : []),
-    { label: "Clientes Únicos", value: String(metrics.uniqueCustomers), icon: Users, desc: `Base de clientes`, gradient: "from-cyan-500/10 to-cyan-500/5", border: "border-cyan-500/20", iconColor: "text-cyan-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
-    { label: "Estoque Baixo", value: String(metrics.lowStock.length), icon: AlertTriangle, desc: `${metrics.outOfStock.length} esgotados`, gradient: metrics.lowStock.length > 0 ? "from-red-500/10 to-red-500/5" : "from-muted/50 to-muted/30", border: metrics.lowStock.length > 0 ? "border-red-500/20" : "border-border", iconColor: metrics.lowStock.length > 0 ? "text-red-500" : "text-muted-foreground", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
+    { label: "Base de Usuários", value: String(metrics.uniqueCustomers), icon: Users, desc: "Retenção de leads", gradient: "from-cyan-600/20 to-blue-600/10", border: "border-cyan-500/30", iconColor: "text-cyan-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
+    { label: "Nível de Estoque", value: String(metrics.lowStock.length), icon: Cpu, desc: `${metrics.outOfStock.length} itens críticos`, gradient: metrics.lowStock.length > 0 ? "from-red-600/20 to-rose-600/10" : "from-slate-600/20 to-slate-600/10", border: metrics.lowStock.length > 0 ? "border-red-500/30" : "border-slate-500/30", iconColor: metrics.lowStock.length > 0 ? "text-red-400" : "text-slate-400", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
   ];
 
   return (
@@ -270,36 +277,76 @@ export default function Dashboard() {
         <AITrainingAlert />
       )}
 
-      <div id="dashboard-welcome" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> {t.dashboard.title}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">{t.dashboard.welcome}</p>
+      <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/50 backdrop-blur-md p-4 rounded-2xl border border-primary/10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <Activity className="h-6 w-6 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              {t.dashboard.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-amber-500" />
+              Monitoramento em tempo real
+            </p>
+          </div>
         </div>
-        {loadingStats && <Badge variant="outline" className="animate-pulse text-xs self-start sm:self-auto">{t.common.loading}</Badge>}
-        <Button size="sm" variant="outline" className="gap-2" asChild>
-          <a href={storeUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4" />
-            Ver Loja
-          </a>
-        </Button>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/5 border-primary/20">{t.common.loading}</Badge>}
+          
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[140px] bg-background/50 border-primary/10 h-9 text-xs">
+              <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="year">Este ano</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button size="sm" variant="outline" className="gap-2 border-primary/10 h-9 text-xs bg-background/50" asChild>
+            <a href={storeUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ver Minha Loja
+            </a>
+          </Button>
+
+          <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
-      {/* KPI Cards */}
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {kpiCards.map((s) => {
+        {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow h-full`}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm">
-                  <s.icon className={`h-4 w-4 ${s.iconColor}`} />
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+              {/* Subtle background glow */}
+              <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
+              
+              <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{s.label}</CardTitle>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-[360deg]`}>
+                  <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{s.value}</div>
-                <p className="text-xs text-muted-foreground">{s.desc}</p>
+              <CardContent className="z-10 relative">
+                <div className="flex items-baseline gap-1">
+                  <div className="text-3xl font-black text-foreground tracking-tighter tabular-nums drop-shadow-sm">{s.value}</div>
+                  {idx === 2 && <ChevronUp className="h-4 w-4 text-emerald-500" />}
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-1 w-12 rounded-full bg-primary/20 overflow-hidden">
+                    <div className="h-full bg-primary animate-progress-line" style={{ width: '60%' }} />
+                  </div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">{s.desc}</p>
+                </div>
               </CardContent>
             </Card>
           );
@@ -320,32 +367,61 @@ export default function Dashboard() {
 
       {/* Payment Summary - only for plans with gateway and admins */}
       {hasGateway && canViewMetrics && (
-        <div className="grid gap-3 sm:grid-cols-4">
-          <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /><span className="text-xs text-muted-foreground">Aprovados</span></div>
-              <p className="text-xl font-bold text-green-600 mt-1">{paymentMetrics.approved}</p>
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Card className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-emerald-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Aprovados</span>
+                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <p className="text-2xl font-black text-emerald-500 mt-1 tabular-nums">{paymentMetrics.approved}</p>
             </CardContent>
           </Card>
-          <Card className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-yellow-600" /><span className="text-xs text-muted-foreground">Pendentes</span></div>
-              <p className="text-xl font-bold text-yellow-600 mt-1">{paymentMetrics.pending}</p>
+          
+          <Card className="border-amber-500/20 bg-amber-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-amber-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-amber-500/10 rounded-lg">
+                    <CreditCard className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pendentes</span>
+                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              </div>
+              <p className="text-2xl font-black text-amber-500 mt-1 tabular-nums">{paymentMetrics.pending}</p>
             </CardContent>
           </Card>
-          <Card className="border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent shadow-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-600" /><span className="text-xs text-muted-foreground">Recusados</span></div>
-              <p className="text-xl font-bold text-red-600 mt-1">{paymentMetrics.rejected}</p>
+          
+          <Card className="border-rose-500/20 bg-rose-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-rose-500/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-rose-500/10 rounded-lg">
+                    <XCircle className="h-4 w-4 text-rose-500" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Falhas</span>
+                </div>
+              </div>
+              <p className="text-2xl font-black text-rose-500 mt-1 tabular-nums">{paymentMetrics.rejected}</p>
             </CardContent>
           </Card>
-          <Card className="border-border shadow-sm">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground mb-1">Por Método</p>
-              <div className="flex gap-2 text-xs">
-                <Badge variant="outline" className="text-[10px] px-1.5">💰 {paymentMetrics.byMethod.pix}</Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5">💳 {paymentMetrics.byMethod.credit_card}</Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5">📄 {paymentMetrics.byMethod.boleto}</Badge>
+          
+          <Card className="border-primary/10 bg-primary/5 backdrop-blur-sm shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-1 opacity-20">
+              <Layers className="h-12 w-12 text-primary rotate-12" />
+            </div>
+            <CardContent className="p-4 relative z-10">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Distribuição</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-emerald-500/20 text-emerald-500">PIX: {paymentMetrics.byMethod.pix}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-blue-500/20 text-blue-500">CARD: {paymentMetrics.byMethod.credit_card}</Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 bg-background/50 border-slate-500/20 text-slate-400">BOL: {paymentMetrics.byMethod.boleto}</Badge>
               </div>
             </CardContent>
           </Card>
@@ -421,25 +497,37 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Receita (30 dias)</CardTitle></CardHeader>
+        <Card className="border-primary/10 bg-card/40 backdrop-blur-xl shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Performance de Receita
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px] bg-primary/5">30 DIAS</Badge>
+            </div>
+          </CardHeader>
           <CardContent>
             {revenueByDay.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={revenueByDay}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(243 75% 59%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(243 75% 59%)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `R$${v}`} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                  <Area type="monotone" dataKey="total" stroke="hsl(243 75% 59%)" fill="url(#revenueGrad)" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--primary)/0.05)" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `R$${v}`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--primary)/0.2)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    formatter={(v: number) => [formatCurrency(v), "Faturamento"]} 
+                  />
+                  <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" fill="url(#revenueGrad)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
+            ) : <p className="text-sm text-muted-foreground py-12 text-center italic">Aguardando dados de transação...</p>}
           </CardContent>
         </Card>
 
