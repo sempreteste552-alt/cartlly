@@ -44,7 +44,7 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
         </div>
 
         {/* Right Side: Mobile Image as Card Background on Desktop */}
-        <div className="w-1/2 h-full relative overflow-hidden bg-background">
+        <div className="w-1/2 h-full relative overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
             style={{
