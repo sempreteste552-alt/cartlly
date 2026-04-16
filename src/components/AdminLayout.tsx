@@ -187,6 +187,7 @@ export function AdminLayout() {
       <div
         id="admin-layout-root"
         data-tenant={user?.id}
+        data-role={ctx.role || (role as string)}
         style={adminThemeStyle}
         className={`min-h-screen flex w-full bg-background ${adminDark ? "dark" : ""}`}
       >

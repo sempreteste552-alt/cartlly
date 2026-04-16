@@ -59,10 +59,10 @@ export function useEffectiveUser() {
       }
 
       // Fallback: If not a collaborator but trying to access a slug, 
-      // they might be denied by RLS, but we return their own ID for safety
+      // return a restricted role to prevent accidental data leaks
       return { 
         effectiveId: user!.id, 
-        role: "owner" as const,
+        role: "viewer" as const, // Safer fallback than owner
         isCollaborator: false 
       };
     }

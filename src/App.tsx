@@ -186,6 +186,11 @@ const App = () => {
                     <Route path="roleta" element={<MinhaRoleta />} />
                     <Route path="vendas-externas" element={<VendasExternas />} />
                   </Route>
+                  {/* Auth redirects and legacy handlers */}
+                  <Route path="/auth/*" element={<Navigate to="/" replace />} />
+                  <Route path="/:slug/auth" element={<Navigate to="/login" replace />} />
+                  <Route path="/:slug/aut" element={<Navigate to="/login" replace />} />
+                  
                   {/* Multi-tenant: store by slug only — no default /loja */}
                   <Route path="/loja" element={<Navigate to="/" replace />} />
                   <Route path="/loja/:slug" element={<CustomerAuthProvider><LojaLayout /></CustomerAuthProvider>}>
