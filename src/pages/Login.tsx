@@ -434,7 +434,7 @@ export default function Login() {
   if (showMaintenance) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-24 w-auto drop-shadow-lg" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
@@ -471,7 +471,7 @@ export default function Login() {
   if (showEmailSent) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
@@ -561,7 +561,7 @@ export default function Login() {
         </div>
         <div className="absolute -inset-[6px] rounded-2xl bg-blue-500/20 blur-xl animate-pulse" style={{ animationDuration: "4s" }} />
 
-        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10 max-h-[90vh] overflow-y-auto">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-14 w-auto drop-shadow-lg" />
             <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-16 object-contain" />
