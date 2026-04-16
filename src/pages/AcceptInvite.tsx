@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle2, XCircle, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MarketingBackground } from "@/components/MarketingBackground";
 import { toast } from "sonner";
 
 export default function AcceptInvite() {
