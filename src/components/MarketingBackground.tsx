@@ -1,5 +1,6 @@
 import React from 'react';
 import cartlyLogo from '@/assets/cartly-logo.png';
+import loginBg from '@/assets/login-bg.png';
 
 interface MarketingBackgroundProps {
   children: React.ReactNode;
