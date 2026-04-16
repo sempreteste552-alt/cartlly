@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
       return await handlePagBank(req, supabase);
     } else if (gateway === "amplopay") {
       return await handleAmplopay(req, supabase);
+    } else if (gateway === "stripe") {
+      return await handleStripe(req, supabase);
     }
 
     return new Response(JSON.stringify({ error: "Gateway não especificado" }), {
@@ -484,7 +486,95 @@ async function activatePlanSubscription(supabase: any, userId: string, planId: s
     .eq("status", "pending");
 }
 
-// ===================== RICH PUSH HELPER =====================
+
+async function handleStripe(req: Request, supabase: any) {
+  const url = new URL(req.url);
+  const orderId = url.searchParams.get("order_id");
+  const paymentIntentId = url.searchParams.get("payment_intent");
+
+  console.log("Stripe Webhook/Redirect:", { orderId, paymentIntentId, method: req.method });
+
+  if (req.method === "POST") {
+    try {
+      const body = await req.json();
+      const event = body;
+      const paymentIntent = event.data?.object;
+      
+      if (event.type === "payment_intent.succeeded" || event.type === "payment_intent.payment_failed" || event.type === "payment_intent.canceled") {
+        const pOrderId = paymentIntent.metadata?.order_id || orderId;
+        const status = event.type === "payment_intent.succeeded" ? "approved" : 
+                       event.type === "payment_intent.canceled" ? "cancelled" : "rejected";
+
+        if (pOrderId) {
+          await processStatusUpdate(supabase, pOrderId, status, "stripe", paymentIntent.id, paymentIntent);
+        }
+      }
+    } catch (e) {
+      console.error("Stripe Webhook JSON error:", e.message);
+    }
+  } else if (req.method === "GET" && orderId && paymentIntentId) {
+    // Redirection from Stripe checkout
+    // We don't have the secret key here easily without finding the store owner
+    // But we can check the status from the DB if it was already updated by webhook
+    // or we can wait for the webhook to do it.
+    // For now, let's just log and redirect the user back to the store
+    console.log("Stripe Redirect GET received for order:", orderId);
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function processStatusUpdate(supabase: any, orderId: string, status: string, gateway: string, gatewayPaymentId: string, rawResponse: any) {
+  console.log(`Processing status update for order ${orderId}: ${status} (${gateway})`);
+  
+  // Update payment record
+  const { data: payment } = await supabase
+    .from("payments")
+    .update({ status, raw_response: rawResponse })
+    .eq("order_id", orderId)
+    .eq("gateway", gateway)
+    .select("*, orders(*)")
+    .maybeSingle();
+
+  if (!payment) {
+    console.error(`Payment not found for order ${orderId} and gateway ${gateway}`);
+    return;
+  }
+
+  const order = payment.orders;
+  const userId = payment.user_id;
+  const customerName = order?.customer_name || "Cliente";
+  const orderTotal = payment.amount || order?.total || 0;
+  const formattedTotal = `R$ ${Number(orderTotal).toFixed(2).replace(".", ",")}`;
+  const orderId8 = orderId.slice(0, 8);
+
+  if (status === "approved") {
+    await supabase.from("orders").update({ status: "processando" }).eq("id", orderId);
+    await supabase.from("order_status_history").insert({ order_id: orderId, status: "pago" });
+
+    await sendRichPush(userId, {
+      title: "✅ Pagamento aprovado!",
+      body: `${customerName} pagou ${formattedTotal} via ${gateway} 💰 Pedido #${orderId8}`,
+      url: "/admin/pedidos",
+      type: "payment_approved",
+      data: { orderId, paymentId: payment.id, gateway },
+    });
+  } else if (status === "rejected" || status === "cancelled") {
+    await supabase.from("orders").update({ status: "cancelado" }).eq("id", orderId);
+    await supabase.from("order_status_history").insert({ order_id: orderId, status: "cancelado" });
+
+    await sendRichPush(userId, {
+      title: status === "rejected" ? "❌ Pagamento recusado!" : "⚠️ Pagamento cancelado",
+      body: `Pagamento de ${formattedTotal} do pedido #${orderId8} foi ${status === "rejected" ? "recusado" : "cancelado"}.`,
+      url: "/admin/pedidos",
+      type: status === "rejected" ? "payment_rejected" : "payment_cancelled",
+      data: { orderId, paymentId: payment.id },
+    });
+  }
+}
+
 
 async function sendRichPush(targetUserId: string, payload: {
   title: string;

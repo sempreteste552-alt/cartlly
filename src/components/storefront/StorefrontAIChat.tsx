@@ -438,17 +438,24 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               .from("products")
               .select("id")
               .in("id", itemIds);
-            validIds = new Set((validProducts || []).map(p => p.id));
+            
+            if (validProducts) {
+              validProducts.forEach(p => validIds.add(p.id.toLowerCase()));
+            }
           }
 
-          const orderItems = payload.items.map((item: any) => ({
-            order_id: order.id, 
-            product_id: (item.product_id && isUUID(item.product_id) && validIds.has(item.product_id)) ? item.product_id : null, 
-            product_name: item.product_name, 
-            quantity: item.quantity, 
-            unit_price: item.unit_price, 
-            product_image: item.product_image || null,
-          }));
+          const orderItems = payload.items.map((item: any) => {
+            const idLower = item.product_id?.toLowerCase();
+            return {
+              order_id: order.id, 
+              // Only set product_id if it's a valid UUID AND exists in the database
+              product_id: (item.product_id && isUUID(item.product_id) && idLower && validIds.has(idLower)) ? item.product_id : null, 
+              product_name: item.product_name, 
+              quantity: item.quantity, 
+              unit_price: item.unit_price, 
+              product_image: item.product_image || null,
+            };
+          });
           await supabase.from("order_items").insert(orderItems);
         }
 
