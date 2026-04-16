@@ -171,8 +171,9 @@ export default function Analytics() {
   }
 
   return (
-    <PlanGate feature="analytics_advanced">
-    <div className="p-4 md:p-6 space-y-6">
+    <RoleGate allowedRoles={["owner", "admin"]}>
+      <PlanGate feature="analytics_advanced">
+        <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">📊 Analytics de Funil</h1>
