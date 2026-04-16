@@ -69,7 +69,7 @@ export function GenericProductSection({ section, products, cart, basePath = "", 
         {filteredProducts.map((product, index) => (
           <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group">
             <Card 
-              className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
+              className="overflow-hidden border-white/20 backdrop-blur-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-white/20 dark:bg-black/20"
               style={{ 
                 borderRadius: "var(--store-card-radius, 8px)",
                 boxShadow: "var(--store-card-shadow, 0 1px 2px 0 rgb(0 0 0 / 0.05))",
