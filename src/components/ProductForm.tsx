@@ -56,7 +56,8 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const videoFileRef = useRef<HTMLInputElement>(null);
   const uploadImage = useUploadProductImage();
   const { data: categories } = useCategories();
-  const { ctx } = useTenantContext();
+  const { ctx, role } = useTenantContext();
+  const isViewer = role === "viewer";
   const aiLocked = !canAccess("ai_tools", ctx);
   const canVideo = canAccess("product_video", ctx);
   const maxImages = getMaxProductImages(ctx);
@@ -182,6 +183,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
           <DialogTitle>{initialData ? "Editar Produto" : "Novo Produto"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <fieldset disabled={isViewer} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome *</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} placeholder="Nome do produto" />
@@ -363,13 +365,18 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
             </div>
             <Switch id="published" checked={published} onCheckedChange={setPublished} />
           </div>
+        </fieldset>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" disabled={loading || uploadImage.isPending}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {initialData ? "Salvar" : "Criar Produto"}
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {isViewer ? "Fechar" : "Cancelar"}
             </Button>
+            {!isViewer && (
+              <Button type="submit" disabled={loading || uploadImage.isPending}>
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {initialData ? "Salvar" : "Criar Produto"}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>

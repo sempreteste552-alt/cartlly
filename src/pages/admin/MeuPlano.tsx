@@ -1,3 +1,4 @@
+import { RoleGate } from "@/components/RoleGate";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -129,7 +130,8 @@ export default function MeuPlano() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <RoleGate allowedRoles={["owner", "admin"]}>
+      <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -362,6 +364,7 @@ export default function MeuPlano() {
           availableMethods={gatewayInfo?.methods || ["PIX"]}
         />
       )}
-    </div>
+      </div>
+    </RoleGate>
   );
 }

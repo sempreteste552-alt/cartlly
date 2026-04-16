@@ -20,6 +20,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { useTranslation } from "@/i18n";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
+import { useRolePermissions } from "@/components/RoleGate";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -58,6 +59,7 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
 }
 
 export default function Dashboard() {
+  const { isViewer, isAdmin } = useRolePermissions();
   const { slug } = useParams();
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -250,7 +252,7 @@ export default function Dashboard() {
   const kpiCards = [
     { label: "Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Total cadastrados", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `de ${metrics.totalOrders} total`, gradient: "from-purple-500/10 to-purple-500/5", border: "border-purple-500/20", iconColor: "text-purple-500", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
-    ...(hasGateway ? [
+    ...(hasGateway && isAdmin ? [
       { label: "Receita Aprovada", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: `${paymentMetrics.approved} pagamentos`, gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
       { label: "Ticket Médio", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Apenas aprovados", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ] : []),
@@ -314,8 +316,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Payment Summary - only for plans with gateway */}
-      {hasGateway && (
+      {/* Payment Summary - only for plans with gateway and admins */}
+      {hasGateway && isAdmin && (
         <div className="grid gap-3 sm:grid-cols-4">
           <Card className="border-green-500/20 bg-gradient-to-br from-green-500/10 to-transparent shadow-sm">
             <CardContent className="p-3">

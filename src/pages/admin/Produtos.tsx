@@ -31,8 +31,10 @@ import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 import { useTranslation } from "@/i18n";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
+import { useRolePermissions } from "@/components/RoleGate";
 
 export default function Produtos() {
+  const { isViewer } = useRolePermissions();
   const { slug } = useParams();
   const { data: products, isLoading } = useProducts();
   const { data: categories } = useCategories();
@@ -191,36 +193,40 @@ export default function Produtos() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => aiAvailable ? setAiImportOpen(true) : navigate(`/painel/${slug}/plano`)}
-            className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
-          >
-            {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}</span>
-            <span className="sm:hidden">IA</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setCatDialogOpen(true)} className="text-xs sm:text-sm">
-            <Tag className="mr-1.5 h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Categorias</span>
-            <span className="sm:hidden">Cat.</span>
-          </Button>
-          <Button
-            id="new-product-btn"
-            size="sm"
-            className="text-xs sm:text-sm"
-            onClick={() => {
-              if (!canCreate) {
-                toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
-                return;
-              }
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Novo
-          </Button>
+          {!isViewer && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => aiAvailable ? setAiImportOpen(true) : navigate(`/painel/${slug}/plano`)}
+                className={`text-xs sm:text-sm ${!aiAvailable ? "border-primary/30 text-primary" : ""}`}
+              >
+                {aiAvailable ? <Sparkles className="mr-1.5 h-3.5 w-3.5" /> : <Lock className="mr-1.5 h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{aiAvailable ? "Importar com IA" : "Importar com IA • Desbloquear"}</span>
+                <span className="sm:hidden">IA</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCatDialogOpen(true)} className="text-xs sm:text-sm">
+                <Tag className="mr-1.5 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Categorias</span>
+                <span className="sm:hidden">Cat.</span>
+              </Button>
+              <Button
+                id="new-product-btn"
+                size="sm"
+                className="text-xs sm:text-sm"
+                onClick={() => {
+                  if (!canCreate) {
+                    toast.error(productLimitMsg || "Limite atingido. Faça upgrade.");
+                    return;
+                  }
+                  setFormOpen(true);
+                }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Novo
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -361,7 +367,12 @@ export default function Produtos() {
                     {(product as any).is_archived ? (
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Arquivado</Badge>
                     ) : (
-                      <Switch checked={product.published} onCheckedChange={() => handleTogglePublished(product)} aria-label="Publicar" />
+                      <Switch 
+                        checked={product.published} 
+                        onCheckedChange={() => handleTogglePublished(product)} 
+                        aria-label="Publicar"
+                        disabled={isViewer}
+                      />
                     )}
                   </TableCell>
                   <TableCell>
@@ -378,17 +389,21 @@ export default function Produtos() {
                         </Button>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
-                            <Layers className="h-4 w-4" />
-                          </Button>
+                          {!isViewer && (
+                            <Button variant="ghost" size="icon" onClick={() => setVariantsProductId(product.id)} title="Variantes">
+                              <Layers className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
-                            <Pencil className="h-4 w-4" />
+                            {isViewer ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                           </Button>
                         </>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isViewer && (
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(product.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

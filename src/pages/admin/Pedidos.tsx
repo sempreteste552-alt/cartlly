@@ -30,8 +30,10 @@ import { useTranslation } from "@/i18n";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { useRolePermissions } from "@/components/RoleGate";
 
 export default function Pedidos() {
+  const { isViewer } = useRolePermissions();
   const { t } = useTranslation();
   const STATUS_ICONS: Record<string, any> = {
     pendente: Clock, processando: Package, enviado: Truck, entregue: CheckCircle, cancelado: XCircle,
@@ -274,10 +276,12 @@ export default function Pedidos() {
           <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">Configurar Impressora</span>
-          </Button>
+          {!isViewer && (
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurar Impressora</span>
+            </Button>
+          )}
           <div className="flex gap-1">
             <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
               <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
@@ -551,24 +555,26 @@ export default function Pedidos() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1.5">
-                                <Button 
-                                  variant="outline" 
-                                  size="icon" 
-                                  className="h-8 w-8 text-green-600 border-green-200 bg-green-50 hover:bg-green-100" 
-                                  onClick={() => {
-                                    if (!customer?.phone) {
-                                      toast.error("Cliente sem telefone.");
-                                      return;
-                                    }
-                                    const storeName = storeSettings?.store_name || "nossa loja";
-                                    const itemNames = items.slice(0, 2).map((i: any) => i.name).join(", ");
-                                    const text = `Olá ${customer.name}! Notamos que você deixou alguns itens no carrinho na ${storeName} (${itemNames}). Gostaria de finalizar sua compra?`;
-                                    window.open(`https://wa.me/${customer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
-                                  }}
-                                  title="Recuperar via WhatsApp"
-                                >
-                                  <MessageSquare className="h-4 w-4" />
-                                </Button>
+                                {!isViewer && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-green-600 border-green-200 bg-green-50 hover:bg-green-100" 
+                                    onClick={() => {
+                                      if (!customer?.phone) {
+                                        toast.error("Cliente sem telefone.");
+                                        return;
+                                      }
+                                      const storeName = storeSettings?.store_name || "nossa loja";
+                                      const itemNames = items.slice(0, 2).map((i: any) => i.name).join(", ");
+                                      const text = `Olá ${customer.name}! Notamos que você deixou alguns itens no carrinho na ${storeName} (${itemNames}). Gostaria de finalizar sua compra?`;
+                                      window.open(`https://wa.me/${customer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+                                    }}
+                                    title="Recuperar via WhatsApp"
+                                  >
+                                    <MessageSquare className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                                   toast.info(`Itens: ${items.map((i: any) => `${i.quantity}x ${i.name}`).join(", ")}`);
                                 }}>

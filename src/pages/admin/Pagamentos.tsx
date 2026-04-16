@@ -1,3 +1,4 @@
+import { RoleGate } from "@/components/RoleGate";
 import { PlanGate } from "@/components/PlanGate";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,8 +49,9 @@ export default function Pagamentos() {
   }
 
   return (
-    <PlanGate feature="payment_dashboard">
-    <div className="space-y-6">
+    <RoleGate allowedRoles={["owner", "admin"]}>
+      <PlanGate feature="payment_dashboard">
+        <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Pagamentos</h1>
         <p className="text-muted-foreground">Gerencie métodos e visualize transações</p>
@@ -114,6 +116,7 @@ export default function Pagamentos() {
       </Tabs>
 
     </div>
-    </PlanGate>
+      </PlanGate>
+    </RoleGate>
   );
 }
