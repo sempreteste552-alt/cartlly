@@ -26,6 +26,7 @@ export function AIProductTools({
   onApplyDescription, onApplyName, onApplyPrice, onApplyBadge, locked = false,
 }: AIProductToolsProps) {
   const { slug } = useParams();
+  const { effectiveId } = useTenantContext();
   const aiEnhance = useAIProductEnhance();
   const [seoResult, setSeoResult] = useState<SEOResult | null>(null);
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
