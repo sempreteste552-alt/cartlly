@@ -475,7 +475,12 @@ export default function Login() {
     );
   }
 
-  return (
+  const getTitle = () => {
+    if (isForgotPassword) return "Recuperar Senha";
+    if (isRegister) return "Criar sua Loja";
+    return "Acessar Painel";
+  };
+
     <MarketingBackground>
       <div className="relative w-full">
         <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
