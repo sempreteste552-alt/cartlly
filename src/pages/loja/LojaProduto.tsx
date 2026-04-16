@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
