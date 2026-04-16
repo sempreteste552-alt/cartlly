@@ -142,23 +142,48 @@ export function ProductImageSlideshow({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {visibleImages.map((src, i) => (
-          <img
-            key={`${src}-${i === currentIndex ? zoomKey : 'idle'}`}
-            src={src}
-            alt={`${alt} ${i + 1}`}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out ${
-              i === currentIndex
-                ? `opacity-100 ${visibleImages.length === 1 ? "kenburns-zoom-single" : "kenburns-zoom"}`
-                : "opacity-0"
-            }`}
-            loading={i === 0 ? "eager" : "lazy"}
-            fetchPriority={i === 0 ? "high" : "auto"}
-            decoding="async"
-            draggable={false}
-            onError={() => handleImageError(src)}
-          />
-        ))}
+        {visibleImages.map((src, i) => {
+          const isVideo = src.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv|mov)$/i) || src.includes("product-videos");
+          
+          if (isVideo) {
+            return (
+              <div
+                key={`${src}-${i}`}
+                className={`absolute inset-0 h-full w-full transition-opacity duration-700 ease-in-out ${
+                  i === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
+              >
+                <video
+                  src={src}
+                  className="h-full w-full object-cover"
+                  autoPlay={i === currentIndex}
+                  loop
+                  muted
+                  playsInline
+                  controls={i === currentIndex}
+                />
+              </div>
+            );
+          }
+
+          return (
+            <img
+              key={`${src}-${i === currentIndex ? zoomKey : 'idle'}`}
+              src={src}
+              alt={`${alt} ${i + 1}`}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out ${
+                i === currentIndex
+                  ? `opacity-100 ${visibleImages.length === 1 ? "kenburns-zoom-single" : "kenburns-zoom"}`
+                  : "opacity-0"
+              }`}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchPriority={i === 0 ? "high" : "auto"}
+              decoding="async"
+              draggable={false}
+              onError={() => handleImageError(src)}
+            />
+          );
+        })}
 
         {glowColor && (
           <div
