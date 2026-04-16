@@ -448,7 +448,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         return;
       }
 
-      setLoading(true);
+      setTokenizing(true);
       try {
         const result = await createPayment.mutateAsync({
           order_id: orderId,
