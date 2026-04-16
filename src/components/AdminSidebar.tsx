@@ -32,7 +32,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
-  const { ctx, role } = useTenantContext();
+  const { ctx, role, isCollaborator } = useTenantContext();
   const supportUnreadCount = useAdminSupportUnreadCount();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
