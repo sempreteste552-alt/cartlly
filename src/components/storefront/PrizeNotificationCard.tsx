@@ -109,7 +109,7 @@ export function PrizeNotificationCard({ customer, storeUserId, settings }: Prize
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-sm"
       >
-        <Card className="p-6 border-2 border-primary/20 shadow-2xl bg-card relative overflow-hidden group">
+        <Card className="p-6 border border-white/20 shadow-2xl bg-white/10 dark:bg-black/20 backdrop-blur-md relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-2">
             <button onClick={() => setIsVisible(false)} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />

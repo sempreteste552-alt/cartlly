@@ -46,7 +46,7 @@ export function TestimonialsSection({ section, primaryColor }: Props) {
     <SectionWrapper section={section} primaryColor={primaryColor}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {testimonials.map((t: any, i: number) => (
-          <Card key={i} className="border-border">
+          <Card key={i} className="border border-white/20 bg-white/10 dark:bg-black/20 backdrop-blur-md shadow-xl">
             <CardContent className="p-6 text-center space-y-3">
               <div className="flex justify-center gap-0.5">
                 {[...Array(5)].map((_, j) => (

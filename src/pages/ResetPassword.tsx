@@ -67,11 +67,11 @@ export default function ResetPassword() {
   if (!ready) {
     return (
       <MarketingBackground>
-        <Card className="w-full max-w-md border-border shadow-lg">
+        <Card className="w-full max-w-md border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/10 backdrop-blur-md">
           <CardHeader className="text-center space-y-3">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
-            <CardTitle className="text-2xl font-bold tracking-tight">Link Inválido</CardTitle>
-            <CardDescription>Este link de redefinição expirou ou é inválido.</CardDescription>
+            <CardTitle className="text-2xl font-bold tracking-tight text-white">Link Inválido</CardTitle>
+            <CardDescription className="text-white/70">Este link de redefinição expirou ou é inválido.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => navigate("/login")}>
@@ -85,7 +85,7 @@ export default function ResetPassword() {
 
   return (
     <MarketingBackground>
-      <Card className="w-full max-w-md border-border shadow-lg">
+      <Card className="w-full max-w-md border border-white/20 shadow-2xl rounded-[2.5rem] bg-white/10 backdrop-blur-md">
         <CardHeader className="text-center space-y-3">
           <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-16 w-auto" />
           <CardTitle className="text-2xl font-bold tracking-tight">Nova Senha</CardTitle>
