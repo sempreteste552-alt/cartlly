@@ -1,5 +1,6 @@
 import React from 'react';
 import cartlyLogo from '@/assets/cartly-logo.png';
+import loginBg from '@/assets/login-bg.png';
 
 interface MarketingBackgroundProps {
   children: React.ReactNode;
@@ -15,18 +16,11 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
             style={{ 
-              backgroundImage: 'url(https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=2000)',
+              backgroundImage: `url(${loginBg})`,
               filter: 'contrast(1.1) brightness(0.9)'
             }}
           />
-          {/* Tablet Logo Overlay (Simulating the logo on the tablet) */}
-          <div className="absolute top-[45%] left-[45%] -translate-x-1/2 -translate-y-1/2 opacity-80 pointer-events-none mix-blend-screen hidden xl:block">
-            <img 
-              src={cartlyLogo} 
-              alt="Cartly Logo on Tablet" 
-              className="w-16 h-auto drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" 
-            />
-          </div>
+          {/* Removed Tablet Logo Overlay as it was specific to the previous background image */}
           
           {/* Cinematic Overlays */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#020817]" />
