@@ -126,7 +126,7 @@ function GeneralSettingsTab() {
     [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
     reorderBanners.mutate(arr.map((b) => b.id));
   };
-  const { ctx } = useTenantContext();
+  const { ctx, isCollaborator } = useTenantContext();
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
   const faviconFileRef = useRef<HTMLInputElement>(null);
