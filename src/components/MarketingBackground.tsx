@@ -16,12 +16,12 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${loginBgMobile})`,
-            filter: 'contrast(1.05) brightness(0.55)',
+            filter: 'contrast(1.1) brightness(0.95)',
           }}
         />
         {/* Cinematic dark overlays for legibility on mobile */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/70 via-[#020817]/40 to-[#020817]/90" />
-        <div className="absolute inset-0 bg-[#020817]/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/40 via-[#020817]/10 to-[#020817]/60" />
+        <div className="absolute inset-0 bg-[#020817]/5" />
         {/* Neon glows */}
         <div className="absolute top-1/4 right-0 w-72 h-72 bg-blue-500/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-cyan-500/15 rounded-full blur-[100px]" />
