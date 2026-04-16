@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
+import { useRolePermissions } from "@/components/RoleGate";
 import { canAccess } from "@/lib/planPermissions";
 import { normalizeDomain } from "@/lib/storeDomain";
 import { LockedFeature } from "@/components/LockedFeature";
