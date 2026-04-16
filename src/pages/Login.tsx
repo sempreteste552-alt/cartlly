@@ -15,7 +15,6 @@ import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from 
 import { SimpleVerification } from "@/components/SimpleVerification";
 import { MarketingBackground } from "@/components/MarketingBackground";
 import cartlyLogo from "@/assets/cartly-logo.png";
-import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import { isPlatformHost } from "@/lib/storeDomain";
@@ -477,7 +476,6 @@ export default function Login() {
         <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
-            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-12 md:h-16 object-contain" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
