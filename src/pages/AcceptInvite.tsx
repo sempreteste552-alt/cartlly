@@ -131,53 +131,11 @@ export default function AcceptInvite() {
   if (status === "not_logged_in") {
     return (
       <MarketingBackground>
-        <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-white/20">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-6">
-            <UserPlus className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold mb-4 text-white">Você foi convidado!</h1>
-          <p className="text-white/70 mb-6">
-            Você recebeu um convite para colaborar em uma loja na Cartlly.
-          </p>
-          <div className="bg-white/5 rounded-lg p-4 mb-8 text-left border border-white/10">
-            <p className="text-sm font-medium text-white mb-1">Convite enviado para:</p>
-            <p className="text-sm text-white/60 truncate">{inviteData?.email}</p>
-          </div>
-          
-          <div className="space-y-3">
-            <Button 
-              className="w-full h-11" 
-              onClick={() => navigate(`/login?type=invite&id=${inviteId}&email=${inviteData?.email || ""}&redirect=/accept-invite?id=${inviteId}`)}
-            >
-              Aceitar Convite
-            </Button>
-            <p className="text-xs text-white/50">
-              Ao clicar em aceitar, você poderá entrar em sua conta ou criar uma nova.
-            </p>
-          </div>
-        </div>
-      </MarketingBackground>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <MarketingBackground>
-        <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-destructive/30 text-center">
-          <XCircle className="h-16 w-16 text-destructive mb-4 mx-auto" />
-          <h1 className="text-2xl font-bold mb-2 text-destructive">Ops!</h1>
-          <p className="text-white/70 mb-8">{errorMsg}</p>
-          <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10" onClick={() => navigate("/")}>
-            Voltar para o Início
-          </Button>
-        </div>
-      </MarketingBackground>
-    );
-  }
-
-  return (
-    <MarketingBackground>
-      <div className="bg-white/10 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-green-500/30 text-center">
+        <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-white/20">
+...
+        <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-destructive/30 text-center">
+...
+      <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-green-500/30 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 mx-auto" />
         <h1 className="text-2xl font-bold mb-2 text-green-500">Convite Aceito!</h1>
         <p className="text-muted-foreground mb-4">
