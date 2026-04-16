@@ -132,9 +132,40 @@ export default function AcceptInvite() {
     return (
       <MarketingBackground>
         <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-white/20">
-...
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-6">
+            <UserPlus className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2 text-white">Você foi convidado!</h1>
+          <p className="text-white/80 mb-6">
+            Crie sua conta ou faça login para aceitar o convite e começar a colaborar.
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)} className="w-full">
+              Fazer Login / Criar Conta
+            </Button>
+          </div>
+        </div>
+      </MarketingBackground>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <MarketingBackground>
         <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-destructive/30 text-center">
-...
+          <XCircle className="h-16 w-16 text-destructive mb-4 mx-auto" />
+          <h1 className="text-2xl font-bold mb-2 text-white">Ops! Algo deu errado</h1>
+          <p className="text-white/80 mb-6">{errorMsg}</p>
+          <Button onClick={() => navigate("/")} variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
+            Voltar ao Início
+          </Button>
+        </div>
+      </MarketingBackground>
+    );
+  }
+
+  return (
+    <MarketingBackground>
       <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-green-500/30 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 mx-auto" />
         <h1 className="text-2xl font-bold mb-2 text-green-500">Convite Aceito!</h1>
