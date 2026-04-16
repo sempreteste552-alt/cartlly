@@ -22,6 +22,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { buildStoreUrl } from "@/lib/storeDomain";
+import { motion } from "framer-motion";
+
+const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
+  return (
+    <motion.span 
+      className={className}
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.03,
+            delayChildren: delay,
+          },
+        },
+      }}
+    >
+      {text.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          variants={{
+            hidden: { opacity: 0, x: -2 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
