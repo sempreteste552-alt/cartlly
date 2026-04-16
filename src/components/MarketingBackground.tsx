@@ -16,7 +16,7 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
             style={{ 
-              backgroundImage: 'url(https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&q=80&w=2000)',
+              backgroundImage: `url(${loginBg})`,
               filter: 'contrast(1.1) brightness(0.9)'
             }}
           />
