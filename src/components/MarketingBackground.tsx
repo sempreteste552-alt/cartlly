@@ -46,13 +46,13 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
         {/* Right Side: Mobile Image as Card Background on Desktop */}
         <div className="w-1/2 h-full relative overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80"
             style={{
               backgroundImage: `url(${loginBgMobile})`,
-              filter: 'contrast(1.05) brightness(0.7)',
+              filter: 'contrast(1.05) brightness(0.8)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-background/60 via-background/40 to-background/70" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/30 via-background/10 to-background/40" />
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/10 rounded-full blur-[120px]" />
