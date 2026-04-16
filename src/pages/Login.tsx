@@ -230,18 +230,40 @@ export default function Login() {
           return;
         }
 
-        // Merchant/tenant
+        // Merchant/tenant or collaborator
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
           .eq("user_id", user.id)
           .maybeSingle();
         
-        if (!store?.store_slug) {
-          navigate("/setup-store", { replace: true });
-        } else {
+        if (store?.store_slug) {
           navigate("/", { replace: true });
+          return;
         }
+
+        // If no owner store, check if they are a collaborator
+        const { data: collab } = await supabase
+          .from("store_collaborators")
+          .select("store_owner_id")
+          .eq("collaborator_id", user.id)
+          .limit(1)
+          .maybeSingle();
+        
+        if (collab) {
+           const { data: collabStore } = await supabase
+             .from("store_settings")
+             .select("store_slug")
+             .eq("user_id", collab.store_owner_id)
+             .maybeSingle();
+           
+           if (collabStore?.store_slug) {
+             navigate(`/painel/${collabStore.store_slug}`, { replace: true });
+             return;
+           }
+        }
+        
+        navigate("/setup-store", { replace: true });
       };
       
       routeUser();

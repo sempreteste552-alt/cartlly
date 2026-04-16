@@ -4,8 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "react-router-dom";
 
 export type CollaboratorRole = "admin" | "editor" | "viewer";
+export type EffectiveUserResult = {
+  effectiveId: string;
+  role: "owner" | CollaboratorRole;
+  isCollaborator: boolean;
+  notFound?: boolean;
+};
 
-export function useEffectiveUser() {
+export function useEffectiveUser(): EffectiveUserResult & { isLoading: boolean } {
   const { user } = useAuth();
   const { slug: urlSlug } = useParams();
 
