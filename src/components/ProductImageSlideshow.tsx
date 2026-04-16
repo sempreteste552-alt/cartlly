@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX } from "lucide-react";
 
 interface ProductImageSlideshowProps {
   mainImage: string | null;
