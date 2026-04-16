@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from "lucide-react";
 import { SimpleVerification } from "@/components/SimpleVerification";
+import { MarketingBackground } from "@/components/MarketingBackground";
 import cartlyLogo from "@/assets/cartly-logo.png";
 import sslGoogleImg from "@/assets/ssl-google-seguro.png";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
