@@ -1341,6 +1341,7 @@ export default function LojaLayout() {
           buttonColor={settings?.button_color}
           buttonTextColor={settings?.button_text_color}
         />
+        <VideoShopping />
       </div>
     </LojaContext.Provider>
   );
