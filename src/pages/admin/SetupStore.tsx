@@ -127,14 +127,9 @@ export default function SetupStore() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-      </div>
-
-      <div className="relative w-full max-w-md">
-        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden">
+    <MarketingBackground>
+      <div className="relative w-full">
+        <div className="absolute -inset-[2px] rounded-2xl overflow-hidden hidden md:block">
           <div
             className="absolute inset-0 animate-spin"
             style={{
