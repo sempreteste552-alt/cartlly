@@ -27,6 +27,7 @@ const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entr
 export default function LojaRastreio() {
   const { t, locale } = useTranslation();
   const { orderId: urlOrderId } = useParams();
+  const { customer } = useLojaContext();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(urlOrderId || "");
   const [order, setOrder] = useState<any>(null);
@@ -34,6 +35,33 @@ export default function LojaRastreio() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
+
+  const isOwner = order && customer && (
+    (order.customer_email && customer.email && order.customer_email.toLowerCase() === customer.email.toLowerCase()) ||
+    (order.customer_phone && customer.phone && order.customer_phone.replace(/\D/g, "") === customer.phone.replace(/\D/g, ""))
+  );
+
+  const obfuscate = (val: string, type: "name" | "email" | "phone" | "address") => {
+    if (!val) return "";
+    if (isOwner) return val;
+    
+    if (type === "name") {
+      const parts = val.split(" ");
+      return parts.map((p, i) => i === 0 ? p : p[0] + "***").join(" ");
+    }
+    if (type === "email") {
+      const [u, d] = val.split("@");
+      return `${u.slice(0, 2)}***@${d}`;
+    }
+    if (type === "phone") {
+      return val.replace(/\d{4}$/, "****");
+    }
+    if (type === "address") {
+      const parts = val.split(",");
+      return `${parts[0].slice(0, 5)}***, ${parts[parts.length - 1] || ""}`;
+    }
+    return "***";
+  };
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : locale === "es" ? "es-ES" : "fr-FR", { style: "currency", currency: "BRL" }).format(price);
