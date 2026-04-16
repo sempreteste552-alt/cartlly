@@ -141,7 +141,9 @@ export function SuperAdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold opacity-40">Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold opacity-40">
+            <AnimatedText text="Menu Principal" delay={0.1} />
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item, index) => (
