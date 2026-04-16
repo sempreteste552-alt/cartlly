@@ -588,6 +588,75 @@ async function createAmplopayPayment(order: any, method: string, secretKey: stri
   return result;
 }
 
+async function createStripePayment(
+  order: any, 
+  method: string, 
+  secretKey: string, 
+  environment: string, 
+  cardToken?: string, 
+  installments?: number
+) {
+  const stripe = new Stripe(secretKey, {
+    apiVersion: "2023-10-16",
+    httpClient: Stripe.createFetchHttpClient(),
+  });
+
+  // Calculate amount in cents
+  const amountCents = Math.round(Number(order.total) * 100);
+
+  const paymentIntentParams: any = {
+    amount: amountCents,
+    currency: "brl",
+    description: `Pedido #${order.id.slice(0, 8)} na ${order.store_name || "Loja"}`,
+    metadata: {
+      order_id: order.id,
+    },
+    confirm: true,
+  };
+
+  // If we have a payment method ID from Apple/Google Pay or similar
+  if (cardToken) {
+    paymentIntentParams.payment_method = cardToken;
+    paymentIntentParams.return_url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=stripe&order_id=${order.id}`;
+    paymentIntentParams.automatic_payment_methods = {
+      enabled: true,
+      allow_redirects: "never",
+    };
+  } else {
+    // If no token, just create and let client confirm
+    paymentIntentParams.confirm = false;
+    paymentIntentParams.automatic_payment_methods = { enabled: true };
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
+
+  return {
+    gateway_payment_id: paymentIntent.id,
+    status: mapStripeStatus(paymentIntent.status),
+    status_detail: paymentIntent.status,
+    raw: paymentIntent,
+    client_secret: paymentIntent.client_secret,
+  };
+}
+
+function mapStripeStatus(status: string): string {
+  const map: Record<string, string> = {
+    succeeded: "approved",
+    processing: "pending",
+    requires_payment_method: "pending",
+    requires_confirmation: "pending",
+    requires_action: "pending",
+    requires_capture: "pending",
+    canceled: "cancelled",
+  };
+  return map[status] || "pending";
+}
+
+function sendRichPush(userId: string, data: any) {
+  // Mock function or actual implementation if available
+  console.log("Push Notification:", userId, data);
+}
+
 // ===================== RICH PUSH HELPER =====================
 
 async function sendRichPush(targetUserId: string, payload: { title: string; body: string; url?: string; type?: string; data?: any; }) {
