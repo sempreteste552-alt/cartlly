@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
+  { id: "stripe", name: "Stripe", description: "Pagamentos globais com Apple Pay e Google Pay.", publicKeyLabel: "Publishable Key", publicKeyPlaceholder: "pk_live_xxxxxxxx", docsUrl: "https://stripe.com/docs", color: "#635bff", testEndpoint: "" },
   { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
   { id: "amplopay", name: "Amplopay", description: "Gateway com PIX e Boleto simplificado.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://app.amplopay.com/docs", color: "#6366f1", testEndpoint: "" },
 ];
