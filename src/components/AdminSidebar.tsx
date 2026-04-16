@@ -179,7 +179,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {mainItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.management}
+              <AnimatedText text={t.sidebar.management} delay={0.1} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -245,7 +245,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {marketingItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.marketing}
+              <AnimatedText text={t.sidebar.marketing} delay={0.4} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -294,7 +294,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {configItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.settings}
+              <AnimatedText text={t.sidebar.settings} delay={0.7} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
