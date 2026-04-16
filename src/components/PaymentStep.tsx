@@ -475,7 +475,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       } catch (err: any) {
         setErrorMessage(err.message);
       } finally {
-        setLoading(false);
+        setTokenizing(false);
       }
     };
 
