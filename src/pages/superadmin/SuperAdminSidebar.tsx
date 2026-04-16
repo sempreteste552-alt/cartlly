@@ -31,6 +31,38 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+
+const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
+  return (
+    <motion.span 
+      className={className}
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.03,
+            delayChildren: delay,
+          },
+        },
+      }}
+    >
+      {text.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          variants={{
+            hidden: { opacity: 0, x: -2 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 function BadgeCount({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -88,10 +120,19 @@ export function SuperAdminSidebar() {
             )}
           </div>
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground">Super Admin</span>
-              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-medium">Cartlly Platform</span>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="flex flex-col"
+            >
+              <span className="text-sm font-bold text-sidebar-foreground">
+                <AnimatedText text="Super Admin" />
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-medium">
+                <AnimatedText text="Cartlly Platform" delay={0.5} />
+              </span>
+            </motion.div>
           )}
         </div>
       </SidebarHeader>
@@ -100,30 +141,45 @@ export function SuperAdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold opacity-40">Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider font-semibold opacity-40">
+            <AnimatedText text="Menu Principal" delay={0.1} />
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {menuItems.map((item, index) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink
                       to={item.url}
                       end={item.url === "/superadmin"}
-                      className="hover:bg-sidebar-accent/50 transition-colors"
+                      className="hover:bg-sidebar-accent/50 transition-colors group"
                       activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                     >
-                      <div className="relative flex items-center">
+                      <motion.div 
+                        className="relative flex items-center"
+                        initial={{ opacity: 0, scale: 0.8, x: -5 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        transition={{ duration: 1, delay: index * 0.08, ease: "easeOut" }}
+                      >
                         <item.icon className="h-4 w-4" />
                         {collapsed && item.badge > 0 && (
                           <span className="absolute -top-1.5 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-0.5 text-[8px] font-bold text-destructive-foreground border border-sidebar shadow-sm">
                             {item.badge > 9 ? "9+" : item.badge}
                           </span>
                         )}
-                      </div>
+                      </motion.div>
                       {!collapsed && (
                         <>
-                          <span className="flex-1 truncate">{item.title}</span>
-                          <BadgeCount count={item.badge} />
+                          <span className="flex-1 truncate">
+                            <AnimatedText text={item.title} delay={0.2 + (index * 0.08)} />
+                          </span>
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.8, delay: 0.5 + (index * 0.08) }}
+                          >
+                            <BadgeCount count={item.badge} />
+                          </motion.div>
                         </>
                       )}
                     </NavLink>

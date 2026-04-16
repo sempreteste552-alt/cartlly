@@ -22,6 +22,38 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { buildStoreUrl } from "@/lib/storeDomain";
+import { motion } from "framer-motion";
+
+const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
+  return (
+    <motion.span 
+      className={className}
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.03,
+            delayChildren: delay,
+          },
+        },
+      }}
+    >
+      {text.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          variants={{
+            hidden: { opacity: 0, x: -2 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const { state, setOpenMobile, isMobile } = useSidebar();
@@ -110,19 +142,34 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
             <Store className="h-4.5 w-4.5" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col flex-1 min-w-0">
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="flex flex-col flex-1 min-w-0"
+            >
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                  {(settings as any)?.store_name || adminSidebarText.defaultStore}
+                  <AnimatedText text={(settings as any)?.store_name || adminSidebarText.defaultStore} />
                 </span>
                 {(planSlug === "PREMIUM" || planSlug === "PRO") && isTenantActive(ctx) && (
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
                 )}
               </div>
-              <span className="text-[11px] text-sidebar-foreground/50">{t.sidebar.management}</span>
-            </div>
+              <span className="text-[11px] text-sidebar-foreground/50">
+                <AnimatedText text={t.sidebar.management} delay={0.5} />
+              </span>
+            </motion.div>
           )}
-          {!collapsed && <AdminNotificationsBell />}
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+            >
+              <AdminNotificationsBell />
+            </motion.div>
+          )}
         </div>
       </SidebarHeader>
 
@@ -132,40 +179,57 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {mainItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.management}
+              <AnimatedText text={t.sidebar.management} delay={0.1} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {mainItems.map((item) => (
+                {mainItems.map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
                         end={item.url === adminBasePath}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg group"
                         onClick={() => isMobile && setOpenMobile(false)}
                       >
-                        <div className="relative">
+                        <motion.div 
+                          className="relative"
+                          initial={{ opacity: 0, scale: 0.8, x: -5 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
+                        >
                           <item.icon className="h-4 w-4" />
                           {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
                             <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                               {item.badgeCount > 9 ? "9+" : item.badgeCount}
                             </span>
                           )}
-                        </div>
+                        </motion.div>
                         {!collapsed && (
                           <span className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="truncate">{item.title}</span>
+                            <span className="truncate">
+                              <AnimatedText text={item.title} delay={0.2 + (index * 0.1)} />
+                            </span>
                             {!!item.badgeCount && item.badgeCount > 0 && (
-                              <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+                              <motion.span 
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 1.2, delay: 0.5 + (index * 0.1) }}
+                                className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm"
+                              >
                                 {item.badgeCount > 99 ? "99+" : item.badgeCount}
-                              </span>
+                              </motion.span>
                             )}
                             {!item.badgeCount && item.isNew && (
-                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 1.5, delay: 0.6 + (index * 0.1) }}
+                                className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none"
+                              >
                                 {adminSidebarText.new}
-                              </span>
+                              </motion.span>
                             )}
                           </span>
                         )}
@@ -181,27 +245,40 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {marketingItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.marketing}
+              <AnimatedText text={t.sidebar.marketing} delay={0.4} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {marketingItems.map((item) => (
+                {marketingItems.map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg group"
                         onClick={() => isMobile && setOpenMobile(false)}
                       >
-                        <item.icon className="h-4 w-4" />
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                          transition={{ duration: 1, delay: 0.5 + (index * 0.1), ease: "easeOut" }}
+                        >
+                          <item.icon className="h-4 w-4" />
+                        </motion.div>
                         {!collapsed && (
                           <span className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="truncate">{item.title}</span>
+                            <span className="truncate">
+                              <AnimatedText text={item.title} delay={0.6 + (index * 0.1)} />
+                            </span>
                             {item.isNew && (
-                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 1.5, delay: 0.8 + (index * 0.1) }}
+                                className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none"
+                              >
                                 {adminSidebarText.new}
-                              </span>
+                              </motion.span>
                             )}
                           </span>
                         )}
@@ -217,21 +294,31 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         {configItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              {t.sidebar.settings}
+              <AnimatedText text={t.sidebar.settings} delay={0.7} />
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {configItems.map((item) => (
+                {configItems.map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg group"
                         onClick={() => isMobile && setOpenMobile(false)}
                       >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
+                        <motion.div 
+                          initial={{ opacity: 0, x: -5 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.8, delay: 0.8 + (index * 0.1) }}
+                        >
+                          <item.icon className="h-4 w-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+                        </motion.div>
+                        {!collapsed && (
+                          <span className="truncate">
+                            <AnimatedText text={item.title} delay={0.9 + (index * 0.1)} />
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
