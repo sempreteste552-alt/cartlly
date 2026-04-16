@@ -376,8 +376,9 @@ export default function LojaProduto() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product images */}
+        <div className="space-y-3 pdp-reveal pdp-reveal-d1">
           <div 
-            className={`aspect-square bg-muted rounded-lg overflow-hidden border border-border pdp-reveal pdp-reveal-d1`}
+            className={`aspect-square bg-muted rounded-lg overflow-hidden border border-border`}
           >
             <ProductImageSlideshow 
               mainImage={product.image_url}
