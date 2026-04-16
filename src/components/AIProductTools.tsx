@@ -79,6 +79,17 @@ export function AIProductTools({
     setActiveAction(null);
   };
 
+  const handleGenerateRestock = async () => {
+    setActiveAction("restock");
+    const result = await aiEnhance.mutateAsync({
+      action: "generate_restock_phrases",
+      productName: name,
+      productCategory: category,
+    });
+    setRestockResult(result as RestockPhrasesResult);
+    setActiveAction(null);
+  };
+
   const handleGenerateSocialPost = async () => {
     setActiveAction("social");
     const result = await aiEnhance.mutateAsync({
