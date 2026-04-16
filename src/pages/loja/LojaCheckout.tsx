@@ -352,7 +352,7 @@ export default function LojaCheckout() {
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
         setPhase("success");
-      } else if (hasGateway) {
+      } else if (hasGateway || settings?.payment_gateway === "stripe") {
         setPhase("payment");
       } else {
         setSavedFinalTotal(finalTotal);

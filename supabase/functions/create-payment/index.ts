@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@14.16.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,7 @@ const corsHeaders = {
 
 interface PaymentRequest {
   order_id: string;
-  method: "pix" | "credit_card" | "boleto" | "debit_card";
+  method: "pix" | "credit_card" | "boleto" | "debit_card" | "express";
   card_token?: string;
   card_type?: "credit" | "debit";
   installments?: number;
@@ -115,6 +116,17 @@ Deno.serve(async (req) => {
           return json({ test_ok: true, message: "✅ Amplopay configurado. O teste real ocorre ao processar pagamentos.", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
         }
 
+        if (gateway === "stripe") {
+          const stripe = new Stripe(testSettings.gateway_secret_key, { apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient() });
+          const stripeUser = await stripe.accounts.retrieve().catch(() => null);
+          if (stripeUser) {
+            return json({ test_ok: true, message: "✅ Stripe conectado com sucesso!", owner_name: stripeUser.settings?.dashboard.display_name || ownerName, owner_email: stripeUser.email || ownerEmail, store_name: testSettings.store_name });
+          }
+          // If it's a regular secret key (not connect), just check if we can list something
+          await stripe.paymentIntents.list({ limit: 1 });
+          return json({ test_ok: true, message: "✅ Stripe conectado (Chave API válida)!", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
+        }
+
         return json({ test_ok: true, message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.`, owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
       } catch (testError: any) {
         return json({ test_ok: false, error: "Erro de conexão com o gateway: " + testError.message });
@@ -177,6 +189,8 @@ Deno.serve(async (req) => {
         paymentResult = await createPagBankPayment(order, method, secretKey, environment, card_token, installments, payer_cpf);
       } else if (gateway === "amplopay") {
         paymentResult = await createAmplopayPayment(order, method, secretKey, publicKey, environment);
+      } else if (gateway === "stripe") {
+        paymentResult = await createStripePayment(order, method, secretKey, environment, card_token, installments);
       } else {
         return json({ error: `Gateway "${gateway}" não é suportado.` }, 400);
       }
@@ -572,6 +586,75 @@ async function createAmplopayPayment(order: any, method: string, secretKey: stri
   }
 
   return result;
+}
+
+async function createStripePayment(
+  order: any, 
+  method: string, 
+  secretKey: string, 
+  environment: string, 
+  cardToken?: string, 
+  installments?: number
+) {
+  const stripe = new Stripe(secretKey, {
+    apiVersion: "2023-10-16",
+    httpClient: Stripe.createFetchHttpClient(),
+  });
+
+  // Calculate amount in cents
+  const amountCents = Math.round(Number(order.total) * 100);
+
+  const paymentIntentParams: any = {
+    amount: amountCents,
+    currency: "brl",
+    description: `Pedido #${order.id.slice(0, 8)} na ${order.store_name || "Loja"}`,
+    metadata: {
+      order_id: order.id,
+    },
+    confirm: true,
+  };
+
+  // If we have a payment method ID from Apple/Google Pay or similar
+  if (cardToken) {
+    paymentIntentParams.payment_method = cardToken;
+    paymentIntentParams.return_url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/payment-webhook?gateway=stripe&order_id=${order.id}`;
+    paymentIntentParams.automatic_payment_methods = {
+      enabled: true,
+      allow_redirects: "never",
+    };
+  } else {
+    // If no token, just create and let client confirm
+    paymentIntentParams.confirm = false;
+    paymentIntentParams.automatic_payment_methods = { enabled: true };
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
+
+  return {
+    gateway_payment_id: paymentIntent.id,
+    status: mapStripeStatus(paymentIntent.status),
+    status_detail: paymentIntent.status,
+    raw: paymentIntent,
+    client_secret: paymentIntent.client_secret,
+  };
+}
+
+function mapStripeStatus(status: string): string {
+  const map: Record<string, string> = {
+    succeeded: "approved",
+    processing: "pending",
+    requires_payment_method: "pending",
+    requires_confirmation: "pending",
+    requires_action: "pending",
+    requires_capture: "pending",
+    canceled: "cancelled",
+  };
+  return map[status] || "pending";
+}
+
+function sendRichPush(userId: string, data: any) {
+  // Mock function or actual implementation if available
+  console.log("Push Notification:", userId, data);
 }
 
 // ===================== RICH PUSH HELPER =====================
