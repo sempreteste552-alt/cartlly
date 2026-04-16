@@ -31,6 +31,9 @@ export function PWAInstallPrompt() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
+    const handleShowPrompt = () => setOpen(true);
+    window.addEventListener('show_pwa_prompt', handleShowPrompt);
+
     // If iOS and not standalone, show prompt after delay
     if (isIOSDevice && !isStandaloneMode) {
       const shown = localStorage.getItem("pwa_prompt_shown");
@@ -39,7 +42,10 @@ export function PWAInstallPrompt() {
       }
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener('show_pwa_prompt', handleShowPrompt);
+    };
   }, []);
 
   const handleInstallClick = async () => {
