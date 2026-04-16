@@ -119,8 +119,9 @@ export function AIProductTools({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground">Assistente IA</span>
+        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+        <span className="text-sm font-bold text-foreground">Assistente IA Turbinado</span>
+        <Badge variant="outline" className="text-[10px] h-5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20 text-amber-600">PREMIUM</Badge>
       </div>
 
       <div className="flex flex-wrap gap-2">
