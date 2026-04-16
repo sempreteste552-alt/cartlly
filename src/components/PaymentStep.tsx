@@ -221,6 +221,8 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: FileText, enabled: settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
+  const isStripe = settings?.payment_gateway === "stripe";
+
   const formatCardNumber = (v: string) => {
     const nums = v.replace(/\D/g, "").slice(0, 16);
     return nums.replace(/(\d{4})(?=\d)/g, "$1 ");
