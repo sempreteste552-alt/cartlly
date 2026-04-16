@@ -497,25 +497,37 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-border shadow-sm">
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Receita (30 dias)</CardTitle></CardHeader>
+        <Card className="border-primary/10 bg-card/40 backdrop-blur-xl shadow-lg">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Performance de Receita
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px] bg-primary/5">30 DIAS</Badge>
+            </div>
+          </CardHeader>
           <CardContent>
             {revenueByDay.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={revenueByDay}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(243 75% 59%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(243 75% 59%)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `R$${v}`} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                  <Area type="monotone" dataKey="total" stroke="hsl(243 75% 59%)" fill="url(#revenueGrad)" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--primary)/0.05)" />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `R$${v}`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--primary)/0.2)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    formatter={(v: number) => [formatCurrency(v), "Faturamento"]} 
+                  />
+                  <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" fill="url(#revenueGrad)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : <p className="text-sm text-muted-foreground py-8 text-center">Sem dados</p>}
+            ) : <p className="text-sm text-muted-foreground py-12 text-center italic">Aguardando dados de transação...</p>}
           </CardContent>
         </Card>
 
