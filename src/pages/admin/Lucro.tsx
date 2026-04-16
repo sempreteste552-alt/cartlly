@@ -257,5 +257,6 @@ export default function Lucro() {
       )}
     </div>
     </PlanGate>
+    </RoleGate>
   );
 }
