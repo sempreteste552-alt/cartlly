@@ -97,7 +97,7 @@ export default function Lucro() {
   if (!analysis) return null;
 
   return (
-    <RoleGate allowedRoles={["owner", "admin"]}>
+    <RoleGate allowedRoles={["owner"]}>
       <PlanGate feature="profit_reports">
         <div className="space-y-6">
       <div>
