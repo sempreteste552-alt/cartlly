@@ -30,6 +30,7 @@ export function AIProductTools({
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [imageResult, setImageResult] = useState<ImageAnalysisResult | null>(null);
   const [restockResult, setRestockResult] = useState<RestockPhrasesResult | null>(null);
+  const [socialResult, setSocialResult] = useState<SocialPostResult | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [voiceText, setVoiceText] = useState("");
 
