@@ -368,6 +368,39 @@ export default function SuperAdminTenants() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!msgBody.trim() || !msgTenant) return;
+    setMsgSending(true);
+    try {
+      // 1. In-app notification
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: msgTenant.user_id,
+        title: msgTitle,
+        message: msgBody,
+        type: "info",
+      } as any);
+
+      // 2. Push Notification
+      await supabase.functions.invoke("send-push", {
+        body: {
+          title: msgTitle,
+          body: msgBody,
+          url: "/admin",
+          targetUserId: msgTenant.user_id,
+        },
+      });
+
+      toast.success("Mensagem enviada!");
+      setMsgDialogOpen(false);
+      setMsgBody("");
+    } catch (err) {
+      toast.error("Erro ao enviar mensagem");
+    } finally {
+      setMsgSending(false);
+    }
+  };
+
   const getStatusBadge = (tenant: any) => {
     const status = tenant.status;
     const storeBlocked = tenant.store?.store_blocked;
