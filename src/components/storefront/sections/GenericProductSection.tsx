@@ -96,14 +96,14 @@ export function GenericProductSection({ section, products, cart, basePath = "", 
               </div>
               <div className="p-3">
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] flex-1">{translatedNames[index] || product.name}</p>
+                  <p className="text-sm font-medium line-clamp-2 min-h-[2.5rem] flex-1 drop-shadow-md text-foreground">{translatedNames[index] || product.name}</p>
                   <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full shrink-0">
                     <Eye className="h-3 w-3" />
                     <span>{product.views || 0}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-baseline gap-1.5">
-                  <p className="text-lg font-bold" style={{ color: primaryColor }}>
+                  <p className="text-lg font-bold drop-shadow-md" style={{ color: primaryColor }}>
                     {formatPrice(product.price)}
                   </p>
                   {product.original_price && product.original_price > product.price && (
