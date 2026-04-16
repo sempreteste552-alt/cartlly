@@ -477,7 +477,6 @@ export default function Login() {
         <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
-            <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-12 md:h-16 object-contain" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
               {getTitle()}
             </CardTitle>
