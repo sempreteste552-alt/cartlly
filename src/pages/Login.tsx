@@ -698,7 +698,7 @@ export default function Login() {
                     <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">ou continue com</span>
+                    <span className="bg-transparent px-2 text-muted-foreground">ou continue com</span>
                   </div>
                 </div>
                 <Button
