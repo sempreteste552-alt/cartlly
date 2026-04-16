@@ -111,7 +111,7 @@ export default function Login() {
   // Per-device dark mode for login page
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme_login");
+      const stored = localStorage.getItem("theme_admin");
       if (stored) return stored === "dark";
       return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
     }
