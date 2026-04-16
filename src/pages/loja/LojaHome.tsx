@@ -23,7 +23,6 @@ import { PrizeNotificationCard } from "@/components/storefront/PrizeNotification
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
-import { VideoShopping } from "@/components/storefront/VideoShopping";
 
 export default function LojaHome() {
   const location = useLocation();
