@@ -142,31 +142,96 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Dashboard Super Admin</h1>
-        <p className="text-muted-foreground text-xs sm:text-sm">Visão geral da plataforma em tempo real</p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/50 backdrop-blur-md p-5 rounded-3xl border border-primary/10 shadow-lg">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-2xl shadow-inner border border-primary/20">
+            <Shield className="h-7 w-7 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+              Nexus SuperAdmin
+            </h1>
+            <p className="text-muted-foreground text-xs sm:text-sm flex items-center gap-1.5 font-medium">
+              <Activity className="h-4 w-4 text-emerald-500" />
+              Monitoramento Global em Tempo Real
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[160px] bg-background/50 border-primary/10 h-10 font-semibold text-xs">
+              <Calendar className="mr-2 h-4 w-4 text-primary" />
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24h">Últimas 24 horas</SelectItem>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="all">Todo o histórico</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="gap-2 h-10 px-4 border-primary/10 bg-background/50 font-bold hover:bg-primary/5"
+            onClick={() => {
+              setIsRefreshing(true);
+              setTimeout(() => setIsRefreshing(false), 1000);
+            }}
+          >
+            <RefreshCw className={`h-4 w-4 text-primary ${isRefreshing ? "animate-spin" : ""}`} />
+            Sync
+          </Button>
+
+          <div className="h-10 w-px bg-primary/10 mx-1 hidden sm:block" />
+
+          <Badge variant="secondary" className="h-10 px-4 rounded-xl flex items-center gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+            SISTEMA ONLINE
+          </Badge>
+        </div>
       </div>
 
       {/* Primary KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Total Tenants", value: String(metrics.total), icon: Users, desc: `${metrics.active} ativos, ${metrics.trial} teste`, gradient: "from-primary/10 to-primary/5", border: "border-primary/20", iconColor: "text-primary" },
-          { label: "Receita Total", value: formatCurrency(metrics.totalRevenue), icon: DollarSign, desc: "Soma de todas as lojas", gradient: "from-green-500/10 to-green-500/5", border: "border-green-500/20", iconColor: "text-green-500" },
-          { label: "Total Produtos", value: String(metrics.totalProducts), icon: Package, desc: "Em todas as lojas", gradient: "from-blue-500/10 to-blue-500/5", border: "border-blue-500/20", iconColor: "text-blue-500" },
-          { label: "Total Pedidos", value: String(metrics.totalOrders), icon: ShoppingCart, desc: "Em todas as lojas", gradient: "from-amber-500/10 to-amber-500/5", border: "border-amber-500/20", iconColor: "text-amber-500" },
-        ].map((s) => (
-          <Card key={s.label} className={`${s.border} bg-gradient-to-br ${s.gradient} shadow-sm hover:shadow-md transition-shadow`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/80 shadow-sm">
-                <s.icon className={`h-4 w-4 ${s.iconColor}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{s.value}</div>
-              <p className="text-xs text-muted-foreground">{s.desc}</p>
-            </CardContent>
-          </Card>
+          { label: "Ecossistema Tenants", value: String(metrics.total), icon: Globe, desc: `${metrics.active} ativos | ${metrics.trial} trial`, gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-400" },
+          { label: "Volume de Capital", value: formatCurrency(metrics.totalRevenue), icon: DollarSign, desc: "Processamento consolidado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-400" },
+          { label: "Catálogo Global", value: String(metrics.totalProducts), icon: Layers, desc: "Itens sob gestão", gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-400" },
+          { label: "Fluxo de Operações", value: String(metrics.totalOrders), icon: Zap, desc: "Pedidos transacionados", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-400" },
+        ].map((s, idx) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+          >
+            <Card className={`relative overflow-hidden ${s.border} bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group h-full`}>
+              <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">{s.label}</CardTitle>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-12`}>
+                  <s.icon className={`h-5 w-5 ${s.iconColor}`} />
+                </div>
+              </CardHeader>
+              <CardContent className="z-10 relative">
+                <div className="text-3xl font-black text-foreground tracking-tighter tabular-nums drop-shadow-sm">{s.value}</div>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="h-1 flex-1 rounded-full bg-primary/10 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-primary" 
+                      initial={{ width: 0 }}
+                      animate={{ width: "70%" }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    />
+                  </div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{s.desc}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
