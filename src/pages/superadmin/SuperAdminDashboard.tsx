@@ -23,6 +23,8 @@ export default function SuperAdminDashboard() {
   const { data: tenants, isLoading } = useAllTenants();
   const { data: plans } = useAllPlans();
   const navigate = useNavigate();
+  const [timeRange, setTimeRange] = useState<string>("30d");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: pendingRequests } = useQuery({
     queryKey: ["all_plan_requests_pending"],
