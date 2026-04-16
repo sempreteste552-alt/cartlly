@@ -904,4 +904,3 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   return <PaymentSelection />;
 }
-}
