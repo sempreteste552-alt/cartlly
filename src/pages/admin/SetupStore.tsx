@@ -210,6 +210,6 @@ export default function SetupStore() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MarketingBackground>
   );
 }
