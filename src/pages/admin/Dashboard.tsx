@@ -277,20 +277,50 @@ export default function Dashboard() {
         <AITrainingAlert />
       )}
 
-      <div id="dashboard-welcome" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> {t.dashboard.title}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">{t.dashboard.welcome}</p>
+      <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/50 backdrop-blur-md p-4 rounded-2xl border border-primary/10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <Activity className="h-6 w-6 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              {t.dashboard.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-amber-500" />
+              Monitoramento em tempo real
+            </p>
+          </div>
         </div>
-        {loadingStats && <Badge variant="outline" className="animate-pulse text-xs self-start sm:self-auto">{t.common.loading}</Badge>}
-        <Button size="sm" variant="outline" className="gap-2" asChild>
-          <a href={storeUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4" />
-            Ver Loja
-          </a>
-        </Button>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/5 border-primary/20">{t.common.loading}</Badge>}
+          
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[140px] bg-background/50 border-primary/10 h-9 text-xs">
+              <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Hoje</SelectItem>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="year">Este ano</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button size="sm" variant="outline" className="gap-2 border-primary/10 h-9 text-xs bg-background/50" asChild>
+            <a href={storeUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ver Minha Loja
+            </a>
+          </Button>
+
+          <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
