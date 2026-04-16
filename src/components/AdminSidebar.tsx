@@ -32,7 +32,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: settings } = useStoreSettings();
-  const { ctx, role } = useTenantContext();
+  const { ctx, role, isCollaborator } = useTenantContext();
   const supportUnreadCount = useAdminSupportUnreadCount();
   const planSlug = ctx.planSlug;
   const pushNotifs = usePushNotifications();
@@ -55,41 +55,42 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
 
   const isViewer = role === "viewer";
   const isEditor = role === "editor";
-  const isOwner = role === "owner";
-  const isAdmin = role === "admin" || isOwner;
-  const isStaff = isEditor || isAdmin;
+  const isOwner = role === "owner" && !isCollaborator;
+  const isAdmin = (role === "admin" || role === "owner") && !isCollaborator;
+  const isStaff = isEditor || isAdmin || (role === "owner" || role === "admin"); // Staff can be collaborators
+  const isRealOwner = isOwner;
 
   const mainItems = [
     { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false, show: true },
     { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false, show: true },
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false, show: true },
-    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true, show: isStaff },
-    { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false, show: isStaff || isViewer },
-    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: Users, isNew: true, show: isAdmin },
-    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false, show: isStaff },
-    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount, show: isStaff },
+    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true, show: true },
+    { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false, show: true },
+    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: Users, isNew: true, show: isRealOwner },
+    { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false, show: true },
+    { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount, show: true },
   ].filter(i => i.show !== false);
 
   const marketingItems = [
-    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true, show: isStaff },
-    { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: isStaff },
-    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: isStaff },
-    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true, show: isStaff },
-    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true, show: isStaff },
-    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true, show: isStaff },
-    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: isStaff },
-    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true, show: isStaff },
+    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true, show: true },
+    { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: true },
+    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: true },
+    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true, show: true },
+    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true, show: true },
+    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true, show: true },
+    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: true },
+    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true, show: true },
   ].filter(i => i.show !== false);
 
   const configItems = [
-    { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null, show: isStaff },
-    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false, show: isStaff },
-    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false, show: isAdmin },
-    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false, show: isAdmin },
-    { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const, show: isAdmin },
-    { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null, show: isStaff },
-    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false, show: isStaff },
-    { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null, show: isAdmin },
+    { title: t.sidebar.store, url: `${adminBasePath}/config`, icon: Settings, feature: null, show: true },
+    { title: t.sidebar.pages, url: `${adminBasePath}/paginas`, icon: FileText, isNew: false, show: true },
+    { title: t.sidebar.profit, url: `${adminBasePath}/lucro`, icon: DollarSign, isNew: false, show: isRealOwner },
+    { title: t.sidebar.analytics, url: `${adminBasePath}/analytics`, icon: BarChart3, isNew: false, show: isRealOwner },
+    { title: t.sidebar.payments, url: `${adminBasePath}/pagamentos`, icon: CreditCard, feature: "gateway" as const, show: isRealOwner },
+    { title: t.sidebar.shipping, url: `${adminBasePath}/frete`, icon: Truck, feature: null, show: true },
+    { title: t.sidebar.policies, url: `${adminBasePath}/politicas`, icon: Shield, isNew: false, show: true },
+    { title: t.sidebar.myPlan, url: `${adminBasePath}/plano`, icon: Crown, feature: null, show: isRealOwner },
   ].filter(i => i.show !== false);
 
   useEffect(() => {

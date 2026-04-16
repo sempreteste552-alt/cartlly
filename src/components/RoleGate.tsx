@@ -13,10 +13,12 @@ interface RoleGateProps {
 }
 
 export function RoleGate({ children, allowedRoles, fallback }: RoleGateProps) {
-  const { role } = useTenantContext();
+  const { role, isCollaborator } = useTenantContext();
   const navigate = useNavigate();
 
-  const isAllowed = allowedRoles.includes(role as Role);
+  // If a collaborator is trying to access owner-only features, block it
+  const effectiveRole = isCollaborator ? (role === 'owner' ? 'admin' : role) : role;
+  const isAllowed = allowedRoles.includes(effectiveRole as Role);
 
   if (isAllowed) return <>{children}</>;
 
@@ -43,9 +45,9 @@ export function RoleGate({ children, allowedRoles, fallback }: RoleGateProps) {
  * Utility hook to check if a user can perform an action based on their role
  */
 export function useRolePermissions() {
-  const { role } = useTenantContext();
+  const { role, isCollaborator } = useTenantContext();
   
-  const isOwner = role === "owner";
+  const isOwner = role === "owner" && !isCollaborator;
   const isAdmin = role === "admin" || isOwner;
   const isEditor = role === "editor" || isAdmin;
   const isViewer = role === "viewer";
@@ -55,10 +57,11 @@ export function useRolePermissions() {
     isEditor,
     isViewer,
     isOwner,
-    canManageTeam: isAdmin,
-    canManagePayments: isAdmin,
-    canManagePlan: isAdmin,
-    canViewMetrics: isAdmin,
+    isCollaborator,
+    canManageTeam: isOwner, // Only owner should manage team
+    canManagePayments: isOwner, // Only owner should manage payments
+    canManagePlan: isOwner, // Only owner should manage plan
+    canViewMetrics: isOwner, // Only owner should see full metrics (revenue)
     canManageProducts: isEditor,
     canManageOrders: isEditor,
     canManageCustomers: isEditor,

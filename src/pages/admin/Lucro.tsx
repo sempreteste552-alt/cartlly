@@ -1,4 +1,4 @@
-import { RoleGate } from "@/components/RoleGate";
+import { RoleGate, useRolePermissions } from "@/components/RoleGate";
 import { PlanGate } from "@/components/PlanGate";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ const COLORS = ["hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(22
 
 export default function Lucro() {
   const { user } = useAuth();
+  const { canViewMetrics } = useRolePermissions();
   const { data: products, isLoading: loadingProducts } = useProducts();
 
   // Fetch orders with items for profit calculation
@@ -96,7 +97,7 @@ export default function Lucro() {
   if (!analysis) return null;
 
   return (
-    <RoleGate allowedRoles={["owner", "admin"]}>
+    <RoleGate allowedRoles={["owner"]}>
       <PlanGate feature="profit_reports">
         <div className="space-y-6">
       <div>

@@ -130,7 +130,7 @@ export default function MeuPlano() {
   };
 
   return (
-    <RoleGate allowedRoles={["owner", "admin"]}>
+    <RoleGate allowedRoles={["owner"]}>
       <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
       <div>
