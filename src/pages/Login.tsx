@@ -478,7 +478,7 @@ export default function Login() {
           exit={{ rotateY: isRegister ? 90 : -90, opacity: 0 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
-          <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-white/5 dark:bg-black/5 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
+          <Card className="relative w-full border border-white/10 shadow-2xl rounded-[2.5rem] bg-black/10 dark:bg-black/40 backdrop-blur-md z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
