@@ -272,7 +272,6 @@ export default function LojaHome() {
           settings={settings} 
         />
       )}
-      <VideoShopping />
     </div>
   );
 }
