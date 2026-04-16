@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useTranslation } from "@/i18n";
+import { useLojaContext } from "./LojaLayout";
 
 const STATUS_ICONS: Record<string, any> = {
   pendente: Clock,
@@ -26,6 +27,7 @@ const STATUS_STEPS: OrderStatus[] = ["pendente", "processando", "enviado", "entr
 export default function LojaRastreio() {
   const { t, locale } = useTranslation();
   const { orderId: urlOrderId } = useParams();
+  const { customer } = useLojaContext();
   const navigate = useNavigate();
   const [searchId, setSearchId] = useState(urlOrderId || "");
   const [order, setOrder] = useState<any>(null);
@@ -33,6 +35,33 @@ export default function LojaRastreio() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
+
+  const isOwner = order && customer && (
+    (order.customer_email && customer.email && order.customer_email.toLowerCase() === customer.email.toLowerCase()) ||
+    (order.customer_phone && customer.phone && order.customer_phone.replace(/\D/g, "") === customer.phone.replace(/\D/g, ""))
+  );
+
+  const obfuscate = (val: string, type: "name" | "email" | "phone" | "address") => {
+    if (!val) return "";
+    if (isOwner) return val;
+    
+    if (type === "name") {
+      const parts = val.split(" ");
+      return parts.map((p, i) => i === 0 ? p : p[0] + "***").join(" ");
+    }
+    if (type === "email") {
+      const [u, d] = val.split("@");
+      return `${u.slice(0, 2)}***@${d}`;
+    }
+    if (type === "phone") {
+      return val.replace(/\d{4}$/, "****");
+    }
+    if (type === "address") {
+      const parts = val.split(",");
+      return `${parts[0].slice(0, 5)}***, ${parts[parts.length - 1] || ""}`;
+    }
+    return "***";
+  };
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat(locale === "pt" ? "pt-BR" : locale === "en" ? "en-US" : locale === "es" ? "es-ES" : "fr-FR", { style: "currency", currency: "BRL" }).format(price);
@@ -339,11 +368,40 @@ export default function LojaRastreio() {
           <Card>
             <CardHeader><CardTitle className="text-base">{uiText.details}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">{uiText.customer}</span><span>{order.customer_name}</span></div>
-              {order.customer_phone && <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{order.customer_phone}</span></div>}
-              {order.customer_email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{order.customer_email}</span></div>}
-              {order.customer_address && <div className="flex justify-between"><span className="text-muted-foreground">{uiText.address}</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{uiText.customer}</span>
+                <span>{obfuscate(order.customer_name, "name")}</span>
+              </div>
+              {order.customer_phone && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Telefone</span>
+                  <span>{obfuscate(order.customer_phone, "phone")}</span>
+                </div>
+              )}
+              {order.customer_email && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Email</span>
+                  <span>{obfuscate(order.customer_email, "email")}</span>
+                </div>
+              )}
+              {order.customer_address && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{uiText.address}</span>
+                  <span className="text-right max-w-[60%]">{obfuscate(order.customer_address, "address")}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Data</span>
+                <span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
+              </div>
+              {!isOwner && (
+                <div className="mt-4 pt-4 border-t border-border text-center">
+                  <p className="text-xs text-muted-foreground mb-2">Alguns dados estão ocultos para sua segurança.</p>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link to="/auth?redirect=rastreio">{t.auth.login} para ver tudo</Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
