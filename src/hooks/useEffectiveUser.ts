@@ -4,8 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "react-router-dom";
 
 export type CollaboratorRole = "admin" | "editor" | "viewer";
+export type EffectiveUserResult = {
+  effectiveId: string;
+  role: "owner" | CollaboratorRole;
+  isCollaborator: boolean;
+  notFound?: boolean;
+};
 
-export function useEffectiveUser() {
+export function useEffectiveUser(): EffectiveUserResult & { isLoading: boolean } {
   const { user } = useAuth();
   const { slug: urlSlug } = useParams();
 
@@ -31,8 +37,18 @@ export function useEffectiveUser() {
 
       if (storeError) throw storeError;
       
-      // If store not found or it belongs to the user
-      if (!store || store.user_id === user!.id) {
+      // If store not found (could be RLS) or it belongs to the user
+      if (!store) {
+        // If we are at /painel/:slug but store not found, we shouldn't be "owner" of it
+        return { 
+          effectiveId: user!.id, 
+          role: "viewer" as const,
+          isCollaborator: false,
+          notFound: true
+        };
+      }
+
+      if (store.user_id === user!.id) {
         return { 
           effectiveId: user!.id, 
           role: "owner" as const,
@@ -59,10 +75,10 @@ export function useEffectiveUser() {
       }
 
       // Fallback: If not a collaborator but trying to access a slug, 
-      // they might be denied by RLS, but we return their own ID for safety
+      // return a restricted role to prevent accidental data leaks
       return { 
         effectiveId: user!.id, 
-        role: "owner" as const,
+        role: "viewer" as const, // Safer fallback than owner
         isCollaborator: false 
       };
     }

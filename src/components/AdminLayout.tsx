@@ -40,7 +40,7 @@ export function AdminLayout() {
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
   const { user } = useAuth();
   const { features, isLoading: featuresLoading } = usePlanFeatures();
-  const { ctx, isLoading: ctxLoading } = useTenantContext();
+  const { ctx, role, isLoading: ctxLoading } = useTenantContext();
   const aiAvailable = canAccess("ai_tools", ctx);
   useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -187,6 +187,7 @@ export function AdminLayout() {
       <div
         id="admin-layout-root"
         data-tenant={user?.id}
+        data-role={role}
         style={adminThemeStyle}
         className={`min-h-screen flex w-full bg-background ${adminDark ? "dark" : ""}`}
       >
