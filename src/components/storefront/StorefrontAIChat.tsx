@@ -428,8 +428,26 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         }).select("id, tracking_token").single();
 
         if (order && payload.items) {
+          // Validate UUIDs to prevent "invalid input syntax for type uuid" and foreign key errors
+          const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+          const itemIds = (payload.items as any[]).map(i => i.product_id).filter(id => id && isUUID(id));
+          
+          let validIds = new Set<string>();
+          if (itemIds.length > 0) {
+            const { data: validProducts } = await supabase
+              .from("products")
+              .select("id")
+              .in("id", itemIds);
+            validIds = new Set((validProducts || []).map(p => p.id));
+          }
+
           const orderItems = payload.items.map((item: any) => ({
-            order_id: order.id, product_id: item.product_id || null, product_name: item.product_name, quantity: item.quantity, unit_price: item.unit_price, product_image: item.product_image || null,
+            order_id: order.id, 
+            product_id: (item.product_id && isUUID(item.product_id) && validIds.has(item.product_id)) ? item.product_id : null, 
+            product_name: item.product_name, 
+            quantity: item.quantity, 
+            unit_price: item.unit_price, 
+            product_image: item.product_image || null,
           }));
           await supabase.from("order_items").insert(orderItems);
         }
