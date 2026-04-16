@@ -368,11 +368,40 @@ export default function LojaRastreio() {
           <Card>
             <CardHeader><CardTitle className="text-base">{uiText.details}</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">{uiText.customer}</span><span>{order.customer_name}</span></div>
-              {order.customer_phone && <div className="flex justify-between"><span className="text-muted-foreground">Telefone</span><span>{order.customer_phone}</span></div>}
-              {order.customer_email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span>{order.customer_email}</span></div>}
-              {order.customer_address && <div className="flex justify-between"><span className="text-muted-foreground">{uiText.address}</span><span className="text-right max-w-[60%]">{order.customer_address}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Data</span><span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{uiText.customer}</span>
+                <span>{obfuscate(order.customer_name, "name")}</span>
+              </div>
+              {order.customer_phone && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Telefone</span>
+                  <span>{obfuscate(order.customer_phone, "phone")}</span>
+                </div>
+              )}
+              {order.customer_email && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Email</span>
+                  <span>{obfuscate(order.customer_email, "email")}</span>
+                </div>
+              )}
+              {order.customer_address && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{uiText.address}</span>
+                  <span className="text-right max-w-[60%]">{obfuscate(order.customer_address, "address")}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Data</span>
+                <span>{format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
+              </div>
+              {!isOwner && (
+                <div className="mt-4 pt-4 border-t border-border text-center">
+                  <p className="text-xs text-muted-foreground mb-2">Alguns dados estão ocultos para sua segurança.</p>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link to="/auth?redirect=rastreio">{t.auth.login} para ver tudo</Link>
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
