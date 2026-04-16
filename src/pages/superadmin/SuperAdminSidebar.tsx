@@ -31,6 +31,38 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+
+const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
+  return (
+    <motion.span 
+      className={className}
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.03,
+            delayChildren: delay,
+          },
+        },
+      }}
+    >
+      {text.split("").map((char, index) => (
+        <motion.span
+          key={index}
+          variants={{
+            hidden: { opacity: 0, x: -2 },
+            visible: { opacity: 1, x: 0 },
+          }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 function BadgeCount({ count }: { count: number }) {
   if (count <= 0) return null;
