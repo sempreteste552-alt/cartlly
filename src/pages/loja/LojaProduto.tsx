@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { ProductImageSlideshow } from "@/components/ProductImageSlideshow";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { usePublicProducts } from "@/hooks/usePublicStore";
 import Autoplay from "embla-carousel-autoplay";
@@ -378,35 +379,18 @@ export default function LojaProduto() {
         {/* Product images */}
         <div className="space-y-3 pdp-reveal pdp-reveal-d1">
           <div 
-            onClick={() => productPageConfig?.enable_image_zoom && setIsZoomed(true)}
-            className={`aspect-square bg-muted rounded-lg overflow-hidden border border-border ${productPageConfig?.enable_image_zoom ? "group cursor-zoom-in" : ""}`}
+            className={`aspect-square bg-muted rounded-lg overflow-hidden border border-border`}
           >
-            {allImages.length > 0 ? (
-              <img
-                src={allImages[selectedImageIndex] || allImages[0]}
-                alt={product.name}
-                className={`w-full h-full object-contain transition-all duration-300 ${productPageConfig?.enable_image_zoom ? "group-hover:scale-150" : ""}`}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="h-24 w-24 text-muted-foreground/30" />
-              </div>
-            )}
+            <ProductImageSlideshow 
+              mainImage={product.image_url}
+              additionalImages={productImages?.map(img => img.image_url) || []}
+              alt={product.name}
+              showArrows
+              showThumbnails
+              glowColor={primaryColor}
+            />
           </div>
-          {allImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {allImages.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImageIndex(i)}
-                  className="shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors"
-                  style={{ borderColor: selectedImageIndex === i ? primaryColor : "#e5e7eb" }}
-                >
-                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+
 
           {/* Videos section below images */}
           {allVideos.length > 0 && (

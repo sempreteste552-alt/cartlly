@@ -43,6 +43,7 @@ import iconFacebook from "@/assets/icon-facebook.png";
 import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
+import { VideoShopping } from "@/components/storefront/VideoShopping";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -1340,6 +1341,7 @@ export default function LojaLayout() {
           buttonColor={settings?.button_color}
           buttonTextColor={settings?.button_text_color}
         />
+        <VideoShopping />
       </div>
     </LojaContext.Provider>
   );
