@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle2, XCircle, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MarketingBackground } from "@/components/MarketingBackground";
 import { toast } from "sonner";
 
 export default function AcceptInvite() {
@@ -118,16 +119,18 @@ export default function AcceptInvite() {
 
   if (status === "fetching_invite" || (status === "loading" && !storeSlug)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Processando seu convite...</p>
-      </div>
+      <MarketingBackground>
+        <div className="flex flex-col items-center justify-center text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-white font-medium">Processando seu convite...</p>
+        </div>
+      </MarketingBackground>
     );
   }
 
   if (status === "not_logged_in") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+      <MarketingBackground>
         <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-border">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-6">
             <UserPlus className="h-8 w-8 text-primary" />
@@ -153,14 +156,14 @@ export default function AcceptInvite() {
             </p>
           </div>
         </div>
-      </div>
+      </MarketingBackground>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-destructive/20">
+      <MarketingBackground>
+        <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-destructive/20 text-center">
           <XCircle className="h-16 w-16 text-destructive mb-4 mx-auto" />
           <h1 className="text-2xl font-bold mb-2 text-destructive">Ops!</h1>
           <p className="text-muted-foreground mb-8">{errorMsg}</p>
@@ -168,13 +171,13 @@ export default function AcceptInvite() {
             Voltar para o Início
           </Button>
         </div>
-      </div>
+      </MarketingBackground>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-      <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-green-500/20">
+    <MarketingBackground>
+      <div className="bg-card p-8 rounded-2xl shadow-xl max-w-md w-full border border-green-500/20 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 mx-auto" />
         <h1 className="text-2xl font-bold mb-2 text-green-500">Convite Aceito!</h1>
         <p className="text-muted-foreground mb-4">
@@ -184,6 +187,6 @@ export default function AcceptInvite() {
           Redirecionando para o painel administrativo...
         </p>
       </div>
-    </div>
+    </MarketingBackground>
   );
 }
