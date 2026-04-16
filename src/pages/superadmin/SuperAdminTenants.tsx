@@ -11,8 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 import { buildStoreUrl } from "@/lib/storeDomain";
@@ -46,6 +47,11 @@ export default function SuperAdminTenants() {
   const [detailTenant, setDetailTenant] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingTenant, setDeletingTenant] = useState<any>(null);
+  const [msgDialogOpen, setMsgDialogOpen] = useState(false);
+  const [msgTenant, setMsgTenant] = useState<any>(null);
+  const [msgTitle, setMsgTitle] = useState("Aviso da Plataforma");
+  const [msgBody, setMsgBody] = useState("");
+  const [msgSending, setMsgSending] = useState(false);
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -360,6 +366,39 @@ export default function SuperAdminTenants() {
       toast.success("Plano removido");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       setPlanDialogOpen(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!msgBody.trim() || !msgTenant) return;
+    setMsgSending(true);
+    try {
+      // 1. In-app notification
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: msgTenant.user_id,
+        title: msgTitle,
+        message: msgBody,
+        type: "info",
+      } as any);
+
+      // 2. Push Notification
+      await supabase.functions.invoke("send-push", {
+        body: {
+          title: msgTitle,
+          body: msgBody,
+          url: "/admin",
+          targetUserId: msgTenant.user_id,
+        },
+      });
+
+      toast.success("Mensagem enviada!");
+      setMsgDialogOpen(false);
+      setMsgBody("");
+    } catch (err) {
+      toast.error("Erro ao enviar mensagem");
+    } finally {
+      setMsgSending(false);
     }
   };
 
@@ -776,6 +815,43 @@ export default function SuperAdminTenants() {
                 <Trash2 className="mr-2 h-4 w-4" /> Excluir Permanentemente
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Send Message Dialog */}
+      <Dialog open={msgDialogOpen} onOpenChange={setMsgDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-primary" />
+              Enviar Mensagem Direta
+            </DialogTitle>
+            <DialogDescription>
+              A mensagem será enviada como notificação push e aparecerá no painel do tenant.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Para</Label>
+              <Input value={msgTenant?.display_name || msgTenant?.store?.store_name || "Tenant"} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} placeholder="Título da mensagem" />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <Textarea
+                value={msgBody}
+                onChange={(e) => setMsgBody(e.target.value)}
+                placeholder="Escreva sua mensagem aqui..."
+                rows={4}
+              />
+            </div>
+            <Button className="w-full" onClick={handleSendMessage} disabled={msgSending || !msgBody.trim()}>
+              {msgSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {msgSending ? "Enviando..." : "Enviar Agora"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

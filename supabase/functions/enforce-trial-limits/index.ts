@@ -43,17 +43,29 @@ Deno.serve(async (req) => {
           .eq("id", sub.id);
 
         results.push(`Marked trial expired for user ${sub.user_id}`);
+        
+        // Block the store entirely when trial expires
+        await supabase
+          .from("store_settings")
+          .update({ store_blocked: true })
+          .eq("user_id", sub.user_id);
 
-        // Process product limits for this newly expired trial
-        await enforceProductLimit(supabase, sub.user_id, 10);
+        // Process product limits (backup enforcement)
+        await enforceProductLimit(supabase, sub.user_id, 0); // No products if trial expired
       }
     }
 
-    // Enforce product limits on already expired subscriptions
+    // Enforce product limits and blocking on already expired subscriptions
     for (const sub of expiredSubs || []) {
       const maxProducts = (sub as any).tenant_plans?.max_products ?? 10;
-      const effectiveLimit = Math.max(maxProducts, 10); // at minimum FREE limit
-      await enforceProductLimit(supabase, sub.user_id, effectiveLimit);
+      
+      // If it's expired, block the store
+      await supabase
+        .from("store_settings")
+        .update({ store_blocked: true })
+        .eq("user_id", sub.user_id);
+
+      await enforceProductLimit(supabase, sub.user_id, 0); // No products if expired
     }
 
     return new Response(

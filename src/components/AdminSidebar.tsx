@@ -365,6 +365,19 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
             <LanguageSelector compact className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground" />
           </div>
         )}
+        {!collapsed && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start gap-2 text-[10px] h-8 font-bold border-sidebar-primary/20 bg-sidebar-primary/5 hover:bg-sidebar-primary/10 text-sidebar-primary mb-2"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('show_pwa_prompt'));
+            }}
+          >
+            <Zap className="h-3 w-3 fill-sidebar-primary" />
+            BAIXAR APP DASHBOARD
+          </Button>
+        )}
         <Button
           variant="ghost"
           size={collapsed ? "icon" : "sm"}
