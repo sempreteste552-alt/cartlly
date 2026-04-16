@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff } from "lucide-react";
+import { Sparkles, DollarSign, ImageIcon, Loader2, Check, Copy, ArrowRight, Mic, MicOff, Share2, Instagram, Music2 } from "lucide-react";
 import { useAIProductEnhance, type SEOResult, type PriceResult, type ImageAnalysisResult, type RestockPhrasesResult } from "@/hooks/useAIProductEnhance";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 
