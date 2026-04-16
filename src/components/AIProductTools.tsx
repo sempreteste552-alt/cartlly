@@ -148,6 +148,14 @@ export function AIProductTools({
           {activeAction === "restock" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5" />}
           Gerar Frases de Destaque
         </Button>
+        <Button
+          type="button" variant="outline" size="sm"
+          onClick={handleGenerateSocialPost}
+          disabled={locked || isLoading || !name}
+        >
+          {activeAction === "social" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+          Gerar Post Redes Sociais
+        </Button>
         {voiceRecorder.isSupported && (
           <Button
             type="button" variant={voiceRecorder.isRecording ? "destructive" : "outline"} size="sm"
