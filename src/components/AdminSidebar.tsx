@@ -183,36 +183,53 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {mainItems.map((item) => (
+                {mainItems.map((item, index) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
                       <NavLink
                         to={item.url}
                         end={item.url === adminBasePath}
                         id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg"
+                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg group"
                         onClick={() => isMobile && setOpenMobile(false)}
                       >
-                        <div className="relative">
+                        <motion.div 
+                          className="relative"
+                          initial={{ opacity: 0, scale: 0.8, x: -5 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
+                        >
                           <item.icon className="h-4 w-4" />
                           {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
                             <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                               {item.badgeCount > 9 ? "9+" : item.badgeCount}
                             </span>
                           )}
-                        </div>
+                        </motion.div>
                         {!collapsed && (
                           <span className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="truncate">{item.title}</span>
+                            <span className="truncate">
+                              <AnimatedText text={item.title} delay={0.2 + (index * 0.1)} />
+                            </span>
                             {!!item.badgeCount && item.badgeCount > 0 && (
-                              <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
+                              <motion.span 
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 1.2, delay: 0.5 + (index * 0.1) }}
+                                className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm"
+                              >
                                 {item.badgeCount > 99 ? "99+" : item.badgeCount}
-                              </span>
+                              </motion.span>
                             )}
                             {!item.badgeCount && item.isNew && (
-                              <span className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 1.5, delay: 0.6 + (index * 0.1) }}
+                                className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none"
+                              >
                                 {adminSidebarText.new}
-                              </span>
+                              </motion.span>
                             )}
                           </span>
                         )}
