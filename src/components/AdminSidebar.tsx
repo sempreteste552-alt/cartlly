@@ -142,19 +142,34 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
             <Store className="h-4.5 w-4.5" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col flex-1 min-w-0">
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="flex flex-col flex-1 min-w-0"
+            >
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                  {(settings as any)?.store_name || adminSidebarText.defaultStore}
+                  <AnimatedText text={(settings as any)?.store_name || adminSidebarText.defaultStore} />
                 </span>
                 {(planSlug === "PREMIUM" || planSlug === "PRO") && isTenantActive(ctx) && (
                   <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
                 )}
               </div>
-              <span className="text-[11px] text-sidebar-foreground/50">{t.sidebar.management}</span>
-            </div>
+              <span className="text-[11px] text-sidebar-foreground/50">
+                <AnimatedText text={t.sidebar.management} delay={0.5} />
+              </span>
+            </motion.div>
           )}
-          {!collapsed && <AdminNotificationsBell />}
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+            >
+              <AdminNotificationsBell />
+            </motion.div>
+          )}
         </div>
       </SidebarHeader>
 
