@@ -470,12 +470,8 @@ export default function Login() {
   // Email verification success screen
   if (showEmailSent) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div className="pointer-events-none fixed inset-0">
-          <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        </div>
-        <Card className="relative w-full max-w-md border-0 shadow-2xl rounded-2xl bg-card z-10">
+      <MarketingBackground>
+        <Card className="relative w-full border-0 shadow-2xl rounded-2xl bg-card z-10">
           <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
             <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
