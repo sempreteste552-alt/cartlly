@@ -1,3 +1,4 @@
+import { RoleGate } from "@/components/RoleGate";
 import { PlanGate } from "@/components/PlanGate";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
