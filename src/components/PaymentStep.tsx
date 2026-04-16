@@ -829,15 +829,26 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     );
   }
 
-  // Method selection
-  return (
+  const PaymentSelection = () => (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Forma de Pagamento</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-2xl font-bold text-center mb-4">{formatPrice(total)}</p>
-        {availableMethods.length === 0 && (
+        
+        {isStripe && stripePromise && (
+          <>
+            <StripeExpressCheckout />
+            <div className="flex items-center gap-2 py-2">
+              <Separator className="flex-1" />
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">Ou escolha outro método</span>
+              <Separator className="flex-1" />
+            </div>
+          </>
+        )}
+
+        {availableMethods.length === 0 && !isStripe && (
           <p className="text-center text-sm text-muted-foreground">Nenhuma forma de pagamento configurada.</p>
         )}
         {availableMethods.map((method) => (
@@ -877,9 +888,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
         </div>
         <p className="text-[10px] text-muted-foreground text-center">
-          Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : settings?.payment_gateway === "amplopay" ? "Amplopay" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
+          Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : settings?.payment_gateway === "amplopay" ? "Amplopay" : settings?.payment_gateway === "stripe" ? "Stripe" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}
         </p>
       </CardContent>
     </Card>
   );
+
+  if (isStripe && stripePromise) {
+    return (
+      <Elements stripe={stripePromise}>
+        <PaymentSelection />
+      </Elements>
+    );
+  }
+
+  return <PaymentSelection />;
+}
 }
