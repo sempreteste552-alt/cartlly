@@ -96,8 +96,9 @@ export default function Lucro() {
   if (!analysis) return null;
 
   return (
-    <PlanGate feature="profit_reports">
-    <div className="space-y-6">
+    <RoleGate allowedRoles={["owner", "admin"]}>
+      <PlanGate feature="profit_reports">
+        <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <DollarSign className="h-6 w-6 text-primary" />
