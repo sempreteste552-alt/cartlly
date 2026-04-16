@@ -237,55 +237,107 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
+      {/* Platform Intelligence Section */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2 border-primary/10 bg-card/30 backdrop-blur-xl overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
+          <CardHeader className="flex flex-row items-center justify-between z-10">
+            <div>
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Performance do Ecossistema
+              </CardTitle>
+              <CardDescription>Análise de crescimento e engajamento global</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="bg-primary/5 border-primary/20 text-[10px]">LIVE</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="h-[250px] mt-2 z-10 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={[
+                { name: 'Jan', value: 4000 }, { name: 'Fev', value: 3000 }, { name: 'Mar', value: 5000 },
+                { name: 'Abr', value: 2780 }, { name: 'Mai', value: 1890 }, { name: 'Jun', value: 2390 },
+                { name: 'Jul', value: 3490 },
+              ]}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--primary)/0.1)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--primary)/0.2)', borderRadius: '8px' }}
+                  itemStyle={{ color: 'hsl(var(--primary))' }}
+                />
+                <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorValue)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/10 bg-card/30 backdrop-blur-xl z-10">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <Cpu className="h-5 w-5 text-primary" />
+              Recursos Críticos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[
+              { label: "SLA de Resposta", value: 99.8, color: "bg-emerald-500", icon: Server },
+              { label: "Integridade de Dados", value: 100, color: "bg-blue-500", icon: Database },
+              { label: "Carga de Trabalho", value: 42, color: "bg-amber-500", icon: Activity },
+            ].map((item) => (
+              <div key={item.label} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-tighter">
+                  <div className="flex items-center gap-1.5">
+                    <item.icon className="h-3 w-3 text-muted-foreground" />
+                    <span>{item.label}</span>
+                  </div>
+                  <span className="text-foreground">{item.value}%</span>
+                </div>
+                <Progress value={item.value} className="h-1.5" />
+              </div>
+            ))}
+            <div className="pt-4 border-t border-primary/10">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldAlert className="h-4 w-4 text-emerald-500" />
+                <span className="text-[10px] font-bold text-muted-foreground">Protocolos Ativos</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-[9px] bg-background/50">AES-256</Badge>
+                <Badge variant="outline" className="text-[9px] bg-background/50">TLS 1.3</Badge>
+                <Badge variant="outline" className="text-[9px] bg-background/50">WAF-ACTIVE</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Secondary KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Percent className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{metrics.trialConversion}%</p>
-              <p className="text-xs text-muted-foreground">Conversão trial → pago</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-              <Timer className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{metrics.trial}</p>
-              <p className="text-xs text-muted-foreground">Em período de teste</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
-              <Ban className="h-5 w-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{metrics.blocked}</p>
-              <p className="text-xs text-muted-foreground">Bloqueados / expirados</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10">
-              <Crown className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{metrics.active}</p>
-              <p className="text-xs text-muted-foreground">Assinantes ativos</p>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Conversão Trial", value: `${metrics.trialConversion}%`, icon: Percent, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", desc: "Sucesso de Onboarding" },
+          { label: "Trial Ativo", value: metrics.trial, icon: Timer, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20", desc: "Potencial de Receita" },
+          { label: "Status Crítico", value: metrics.blocked, icon: Ban, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/20", desc: "Ação Imediata" },
+          { label: "Elite Members", value: metrics.active, icon: Crown, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", desc: "Retenção Garantida" },
+        ].map((item) => (
+          <Card key={item.label} className={`${item.border} bg-card/30 backdrop-blur-sm transition-all hover:translate-y-[-2px]`}>
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.bg}`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-black text-foreground tracking-tight">{item.value}</p>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">{item.label}</p>
+                <p className="text-[9px] text-muted-foreground/60">{item.desc}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* AI Actions */}
