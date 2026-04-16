@@ -35,24 +35,24 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
             style={{
               backgroundImage: `url(${loginBg})`,
-              filter: 'contrast(1.1) brightness(0.7)',
+              filter: 'contrast(1.05) brightness(0.85)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#020817]/60 via-transparent to-[#020817]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/20 via-transparent to-[#020817]/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#020817]/40 via-transparent to-[#020817]/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#020817]/10 via-transparent to-[#020817]/40" />
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" />
         </div>
 
         {/* Right Side: Mobile Image as Card Background on Desktop */}
         <div className="w-1/2 h-full relative overflow-hidden bg-[#020817]">
           <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
             style={{
               backgroundImage: `url(${loginBgMobile})`,
-              filter: 'contrast(1.1) brightness(0.5)',
+              filter: 'contrast(1.05) brightness(0.7)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#020817]/80 via-[#020817]/60 to-[#0f172a]/90" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#020817]/60 via-[#020817]/40 to-[#0f172a]/70" />
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]" />
