@@ -180,10 +180,10 @@ export function AIProductTools({
       {locked && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-3 space-y-2">
-            <span className="text-sm font-semibold text-foreground">IA bloqueada no seu plano</span>
+            <span className="text-sm font-semibold text-foreground">Assistente IA Premium</span>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Cada produto sem descrição persuasiva, preço estratégico e análise inteligente é dinheiro ficando na mesa.
-              Desbloqueie a IA para vender com mais velocidade e muito mais força.
+              Desbloqueie o Gerador de Posts para Redes Sociais, SEO Avançado, Análise de Imagem e Precificação Estratégica. 
+              Utilize o <strong>Cérebro da Loja</strong> para criar conteúdo que combina 100% com sua marca.
             </p>
             <Button type="button" size="sm" className="gap-2" onClick={handleUpgrade}>
               <ArrowRight className="h-3.5 w-3.5" /> Desbloquear IA agora
@@ -350,14 +350,14 @@ export function AIProductTools({
                 <div className="relative group">
                   <p className="text-sm bg-background p-3 rounded-md border border-border whitespace-pre-wrap">{socialResult.instagram_caption}</p>
                   <Button 
-                    type="button" variant="ghost" size="icon" 
-                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    type="button" variant="outline" size="sm" 
+                    className="absolute top-2 right-2 h-7 px-2 text-[10px] gap-1 bg-background/80 backdrop-blur-sm border-primary/20 hover:bg-primary/10 transition-all"
                     onClick={() => {
                       navigator.clipboard.writeText(socialResult.instagram_caption);
-                      toast.success("Legenda copiada!");
+                      toast.success("Legenda do Instagram copiada!");
                     }}
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-3 w-3" /> Copiar
                   </Button>
                 </div>
               </div>
@@ -369,14 +369,14 @@ export function AIProductTools({
                 <div className="relative group">
                   <p className="text-sm bg-background p-3 rounded-md border border-border whitespace-pre-wrap">{socialResult.tiktok_caption}</p>
                   <Button 
-                    type="button" variant="ghost" size="icon" 
-                    className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    type="button" variant="outline" size="sm" 
+                    className="absolute top-2 right-2 h-7 px-2 text-[10px] gap-1 bg-background/80 backdrop-blur-sm border-primary/20 hover:bg-primary/10 transition-all"
                     onClick={() => {
                       navigator.clipboard.writeText(socialResult.tiktok_caption);
-                      toast.success("Legenda copiada!");
+                      toast.success("Legenda do TikTok copiada!");
                     }}
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-3 w-3" /> Copiar
                   </Button>
                 </div>
               </div>
