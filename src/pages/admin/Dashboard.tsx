@@ -18,7 +18,7 @@ import {
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
 import { MultiStoreManager } from "@/components/MultiStoreManager";
 import { TrialBanner } from "@/components/TrialBanner";
 import { WelcomeTrialCard } from "@/components/WelcomeTrialCard";
