@@ -172,12 +172,9 @@ export default function Login() {
     fetchCouponConfig();
   }, []);
 
-  // Reset any leaked tenant/store theme colors and apply login dark mode
+  // Apply dark mode based on theme_admin
   useEffect(() => {
     const root = document.documentElement;
-    const propsToReset = ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring", "--accent-foreground",
-      "--store-primary", "--store-secondary", "--store-accent", "--store-button-bg", "--store-button-text", "--store-bg-base", "--store-text-base"];
-    propsToReset.forEach(prop => root.style.removeProperty(prop));
     if (dark) {
       root.classList.add("dark");
     } else {
@@ -490,9 +487,9 @@ export default function Login() {
 
             {!isForgotPassword && (
               <div className="h-6 flex items-center justify-center">
-                <p className="text-xs font-medium bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                <p className="text-xs font-medium bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   {isRegister ? registerText : loginText}
-                  <span className="inline-block w-0.5 h-3 bg-blue-500 ml-0.5 animate-pulse align-middle" />
+                  <span className="inline-block w-0.5 h-3 bg-primary ml-0.5 animate-pulse align-middle" />
                 </p>
               </div>
             )}
@@ -686,7 +683,7 @@ export default function Login() {
               )}
               <Button
                 type="submit"
-                className="w-full h-9 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40"
+                className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg transition-all duration-300"
                 disabled={loading || (isRegister && !acceptedTerms) || (!isForgotPassword && !isVerified)}
               >
                 {loading ? "Carregando..." : isForgotPassword ? "Enviar Link" : isRegister ? "Criar Conta" : "Entrar"}
