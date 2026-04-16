@@ -218,20 +218,15 @@ export default function Login() {
             } catch { /* ignore */ }
           }
           
-          // We only automatically redirect to last_visited_store if we are NOT on the platform domains
-          // OR if there's an explicit redirect_back context.
-          // This avoids the "cache" problem where users are stuck on a previous store.
           const lastStore = localStorage.getItem("last_visited_store");
           if (lastStore && !isPlatformHost(window.location.hostname)) {
             navigate(`/loja/${lastStore}`, { replace: true });
           } else {
-            // Stay at root or let them sign out
             navigate("/", { replace: true });
           }
           return;
         }
 
-        // Merchant/tenant or collaborator
         const { data: store } = await supabase
           .from("store_settings")
           .select("store_slug")
@@ -243,7 +238,6 @@ export default function Login() {
           return;
         }
 
-        // If no owner store, check if they are a collaborator
         const { data: collab } = await supabase
           .from("store_collaborators")
           .select("store_owner_id")
@@ -278,7 +272,6 @@ export default function Login() {
     try {
       setAlertCard(null);
 
-      // Validate Turnstile captcha for login and register (not forgot password)
       if (!isForgotPassword) {
         if (!isVerified) {
           setAlertCard({ type: "error", message: "Responda corretamente ao desafio de segurança." });
@@ -371,12 +364,10 @@ export default function Login() {
         if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
           throw new Error("Este e-mail já está cadastrado. Faça login.");
         }
-        // Store creation is now handled by database trigger handle_new_user_setup
         localStorage.removeItem("referral_code");
         await supabase.auth.signOut();
         setShowEmailSent(true);
       } else {
-        // Save stay connected preference
         localStorage.setItem("stay_connected", stayConnected ? "true" : "false");
         if (!email.trim() || !email.includes("@")) {
           setAlertCard({ type: "error", message: "Informe um e-mail válido." });
@@ -430,7 +421,6 @@ export default function Login() {
     }
   };
 
-  // Maintenance mode screen
   if (showMaintenance) {
     return (
       <MarketingBackground>
@@ -481,6 +471,7 @@ export default function Login() {
     return "Acessar Painel";
   };
 
+  return (
     <MarketingBackground>
       <div className="relative w-full">
         <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
@@ -715,7 +706,6 @@ export default function Login() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      // Mark this as an admin/tenant OAuth flow, include referral if present
                       const savedRef = refCode || localStorage.getItem("referral_code") || undefined;
                       localStorage.setItem("auth_context", JSON.stringify({ type: "admin", referral_code: savedRef }));
                       const { error } = await lovable.auth.signInWithOAuth("google", {
