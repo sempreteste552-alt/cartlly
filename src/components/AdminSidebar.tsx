@@ -55,9 +55,10 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
 
   const isViewer = role === "viewer";
   const isEditor = role === "editor";
-  const isOwner = role === "owner";
-  const isAdmin = role === "admin" || isOwner;
-  const isStaff = isEditor || isAdmin;
+  const isOwner = role === "owner" && !isCollaborator;
+  const isAdmin = (role === "admin" || role === "owner") && !isCollaborator;
+  const isStaff = isEditor || isAdmin || (role === "owner" || role === "admin"); // Staff can be collaborators
+  const isRealOwner = isOwner;
 
   const mainItems = [
     { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false, show: true },
