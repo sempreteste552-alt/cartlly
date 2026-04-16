@@ -120,10 +120,19 @@ export function SuperAdminSidebar() {
             )}
           </div>
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-foreground">Super Admin</span>
-              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-medium">Cartlly Platform</span>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="flex flex-col"
+            >
+              <span className="text-sm font-bold text-sidebar-foreground">
+                <AnimatedText text="Super Admin" />
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/50 uppercase tracking-wider font-medium">
+                <AnimatedText text="Cartlly Platform" delay={0.5} />
+              </span>
+            </motion.div>
           )}
         </div>
       </SidebarHeader>
