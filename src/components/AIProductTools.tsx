@@ -161,7 +161,7 @@ export function AIProductTools({
           onClick={handleGenerateSocialPost}
           disabled={locked || isLoading || !name}
         >
-          {activeAction === "social" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+          {activeAction === "social" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-1.5 h-3.5 w-3.5 text-primary" />}
           Gerar Post Redes Sociais
         </Button>
         {voiceRecorder.isSupported && (
