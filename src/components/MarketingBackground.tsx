@@ -20,14 +20,7 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
               filter: 'contrast(1.1) brightness(0.9)'
             }}
           />
-          {/* Tablet Logo Overlay (Simulating the logo on the tablet) */}
-          <div className="absolute top-[45%] left-[45%] -translate-x-1/2 -translate-y-1/2 opacity-80 pointer-events-none mix-blend-screen hidden xl:block">
-            <img 
-              src={cartlyLogo} 
-              alt="Cartly Logo on Tablet" 
-              className="w-16 h-auto drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" 
-            />
-          </div>
+          {/* Removed Tablet Logo Overlay as it was specific to the previous background image */}
           
           {/* Cinematic Overlays */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#020817]" />
