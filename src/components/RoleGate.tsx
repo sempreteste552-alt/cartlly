@@ -13,10 +13,12 @@ interface RoleGateProps {
 }
 
 export function RoleGate({ children, allowedRoles, fallback }: RoleGateProps) {
-  const { role } = useTenantContext();
+  const { role, isCollaborator } = useTenantContext();
   const navigate = useNavigate();
 
-  const isAllowed = allowedRoles.includes(role as Role);
+  // If a collaborator is trying to access owner-only features, block it
+  const effectiveRole = isCollaborator ? (role === 'owner' ? 'admin' : role) : role;
+  const isAllowed = allowedRoles.includes(effectiveRole as Role);
 
   if (isAllowed) return <>{children}</>;
 
