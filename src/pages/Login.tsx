@@ -434,114 +434,11 @@ export default function Login() {
   if (showMaintenance) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
-          <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={cartlyLogo} alt="Cartlly" className="h-24 w-auto drop-shadow-lg" />
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-              <ShieldCheck className="h-10 w-10 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Sistema em Manutenção
-              </h1>
-              <p className="text-muted-foreground leading-relaxed">
-                Estamos realizando melhorias programadas em nossa infraestrutura para oferecer uma experiência ainda melhor.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                O acesso ao painel administrativo e a criação de novas lojas estão temporariamente suspensos. Suas lojas continuam funcionando normalmente (exceto se houver aviso específico).
-              </p>
-            </div>
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 w-full">
-              <p className="text-sm text-primary font-medium">🛠️ Previsão de retorno: Em breve</p>
-            </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => window.location.reload()}
-            >
-              Recarregar Página
-            </Button>
-          </CardContent>
-        </Card>
-      </MarketingBackground>
-    );
-  }
-
-  // Email verification success screen
-  if (showEmailSent) {
-    return (
-      <MarketingBackground>
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10">
-          <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
-              <Mail className="h-10 w-10 text-green-500" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Verifique seu E-mail
-              </h1>
-              <p className="text-muted-foreground leading-relaxed">
-                Enviamos um link de verificação para <strong className="text-foreground">{email}</strong>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Clique no link do e-mail para ativar sua conta automaticamente. Após a verificação, você já pode fazer login.
-              </p>
-            </div>
-            <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4 w-full">
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-                <p className="text-sm font-medium">Conta criada com sucesso! Verifique seu e-mail.</p>
-              </div>
-            </div>
-            <div className="space-y-2 w-full">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setShowEmailSent(false);
-                  setIsRegister(false);
-                }}
-              >
-                Voltar ao Login
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Não recebeu? Verifique a pasta de spam ou{" "}
-                <button
-                  onClick={async () => {
-                    try {
-                      const { error } = await supabase.auth.resend({ type: "signup", email });
-                      if (error) throw error;
-                      toast.success("E-mail reenviado!");
-                    } catch (err: any) {
-                      toast.error(err.message || "Erro ao reenviar");
-                    }
-                  }}
-                  className="text-blue-500 hover:underline font-medium"
-                >
-                  reenvie o e-mail
-                </button>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </MarketingBackground>
-    );
-  }
-
-  const getTitle = () => {
-    const isInvite = window.location.search.includes("type=invite");
-    if (isForgotPassword) return "Redefinir Senha";
-    if (isInvite) return isRegister ? "Criar Perfil de Colaborador" : "Entrar como Colaborador";
-    if (isRegister) return "Criar Conta";
-    return "Painel Administrativo";
-  };
-
-  return (
-    <MarketingBackground>
-      <div className="relative w-full">
-
-        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/40 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10">
+...
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10">
+...
+        <Card className="relative w-full border border-white/20 shadow-2xl rounded-[2.5rem] bg-card/10 backdrop-blur-xl z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <img src={sslGoogleImg} alt="Site Seguro SSL e Google" className="mx-auto h-12 md:h-16 object-contain" />
