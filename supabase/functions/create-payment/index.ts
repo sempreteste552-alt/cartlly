@@ -116,6 +116,17 @@ Deno.serve(async (req) => {
           return json({ test_ok: true, message: "✅ Amplopay configurado. O teste real ocorre ao processar pagamentos.", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
         }
 
+        if (gateway === "stripe") {
+          const stripe = new Stripe(testSettings.gateway_secret_key, { apiVersion: "2023-10-16", httpClient: Stripe.createFetchHttpClient() });
+          const stripeUser = await stripe.accounts.retrieve().catch(() => null);
+          if (stripeUser) {
+            return json({ test_ok: true, message: "✅ Stripe conectado com sucesso!", owner_name: stripeUser.settings?.dashboard.display_name || ownerName, owner_email: stripeUser.email || ownerEmail, store_name: testSettings.store_name });
+          }
+          // If it's a regular secret key (not connect), just check if we can list something
+          await stripe.paymentIntents.list({ limit: 1 });
+          return json({ test_ok: true, message: "✅ Stripe conectado (Chave API válida)!", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
+        }
+
         return json({ test_ok: true, message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.`, owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
       } catch (testError: any) {
         return json({ test_ok: false, error: "Erro de conexão com o gateway: " + testError.message });
