@@ -166,7 +166,7 @@ export default function AcceptInvite() {
 
   return (
     <MarketingBackground>
-      <div className="bg-white/5 dark:bg-black/5 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-green-500/30 text-center">
+      <div className="bg-black/10 dark:bg-black/40 backdrop-blur-md p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border border-green-500/30 text-center">
         <CheckCircle2 className="h-16 w-16 text-green-500 mb-4 mx-auto" />
         <h1 className="text-2xl font-bold mb-2 text-green-500">Convite Aceito!</h1>
         <p className="text-muted-foreground mb-4">
