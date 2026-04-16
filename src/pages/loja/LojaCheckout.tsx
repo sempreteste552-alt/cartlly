@@ -252,28 +252,44 @@ export default function LojaCheckout() {
       } as any)
     if (orderErr) throw orderErr;
 
-    // Validate UUIDs to prevent "invalid input syntax for type uuid" error
+    // Validate UUIDs to prevent "invalid input syntax for type uuid" and foreign key errors
     const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    const cartItemIds = cart.items.map(i => i.id).filter(isUUID);
+    const cartItemIds = cart.items.map(i => i.id).filter(id => id && isUUID(id));
 
     // Get valid product IDs for this store to prevent foreign key violations
-    const { data: validProducts } = await supabase
-      .from("products")
-      .select("id")
-      .in("id", cartItemIds);
-    
-    const validIds = new Set((validProducts || []).map(p => p.id));
+    // We fetch all product IDs from the database to ensure they actually exist
+    let validIds = new Set<string>();
+    if (cartItemIds.length > 0) {
+      const { data: validProducts, error: validErr } = await supabase
+        .from("products")
+        .select("id")
+        .in("id", cartItemIds);
+      
+      if (!validErr && validProducts) {
+        validProducts.forEach(p => validIds.add(p.id.toLowerCase()));
+      }
+    }
 
-    const items = cart.items.map((i) => ({
-      order_id: orderId,
-      product_id: isUUID(i.id) && validIds.has(i.id) ? i.id : null,
-      product_name: i.name,
-      product_image: i.image_url,
-      quantity: i.quantity,
-      unit_price: i.price,
-    }));
+    const items = cart.items.map((i) => {
+      const idLower = i.id?.toLowerCase();
+      return {
+        order_id: orderId,
+        // Only set product_id if it's a valid UUID AND exists in the database
+        product_id: (isUUID(i.id) && validIds.has(idLower)) ? i.id : null,
+        product_name: i.name,
+        product_image: i.image_url,
+        quantity: i.quantity,
+        unit_price: i.price,
+      };
+    });
+
     const { error: itemsErr } = await supabase.from("order_items").insert(items);
-    if (itemsErr) throw itemsErr;
+    if (itemsErr) {
+      console.error("Error inserting order items:", itemsErr);
+      // If items insert fails, we already have the order, so we should notify but maybe not block
+      // But for consistency we throw to be caught by the outer try/catch
+      throw itemsErr;
+    }
 
     const { error: historyErr } = await supabase.from("order_status_history").insert({ order_id: orderId, status: "pendente" });
     if (historyErr) throw historyErr;

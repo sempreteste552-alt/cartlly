@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
       return await handlePagBank(req, supabase);
     } else if (gateway === "amplopay") {
       return await handleAmplopay(req, supabase);
+    } else if (gateway === "stripe") {
+      return await handleStripe(req, supabase);
     }
 
     return new Response(JSON.stringify({ error: "Gateway não especificado" }), {
