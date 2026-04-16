@@ -443,42 +443,9 @@ export default function Login() {
   if (showEmailSent) {
     return (
       <MarketingBackground>
-        <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md z-10">
-          <CardContent className="flex flex-col items-center text-center py-12 px-6 space-y-6">
-            <img src={cartlyLogo} alt="Cartlly" className="h-16 w-auto" />
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-500/10">
-              <Mail className="h-10 w-10 text-green-500" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">Verifique seu E-mail</h2>
-              <p className="text-muted-foreground">Enviamos um link de confirmação para <strong>{email}</strong>. Verifique sua caixa de entrada e spam.</p>
-            </div>
-            <Button onClick={() => setShowEmailSent(false)} variant="outline" className="w-full">
-              Voltar ao Login
-            </Button>
-          </CardContent>
-        </Card>
-      </MarketingBackground>
-    );
-  }
-
-  const getTitle = () => {
-    if (isForgotPassword) return "Recuperar Senha";
-    if (isRegister) return "Criar sua Loja";
-    return "Acessar Painel";
-  };
-
-  return (
-    <MarketingBackground>
-      <div className="relative w-full perspective-[1000px]">
-        <motion.div
-          key={isRegister ? "register" : "login"}
-          initial={{ rotateY: isRegister ? -90 : 90, opacity: 0 }}
-          animate={{ rotateY: 0, opacity: 1 }}
-          exit={{ rotateY: isRegister ? 90 : -90, opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-        >
-          <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-card/80 backdrop-blur-md z-10 max-h-[90vh] overflow-y-auto">
+        <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-white/95 backdrop-blur-md z-10">
+...
+          <Card className="relative w-full border border-border/50 shadow-2xl rounded-[2.5rem] bg-white/95 backdrop-blur-md z-10 max-h-[90vh] overflow-y-auto">
           <CardHeader className="text-center space-y-2 pt-4 pb-2">
             <img src={cartlyLogo} alt="Cartlly" className="mx-auto h-20 md:h-14 w-auto drop-shadow-lg" />
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">
