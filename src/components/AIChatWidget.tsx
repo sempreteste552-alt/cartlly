@@ -1271,16 +1271,21 @@ export function AIChatWidget() {
                 maxLength={18}
               />
             </div>
-            <Button
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
               className="w-full"
-              disabled={cpfValue.replace(/\D/g, "").length < 11 || subscribeLoading}
-              onClick={async () => {
-                if (!pendingSubscribe) return;
-                setCpfDialogOpen(false);
-                await handleSubscribe(pendingSubscribe.plan_id, pendingSubscribe.plan_name, cpfValue);
-                setPendingSubscribe(null);
-              }}
             >
+              <Button
+                className="w-full"
+                disabled={cpfValue.replace(/\D/g, "").length < 11 || subscribeLoading}
+                onClick={async () => {
+                  if (!pendingSubscribe) return;
+                  setCpfDialogOpen(false);
+                  await handleSubscribe(pendingSubscribe.plan_id, pendingSubscribe.plan_name, cpfValue);
+                  setPendingSubscribe(null);
+                }}
+              >
               {subscribeLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...</>
               ) : (
