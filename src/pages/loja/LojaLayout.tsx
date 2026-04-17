@@ -877,7 +877,7 @@ export default function LojaLayout() {
               </Sheet>
             </div>
 
-            <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
+            <div className="sm:hidden px-2 pb-3 flex items-center gap-2 overflow-hidden">
               <SmartSearchBar
                 products={smartSearchProducts || []}
                 searchTerm={searchTerm}
