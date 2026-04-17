@@ -110,7 +110,11 @@ export default function Pagamentos() {
                   { id: "diners", label: "Diners Club" },
                   { id: "discover", label: "Discover" },
                 ].map((flag) => (
-                  <div key={flag.id} className="flex items-center gap-2 rounded-lg border border-border p-3">
+                  <div key={flag.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-3">
+                      <PaymentFlags acceptedMethods={[flag.id]} />
+                      <span className="text-sm font-medium">{flag.label}</span>
+                    </div>
                     <Switch 
                       checked={acceptedPaymentMethods.includes(flag.id)} 
                       onCheckedChange={(checked) => {
@@ -121,7 +125,6 @@ export default function Pagamentos() {
                         }
                       }} 
                     />
-                    <span className="text-sm font-medium">{flag.label}</span>
                   </div>
                 ))}
               </div>
