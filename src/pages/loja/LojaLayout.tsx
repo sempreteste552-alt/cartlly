@@ -690,84 +690,194 @@ export default function LojaLayout() {
               } as React.CSSProperties
         }
       >
-        {/* Promotional banner */}
-        <PromoBanner storeUserId={settings?.user_id} />
+        <div className="sticky top-0 z-50 w-full transition-all duration-300">
+          {/* Promotional banner */}
+          <PromoBanner storeUserId={settings?.user_id} />
 
-        <PWAInstallBanner 
-          storeName={storeInstallName}
-          logoUrl={storeIconUrl}
-          primaryColor={settings?.primary_color}
-          storeUserId={settings?.user_id}
-        />
-
-
-        <PushPermissionPrompt
-          storeName={settings?.store_name}
-          logoUrl={storeIconUrl}
-          primaryColor={settings?.primary_color}
-          storeUserId={settings?.user_id}
-        />
-
-        {marketingConfig && <CountdownBar config={marketingConfig} />}
-        {marketingConfig && <AnnouncementBar config={marketingConfig} basePath={basePath} />}
-
-        {settings?.marquee_enabled && settings?.marquee_text && (
-          <StoreMarquee
-            text={settings.marquee_text}
-            speed={settings.marquee_speed}
-            bgColor={settings.marquee_bg_color}
-            textColor={settings.marquee_text_color}
+          <PWAInstallBanner 
+            storeName={storeInstallName}
+            logoUrl={storeIconUrl}
+            primaryColor={settings?.primary_color}
+            storeUserId={settings?.user_id}
           />
-        )}
 
-        {marketingConfig && <FreeShippingBar config={marketingConfig} cartTotal={cart.total} />}
-        {marketingConfig && <PopupCoupon config={marketingConfig} />}
+          <PushPermissionPrompt
+            storeName={settings?.store_name}
+            logoUrl={storeIconUrl}
+            primaryColor={settings?.primary_color}
+            storeUserId={settings?.user_id}
+          />
 
-        {(settings?.store_phone || settings?.store_location) && (
-          <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
-            <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6">
-              {settings?.store_phone && (
-                <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{settings.store_phone}</span>
-              )}
-              {settings?.store_location && (
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{settings.store_location}</span>
-              )}
-            </div>
-          </div>
-        )}
+          {marketingConfig && <CountdownBar config={marketingConfig} />}
+          {marketingConfig && <AnnouncementBar config={marketingConfig} basePath={basePath} />}
 
-        <header className="sticky top-0 z-50 border-b border-border shadow-sm transition-colors" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
-              {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+          {settings?.marquee_enabled && settings?.marquee_text && (
+            <StoreMarquee
+              text={settings.marquee_text}
+              speed={settings.marquee_speed}
+              bgColor={settings.marquee_bg_color}
+              textColor={settings.marquee_text_color}
+            />
+          )}
 
-            <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
-              <div className="relative inline-flex items-center">
-                {settings?.logo_url ? (
-                  <div className="relative">
-                    <img
-                      src={settings.logo_url}
-                      alt={storeName}
-                      style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
-                      className="object-contain"
-                    />
-                    {settings?.is_verified && (
-                      <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
-                    {settings?.is_verified && (
-                      <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] mt-0.5" />
-                    )}
-                  </div>
+          {marketingConfig && <FreeShippingBar config={marketingConfig} cartTotal={cart.total} />}
+          {marketingConfig && <PopupCoupon config={marketingConfig} />}
+
+          {(settings?.store_phone || settings?.store_location) && (
+            <div className="hidden sm:block text-xs py-1" style={{ backgroundColor: primaryColor, color: (primaryColor === '#ffffff' || primaryColor === 'white') ? '#000000' : '#ffffff' }}>
+              <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-6">
+                {settings?.store_phone && (
+                  <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{settings.store_phone}</span>
+                )}
+                {settings?.store_location && (
+                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{settings.store_location}</span>
                 )}
               </div>
-            </Link>
+            </div>
+          )}
 
-            <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-2">
+          <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
+            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
+                {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+
+              <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
+                <div className="relative inline-flex items-center">
+                  {settings?.logo_url ? (
+                    <div className="relative">
+                      <img
+                        src={settings.logo_url}
+                        alt={storeName}
+                        style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
+                        className="object-contain"
+                      />
+                      {settings?.is_verified && (
+                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xl font-bold" style={{ color: headerTextColor }}>{storeName}</span>
+                      {settings?.is_verified && (
+                        <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] mt-0.5" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Link>
+
+              <div className="flex-1 max-w-2xl mx-auto hidden lg:flex items-center gap-2">
+                <SmartSearchBar
+                  products={smartSearchProducts || []}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
+                  primaryColor={primaryColor}
+                  storeUserId={settings?.user_id}
+                  className="flex-1"
+                />
+                <StoreFilter 
+                  storeUserId={settings?.user_id || ""} 
+                  primaryColor={primaryColor} 
+                  products={smartSearchProducts || []} 
+                />
+              </div>
+
+              <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
+              <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
+              {settings?.is_premium_plan && (
+                <LanguageSelector compact className="flex shrink-0" skipGate />
+              )}
+              <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
+
+              <div className="flex items-center gap-1.5">
+                {settings?.instagram_url && (
+                  <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                    <img src={iconInstagram} alt="Instagram" className="h-5 w-5 rounded" />
+                  </a>
+                )}
+              </div>
+
+              <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
+                {user ? (
+                  isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
+              </Button>
+
+              <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative hidden md:inline-flex" style={{ color: headerTextColor }}>
+                    <ShoppingCart className="h-5 w-5" />
+                    {cart.count > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
+                        {cart.count}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-md">
+                  <SheetHeader>
+                    <SheetTitle>{t.store.cart} ({cart.count})</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-3 flex-1 overflow-auto">
+                    {cart.items.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">{t.store.emptyCart}</p>
+                    ) : (
+                      cart.items.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 border-b border-border pb-3">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
+                          ) : (
+                            <div className="h-16 w-16 rounded bg-muted" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(item.price)}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
+                              <span className="text-sm w-6 text-center">{item.quantity}</span>
+                              <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity + 1)}>+</Button>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => cart.removeItem(item.id)}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {cart.items.length > 0 && (
+                    <div className="mt-4 space-y-3 border-t border-border pt-4">
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>{t.common.total}</span>
+                        <span>{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(cart.total)}</span>
+                      </div>
+                      <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
+                        {t.store.goToCheckout}
+                      </Button>
+                      {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
+                        <Button
+                          variant="outline"
+                          className="w-full border-green-500 text-green-600 hover:bg-green-50"
+                          onClick={() => {
+                            const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(i.price * i.quantity)}`).join("\n");
+                            const text = `Olá! Gostaria de fazer o pedido:\n\n${msg}\n\nTotal: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}`;
+                            window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
+                          }}
+                        >
+                          <MessageCircle className="mr-2 h-4 w-4" /> {t.store.buyNow} WhatsApp
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
               <SmartSearchBar
                 products={smartSearchProducts || []}
                 searchTerm={searchTerm}
@@ -784,345 +894,234 @@ export default function LojaLayout() {
               />
             </div>
 
-            <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
-            <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
-            {settings?.is_premium_plan && (
-              <LanguageSelector compact className="flex shrink-0" skipGate />
+            {mobileMenu && (
+              <div
+                className="lg:hidden fixed inset-0 z-30 bg-black/30"
+                style={{ top: "inherit" }}
+                onClick={() => setMobileMenu(false)}
+              />
             )}
-            <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
-
-            <div className="flex items-center gap-1.5">
-              {settings?.instagram_url && (
-                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                  <img src={iconInstagram} alt="Instagram" className="h-5 w-5 rounded" />
-                </a>
-              )}
-            </div>
-
-            <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
-              {user ? (
-                isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
-              ) : (
-                <User className="h-5 w-5" />
-              )}
-            </Button>
-
-            <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative hidden md:inline-flex" style={{ color: headerTextColor }}>
-                  <ShoppingCart className="h-5 w-5" />
-                  {cart.count > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
-                      {cart.count}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>{t.store.cart} ({cart.count})</SheetTitle>
-                </SheetHeader>
-                <div className="mt-4 space-y-3 flex-1 overflow-auto">
-                  {cart.items.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">{t.store.emptyCart}</p>
-                  ) : (
-                    cart.items.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3 border-b border-border pb-3">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt={item.name} className="h-16 w-16 rounded object-cover" />
-                        ) : (
-                          <div className="h-16 w-16 rounded bg-muted" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(item.price)}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity - 1)}>-</Button>
-                            <span className="text-sm w-6 text-center">{item.quantity}</span>
-                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => cart.updateQuantity(item.id, item.quantity + 1)}>+</Button>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => cart.removeItem(item.id)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {cart.items.length > 0 && (
-                  <div className="mt-4 space-y-3 border-t border-border pt-4">
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>{t.common.total}</span>
-                      <span>{new Intl.NumberFormat(localeTag, { style: "currency", currency: "BRL" }).format(cart.total)}</span>
-                    </div>
-                    <Button className="w-full" style={{ backgroundColor: buttonColor, color: buttonTextColor }} onClick={() => { setCartSheetOpen(false); navigate(`${basePath}/checkout`); }}>
-                      {t.store.goToCheckout}
-                    </Button>
-                    {settings?.sell_via_whatsapp && settings?.store_whatsapp && (
-                      <Button
-                        variant="outline"
-                        className="w-full border-green-500 text-green-600 hover:bg-green-50"
-                        onClick={() => {
-                          const msg = cart.items.map((i) => `${i.quantity}x ${i.name} - ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(i.price * i.quantity)}`).join("\n");
-                          const text = `Olá! Gostaria de fazer o pedido:\n\n${msg}\n\nTotal: ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cart.total)}`;
-                          window.open(`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`, "_blank");
-                        }}
-                      >
-                        <MessageCircle className="mr-2 h-4 w-4" /> {t.store.buyNow} WhatsApp
-                      </Button>
-                    )}
+            <div
+              className={`lg:hidden overflow-hidden overflow-y-auto border-t border-border transition-all ease-[cubic-bezier(0.16,1,0.3,1)] relative z-40 ${
+                mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
+              }`}
+              style={{ backgroundColor: headerBgColor, color: headerTextColor }}
+            >
+              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+                {settings?.instagram_url && (
+                  <div
+                    className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
+                    style={{
+                      opacity: mobileMenu ? 1 : 0,
+                      transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
+                      transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 0ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 0ms",
+                    }}
+                  >
+                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconInstagram} alt="Instagram" className="h-7 w-7 rounded-lg" />
+                    </a>
                   </div>
                 )}
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
-            <SmartSearchBar
-              products={smartSearchProducts || []}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              onProductClick={(pid) => navigate(`${basePath}/produto/${pid}`)}
-              primaryColor={primaryColor}
-              storeUserId={settings?.user_id}
-              className="flex-1"
-            />
-            <StoreFilter 
-              storeUserId={settings?.user_id || ""} 
-              primaryColor={primaryColor} 
-              products={smartSearchProducts || []} 
-            />
-          </div>
-
-          {mobileMenu && (
-            <div
-              className="lg:hidden fixed inset-0 z-30 bg-black/30"
-              style={{ top: "inherit" }}
-              onClick={() => setMobileMenu(false)}
-            />
-          )}
-          <div
-            className={`lg:hidden overflow-hidden overflow-y-auto border-t border-border transition-all ease-[cubic-bezier(0.16,1,0.3,1)] relative z-40 ${
-              mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
-            }`}
-            style={{ backgroundColor: headerBgColor, color: headerTextColor }}
-          >
-          <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {settings?.instagram_url && (
-              <div
-                className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
-                style={{
-                  opacity: mobileMenu ? 1 : 0,
-                  transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                  transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 0ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 0ms",
-                }}
-              >
-                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                  <img src={iconInstagram} alt="Instagram" className="h-7 w-7 rounded-lg" />
-                </a>
-              </div>
-            )}
-            {!isMinimalMenu && (
-              <>
-                <div className="pt-2 pb-1">
-                  <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">{t.store.categories}</p>
-                  <div className="flex flex-wrap gap-2 px-3 mb-4">
-                    {categories?.map((cat, i) => (
-                      <Badge
-                        key={cat.id}
-                        variant="outline"
-                        className="shrink-0 cursor-pointer transition-all px-3 py-1 text-xs"
-                        style={{
-                          opacity: mobileMenu ? 1 : 0,
-                          transform: mobileMenu ? "translateY(0)" : "translateY(10px)",
-                          transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms`,
-                          borderColor: primaryColor,
-                          color: primaryColor,
-                        }}
-                        onClick={() => {
-                          setMobileMenu(false);
-                          const el = document.getElementById(`category-${cat.name}`);
-                          if (el) {
-                            const yOffset = -80;
-                            const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                            window.scrollTo({ top: y, behavior: "smooth" });
-                          } else {
-                            navigate(`${basePath}?categoria=${cat.id}`);
-                          }
-                        }}
-                      >
-                        {localizedCategoryNames[i] || cat.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {[
-                  { icon: Home, label: t.store.home, to: basePath || "/" },
-                  { icon: Package, label: t.sidebar.products, to: basePath || "/" },
-                  { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
-                  { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
-                  ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
-                  ...(user ? [{ icon: LogOut, label: t.auth.logout, to: "#", onClick: () => signOut() }] : []),
-                ].map((item: any, i) => {
-                  const content = (
-                    <div className="flex items-center gap-3 w-full">
-                      <item.icon
-                        className="h-5 w-5 transition-all duration-500"
-                        style={{
-                          color: primaryColor,
-                          opacity: mobileMenu ? 1 : 0,
-                          transform: mobileMenu ? "translateX(0) scale(1)" : "translateX(-12px) scale(0.8)",
-                          transitionDelay: mobileMenu ? `${i * 80 + 100}ms` : "0ms",
-                        }}
-                      />
-                      <span
-                        className="text-sm font-medium transition-all duration-500"
-                        style={{
-                          opacity: mobileMenu ? 1 : 0,
-                          transform: mobileMenu ? "translateX(0)" : "translateX(-20px)",
-                          transitionDelay: mobileMenu ? `${i * 80 + 160}ms` : "0ms",
-                          filter: mobileMenu ? "blur(0)" : "blur(4px)",
-                        }}
-                      >
-                        {item.label}
-                      </span>
+                {!isMinimalMenu && (
+                  <>
+                    <div className="pt-2 pb-1">
+                      <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">{t.store.categories}</p>
+                      <div className="flex flex-wrap gap-2 px-3 mb-4">
+                        {categories?.map((cat, i) => (
+                          <Badge
+                            key={cat.id}
+                            variant="outline"
+                            className="shrink-0 cursor-pointer transition-all px-3 py-1 text-xs"
+                            style={{
+                              opacity: mobileMenu ? 1 : 0,
+                              transform: mobileMenu ? "translateY(0)" : "translateY(10px)",
+                              transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms`,
+                              borderColor: primaryColor,
+                              color: primaryColor,
+                            }}
+                            onClick={() => {
+                              setMobileMenu(false);
+                              const el = document.getElementById(`category-${cat.name}`);
+                              if (el) {
+                                const yOffset = -80;
+                                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                                window.scrollTo({ top: y, behavior: "smooth" });
+                              } else {
+                                navigate(`${basePath}?categoria=${cat.id}`);
+                              }
+                            }}
+                          >
+                            {localizedCategoryNames[i] || cat.name}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  );
 
-                  const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 active:opacity-70 transition-all duration-300 focus:outline-none select-none touch-manipulation";
+                    {[
+                      { icon: Home, label: t.store.home, to: basePath || "/" },
+                      { icon: Package, label: t.sidebar.products, to: basePath || "/" },
+                      { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
+                      { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
+                      ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
+                      ...(user ? [{ icon: LogOut, label: t.auth.logout, to: "#", onClick: () => signOut() }] : []),
+                    ].map((item: any, i) => {
+                      const content = (
+                        <div className="flex items-center gap-3 w-full">
+                          <item.icon
+                            className="h-5 w-5 transition-all duration-500"
+                            style={{
+                              color: primaryColor,
+                              opacity: mobileMenu ? 1 : 0,
+                              transform: mobileMenu ? "translateX(0) scale(1)" : "translateX(-12px) scale(0.8)",
+                              transitionDelay: mobileMenu ? `${i * 80 + 100}ms` : "0ms",
+                            }}
+                          />
+                          <span
+                            className="text-sm font-medium transition-all duration-500"
+                            style={{
+                              opacity: mobileMenu ? 1 : 0,
+                              transform: mobileMenu ? "translateX(0)" : "translateX(-20px)",
+                              transitionDelay: mobileMenu ? `${i * 80 + 160}ms` : "0ms",
+                              filter: mobileMenu ? "blur(0)" : "blur(4px)",
+                            }}
+                          >
+                            {item.label}
+                          </span>
+                        </div>
+                      );
 
-                  return (
-                    <div
-                      key={i}
+                      const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 active:opacity-70 transition-all duration-300 focus:outline-none select-none touch-manipulation";
+
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            opacity: mobileMenu ? 1 : 0,
+                            transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
+                            transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
+                          }}
+                        >
+                          {item.onClick ? (
+                            <button className={className} onClick={() => { setMobileMenu(false); item.onClick(); }} style={{ color: headerTextColor, width: '100%', textAlign: 'left' }}>
+                              {content}
+                            </button>
+                          ) : item.external ? (
+                            <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
+                              {content}
+                            </a>
+                          ) : (
+                            <Link to={item.to} className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
+                              {content}
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    <div 
+                      className="px-3 py-4 border-t border-border mt-2 space-y-2"
                       style={{
                         opacity: mobileMenu ? 1 : 0,
                         transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                        transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
+                        transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 400ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 400ms",
                       }}
                     >
-                      {item.onClick ? (
-                        <button className={className} onClick={() => { setMobileMenu(false); item.onClick(); }} style={{ color: headerTextColor, width: '100%', textAlign: 'left' }}>
-                          {content}
-                        </button>
-                      ) : item.external ? (
-                        <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
-                          {content}
-                        </a>
-                      ) : (
-                        <Link to={item.to} className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
-                          {content}
-                        </Link>
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
+                        <span className="text-sm font-semibold">{t.shipping.calculateShipping}</span>
+                      </div>
+                      {globalCity && (
+                        <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
                       )}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={t.store.zipPlaceholder}
+                          className="bg-secondary border-border font-mono h-11"
+                          value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                          onChange={(e) => handleGlobalCepChange(e.target.value)}
+                          inputMode="numeric"
+                          maxLength={9}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="h-11 aspect-square p-0"
+                          onClick={detectMyLocation}
+                          title={t.store.detectLocation}
+                        >
+                          <LocateFixed className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{t.store.shippingHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingHelpSuffix}</p>
                     </div>
-                  );
-                })}
-
-                <div 
-                  className="px-3 py-4 border-t border-border mt-2 space-y-2"
-                  style={{
-                    opacity: mobileMenu ? 1 : 0,
-                    transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                    transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 400ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 400ms",
-                  }}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
-                    <span className="text-sm font-semibold">{t.shipping.calculateShipping}</span>
-                  </div>
-                  {globalCity && (
-                    <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
-                  )}
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder={t.store.zipPlaceholder}
-                      className="bg-secondary border-border font-mono h-11"
-                      value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                      onChange={(e) => handleGlobalCepChange(e.target.value)}
-                      inputMode="numeric"
-                      maxLength={9}
-                    />
-                    <Button 
-                      variant="outline" 
-                      className="h-11 aspect-square p-0"
-                      onClick={detectMyLocation}
-                      title={t.store.detectLocation}
-                    >
-                      <LocateFixed className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">{t.store.shippingHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingHelpSuffix}</p>
-                </div>
-              </>
-            )}
-
-            {!isMinimalMenu && (
-              <>
-                <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
-                  <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
-                  <span className="text-sm" style={{ color: headerTextColor }}>{t.settings.darkMode}</span>
-                </div>
-
-                {settings?.is_premium_plan && (
-                  <div className="px-3 py-2 border-t border-border flex items-center gap-2">
-                    <LanguageSelector skipGate />
-                  </div>
+                  </>
                 )}
-              </>
-            )}
 
-            <div className="px-3 py-2">
-              <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+                {!isMinimalMenu && (
+                  <>
+                    <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
+                      <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
+                      <span className="text-sm">{t.common.darkMode}</span>
+                    </div>
+                    {settings?.is_premium_plan && (
+                      <LanguageSelector compact className="flex shrink-0 px-3 py-2 border-t" skipGate />
+                    )}
+                  </>
+                )}
+
+                <div className="px-3 py-2">
+                  <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+                </div>
+              </nav>
             </div>
-          </nav>
+          </header>
         </div>
 
-          <div className="border-b border-border bg-secondary/50">
-            <div className="max-w-7xl mx-auto px-4">
-              <button
-                className="w-full flex items-center gap-2 py-2 text-sm hover:opacity-80 transition-opacity"
-                onClick={() => setLocationBarOpen(!locationBarOpen)}
-              >
-                <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
-                <span className="font-medium truncate">
-                  {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : t.shipping.calculateShipping)}
-                </span>
-                <span className="text-muted-foreground text-xs ml-auto shrink-0">
-                  {locationBarOpen ? t.common.close : t.common.change}
-                </span>
-              </button>
-              {locationBarOpen && (
-                <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder={t.store.zipPlaceholder}
-                      className="bg-background border-border font-mono h-10"
-                      value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                      onChange={(e) => handleGlobalCepChange(e.target.value)}
-                      inputMode="numeric"
-                      maxLength={9}
-                    />
-                    <Button 
-                      variant="outline" 
-                      className="h-10 aspect-square p-0"
-                      onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
-                      title={t.store.detectLocation}
-                    >
-                      <LocateFixed className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {globalCity && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      📍 {globalCity}
-                    </p>
-                  )}
-                  <p className="text-[10px] text-muted-foreground">
-                    {t.store.shippingDeliveryHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingDeliveryHelpSuffix}
-                  </p>
+        <div className="border-b border-border bg-secondary/50">
+          <div className="max-w-7xl mx-auto px-4">
+            <button
+              className="w-full flex items-center gap-2 py-2 text-sm hover:opacity-80 transition-opacity"
+              onClick={() => setLocationBarOpen(!locationBarOpen)}
+            >
+              <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
+              <span className="font-medium truncate">
+                {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : t.shipping.calculateShipping)}
+              </span>
+              <span className="text-muted-foreground text-xs ml-auto shrink-0">
+                {locationBarOpen ? t.common.close : t.common.change}
+              </span>
+            </button>
+            {locationBarOpen && (
+              <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t.store.zipPlaceholder}
+                    className="bg-background border-border font-mono h-10"
+                    value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                    onChange={(e) => handleGlobalCepChange(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={9}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="h-10 aspect-square p-0"
+                    onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
+                    title={t.store.detectLocation}
+                  >
+                    <LocateFixed className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
-            </div>
+                {globalCity && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    📍 {globalCity}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">
+                  {t.store.shippingDeliveryHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingDeliveryHelpSuffix}
+                </p>
+              </div>
+            )}
           </div>
+        </div>
 
         <main>
           <Suspense fallback={
