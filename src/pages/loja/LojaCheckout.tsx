@@ -784,46 +784,71 @@ export default function LojaCheckout() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8" style={{ fontFamily: "var(--store-font-body)" }}>
-      <h1 className="text-2xl font-bold mb-6" style={{ fontFamily: "var(--store-font-heading)" }}>{t.checkout.title}</h1>
+      <CheckoutProgress currentPhase="info" />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="grid gap-6"
+      >
+        <h1 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: "var(--store-font-heading)" }}>
+          {t.checkout.title}
+        </h1>
 
-      <div className="grid gap-6">
         {/* Items summary */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t.checkout.orderSummary}</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {cart.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span>{item.quantity}x {item.name}</span>
-                <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
-              </div>
-            ))}
-            <Separator />
-            <div className="flex justify-between text-sm">
-              <span>Subtotal</span>
-              <span>{formatPrice(cart.total)}</span>
-            </div>
-            {appliedCoupon && (
-              <div className="flex justify-between text-sm text-emerald-500 dark:text-emerald-400">
-                <span className="flex items-center gap-1">
-                  <Ticket className="h-3.5 w-3.5" />
-                  Cupom {appliedCoupon.code}
-                  <button onClick={removeCoupon} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
-                </span>
-                <span>-{formatPrice(discountAmount)}</span>
-              </div>
-            )}
-            {shippingCost > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-slate-50 dark:from-zinc-900 dark:to-zinc-950">
+            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Box className="h-4 w-4 text-primary" /> {t.checkout.orderSummary}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {cart.items.map((item, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + (idx * 0.05) }}
+                  key={item.id} 
+                  className="flex justify-between text-sm items-center"
+                >
+                  <span className="text-muted-foreground font-medium">{item.quantity}x {item.name}</span>
+                  <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
+                </motion.div>
+              ))}
+              <Separator className="my-2" />
               <div className="flex justify-between text-sm">
-                <span>Frete ({selectedShipping?.method})</span>
-                <span>{formatPrice(shippingCost)}</span>
+                <span className="text-muted-foreground font-medium">Subtotal</span>
+                <span className="font-bold">{formatPrice(cart.total)}</span>
               </div>
-            )}
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>{formatPrice(finalTotal)}</span>
-            </div>
-          </CardContent>
-        </Card>
+              {appliedCoupon && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg"
+                >
+                  <span className="flex items-center gap-1">
+                    <Ticket className="h-3.5 w-3.5" />
+                    Cupom {appliedCoupon.code}
+                    <button onClick={removeCoupon} className="text-emerald-400 hover:text-destructive"><X className="h-3 w-3" /></button>
+                  </span>
+                  <span>-{formatPrice(discountAmount)}</span>
+                </motion.div>
+              )}
+              {shippingCost > 0 && (
+                <div className="flex justify-between text-sm text-primary font-bold">
+                  <span className="flex items-center gap-1"><TruckIcon className="h-3.5 w-3.5" /> Frete ({selectedShipping?.method})</span>
+                  <span>{formatPrice(shippingCost)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-extrabold text-xl pt-2 border-t border-dashed border-border mt-2">
+                <span>Total</span>
+                <span className="text-primary">{formatPrice(finalTotal)}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Shipping Calculator */}
         <Card>
