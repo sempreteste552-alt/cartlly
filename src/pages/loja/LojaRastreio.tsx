@@ -327,22 +327,42 @@ export default function LojaRastreio() {
                   <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-muted" />
                   {history.map((h, i) => {
                     const Icon = STATUS_ICONS[h.status] || Clock;
+                    const isLatest = i === history.length - 1;
                     return (
-                      <div key={h.id} className="relative flex items-start gap-3 pb-4 last:pb-0">
-                        <div className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center ${
-                          i === history.length - 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        key={h.id}
+                        className="relative flex items-start gap-4 pb-8 last:pb-0"
+                      >
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center relative z-10 transition-colors ${
+                          isLatest ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted text-muted-foreground"
                         }`}>
-                          <Icon className="h-3 w-3" />
+                          <Icon className="h-4 w-4" />
+                          {isLatest && (
+                            <motion.div
+                              layoutId="timeline-glow"
+                              className="absolute inset-0 rounded-full bg-primary/30"
+                              animate={{ scale: [1, 1.5, 1] }}
+                              transition={{ repeat: Infinity, duration: 2.5 }}
+                            />
+                          )}
                         </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium">
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold uppercase tracking-tight ${isLatest ? "text-primary" : "text-muted-foreground"}`}>
                             {ORDER_STATUS_MAP[h.status as OrderStatus]?.label || h.status}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                             {format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
+                          {h.notes && (
+                            <div className="mt-2 text-xs bg-muted/50 p-2 rounded-lg border border-border italic text-muted-foreground">
+                              {h.notes}
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
