@@ -709,7 +709,7 @@ export default function Dashboard() {
         </LockedDashboardCard>
 
         {/* Top Termos Pesquisados */}
-        {hasPremiumAnalytics && <Card className="border-border shadow-sm">
+        {hasPremiumAnalytics && <Card className="border-border bg-transparent backdrop-blur-sm shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Search className="h-4 w-4 text-purple-500" /> Top Buscas
