@@ -36,7 +36,7 @@ export const PaymentFlags: React.FC<PaymentFlagsProps> = ({
   if (!acceptedMethods || acceptedMethods.length === 0) return null;
 
   return (
-    <div className={cn("flex flex-wrap items-center justify-center gap-3", className)}>
+    <div className={cn("flex flex-wrap items-center justify-center gap-2", className)}>
       {acceptedMethods.map((method) => {
         const data = PAYMENT_METHODS_DATA[method.toLowerCase()];
         if (!data) return null;
@@ -44,13 +44,13 @@ export const PaymentFlags: React.FC<PaymentFlagsProps> = ({
         return (
           <div 
             key={method} 
-            className="bg-white rounded p-1 flex items-center justify-center w-10 h-6 border border-gray-200 shadow-sm"
+            className="bg-white rounded px-2 py-1.5 flex items-center justify-center w-16 h-9 border border-gray-200 shadow-sm transition-transform hover:scale-110"
             title={data.label}
           >
             <img 
               src={data.icon} 
               alt={data.label} 
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain filter brightness-110"
             />
           </div>
         );
