@@ -583,7 +583,7 @@ export default function LojaProduto() {
           {productPageConfig?.enable_trust_badges && (
             <div className="flex flex-col items-center gap-4 py-4 pdp-reveal pdp-reveal-d3">
               <p className="text-sm font-semibold text-muted-foreground">{uiText.paymentMethods}</p>
-              <img src={paymentMethodsImg} alt={uiText.paymentMethodsAlt} className="w-full max-w-sm object-contain" />
+              <PaymentFlags acceptedMethods={(settings as any)?.accepted_payment_methods} className="max-w-sm" />
               <div className="bg-muted/50 rounded-xl p-3 border border-border">
                 <img src={securityBadgesImg} alt={uiText.secureAlt} className="w-full max-w-md object-contain" />
               </div>
