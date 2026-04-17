@@ -26,6 +26,7 @@ import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStor
 
 export default function LojaHome() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useTranslation();
   const { cart, searchTerm, settings, storeUserId, openCart, basePath, customer } = useLojaContext();
