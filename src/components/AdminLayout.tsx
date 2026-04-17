@@ -193,7 +193,7 @@ export function AdminLayout() {
         className={`min-h-screen flex w-full bg-transparent relative ${adminDark ? "dark" : ""}`}
       >
         <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80"
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 md:hidden"
           style={{ backgroundImage: `url(${dashboardHeroBg})` }}
           aria-hidden="true"
         />
