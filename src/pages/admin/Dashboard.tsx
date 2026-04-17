@@ -280,7 +280,7 @@ export default function Dashboard() {
         )}
 
         {/* Header */}
-        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-transparent backdrop-blur-md">
+        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/10 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
               <Activity className="h-6 w-6 text-primary animate-pulse" />
