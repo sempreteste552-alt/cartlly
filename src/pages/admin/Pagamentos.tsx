@@ -21,6 +21,7 @@ export default function Pagamentos() {
   const [paymentCreditCard, setPaymentCreditCard] = useState(false);
   const [paymentDebitCard, setPaymentDebitCard] = useState(false);
   const [sellViaWhatsapp, setSellViaWhatsapp] = useState(false);
+  const [acceptedPaymentMethods, setAcceptedPaymentMethods] = useState<string[]>([]);
 
   useEffect(() => {
     if (settings) {
@@ -29,6 +30,7 @@ export default function Pagamentos() {
       setPaymentCreditCard(settings.payment_credit_card);
       setPaymentDebitCard(settings.payment_debit_card);
       setSellViaWhatsapp((settings as any).sell_via_whatsapp ?? false);
+      setAcceptedPaymentMethods((settings as any).accepted_payment_methods ?? ["visa", "mastercard", "elo", "amex", "hipercard", "pix", "boleto"]);
     }
   }, [settings]);
 
