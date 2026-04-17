@@ -10,7 +10,7 @@ import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Loader2 } from "lucide-react";
-import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
+
 
 const AdminLayout = lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
 const Login = lazy(() => import("./pages/Login"));
