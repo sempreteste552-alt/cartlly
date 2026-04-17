@@ -9,39 +9,39 @@ interface PaymentFlagsProps {
 const PAYMENT_METHODS_DATA: Record<string, { label: string; icon: string }> = {
   visa: {
     label: "Visa",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/visa.svg",
   },
   mastercard: {
     label: "Mastercard",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/mastercard.svg",
   },
   elo: {
     label: "Elo",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Elo_logo.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/elo.svg",
   },
   amex: {
     label: "American Express",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/amex.svg",
   },
   hipercard: {
     label: "Hipercard",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Hipercard_logo.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/hipercard.svg",
   },
   pix: {
     label: "PIX",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Pix.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/pix.svg",
   },
   boleto: {
     label: "Boleto",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/c/c7/BoletoBancario.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/boleto.svg",
   },
   diners: {
     label: "Diners Club",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Diners_Club_Logo3.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/diners.svg",
   },
   discover: {
     label: "Discover",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/5/57/Discover_Card_logo.svg",
+    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/discover.svg",
   },
 };
 
