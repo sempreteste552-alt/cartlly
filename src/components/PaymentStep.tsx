@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock, Save, Zap } from "lucide-react";
+import { Loader2, QrCode, CreditCard, FileText, Copy, CheckCircle, ExternalLink, XCircle, Clock, Save, Zap, AlertCircle } from "lucide-react";
 import { useCreatePayment } from "@/hooks/usePayments";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { motion, AnimatePresence } from "framer-motion";
 import pixLogo from "@/assets/pix-logo.webp";
 import paymentCards from "@/assets/payment-cards.webp";
 import siteSeguro from "@/assets/site-seguro.webp";
@@ -69,6 +70,91 @@ function CpfInputField({ label = "CPF", value, onChange }: CpfInputFieldProps) {
   );
 }
 
+function CardMachineAnimation({ status }: { status: "processing" | "approved" | "rejected" | null }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-8 bg-muted/30 rounded-xl border-2 border-dashed border-muted-foreground/20 mb-6">
+      <div className="relative w-48 h-64 bg-slate-800 rounded-2xl shadow-2xl flex flex-col items-center p-4 border-4 border-slate-700">
+        {/* Machine Screen */}
+        <div className="w-full h-24 bg-blue-900/50 rounded-lg border-2 border-slate-600 mb-6 flex flex-col items-center justify-center overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {status === "processing" && (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center"
+              >
+                <Loader2 className="h-8 w-8 text-blue-400 animate-spin mb-2" />
+                <span className="text-[10px] text-blue-200 uppercase font-bold tracking-widest">Processando</span>
+              </motion.div>
+            )}
+            {status === "approved" && (
+              <motion.div
+                key="approved"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+              >
+                <CheckCircle className="h-10 w-10 text-green-400 mb-1" />
+                <span className="text-[10px] text-green-300 uppercase font-bold tracking-widest">Aprovado</span>
+              </motion.div>
+            )}
+            {status === "rejected" && (
+              <motion.div
+                key="rejected"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+              >
+                <XCircle className="h-10 w-10 text-red-400 mb-1" />
+                <span className="text-[10px] text-red-300 uppercase font-bold tracking-widest">Recusado</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Scanning line effect */}
+          {status === "processing" && (
+            <motion.div
+              animate={{ top: ["0%", "100%", "0%"] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute left-0 right-0 h-0.5 bg-blue-400/30 blur-sm z-10"
+            />
+          )}
+        </div>
+
+        {/* Buttons Grid */}
+        <div className="grid grid-cols-3 gap-2 w-full">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+            <div key={n} className="h-4 bg-slate-700 rounded-sm" />
+          ))}
+          <div className="h-4 bg-red-500/50 rounded-sm" />
+          <div className="h-4 bg-yellow-500/50 rounded-sm" />
+          <div className="h-4 bg-green-500/50 rounded-sm" />
+        </div>
+
+        {/* Card Slot Animation */}
+        <AnimatePresence>
+          {status === "processing" && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 40, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="absolute -bottom-8 w-32 h-20 bg-gradient-to-br from-gray-200 to-gray-400 rounded-lg shadow-xl border border-gray-300 flex items-center px-4"
+            >
+              <div className="w-8 h-6 bg-yellow-400/80 rounded-sm" />
+              <div className="ml-2 w-16 h-1 bg-gray-500/30 rounded-full" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <p className="mt-6 text-sm font-medium text-muted-foreground animate-pulse">
+        {status === "processing" ? "Comunicando com a operadora..." : status === "approved" ? "Pagamento confirmado!" : "Ops! Tente outro cartão."}
+      </p>
+    </div>
+  );
+}
+
 export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess, initialCpf = "" }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | "stripe" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
@@ -101,6 +187,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   }, [settings]);
 
+  const [isProcessingAnimation, setIsProcessingAnimation] = useState(false);
+  const [animationStatus, setAnimationStatus] = useState<"processing" | "approved" | "rejected" | null>(null);
+
   // Realtime order status tracking
   useEffect(() => {
     if (!orderId) return;
@@ -118,8 +207,11 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         (payload) => {
           const newStatus = payload.new.status;
           if (["processando", "pago", "aprovado", "approved", "enviado", "entregue"].includes(newStatus?.toLowerCase())) {
+            setAnimationStatus("approved");
             toast.success("💰 Pedido confirmado e aprovado!");
-            onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+            setTimeout(() => {
+              onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+            }, 2000);
           }
         }
       )
@@ -335,6 +427,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       }
     }
 
+    if (method === "credit_card") {
+      setIsProcessingAnimation(true);
+      setAnimationStatus("processing");
+    }
     setSelectedMethod(method);
     try {
       const params: any = {
@@ -429,6 +525,13 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         }
       }
     } catch (err: any) {
+      if (method === "credit_card") {
+        setAnimationStatus("rejected");
+        setTimeout(() => {
+          setIsProcessingAnimation(false);
+          setAnimationStatus(null);
+        }, 3000);
+      }
       toast.error(err.message || "Erro ao processar pagamento");
       if (method !== "credit_card") setSelectedMethod(null);
     }
@@ -643,7 +746,23 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Credit card form
   if (showCardForm && selectedMethod === "credit_card") {
-    const isProcessing = createPayment.isPending || tokenizing;
+    const isProcessing = createPayment.isPending || tokenizing || isProcessingAnimation;
+
+    if (isProcessingAnimation) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-5 w-5" /> Processando Pagamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardMachineAnimation status={animationStatus} />
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <Card>
         <CardHeader>

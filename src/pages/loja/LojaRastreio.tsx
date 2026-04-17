@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Package, CheckCircle, Truck, Clock, XCircle, Search, ArrowLeft, MapPin, Box } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useTranslation } from "@/i18n";
+import { motion, AnimatePresence } from "framer-motion";
 
 const STATUS_ICONS: Record<string, any> = {
   pendente: Clock,
@@ -219,12 +220,14 @@ export default function LojaRastreio() {
                   <p className="mt-2 font-medium text-red-600">{uiText.cancelled}</p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between relative px-4">
-                  {/* Progress bar */}
-                  <div className="absolute top-5 left-8 right-8 h-1 bg-muted rounded-full">
-                    <div
-                      className="h-full bg-black rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${Math.max(0, (currentStepIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
+                <div className="flex items-center justify-between relative px-2 py-8">
+                  {/* Progress bar background */}
+                  <div className="absolute top-[52px] left-8 right-8 h-1 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(0, (currentStepIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
+                      transition={{ duration: 1.5, ease: "easeInOut" }}
+                      className="h-full bg-primary"
                     />
                   </div>
 
@@ -235,17 +238,29 @@ export default function LojaRastreio() {
                     const isCurrent = i === currentStepIndex;
 
                     return (
-                      <div key={step} className="flex flex-col items-center relative z-10">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                            isCompleted
-                              ? "bg-black text-white shadow-lg"
-                              : "bg-muted text-muted-foreground border-2 border-border"
-                          } ${isCurrent ? "ring-4 ring-gray-200 scale-110" : ""}`}
+                      <div key={step} className="flex flex-col items-center relative z-10 w-20">
+                        <motion.div
+                          initial={false}
+                          animate={{
+                            backgroundColor: isCompleted ? "var(--primary)" : "var(--muted)",
+                            scale: isCurrent ? 1.2 : 1,
+                            color: isCompleted ? "var(--primary-foreground)" : "var(--muted-foreground)"
+                          }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors border-2 ${
+                            isCompleted ? "border-primary" : "border-muted"
+                          } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}
                         >
                           <Icon className="h-5 w-5" />
-                        </div>
-                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+                          {isCurrent && (
+                            <motion.div
+                              layoutId="activeStatus"
+                              className="absolute inset-0 rounded-full bg-primary/20"
+                              animate={{ scale: [1, 1.4, 1] }}
+                              transition={{ repeat: Infinity, duration: 2 }}
+                            />
+                          )}
+                        </motion.div>
+                        <span className={`text-[10px] mt-3 font-bold uppercase tracking-wider text-center ${isCompleted ? "text-primary" : "text-muted-foreground"}`}>
                           {info.label}
                         </span>
                       </div>
@@ -312,22 +327,42 @@ export default function LojaRastreio() {
                   <div className="absolute left-[11px] top-1 bottom-1 w-0.5 bg-muted" />
                   {history.map((h, i) => {
                     const Icon = STATUS_ICONS[h.status] || Clock;
+                    const isLatest = i === history.length - 1;
                     return (
-                      <div key={h.id} className="relative flex items-start gap-3 pb-4 last:pb-0">
-                        <div className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center ${
-                          i === history.length - 1 ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
+                      <motion.div
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        key={h.id}
+                        className="relative flex items-start gap-4 pb-8 last:pb-0"
+                      >
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center relative z-10 transition-colors ${
+                          isLatest ? "bg-primary text-primary-foreground shadow-lg" : "bg-muted text-muted-foreground"
                         }`}>
-                          <Icon className="h-3 w-3" />
+                          <Icon className="h-4 w-4" />
+                          {isLatest && (
+                            <motion.div
+                              layoutId="timeline-glow"
+                              className="absolute inset-0 rounded-full bg-primary/30"
+                              animate={{ scale: [1, 1.5, 1] }}
+                              transition={{ repeat: Infinity, duration: 2.5 }}
+                            />
+                          )}
                         </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium">
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold uppercase tracking-tight ${isLatest ? "text-primary" : "text-muted-foreground"}`}>
                             {ORDER_STATUS_MAP[h.status as OrderStatus]?.label || h.status}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
                             {format(new Date(h.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                           </p>
+                          {h.notes && (
+                            <div className="mt-2 text-xs bg-muted/50 p-2 rounded-lg border border-border italic text-muted-foreground">
+                              {h.notes}
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
