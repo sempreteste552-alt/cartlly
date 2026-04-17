@@ -600,15 +600,15 @@ export default function Dashboard() {
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cupons</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="p-3 rounded-lg bg-muted/50">
+              <div className="p-3 rounded-lg bg-card/10 backdrop-blur-sm">
                 <p className="text-xl font-bold text-foreground">{couponStats.total}</p>
                 <p className="text-[10px] text-muted-foreground">Pedidos</p>
               </div>
-              <div className="p-3 rounded-lg bg-muted/50">
+              <div className="p-3 rounded-lg bg-card/10 backdrop-blur-sm">
                 <p className="text-xl font-bold text-foreground">{couponStats.withCoupon}</p>
                 <p className="text-[10px] text-muted-foreground">Com cupom</p>
               </div>
-              <div className="p-3 rounded-lg bg-green-500/10">
+              <div className="p-3 rounded-lg bg-green-500/10 backdrop-blur-sm">
                 <p className="text-xl font-bold text-green-600">{formatCurrency(couponStats.totalDiscount)}</p>
                 <p className="text-[10px] text-muted-foreground">Descontos</p>
               </div>
@@ -701,7 +701,7 @@ export default function Dashboard() {
         </LockedDashboardCard>
 
         {/* Top Termos Pesquisados */}
-        {hasPremiumAnalytics && <Card className="border-border bg-transparent backdrop-blur-sm shadow-sm">
+        {hasPremiumAnalytics && <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Search className="h-4 w-4 text-purple-500" /> Top Buscas
@@ -726,7 +726,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Orders */}
-      <Card className="border-border shadow-sm">
+      <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">Pedidos Recentes</CardTitle>
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="mt-2">
