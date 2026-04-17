@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save, Printer, MapPin, User, Truck as TruckIcon, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle, MessageCircle, Ticket, X, Star, Share2, Receipt, CreditCard, QrCode, FileText, CalendarDays, Package, Heart, Download, Instagram, Search, Save, Printer, User, Box, Truck as TruckIcon, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import PaymentStep from "@/components/PaymentStep";
 import ShippingCalculator from "@/components/ShippingCalculator";
@@ -26,6 +26,8 @@ import securityBadgesImg from "@/assets/security-badges.png";
 import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
 import { useTranslation } from "@/i18n";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 type CheckoutPhase = "info" | "payment" | "success";
 
@@ -161,7 +163,6 @@ export default function LojaCheckout() {
       setCity(customer.city || "");
       setState(customer.state || "");
       if (customer.address) {
-        // If address has parts separated by comma, try to parse (simple attempt)
         const parts = customer.address.split(", ");
         if (parts.length >= 3) {
           setStreet(parts[0]);
@@ -253,12 +254,9 @@ export default function LojaCheckout() {
       } as any)
     if (orderErr) throw orderErr;
 
-    // Validate UUIDs to prevent "invalid input syntax for type uuid" and foreign key errors
     const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const cartItemIds = cart.items.map(i => i.id).filter(id => id && isUUID(id));
 
-    // Get valid product IDs for this store to prevent foreign key violations
-    // We fetch all product IDs from the database to ensure they actually exist
     let validIds = new Set<string>();
     if (cartItemIds.length > 0) {
       const { data: validProducts, error: validErr } = await supabase
@@ -275,7 +273,6 @@ export default function LojaCheckout() {
       const idLower = i.id?.toLowerCase();
       return {
         order_id: orderId,
-        // Only set product_id if it's a valid UUID AND exists in the database
         product_id: (isUUID(i.id) && validIds.has(idLower)) ? i.id : null,
         product_name: i.name,
         product_image: i.image_url,
@@ -285,12 +282,7 @@ export default function LojaCheckout() {
     });
 
     const { error: itemsErr } = await supabase.from("order_items").insert(items);
-    if (itemsErr) {
-      console.error("Error inserting order items:", itemsErr);
-      // If items insert fails, we already have the order, so we should notify but maybe not block
-      // But for consistency we throw to be caught by the outer try/catch
-      throw itemsErr;
-    }
+    if (itemsErr) throw itemsErr;
 
     const { error: historyErr } = await supabase.from("order_status_history").insert({ order_id: orderId, status: "pendente" });
     if (historyErr) throw historyErr;
@@ -308,12 +300,10 @@ export default function LojaCheckout() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pendingPayment, setPendingPayment] = useState(false);
 
-  // Auto-proceed after login: when user becomes authenticated while pending
   useEffect(() => {
     if (pendingPayment && user && !authLoading) {
       setPendingPayment(false);
       setAuthModalOpen(false);
-      // Small delay to let state settle
       setTimeout(() => handleSubmit(false), 300);
     }
   }, [user, authLoading, pendingPayment]);
@@ -341,7 +331,6 @@ export default function LojaCheckout() {
 
     if (cart.items.length === 0) return toast.error("Seu carrinho está vazio");
 
-    // Require customer login before payment (not for WhatsApp)
     if (!viaWhatsApp && authLoading) {
       toast.info("Aguarde, estamos confirmando seu login...");
       return;
@@ -354,13 +343,11 @@ export default function LojaCheckout() {
       return;
     }
 
-    // Block if no gateway and not WhatsApp
     if (!viaWhatsApp && !hasGateway) {
       toast.error("🔧 Pagamento em manutenção. Envie seu pedido pelo WhatsApp!");
       return;
     }
 
-    // Save items before clearing cart
     const savedItems = [...cart.items];
 
     setLoading(true);
@@ -381,16 +368,8 @@ export default function LojaCheckout() {
         setPaymentMethod("whatsapp");
         setPaymentDate(new Date());
         setPhase("success");
-      } else if (hasGateway || settings?.payment_gateway === "stripe") {
-        setPhase("payment");
       } else {
-        setSavedFinalTotal(finalTotal);
-        setSavedDiscountAmount(discountAmount);
-        setSavedShippingCost(shippingCost);
-        cart.clearCart();
-        setPaymentMethod("whatsapp");
-        setPaymentDate(new Date());
-        setPhase("success");
+        setPhase("payment");
       }
     } catch (err: any) {
       toast.error("Erro ao criar pedido: " + err.message);
@@ -431,201 +410,153 @@ export default function LojaCheckout() {
     }
   };
 
-  const handleShareProduct = async (item: any) => {
-    const url = `${window.location.origin}/loja/${settings?.store_slug || "loja"}/produto/${item.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: item.name, text: `Confira este produto na ${settings?.store_name}: ${item.name}`, url });
-      } catch {}
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copiado!");
+  const handleDownloadReceipt = () => {
+    if (!orderId) return;
+    const formattedDate = paymentDate ? format(paymentDate, "dd/MM/yyyy HH:mm", { locale: ptBR }) : "";
+    generateReceiptPdf({
+      orderId,
+      storeName: settings?.store_name || "Loja",
+      customerName: name,
+      items: orderItems,
+      total: savedFinalTotal,
+      paymentMethod: getMethodLabel(paymentMethod),
+      date: formattedDate,
+      shippingCost: savedShippingCost,
+      discountAmount: savedDiscountAmount,
+      storeLogo: settings?.logo_url,
+    });
+    toast.success("Recibo gerado com sucesso!");
+  };
+
+  const getMethodIcon = (method: string | null) => {
+    switch (method) {
+      case "pix": return <QrCode className="h-4 w-4 text-primary" />;
+      case "credit_card": return <CreditCard className="h-4 w-4 text-primary" />;
+      case "boleto": return <FileText className="h-4 w-4 text-primary" />;
+      case "whatsapp": return <MessageCircle className="h-4 w-4 text-green-500" />;
+      default: return <ShieldCheck className="h-4 w-4 text-primary" />;
     }
   };
 
-  const handleShareInstagram = async (item: any) => {
-    const url = `${window.location.origin}/loja/${settings?.store_slug || "loja"}/produto/${item.id}`;
-    const caption = `Acabei de comprar este ${item.name} na ${settings?.store_name}! 😍✨\n\nConfira aqui: ${url}`;
-    
-    try {
-      await navigator.clipboard.writeText(caption);
-      toast.success("Legenda pronta para o Instagram! 📸", {
-        description: "A legenda foi copiada, agora você pode postar.",
-        duration: 3000,
-      });
-      
-      // If store has Instagram, try to open it
-      if (settings?.instagram_url) {
-        setTimeout(() => {
-          window.open(settings.instagram_url, "_blank");
-        }, 1500);
-      }
-    } catch {
-      toast.error("Erro ao copiar legenda");
-    }
-  };
-
-  const getMethodLabel = (m: string | null) => {
-    switch (m) {
-      case "pix": return "PIX";
+  const getMethodLabel = (method: string | null) => {
+    switch (method) {
+      case "pix": return "PIX Dinâmico";
       case "credit_card": return "Cartão de Crédito";
       case "boleto": return "Boleto Bancário";
-      case "whatsapp": return "WhatsApp";
-      default: return "Pagamento Online";
+      case "whatsapp": return "WhatsApp / Offline";
+      default: return "Gateway Seguro";
     }
   };
 
-  const getMethodIcon = (m: string | null) => {
-    switch (m) {
-      case "pix": return <QrCode className="h-5 w-5" />;
-      case "credit_card": return <CreditCard className="h-5 w-5" />;
-      case "boleto": return <FileText className="h-5 w-5" />;
-      case "whatsapp": return <MessageCircle className="h-5 w-5 text-green-500" />;
-      default: return <Receipt className="h-5 w-5" />;
-    }
-  };
-
-  if (phase === "success") {
-    const receiptDate = paymentDate || new Date();
-    const formattedDate = new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    }).format(receiptDate);
-
-    const handleDownloadReceipt = () => {
-      generateReceiptPdf({
-        orderId: orderId || "",
-        date: formattedDate,
-        storeName: settings?.store_name || "Loja",
-        storeLogoUrl: settings?.logo_url || undefined,
-        storeAddress: settings?.store_address || undefined,
-        storePhone: settings?.store_phone || settings?.store_whatsapp || undefined,
-        customerName: name,
-        customerEmail: email,
-        customerPhone: phone,
-        customerAddress: address || `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state}, ${cep}`,
-        customerCpf: savedPayerCpf || undefined,
-        items: orderItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, image_url: i.image_url })),
-        subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
-        discount: savedDiscountAmount,
-        shipping: savedShippingCost,
-        total: savedFinalTotal,
-        paymentMethod: getMethodLabel(paymentMethod),
-        notes: notes || undefined,
-      });
-    };
+  const CheckoutProgress = ({ currentPhase }: { currentPhase: CheckoutPhase }) => {
+    const steps = [
+      { id: "info", label: "Dados", icon: User },
+      { id: "payment", label: "Pagamento", icon: CreditCard },
+      { id: "success", label: "Concluído", icon: CheckCircle },
+    ];
 
     return (
-      <div className="max-w-lg mx-auto px-4 py-10 space-y-8 animate-in fade-in duration-700">
-        {/* Success Header */}
-        <div className="text-center space-y-4">
-          <div className="mx-auto w-20 h-20 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center border-4 border-white dark:border-gray-900 shadow-sm">
-            <CheckCircle className="h-10 w-10 text-green-500" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Pagamento Realizado!</h1>
-            <p className="text-muted-foreground text-sm">
-              Seu pedido em <span className="font-semibold text-foreground">{settings?.store_name}</span> foi confirmado.
-            </p>
-          </div>
+      <div className="mb-8 relative flex justify-between items-center max-w-md mx-auto px-4">
+        <div className="absolute top-1/2 left-0 w-full h-1 bg-muted -translate-y-1/2 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ 
+              width: currentPhase === "info" ? "0%" : currentPhase === "payment" ? "50%" : "100%" 
+            }}
+            className="h-full bg-primary"
+          />
         </div>
 
-        {/* Review prompt - MOVED TO THE BEGINNING */}
-        {orderItems.length > 0 && (
-          <Card className="border-primary/20 shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Avalie seus produtos agora
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">Sua opinião nos ajuda muito!</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {orderItems.map((item) => (
-                <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {item.image_url && <img src={item.image_url} alt={item.name} className="h-12 w-12 rounded object-cover" />}
-                      <p className="font-medium text-sm line-clamp-1">{item.name}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleShareProduct(item)} title="Compartilhar">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleShareInstagram(item)} title="Postar no Instagram" className="text-pink-600 hover:text-pink-700 hover:bg-pink-50">
-                        <Instagram className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+        {steps.map((step, idx) => {
+          const isActive = step.id === currentPhase;
+          const isCompleted = steps.findIndex(s => s.id === currentPhase) > idx;
+          const Icon = step.icon;
 
-                  {reviewsSubmitted.has(item.id) ? (
-                    <p className="text-sm text-emerald-500 dark:text-emerald-400 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Avaliação enviada!</p>
-                  ) : (
-                    <>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => setReviewRatings((prev) => ({ ...prev, [item.id]: star }))}
-                            className="transition-transform hover:scale-110"
-                          >
-                            <Star
-                              className={`h-6 w-6 ${
-                                (reviewRatings[item.id] || 0) >= star
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                      <Textarea
-                        placeholder="Deixe um comentário (opcional)"
-                        value={reviewComments[item.id] || ""}
-                        onChange={(e) => setReviewComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                        className="text-sm"
-                        rows={2}
-                      />
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleSubmitReview(item.id)}
-                        disabled={!reviewRatings[item.id] || createReview.isPending}
-                      >
-                        {createReview.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
-                        Enviar Avaliação
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ))}
+          return (
+            <div key={step.id} className="relative z-10 flex flex-col items-center gap-2">
+              <motion.div
+                initial={false}
+                animate={{
+                  backgroundColor: isActive || isCompleted ? "var(--primary)" : "var(--muted)",
+                  scale: isActive ? 1.2 : 1,
+                  color: isActive || isCompleted ? "var(--primary-foreground)" : "var(--muted-foreground)"
+                }}
+                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors border-2 ${
+                  isActive || isCompleted ? "border-primary" : "border-muted"
+                }`}
+              >
+                {isCompleted ? <CheckCircle className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+              </motion.div>
+              <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                isActive ? "text-primary" : "text-muted-foreground"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
-              {settings?.instagram_url && (
-                <Button 
-                  variant="outline" 
-                  className="w-full border-pink-200 text-pink-600 hover:bg-pink-50 hover:border-pink-300 gap-2"
-                  onClick={() => window.open(settings.instagram_url, "_blank")}
-                >
-                  <Instagram className="h-4 w-4" /> Siga a {settings?.store_name} no Instagram
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
+  if (phase === "payment" && orderId) {
+    return (
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        <CheckoutProgress currentPhase="payment" />
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.4 }}
+        >
+          <PaymentStep
+            orderId={orderId}
+            storeUserId={settings?.user_id}
+            total={finalTotal}
+            settings={settings}
+            initialCpf={cpf}
+            onSuccess={(method, cpf) => {
+              setSavedFinalTotal(finalTotal);
+              setSavedDiscountAmount(discountAmount);
+              setSavedShippingCost(shippingCost);
+              setSavedPayerCpf(cpf || null);
+              cart.clearCart();
+              setPaymentMethod(method || "gateway");
+              setPaymentDate(new Date());
+              setPhase("success");
+            }}
+          />
+          <Button 
+            variant="ghost" 
+            className="w-full mt-4 text-muted-foreground"
+            onClick={() => setPhase("info")}
+          >
+            ← Voltar para dados de entrega
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
 
-        {/* Bank-Style Receipt Slip */}
-        <div className="relative bg-card border border-border shadow-xl rounded-2xl overflow-hidden overflow-visible">
-          {/* Decorative "cut" edge at top and bottom (optional, but sleek) */}
-          <div className="absolute -top-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50" />
-          
+  if (phase === "success") {
+    const formattedDate = paymentDate ? format(paymentDate, "dd/MM/yyyy HH:mm", { locale: ptBR }) : "";
+    return (
+      <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
+        <CheckoutProgress currentPhase="success" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-3 mb-8"
+        >
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-green-100 text-green-600 mb-2">
+            <CheckCircle className="h-10 w-10" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Obrigado pela compra!</h1>
+          <p className="text-muted-foreground">Seu pedido foi processado com sucesso e o recibo já está disponível.</p>
+        </motion.div>
+
+        <div className="relative bg-card border border-border shadow-xl rounded-2xl overflow-visible">
           <div className="p-8 pt-10 space-y-8">
-            {/* Store Logo */}
-            {settings?.logo_url && (
-              <div className="flex justify-center pb-2">
-                <img src={settings.logo_url} alt={settings?.store_name || "Loja"} className="h-12 max-w-[180px] object-contain" />
-              </div>
-            )}
-            {/* Main Value - Bank Style */}
             <div className="text-center space-y-1 pb-6 border-b border-dashed border-border">
               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-400">Valor Total</p>
               <h2 className="text-4xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tighter">
@@ -636,7 +567,6 @@ export default function LojaCheckout() {
               </Badge>
             </div>
 
-            {/* Receipt Details Grid */}
             <div className="space-y-6 text-sm">
               <div className="grid grid-cols-2 gap-y-4">
                 <div className="space-y-1">
@@ -647,128 +577,19 @@ export default function LojaCheckout() {
                   <p className="text-[10px] uppercase font-bold text-zinc-400">ID da Transação</p>
                   <p className="font-mono font-medium text-xs break-all">#{orderId?.slice(0, 18).toUpperCase()}</p>
                 </div>
-                
-                <div className="space-y-1">
-                  <p className="text-[10px] uppercase font-bold text-zinc-400">Destinatário</p>
-                  <p className="font-semibold">{settings?.store_name || "Loja Virtual"}</p>
-                  <p className="text-xs text-zinc-500">Pagamento de Pedido</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[10px] uppercase font-bold text-zinc-400">Pagador</p>
-                  <p className="font-semibold">{name || "Cliente"}</p>
-                  <p className="text-xs text-zinc-500">
-                    {savedPayerCpf ? `CPF: ***.***.${savedPayerCpf.replace(/\D/g, "").slice(7, 9)}-${savedPayerCpf.replace(/\D/g, "").slice(9)}` : email || "—"}
-                  </p>
-                </div>
               </div>
-
-              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-900 space-y-4">
-                <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Detalhamento</p>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0))}</span>
-                  </div>
-                  
-                  {savedDiscountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-500 dark:text-emerald-400 font-medium">
-                      <span className="flex items-center gap-1">Desconto Aplicado</span>
-                      <span>-{formatPrice(savedDiscountAmount)}</span>
-                    </div>
-                  )}
-                  
-                  {savedShippingCost > 0 && (
-                    <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
-                      <span>Frete e Manuseio</span>
-                      <span>{formatPrice(savedShippingCost)}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-card flex items-center justify-center shadow-sm border border-border">
-                      {getMethodIcon(paymentMethod)}
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-bold text-zinc-400">Meio de Pagamento</p>
-                      <p className="font-semibold text-xs">{getMethodLabel(paymentMethod)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center pt-8 border-t border-dashed border-zinc-100 dark:border-zinc-900 space-y-2">
-              <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
-                Autenticação Eletrônica
-              </p>
-              <p className="font-mono text-[8px] text-zinc-400 break-all px-4">
-                {(orderId?.replace(/-/g, "").toUpperCase() + "BANKTRANS" + Date.now().toString(36).toUpperCase()).slice(0, 32)}
-              </p>
-              <p className="text-[9px] text-zinc-400 uppercase tracking-widest pt-2 opacity-50">
-                Nota Fiscal gerada eletronicamente
-              </p>
             </div>
           </div>
-          
-          <div className="absolute -bottom-2 left-0 right-0 h-4 bg-[radial-gradient(circle,transparent_8px,#fff_8px)] dark:bg-[radial-gradient(circle,transparent_8px,#09090b_8px)] bg-[length:24px_24px] bg-repeat-x z-10 opacity-50 transform rotate-180" />
         </div>
 
-        {/* Main Actions */}
-        <div className="grid grid-cols-1 gap-3 sm:px-4">
-          <Button 
-            className="w-full h-12 bg-primary text-primary-foreground hover:opacity-90 transition-all font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:scale-[1.01]"
-            onClick={handleDownloadReceipt}
-          >
-            <Printer className="h-5 w-5" /> Imprimir Recibo Profissional
+        <div className="grid grid-cols-1 gap-3">
+          <Button className="w-full h-12 font-bold rounded-xl" onClick={handleDownloadReceipt}>
+            <Printer className="mr-2 h-5 w-5" /> Imprimir Recibo
           </Button>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              className="h-11 rounded-xl border-border"
-              onClick={() => navigate(`../rastreio/${orderId}`)}
-            >
-              <Package className="mr-2 h-4 w-4" /> Ver Pedido
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="h-11 rounded-xl"
-              onClick={() => navigate("..")}
-            >
-              🏠 Voltar à Loja
-            </Button>
-          </div>
+          <Button variant="outline" className="w-full h-12" onClick={() => navigate(`/loja/${settings?.store_slug || ""}/rastreio/${orderId}`)}>
+            <Package className="mr-2 h-5 w-5" /> Ver Rastreio
+          </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (phase === "payment" && orderId) {
-    return (
-      <div className="max-w-lg mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Pagamento</h1>
-        <PaymentStep
-          orderId={orderId}
-          storeUserId={settings?.user_id}
-          total={finalTotal}
-          settings={settings}
-          initialCpf={cpf}
-          onSuccess={(method, cpf) => {
-            setSavedFinalTotal(finalTotal);
-            setSavedDiscountAmount(discountAmount);
-            setSavedShippingCost(shippingCost);
-            setSavedPayerCpf(cpf || null);
-            // We don't overwrite orderItems here as it was already set in handleSubmit
-            // This prevents race conditions with cart.clearCart()
-            setPaymentMethod(method || "gateway");
-            setPaymentDate(new Date());
-            cart.clearCart();
-            setPhase("success");
-          }}
-        />
       </div>
     );
   }
@@ -789,260 +610,106 @@ export default function LojaCheckout() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
         className="grid gap-6"
       >
         <h1 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: "var(--store-font-heading)" }}>
           {t.checkout.title}
         </h1>
 
-        {/* Items summary */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-slate-50 dark:from-zinc-900 dark:to-zinc-950">
-            <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Box className="h-4 w-4 text-primary" /> {t.checkout.orderSummary}</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {cart.items.map((item, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + (idx * 0.05) }}
-                  key={item.id} 
-                  className="flex justify-between text-sm items-center"
-                >
-                  <span className="text-muted-foreground font-medium">{item.quantity}x {item.name}</span>
-                  <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
-                </motion.div>
-              ))}
-              <Separator className="my-2" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground font-medium">Subtotal</span>
-                <span className="font-bold">{formatPrice(cart.total)}</span>
-              </div>
-              {appliedCoupon && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  className="flex justify-between text-sm text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg"
-                >
-                  <span className="flex items-center gap-1">
-                    <Ticket className="h-3.5 w-3.5" />
-                    Cupom {appliedCoupon.code}
-                    <button onClick={removeCoupon} className="text-emerald-400 hover:text-destructive"><X className="h-3 w-3" /></button>
-                  </span>
-                  <span>-{formatPrice(discountAmount)}</span>
-                </motion.div>
-              )}
-              {shippingCost > 0 && (
-                <div className="flex justify-between text-sm text-primary font-bold">
-                  <span className="flex items-center gap-1"><TruckIcon className="h-3.5 w-3.5" /> Frete ({selectedShipping?.method})</span>
-                  <span>{formatPrice(shippingCost)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-extrabold text-xl pt-2 border-t border-dashed border-border mt-2">
-                <span>Total</span>
-                <span className="text-primary">{formatPrice(finalTotal)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Shipping Calculator */}
-        <Card>
-          <CardContent className="p-4">
-            <ShippingCalculator
-              settings={settings}
-              subtotal={cart.total}
-              onSelectShipping={setSelectedShipping}
-              selectedShipping={selectedShipping}
-              storeUserId={settings?.user_id}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Coupon */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Código do cupom"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="pl-9 font-mono"
-                  disabled={!!appliedCoupon}
-                />
-              </div>
-              {appliedCoupon ? (
-                <Button variant="outline" onClick={removeCoupon}><X className="h-4 w-4" /></Button>
-              ) : (
-                <Button variant="outline" onClick={handleApplyCoupon} disabled={couponLoading || !couponCode.trim()}>
-                  {couponLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Aplicar"}
-                </Button>
-              )}
+        <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-white to-slate-50 dark:from-zinc-900 dark:to-zinc-950">
+          <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Box className="h-4 w-4 text-primary" /> {t.checkout.orderSummary}</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {cart.items.map((item, idx) => (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                key={item.id} 
+                className="flex justify-between text-sm items-center"
+              >
+                <span>{item.quantity}x {item.name}</span>
+                <span className="font-bold">{formatPrice(item.price * item.quantity)}</span>
+              </motion.div>
+            ))}
+            <Separator />
+            <div className="flex justify-between font-extrabold text-xl pt-2">
+              <span>Total</span>
+              <span className="text-primary">{formatPrice(finalTotal)}</span>
             </div>
-            {appliedCoupon && (
-              <Badge className="mt-2 bg-green-100 text-green-800">
-                {appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}% de desconto` : `${formatPrice(appliedCoupon.discount_value)} de desconto`}
-              </Badge>
-            )}
           </CardContent>
         </Card>
 
-        <Card className={errors.size > 0 ? "border-destructive ring-1 ring-destructive ring-offset-2" : ""}>
+        <Card>
+          <CardContent className="p-4">
+            <ShippingCalculator settings={settings} subtotal={cart.total} onSelectShipping={setSelectedShipping} selectedShipping={selectedShipping} storeUserId={settings?.user_id} />
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader><CardTitle className="text-base">{t.checkout.personalData}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className={errors.has("name") ? "text-destructive" : ""}>{t.checkout.fullName} *</Label>
-                <Input value={name} onChange={(e) => { setName(e.target.value); if(errors.has("name")) setErrors(prev => { const s = new Set(prev); s.delete("name"); return s; }); }} placeholder="Seu nome completo" maxLength={100} className={errors.has("name") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>{t.checkout.fullName} *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" />
               </div>
               <div className="space-y-2">
-                <Label className={errors.has("cpf") ? "text-destructive" : ""}>{t.checkout.cpf} *</Label>
-                <Input value={cpf} onChange={(e) => { setCpf(formatCPF(e.target.value)); if(errors.has("cpf")) setErrors(prev => { const s = new Set(prev); s.delete("cpf"); return s; }); }} placeholder="000.000.000-00" maxLength={14} className={errors.has("cpf") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>CPF *</Label>
+                <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
               </div>
               <div className="space-y-2">
-                <Label className={errors.has("phone") ? "text-destructive" : ""}>{t.common.phone} *</Label>
-                <Input value={phone} onChange={(e) => { setPhone(e.target.value); if(errors.has("phone")) setErrors(prev => { const s = new Set(prev); s.delete("phone"); return s; }); }} placeholder="(11) 99999-9999" maxLength={20} className={errors.has("phone") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>{t.common.phone} *</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" maxLength={255} />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" />
               </div>
             </div>
 
             <Separator />
-            <CardTitle className="text-sm font-semibold">Endereço de Entrega</CardTitle>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className={errors.has("cep") ? "text-destructive" : ""}>CEP *</Label>
-                <div className="relative">
-                  <Input 
-                    value={cep} 
-                    onChange={(e) => { setCep(formatCEP(e.target.value)); if(errors.has("cep")) setErrors(prev => { const s = new Set(prev); s.delete("cep"); return s; }); }} 
-                    onBlur={handleCepBlur}
-                    placeholder="00000-000" 
-                    maxLength={9} 
-                    className={errors.has("cep") ? "border-destructive focus-visible:ring-destructive" : ""}
-                  />
-                  {cepLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
-                </div>
+                <Label>CEP *</Label>
+                <Input value={cep} onChange={(e) => setCep(formatCEP(e.target.value))} onBlur={handleCepBlur} placeholder="00000-000" maxLength={9} />
               </div>
               <div className="sm:col-span-2 space-y-2">
-                <Label className={errors.has("street") ? "text-destructive" : ""}>Rua/Logradouro *</Label>
-                <Input value={street} onChange={(e) => { setStreet(e.target.value); if(errors.has("street")) setErrors(prev => { const s = new Set(prev); s.delete("street"); return s; }); }} placeholder="Ex: Rua das Flores" className={errors.has("street") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>Rua *</Label>
+                <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className={errors.has("number") ? "text-destructive" : ""}>Número *</Label>
-                <Input value={number} onChange={(e) => { setNumber(e.target.value); if(errors.has("number")) setErrors(prev => { const s = new Set(prev); s.delete("number"); return s; }); }} placeholder="Nº" className={errors.has("number") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>Número *</Label>
+                <Input value={number} onChange={(e) => setNumber(e.target.value)} placeholder="Nº" />
               </div>
               <div className="sm:col-span-2 space-y-2">
-                <Label>Complemento</Label>
-                <Input value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apt, Sala, fundos (opcional)" />
+                <Label>Bairro *</Label>
+                <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label className={errors.has("neighborhood") ? "text-destructive" : ""}>Bairro *</Label>
-                <Input value={neighborhood} onChange={(e) => { setNeighborhood(e.target.value); if(errors.has("neighborhood")) setErrors(prev => { const s = new Set(prev); s.delete("neighborhood"); return s; }); }} placeholder="Seu bairro" className={errors.has("neighborhood") ? "border-destructive focus-visible:ring-destructive" : ""} />
+              <div className="sm:col-span-2 space-y-2">
+                <Label>Cidade *</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
               </div>
               <div className="space-y-2">
-                <Label className={errors.has("city") ? "text-destructive" : ""}>Cidade *</Label>
-                <Input value={city} onChange={(e) => { setCity(e.target.value); if(errors.has("city")) setErrors(prev => { const s = new Set(prev); s.delete("city"); return s; }); }} placeholder="Sua cidade" className={errors.has("city") ? "border-destructive focus-visible:ring-destructive" : ""} />
+                <Label>Estado *</Label>
+                <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} placeholder="UF" maxLength={2} />
               </div>
-              <div className="space-y-2">
-                <Label className={errors.has("state") ? "text-destructive" : ""}>Estado (UF) *</Label>
-                <Input value={state} onChange={(e) => { setState(e.target.value.toUpperCase()); if(errors.has("state")) setErrors(prev => { const s = new Set(prev); s.delete("state"); return s; }); }} placeholder="UF" maxLength={2} className={errors.has("state") ? "border-destructive focus-visible:ring-destructive" : ""} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Observações do Pedido</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma observação para a entrega?" maxLength={500} />
-            </div>
-
-            <div className="flex items-center space-x-2 pt-2">
-              <Checkbox 
-                id="saveData" 
-                checked={saveData} 
-                onCheckedChange={(checked) => setSaveData(checked as boolean)}
-              />
-              <Label htmlFor="saveData" className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2">
-                <Save className="h-3 w-3 text-muted-foreground" />
-                Salvar meus dados para compras futuras
-              </Label>
             </div>
           </CardContent>
         </Card>
 
-        {/* Trust badges */}
-        <div className="flex flex-col items-center gap-5 py-6">
-          <p className="text-sm font-semibold text-muted-foreground">Formas de pagamento</p>
-          <img src={paymentMethodsImg} alt="Formas de pagamento aceitas" className="w-full max-w-sm object-contain" />
-          <div className="bg-muted/50 rounded-xl p-4 border border-border">
-            <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xs object-contain" />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-3">
-          {hasGateway ? (
-            <Button className="w-full bg-black text-white hover:bg-gray-800 h-12 text-base" onClick={() => handleSubmit(false)} disabled={loading || authLoading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Ir para Pagamento
-            </Button>
-          ) : settings?.sell_via_whatsapp && settings?.store_whatsapp ? (
-            <>
-              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 text-center space-y-2">
-                <p className="text-4xl">🚧</p>
-                <p className="text-sm font-medium text-yellow-800">Pagamento online em manutenção</p>
-                <p className="text-xs text-yellow-700">Finalize seu pedido pelo WhatsApp</p>
-              </div>
-              <Button
-                className="w-full bg-green-600 text-white hover:bg-green-700 h-12 text-base"
-                onClick={() => handleSubmit(true)}
-                disabled={loading}
-              >
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                <MessageCircle className="mr-2 h-5 w-5" /> Finalizar via WhatsApp
-              </Button>
-            </>
-          ) : (
-            <div className="bg-red-50 border border-red-300 rounded-lg p-4 text-center space-y-2">
-              <p className="text-4xl">🚧</p>
-              <p className="text-sm font-medium text-red-800">Checkout indisponível</p>
-              <p className="text-xs text-red-700">A loja ainda não configurou um meio de pagamento.</p>
-            </div>
-          )}
-          {hasGateway && settings?.sell_via_whatsapp && settings?.store_whatsapp && (
-            <Button
-              variant="outline"
-              className="w-full border-green-500 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-500/10 h-12 text-base"
-              onClick={() => handleSubmit(true)}
-              disabled={loading}
-            >
-              <MessageCircle className="mr-2 h-5 w-5" /> Finalizar via WhatsApp
-            </Button>
-          )}
-        </div>
+        <Button className="w-full h-12 text-lg font-bold" onClick={() => handleSubmit(false)} disabled={loading || authLoading}>
+          {loading ? <Loader2 className="animate-spin" /> : "Ir para Pagamento"}
+        </Button>
       </motion.div>
 
-      {/* Auth modal for checkout gate */}
       {settings?.user_id && (
-        <CustomerAuthModal
-          open={authModalOpen}
-          onOpenChange={setAuthModalOpen}
-          storeUserId={settings.user_id}
-        />
+        <CustomerAuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} storeUserId={settings.user_id} />
       )}
     </div>
   );
