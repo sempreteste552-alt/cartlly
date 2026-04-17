@@ -401,9 +401,9 @@ export default function PlanCheckoutModal({
                 Pagar com PIX — {formatPrice(planPrice)}
               </Button>
 
-              <div className="flex flex-col items-center gap-3 mt-3 pt-3 border-t border-border/30">
+              <div className="flex flex-col items-center gap-3 mt-3 pt-4 border-t border-border/30 bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                 <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-9 sm:h-11 w-auto object-contain" />
-                <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-6 sm:h-7 w-auto object-contain opacity-80" />
+                <img src={paymentMethodsImg} alt="Métodos de Pagamento" className="h-6 sm:h-7 w-auto object-contain" />
               </div>
             </div>
           )}
