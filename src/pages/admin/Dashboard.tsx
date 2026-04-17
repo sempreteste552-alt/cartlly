@@ -272,44 +272,40 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Hero banner */}
-      <div className="relative w-full overflow-hidden rounded-2xl border border-border shadow-lg">
-        <img
-          src={dashboardHeroBg}
-          alt="Cartly - Vendas inteligentes, resultados reais"
-          className="w-full h-auto max-h-[260px] object-cover object-center"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/20 pointer-events-none" />
-      </div>
-
       <WelcomeTrialCard />
 
       {hasAiTools && (!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
         <AITrainingAlert />
       )}
 
-      <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/50 backdrop-blur-md p-4 rounded-2xl border border-primary/10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
+      {/* Header with Dashboard Background */}
+      <div id="dashboard-header" className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg overflow-hidden group">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
+          style={{ backgroundImage: `url(${dashboardHeroBg})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40 z-0" />
+        
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
             <Activity className="h-6 w-6 text-primary animate-pulse" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
               {t.dashboard.title}
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5 font-medium">
               <Zap className="h-3.5 w-3.5 text-amber-500" />
               Monitoramento em tempo real
             </p>
           </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
-          {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/5 border-primary/20">{t.common.loading}</Badge>}
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
+          {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
           
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[140px] bg-background/50 border-primary/10 h-9 text-xs">
+            <SelectTrigger className="w-[140px] bg-background/60 backdrop-blur-md border-primary/20 h-9 text-xs">
               <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
               <SelectValue placeholder="Período" />
             </SelectTrigger>
@@ -321,7 +317,7 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
 
-          <Button size="sm" variant="outline" className="gap-2 border-primary/10 h-9 text-xs bg-background/50" asChild>
+          <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
             <a href={storeUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-3.5 w-3.5" />
               Ver Minha Loja
