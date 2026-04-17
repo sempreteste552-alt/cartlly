@@ -29,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { isLocale, useTranslation } from "@/i18n";
 import { isPlatformHost } from "@/lib/storeDomain";
+import dashboardHeroBg from "@/assets/dashboard-hero-bg.png";
 
 export function AdminLayout() {
   const location = useLocation();
