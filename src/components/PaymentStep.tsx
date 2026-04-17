@@ -15,7 +15,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { motion, AnimatePresence } from "framer-motion";
 import pixLogo from "@/assets/pix-logo.webp";
-import paymentCards from "@/assets/payment-cards.webp";
+import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 
@@ -1018,9 +1018,8 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
           <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
         </div>
-        <div className="flex items-center justify-center gap-4 py-2">
-          <img src={paymentCards} alt="Bandeiras aceitas" className="h-12 w-auto" />
-          <img src={pixLogo} alt="PIX" className="h-12 w-auto" />
+        <div className="flex flex-col items-center justify-center gap-4 py-2">
+          <PaymentFlags acceptedMethods={settings?.accepted_payment_methods} />
         </div>
         <p className="text-[10px] text-muted-foreground text-center">
           Pagamento processado por {settings?.payment_gateway === "mercadopago" ? "Mercado Pago" : settings?.payment_gateway === "pagbank" ? "PagBank" : settings?.payment_gateway === "amplopay" ? "Amplopay" : settings?.payment_gateway === "stripe" ? "Stripe" : "Gateway"} em ambiente {settings?.gateway_environment === "production" ? "de produção" : "sandbox"}

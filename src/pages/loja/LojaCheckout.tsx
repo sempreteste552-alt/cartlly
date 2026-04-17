@@ -21,7 +21,7 @@ import ShippingCalculator from "@/components/ShippingCalculator";
 import { CustomerAuthModal } from "@/components/CustomerAuthModal";
 import { generateReceiptPdf } from "@/lib/generateReceiptPdf";
 import confetti from "canvas-confetti";
-import paymentMethodsImg from "@/assets/payment-methods.png";
+// paymentMethodsImg removed
 import securityBadgesImg from "@/assets/security-badges.png";
 import { validateCPF, formatCPF, formatCEP } from "@/lib/validations";
 import { useTranslation } from "@/i18n";
