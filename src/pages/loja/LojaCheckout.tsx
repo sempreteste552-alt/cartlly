@@ -415,15 +415,16 @@ export default function LojaCheckout() {
     const formattedDate = paymentDate ? format(paymentDate, "dd/MM/yyyy HH:mm", { locale: ptBR }) : "";
     generateReceiptPdf({
       orderId,
+      date: formattedDate,
       storeName: settings?.store_name || "Loja",
       customerName: name,
       items: orderItems,
+      subtotal: orderItems.reduce((acc, i) => acc + i.price * i.quantity, 0),
+      discount: savedDiscountAmount,
+      shipping: savedShippingCost,
       total: savedFinalTotal,
       paymentMethod: getMethodLabel(paymentMethod),
-      date: formattedDate,
-      shippingCost: savedShippingCost,
-      discountAmount: savedDiscountAmount,
-      storeLogo: settings?.logo_url,
+      storeLogoUrl: settings?.logo_url,
     });
     toast.success("Recibo gerado com sucesso!");
   };
