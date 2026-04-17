@@ -201,44 +201,46 @@ export function AdminLayout() {
         
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
-          <GlobalMaintenanceBanner />
-          {/* Push notification install banner */}
-          <AdminAnnouncementBanner />
-          <AdminPushBanner />
-          <AdminPendingOrdersAlert />
-          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4 sticky top-0 z-30">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="mr-1" />
-              <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
-                {(settings as any)?.store_name || adminText.panel}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              {isTrial && trialDaysLeft > 0 && (
-                <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
-                  <Clock className="h-3 w-3" />
-                  {trialDaysLeft}d {adminText.remaining}
-                </Badge>
-              )}
-              <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={startTutorial}
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <HelpCircle className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{adminText.tutorial}</p>
-                </TooltipContent>
-              </Tooltip>
-              <AdminNotificationsBell />
-            </div>
-          </header>
+          <div className="sticky top-0 z-30 w-full shadow-sm transition-all duration-300">
+            <GlobalMaintenanceBanner />
+            {/* Push notification install banner */}
+            <AdminAnnouncementBanner />
+            <AdminPushBanner />
+            <AdminPendingOrdersAlert />
+            <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="mr-1" />
+                <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
+                  {(settings as any)?.store_name || adminText.panel}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                {isTrial && trialDaysLeft > 0 && (
+                  <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
+                    <Clock className="h-3 w-3" />
+                    {trialDaysLeft}d {adminText.remaining}
+                  </Badge>
+                )}
+                <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={startTutorial}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{adminText.tutorial}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AdminNotificationsBell />
+              </div>
+            </header>
+          </div>
           <main className="flex-1 overflow-auto p-4 sm:p-6">
             <OnboardingTutorial />
             <TrialBanner />

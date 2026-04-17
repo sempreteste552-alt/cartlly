@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicProducts, usePublicCategories, useAllProductReviews, useBestSellingProducts, usePublicProductVariants } from "@/hooks/usePublicStore";
@@ -26,6 +26,7 @@ import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStor
 
 export default function LojaHome() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, locale } = useTranslation();
   const { cart, searchTerm, settings, storeUserId, openCart, basePath, customer } = useLojaContext();
@@ -37,10 +38,6 @@ export default function LojaHome() {
     fr: { other: "Autres" },
   }[locale];
 
-  // Smooth scroll to top on page load
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.pathname]);
   const { data: products, isLoading: prodLoading } = usePublicProducts(storeUserId);
   const { data: banners } = usePublicBanners(storeUserId);
   const { data: categories } = usePublicCategories(storeUserId);
@@ -55,7 +52,6 @@ export default function LojaHome() {
   const translatedCategoryNames = useLocalizedTextList(categories?.map((cat: any) => cat.name) || []);
   const translatedProductNames = useLocalizedTextList(products?.map((p) => p.name) || []);
 
-  // Build a product id -> translated name map
   const productNameMap = useMemo(() => {
     const map: Record<string, string> = {};
     products?.forEach((p, i) => {
@@ -73,25 +69,21 @@ export default function LojaHome() {
     if (!products) return [];
     let result = products;
 
-    // Filter by categories (comma-separated IDs)
     if (categoriaParam) {
       const selectedCats = categoriaParam.split(",");
       result = result.filter((p) => selectedCats.includes(p.category_id));
     }
 
-    // Filter by searchTerm
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter((p) => p.name.toLowerCase().includes(term) || p.description?.toLowerCase().includes(term));
     }
 
-    // Filter by price range
     const minP = searchParams.get("min_price");
     const maxP = searchParams.get("max_price");
     if (minP) result = result.filter((p) => p.price >= Number(minP));
     if (maxP) result = result.filter((p) => p.price <= Number(maxP));
 
-    // Filter by variants: v_Cor=Preto,Branco&v_Tamanho=P,M
     const variantFilters: Record<string, string[]> = {};
     searchParams.forEach((val, key) => {
       if (key.startsWith("v_")) {
@@ -102,9 +94,7 @@ export default function LojaHome() {
     if (Object.keys(variantFilters).length > 0 && productVariantsMap) {
       result = result.filter((p) => {
         const productVariants = productVariantsMap[p.id] || [];
-        // All filters must be satisfied
         return Object.entries(variantFilters).every(([type, values]) => {
-          // If a product has ANY variant that matches ONE of the selected values for this type
           return productVariants.some(v => v.variant_type === type && values.includes(v.variant_value));
         });
       });
@@ -163,18 +153,11 @@ export default function LojaHome() {
       )}
       {!searchTerm.trim() && !categoriaParam && (
         <>
-          {/* 1. Banner - logo abaixo do cabeçalho */}
           {banners && banners.length > 0 && (
             <BannerCarousel banners={banners} mobileFormat={(settings as any)?.banner_mobile_format || "landscape"} basePath={basePath} />
           )}
-
-          {/* 2. Destaques (Stories) - abaixo do banner */}
           <HighlightsSection storeUserId={storeUserId} primaryColor={primaryColor} />
-
-          {/* 2.5. Cupons ativos */}
           <ActiveCouponsBanner storeUserId={storeUserId} primaryColor={primaryColor} />
-
-          {/* 3. Seções dinâmicas (produtos em destaque, etc.) */}
           <DynamicHomeSections
             storeUserId={storeUserId}
             products={products || []}
@@ -203,6 +186,8 @@ export default function LojaHome() {
                      const yOffset = -80;
                      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
                      window.scrollTo({ top: y, behavior: "smooth" });
+                   } else {
+                     navigate(`${basePath}?categoria=${cat.id}`);
                    }
                  }}
               >
