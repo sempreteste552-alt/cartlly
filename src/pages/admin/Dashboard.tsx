@@ -271,65 +271,68 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <WelcomeTrialCard />
+    <>
+      {/* Fundo full-screen do dashboard - mobile e desktop */}
+      <div
+        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${dashboardHeroBg})` }}
+        aria-hidden="true"
+      />
+      <div className="fixed inset-0 -z-10 bg-background/80 backdrop-blur-sm" aria-hidden="true" />
 
-      {hasAiTools && (!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
-        <AITrainingAlert />
-      )}
+      <div className="space-y-6 relative">
+        <WelcomeTrialCard />
 
-      {/* Header with Dashboard Background */}
-      <div id="dashboard-header" className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg overflow-hidden group">
-        <div 
-          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
-          style={{ backgroundImage: `url(${dashboardHeroBg})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40 z-0" />
-        
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
-            <Activity className="h-6 w-6 text-primary animate-pulse" />
+        {hasAiTools && (!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
+          <AITrainingAlert />
+        )}
+
+        {/* Header */}
+        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/60 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
+              <Activity className="h-6 w-6 text-primary animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                {t.dashboard.title}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                Monitoramento em tempo real
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              {t.dashboard.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5 font-medium">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
-              Monitoramento em tempo real
-            </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
+
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[140px] bg-background/60 backdrop-blur-md border-primary/20 h-9 text-xs">
+                <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Hoje</SelectItem>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                <SelectItem value="year">Este ano</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
+              <a href={storeUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Ver Minha Loja
+              </a>
+            </Button>
+
+            <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
+              <RefreshCw className="h-3.5 w-3.5" />
+              Atualizar
+            </Button>
           </div>
         </div>
-        
-        <div className="relative z-10 flex flex-wrap items-center gap-2">
-          {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
-          
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[140px] bg-background/60 backdrop-blur-md border-primary/20 h-9 text-xs">
-              <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Hoje</SelectItem>
-              <SelectItem value="7d">Últimos 7 dias</SelectItem>
-              <SelectItem value="30d">Últimos 30 dias</SelectItem>
-              <SelectItem value="year">Este ano</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
-            <a href={storeUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
-              Ver Minha Loja
-            </a>
-          </Button>
-
-          <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
-            <RefreshCw className="h-3.5 w-3.5" />
-            Atualizar
-          </Button>
-        </div>
-      </div>
 
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiCards.map((s, idx) => {
