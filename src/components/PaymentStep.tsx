@@ -525,6 +525,13 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         }
       }
     } catch (err: any) {
+      if (method === "credit_card") {
+        setAnimationStatus("rejected");
+        setTimeout(() => {
+          setIsProcessingAnimation(false);
+          setAnimationStatus(null);
+        }, 3000);
+      }
       toast.error(err.message || "Erro ao processar pagamento");
       if (method !== "credit_card") setSelectedMethod(null);
     }
