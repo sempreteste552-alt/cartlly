@@ -427,6 +427,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
       }
     }
 
+    if (method === "credit_card") {
+      setIsProcessingAnimation(true);
+      setAnimationStatus("processing");
+    }
     setSelectedMethod(method);
     try {
       const params: any = {
