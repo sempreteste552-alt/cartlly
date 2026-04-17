@@ -44,6 +44,7 @@ import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 import { VideoShopping } from "@/components/storefront/VideoShopping";
+import sidebarBg from "@/assets/sidebar-bg.png";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
