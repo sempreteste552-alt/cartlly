@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StockNotifyButton } from "@/components/storefront/StockNotifyButton";
 import { getLocaleTag, useTranslation } from "@/i18n";
-import paymentMethodsImg from "@/assets/payment-methods.png";
+import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import securityBadgesImg from "@/assets/security-badges.png";
 import { useLocalizedText } from "@/hooks/useLocalizedStoreText";
 
