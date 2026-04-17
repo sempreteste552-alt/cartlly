@@ -1113,14 +1113,19 @@ export function AIChatWidget() {
 
           {/* PIX QR Code inline */}
           {!aiLocked && pixData && (
-            <div className="flex justify-start">
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="flex justify-start"
+            >
               <div className="flex gap-3 max-w-[85%]">
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                   <QrCode className="h-4 w-4" />
                 </div>
                 <PixQrCard data={pixData} onCopy={() => toast.success("Código PIX copiado!")} />
               </div>
-            </div>
+            </motion.div>
           )}
 
           {!aiLocked && (isLoading || subscribeLoading) && (

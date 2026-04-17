@@ -938,14 +938,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             <Button variant="outline" className="flex-1" onClick={() => setSelectedMethod(null)}>
               Voltar
             </Button>
-            <Button
-              className="flex-1 h-12 text-base font-bold"
-              disabled={isProcessing}
-              onClick={() => handlePay(selectedMethod)}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1"
             >
-              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-              {selectedMethod === "pix" ? "Gerar QR Code PIX" : "Gerar Boleto"}
-            </Button>
+              <Button
+                className="w-full h-12 text-base font-bold"
+                disabled={isProcessing}
+                onClick={() => handlePay(selectedMethod)}
+              >
+                {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {selectedMethod === "pix" ? "Gerar QR Code PIX" : "Gerar Boleto"}
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       </Card>
