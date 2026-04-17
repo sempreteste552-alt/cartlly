@@ -109,6 +109,7 @@ export default function Pagamentos() {
                   { id: "boleto", label: "Boleto" },
                   { id: "diners", label: "Diners Club" },
                   { id: "discover", label: "Discover" },
+                  { id: "applepay", label: "Apple Pay" },
                 ].map((flag) => (
                   <div key={flag.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                     <div className="flex items-center gap-3">
