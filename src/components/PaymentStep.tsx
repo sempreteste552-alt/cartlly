@@ -15,7 +15,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { motion, AnimatePresence } from "framer-motion";
 import pixLogo from "@/assets/pix-logo.webp";
-import paymentCards from "@/assets/payment-cards.webp";
+import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
 
