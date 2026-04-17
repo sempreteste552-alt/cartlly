@@ -670,6 +670,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
