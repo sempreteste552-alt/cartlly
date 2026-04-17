@@ -1034,7 +1034,7 @@ export default function LojaCheckout() {
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Auth modal for checkout gate */}
       {settings?.user_id && (
