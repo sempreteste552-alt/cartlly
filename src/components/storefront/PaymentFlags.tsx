@@ -44,7 +44,7 @@ export const PaymentFlags: React.FC<PaymentFlagsProps> = ({
         return (
           <div 
             key={method} 
-            className="bg-white rounded px-2 py-1 flex items-center justify-center w-14 h-8 border border-gray-200 shadow-sm transition-transform hover:scale-110"
+            className="bg-white rounded px-2 py-1.5 flex items-center justify-center w-16 h-9 border border-gray-200 shadow-sm transition-transform hover:scale-110"
             title={data.label}
           >
             <img 
