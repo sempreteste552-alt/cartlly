@@ -361,9 +361,9 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="relative z-10" />
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 relative z-10">
         {!collapsed && (
           <div className="flex items-center justify-between mb-2 px-2">
             <p className="truncate text-[11px] text-sidebar-foreground/40 flex-1">{user?.email}</p>
