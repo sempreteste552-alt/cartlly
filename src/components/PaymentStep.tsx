@@ -70,6 +70,91 @@ function CpfInputField({ label = "CPF", value, onChange }: CpfInputFieldProps) {
   );
 }
 
+function CardMachineAnimation({ status }: { status: "processing" | "approved" | "rejected" | null }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-8 bg-muted/30 rounded-xl border-2 border-dashed border-muted-foreground/20 mb-6">
+      <div className="relative w-48 h-64 bg-slate-800 rounded-2xl shadow-2xl flex flex-col items-center p-4 border-4 border-slate-700">
+        {/* Machine Screen */}
+        <div className="w-full h-24 bg-blue-900/50 rounded-lg border-2 border-slate-600 mb-6 flex flex-col items-center justify-center overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {status === "processing" && (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center"
+              >
+                <Loader2 className="h-8 w-8 text-blue-400 animate-spin mb-2" />
+                <span className="text-[10px] text-blue-200 uppercase font-bold tracking-widest">Processando</span>
+              </motion.div>
+            )}
+            {status === "approved" && (
+              <motion.div
+                key="approved"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+              >
+                <CheckCircle className="h-10 w-10 text-green-400 mb-1" />
+                <span className="text-[10px] text-green-300 uppercase font-bold tracking-widest">Aprovado</span>
+              </motion.div>
+            )}
+            {status === "rejected" && (
+              <motion.div
+                key="rejected"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+              >
+                <XCircle className="h-10 w-10 text-red-400 mb-1" />
+                <span className="text-[10px] text-red-300 uppercase font-bold tracking-widest">Recusado</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Scanning line effect */}
+          {status === "processing" && (
+            <motion.div
+              animate={{ top: ["0%", "100%", "0%"] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute left-0 right-0 h-0.5 bg-blue-400/30 blur-sm z-10"
+            />
+          )}
+        </div>
+
+        {/* Buttons Grid */}
+        <div className="grid grid-cols-3 gap-2 w-full">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+            <div key={n} className="h-4 bg-slate-700 rounded-sm" />
+          ))}
+          <div className="h-4 bg-red-500/50 rounded-sm" />
+          <div className="h-4 bg-yellow-500/50 rounded-sm" />
+          <div className="h-4 bg-green-500/50 rounded-sm" />
+        </div>
+
+        {/* Card Slot Animation */}
+        <AnimatePresence>
+          {status === "processing" && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 40, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: "spring", damping: 15 }}
+              className="absolute -bottom-8 w-32 h-20 bg-gradient-to-br from-gray-200 to-gray-400 rounded-lg shadow-xl border border-gray-300 flex items-center px-4"
+            >
+              <div className="w-8 h-6 bg-yellow-400/80 rounded-sm" />
+              <div className="ml-2 w-16 h-1 bg-gray-500/30 rounded-full" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <p className="mt-6 text-sm font-medium text-muted-foreground animate-pulse">
+        {status === "processing" ? "Comunicando com a operadora..." : status === "approved" ? "Pagamento confirmado!" : "Ops! Tente outro cartão."}
+      </p>
+    </div>
+  );
+}
+
 export default function PaymentStep({ orderId, storeUserId, total, settings, onSuccess, initialCpf = "" }: PaymentStepProps) {
   const [selectedMethod, setSelectedMethod] = useState<"pix" | "credit_card" | "boleto" | "stripe" | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
