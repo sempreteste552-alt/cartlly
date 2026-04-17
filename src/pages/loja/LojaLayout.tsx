@@ -647,7 +647,7 @@ export default function LojaLayout() {
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
-        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground overflow-x-hidden ${isDarkMode ? "dark" : ""}`}
+        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground ${isDarkMode ? "dark" : ""}`}
         style={
           isDarkMode
             ? {
