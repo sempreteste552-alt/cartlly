@@ -193,11 +193,11 @@ export function AdminLayout() {
         className={`min-h-screen flex w-full bg-transparent relative ${adminDark ? "dark" : ""}`}
       >
         <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80 md:hidden"
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80"
           style={{ backgroundImage: `url(${dashboardHeroBg})` }}
           aria-hidden="true"
         />
-        <div className="fixed inset-0 -z-10 bg-background/20 backdrop-blur-[1.5px] pointer-events-none" aria-hidden="true" />
+        <div className="fixed inset-0 -z-10 bg-background/30 backdrop-blur-[1px] pointer-events-none" aria-hidden="true" />
         
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">

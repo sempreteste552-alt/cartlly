@@ -136,16 +136,9 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   };
 
   return (
-    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar/40 backdrop-blur-md border-r border-sidebar-border/20 overflow-hidden">
+    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden">
       {!collapsed && isMobile && (
-        <>
-          <div
-            className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-25"
-            style={{ backgroundImage: `url(${sidebarBg})` }}
-            aria-hidden="true"
-          />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sidebar/30 via-sidebar/50 to-sidebar/80 pointer-events-none" aria-hidden="true" />
-        </>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sidebar/30 via-sidebar/50 to-sidebar/80 pointer-events-none" aria-hidden="true" />
       )}
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
