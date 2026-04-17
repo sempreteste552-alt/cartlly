@@ -618,7 +618,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     const pixCode = paymentData.paymentResult?.pix_qr_code || paymentData.payment?.pix_qr_code;
 
     return (
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <QrCode className="h-5 w-5" /> Pagamento via PIX
@@ -665,6 +670,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
@@ -674,7 +680,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     const boletoBarcode = paymentData.paymentResult?.boleto_barcode || paymentData.payment?.boleto_barcode;
 
     return (
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="h-5 w-5" /> Boleto Bancário
@@ -717,6 +728,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
@@ -932,14 +944,20 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             <Button variant="outline" className="flex-1" onClick={() => setSelectedMethod(null)}>
               Voltar
             </Button>
-            <Button
-              className="flex-1 h-12 text-base font-bold"
-              disabled={isProcessing}
-              onClick={() => handlePay(selectedMethod)}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1"
             >
-              {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-              {selectedMethod === "pix" ? "Gerar QR Code PIX" : "Gerar Boleto"}
-            </Button>
+              <Button
+                className="w-full h-12 text-base font-bold"
+                disabled={isProcessing}
+                onClick={() => handlePay(selectedMethod)}
+              >
+                {isProcessing ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {selectedMethod === "pix" ? "Gerar QR Code PIX" : "Gerar Boleto"}
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       </Card>

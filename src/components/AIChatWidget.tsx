@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Send, Loader2, Sparkles, Bot, User, Minimize2, Lock, Settings2, ImagePlus, QrCode, Copy, CheckCircle2, Megaphone, Trash2, RotateCcw, FileText, Mic, MicOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import ReactMarkdown from "react-markdown";
 import { useProducts } from "@/hooks/useProducts";
@@ -1112,14 +1113,19 @@ export function AIChatWidget() {
 
           {/* PIX QR Code inline */}
           {!aiLocked && pixData && (
-            <div className="flex justify-start">
+            <motion.div 
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="flex justify-start"
+            >
               <div className="flex gap-3 max-w-[85%]">
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                   <QrCode className="h-4 w-4" />
                 </div>
                 <PixQrCard data={pixData} onCopy={() => toast.success("Código PIX copiado!")} />
               </div>
-            </div>
+            </motion.div>
           )}
 
           {!aiLocked && (isLoading || subscribeLoading) && (
@@ -1271,22 +1277,28 @@ export function AIChatWidget() {
                 maxLength={18}
               />
             </div>
-            <Button
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
               className="w-full"
-              disabled={cpfValue.replace(/\D/g, "").length < 11 || subscribeLoading}
-              onClick={async () => {
-                if (!pendingSubscribe) return;
-                setCpfDialogOpen(false);
-                await handleSubscribe(pendingSubscribe.plan_id, pendingSubscribe.plan_name, cpfValue);
-                setPendingSubscribe(null);
-              }}
             >
+              <Button
+                className="w-full"
+                disabled={cpfValue.replace(/\D/g, "").length < 11 || subscribeLoading}
+                onClick={async () => {
+                  if (!pendingSubscribe) return;
+                  setCpfDialogOpen(false);
+                  await handleSubscribe(pendingSubscribe.plan_id, pendingSubscribe.plan_name, cpfValue);
+                  setPendingSubscribe(null);
+                }}
+              >
               {subscribeLoading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...</>
               ) : (
                 <><QrCode className="mr-2 h-4 w-4" /> Gerar QR Code PIX</>
               )}
             </Button>
+          </motion.div>
           </div>
         </DialogContent>
       </Dialog>
