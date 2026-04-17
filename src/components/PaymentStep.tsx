@@ -187,6 +187,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   }, [settings]);
 
+  const [isProcessingAnimation, setIsProcessingAnimation] = useState(false);
+  const [animationStatus, setAnimationStatus] = useState<"processing" | "approved" | "rejected" | null>(null);
+
   // Realtime order status tracking
   useEffect(() => {
     if (!orderId) return;
@@ -204,8 +207,11 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         (payload) => {
           const newStatus = payload.new.status;
           if (["processando", "pago", "aprovado", "approved", "enviado", "entregue"].includes(newStatus?.toLowerCase())) {
+            setAnimationStatus("approved");
             toast.success("💰 Pedido confirmado e aprovado!");
-            onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+            setTimeout(() => {
+              onSuccess(selectedMethod || "gateway", selectedMethod === "credit_card" ? cardCpf : payerCpf);
+            }, 2000);
           }
         }
       )
