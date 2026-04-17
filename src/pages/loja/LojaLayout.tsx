@@ -646,7 +646,7 @@ export default function LojaLayout() {
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
-        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground ${isDarkMode ? "dark" : ""}`}
+        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground overflow-x-hidden ${isDarkMode ? "dark" : ""}`}
         style={
           isDarkMode
             ? {
@@ -690,7 +690,7 @@ export default function LojaLayout() {
               } as React.CSSProperties
         }
       >
-        <div className="sticky top-0 z-50 w-full transition-all duration-300">
+        <div className="sticky top-0 z-50 w-full transition-all duration-300 overflow-x-hidden">
           {/* Promotional banner */}
           <PromoBanner storeUserId={settings?.user_id} />
 
@@ -737,7 +737,7 @@ export default function LojaLayout() {
           )}
 
           <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 flex items-center gap-1 sm:gap-4 overflow-hidden">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -749,8 +749,8 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
-                        className="object-contain"
+                        style={{ height: `${logoSize}px`, maxWidth: `min(140px, ${Math.max(120, logoSize * 5)}px)` }}
+                        className="object-contain sm:max-w-none"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
@@ -877,7 +877,7 @@ export default function LojaLayout() {
               </Sheet>
             </div>
 
-            <div className="sm:hidden px-4 pb-3 flex items-center gap-2">
+            <div className="sm:hidden px-2 pb-3 flex items-center gap-2 overflow-hidden">
               <SmartSearchBar
                 products={smartSearchProducts || []}
                 searchTerm={searchTerm}
