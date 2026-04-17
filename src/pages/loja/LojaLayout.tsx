@@ -44,6 +44,7 @@ import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 import { VideoShopping } from "@/components/storefront/VideoShopping";
+import sidebarBg from "@/assets/sidebar-bg.png";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
@@ -907,7 +908,11 @@ export default function LojaLayout() {
               }`}
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
             >
-              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+              <div 
+                className="absolute inset-0 opacity-[0.15] bg-cover bg-center bg-no-repeat pointer-events-none"
+                style={{ backgroundImage: `url(${sidebarBg})` }}
+              />
+              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1 relative z-10">
                 {settings?.instagram_url && (
                   <div
                     className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
@@ -1074,6 +1079,38 @@ export default function LojaLayout() {
               </nav>
             </div>
           </header>
+
+          {/* Categories bar for desktop with background image */}
+          <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
+            <div 
+              className="absolute inset-0 opacity-[0.12] bg-cover bg-center bg-no-repeat pointer-events-none"
+              style={{ backgroundImage: `url(${sidebarBg})` }}
+            />
+            <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
+              <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
+                {categories?.map((cat, i) => (
+                  <button
+                    key={cat.id}
+                    className="whitespace-nowrap text-sm font-medium hover:opacity-70 transition-opacity flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-black/5"
+                    style={{ color: headerTextColor }}
+                    onClick={() => {
+                      const el = document.getElementById(`category-${cat.name}`);
+                      if (el) {
+                        const yOffset = -140; // Space for the double header
+                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      } else {
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }
+                    }}
+                  >
+                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: primaryColor }} />
+                    {localizedCategoryNames[i] || cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="border-b border-border bg-secondary/50">
