@@ -746,7 +746,23 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Credit card form
   if (showCardForm && selectedMethod === "credit_card") {
-    const isProcessing = createPayment.isPending || tokenizing;
+    const isProcessing = createPayment.isPending || tokenizing || isProcessingAnimation;
+
+    if (isProcessingAnimation) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-5 w-5" /> Processando Pagamento
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardMachineAnimation status={animationStatus} />
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <Card>
         <CardHeader>
