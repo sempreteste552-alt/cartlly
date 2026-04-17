@@ -737,7 +737,7 @@ export default function LojaLayout() {
           )}
 
           <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 flex items-center gap-1 sm:gap-4 overflow-hidden">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -749,8 +749,8 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, maxWidth: `${Math.max(120, logoSize * 5)}px` }}
-                        className="object-contain"
+                        style={{ height: `${logoSize}px`, maxWidth: `min(140px, ${Math.max(120, logoSize * 5)}px)` }}
+                        className="object-contain sm:max-w-none"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
