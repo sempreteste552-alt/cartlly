@@ -1,5 +1,15 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import visaIcon from "@/assets/payment-flags/visa.png";
+import mastercardIcon from "@/assets/payment-flags/mastercard.png";
+import eloIcon from "@/assets/payment-flags/elo.png";
+import amexIcon from "@/assets/payment-flags/amex.png";
+import hipercardIcon from "@/assets/payment-flags/hipercard.png";
+import pixIcon from "@/assets/payment-flags/pix.png";
+import boletoIcon from "@/assets/payment-flags/boleto.png";
+import dinersIcon from "@/assets/payment-flags/diners.png";
+import discoverIcon from "@/assets/payment-flags/discover.png";
+import applepayIcon from "@/assets/payment-flags/applepay.png";
 
 interface PaymentFlagsProps {
   acceptedMethods?: string[];
@@ -7,42 +17,16 @@ interface PaymentFlagsProps {
 }
 
 const PAYMENT_METHODS_DATA: Record<string, { label: string; icon: string }> = {
-  visa: {
-    label: "Visa",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/visa.svg",
-  },
-  mastercard: {
-    label: "Mastercard",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/mastercard.svg",
-  },
-  elo: {
-    label: "Elo",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/elo.svg",
-  },
-  amex: {
-    label: "American Express",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/amex.svg",
-  },
-  hipercard: {
-    label: "Hipercard",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/hipercard.svg",
-  },
-  pix: {
-    label: "PIX",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/pix.svg",
-  },
-  boleto: {
-    label: "Boleto",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/boleto.svg",
-  },
-  diners: {
-    label: "Diners Club",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/diners.svg",
-  },
-  discover: {
-    label: "Discover",
-    icon: "https://cdn.jsdelivr.net/gh/fabioluz/pagamento-icons@master/svg/discover.svg",
-  },
+  visa: { label: "Visa", icon: visaIcon },
+  mastercard: { label: "Mastercard", icon: mastercardIcon },
+  elo: { label: "Elo", icon: eloIcon },
+  amex: { label: "American Express", icon: amexIcon },
+  hipercard: { label: "Hipercard", icon: hipercardIcon },
+  pix: { label: "PIX", icon: pixIcon },
+  boleto: { label: "Boleto", icon: boletoIcon },
+  diners: { label: "Diners Club", icon: dinersIcon },
+  discover: { label: "Discover", icon: discoverIcon },
+  applepay: { label: "Apple Pay", icon: applepayIcon },
 };
 
 export const PaymentFlags: React.FC<PaymentFlagsProps> = ({ 
