@@ -3367,6 +3367,7 @@ export type Database = {
       store_settings: {
         Row: {
           accent_color: string
+          accepted_payment_methods: string[] | null
           admin_accent_color: string
           admin_blocked: boolean
           admin_primary_color: string
@@ -3446,6 +3447,7 @@ export type Database = {
         }
         Insert: {
           accent_color?: string
+          accepted_payment_methods?: string[] | null
           admin_accent_color?: string
           admin_blocked?: boolean
           admin_primary_color?: string
@@ -3525,6 +3527,7 @@ export type Database = {
         }
         Update: {
           accent_color?: string
+          accepted_payment_methods?: string[] | null
           admin_accent_color?: string
           admin_blocked?: boolean
           admin_primary_color?: string
