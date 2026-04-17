@@ -43,6 +43,7 @@ export default function Pagamentos() {
       payment_credit_card: paymentCreditCard,
       payment_debit_card: paymentDebitCard,
       sell_via_whatsapp: sellViaWhatsapp,
+      accepted_payment_methods: acceptedPaymentMethods,
     } as any);
   };
 
