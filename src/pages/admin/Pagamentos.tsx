@@ -9,6 +9,7 @@ import { Loader2, CreditCard, MessageCircle, BarChart3, Zap } from "lucide-react
 import { useStoreSettings, useUpdateStoreSettings } from "@/hooks/useStoreSettings";
 import PaymentsDashboard from "@/components/PaymentsDashboard";
 import { GatewaySettings } from "@/components/admin/GatewaySettings";
+import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 
 
 export default function Pagamentos() {
