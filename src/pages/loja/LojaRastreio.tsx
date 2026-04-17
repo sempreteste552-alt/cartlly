@@ -220,12 +220,14 @@ export default function LojaRastreio() {
                   <p className="mt-2 font-medium text-red-600">{uiText.cancelled}</p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between relative px-4">
-                  {/* Progress bar */}
-                  <div className="absolute top-5 left-8 right-8 h-1 bg-muted rounded-full">
-                    <div
-                      className="h-full bg-black rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${Math.max(0, (currentStepIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
+                <div className="flex items-center justify-between relative px-2 py-8">
+                  {/* Progress bar background */}
+                  <div className="absolute top-[52px] left-8 right-8 h-1 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(0, (currentStepIndex / (STATUS_STEPS.length - 1)) * 100)}%` }}
+                      transition={{ duration: 1.5, ease: "easeInOut" }}
+                      className="h-full bg-primary"
                     />
                   </div>
 
@@ -236,17 +238,29 @@ export default function LojaRastreio() {
                     const isCurrent = i === currentStepIndex;
 
                     return (
-                      <div key={step} className="flex flex-col items-center relative z-10">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                            isCompleted
-                              ? "bg-black text-white shadow-lg"
-                              : "bg-muted text-muted-foreground border-2 border-border"
-                          } ${isCurrent ? "ring-4 ring-gray-200 scale-110" : ""}`}
+                      <div key={step} className="flex flex-col items-center relative z-10 w-20">
+                        <motion.div
+                          initial={false}
+                          animate={{
+                            backgroundColor: isCompleted ? "var(--primary)" : "var(--muted)",
+                            scale: isCurrent ? 1.2 : 1,
+                            color: isCompleted ? "var(--primary-foreground)" : "var(--muted-foreground)"
+                          }}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors border-2 ${
+                            isCompleted ? "border-primary" : "border-muted"
+                          } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}
                         >
                           <Icon className="h-5 w-5" />
-                        </div>
-                        <span className={`text-xs mt-2 font-medium ${isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+                          {isCurrent && (
+                            <motion.div
+                              layoutId="activeStatus"
+                              className="absolute inset-0 rounded-full bg-primary/20"
+                              animate={{ scale: [1, 1.4, 1] }}
+                              transition={{ repeat: Infinity, duration: 2 }}
+                            />
+                          )}
+                        </motion.div>
+                        <span className={`text-[10px] mt-3 font-bold uppercase tracking-wider text-center ${isCompleted ? "text-primary" : "text-muted-foreground"}`}>
                           {info.label}
                         </span>
                       </div>
