@@ -258,16 +258,16 @@ export default function Dashboard() {
   }, [payments]);
 
   const kpiCards = [
-    { label: "Produtos", value: String(metrics.totalProducts), icon: Layers, desc: "Ecossistema de itens", gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+    { label: "Produtos", value: String(metrics.totalProducts), icon: Layers, desc: "Ecossistema de itens", gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-600 dark:text-blue-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ...(canViewMetrics ? [
-      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `Fluxo: ${metrics.totalOrders} total`, gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
+      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `Fluxo: ${metrics.totalOrders} total`, gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-600 dark:text-purple-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
     ] : []),
     ...(hasGateway && canViewMetrics ? [
-      { label: "Faturamento", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: "Capital processado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
-      { label: "Eficiência/Ticket", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Média por conversão", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Faturamento", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: "Capital processado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-600 dark:text-emerald-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Eficiência/Ticket", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Média por conversão", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-600 dark:text-amber-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ] : []),
-    { label: "Base de Usuários", value: String(metrics.uniqueCustomers), icon: Users, desc: "Retenção de leads", gradient: "from-cyan-600/20 to-blue-600/10", border: "border-cyan-500/30", iconColor: "text-cyan-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
-    { label: "Nível de Estoque", value: String(metrics.lowStock.length), icon: Cpu, desc: `${metrics.outOfStock.length} itens críticos`, gradient: metrics.lowStock.length > 0 ? "from-red-600/20 to-rose-600/10" : "from-slate-600/20 to-slate-600/10", border: metrics.lowStock.length > 0 ? "border-red-500/30" : "border-slate-500/30", iconColor: metrics.lowStock.length > 0 ? "text-red-400" : "text-slate-400", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
+    { label: "Base de Usuários", value: String(metrics.uniqueCustomers), icon: Users, desc: "Retenção de leads", gradient: "from-cyan-600/20 to-blue-600/10", border: "border-cyan-500/30", iconColor: "text-cyan-600 dark:text-cyan-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
+    { label: "Nível de Estoque", value: String(metrics.lowStock.length), icon: Cpu, desc: `${metrics.outOfStock.length} itens críticos`, gradient: metrics.lowStock.length > 0 ? "from-red-600/20 to-rose-600/10" : "from-slate-600/20 to-slate-600/10", border: metrics.lowStock.length > 0 ? "border-red-500/30" : "border-slate-500/30", iconColor: metrics.lowStock.length > 0 ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
   ];
 
   return (
@@ -280,7 +280,7 @@ export default function Dashboard() {
         )}
 
         {/* Header */}
-        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/10 backdrop-blur-xl">
+        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/80 dark:bg-card/10 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
               <Activity className="h-6 w-6 text-primary animate-pulse" />
@@ -329,12 +329,12 @@ export default function Dashboard() {
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/10 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
               {/* Subtle background glow */}
               <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
               
               <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{s.label}</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-[360deg]`}>
                   <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
@@ -371,7 +371,7 @@ export default function Dashboard() {
       {/* Payment Summary - only for plans with gateway and admins */}
       {hasGateway && canViewMetrics && (
         <div className="grid gap-4 sm:grid-cols-4">
-          <Card className="border-emerald-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-emerald-500/10">
+          <Card className="border-emerald-500/20 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-emerald-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-amber-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-amber-500/10">
+          <Card className="border-amber-500/20 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-amber-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-rose-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-rose-500/10">
+          <Card className="border-rose-500/20 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-rose-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm overflow-hidden relative">
+          <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm overflow-hidden relative">
             <div className="absolute top-0 right-0 p-1 opacity-20">
               <Layers className="h-12 w-12 text-primary rotate-12" />
             </div>
@@ -439,7 +439,7 @@ export default function Dashboard() {
           title="Alerta de Estoque"
           description="Você continua correndo risco de anunciar produto sem saldo e perder pedido bom por falta de aviso."
         >
-          <Card className="border-amber-500/30 bg-card/10 backdrop-blur-md shadow-sm">
+          <Card className="border-amber-500/30 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -500,7 +500,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-primary/10 bg-card/10 backdrop-blur-xl shadow-lg">
+        <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-xl shadow-lg">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -540,7 +540,7 @@ export default function Dashboard() {
           title="Pedidos por Dia"
           description="Sem esse gráfico você vende sem ritmo, reage tarde e deixa tendência passar batida."
         >
-          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
+          <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pedidos por Dia</CardTitle></CardHeader>
             <CardContent>
               {ordersByDay.length > 0 ? (
@@ -563,7 +563,7 @@ export default function Dashboard() {
           title="Status dos Pedidos"
           description="Sem essa leitura você só descobre gargalo quando o cliente já está impaciente ou foi embora."
         >
-          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
+          <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
             <CardContent>
               {ordersByStatus.length > 0 ? (
@@ -596,7 +596,7 @@ export default function Dashboard() {
         </LockedDashboardCard>
 
         {hasStarterAnalytics && (
-        <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
+        <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cupons</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -632,7 +632,7 @@ export default function Dashboard() {
           title="Top Vendidos"
           description="Sem essa lista você insiste no produto errado e deixa de empurrar o que realmente gira caixa."
         >
-          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
+          <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
@@ -666,7 +666,7 @@ export default function Dashboard() {
           title="Top Visitados"
           description="Sem essa visão você não sabe onde existe interesse real e perde chance de converter o tráfego certo."
         >
-          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
+          <Card className="border-primary/10 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
