@@ -1270,7 +1270,7 @@ export default function LojaLayout() {
                 <p className="text-sm font-semibold mb-3 opacity-70">{t.store.paymentMethods}</p>
                 <PaymentFlags acceptedMethods={(settings as any)?.accepted_payment_methods} />
               </div>
-              <div className="bg-white/10 rounded-xl p-6 border border-white/20">
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                 <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xl mx-auto object-contain" />
               </div>
             </div>

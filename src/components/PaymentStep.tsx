@@ -1014,9 +1014,9 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           </Button>
         ))}
         <Separator />
-        <div className="flex items-center justify-center gap-4 flex-wrap py-3">
-          <img src={siteSeguro} alt="Site Seguro" className="h-14 w-auto" />
-          <img src={compraSegura} alt="Compra Segura" className="h-14 w-auto" />
+        <div className="flex items-center justify-center gap-4 flex-wrap py-3 bg-white rounded-lg border border-gray-200 shadow-sm px-4">
+          <img src={siteSeguro} alt="Site Seguro" className="h-10 w-auto" />
+          <img src={compraSegura} alt="Compra Segura" className="h-10 w-auto" />
         </div>
         <div className="flex flex-col items-center justify-center gap-4 py-2">
           <PaymentFlags acceptedMethods={settings?.accepted_payment_methods} />
