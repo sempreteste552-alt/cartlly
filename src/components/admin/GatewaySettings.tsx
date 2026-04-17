@@ -73,9 +73,9 @@ export function GatewaySettings() {
     setTestOwner(null);
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/create-payment`,
+        `${supabaseUrl}/functions/v1/create-payment`,
         {
           method: "POST",
           headers: {
