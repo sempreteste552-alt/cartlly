@@ -272,13 +272,7 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Fundo full-screen do dashboard - mobile e desktop */}
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${dashboardHeroBg})` }}
-        aria-hidden="true"
-      />
-      <div className="fixed inset-0 -z-10 bg-background/80 backdrop-blur-sm" aria-hidden="true" />
+      <div className="space-y-6 relative">
 
       <div className="space-y-6 relative">
         <WelcomeTrialCard />
