@@ -647,7 +647,7 @@ export default function LojaLayout() {
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
-        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground overflow-x-hidden ${isDarkMode ? "dark" : ""}`}
+        className={`min-h-screen pb-16 md:pb-0 transition-colors bg-background text-foreground ${isDarkMode ? "dark" : ""}`}
         style={
           isDarkMode
             ? {
@@ -691,7 +691,7 @@ export default function LojaLayout() {
               } as React.CSSProperties
         }
       >
-        <div className="sticky top-0 z-50 w-full transition-all duration-300 overflow-x-hidden">
+        <div className="sticky top-0 z-50 w-full transition-all duration-300">
           {/* Promotional banner */}
           <PromoBanner storeUserId={settings?.user_id} />
 
