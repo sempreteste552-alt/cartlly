@@ -435,22 +435,11 @@ export default function Suporte() {
     }
   }, [newMessage, selectedConversation, isAdminTyping]);
 
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    const touchPresence = () => {
-      supabase
-        .from("support_conversations")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id)
-        .then();
-    };
-
-    touchPresence();
-    const interval = window.setInterval(touchPresence, 30000);
-
-    return () => window.clearInterval(interval);
-  }, [selectedConversation?.id]);
+  // NOTE: We intentionally do NOT bump support_conversations.updated_at from the admin side.
+  // That field is used to determine whether the CUSTOMER is online (chat panel open & visible).
+  // Updating it from the admin would falsely mark the customer as online whenever the admin
+  // opens the conversation. Customer presence is pinged from StorefrontAIChat only while the
+  // customer's chat panel is open and the tab is visible/focused.
 
   useEffect(() => {
     if (scrollRef.current) {

@@ -369,9 +369,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
 
-    const syncVisibleStatuses = () => {
-      const markAsRead = open && document.visibilityState === "visible";
-      syncIncomingAdminMessages(markAsRead).then();
+    const pingPresence = () => {
       supabase
         .from("support_conversations")
         .update({ updated_at: new Date().toISOString() })
@@ -379,21 +377,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         .then();
     };
 
+    const isActive = () => open && document.visibilityState === "visible" && document.hasFocus();
+
+    const syncVisibleStatuses = () => {
+      const markAsRead = open && document.visibilityState === "visible";
+      syncIncomingAdminMessages(markAsRead).then();
+      if (isActive()) pingPresence();
+    };
+
     syncVisibleStatuses();
     document.addEventListener("visibilitychange", syncVisibleStatuses);
     window.addEventListener("focus", syncVisibleStatuses);
+    window.addEventListener("blur", syncVisibleStatuses);
 
     const interval = window.setInterval(() => {
-      supabase
-        .from("support_conversations")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .then();
+      // Only mark as online while the chat panel is actually open and visible
+      if (isActive()) pingPresence();
     }, 30000);
 
     return () => {
       document.removeEventListener("visibilitychange", syncVisibleStatuses);
       window.removeEventListener("focus", syncVisibleStatuses);
+      window.removeEventListener("blur", syncVisibleStatuses);
       window.clearInterval(interval);
     };
   }, [conversationId, isHumanMode, open, syncIncomingAdminMessages]);
