@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      selfDestroying: true,
       injectRegister: null,
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
@@ -25,7 +26,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/~oauth/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,ico,png,svg,woff2}"],
         importScripts: ["/sw-push.js"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
