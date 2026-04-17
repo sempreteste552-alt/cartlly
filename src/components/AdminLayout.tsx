@@ -36,6 +36,7 @@ export function AdminLayout() {
   const { slug: urlSlug } = useParams();
   const isCerebroPage = location.pathname.includes("/cerebro");
   const isSuportePage = location.pathname.includes("/suporte");
+  const isDashboard = location.pathname.split('/').filter(Boolean).length === 2 && location.pathname.includes('/painel/');
   const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
@@ -190,14 +191,18 @@ export function AdminLayout() {
         data-tenant={user?.id}
         data-role={role}
         style={adminThemeStyle}
-        className={`min-h-screen flex w-full bg-transparent relative ${adminDark ? "dark" : ""}`}
+        className={`min-h-screen flex w-full bg-background relative ${adminDark ? "dark" : ""}`}
       >
-        <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80"
-          style={{ backgroundImage: `url(${dashboardHeroBg})` }}
-          aria-hidden="true"
-        />
-        <div className="fixed inset-0 -z-10 bg-background/30 backdrop-blur-[1px] pointer-events-none" aria-hidden="true" />
+        {isDashboard && (
+          <>
+            <div
+              className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-80"
+              style={{ backgroundImage: `url(${dashboardHeroBg})` }}
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 -z-10 bg-background/30 backdrop-blur-[1px] pointer-events-none" aria-hidden="true" />
+          </>
+        )}
         
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
