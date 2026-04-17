@@ -136,7 +136,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   };
 
   return (
-    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden relative group/sidebar">
+    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden group/sidebar">
       {/* Background layer that works on both mobile and desktop */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-sidebar/40 via-sidebar/60 to-sidebar/90" />
