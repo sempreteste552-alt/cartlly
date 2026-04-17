@@ -27,6 +27,7 @@ import { canAccess } from "@/lib/planPermissions";
 import { useTranslation } from "@/i18n";
 import { AITrainingAlert } from "@/components/admin/AITrainingAlert";
 import { useRolePermissions } from "@/components/RoleGate";
+import dashboardHeroBg from "@/assets/dashboard-hero-bg.png";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(142 71% 45%)", "hsl(38 92% 50%)", "hsl(0 72% 51%)", "hsl(220 70% 55%)"];
 
@@ -271,6 +272,17 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Hero banner */}
+      <div className="relative w-full overflow-hidden rounded-2xl border border-border shadow-lg">
+        <img
+          src={dashboardHeroBg}
+          alt="Cartly - Vendas inteligentes, resultados reais"
+          className="w-full h-auto max-h-[260px] object-cover object-center"
+          loading="eager"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/20 pointer-events-none" />
+      </div>
+
       <WelcomeTrialCard />
 
       {hasAiTools && (!aiConfig || !aiConfig.niche || !aiConfig.personality) && (
