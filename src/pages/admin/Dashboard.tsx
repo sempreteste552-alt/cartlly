@@ -47,7 +47,7 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
       <div className="pointer-events-none select-none opacity-45 blur-[3px] h-full">
         {children}
       </div>
-      <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/82 p-4 backdrop-blur-sm">
+      <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-background/40 p-4 backdrop-blur-sm">
         <div className="max-w-xs text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/20 bg-primary/10">
             <Lock className="h-5 w-5 text-primary" />
@@ -329,7 +329,7 @@ export default function Dashboard() {
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-transparent backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/10 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
               {/* Subtle background glow */}
               <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
               
@@ -371,7 +371,7 @@ export default function Dashboard() {
       {/* Payment Summary - only for plans with gateway and admins */}
       {hasGateway && canViewMetrics && (
         <div className="grid gap-4 sm:grid-cols-4">
-          <Card className="border-emerald-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-emerald-500/10">
+          <Card className="border-emerald-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-emerald-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-amber-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-amber-500/10">
+          <Card className="border-amber-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-amber-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-rose-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-rose-500/10">
+          <Card className="border-rose-500/20 bg-card/10 backdrop-blur-md shadow-sm transition-all hover:bg-rose-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-primary/10 bg-transparent backdrop-blur-sm shadow-sm overflow-hidden relative">
+          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm overflow-hidden relative">
             <div className="absolute top-0 right-0 p-1 opacity-20">
               <Layers className="h-12 w-12 text-primary rotate-12" />
             </div>
@@ -439,7 +439,7 @@ export default function Dashboard() {
           title="Alerta de Estoque"
           description="Você continua correndo risco de anunciar produto sem saldo e perder pedido bom por falta de aviso."
         >
-          <Card className="border-amber-500/30 bg-transparent backdrop-blur-sm shadow-sm">
+          <Card className="border-amber-500/30 bg-card/10 backdrop-blur-md shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -500,7 +500,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-primary/10 bg-transparent backdrop-blur-md shadow-lg">
+        <Card className="border-primary/10 bg-card/10 backdrop-blur-xl shadow-lg">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -540,7 +540,7 @@ export default function Dashboard() {
           title="Pedidos por Dia"
           description="Sem esse gráfico você vende sem ritmo, reage tarde e deixa tendência passar batida."
         >
-          <Card className="border-border shadow-sm">
+          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Pedidos por Dia</CardTitle></CardHeader>
             <CardContent>
               {ordersByDay.length > 0 ? (
@@ -563,7 +563,7 @@ export default function Dashboard() {
           title="Status dos Pedidos"
           description="Sem essa leitura você só descobre gargalo quando o cliente já está impaciente ou foi embora."
         >
-          <Card className="border-border shadow-sm">
+          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Status dos Pedidos</CardTitle></CardHeader>
             <CardContent>
               {ordersByStatus.length > 0 ? (
@@ -596,7 +596,7 @@ export default function Dashboard() {
         </LockedDashboardCard>
 
         {hasStarterAnalytics && (
-        <Card className="border-border shadow-sm">
+        <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Cupons</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -632,7 +632,7 @@ export default function Dashboard() {
           title="Top Vendidos"
           description="Sem essa lista você insiste no produto errado e deixa de empurrar o que realmente gira caixa."
         >
-          <Card className="border-border shadow-sm">
+          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Award className="h-4 w-4 text-amber-500" /> Top Vendidos
@@ -666,7 +666,7 @@ export default function Dashboard() {
           title="Top Visitados"
           description="Sem essa visão você não sabe onde existe interesse real e perde chance de converter o tráfego certo."
         >
-          <Card className="border-border shadow-sm">
+          <Card className="border-primary/10 bg-card/10 backdrop-blur-md shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Eye className="h-4 w-4 text-blue-500" /> Top Visitados
