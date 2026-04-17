@@ -136,14 +136,17 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   };
 
   return (
-    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sidebar/30 via-sidebar/50 to-sidebar/80 pointer-events-none" aria-hidden="true" />
-      <div 
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-[0.15]"
-        style={{ backgroundImage: `url(${sidebarBg})` }}
-        aria-hidden="true"
-      />
-      <SidebarHeader className="p-4">
+    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden relative group/sidebar">
+      {/* Background layer that works on both mobile and desktop */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-sidebar/40 via-sidebar/60 to-sidebar/90" />
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.25] transition-opacity duration-700 group-hover/sidebar:opacity-[0.35]"
+          style={{ backgroundImage: `url(${sidebarBg})` }}
+        />
+      </div>
+
+      <SidebarHeader className="p-4 relative z-10">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 text-sidebar-primary-foreground shadow-md">
             <Store className="h-4.5 w-4.5" />
