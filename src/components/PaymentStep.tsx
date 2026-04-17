@@ -680,7 +680,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     const boletoBarcode = paymentData.paymentResult?.boleto_barcode || paymentData.payment?.boleto_barcode;
 
     return (
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="h-5 w-5" /> Boleto Bancário
@@ -723,6 +728,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           )}
         </CardContent>
       </Card>
+      </motion.div>
     );
   }
 
