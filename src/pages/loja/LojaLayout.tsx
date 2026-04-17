@@ -691,7 +691,7 @@ export default function LojaLayout() {
               } as React.CSSProperties
         }
       >
-        <div className="sticky top-0 z-50 w-full transition-all duration-300 overflow-x-hidden">
+        <div className="sticky top-0 z-50 w-full transition-all duration-300">
           {/* Promotional banner */}
           <PromoBanner storeUserId={settings?.user_id} />
 
