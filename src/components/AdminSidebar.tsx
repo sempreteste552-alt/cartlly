@@ -137,121 +137,12 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
 
   return (
     <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden">
-      {!collapsed && isMobile && (
-        <>
-          <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sidebar/30 via-sidebar/50 to-sidebar/80 pointer-events-none" aria-hidden="true" />
-          <div 
-            className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-[0.15]"
-            style={{ backgroundImage: `url(${sidebarBg})` }}
-            aria-hidden="true"
-          />
-        </>
-      )}
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 text-sidebar-primary-foreground shadow-md">
-            <Store className="h-4.5 w-4.5" />
-          </div>
-          {!collapsed && (
-            <motion.div 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="flex flex-col flex-1 min-w-0"
-            >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                  <AnimatedText text={(settings as any)?.store_name || adminSidebarText.defaultStore} />
-                </span>
-                {(planSlug === "PREMIUM" || planSlug === "PRO") && isTenantActive(ctx) && (
-                  <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px] shrink-0" />
-                )}
-              </div>
-              <span className="text-[11px] text-sidebar-foreground/50">
-                <AnimatedText text={t.sidebar.management} delay={0.5} />
-              </span>
-            </motion.div>
-          )}
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-            >
-              <AdminNotificationsBell />
-            </motion.div>
-          )}
-        </div>
-      </SidebarHeader>
-
-      <SidebarSeparator />
-
-      <SidebarContent>
-        {mainItems.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-              <AnimatedText text={t.sidebar.management} delay={0.1} />
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {mainItems.map((item, index) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                      <NavLink
-                        to={item.url}
-                        end={item.url === adminBasePath}
-                        id={`sidebar-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="hover:bg-sidebar-accent/60 transition-colors rounded-lg group"
-                        onClick={() => isMobile && setOpenMobile(false)}
-                      >
-                        <motion.div 
-                          className="relative"
-                          initial={{ opacity: 0, scale: 0.8, x: -5 }}
-                          animate={{ opacity: 1, scale: 1, x: 0 }}
-                          transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          {collapsed && !!item.badgeCount && item.badgeCount > 0 && (
-                            <span className="absolute -top-2 -right-2 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
-                              {item.badgeCount > 9 ? "9+" : item.badgeCount}
-                            </span>
-                          )}
-                        </motion.div>
-                        {!collapsed && (
-                          <span className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="truncate">
-                              <AnimatedText text={item.title} delay={0.2 + (index * 0.1)} />
-                            </span>
-                            {!!item.badgeCount && item.badgeCount > 0 && (
-                              <motion.span 
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 1.2, delay: 0.5 + (index * 0.1) }}
-                                className="ml-auto h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm"
-                              >
-                                {item.badgeCount > 99 ? "99+" : item.badgeCount}
-                              </motion.span>
-                            )}
-                            {!item.badgeCount && item.isNew && (
-                              <motion.span 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 1.5, delay: 0.6 + (index * 0.1) }}
-                                className="ml-auto text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none"
-                              >
-                                {adminSidebarText.new}
-                              </motion.span>
-                            )}
-                          </span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-sidebar/30 via-sidebar/50 to-sidebar/80 pointer-events-none" aria-hidden="true" />
+      <div 
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-[0.15]"
+        style={{ backgroundImage: `url(${sidebarBg})` }}
+        aria-hidden="true"
+      />
 
         {marketingItems.length > 0 && (
           <SidebarGroup>
