@@ -325,7 +325,7 @@ export default function SuperAdminDashboard() {
           { label: "Status Crítico", value: metrics.blocked, icon: Ban, color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/20", desc: "Ação Imediata" },
           { label: "Elite Members", value: metrics.active, icon: Crown, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", desc: "Retenção Garantida" },
         ].map((item) => (
-          <Card key={item.label} className={`${item.border} bg-card/30 backdrop-blur-sm transition-all hover:translate-y-[-2px]`}>
+          <Card key={item.label} className={`${item.border} bg-card/80 dark:bg-card/30 backdrop-blur-sm transition-all hover:translate-y-[-2px]`}>
             <CardContent className="p-4 flex items-center gap-4">
               <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.bg}`}>
                 <item.icon className={`h-6 w-6 ${item.color}`} />
