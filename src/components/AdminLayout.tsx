@@ -191,7 +191,7 @@ export function AdminLayout() {
         data-tenant={user?.id}
         data-role={role}
         style={adminThemeStyle}
-        className={`min-h-screen flex w-full bg-background relative ${adminDark ? "dark" : ""}`}
+        className={`h-screen flex w-full bg-background relative overflow-hidden ${adminDark ? "dark" : ""}`}
       >
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
