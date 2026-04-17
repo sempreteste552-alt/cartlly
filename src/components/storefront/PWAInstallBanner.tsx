@@ -135,36 +135,36 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   return (
     <>
       {/* Banner */}
-      <div className="relative z-[60]" style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}>
+      <div className="fixed bottom-0 left-0 right-0 z-[60] pb-safe" style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}>
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {logoUrl ? (
-              <img src={logoUrl} alt={name} className="h-8 w-8 rounded-lg object-contain bg-white/20 p-0.5 shrink-0" />
+              <img src={logoUrl} alt={name} className="h-10 w-10 rounded-lg object-contain bg-white/20 p-0.5 shrink-0" />
             ) : (
-              <div className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                <Gift className="h-4 w-4 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <Gift className="h-5 w-5 text-white" />
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-bold text-white truncate">
+              <p className="text-sm font-bold text-white truncate">
                 📲 Baixe o app de {name}!
               </p>
               <p className="text-[10px] sm:text-xs text-white/80 truncate">
                 {platform === "ios"
-                  ? "Adicione à tela de início e fique por dentro das promoções"
-                  : "Receba ofertas e promoções exclusivas em tempo real"}
+                  ? "Adicione à tela de início para acesso rápido"
+                  : "Receba ofertas e promoções exclusivas"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button
               size="sm"
-              className="h-8 text-xs font-bold px-4 shadow-lg"
+              className="h-9 text-xs font-bold px-4 shadow-lg animate-bounce-subtle"
               style={{ backgroundColor: "white", color: bgColor }}
               onClick={handleInstall}
             >
               <Download className="h-3.5 w-3.5 mr-1" />
-              {platform === "ios" ? "Instalar" : "Baixar App"}
+              {platform === "ios" ? "Instalar" : "Baixar"}
             </Button>
             <button onClick={dismiss} className="p-1 hover:bg-white/20 rounded text-white/70 hover:text-white">
               <X className="h-4 w-4" />
