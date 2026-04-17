@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { X, Download, Share, Plus, MoreVertical, Bell, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,10 +28,6 @@ interface PWAInstallBannerProps {
   storeUserId?: string;
 }
 
-/**
- * After a successful install, automatically request push permission
- * and persist the subscription so the customer receives notifications.
- */
 async function autoEnablePushAfterInstall(storeUserId?: string) {
   try {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
@@ -70,7 +66,6 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
-  const dismissKey = `pwa-banner-dismissed-${storeUserId || window.location.pathname}`;
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -85,7 +80,6 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  // Listen for app installed event to auto-enable push
   useEffect(() => {
     const onInstalled = () => {
       autoEnablePushAfterInstall(storeUserId);
@@ -94,24 +88,16 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     return () => window.removeEventListener("appinstalled", onInstalled);
   }, [storeUserId]);
 
-  const dismiss = () => {
-    setShow(false);
-    sessionStorage.setItem(dismissKey, "1");
-  };
-
   const handleInstall = async () => {
     if (platform === "android" || platform === "desktop") {
       if (deferredPrompt) {
-        // Native install prompt available — trigger it
         deferredPrompt.prompt();
         const result = await deferredPrompt.userChoice;
         if (result.outcome === "accepted") {
-          dismiss();
-          // Push will be auto-enabled via the appinstalled event
+          setShow(false);
         }
         setDeferredPrompt(null);
       } else {
-        // No deferred prompt yet — request push permission first, then show instructions
         try {
           if ("Notification" in window && Notification.permission === "default") {
             await Notification.requestPermission();
@@ -120,7 +106,6 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
         setShowInstructions(true);
       }
     } else {
-      // iOS — always show instructions (no native prompt support)
       setShowInstructions(true);
     }
   };
@@ -132,10 +117,10 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   return (
     <>
-      {/* Banner */}
-      <div className="fixed bottom-4 left-4 right-4 z-[60] animate-in slide-in-from-bottom duration-500">
+      {/* Floating Professional Push Banner at bottom */}
+      <div className="fixed bottom-20 md:bottom-6 left-4 right-4 z-[100] animate-in slide-in-from-bottom-full duration-700 ease-out pointer-events-none">
         <div 
-          className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-3 rounded-2xl shadow-2xl border border-white/10" 
+          className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-4 rounded-2xl shadow-2xl border border-white/20 pointer-events-auto" 
           style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -147,24 +132,24 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate">
-                Baixe o app {name}!
+              <p className="text-sm font-bold text-white truncate leading-tight">
+                Baixar o app {name}!
               </p>
-              <p className="text-[10px] sm:text-xs text-white/80 truncate">
+              <p className="text-[10px] text-white/90 truncate mt-0.5 font-medium uppercase tracking-wider">
                 {platform === "ios"
-                  ? "Instale agora e use offline"
-                  : "Receba ofertas exclusivas"}
+                  ? "Acesso rápido e offline"
+                  : "Promoções em tempo real"}
               </p>
             </div>
           </div>
           <div className="flex items-center shrink-0">
             <Button
               size="sm"
-              className="h-9 text-xs font-black px-5 shadow-lg animate-pulse"
+              className="h-10 text-xs font-black px-6 shadow-xl animate-pulse hover:scale-105 active:scale-95 transition-transform"
               style={{ backgroundColor: "white", color: bgColor }}
               onClick={handleInstall}
             >
-              <Download className="h-3.5 w-3.5 mr-1.5" />
+              <Download className="h-4 w-4 mr-1.5" />
               {platform === "ios" ? "INSTALAR" : "BAIXAR"}
             </Button>
           </div>
