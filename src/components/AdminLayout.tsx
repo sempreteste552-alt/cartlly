@@ -36,6 +36,7 @@ export function AdminLayout() {
   const { slug: urlSlug } = useParams();
   const isCerebroPage = location.pathname.includes("/cerebro");
   const isSuportePage = location.pathname.includes("/suporte");
+  const isDashboard = location.pathname.split('/').filter(Boolean).length === 2 && location.pathname.includes('/painel/');
   const { locale, setLocale } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useStoreSettings();
   const { data: themeConfig, isLoading: themeLoading } = useStoreThemeConfig();
