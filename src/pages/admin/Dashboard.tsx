@@ -272,14 +272,6 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Fundo full-screen do dashboard - mobile e desktop */}
-      <div
-        className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${dashboardHeroBg})` }}
-        aria-hidden="true"
-      />
-      <div className="fixed inset-0 -z-10 bg-background/80 backdrop-blur-sm" aria-hidden="true" />
-
       <div className="space-y-6 relative">
         <WelcomeTrialCard />
 
@@ -288,7 +280,7 @@ export default function Dashboard() {
         )}
 
         {/* Header */}
-        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/60 backdrop-blur-xl">
+        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-transparent backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
               <Activity className="h-6 w-6 text-primary animate-pulse" />
@@ -337,7 +329,7 @@ export default function Dashboard() {
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-transparent backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
               {/* Subtle background glow */}
               <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
               
@@ -379,7 +371,7 @@ export default function Dashboard() {
       {/* Payment Summary - only for plans with gateway and admins */}
       {hasGateway && canViewMetrics && (
         <div className="grid gap-4 sm:grid-cols-4">
-          <Card className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-emerald-500/10">
+          <Card className="border-emerald-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-emerald-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -394,7 +386,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-amber-500/20 bg-amber-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-amber-500/10">
+          <Card className="border-amber-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-amber-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -409,7 +401,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-rose-500/20 bg-rose-500/5 backdrop-blur-sm shadow-sm transition-all hover:bg-rose-500/10">
+          <Card className="border-rose-500/20 bg-transparent backdrop-blur-sm shadow-sm transition-all hover:bg-rose-500/10">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -423,7 +415,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="border-primary/10 bg-primary/5 backdrop-blur-sm shadow-sm overflow-hidden relative">
+          <Card className="border-primary/10 bg-transparent backdrop-blur-sm shadow-sm overflow-hidden relative">
             <div className="absolute top-0 right-0 p-1 opacity-20">
               <Layers className="h-12 w-12 text-primary rotate-12" />
             </div>
@@ -447,7 +439,7 @@ export default function Dashboard() {
           title="Alerta de Estoque"
           description="Você continua correndo risco de anunciar produto sem saldo e perder pedido bom por falta de aviso."
         >
-          <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent shadow-sm">
+          <Card className="border-amber-500/30 bg-transparent backdrop-blur-sm shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -508,7 +500,7 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-primary/10 bg-card/40 backdrop-blur-xl shadow-lg">
+        <Card className="border-primary/10 bg-transparent backdrop-blur-md shadow-lg">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -709,7 +701,7 @@ export default function Dashboard() {
         </LockedDashboardCard>
 
         {/* Top Termos Pesquisados */}
-        {hasPremiumAnalytics && <Card className="border-border shadow-sm">
+        {hasPremiumAnalytics && <Card className="border-border bg-transparent backdrop-blur-sm shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Search className="h-4 w-4 text-purple-500" /> Top Buscas

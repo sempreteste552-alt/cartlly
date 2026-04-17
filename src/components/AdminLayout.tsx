@@ -29,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Button } from "@/components/ui/button";
 import { isLocale, useTranslation } from "@/i18n";
 import { isPlatformHost } from "@/lib/storeDomain";
+import dashboardHeroBg from "@/assets/dashboard-hero-bg.png";
 
 export function AdminLayout() {
   const location = useLocation();
@@ -189,8 +190,15 @@ export function AdminLayout() {
         data-tenant={user?.id}
         data-role={role}
         style={adminThemeStyle}
-        className={`min-h-screen flex w-full bg-background ${adminDark ? "dark" : ""}`}
+        className={`min-h-screen flex w-full bg-background relative ${adminDark ? "dark" : ""}`}
       >
+        <div
+          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat pointer-events-none opacity-50"
+          style={{ backgroundImage: `url(${dashboardHeroBg})` }}
+          aria-hidden="true"
+        />
+        <div className="fixed inset-0 -z-10 bg-background/40 backdrop-blur-[1px] pointer-events-none" aria-hidden="true" />
+        
         <AdminSidebar themeStyle={adminThemeStyle} />
         <div className="flex-1 flex flex-col min-w-0">
           <GlobalMaintenanceBanner />
