@@ -908,7 +908,11 @@ export default function LojaLayout() {
               }`}
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
             >
-              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+              <div 
+                className="absolute inset-0 opacity-[0.15] bg-cover bg-center bg-no-repeat pointer-events-none"
+                style={{ backgroundImage: `url(${sidebarBg})` }}
+              />
+              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1 relative z-10">
                 {settings?.instagram_url && (
                   <div
                     className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
