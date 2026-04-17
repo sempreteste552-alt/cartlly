@@ -74,8 +74,6 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   useEffect(() => {
     if (isStandalone()) return;
-    const dismissed = sessionStorage.getItem(dismissKey);
-    if (dismissed) return;
     setPlatform(detectPlatform());
     setShow(true);
 
@@ -85,7 +83,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, [dismissKey]);
+  }, []);
 
   // Listen for app installed event to auto-enable push
   useEffect(() => {
