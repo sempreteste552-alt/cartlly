@@ -652,10 +652,7 @@ function mapStripeStatus(status: string): string {
   return map[status] || "pending";
 }
 
-function sendRichPush(userId: string, data: any) {
-  // Mock function or actual implementation if available
-  console.log("Push Notification:", userId, data);
-}
+// Already implemented below as async function sendRichPush
 
 // ===================== RICH PUSH HELPER =====================
 
