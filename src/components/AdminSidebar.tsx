@@ -183,9 +183,9 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="relative z-10" />
 
-      <SidebarContent>
+      <SidebarContent className="relative z-10">
         {mainItems.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
