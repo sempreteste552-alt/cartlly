@@ -91,6 +91,41 @@ export default function Pagamentos() {
               ))}
             </CardContent>
           </Card>
+          <Card className="border-border mt-4">
+            <CardHeader>
+              <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Bandeiras e Ícones</CardTitle></div>
+              <p className="text-xs text-muted-foreground">Selecione quais ícones de pagamento aparecerão no rodapé e checkout da loja</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { id: "visa", label: "Visa" },
+                  { id: "mastercard", label: "Mastercard" },
+                  { id: "elo", label: "Elo" },
+                  { id: "amex", label: "American Express" },
+                  { id: "hipercard", label: "Hipercard" },
+                  { id: "pix", label: "PIX" },
+                  { id: "boleto", label: "Boleto" },
+                  { id: "diners", label: "Diners Club" },
+                  { id: "discover", label: "Discover" },
+                ].map((flag) => (
+                  <div key={flag.id} className="flex items-center gap-2 rounded-lg border border-border p-3">
+                    <Switch 
+                      checked={acceptedPaymentMethods.includes(flag.id)} 
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setAcceptedPaymentMethods([...acceptedPaymentMethods, flag.id]);
+                        } else {
+                          setAcceptedPaymentMethods(acceptedPaymentMethods.filter(f => f !== flag.id));
+                        }
+                      }} 
+                    />
+                    <span className="text-sm font-medium">{flag.label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="border-border mt-4">
             <CardContent className="flex items-center justify-between p-4">
