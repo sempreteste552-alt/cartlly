@@ -1060,7 +1060,7 @@ export default function LojaLayout() {
                   <>
                     <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
                       <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
-                      <span className="text-sm">{t.common.darkMode}</span>
+                      <span className="text-sm">{t.misc.darkMode}</span>
                     </div>
                     {settings?.is_premium_plan && (
                       <LanguageSelector compact className="flex shrink-0 px-3 py-2 border-t" skipGate />
