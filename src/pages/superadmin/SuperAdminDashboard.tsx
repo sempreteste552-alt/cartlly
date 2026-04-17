@@ -144,7 +144,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/50 backdrop-blur-md p-5 rounded-3xl border border-primary/10 shadow-lg">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card/80 dark:bg-card/50 backdrop-blur-md p-5 rounded-3xl border border-primary/10 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary/10 rounded-2xl shadow-inner border border-primary/20">
             <Shield className="h-7 w-7 text-primary animate-pulse" />
@@ -199,10 +199,10 @@ export default function SuperAdminDashboard() {
       {/* Primary KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Ecossistema Tenants", value: String(metrics.total), icon: Globe, desc: `${metrics.active} ativos | ${metrics.trial} trial`, gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-400" },
-          { label: "Volume de Capital", value: formatCurrency(metrics.totalRevenue), icon: DollarSign, desc: "Processamento consolidado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-400" },
-          { label: "Catálogo Global", value: String(metrics.totalProducts), icon: Layers, desc: "Itens sob gestão", gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-400" },
-          { label: "Fluxo de Operações", value: String(metrics.totalOrders), icon: Zap, desc: "Pedidos transacionados", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-400" },
+          { label: "Ecossistema Tenants", value: String(metrics.total), icon: Globe, desc: `${metrics.active} ativos | ${metrics.trial} trial`, gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-600 dark:text-blue-400" },
+          { label: "Volume de Capital", value: formatCurrency(metrics.totalRevenue), icon: DollarSign, desc: "Processamento consolidado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-600 dark:text-emerald-400" },
+          { label: "Catálogo Global", value: String(metrics.totalProducts), icon: Layers, desc: "Itens sob gestão", gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-600 dark:text-purple-400" },
+          { label: "Fluxo de Operações", value: String(metrics.totalOrders), icon: Zap, desc: "Pedidos transacionados", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-600 dark:text-amber-400" },
         ].map((s, idx) => (
           <motion.div
             key={s.label}
@@ -210,10 +210,10 @@ export default function SuperAdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <Card className={`relative overflow-hidden ${s.border} bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group h-full`}>
+            <Card className={`relative overflow-hidden ${s.border} bg-card/80 dark:bg-card/40 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group h-full`}>
               <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
               <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">{s.label}</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{s.label}</CardTitle>
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-12`}>
                   <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
