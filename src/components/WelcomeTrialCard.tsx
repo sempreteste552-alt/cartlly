@@ -82,7 +82,7 @@ export function WelcomeTrialCard() {
   };
 
   return (
-    <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent shadow-lg">
+    <Card className="relative overflow-hidden border-primary/30 bg-card/10 backdrop-blur-md shadow-lg">
       {/* Decorative elements */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -112,7 +112,7 @@ export function WelcomeTrialCard() {
         </div>
 
         {/* Trial countdown */}
-        <div className="rounded-xl bg-card border border-border/60 p-4 mb-5">
+        <div className="rounded-xl bg-card/20 backdrop-blur-sm border border-border/30 p-4 mb-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-primary" /> Período de Teste Premium
@@ -128,7 +128,7 @@ export function WelcomeTrialCard() {
         </div>
 
         {/* Premium features unlocked */}
-        <div className="rounded-xl bg-primary/[0.04] border border-primary/10 p-4 mb-5">
+        <div className="rounded-xl bg-primary/[0.08] backdrop-blur-sm border border-primary/20 p-4 mb-5">
           <p className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
             <Star className="h-3.5 w-3.5 text-amber-500" /> Recursos desbloqueados durante o teste:
           </p>
@@ -147,7 +147,7 @@ export function WelcomeTrialCard() {
         </div>
 
         {/* Checklist */}
-        <div className="rounded-xl bg-card border border-border/60 p-4 mb-4">
+        <div className="rounded-xl bg-card/20 backdrop-blur-sm border border-border/30 p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Rocket className="h-3.5 w-3.5 text-primary" /> Comece agora:

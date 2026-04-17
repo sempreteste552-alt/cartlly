@@ -135,7 +135,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   };
 
   return (
-    <Sidebar collapsible="icon" style={themeStyle}>
+    <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar/40 backdrop-blur-md border-r border-sidebar-border/20">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 text-sidebar-primary-foreground shadow-md">
