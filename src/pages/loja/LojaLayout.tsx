@@ -34,7 +34,7 @@ import { getLocaleTag, isLocale, useTranslation } from "@/i18n";
 import { PromoBanner } from "@/components/storefront/PromoBanner";
 import { CookieConsent } from "@/components/storefront/CookieConsent";
 import { toast } from "sonner";
-import paymentMethodsImg from "@/assets/payment-methods.png";
+import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import securityBadgesImg from "@/assets/security-badges.png";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
 import iconInstagram from "@/assets/icon-instagram.png";
