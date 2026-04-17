@@ -258,16 +258,16 @@ export default function Dashboard() {
   }, [payments]);
 
   const kpiCards = [
-    { label: "Produtos", value: String(metrics.totalProducts), icon: Layers, desc: "Ecossistema de itens", gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+    { label: "Produtos", value: String(metrics.totalProducts), icon: Layers, desc: "Ecossistema de itens", gradient: "from-blue-600/20 to-indigo-600/10", border: "border-blue-500/30", iconColor: "text-blue-600 dark:text-blue-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ...(canViewMetrics ? [
-      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `Fluxo: ${metrics.totalOrders} total`, gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
+      { label: "Pedidos do Mês", value: String(metrics.monthOrdersCount), icon: ShoppingCart, desc: `Fluxo: ${metrics.totalOrders} total`, gradient: "from-purple-600/20 to-pink-600/10", border: "border-purple-500/30", iconColor: "text-purple-600 dark:text-purple-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem esse painel você não enxerga o ritmo real de vendas da sua loja." },
     ] : []),
     ...(hasGateway && canViewMetrics ? [
-      { label: "Faturamento", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: "Capital processado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
-      { label: "Eficiência/Ticket", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Média por conversão", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Faturamento", value: formatCurrency(paymentMetrics.approvedRevenue), icon: DollarSign, desc: "Capital processado", gradient: "from-emerald-600/20 to-teal-600/10", border: "border-emerald-500/30", iconColor: "text-emerald-600 dark:text-emerald-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
+      { label: "Eficiência/Ticket", value: formatCurrency(paymentMetrics.avgTicket), icon: TrendingUp, desc: "Média por conversão", gradient: "from-amber-600/20 to-orange-600/10", border: "border-amber-500/30", iconColor: "text-amber-600 dark:text-amber-400", locked: false, minPlan: "STARTER" as const, lockDescription: "" },
     ] : []),
-    { label: "Base de Usuários", value: String(metrics.uniqueCustomers), icon: Users, desc: "Retenção de leads", gradient: "from-cyan-600/20 to-blue-600/10", border: "border-cyan-500/30", iconColor: "text-cyan-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
-    { label: "Nível de Estoque", value: String(metrics.lowStock.length), icon: Cpu, desc: `${metrics.outOfStock.length} itens críticos`, gradient: metrics.lowStock.length > 0 ? "from-red-600/20 to-rose-600/10" : "from-slate-600/20 to-slate-600/10", border: metrics.lowStock.length > 0 ? "border-red-500/30" : "border-slate-500/30", iconColor: metrics.lowStock.length > 0 ? "text-red-400" : "text-slate-400", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
+    { label: "Base de Usuários", value: String(metrics.uniqueCustomers), icon: Users, desc: "Retenção de leads", gradient: "from-cyan-600/20 to-blue-600/10", border: "border-cyan-500/30", iconColor: "text-cyan-600 dark:text-cyan-400", locked: !hasStarterAnalytics, minPlan: "STARTER" as const, lockDescription: "Sem isso você nem sabe quem volta, quem some e onde está perdendo recompra." },
+    { label: "Nível de Estoque", value: String(metrics.lowStock.length), icon: Cpu, desc: `${metrics.outOfStock.length} itens críticos`, gradient: metrics.lowStock.length > 0 ? "from-red-600/20 to-rose-600/10" : "from-slate-600/20 to-slate-600/10", border: metrics.lowStock.length > 0 ? "border-red-500/30" : "border-slate-500/30", iconColor: metrics.lowStock.length > 0 ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400", locked: !hasProAnalytics, minPlan: "PRO" as const, lockDescription: "Sem alerta de estoque você descobre a perda de venda tarde demais." },
   ];
 
   return (
@@ -280,7 +280,7 @@ export default function Dashboard() {
         )}
 
         {/* Header */}
-        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/10 backdrop-blur-xl">
+        <div id="dashboard-header" className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-2xl border border-primary/10 shadow-lg bg-card/80 dark:bg-card/10 backdrop-blur-xl">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/20 backdrop-blur-md rounded-xl border border-primary/20">
               <Activity className="h-6 w-6 text-primary animate-pulse" />
@@ -329,12 +329,12 @@ export default function Dashboard() {
       <div id="kpi-cards" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {kpiCards.map((s, idx) => {
           const card = (
-            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/10 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
+            <Card key={s.label} className={`relative overflow-hidden ${s.border} bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300 h-full group`}>
               {/* Subtle background glow */}
               <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-20 bg-gradient-to-br ${s.gradient}`} />
               
               <CardHeader className="flex flex-row items-center justify-between pb-2 z-10">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">{s.label}</CardTitle>
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-background/50 border border-primary/5 shadow-inner transition-transform duration-500 group-hover:rotate-[360deg]`}>
                   <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
