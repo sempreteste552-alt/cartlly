@@ -206,7 +206,7 @@ export function AdminLayout() {
           <AdminAnnouncementBanner />
           <AdminPushBanner />
           <AdminPendingOrdersAlert />
-          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
+          <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-1" />
               <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
