@@ -69,6 +69,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   useEffect(() => {
     if (isStandalone()) return;
+    if (localStorage.getItem("pwa-install-dismissed") === "1") return;
     setPlatform(detectPlatform());
     setShow(true);
 
@@ -78,6 +79,12 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const dismissBanner = useCallback(() => {
+    setShow(false);
+    localStorage.setItem("pwa-install-dismissed", "1");
+    window.dispatchEvent(new CustomEvent("pwa-install-dismissed"));
   }, []);
 
   useEffect(() => {
