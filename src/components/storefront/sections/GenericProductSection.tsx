@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
 import { useTranslation } from "@/i18n";
 import { useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
+import { flyToCart } from "@/components/storefront/FlyToCart";
 
 interface Props {
   section: StoreHomeSection;
@@ -120,6 +121,7 @@ export function GenericProductSection({ section, products, cart, basePath = "", 
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    flyToCart(e.currentTarget as HTMLElement, { image: product.image_url, color: buttonColor });
                     cart?.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url });
                     onAddToCart?.(product.name, product.image_url);
                   }}

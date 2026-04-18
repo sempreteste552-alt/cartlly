@@ -19,6 +19,7 @@ import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
+import { flyToCart } from "@/components/storefront/FlyToCart";
 import { PrizeNotificationCard } from "@/components/storefront/PrizeNotificationCard";
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
@@ -456,6 +457,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
                   onClick={(e) => { 
                     e.preventDefault(); 
                     e.stopPropagation(); 
+                    flyToCart(e.currentTarget as HTMLElement, { image: product.image_url, color: buttonColor });
                     cart.addItem({ id: product.id, name: product.name, price: product.price, image_url: product.image_url }); 
                     onAddToCart(product.name, product.image_url); 
                   }}
