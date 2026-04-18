@@ -1168,6 +1168,7 @@ export default function LojaLayout() {
             </div>
           }>
             <Outlet />
+            <FlyToCart />
           </Suspense>
         </main>
 
