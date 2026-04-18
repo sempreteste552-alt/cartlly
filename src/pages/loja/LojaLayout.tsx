@@ -909,10 +909,6 @@ export default function LojaLayout() {
               }`}
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
             >
-              <div 
-                className="absolute inset-0 opacity-[0.15] bg-cover bg-center bg-no-repeat pointer-events-none"
-                style={{ backgroundImage: `url(${sidebarBg})` }}
-              />
               <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1 relative z-10">
                 {settings?.instagram_url && (
                   <div
@@ -1083,10 +1079,6 @@ export default function LojaLayout() {
 
           {/* Categories bar for desktop with background image */}
           <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
-            <div 
-              className="absolute inset-0 opacity-[0.12] bg-cover bg-center bg-no-repeat pointer-events-none"
-              style={{ backgroundImage: `url(${sidebarBg})` }}
-            />
             <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
                 {categories?.map((cat, i) => (
