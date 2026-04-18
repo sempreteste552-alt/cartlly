@@ -167,9 +167,9 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
       {/* Instructions modal */}
       {showInstructions && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setShowInstructions(false)}>
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-4" onClick={() => setShowInstructions(false)}>
           <div
-            className="bg-card w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto overscroll-contain"
+            className="bg-card w-full sm:max-w-md sm:rounded-2xl rounded-2xl p-6 space-y-5 animate-in slide-in-from-bottom duration-300 max-h-[75vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain mx-2 sm:mx-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
