@@ -124,8 +124,8 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   return (
     <>
-      {/* Professional floating install banner */}
-      <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+      {/* Professional install banner — top on mobile, bottom on desktop */}
+      <div className="fixed top-2 md:top-auto md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-1rem)] max-w-md animate-in fade-in slide-in-from-top-4 md:slide-in-from-bottom-4 duration-500 ease-out">
         <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-black/5">
           {/* Subtle accent bar */}
           <div
