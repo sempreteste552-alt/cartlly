@@ -19,6 +19,7 @@ import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
+import { flyToCart } from "@/components/storefront/FlyToCart";
 import { PrizeNotificationCard } from "@/components/storefront/PrizeNotificationCard";
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
