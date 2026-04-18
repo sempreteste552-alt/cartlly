@@ -69,7 +69,6 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   useEffect(() => {
     if (isStandalone()) return;
-    if (localStorage.getItem("pwa-install-dismissed") === "1") return;
     setPlatform(detectPlatform());
     setShow(true);
 
@@ -83,17 +82,17 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   const dismissBanner = useCallback(() => {
     setShow(false);
-    localStorage.setItem("pwa-install-dismissed", "1");
     window.dispatchEvent(new CustomEvent("pwa-install-dismissed"));
   }, []);
 
   useEffect(() => {
     const onInstalled = () => {
+      dismissBanner();
       autoEnablePushAfterInstall(storeUserId);
     };
     window.addEventListener("appinstalled", onInstalled);
     return () => window.removeEventListener("appinstalled", onInstalled);
-  }, [storeUserId]);
+  }, [storeUserId, dismissBanner]);
 
   const handleInstall = async () => {
     if (platform === "android" || platform === "desktop") {
@@ -124,68 +123,45 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   return (
     <>
-      {/* Professional install banner — top on mobile, bottom on desktop */}
-      <div className="fixed top-2 md:top-auto md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-1rem)] max-w-md animate-in fade-in slide-in-from-top-4 md:slide-in-from-bottom-4 duration-500 ease-out">
-        <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-black/5">
-          {/* Subtle accent bar */}
-          <div
-            className="absolute inset-x-0 top-0 h-[3px]"
-            style={{ background: `linear-gradient(90deg, ${bgColor}, ${adjustColor(bgColor, 40)})` }}
-          />
-
-          <button
-            onClick={dismissBanner}
-            aria-label="Fechar"
-            className="absolute top-2.5 right-2.5 h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-
-          <div className="flex items-center gap-3 p-3.5 pr-10">
-            {/* Logo */}
-            <div className="relative shrink-0">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt={name}
-                  className="h-12 w-12 rounded-xl object-cover border border-border shadow-sm"
-                />
-              ) : (
-                <div
-                  className="h-12 w-12 rounded-xl flex items-center justify-center shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -20)})` }}
-                >
-                  <Gift className="h-6 w-6 text-white" />
-                </div>
-              )}
-              <span
-                className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center"
-                style={{ backgroundColor: bgColor }}
+      {/* Inline sticky install card — stays at top until installed */}
+      <div className="w-full bg-card border-b border-border shadow-sm">
+        <div className="max-w-md mx-auto flex items-center gap-3 p-2.5">
+          <div className="relative shrink-0">
+            {logoUrl ? (
+              <img src={logoUrl} alt={name} className="h-10 w-10 rounded-xl object-cover border border-border" />
+            ) : (
+              <div
+                className="h-10 w-10 rounded-xl flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -20)})` }}
               >
-                <Download className="h-2 w-2 text-white" strokeWidth={3} />
-              </span>
-            </div>
-
-            {/* Text */}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground truncate leading-tight">
-                {name}
-              </p>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                Instale o app para acesso rápido
-              </p>
-            </div>
-
-            {/* CTA */}
-            <Button
-              size="sm"
-              className="h-9 px-4 text-xs font-semibold rounded-lg shadow-sm hover:shadow-md transition-all shrink-0 text-white"
+                <Gift className="h-5 w-5 text-white" />
+              </div>
+            )}
+            <span
+              className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center"
               style={{ backgroundColor: bgColor }}
-              onClick={handleInstall}
             >
-              Instalar
-            </Button>
+              <Download className="h-2 w-2 text-white" strokeWidth={3} />
+            </span>
           </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground truncate leading-tight">
+              Instalar {name}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+              Acesso rápido • Notificações • Offline
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            className="h-8 px-3.5 text-xs font-semibold rounded-lg shrink-0 text-white"
+            style={{ backgroundColor: bgColor }}
+            onClick={handleInstall}
+          >
+            Instalar
+          </Button>
         </div>
       </div>
 
