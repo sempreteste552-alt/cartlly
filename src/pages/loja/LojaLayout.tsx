@@ -44,6 +44,7 @@ import iconYoutube from "@/assets/icon-youtube.png";
 import iconLocation from "@/assets/icon-location.png";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
 import { VideoShopping } from "@/components/storefront/VideoShopping";
+import { FlyToCart } from "@/components/storefront/FlyToCart";
 import sidebarBg from "@/assets/sidebar-bg.png";
 
 export interface LojaContextType {
@@ -811,7 +812,7 @@ export default function LojaLayout() {
               <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative hidden md:inline-flex" style={{ color: headerTextColor }}>
-                    <ShoppingCart className="h-5 w-5" />
+                    <ShoppingCart className="h-5 w-5" data-cart-icon />
                     {cart.count > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
                         {cart.count}
@@ -1310,7 +1311,7 @@ export default function LojaLayout() {
               style={{ color: isCheckout ? primaryColor : undefined }}
             >
               <div className="relative">
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-5 w-5" data-cart-icon />
                 {cart.count > 0 && (
                   <span className="absolute -top-1.5 -right-2.5 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ backgroundColor: primaryColor }}>
                     {cart.count}
