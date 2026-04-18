@@ -124,47 +124,66 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   return (
     <>
-      {/* Floating Professional Push Banner at bottom */}
-      <div className="fixed bottom-20 md:bottom-6 left-4 right-4 z-[100] animate-in slide-in-from-bottom-full duration-700 ease-out pointer-events-none">
-        <div 
-          className="relative max-w-md mx-auto px-4 py-3 pr-10 flex items-center justify-between gap-4 rounded-2xl shadow-2xl border border-white/20 pointer-events-auto" 
-          style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}
-        >
+      {/* Professional floating install banner */}
+      <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+        <div className="relative overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-black/5">
+          {/* Subtle accent bar */}
+          <div
+            className="absolute inset-x-0 top-0 h-[3px]"
+            style={{ background: `linear-gradient(90deg, ${bgColor}, ${adjustColor(bgColor, 40)})` }}
+          />
+
           <button
             onClick={dismissBanner}
             aria-label="Fechar"
-            className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+            className="absolute top-2.5 right-2.5 h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
           >
-            <X className="h-3.5 w-3.5 text-white" />
+            <X className="h-3.5 w-3.5" />
           </button>
-          <div className="flex items-center gap-3 min-w-0">
-            {logoUrl ? (
-              <img src={logoUrl} alt={name} className="h-10 w-10 rounded-xl object-contain bg-white/20 p-0.5 shrink-0" />
-            ) : (
-              <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <Gift className="h-5 w-5 text-white" />
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-white truncate leading-tight">
-                Baixar o app {name}!
+
+          <div className="flex items-center gap-3 p-3.5 pr-10">
+            {/* Logo */}
+            <div className="relative shrink-0">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={name}
+                  className="h-12 w-12 rounded-xl object-cover border border-border shadow-sm"
+                />
+              ) : (
+                <div
+                  className="h-12 w-12 rounded-xl flex items-center justify-center shadow-sm"
+                  style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -20)})` }}
+                >
+                  <Gift className="h-6 w-6 text-white" />
+                </div>
+              )}
+              <span
+                className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-card flex items-center justify-center"
+                style={{ backgroundColor: bgColor }}
+              >
+                <Download className="h-2 w-2 text-white" strokeWidth={3} />
+              </span>
+            </div>
+
+            {/* Text */}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                {name}
               </p>
-              <p className="text-[10px] text-white/90 truncate mt-0.5 font-medium uppercase tracking-wider">
-                {platform === "ios"
-                  ? "Acesso rápido e offline"
-                  : "Promoções em tempo real"}
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                Instale o app para acesso rápido
               </p>
             </div>
-          </div>
-          <div className="flex items-center shrink-0">
+
+            {/* CTA */}
             <Button
               size="sm"
-              className="h-10 text-xs font-black px-6 shadow-xl animate-pulse hover:scale-105 active:scale-95 transition-transform"
-              style={{ backgroundColor: "white", color: bgColor }}
+              className="h-9 px-4 text-xs font-semibold rounded-lg shadow-sm hover:shadow-md transition-all shrink-0 text-white"
+              style={{ backgroundColor: bgColor }}
               onClick={handleInstall}
             >
-              <Download className="h-4 w-4 mr-1.5" />
-              {platform === "ios" ? "INSTALAR" : "BAIXAR"}
+              Instalar
             </Button>
           </div>
         </div>
