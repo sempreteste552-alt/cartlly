@@ -11,9 +11,9 @@ interface FlyEvent {
 }
 
 /**
- * Global "fly to cart" animation system.
+ * Global "gift to cart" animation.
  * Listens to window event "fly-to-cart" with detail: { sourceEl, image?, color? }
- * Renders an absolutely-positioned image/dot that arcs from source → cart icon (data-cart-icon).
+ * Renders a gift box being wrapped around the product, then arcs to the cart icon.
  */
 export function FlyToCart() {
   const [flights, setFlights] = useState<FlyEvent[]>([]);
@@ -28,7 +28,6 @@ export function FlyToCart() {
       const sourceEl = detail?.sourceEl;
       if (!sourceEl) return;
 
-      // Find visible cart icon (mobile bottom nav OR desktop header)
       const candidates = Array.from(document.querySelectorAll<HTMLElement>("[data-cart-icon]"));
       const target = candidates.find((el) => {
         const r = el.getBoundingClientRect();
@@ -46,21 +45,21 @@ export function FlyToCart() {
         endX: tRect.left + tRect.width / 2,
         endY: tRect.top + tRect.height / 2,
         image: detail?.image || null,
-        color: detail?.color || "#000",
+        color: detail?.color || "#e11d48",
       };
 
       setFlights((prev) => [...prev, flight]);
 
-      // Trigger cart bounce on arrival
+      // Cart bounces when gift arrives (after wrap + fly = ~1500ms)
       setTimeout(() => {
         target.classList.add("cart-bounce");
         setTimeout(() => target.classList.remove("cart-bounce"), 600);
-      }, 750);
+      }, 1500);
 
-      // Cleanup
+      // Cleanup after full animation
       setTimeout(() => {
         setFlights((prev) => prev.filter((f) => f.id !== flight.id));
-      }, 1100);
+      }, 2000);
     };
 
     window.addEventListener("fly-to-cart", handler);
@@ -72,24 +71,52 @@ export function FlyToCart() {
       {flights.map((f) => (
         <div
           key={f.id}
-          className="fly-to-cart-item"
+          className="gift-fly-wrapper"
           style={{
             left: f.startX,
             top: f.startY,
-            // CSS variables drive the animation
             ["--end-x" as any]: `${f.endX - f.startX}px`,
             ["--end-y" as any]: `${f.endY - f.startY}px`,
-            backgroundColor: f.image ? undefined : f.color,
-            backgroundImage: f.image ? `url(${f.image})` : undefined,
+            ["--ribbon-color" as any]: f.color,
           }}
-        />
+        >
+          {/* Product image (visible during wrap, hidden when ribbons close) */}
+          {f.image && (
+            <div
+              className="gift-product"
+              style={{ backgroundImage: `url(${f.image})` }}
+            />
+          )}
+
+          {/* Gift box body (kraft/cream color) */}
+          <div className="gift-box" />
+
+          {/* Ribbon (vertical) */}
+          <div className="gift-ribbon-v" />
+          {/* Ribbon (horizontal) */}
+          <div className="gift-ribbon-h" />
+          {/* Bow */}
+          <div className="gift-bow">
+            <span className="gift-bow-loop gift-bow-left" />
+            <span className="gift-bow-loop gift-bow-right" />
+            <span className="gift-bow-knot" />
+          </div>
+
+          {/* Sparkles */}
+          <span className="gift-spark gift-spark-1">✨</span>
+          <span className="gift-spark gift-spark-2">✨</span>
+          <span className="gift-spark gift-spark-3">✨</span>
+        </div>
       ))}
     </div>
   );
 }
 
-/** Helper to dispatch the fly-to-cart event from any "Add to cart" button */
-export function flyToCart(sourceEl: HTMLElement | null, options?: { image?: string | null; color?: string }) {
+/** Helper to dispatch the gift animation event from any "Add to cart" button */
+export function flyToCart(
+  sourceEl: HTMLElement | null,
+  options?: { image?: string | null; color?: string }
+) {
   if (!sourceEl) return;
   window.dispatchEvent(
     new CustomEvent("fly-to-cart", {
