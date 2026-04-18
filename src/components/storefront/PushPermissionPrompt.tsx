@@ -66,9 +66,21 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
     if (!supported) return;
     if (Notification.permission !== "default") return;
 
-    // Always show on every page load (per user request), after a short delay
-    const timer = setTimeout(() => setShow(true), 2500);
-    return () => clearTimeout(timer);
+    // Only show after cookies have been accepted (avoid stacking prompts)
+    const cookiesAccepted = Object.keys(localStorage).some(
+      (k) => k.startsWith("cookie_consent_") && localStorage.getItem(k) === "true"
+    );
+
+    if (cookiesAccepted) {
+      const timer = setTimeout(() => setShow(true), 800);
+      return () => clearTimeout(timer);
+    }
+
+    const onAccepted = () => {
+      setTimeout(() => setShow(true), 600);
+    };
+    window.addEventListener("cookies-accepted", onAccepted, { once: true });
+    return () => window.removeEventListener("cookies-accepted", onAccepted);
   }, []);
 
   const handleAllow = useCallback(async () => {
