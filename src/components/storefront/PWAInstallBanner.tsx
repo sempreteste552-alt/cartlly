@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Download, Share, Plus, MoreVertical, Bell, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +69,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
 
   useEffect(() => {
     if (isStandalone()) return;
+    if (localStorage.getItem("pwa-install-dismissed") === "1") return;
     setPlatform(detectPlatform());
     setShow(true);
 
@@ -78,6 +79,12 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const dismissBanner = useCallback(() => {
+    setShow(false);
+    localStorage.setItem("pwa-install-dismissed", "1");
+    window.dispatchEvent(new CustomEvent("pwa-install-dismissed"));
   }, []);
 
   useEffect(() => {
@@ -94,7 +101,7 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
         deferredPrompt.prompt();
         const result = await deferredPrompt.userChoice;
         if (result.outcome === "accepted") {
-          setShow(false);
+          dismissBanner();
         }
         setDeferredPrompt(null);
       } else {
@@ -120,9 +127,16 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
       {/* Floating Professional Push Banner at bottom */}
       <div className="fixed bottom-20 md:bottom-6 left-4 right-4 z-[100] animate-in slide-in-from-bottom-full duration-700 ease-out pointer-events-none">
         <div 
-          className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-4 rounded-2xl shadow-2xl border border-white/20 pointer-events-auto" 
+          className="relative max-w-md mx-auto px-4 py-3 pr-10 flex items-center justify-between gap-4 rounded-2xl shadow-2xl border border-white/20 pointer-events-auto" 
           style={{ background: `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -30)})` }}
         >
+          <button
+            onClick={dismissBanner}
+            aria-label="Fechar"
+            className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+          >
+            <X className="h-3.5 w-3.5 text-white" />
+          </button>
           <div className="flex items-center gap-3 min-w-0">
             {logoUrl ? (
               <img src={logoUrl} alt={name} className="h-10 w-10 rounded-xl object-contain bg-white/20 p-0.5 shrink-0" />
