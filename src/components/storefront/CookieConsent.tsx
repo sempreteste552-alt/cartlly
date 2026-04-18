@@ -63,6 +63,7 @@ export function CookieConsent({ basePath, storeUserId, primaryColor, buttonColor
   const handleAccept = () => {
     localStorage.setItem(storageKey, "true");
     setVisible(false);
+    window.dispatchEvent(new CustomEvent("cookies-accepted"));
   };
 
   const handleDismiss = () => {
