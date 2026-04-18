@@ -66,25 +66,8 @@ export function PushPermissionPrompt({ storeName, logoUrl, primaryColor, storeUs
     if (!supported) return;
     if (Notification.permission !== "default") return;
 
-    const dismissed = sessionStorage.getItem("push-prompt-dismissed");
-    if (dismissed) return;
-
-    // Avoid stacking with the PWA install banner.
-    // Only show this prompt if the app is already installed (standalone)
-    // OR the user already dismissed/handled the install banner.
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      // @ts-ignore iOS Safari
-      window.navigator.standalone === true;
-    const installDismissed = localStorage.getItem("pwa-install-dismissed") === "1";
-
-    if (!isStandalone && !installDismissed) {
-      const onDismiss = () => setShow(true);
-      window.addEventListener("pwa-install-dismissed", onDismiss, { once: true });
-      return () => window.removeEventListener("pwa-install-dismissed", onDismiss);
-    }
-
-    const timer = setTimeout(() => setShow(true), 3000);
+    // Always show on every page load (per user request), after a short delay
+    const timer = setTimeout(() => setShow(true), 2500);
     return () => clearTimeout(timer);
   }, []);
 
