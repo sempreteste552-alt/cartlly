@@ -590,7 +590,7 @@ async function processAsaas(
         name: name || card.holder,
         email,
         cpfCnpj: cleanDoc,
-        postalCode: "01000000",
+        postalCode: "01310100",
         addressNumber: "0",
         phone: cleanPhone || undefined,
       };
