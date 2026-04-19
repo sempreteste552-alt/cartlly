@@ -113,6 +113,24 @@ export default function SuperAdminConfig() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Debug: confirm which user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("[SuperAdminConfig] Saving as user:", user?.id, user?.email);
+      
+      const { data: roleCheck } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user?.id || "")
+        .eq("role", "super_admin")
+        .maybeSingle();
+      console.log("[SuperAdminConfig] Super admin role check:", roleCheck);
+      
+      if (!roleCheck) {
+        toast.error(`Sua conta (${user?.email}) não tem permissão de super admin. Faça login com a conta correta.`);
+        setSaving(false);
+        return;
+      }
+
       const rows = Object.entries(config).map(([key, val]) => ({
         key,
         value: { value: val } as any,
