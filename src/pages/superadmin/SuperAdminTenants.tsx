@@ -16,7 +16,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
+import { SensitiveEditDialog } from "@/components/superadmin/SensitiveEditDialog";
 import { buildStoreUrl } from "@/lib/storeDomain";
+import { Link, useNavigate } from "react-router-dom";
+import { Activity, ShieldAlert } from "lucide-react";
 
 export default function SuperAdminTenants() {
   const { data: tenants, isLoading } = useAllTenants();
@@ -52,6 +55,8 @@ export default function SuperAdminTenants() {
   const [msgTitle, setMsgTitle] = useState("Aviso da Plataforma");
   const [msgBody, setMsgBody] = useState("");
   const [msgSending, setMsgSending] = useState(false);
+  const [editTenant, setEditTenant] = useState<any>(null);
+  const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -674,7 +679,13 @@ export default function SuperAdminTenants() {
                           <Mail className="mr-2 h-4 w-4" /> Reenviar Verificação
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendPasswordReset(tenant)}>
-                          <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha
+                          <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha (link)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditTenant(tenant)}>
+                          <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" /> Editar Email/Senha/Slug (OTP)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/superadmin/tenants/${tenant.user_id}/diagnostics`)}>
+                          <Activity className="mr-2 h-4 w-4 text-blue-500" /> Diagnóstico & Logs
                         </DropdownMenuItem>
                         {(tenant.status === "pending" || tenant.status === "blocked" || tenant.status === "rejected") && (
                           <DropdownMenuItem onClick={() => handleManualActivate(tenant)}>
@@ -855,6 +866,15 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {editTenant && (
+        <SensitiveEditDialog
+          open={!!editTenant}
+          onOpenChange={(o) => !o && setEditTenant(null)}
+          tenant={editTenant}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["all_tenants"] })}
+        />
+      )}
     </div>
   );
 }
