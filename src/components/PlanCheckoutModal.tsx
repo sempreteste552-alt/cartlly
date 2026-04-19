@@ -24,9 +24,23 @@ type CheckoutStep =
   | "form"
   | "loading"
   | "pix"
+  | "boleto"
   | "success"
   | "expired"
   | "error";
+
+type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
+
+const METHOD_LABELS: Record<PaymentMethod, string> = {
+  PIX: "PIX",
+  CREDIT_CARD: "Cartão",
+  BOLETO: "Boleto",
+};
+const METHOD_SUBLABELS: Record<PaymentMethod, string> = {
+  PIX: "Aprovação imediata",
+  CREDIT_CARD: "Até 12x no crédito",
+  BOLETO: "Vence em 3 dias",
+};
 
 interface PlanCheckoutModalProps {
   open: boolean;
