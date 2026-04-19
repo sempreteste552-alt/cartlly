@@ -18,6 +18,7 @@ import pixLogo from "@/assets/pix-logo.webp";
 import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
+import { VirtualCard } from "@/components/checkout/VirtualCard";
 
 declare global {
   interface Window {
@@ -167,6 +168,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
+  const [cardFocus, setCardFocus] = useState<"number" | "name" | "expiry" | "cvv">("number");
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
@@ -818,14 +820,25 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         <CardContent className="space-y-4">
           <p className="text-2xl font-bold text-center">{formatPrice(total)}</p>
 
+          {/* Cartão visual 3D */}
+          <VirtualCard
+            number={cardNumber}
+            name={cardName}
+            expiry={cardExpiry}
+            cvv={cardCvv}
+            flipped={cardFocus === "cvv"}
+          />
+
           <div className="space-y-2">
             <Label>Número do Cartão</Label>
             <Input
               placeholder="0000 0000 0000 0000"
               value={cardNumber}
               onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+              onFocus={() => setCardFocus("number")}
               maxLength={19}
               className="font-mono"
+              inputMode="numeric"
             />
           </div>
 
@@ -835,6 +848,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
               placeholder="NOME COMO NO CARTÃO"
               value={cardName}
               onChange={(e) => setCardName(e.target.value.toUpperCase())}
+              onFocus={() => setCardFocus("name")}
               maxLength={50}
             />
           </div>
@@ -846,8 +860,10 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
                 placeholder="MM/AA"
                 value={cardExpiry}
                 onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                onFocus={() => setCardFocus("expiry")}
                 maxLength={5}
                 className="font-mono"
+                inputMode="numeric"
               />
             </div>
             <div className="space-y-2">
@@ -856,9 +872,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
                 placeholder="000"
                 value={cardCvv}
                 onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                onFocus={() => setCardFocus("cvv")}
+                onBlur={() => setCardFocus("number")}
                 maxLength={4}
                 type="password"
                 className="font-mono"
+                inputMode="numeric"
               />
             </div>
           </div>
