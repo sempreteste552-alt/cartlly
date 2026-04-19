@@ -425,6 +425,25 @@ export default function PlanCheckoutModal({
                     />
                   </div>
                 </div>
+
+                <div className="relative">
+                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                  <Input
+                    value={phone}
+                    onChange={(e) => {
+                      const d = e.target.value.replace(/\D/g, "").slice(0, 11);
+                      let formatted = d;
+                      if (d.length > 2) formatted = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+                      if (d.length > 7) formatted = `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+                      setPhone(formatted);
+                    }}
+                    placeholder="Celular com DDD — (00) 00000-0000"
+                    maxLength={15}
+                    inputMode="tel"
+                    autoComplete="tel"
+                    className="h-10 pl-9 font-mono text-sm"
+                  />
+                </div>
               </div>
 
               {/* Card fields (only when CREDIT_CARD selected) */}
