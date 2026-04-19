@@ -471,6 +471,10 @@ export default function SuperAdminConfig() {
               <Input type="password" value={config.asaas_api_key} onChange={e => updateField("asaas_api_key", e.target.value)} placeholder="$aact_..." />
               <p className="text-xs text-muted-foreground">A chave configurada em ASAAS_API_KEY (env) tem prioridade sobre este campo.</p>
             </div>
+            <Button variant="outline" size="sm" onClick={() => handleTestGateway("asaas")} disabled={testing === "asaas"}>
+              {testing === "asaas" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Testar Conexão Asaas
+            </Button>
           </div>
 
           <Separator />
