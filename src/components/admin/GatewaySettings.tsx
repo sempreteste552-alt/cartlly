@@ -56,8 +56,12 @@ export function GatewaySettings() {
   const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
 
   const handleTestApi = async () => {
-    if (!paymentGateway || !gatewayPublicKey) {
-      toast.error("Configure o gateway e a chave pública primeiro.");
+    if (!paymentGateway) {
+      toast.error("Selecione um gateway primeiro.");
+      return;
+    }
+    if (selectedGateway?.requiresPublicKey && !gatewayPublicKey) {
+      toast.error("Configure a chave pública primeiro.");
       return;
     }
     if (!gatewaySecretKey) {
