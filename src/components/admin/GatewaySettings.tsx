@@ -14,11 +14,11 @@ import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useAuth } from "@/contexts/AuthContext";
 
 const GATEWAYS = [
-  { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
-  { id: "stripe", name: "Stripe", description: "Pagamentos globais com Apple Pay e Google Pay.", publicKeyLabel: "Publishable Key", publicKeyPlaceholder: "pk_live_xxxxxxxx", docsUrl: "https://stripe.com/docs", color: "#635bff", testEndpoint: "" },
-  { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
-  { id: "amplopay", name: "Amplopay", description: "Gateway com PIX e Boleto simplificado.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://app.amplopay.com/docs", color: "#6366f1", testEndpoint: "" },
-  { id: "asaas", name: "Asaas", description: "PIX, Cartão de Crédito e Boleto em uma só API.", publicKeyLabel: "Não utilizado", publicKeyPlaceholder: "(deixe em branco)", docsUrl: "https://docs.asaas.com", color: "#1d8cf8", testEndpoint: "" },
+  { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", requiresPublicKey: true, publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", secretKeyLabel: "Access Token", secretKeyPlaceholder: "APP_USR-xxxxxxxx-xxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
+  { id: "stripe", name: "Stripe", description: "Pagamentos globais com Apple Pay e Google Pay.", requiresPublicKey: true, publicKeyLabel: "Publishable Key", publicKeyPlaceholder: "pk_live_xxxxxxxx", secretKeyLabel: "Secret Key", secretKeyPlaceholder: "sk_live_xxxxxxxx", docsUrl: "https://stripe.com/docs", color: "#635bff", testEndpoint: "" },
+  { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", requiresPublicKey: true, publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", secretKeyLabel: "Token Privado", secretKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
+  { id: "amplopay", name: "Amplopay", description: "Gateway com PIX e Boleto simplificado.", requiresPublicKey: true, publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", secretKeyLabel: "Secret Key", secretKeyPlaceholder: "sk_xxxxxxxx", docsUrl: "https://app.amplopay.com/docs", color: "#6366f1", testEndpoint: "" },
+  { id: "asaas", name: "Asaas", description: "PIX, Cartão de Crédito e Boleto em uma só API.", requiresPublicKey: false, publicKeyLabel: "", publicKeyPlaceholder: "", secretKeyLabel: "API Key", secretKeyPlaceholder: "$aact_xxxxxxxx...", docsUrl: "https://docs.asaas.com", color: "#1d8cf8", testEndpoint: "" },
 ];
 
 type TestStatus = "idle" | "testing" | "success" | "error";
@@ -56,8 +56,12 @@ export function GatewaySettings() {
   const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
 
   const handleTestApi = async () => {
-    if (!paymentGateway || !gatewayPublicKey) {
-      toast.error("Configure o gateway e a chave pública primeiro.");
+    if (!paymentGateway) {
+      toast.error("Selecione um gateway primeiro.");
+      return;
+    }
+    if (selectedGateway?.requiresPublicKey && !gatewayPublicKey) {
+      toast.error("Configure a chave pública primeiro.");
       return;
     }
     if (!gatewaySecretKey) {
@@ -192,20 +196,22 @@ export function GatewaySettings() {
                 </SelectContent>
               </Select>
 
-              <div className="space-y-2">
-                <Label>{selectedGateway.publicKeyLabel}</Label>
-                <div className="relative">
-                  <Input type={showPublicKey ? "text" : "password"} value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs pr-10" maxLength={500} />
-                  <button type="button" onClick={() => setShowPublicKey(!showPublicKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                    {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              {selectedGateway.requiresPublicKey && (
+                <div className="space-y-2">
+                  <Label>{selectedGateway.publicKeyLabel}</Label>
+                  <div className="relative">
+                    <Input type={showPublicKey ? "text" : "password"} value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs pr-10" maxLength={500} />
+                    <button type="button" onClick={() => setShowPublicKey(!showPublicKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-2">
-                <Label>Chave Secreta / Access Token</Label>
+                <Label>{selectedGateway.secretKeyLabel || "Chave Secreta"}</Label>
                 <div className="relative">
-                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs pr-10" maxLength={500} />
+                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder={selectedGateway.secretKeyPlaceholder || "Chave secreta do gateway"} className="font-mono text-xs pr-10" maxLength={500} />
                   <button type="button" onClick={() => setShowSecretKey(!showSecretKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -277,12 +283,14 @@ export function GatewaySettings() {
                 <p className="text-xs text-muted-foreground">Ambiente</p>
                 <p className="font-medium">{gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
               </div>
+              {selectedGateway.requiresPublicKey && (
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">{selectedGateway.publicKeyLabel}</p>
+                  <p className="font-mono text-xs truncate">{gatewayPublicKey ? `${gatewayPublicKey.slice(0, 12)}...` : "Não configurada"}</p>
+                </div>
+              )}
               <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">Chave Pública</p>
-                <p className="font-mono text-xs truncate">{gatewayPublicKey ? `${gatewayPublicKey.slice(0, 12)}...` : "Não configurada"}</p>
-              </div>
-              <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">Chave Secreta</p>
+                <p className="text-xs text-muted-foreground">{selectedGateway.secretKeyLabel || "Chave Secreta"}</p>
                 <p className="font-mono text-xs">{gatewaySecretKey ? "••••••••" : "Não configurada"}</p>
               </div>
             </div>
