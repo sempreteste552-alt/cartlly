@@ -191,6 +191,8 @@ Deno.serve(async (req) => {
         paymentResult = await createAmplopayPayment(order, method, secretKey, publicKey, environment);
       } else if (gateway === "stripe") {
         paymentResult = await createStripePayment(order, method, secretKey, environment, card_token, installments);
+      } else if (gateway === "asaas") {
+        paymentResult = await createAsaasPayment(order, method, secretKey, environment, card_token, installments, payer_cpf, payer_first_name, payer_last_name);
       } else {
         return json({ error: `Gateway "${gateway}" não é suportado.` }, 400);
       }
