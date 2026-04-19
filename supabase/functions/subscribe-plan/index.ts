@@ -49,7 +49,11 @@ Deno.serve(async (req) => {
         cfg[s.key] = s.value?.value ?? s.value ?? "";
       });
 
-      // Determine active gateway
+      // Asaas key comes from edge env (preferred). Override default if present.
+      const asaasKey = Deno.env.get("ASAAS_API_KEY") || "";
+      if (asaasKey) cfg.asaas_api_key = asaasKey;
+
+      // Determine active gateway. Prefer asaas if configured.
       const gateway = cfg.plan_gateway || detectGateway(cfg);
       const hasKeys = !!getGatewayKeys(gateway, cfg).secretKey;
 
