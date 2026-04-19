@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     // ==================== PROCESS PAYMENT ====================
-    const { user_id, plan_id, payment_method, document, phone, card_token, installments, device_id, payment_method_id, issuer_id } = body;
+    const { user_id, plan_id, payment_method, document, phone, card, card_token, installments, device_id, payment_method_id, issuer_id, payer_name, payer_email } = body;
 
     if (!user_id || !plan_id) {
       return json({ error: "Dados incompletos" }, 400);
@@ -114,8 +114,8 @@ Deno.serve(async (req) => {
     // Get tenant info
     const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user_id).single();
     const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
-    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
-    const tenantName = profile?.display_name || "Tenant";
+    const tenantEmail = payer_email || authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
+    const tenantName = payer_name || profile?.display_name || "Tenant";
 
     const method = payment_method || "PIX";
     let result: any;
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       } else if (gateway === "amplopay") {
         result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
       } else if (gateway === "asaas") {
-        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, installments, user_id);
+        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, card, installments, user_id);
       } else {
         return json({ error: `Gateway "${gateway}" não suportado` }, 400);
       }
@@ -513,7 +513,7 @@ async function processAmplopay(
 async function processAsaas(
   apiKey: string, plan: any, method: string,
   email: string, name: string, document: string, phone: string,
-  cardToken: string | undefined, installments: number | undefined, userId: string
+  cardToken: string | undefined, card: any | undefined, installments: number | undefined, userId: string
 ) {
   const BASE_URL = "https://api.asaas.com/v3";
   const headers = {
@@ -576,10 +576,28 @@ async function processAsaas(
   };
 
   if (method === "CREDIT_CARD") {
-    if (!cardToken) {
-      throw new Error("Token do cartão é obrigatório para pagamento com cartão de crédito.");
+    if (cardToken) {
+      paymentBody.creditCardToken = cardToken;
+    } else if (card?.number && card?.holder && card?.expiry_month && card?.expiry_year && card?.cvv) {
+      paymentBody.creditCard = {
+        holderName: card.holder,
+        number: String(card.number).replace(/\D/g, ""),
+        expiryMonth: String(card.expiry_month).padStart(2, "0"),
+        expiryYear: String(card.expiry_year),
+        ccv: String(card.cvv),
+      };
+      paymentBody.creditCardHolderInfo = {
+        name: name || card.holder,
+        email,
+        cpfCnpj: cleanDoc,
+        postalCode: "01000000",
+        addressNumber: "0",
+        phone: cleanPhone || undefined,
+      };
+    } else {
+      throw new Error("Dados do cartão são obrigatórios.");
     }
-    paymentBody.creditCardToken = cardToken;
+
     if (installments && installments > 1) {
       paymentBody.installmentCount = installments;
       paymentBody.totalValue = Number(plan.price);

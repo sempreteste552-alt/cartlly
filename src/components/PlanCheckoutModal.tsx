@@ -24,9 +24,23 @@ type CheckoutStep =
   | "form"
   | "loading"
   | "pix"
+  | "boleto"
   | "success"
   | "expired"
   | "error";
+
+type PaymentMethod = "PIX" | "CREDIT_CARD" | "BOLETO";
+
+const METHOD_LABELS: Record<PaymentMethod, string> = {
+  PIX: "PIX",
+  CREDIT_CARD: "Cartão",
+  BOLETO: "Boleto",
+};
+const METHOD_SUBLABELS: Record<PaymentMethod, string> = {
+  PIX: "Aprovação imediata",
+  CREDIT_CARD: "Até 12x no crédito",
+  BOLETO: "Vence em 3 dias",
+};
 
 interface PlanCheckoutModalProps {
   open: boolean;
@@ -74,14 +88,23 @@ export default function PlanCheckoutModal({
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<CheckoutStep>("form");
-  const [selectedMethod, setSelectedMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Card fields
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [installments, setInstallments] = useState(1);
+
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrBase64, setPixQrBase64] = useState("");
+  const [boletoUrl, setBoletoUrl] = useState("");
+  const [boletoBarcode, setBoletoBarcode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [transactionId, setTransactionId] = useState("");
 
@@ -100,15 +123,21 @@ export default function PlanCheckoutModal({
         setFullName("");
         setEmail("");
         setCpf("");
+        setCardNumber(""); setCardHolder(""); setCardExpiry(""); setCardCvv(""); setInstallments(1);
         setPixQrCode("");
         setPixQrBase64("");
+        setBoletoUrl(""); setBoletoBarcode("");
         setCountdown(0);
         setTransactionId("");
         setErrorMsg("");
       }, 300);
       return () => clearTimeout(t);
+    } else {
+      // Pick first available method as default
+      const first = (availableMethods[0] as PaymentMethod) || "PIX";
+      setSelectedMethod(first);
     }
-  }, [open]);
+  }, [open, availableMethods]);
 
   useEffect(() => {
     if (countdown <= 0 && countdownRef.current) {
@@ -160,10 +189,18 @@ export default function PlanCheckoutModal({
 
   /* ------ Validation ------ */
   const cpfClean = cpf.replace(/\D/g, "");
-  const isFormValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11;
+  const baseValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11;
+  const cardDigits = cardNumber.replace(/\D/g, "");
+  const expiryDigits = cardExpiry.replace(/\D/g, "");
+  const cardValid =
+    cardDigits.length >= 13 &&
+    cardHolder.trim().length >= 3 &&
+    expiryDigits.length === 4 &&
+    cardCvv.length >= 3;
+  const isFormValid = baseValid && (selectedMethod !== "CREDIT_CARD" || cardValid);
 
-  /* ------ Generate PIX ------ */
-  const generatePix = async () => {
+  /* ------ Generate Payment ------ */
+  const generatePayment = async () => {
     if (!isFormValid) {
       toast.error("Preencha todos os campos corretamente.");
       return;
@@ -176,6 +213,26 @@ export default function PlanCheckoutModal({
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+      const payload: any = {
+        user_id: userId,
+        plan_id: planId,
+        payment_method: selectedMethod,
+        document: cpfClean,
+        payer_name: fullName.trim(),
+        payer_email: email.trim(),
+      };
+
+      if (selectedMethod === "CREDIT_CARD") {
+        payload.installments = installments;
+        payload.card = {
+          number: cardDigits,
+          holder: cardHolder.trim(),
+          expiry_month: expiryDigits.slice(0, 2),
+          expiry_year: `20${expiryDigits.slice(2, 4)}`,
+          cvv: cardCvv,
+        };
+      }
+
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
         {
@@ -185,19 +242,14 @@ export default function PlanCheckoutModal({
             apikey: anonKey,
             Authorization: `Bearer ${anonKey}`,
           },
-          body: JSON.stringify({
-            user_id: userId,
-            plan_id: planId,
-            payment_method: "PIX",
-            document: cpfClean,
-            payer_name: fullName.trim(),
-            payer_email: email.trim(),
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao gerar cobrança");
+
+      setTransactionId(data.transaction_id || "");
 
       if (data.status === "approved") {
         setStep("success");
@@ -206,10 +258,9 @@ export default function PlanCheckoutModal({
         return;
       }
 
-      if (data.pix?.qrCode) {
+      if (selectedMethod === "PIX" && data.pix?.qrCode) {
         setPixQrCode(data.pix.qrCode);
         setPixQrBase64(data.pix.qrCodeBase64 || "");
-        setTransactionId(data.transaction_id || "");
         setStep("pix");
 
         setCountdown(PIX_TIMEOUT);
@@ -218,8 +269,15 @@ export default function PlanCheckoutModal({
         }, 1000);
 
         startPolling();
+      } else if (selectedMethod === "BOLETO" && (data.boleto?.url || data.boleto?.barcode)) {
+        setBoletoUrl(data.boleto.url || "");
+        setBoletoBarcode(data.boleto.barcode || "");
+        setStep("boleto");
+        startPolling();
+      } else if (selectedMethod === "CREDIT_CARD") {
+        throw new Error("Pagamento em análise. Aguarde a confirmação ou tente novamente.");
       } else {
-        throw new Error("QR Code não foi gerado. Tente novamente.");
+        throw new Error("Não foi possível gerar a cobrança. Tente novamente.");
       }
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao processar pagamento");
@@ -287,48 +345,39 @@ export default function PlanCheckoutModal({
               {/* Payment method */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Forma de pagamento</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                  {pixAvailable && (
-                    <button
-                      onClick={() => setSelectedMethod("PIX")}
-                      className={`relative flex items-center gap-3 rounded-xl border-2 p-3 sm:p-3.5 transition-all duration-200 ${
-                        selectedMethod === "PIX"
-                          ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                          : "border-border/60 hover:border-border hover:bg-muted/30"
-                      }`}
-                    >
-                      {selectedMethod === "PIX" && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="h-3.5 w-3.5 text-primary" />
+                <div className={`grid gap-2 sm:gap-3 ${availableMethods.length >= 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
+                  {(["PIX", "CREDIT_CARD", "BOLETO"] as PaymentMethod[]).map((m) => {
+                    const enabled = availableMethods.includes(m);
+                    if (!enabled) return null;
+                    const Icon = m === "PIX" ? QrCode : m === "CREDIT_CARD" ? CreditCard : FileText;
+                    const active = selectedMethod === m;
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => setSelectedMethod(m)}
+                        className={`relative flex items-center gap-3 rounded-xl border-2 p-3 sm:p-3.5 transition-all duration-200 ${
+                          active
+                            ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                            : "border-border/60 hover:border-border hover:bg-muted/30"
+                        }`}
+                      >
+                        {active && (
+                          <div className="absolute top-2 right-2">
+                            <Check className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                        )}
+                        <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg shrink-0 ${
+                          active ? "bg-primary/10" : "bg-muted"
+                        }`}>
+                          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
                         </div>
-                      )}
-                      <div className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg shrink-0 ${
-                        selectedMethod === "PIX" ? "bg-primary/10" : "bg-muted"
-                      }`}>
-                        <QrCode className={`h-4.5 w-4.5 sm:h-5 sm:w-5 ${selectedMethod === "PIX" ? "text-primary" : "text-muted-foreground"}`} />
-                      </div>
-                      <div className="text-left overflow-hidden">
-                        <p className={`text-sm font-semibold truncate ${selectedMethod === "PIX" ? "text-primary" : "text-foreground"}`}>PIX</p>
-                        <p className="text-[10px] text-muted-foreground truncate">Aprovação imediata</p>
-                      </div>
-                    </button>
-                  )}
-
-                  <button
-                    disabled
-                    className="relative flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 p-3 sm:p-3.5 opacity-50 cursor-not-allowed"
-                  >
-                    <div className="absolute top-2 right-2">
-                      <Lock className="h-3 w-3 text-muted-foreground/40" />
-                    </div>
-                    <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-muted/50 shrink-0">
-                      <CreditCard className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-muted-foreground/50" />
-                    </div>
-                    <div className="text-left overflow-hidden">
-                      <p className="text-sm font-medium text-muted-foreground truncate">Cartão</p>
-                      <p className="text-[10px] text-muted-foreground/70 truncate">Em breve</p>
-                    </div>
-                  </button>
+                        <div className="text-left overflow-hidden">
+                          <p className={`text-sm font-semibold truncate ${active ? "text-primary" : "text-foreground"}`}>{METHOD_LABELS[m]}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{METHOD_SUBLABELS[m]}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -375,6 +424,66 @@ export default function PlanCheckoutModal({
                 </div>
               </div>
 
+              {/* Card fields (only when CREDIT_CARD selected) */}
+              {selectedMethod === "CREDIT_CARD" && (
+                <div className="space-y-2.5">
+                  <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Dados do cartão</label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+                    <Input
+                      value={cardNumber}
+                      onChange={(e) => {
+                        const d = e.target.value.replace(/\D/g, "").slice(0, 19);
+                        setCardNumber(d.replace(/(\d{4})(?=\d)/g, "$1 ").trim());
+                      }}
+                      placeholder="Número do cartão"
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      className="h-10 pl-9 font-mono text-sm tracking-wider"
+                    />
+                  </div>
+                  <Input
+                    value={cardHolder}
+                    onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                    placeholder="Nome impresso no cartão"
+                    autoComplete="cc-name"
+                    className="h-10 text-sm uppercase"
+                  />
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <Input
+                      value={cardExpiry}
+                      onChange={(e) => {
+                        const d = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        setCardExpiry(d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
+                      }}
+                      placeholder="MM/AA"
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
+                      className="h-10 font-mono text-sm text-center"
+                      maxLength={5}
+                    />
+                    <Input
+                      value={cardCvv}
+                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="CVV"
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
+                      className="h-10 font-mono text-sm text-center"
+                      maxLength={4}
+                    />
+                    <select
+                      value={installments}
+                      onChange={(e) => setInstallments(Number(e.target.value))}
+                      className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>{n}x</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
               {/* Order summary */}
               <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-4 space-y-1.5">
                 <div className="flex items-center justify-between text-xs sm:text-sm">
@@ -395,10 +504,12 @@ export default function PlanCheckoutModal({
               <Button
                 className="w-full h-12 text-base font-bold gap-2.5 shadow-md hover:shadow-lg transition-shadow"
                 disabled={!isFormValid}
-                onClick={generatePix}
+                onClick={generatePayment}
               >
-                <QrCode className="h-5 w-5" />
-                Pagar com PIX — {formatPrice(planPrice)}
+                {selectedMethod === "PIX" && <QrCode className="h-5 w-5" />}
+                {selectedMethod === "CREDIT_CARD" && <CreditCard className="h-5 w-5" />}
+                {selectedMethod === "BOLETO" && <FileText className="h-5 w-5" />}
+                Pagar com {METHOD_LABELS[selectedMethod]} — {formatPrice(planPrice)}
               </Button>
 
               <div className="flex flex-col items-center gap-3 mt-3 pt-4 border-t border-border/30 bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
@@ -416,7 +527,7 @@ export default function PlanCheckoutModal({
                 <Loader2 className="absolute inset-0 m-auto h-10 w-10 text-primary animate-spin" />
               </div>
               <div className="text-center space-y-1.5">
-                <p className="text-lg font-bold text-foreground">Gerando cobrança PIX</p>
+                <p className="text-lg font-bold text-foreground">Gerando cobrança {METHOD_LABELS[selectedMethod]}</p>
                 <p className="text-sm text-muted-foreground">Isso leva apenas alguns segundos...</p>
               </div>
             </div>
@@ -502,7 +613,53 @@ export default function PlanCheckoutModal({
             </div>
           )}
 
-          {/* ==================== STEP: SUCCESS ==================== */}
+          {/* ==================== STEP: BOLETO ==================== */}
+          {step === "boleto" && (
+            <div className="space-y-5">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-primary/10">
+                  <FileText className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Boleto gerado!</h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                    O plano será ativado automaticamente após a compensação (1-3 dias úteis).
+                  </p>
+                </div>
+              </div>
+
+              {boletoBarcode && (
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Linha digitável</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5 font-mono text-[11px] break-all max-h-16 overflow-auto text-muted-foreground leading-relaxed">
+                      {boletoBarcode}
+                    </div>
+                    <Button variant="outline" size="icon" className="shrink-0 h-auto rounded-xl" onClick={() => {
+                      navigator.clipboard.writeText(boletoBarcode);
+                      toast.success("Código copiado!");
+                    }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1 h-11" onClick={() => onOpenChange(false)}>
+                  Fechar
+                </Button>
+                {boletoUrl && (
+                  <Button className="flex-1 gap-2 h-11 font-bold" asChild>
+                    <a href={boletoUrl} target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4" /> Abrir boleto
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {step === "success" && (
             <div className="py-2 sm:py-4 space-y-4 sm:space-y-6">
               <div className="flex flex-col items-center gap-3 sm:gap-4 text-center">
