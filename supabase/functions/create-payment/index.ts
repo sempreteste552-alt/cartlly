@@ -397,9 +397,18 @@ async function createMercadoPagoPayment(
     throw new Error(`${errorMessage} (Ref: ${errorDetail})`);
   }
 
+  const mappedStatus = mapMPStatus(data.status);
+
+  // If card was rejected by the bank, throw a friendly error so the client sees the reason
+  if (mappedStatus === "rejected" && (method === "credit_card" || method === "debit_card")) {
+    const reason = mpRejectionMessage(data.status_detail);
+    console.warn(`MP card rejected: ${data.status_detail} (Order ${order.id})`);
+    throw new Error(reason);
+  }
+
   const result: any = {
     gateway_payment_id: String(data.id),
-    status: mapMPStatus(data.status),
+    status: mappedStatus,
     status_detail: data.status_detail,
     raw: data,
   };
