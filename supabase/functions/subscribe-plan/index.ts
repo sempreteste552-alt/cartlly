@@ -49,7 +49,11 @@ Deno.serve(async (req) => {
         cfg[s.key] = s.value?.value ?? s.value ?? "";
       });
 
-      // Determine active gateway
+      // Asaas key comes from edge env (preferred). Override default if present.
+      const asaasKey = Deno.env.get("ASAAS_API_KEY") || "";
+      if (asaasKey) cfg.asaas_api_key = asaasKey;
+
+      // Determine active gateway. Prefer asaas if configured.
       const gateway = cfg.plan_gateway || detectGateway(cfg);
       const hasKeys = !!getGatewayKeys(gateway, cfg).secretKey;
 
@@ -96,6 +100,10 @@ Deno.serve(async (req) => {
       cfg[s.key] = s.value?.value ?? s.value ?? "";
     });
 
+    // Asaas API key from env (preferred path)
+    const asaasKey = Deno.env.get("ASAAS_API_KEY") || "";
+    if (asaasKey) cfg.asaas_api_key = asaasKey;
+
     const gateway = cfg.plan_gateway || detectGateway(cfg);
     const keys = getGatewayKeys(gateway, cfg);
 
@@ -119,6 +127,8 @@ Deno.serve(async (req) => {
         result = await processPagBank(keys.secretKey, cfg.pagbank_environment || "sandbox", plan, method, tenantEmail, tenantName, document, phone, card_token, user_id);
       } else if (gateway === "amplopay") {
         result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
+      } else if (gateway === "asaas") {
+        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, installments, user_id);
       } else {
         return json({ error: `Gateway "${gateway}" não suportado` }, 400);
       }
@@ -167,6 +177,7 @@ Deno.serve(async (req) => {
 // ===================== HELPERS =====================
 
 function detectGateway(cfg: Record<string, string>): string {
+  if (cfg.asaas_api_key) return "asaas";
   if (cfg.mercadopago_global_key) return "mercadopago";
   if (cfg.pagbank_global_key) return "pagbank";
   if (cfg.amplopay_secret_key) return "amplopay";
@@ -177,6 +188,7 @@ function getGatewayKeys(gw: string, cfg: Record<string, string>) {
   if (gw === "mercadopago") return { secretKey: cfg.mercadopago_global_key, publicKey: cfg.mercadopago_public_key };
   if (gw === "pagbank") return { secretKey: cfg.pagbank_global_key, publicKey: cfg.pagbank_public_key };
   if (gw === "amplopay") return { secretKey: cfg.amplopay_secret_key, publicKey: cfg.amplopay_public_key };
+  if (gw === "asaas") return { secretKey: cfg.asaas_api_key, publicKey: "" };
   return { secretKey: "", publicKey: "" };
 }
 
@@ -184,6 +196,7 @@ function getAvailableMethods(gw: string): string[] {
   if (gw === "mercadopago") return ["PIX", "CREDIT_CARD", "BOLETO"];
   if (gw === "pagbank") return ["PIX", "CREDIT_CARD", "BOLETO"];
   if (gw === "amplopay") return ["PIX", "BOLETO"];
+  if (gw === "asaas") return ["PIX", "CREDIT_CARD", "BOLETO"];
   return [];
 }
 
@@ -486,6 +499,139 @@ async function processAmplopay(
       url: data.boleto.url || data.boleto.bankSlipUrl,
       barcode: data.boleto.barcode || data.boleto.digitableLine,
       dueDate: data.boleto.dueDate,
+    };
+  }
+
+  return result;
+}
+
+// ===================== ASAAS =====================
+// Docs: https://docs.asaas.com/
+// Production base URL: https://api.asaas.com/v3
+// Auth: header "access_token: <API_KEY>"
+
+async function processAsaas(
+  apiKey: string, plan: any, method: string,
+  email: string, name: string, document: string, phone: string,
+  cardToken: string | undefined, installments: number | undefined, userId: string
+) {
+  const BASE_URL = "https://api.asaas.com/v3";
+  const headers = {
+    "Content-Type": "application/json",
+    "access_token": apiKey,
+    "User-Agent": "Cartlly/1.0",
+  };
+  const cleanDoc = (document || "").replace(/\D/g, "");
+  const cleanPhone = (phone || "").replace(/\D/g, "");
+
+  // 1) Find or create customer
+  let customerId = "";
+  try {
+    const findRes = await fetch(`${BASE_URL}/customers?cpfCnpj=${cleanDoc}`, { headers });
+    const findData = await findRes.json();
+    if (findRes.ok && findData?.data?.[0]?.id) {
+      customerId = findData.data[0].id;
+    }
+  } catch { /* ignore, will create */ }
+
+  if (!customerId) {
+    const createRes = await fetch(`${BASE_URL}/customers`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        name: name || "Cliente Cartlly",
+        email,
+        cpfCnpj: cleanDoc,
+        mobilePhone: cleanPhone || undefined,
+        externalReference: userId,
+        notificationDisabled: false,
+      }),
+    });
+    const createData = await createRes.json();
+    if (!createRes.ok) {
+      console.error("Asaas create customer error:", JSON.stringify(createData));
+      const errMsg = createData?.errors?.[0]?.description || `Erro ao criar cliente Asaas (HTTP ${createRes.status})`;
+      throw new Error(errMsg);
+    }
+    customerId = createData.id;
+  }
+
+  // 2) Create payment
+  const today = new Date();
+  const dueDate = new Date(today.getTime() + (method === "BOLETO" ? 3 : 1) * 86400 * 1000)
+    .toISOString().split("T")[0];
+
+  const billingType = method === "PIX" ? "PIX"
+    : method === "BOLETO" ? "BOLETO"
+    : method === "CREDIT_CARD" ? "CREDIT_CARD"
+    : "UNDEFINED";
+
+  const paymentBody: any = {
+    customer: customerId,
+    billingType,
+    value: Number(plan.price),
+    dueDate,
+    description: `Assinatura plano ${plan.name}`,
+    externalReference: `plan_${plan.id}_user_${userId}_${Date.now()}`,
+  };
+
+  if (method === "CREDIT_CARD") {
+    if (!cardToken) {
+      throw new Error("Token do cartão é obrigatório para pagamento com cartão de crédito.");
+    }
+    paymentBody.creditCardToken = cardToken;
+    if (installments && installments > 1) {
+      paymentBody.installmentCount = installments;
+      paymentBody.totalValue = Number(plan.price);
+    }
+  }
+
+  const payRes = await fetch(`${BASE_URL}/payments`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(paymentBody),
+  });
+  const payData = await payRes.json();
+
+  if (!payRes.ok) {
+    console.error("Asaas create payment error:", JSON.stringify(payData));
+    if (payRes.status === 401) throw new Error("Chave da API Asaas inválida.");
+    const errMsg = payData?.errors?.[0]?.description || `Erro ao criar cobrança Asaas (HTTP ${payRes.status})`;
+    throw new Error(errMsg);
+  }
+
+  const status = payData.status === "CONFIRMED" || payData.status === "RECEIVED" ? "approved"
+    : payData.status === "REFUSED" || payData.status === "REFUNDED" ? "rejected"
+    : "pending";
+
+  const result: any = { gateway_payment_id: payData.id, status };
+
+  // 3) Get PIX QR Code if applicable
+  if (method === "PIX") {
+    const qrRes = await fetch(`${BASE_URL}/payments/${payData.id}/pixQrCode`, { headers });
+    const qrData = await qrRes.json();
+    if (qrRes.ok) {
+      result.pix = {
+        qrCode: qrData.payload,
+        qrCodeBase64: qrData.encodedImage,
+        expiration: qrData.expirationDate,
+      };
+    }
+  }
+
+  if (method === "BOLETO") {
+    result.boleto = {
+      url: payData.bankSlipUrl || `${BASE_URL}/payments/${payData.id}/identificationField`,
+      barcode: payData.nossoNumero || "",
+      dueDate: payData.dueDate,
+    };
+  }
+
+  if (method === "CREDIT_CARD") {
+    result.card = {
+      status,
+      brand: payData.creditCard?.creditCardBrand,
+      lastFour: payData.creditCard?.creditCardNumber?.slice(-4),
     };
   }
 
