@@ -295,8 +295,10 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
     };
   }, [cleanNumber, local.bank]);
 
-  const bank = local.bank || apiBank?.info || null;
-  const fallbackBankLabel = !bank && apiBank?.rawName ? apiBank.rawName : null;
+  // Banco final: 1) detecção local por BIN, 2) API binlist (mapeada), 3) paleta inteligente pelo nome cru
+  const apiGeneric = !local.bank && apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
+  const bank = local.bank || apiBank?.info || apiGeneric || null;
+  const bankDisplayLabel = local.bank?.label || apiBank?.info?.label || (apiBank?.rawName ?? null);
   const brand = local.brand;
   const gradient = bank?.gradient || brand.gradient;
   const textColor = bank?.textColor || "text-white";
