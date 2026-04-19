@@ -307,10 +307,18 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
     }
   }, [cardNumber, settings?.payment_gateway, settings?.gateway_public_key, total]);
 
+  const creditEnabled = !!settings?.payment_credit_card;
+  const debitEnabled = !!(settings as any)?.payment_debit_card;
+  const cardLabel = creditEnabled && debitEnabled
+    ? "Crédito ou Débito"
+    : creditEnabled
+      ? "Cartão de Crédito"
+      : "Cartão de Débito";
+
   const availableMethods = [
-    { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: settings?.payment_pix },
-    { id: "credit_card" as const, label: "Cartão", desc: "Crédito ou Débito", icon: CreditCard, enabled: settings?.payment_credit_card },
-    { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: FileText, enabled: settings?.payment_boleto },
+    { id: "pix" as const, label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: !!settings?.payment_pix },
+    { id: "credit_card" as const, label: "Cartão", desc: cardLabel, icon: CreditCard, enabled: creditEnabled || debitEnabled },
+    { id: "boleto" as const, label: "Boleto Bancário", desc: "Vencimento em 3 dias úteis", icon: FileText, enabled: !!settings?.payment_boleto },
   ].filter((m) => m.enabled);
 
   const isStripe = settings?.payment_gateway === "stripe";

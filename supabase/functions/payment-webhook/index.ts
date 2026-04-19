@@ -164,7 +164,7 @@ async function handleMercadoPago(req: Request, supabase: any) {
         console.warn("AI learning failed for purchase:", e);
       }
 
-      // 🔔 Push: Payment approved
+      // 🔔 Push: Payment approved (admin)
       await sendRichPush(payment.user_id, {
         title: "✅ Pagamento aprovado!",
         body: `${customerName} pagou ${formattedTotal} via ${methodLabel} 💰 Pedido #${orderId8}`,
@@ -172,17 +172,44 @@ async function handleMercadoPago(req: Request, supabase: any) {
         type: "payment_approved",
         data: { orderId: payment.order_id, paymentId: payment.id, method: payment.method },
       });
+
+      // 🔔 Push + sininho ao cliente da loja
+      const productSummary = (await supabase.from("order_items").select("product_name, quantity").eq("order_id", payment.order_id)).data
+        ?.map((i: any) => `${i.quantity}x ${i.product_name}`).slice(0, 2).join(", ");
+      const { data: storeMeta } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: order?.customer_email,
+        orderId: payment.order_id,
+        status: "approved",
+        method: payment.method,
+        amount: orderTotal,
+        productSummary,
+        storeSlug: storeMeta?.store_slug,
+      });
     } else if (newStatus === "rejected" || newStatus === "cancelled") {
       await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
 
-      // 🔔 Push: Payment rejected
+      // 🔔 Push: Payment rejected (admin)
       await sendRichPush(payment.user_id, {
         title: "❌ Pagamento recusado!",
         body: `Pagamento de ${formattedTotal} via ${methodLabel} do pedido #${orderId8} (${customerName}) foi recusado.`,
         url: "/admin/pedidos",
         type: "payment_rejected",
         data: { orderId: payment.order_id, paymentId: payment.id },
+      });
+
+      // 🔔 Push + sininho ao cliente da loja
+      const { data: storeMeta2 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: order?.customer_email,
+        orderId: payment.order_id,
+        status: newStatus as any,
+        method: payment.method,
+        amount: orderTotal,
+        storeSlug: storeMeta2?.store_slug,
       });
     }
   }
@@ -243,6 +270,17 @@ async function handlePagBank(req: Request, supabase: any) {
           type: "payment_approved",
           data: { orderId, paymentId: orderPayment.id },
         });
+        const { data: o1 } = await supabase.from("orders").select("customer_email").eq("id", orderId).maybeSingle();
+        const { data: s1 } = await supabase.from("store_settings").select("store_slug").eq("user_id", orderPayment.user_id).maybeSingle();
+        await notifyCustomerStorefront(supabase, {
+          storeUserId: orderPayment.user_id,
+          customerEmail: o1?.customer_email,
+          orderId,
+          status: "approved",
+          method: orderPayment.method,
+          amount: orderPayment.amount,
+          storeSlug: s1?.store_slug,
+        });
       } else if (newStatus === "rejected") {
         await sendRichPush(orderPayment.user_id, {
           title: "❌ Pagamento recusado!",
@@ -250,6 +288,17 @@ async function handlePagBank(req: Request, supabase: any) {
           url: "/admin/pedidos",
           type: "payment_rejected",
           data: { orderId, paymentId: orderPayment.id },
+        });
+        const { data: o2 } = await supabase.from("orders").select("customer_email").eq("id", orderId).maybeSingle();
+        const { data: s2 } = await supabase.from("store_settings").select("store_slug").eq("user_id", orderPayment.user_id).maybeSingle();
+        await notifyCustomerStorefront(supabase, {
+          storeUserId: orderPayment.user_id,
+          customerEmail: o2?.customer_email,
+          orderId,
+          status: "rejected",
+          method: orderPayment.method,
+          amount: orderPayment.amount,
+          storeSlug: s2?.store_slug,
         });
       }
     }
@@ -271,6 +320,29 @@ async function handlePagBank(req: Request, supabase: any) {
         url: "/admin/pedidos",
         type: "payment_approved",
         data: { orderId: payment.order_id, paymentId: payment.id },
+      });
+      const { data: o3 } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+      const { data: s3 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: o3?.customer_email,
+        orderId: payment.order_id,
+        status: "approved",
+        method: payment.method,
+        amount: payment.amount,
+        storeSlug: s3?.store_slug,
+      });
+    } else if (newStatus === "rejected" || newStatus === "cancelled") {
+      const { data: o4 } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+      const { data: s4 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: o4?.customer_email,
+        orderId: payment.order_id,
+        status: newStatus as any,
+        method: payment.method,
+        amount: payment.amount,
+        storeSlug: s4?.store_slug,
       });
     }
   }
@@ -353,6 +425,17 @@ async function handleAmplopay(req: Request, supabase: any) {
       type: "payment_approved",
       data: { orderId: payment.order_id, paymentId: payment.id },
     });
+    const { data: oA } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+    const { data: sA } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+    await notifyCustomerStorefront(supabase, {
+      storeUserId: payment.user_id,
+      customerEmail: oA?.customer_email,
+      orderId: payment.order_id,
+      status: "approved",
+      method: payment.method,
+      amount: payment.amount,
+      storeSlug: sA?.store_slug,
+    });
   } else if (newStatus === "rejected" || newStatus === "cancelled") {
     await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
@@ -362,6 +445,17 @@ async function handleAmplopay(req: Request, supabase: any) {
       url: "/admin/pedidos",
       type: "payment_rejected",
       data: { orderId: payment.order_id, paymentId: payment.id },
+    });
+    const { data: oB } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+    const { data: sB } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+    await notifyCustomerStorefront(supabase, {
+      storeUserId: payment.user_id,
+      customerEmail: oB?.customer_email,
+      orderId: payment.order_id,
+      status: newStatus as any,
+      method: payment.method,
+      amount: payment.amount,
+      storeSlug: sB?.store_slug,
     });
   }
 
@@ -583,6 +677,7 @@ async function sendRichPush(targetUserId: string, payload: {
   type?: string;
   data?: any;
   tag?: string;
+  store_user_id?: string;
 }) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -597,15 +692,113 @@ async function sendRichPush(targetUserId: string, payload: {
         type: payload.type || "general",
         data: payload.data || {},
         tag: payload.tag || payload.type || "default",
+        ...(payload.store_user_id ? { store_user_id: payload.store_user_id } : {}),
       }),
     });
     if (!resp.ok) {
       const text = await resp.text();
       console.error("sendRichPush failed:", resp.status, text);
     } else {
-      await resp.text(); // consume body
+      await resp.text();
     }
   } catch (e: any) {
     console.error("sendRichPush error:", e.message);
   }
 }
+
+/**
+ * Notifica o cliente da loja (storefront) sobre mudança de pagamento.
+ * - Insere uma mensagem no sininho da vitrine
+ * - Envia push direto ao cliente (se subscrito)
+ */
+async function notifyCustomerStorefront(supabase: any, args: {
+  storeUserId: string;
+  customerEmail?: string | null;
+  orderId: string;
+  status: "approved" | "rejected" | "pending" | "cancelled";
+  method: string;
+  amount: number;
+  productSummary?: string;
+  storeSlug?: string;
+}) {
+  try {
+    if (!args.customerEmail) return;
+
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, auth_user_id")
+      .eq("store_user_id", args.storeUserId)
+      .eq("email", args.customerEmail)
+      .maybeSingle();
+
+    if (!customer?.auth_user_id) return;
+
+    const firstName = (customer.name || "").split(" ")[0] || "Tudo certo";
+    const formattedTotal = `R$ ${Number(args.amount || 0).toFixed(2).replace(".", ",")}`;
+    const orderId8 = args.orderId.slice(0, 8).toUpperCase();
+    const methodLabel = args.method === "pix" ? "PIX"
+      : args.method === "credit_card" ? "cartão"
+      : args.method === "boleto" ? "boleto"
+      : args.method === "debit_card" ? "cartão de débito"
+      : args.method;
+    const productPart = args.productSummary ? ` (${args.productSummary})` : "";
+    const trackingUrl = args.storeSlug ? `/loja/${args.storeSlug}/rastreio/${args.orderId}` : "/";
+
+    let title = "";
+    let body = "";
+    let messageType = "info";
+
+    if (args.status === "approved") {
+      title = `🎉 ${firstName}, seu pagamento foi aprovado!`;
+      body = `Recebemos ${formattedTotal} no ${methodLabel}. Já estamos preparando seu pedido${productPart} com muito carinho 💛 Pedido #${orderId8}`;
+      messageType = "success";
+    } else if (args.status === "rejected") {
+      title = `😕 Ops, ${firstName}, seu pagamento não passou`;
+      body = `O ${methodLabel} de ${formattedTotal} foi recusado pelo banco. Não desanima! Tenta de novo ou escolhe outra forma — a gente te espera 💛 Pedido #${orderId8}`;
+      messageType = "warning";
+    } else if (args.status === "cancelled") {
+      title = `Pedido cancelado`;
+      body = `${firstName}, o pagamento de ${formattedTotal} (#${orderId8}) foi cancelado. Se foi engano, é só voltar e finalizar de novo 😉`;
+      messageType = "warning";
+    } else if (args.status === "pending") {
+      title = `⏳ ${firstName}, estamos aguardando seu pagamento`;
+      body = `Geramos seu ${methodLabel} de ${formattedTotal}. Assim que cair, avisamos por aqui! Pedido #${orderId8}`;
+      messageType = "info";
+    } else {
+      return;
+    }
+
+    await supabase.from("tenant_messages").insert({
+      source_tenant_id: args.storeUserId,
+      sender_type: "tenant_admin",
+      sender_user_id: args.storeUserId,
+      audience_type: "tenant_admin_to_one_customer",
+      target_area: "public_store",
+      target_tenant_id: args.storeUserId,
+      target_user_id: customer.auth_user_id,
+      channel: "in_app",
+      title,
+      body,
+      message_type: messageType,
+      priority: args.status === "approved" || args.status === "rejected" ? "high" : "normal",
+      is_global: false,
+      status: "sent",
+    });
+
+    await sendRichPush(customer.auth_user_id, {
+      title,
+      body,
+      url: trackingUrl,
+      type: args.status === "approved" ? "payment_approved"
+        : args.status === "rejected" ? "payment_rejected"
+        : args.status === "pending" ? "payment_pending"
+        : "order_update",
+      data: { orderId: args.orderId, status: args.status, method: args.method },
+      tag: `customer_payment_${args.orderId}`,
+      store_user_id: args.storeUserId,
+    });
+  } catch (e: any) {
+    console.error("notifyCustomerStorefront error:", e.message);
+  }
+}
+
