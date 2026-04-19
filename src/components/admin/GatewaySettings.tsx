@@ -124,6 +124,9 @@ export function GatewaySettings() {
       gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
       max_installments: maxInstallments,
+      installments_free_up_to: installmentsFreeUpTo,
+      installments_interest_enabled: interestEnabled,
+      installments_interest_rate: interestRate,
     } as any);
   };
 
