@@ -397,9 +397,18 @@ async function createMercadoPagoPayment(
     throw new Error(`${errorMessage} (Ref: ${errorDetail})`);
   }
 
+  const mappedStatus = mapMPStatus(data.status);
+
+  // If card was rejected by the bank, throw a friendly error so the client sees the reason
+  if (mappedStatus === "rejected" && (method === "credit_card" || method === "debit_card")) {
+    const reason = mpRejectionMessage(data.status_detail);
+    console.warn(`MP card rejected: ${data.status_detail} (Order ${order.id})`);
+    throw new Error(reason);
+  }
+
   const result: any = {
     gateway_payment_id: String(data.id),
-    status: mapMPStatus(data.status),
+    status: mappedStatus,
     status_detail: data.status_detail,
     raw: data,
   };
@@ -436,6 +445,27 @@ function mapMPStatus(status: string): string {
     refunded: "refunded",
   };
   return map[status] || "pending";
+}
+
+// Mercado Pago decline reasons → friendly Portuguese messages
+function mpRejectionMessage(detail?: string): string {
+  const map: Record<string, string> = {
+    cc_rejected_insufficient_amount: "❌ Cartão recusado: limite insuficiente. Tente outro cartão ou método.",
+    cc_rejected_bad_filled_card_number: "❌ Número do cartão inválido. Verifique e tente novamente.",
+    cc_rejected_bad_filled_date: "❌ Data de validade incorreta. Verifique e tente novamente.",
+    cc_rejected_bad_filled_security_code: "❌ Código de segurança (CVV) incorreto.",
+    cc_rejected_bad_filled_other: "❌ Dados do cartão incorretos. Confira número, validade e CVV.",
+    cc_rejected_high_risk: "❌ Pagamento recusado por suspeita de fraude. Use outro cartão ou PIX.",
+    cc_rejected_call_for_authorize: "❌ Você precisa autorizar a compra junto ao banco emissor antes de tentar novamente.",
+    cc_rejected_card_disabled: "❌ Cartão desabilitado. Entre em contato com o banco emissor.",
+    cc_rejected_card_error: "❌ Erro ao processar o cartão. Tente novamente ou use outro cartão.",
+    cc_rejected_duplicated_payment: "❌ Pagamento duplicado detectado. Aguarde alguns minutos antes de tentar de novo.",
+    cc_rejected_invalid_installments: "❌ Quantidade de parcelas inválida para este cartão.",
+    cc_rejected_max_attempts: "❌ Número máximo de tentativas atingido. Tente outro cartão.",
+    cc_rejected_other_reason: "❌ Cartão recusado pelo banco emissor. Tente outro cartão ou método.",
+    cc_rejected_blacklist: "❌ Cartão bloqueado pelo banco. Entre em contato com o emissor.",
+  };
+  return map[detail || ""] || "❌ Pagamento recusado pelo banco emissor. Verifique os dados ou tente outro cartão.";
 }
 
 // ===================== PAGBANK =====================
@@ -534,7 +564,14 @@ async function createPagBankPayment(
 
   if (method === "credit_card" && data.charges?.[0]) {
     const charge = data.charges[0];
-    result.status = charge.status === "PAID" ? "approved" : "pending";
+    const chStatus = String(charge.status || "").toUpperCase();
+    if (chStatus === "DECLINED" || chStatus === "CANCELED" || chStatus === "CANCELLED") {
+      const reason = charge.payment_response?.message || charge.payment_response?.reference || "Cartão recusado pelo banco emissor.";
+      console.warn(`PagBank card declined: ${chStatus} - ${reason}`);
+      throw new Error(`❌ Pagamento recusado: ${reason}. Tente outro cartão ou método.`);
+    }
+    result.status = chStatus === "PAID" ? "approved" : "pending";
+    result.status_detail = charge.payment_response?.code || chStatus;
     result.card_last_four = charge.payment_method?.card?.last_digits;
     result.card_brand = charge.payment_method?.card?.brand;
   }

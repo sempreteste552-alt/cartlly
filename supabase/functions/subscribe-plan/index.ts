@@ -309,6 +309,24 @@ async function processMercadoPago(
   const statusMap: Record<string, string> = { approved: "approved", pending: "pending", authorized: "pending", in_process: "pending", rejected: "rejected", cancelled: "cancelled" };
   const status = statusMap[data.status] || "pending";
 
+  // Friendly decline message for credit card
+  if (status === "rejected" && method === "CREDIT_CARD") {
+    const reasons: Record<string, string> = {
+      cc_rejected_insufficient_amount: "limite insuficiente",
+      cc_rejected_bad_filled_card_number: "número do cartão inválido",
+      cc_rejected_bad_filled_date: "data de validade incorreta",
+      cc_rejected_bad_filled_security_code: "CVV incorreto",
+      cc_rejected_bad_filled_other: "dados do cartão incorretos",
+      cc_rejected_high_risk: "suspeita de fraude — use outro cartão ou PIX",
+      cc_rejected_call_for_authorize: "autorize a compra junto ao banco emissor",
+      cc_rejected_card_disabled: "cartão desabilitado pelo banco",
+      cc_rejected_other_reason: "recusado pelo banco emissor",
+      cc_rejected_max_attempts: "máximo de tentativas atingido",
+    };
+    const reason = reasons[data.status_detail] || "recusado pelo banco emissor";
+    throw new Error(`❌ Pagamento recusado: ${reason}. Tente outro cartão ou método.`);
+  }
+
   const result: any = { gateway_payment_id: String(data.id), status };
 
   if (method === "PIX" && data.point_of_interaction?.transaction_data) {
@@ -428,7 +446,12 @@ async function processPagBank(
   }
   if (method === "CREDIT_CARD" && data.charges?.[0]) {
     const charge = data.charges[0];
-    result.status = charge.status === "PAID" ? "approved" : "pending";
+    const chStatus = String(charge.status || "").toUpperCase();
+    if (chStatus === "DECLINED" || chStatus === "CANCELED" || chStatus === "CANCELLED") {
+      const reason = charge.payment_response?.message || charge.payment_response?.reference || "Cartão recusado pelo banco emissor.";
+      throw new Error(`❌ Pagamento recusado: ${reason}. Tente outro cartão ou método.`);
+    }
+    result.status = chStatus === "PAID" ? "approved" : "pending";
     result.card = {
       status: result.status,
       brand: charge.payment_method?.card?.brand,
