@@ -123,15 +123,21 @@ export default function PlanCheckoutModal({
         setFullName("");
         setEmail("");
         setCpf("");
+        setCardNumber(""); setCardHolder(""); setCardExpiry(""); setCardCvv(""); setInstallments(1);
         setPixQrCode("");
         setPixQrBase64("");
+        setBoletoUrl(""); setBoletoBarcode("");
         setCountdown(0);
         setTransactionId("");
         setErrorMsg("");
       }, 300);
       return () => clearTimeout(t);
+    } else {
+      // Pick first available method as default
+      const first = (availableMethods[0] as PaymentMethod) || "PIX";
+      setSelectedMethod(first);
     }
-  }, [open]);
+  }, [open, availableMethods]);
 
   useEffect(() => {
     if (countdown <= 0 && countdownRef.current) {
