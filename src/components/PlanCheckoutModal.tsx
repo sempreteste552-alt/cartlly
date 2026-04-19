@@ -493,15 +493,9 @@ export default function PlanCheckoutModal({
                       className="h-10 font-mono text-sm text-center"
                       maxLength={4}
                     />
-                    <select
-                      value={installments}
-                      onChange={(e) => setInstallments(Number(e.target.value))}
-                      className="h-10 rounded-md border border-input bg-background px-2 text-sm"
-                    >
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>{n}x</option>
-                      ))}
-                    </select>
+                    <div className="h-10 rounded-md border border-input bg-muted/30 px-2 text-xs flex items-center justify-center text-muted-foreground font-medium">
+                      Cobrança mensal
+                    </div>
                   </div>
                 </div>
               )}
