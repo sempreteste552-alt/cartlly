@@ -16,6 +16,8 @@ interface VirtualCardProps {
   expiry: string;
   cvv: string;
   flipped?: boolean;
+  gatewayBankName?: string;
+  gatewayBrandName?: string;
 }
 
 type BankKey =
@@ -201,32 +203,6 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
   }
 }
 
-// Cache de BINs já consultados (evita chamadas repetidas)
-const binCache = new Map<string, { bank: string; brand: string } | null>();
-
-async function fetchBinInfo(bin: string): Promise<{ bank: string; brand: string } | null> {
-  if (binCache.has(bin)) return binCache.get(bin)!;
-  try {
-    const res = await fetch(`https://lookup.binlist.net/${bin}`, {
-      headers: { "Accept-Version": "3" },
-    });
-    if (!res.ok) {
-      binCache.set(bin, null);
-      return null;
-    }
-    const data = await res.json();
-    const result = {
-      bank: (data?.bank?.name || "").toString().toUpperCase(),
-      brand: (data?.scheme || "").toString().toUpperCase(),
-    };
-    binCache.set(bin, result);
-    return result;
-  } catch {
-    binCache.set(bin, null);
-    return null;
-  }
-}
-
 // Mapeia nome do banco vindo da API para nosso BankInfo
 function bankFromApiName(name: string): BankInfo | null {
   const n = name.toUpperCase();
@@ -296,11 +272,8 @@ function brandFromApiName(scheme: string): { name: string; Logo: React.FC<{ clas
   return null;
 }
 
-export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
+export function VirtualCard({ number, name, expiry, cvv, flipped, gatewayBankName, gatewayBrandName }: VirtualCardProps) {
   const cleanNumber = useMemo(() => number.replace(/\s/g, ""), [number]);
-  const [apiBank, setApiBank] = useState<{ info: BankInfo | null; rawName: string } | null>(null);
-
-  const [apiBrand, setApiBrand] = useState<{ name: string; Logo: React.FC<{ className?: string }>; gradient: string } | null>(null);
 
   // Detecção local imediata
   const local = useMemo(() => {
@@ -309,43 +282,14 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
     return { brand: b, bank: bk };
   }, [cleanNumber]);
 
-  // Lookup remoto quando BIN tem 6 dígitos (sempre tenta enriquecer com bank + brand)
-  useEffect(() => {
-    const bin = cleanNumber.slice(0, 6);
-    if (bin.length < 6) {
-      setApiBank(null);
-      setApiBrand(null);
-      return;
-    }
-    let cancelled = false;
-    fetchBinInfo(bin).then((res) => {
-      if (cancelled || !res) {
-        setApiBank(null);
-        setApiBrand(null);
-        return;
-      }
-      if (res.bank) {
-        setApiBank({ info: bankFromApiName(res.bank), rawName: res.bank });
-      } else {
-        setApiBank(null);
-      }
-      // Brand — sempre tenta enriquecer com a info da API
-      if (res.brand) {
-        setApiBrand(brandFromApiName(res.brand));
-      } else {
-        setApiBrand(null);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [cleanNumber]);
+  const gatewayBank = gatewayBankName ? bankFromApiName(gatewayBankName) : null;
+  const gatewayGeneric = gatewayBankName && !gatewayBank ? genericBankByName(gatewayBankName) : null;
+  const gatewayBrand = gatewayBrandName ? brandFromApiName(gatewayBrandName) : null;
 
-  // Banco final: 1) API bin (mapeada), 2) detecção local, 3) paleta inteligente pelo nome cru
-  const apiGeneric = apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
-  const bank = apiBank?.info || local.bank || apiGeneric || null;
-  const bankDisplayLabel = apiBank?.info?.label || local.bank?.label || (apiBank?.rawName ?? null);
-  const brand = apiBrand || local.brand;
+  // Banco final: 1) gateway real, 2) detecção local, 3) fallback inteligente pelo nome cru
+  const bank = gatewayBank || local.bank || gatewayGeneric || null;
+  const bankDisplayLabel = gatewayBank?.label || local.bank?.label || gatewayBankName || null;
+  const brand = gatewayBrand || local.brand;
   const gradient = bank?.gradient || brand.gradient;
   const textColor = bank?.textColor || "text-white";
   const chipGradient = bank?.chipGradient || "from-yellow-300 to-yellow-500";
