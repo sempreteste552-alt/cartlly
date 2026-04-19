@@ -18,6 +18,7 @@ import pixLogo from "@/assets/pix-logo.webp";
 import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import siteSeguro from "@/assets/site-seguro.webp";
 import compraSegura from "@/assets/compra-segura.webp";
+import { VirtualCard } from "@/components/checkout/VirtualCard";
 
 declare global {
   interface Window {
