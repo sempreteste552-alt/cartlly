@@ -88,14 +88,23 @@ export default function PlanCheckoutModal({
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState<CheckoutStep>("form");
-  const [selectedMethod, setSelectedMethod] = useState<"PIX" | "CREDIT_CARD">("PIX");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Card fields
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [installments, setInstallments] = useState(1);
+
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrBase64, setPixQrBase64] = useState("");
+  const [boletoUrl, setBoletoUrl] = useState("");
+  const [boletoBarcode, setBoletoBarcode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [transactionId, setTransactionId] = useState("");
 
