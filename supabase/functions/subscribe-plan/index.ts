@@ -100,6 +100,10 @@ Deno.serve(async (req) => {
       cfg[s.key] = s.value?.value ?? s.value ?? "";
     });
 
+    // Asaas API key from env (preferred path)
+    const asaasKey = Deno.env.get("ASAAS_API_KEY") || "";
+    if (asaasKey) cfg.asaas_api_key = asaasKey;
+
     const gateway = cfg.plan_gateway || detectGateway(cfg);
     const keys = getGatewayKeys(gateway, cfg);
 
@@ -123,6 +127,8 @@ Deno.serve(async (req) => {
         result = await processPagBank(keys.secretKey, cfg.pagbank_environment || "sandbox", plan, method, tenantEmail, tenantName, document, phone, card_token, user_id);
       } else if (gateway === "amplopay") {
         result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
+      } else if (gateway === "asaas") {
+        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, installments, user_id);
       } else {
         return json({ error: `Gateway "${gateway}" não suportado` }, 400);
       }
