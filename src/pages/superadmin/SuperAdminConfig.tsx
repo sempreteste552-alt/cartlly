@@ -535,6 +535,10 @@ export default function SuperAdminConfig() {
               <Label>Webhook Secret</Label>
               <Input type="password" value={config.mp_webhook_secret} onChange={e => updateField("mp_webhook_secret", e.target.value)} placeholder="Secret..." />
             </div>
+            <Button variant="outline" size="sm" onClick={() => handleTestGateway("mercadopago")} disabled={testing === "mercadopago"}>
+              {testing === "mercadopago" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Testar Conexão Mercado Pago
+            </Button>
           </div>
 
           <Separator />
