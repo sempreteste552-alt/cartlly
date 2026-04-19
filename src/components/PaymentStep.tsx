@@ -173,7 +173,21 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardInstallments, setCardInstallments] = useState("1");
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
   const [saveCard, setSaveCard] = useState(false);
-  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [cardType, setCardType] = useState<"credit" | "debit">(
+    settings?.payment_credit_card ? "credit" : (settings as any)?.payment_debit_card ? "debit" : "credit"
+  );
+
+  // Garante que o tipo selecionado sempre respeite o que o lojista habilitou
+  useEffect(() => {
+    const credOn = !!settings?.payment_credit_card;
+    const debOn = !!(settings as any)?.payment_debit_card;
+    if (cardType === "credit" && !credOn && debOn) {
+      setCardType("debit");
+      setCardInstallments("1");
+    } else if (cardType === "debit" && !debOn && credOn) {
+      setCardType("credit");
+    }
+  }, [settings?.payment_credit_card, (settings as any)?.payment_debit_card]);
   const [mpIssuerId, setMpIssuerId] = useState<string>("");
   const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
   const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
