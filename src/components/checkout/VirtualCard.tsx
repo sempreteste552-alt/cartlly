@@ -151,7 +151,6 @@ function detectBrand(number: string): { name: string; Logo: React.FC<{ className
   return { name: "CARTÃO", Logo: GenericCardLogo, gradient: "from-slate-800 via-slate-700 to-slate-900" };
 }
 
-function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
 function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
   switch (key) {
     case "NUBANK":
