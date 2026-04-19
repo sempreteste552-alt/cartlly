@@ -513,7 +513,7 @@ async function processAmplopay(
 async function processAsaas(
   apiKey: string, plan: any, method: string,
   email: string, name: string, document: string, phone: string,
-  cardToken: string | undefined, installments: number | undefined, userId: string
+  cardToken: string | undefined, card: any | undefined, installments: number | undefined, userId: string
 ) {
   const BASE_URL = "https://api.asaas.com/v3";
   const headers = {
@@ -576,10 +576,28 @@ async function processAsaas(
   };
 
   if (method === "CREDIT_CARD") {
-    if (!cardToken) {
-      throw new Error("Token do cartão é obrigatório para pagamento com cartão de crédito.");
+    if (cardToken) {
+      paymentBody.creditCardToken = cardToken;
+    } else if (card?.number && card?.holder && card?.expiry_month && card?.expiry_year && card?.cvv) {
+      paymentBody.creditCard = {
+        holderName: card.holder,
+        number: String(card.number).replace(/\D/g, ""),
+        expiryMonth: String(card.expiry_month).padStart(2, "0"),
+        expiryYear: String(card.expiry_year),
+        ccv: String(card.cvv),
+      };
+      paymentBody.creditCardHolderInfo = {
+        name: name || card.holder,
+        email,
+        cpfCnpj: cleanDoc,
+        postalCode: "01000000",
+        addressNumber: "0",
+        phone: cleanPhone || undefined,
+      };
+    } else {
+      throw new Error("Dados do cartão são obrigatórios.");
     }
-    paymentBody.creditCardToken = cardToken;
+
     if (installments && installments > 1) {
       paymentBody.installmentCount = installments;
       paymentBody.totalValue = Number(plan.price);
