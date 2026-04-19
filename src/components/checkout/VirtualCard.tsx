@@ -152,14 +152,17 @@ function detectBrand(number: string): { name: string; Logo: React.FC<{ className
 }
 
 function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
+function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
   switch (key) {
     case "NUBANK":
     case "NUBANK_ULTRA": return NubankLogo;
     case "ITAU":
-    case "ITAU_BLACK": return ItauLogo;
+    case "ITAU_BLACK":
+    case "ITI": return ItauLogo;
     case "BB":
     case "BB_BLACK": return BBLogo;
-    case "BRADESCO": return BradescoLogo;
+    case "BRADESCO":
+    case "NEXT": return BradescoLogo;
     case "SANTANDER": return SantanderLogo;
     case "CAIXA": return CaixaLogo;
     case "INTER": return InterLogo;
@@ -172,6 +175,7 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
     case "PAGBANK": return PagBankLogo;
     case "SAFRA": return SafraLogo;
     case "NEON": return NeonLogo;
+    default: return null;
   }
 }
 
