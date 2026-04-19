@@ -364,21 +364,35 @@ async function createAsaasPayment(
   };
 
   if (method === "credit_card" || method === "debit_card") {
-    if (!cardToken) throw new Error("Dados do cartão obrigatórios.");
+    if (!cardToken) throw new Error("Preencha os dados do cartão para continuar.");
     let cardData: any;
-    try { cardData = JSON.parse(cardToken); } catch { throw new Error("Dados do cartão inválidos para o Asaas."); }
+    try { cardData = JSON.parse(cardToken); } catch { throw new Error("Dados do cartão inválidos. Tente novamente."); }
+
+    const ccNumber = String(cardData.number || "").replace(/\D/g, "");
+    const ccMonth = String(cardData.expiryMonth || "").replace(/\D/g, "").padStart(2, "0");
+    let ccYear = String(cardData.expiryYear || "").replace(/\D/g, "");
+    if (ccYear.length === 2) ccYear = `20${ccYear}`;
+    const ccCvv = String(cardData.ccv || "").replace(/\D/g, "");
+    const ccHolder = String(cardData.holderName || fullName).trim();
+
+    if (!ccNumber || ccNumber.length < 13) throw new Error("Informe um número de cartão válido (13-19 dígitos).");
+    if (!ccMonth || Number(ccMonth) < 1 || Number(ccMonth) > 12) throw new Error("Mês de validade inválido.");
+    if (!ccYear || ccYear.length !== 4) throw new Error("Ano de validade inválido.");
+    if (!ccCvv || ccCvv.length < 3) throw new Error("CVV inválido (3 ou 4 dígitos).");
+    if (!ccHolder) throw new Error("Informe o nome impresso no cartão.");
+
     paymentPayload.creditCard = {
-      holderName: cardData.holderName || fullName,
-      number: String(cardData.number || "").replace(/\D/g, ""),
-      expiryMonth: String(cardData.expiryMonth || "").padStart(2, "0"),
-      expiryYear: String(cardData.expiryYear || ""),
-      ccv: String(cardData.ccv || ""),
+      holderName: ccHolder,
+      number: ccNumber,
+      expiryMonth: ccMonth,
+      expiryYear: ccYear,
+      ccv: ccCvv,
     };
     paymentPayload.creditCardHolderInfo = {
-      name: fullName,
+      name: ccHolder,
       email: order.customer_email || "noreply@store.com",
       cpfCnpj: cpfDigits,
-      postalCode: (order.shipping_zip || "00000000").replace(/\D/g, "").padStart(8, "0"),
+      postalCode: (order.shipping_cep || "00000000").replace(/\D/g, "").padStart(8, "0").slice(0, 8),
       addressNumber: order.shipping_number || "S/N",
       phone: (order.customer_phone || "").replace(/\D/g, "") || undefined,
     };
