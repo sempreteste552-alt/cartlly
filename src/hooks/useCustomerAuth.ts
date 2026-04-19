@@ -155,12 +155,9 @@ function useCustomerAuthState(): CustomerAuthContextValue {
                     const storeUserId = pending.store_user_id;
                     const referralCode = localStorage.getItem(`store_referral_${storeUserId}`);
                     if (referralCode) {
-                      const { data: referrer } = await supabase
-                        .from("customers")
-                        .select("id")
-                        .eq("referral_code", referralCode)
-                        .eq("store_user_id", storeUserId)
-                        .maybeSingle();
+                      const { data: referrerRows } = await supabase
+                        .rpc("find_customer_by_referral_code" as any, { _code: referralCode, _store_user_id: storeUserId });
+                      const referrer = Array.isArray(referrerRows) ? referrerRows[0] : null;
                       
                       if (referrer) {
                         await supabase.from("customer_referrals").insert({
