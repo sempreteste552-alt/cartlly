@@ -614,8 +614,32 @@ async function processAsaas(
   if (!payRes.ok) {
     console.error("Asaas create payment error:", JSON.stringify(payData));
     if (payRes.status === 401) throw new Error("Chave da API Asaas inválida.");
-    const errMsg = payData?.errors?.[0]?.description || `Erro ao criar cobrança Asaas (HTTP ${payRes.status})`;
-    throw new Error(errMsg);
+
+    const asaasErr = payData?.errors?.[0];
+    const code = asaasErr?.code || "";
+    const desc = asaasErr?.description || "";
+
+    // Friendly messages for common decline reasons
+    let friendly = desc || `Erro ao criar cobrança Asaas (HTTP ${payRes.status})`;
+    if (code === "invalid_creditCard" || /não autorizada|nao autorizada/i.test(desc)) {
+      friendly = "❌ Pagamento recusado pelo banco emissor. Possíveis causas:\n" +
+        "• Dados do cartão incorretos (número, validade ou CVV)\n" +
+        "• Limite insuficiente ou cartão bloqueado\n" +
+        "• Cartão não habilitado para compras online\n" +
+        "Verifique os dados ou tente outro cartão.";
+    } else if (/cpf|cnpj/i.test(desc)) {
+      friendly = `❌ CPF/CNPJ inválido: ${desc}`;
+    } else if (/cep/i.test(desc)) {
+      friendly = `❌ CEP inválido: ${desc}`;
+    } else if (/email/i.test(desc)) {
+      friendly = `❌ E-mail inválido: ${desc}`;
+    } else if (/telefone|phone|contato/i.test(desc)) {
+      friendly = `❌ Telefone inválido: ${desc}`;
+    } else if (code) {
+      friendly = `❌ ${desc} (código: ${code})`;
+    }
+
+    throw new Error(friendly);
   }
 
   const status = payData.status === "CONFIRMED" || payData.status === "RECEIVED" ? "approved"
