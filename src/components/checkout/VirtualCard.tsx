@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Wifi } from "lucide-react";
 import {
   NubankLogo, ItauLogo, BBLogo, BradescoLogo, SantanderLogo, CaixaLogo,
