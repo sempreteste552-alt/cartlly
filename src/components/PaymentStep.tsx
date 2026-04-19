@@ -840,32 +840,34 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
           <CpfInputField label="CPF do Titular" value={cardCpf} onChange={setCardCpf} />
 
-          <div className="space-y-2">
-            <Label>Tipo do Cartão</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={cardType === "credit" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setCardType("credit")}
-              >
-                Crédito
-              </Button>
-              <Button
-                type="button"
-                variant={cardType === "debit" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => {
-                  setCardType("debit");
-                  setCardInstallments("1");
-                }}
-              >
-                Débito
-              </Button>
+          {(creditEnabled && debitEnabled) && (
+            <div className="space-y-2">
+              <Label>Tipo do Cartão</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={cardType === "credit" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setCardType("credit")}
+                >
+                  Crédito
+                </Button>
+                <Button
+                  type="button"
+                  variant={cardType === "debit" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    setCardType("debit");
+                    setCardInstallments("1");
+                  }}
+                >
+                  Débito
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {cardType === "credit" && (
+          {cardType === "credit" && creditEnabled && (
             <div className="space-y-2">
               <Label>Parcelas</Label>
               <Select value={cardInstallments} onValueChange={setCardInstallments}>
