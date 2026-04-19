@@ -283,12 +283,14 @@ export function GatewaySettings() {
                 <p className="text-xs text-muted-foreground">Ambiente</p>
                 <p className="font-medium">{gatewayEnvironment === "production" ? "Produção" : "Sandbox"}</p>
               </div>
+              {selectedGateway.requiresPublicKey && (
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">{selectedGateway.publicKeyLabel}</p>
+                  <p className="font-mono text-xs truncate">{gatewayPublicKey ? `${gatewayPublicKey.slice(0, 12)}...` : "Não configurada"}</p>
+                </div>
+              )}
               <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">Chave Pública</p>
-                <p className="font-mono text-xs truncate">{gatewayPublicKey ? `${gatewayPublicKey.slice(0, 12)}...` : "Não configurada"}</p>
-              </div>
-              <div className="rounded-lg border border-border p-3">
-                <p className="text-xs text-muted-foreground">Chave Secreta</p>
+                <p className="text-xs text-muted-foreground">{selectedGateway.secretKeyLabel || "Chave Secreta"}</p>
                 <p className="font-mono text-xs">{gatewaySecretKey ? "••••••••" : "Não configurada"}</p>
               </div>
             </div>
