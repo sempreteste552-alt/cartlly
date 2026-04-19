@@ -738,6 +738,57 @@ export default function LojaLayout() {
             </div>
           )}
 
+          {isCheckout ? (
+            <header
+              className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95 sticky top-0 z-40"
+              style={{ backgroundColor: headerBgColor, color: headerTextColor }}
+            >
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 grid grid-cols-[auto_1fr_auto] items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate(-1)}
+                  className="hover:bg-white/10"
+                  style={{ color: headerTextColor }}
+                  aria-label="Voltar"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+
+                <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
+                  {settings?.logo_url ? (
+                    <div className="relative inline-flex items-center">
+                      <img
+                        src={settings.logo_url}
+                        alt={storeName}
+                        style={{ height: `${Math.min(logoSize, 44)}px`, maxWidth: "180px" }}
+                        className="object-contain"
+                      />
+                      {settings?.is_verified && (
+                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg sm:text-xl font-bold truncate" style={{ color: headerTextColor }}>{storeName}</span>
+                      {settings?.is_verified && (
+                        <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                      )}
+                    </div>
+                  )}
+                </Link>
+
+                <div
+                  className="hidden sm:flex items-center gap-1.5 text-xs font-semibold opacity-80"
+                  style={{ color: headerTextColor }}
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Compra segura</span>
+                </div>
+                <div className="sm:hidden w-9" aria-hidden />
+              </div>
+            </header>
+          ) : (
           <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
             <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 flex items-center gap-1 sm:gap-4 overflow-hidden">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
