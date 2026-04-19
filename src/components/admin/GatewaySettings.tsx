@@ -192,20 +192,22 @@ export function GatewaySettings() {
                 </SelectContent>
               </Select>
 
-              <div className="space-y-2">
-                <Label>{selectedGateway.publicKeyLabel}</Label>
-                <div className="relative">
-                  <Input type={showPublicKey ? "text" : "password"} value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs pr-10" maxLength={500} />
-                  <button type="button" onClick={() => setShowPublicKey(!showPublicKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                    {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              {selectedGateway.requiresPublicKey && (
+                <div className="space-y-2">
+                  <Label>{selectedGateway.publicKeyLabel}</Label>
+                  <div className="relative">
+                    <Input type={showPublicKey ? "text" : "password"} value={gatewayPublicKey} onChange={(e) => setGatewayPublicKey(e.target.value)} placeholder={selectedGateway.publicKeyPlaceholder} className="font-mono text-xs pr-10" maxLength={500} />
+                    <button type="button" onClick={() => setShowPublicKey(!showPublicKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPublicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-2">
-                <Label>Chave Secreta / Access Token</Label>
+                <Label>{selectedGateway.secretKeyLabel || "Chave Secreta"}</Label>
                 <div className="relative">
-                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder="Chave secreta do gateway" className="font-mono text-xs pr-10" maxLength={500} />
+                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder={selectedGateway.secretKeyPlaceholder || "Chave secreta do gateway"} className="font-mono text-xs pr-10" maxLength={500} />
                   <button type="button" onClick={() => setShowSecretKey(!showSecretKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
