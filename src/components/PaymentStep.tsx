@@ -486,8 +486,19 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             return;
           }
           setTokenizing(false);
+        } else if (settings?.payment_gateway === "asaas") {
+          // Asaas espera dados crus do cartão serializados como JSON
+          const [aMonth, aYear] = cardExpiry.split("/");
+          const aFullYear = aYear?.length === 2 ? `20${aYear}` : aYear;
+          params.card_token = JSON.stringify({
+            holderName: cardName,
+            number: cardNumber.replace(/\s/g, ""),
+            expiryMonth: aMonth,
+            expiryYear: aFullYear,
+            ccv: cardCvv,
+          });
         } else {
-          // For other gateways, send raw or handle differently
+          // Fallback: outros gateways
           params.card_token = cardNumber.replace(/\s/g, "");
         }
         params.installments = cardType === "debit" ? 1 : parseInt(cardInstallments);
