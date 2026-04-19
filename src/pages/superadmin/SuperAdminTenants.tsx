@@ -866,6 +866,15 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {editTenant && (
+        <SensitiveEditDialog
+          open={!!editTenant}
+          onOpenChange={(o) => !o && setEditTenant(null)}
+          tenant={editTenant}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["all_tenants"] })}
+        />
+      )}
     </div>
   );
 }
