@@ -497,6 +497,10 @@ export default function SuperAdminConfig() {
               <Label>Webhook Secret</Label>
               <Input type="password" value={config.stripe_webhook_secret} onChange={e => updateField("stripe_webhook_secret", e.target.value)} placeholder="whsec_..." />
             </div>
+            <Button variant="outline" size="sm" onClick={() => handleTestGateway("stripe")} disabled={testing === "stripe"}>
+              {testing === "stripe" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Testar Conexão Stripe
+            </Button>
           </div>
 
           <Separator />
