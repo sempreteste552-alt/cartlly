@@ -527,7 +527,7 @@ export default function PlanCheckoutModal({
                 <Loader2 className="absolute inset-0 m-auto h-10 w-10 text-primary animate-spin" />
               </div>
               <div className="text-center space-y-1.5">
-                <p className="text-lg font-bold text-foreground">Gerando cobrança PIX</p>
+                <p className="text-lg font-bold text-foreground">Gerando cobrança {METHOD_LABELS[selectedMethod]}</p>
                 <p className="text-sm text-muted-foreground">Isso leva apenas alguns segundos...</p>
               </div>
             </div>
