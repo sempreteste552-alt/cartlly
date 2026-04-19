@@ -428,7 +428,12 @@ async function processPagBank(
   }
   if (method === "CREDIT_CARD" && data.charges?.[0]) {
     const charge = data.charges[0];
-    result.status = charge.status === "PAID" ? "approved" : "pending";
+    const chStatus = String(charge.status || "").toUpperCase();
+    if (chStatus === "DECLINED" || chStatus === "CANCELED" || chStatus === "CANCELLED") {
+      const reason = charge.payment_response?.message || charge.payment_response?.reference || "Cartão recusado pelo banco emissor.";
+      throw new Error(`❌ Pagamento recusado: ${reason}. Tente outro cartão ou método.`);
+    }
+    result.status = chStatus === "PAID" ? "approved" : "pending";
     result.card = {
       status: result.status,
       brand: charge.payment_method?.card?.brand,
