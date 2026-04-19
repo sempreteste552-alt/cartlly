@@ -114,8 +114,8 @@ Deno.serve(async (req) => {
     // Get tenant info
     const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user_id).single();
     const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
-    const tenantEmail = authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
-    const tenantName = profile?.display_name || "Tenant";
+    const tenantEmail = payer_email || authUser?.user?.email || `tenant-${user_id}@cartlly.com`;
+    const tenantName = payer_name || profile?.display_name || "Tenant";
 
     const method = payment_method || "PIX";
     let result: any;
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       } else if (gateway === "amplopay") {
         result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
       } else if (gateway === "asaas") {
-        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, installments, user_id);
+        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, card, installments, user_id);
       } else {
         return json({ error: `Gateway "${gateway}" não suportado` }, 400);
       }
