@@ -226,7 +226,7 @@ export default function PlanCheckoutModal({
       };
 
       if (selectedMethod === "CREDIT_CARD") {
-        payload.installments = installments;
+        payload.installments = 1;
         payload.card = {
           number: cardDigits,
           holder: cardHolder.trim(),
