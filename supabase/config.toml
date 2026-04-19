@@ -8,4 +8,4 @@ project_id = "dxdpdwwwhhwbbcybyshd"
   [functions.asaas-webhook]
     verify_jwt = false
   [functions.test-gateway]
-    verify_jwt = true
+    verify_jwt = false
