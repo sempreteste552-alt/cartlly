@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Wifi } from "lucide-react";
 import {
   NubankLogo, ItauLogo, BBLogo, BradescoLogo, SantanderLogo, CaixaLogo,
@@ -144,20 +144,92 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
   }
 }
 
-export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
-  const { brand, bank, gradient, textColor, chipGradient, BankLogoComp } = useMemo(() => {
-    const n = number.replace(/\s/g, "");
-    const b = detectBrand(n);
-    const bk = detectBank(n);
-    return {
-      brand: b,
-      bank: bk,
-      gradient: bk?.gradient || b.gradient,
-      textColor: bk?.textColor || "text-white",
-      chipGradient: bk?.chipGradient || "from-yellow-300 to-yellow-500",
-      BankLogoComp: bk ? getBankLogo(bk.key) : null,
+// Cache de BINs já consultados (evita chamadas repetidas)
+const binCache = new Map<string, { bank: string; brand: string } | null>();
+
+async function fetchBinInfo(bin: string): Promise<{ bank: string; brand: string } | null> {
+  if (binCache.has(bin)) return binCache.get(bin)!;
+  try {
+    const res = await fetch(`https://lookup.binlist.net/${bin}`, {
+      headers: { "Accept-Version": "3" },
+    });
+    if (!res.ok) {
+      binCache.set(bin, null);
+      return null;
+    }
+    const data = await res.json();
+    const result = {
+      bank: (data?.bank?.name || "").toString().toUpperCase(),
+      brand: (data?.scheme || "").toString().toUpperCase(),
     };
-  }, [number]);
+    binCache.set(bin, result);
+    return result;
+  } catch {
+    binCache.set(bin, null);
+    return null;
+  }
+}
+
+// Mapeia nome do banco vindo da API para nosso BankInfo
+function bankFromApiName(name: string): BankInfo | null {
+  const n = name.toUpperCase();
+  if (n.includes("NU PAGAMENTOS") || n.includes("NUBANK")) return BANKS.NUBANK;
+  if (n.includes("ITAU") || n.includes("ITAÚ")) return BANKS.ITAU;
+  if (n.includes("BRADESCO")) return BANKS.BRADESCO;
+  if (n.includes("BANCO DO BRASIL") || n === "BB" || n.includes("BCO DO BRASIL")) return BANKS.BB;
+  if (n.includes("SANTANDER")) return BANKS.SANTANDER;
+  if (n.includes("CAIXA")) return BANKS.CAIXA;
+  if (n.includes("INTER")) return BANKS.INTER;
+  if (n.includes("C6")) return BANKS.C6;
+  if (n.includes("BTG")) return BANKS.BTG;
+  if (n.includes("BANCO XP") || n === "XP" || n.includes("XP INVEST")) return BANKS.XP;
+  if (n.includes("PICPAY")) return BANKS.PICPAY;
+  if (n.includes("MERCADO PAGO") || n.includes("MERCADOPAGO")) return BANKS.MERCADOPAGO;
+  if (n.includes("PAGSEGURO") || n.includes("PAGBANK")) return BANKS.PAGBANK;
+  if (n.includes("SAFRA")) return BANKS.SAFRA;
+  if (n.includes("NEON")) return BANKS.NEON;
+  return null;
+}
+
+export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
+  const cleanNumber = useMemo(() => number.replace(/\s/g, ""), [number]);
+  const [apiBank, setApiBank] = useState<{ info: BankInfo | null; rawName: string } | null>(null);
+
+  // Detecção local imediata
+  const local = useMemo(() => {
+    const b = detectBrand(cleanNumber);
+    const bk = detectBank(cleanNumber);
+    return { brand: b, bank: bk };
+  }, [cleanNumber]);
+
+  // Lookup remoto quando BIN tem 6 dígitos e não foi detectado localmente
+  useEffect(() => {
+    const bin = cleanNumber.slice(0, 6);
+    if (bin.length < 6 || local.bank) {
+      setApiBank(null);
+      return;
+    }
+    let cancelled = false;
+    fetchBinInfo(bin).then((res) => {
+      if (cancelled) return;
+      if (!res || !res.bank) {
+        setApiBank(null);
+        return;
+      }
+      setApiBank({ info: bankFromApiName(res.bank), rawName: res.bank });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cleanNumber, local.bank]);
+
+  const bank = local.bank || apiBank?.info || null;
+  const fallbackBankLabel = !bank && apiBank?.rawName ? apiBank.rawName : null;
+  const brand = local.brand;
+  const gradient = bank?.gradient || brand.gradient;
+  const textColor = bank?.textColor || "text-white";
+  const chipGradient = bank?.chipGradient || "from-yellow-300 to-yellow-500";
+  const BankLogoComp = bank ? getBankLogo(bank.key) : null;
 
   const display = (number || "").padEnd(19, "•").slice(0, 19);
   const groups = display.match(/.{1,4}/g) || [];
@@ -191,6 +263,11 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
               {bank && (
                 <span className="text-[9px] font-semibold tracking-widest opacity-80 drop-shadow uppercase">
                   {bank.label}
+                </span>
+              )}
+              {!bank && fallbackBankLabel && (
+                <span className="text-[10px] font-bold tracking-wider opacity-90 drop-shadow uppercase text-right leading-tight max-w-[140px] truncate">
+                  {fallbackBankLabel}
                 </span>
               )}
             </div>
