@@ -287,8 +287,162 @@ function gatewayLabel(gw: string): string {
     mercadopago: "Mercado Pago",
     pagbank: "PagBank",
     amplopay: "Amplopay",
+    stripe: "Stripe",
+    asaas: "Asaas",
   };
   return labels[gw] || gw;
+}
+
+// ===================== ASAAS =====================
+async function createAsaasPayment(
+  order: any,
+  method: string,
+  apiKey: string,
+  environment: string,
+  cardToken?: string,
+  installments?: number,
+  payerCpf?: string,
+  payerFirstName?: string,
+  payerLastName?: string,
+) {
+  const baseUrl = environment === "production"
+    ? "https://api.asaas.com/v3"
+    : "https://api-sandbox.asaas.com/v3";
+
+  const headers = {
+    "Content-Type": "application/json",
+    "access_token": apiKey,
+    "User-Agent": "LovableStore",
+  };
+
+  const cpfDigits = (payerCpf || order.customer_cpf || "").replace(/\D/g, "");
+  if (!cpfDigits || cpfDigits.length < 11) {
+    throw new Error("CPF do cliente é obrigatório para o Asaas.");
+  }
+
+  const fullName = [payerFirstName, payerLastName].filter(Boolean).join(" ").trim()
+    || order.customer_name
+    || "Cliente";
+
+  // 1. Cria customer no Asaas
+  const customerRes = await fetch(`${baseUrl}/customers`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      name: fullName,
+      cpfCnpj: cpfDigits,
+      email: order.customer_email || undefined,
+      mobilePhone: (order.customer_phone || "").replace(/\D/g, "") || undefined,
+    }),
+  });
+  const customerData = await customerRes.json();
+  if (!customerRes.ok || !customerData.id) {
+    const msg = customerData?.errors?.[0]?.description || customerData?.message || "Falha ao criar cliente no Asaas";
+    throw new Error(msg);
+  }
+
+  // 2. Cobrança
+  const billingTypeMap: Record<string, string> = {
+    pix: "PIX",
+    boleto: "BOLETO",
+    credit_card: "CREDIT_CARD",
+    debit_card: "CREDIT_CARD",
+  };
+  const billingType = billingTypeMap[method];
+  if (!billingType) throw new Error(`Método "${method}" não suportado no Asaas.`);
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + (method === "boleto" ? 3 : 1));
+
+  const paymentPayload: any = {
+    customer: customerData.id,
+    billingType,
+    value: Number(order.total),
+    dueDate: dueDate.toISOString().slice(0, 10),
+    description: `Pedido #${String(order.id).slice(0, 8)}`,
+    externalReference: order.id,
+  };
+
+  if (method === "credit_card" || method === "debit_card") {
+    if (!cardToken) throw new Error("Dados do cartão obrigatórios.");
+    let cardData: any;
+    try { cardData = JSON.parse(cardToken); } catch { throw new Error("Dados do cartão inválidos para o Asaas."); }
+    paymentPayload.creditCard = {
+      holderName: cardData.holderName || fullName,
+      number: String(cardData.number || "").replace(/\D/g, ""),
+      expiryMonth: String(cardData.expiryMonth || "").padStart(2, "0"),
+      expiryYear: String(cardData.expiryYear || ""),
+      ccv: String(cardData.ccv || ""),
+    };
+    paymentPayload.creditCardHolderInfo = {
+      name: fullName,
+      email: order.customer_email || "noreply@store.com",
+      cpfCnpj: cpfDigits,
+      postalCode: (order.shipping_zip || "00000000").replace(/\D/g, "").padStart(8, "0"),
+      addressNumber: order.shipping_number || "S/N",
+      phone: (order.customer_phone || "").replace(/\D/g, "") || undefined,
+    };
+    if ((installments || 1) > 1) {
+      paymentPayload.installmentCount = installments;
+      paymentPayload.installmentValue = Number((Number(order.total) / installments!).toFixed(2));
+    }
+  }
+
+  const payRes = await fetch(`${baseUrl}/payments`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(paymentPayload),
+  });
+  const payData = await payRes.json();
+  if (!payRes.ok || !payData.id) {
+    const msg = payData?.errors?.[0]?.description || payData?.message || "Falha ao processar pagamento Asaas";
+    throw new Error(msg);
+  }
+
+  const statusMap: Record<string, string> = {
+    PENDING: "pending",
+    AWAITING_RISK_ANALYSIS: "pending",
+    CONFIRMED: "approved",
+    RECEIVED: "approved",
+    RECEIVED_IN_CASH: "approved",
+    OVERDUE: "rejected",
+    REFUNDED: "refunded",
+    CHARGEBACK_REQUESTED: "rejected",
+    CHARGEBACK_DISPUTE: "rejected",
+  };
+  const mappedStatus = statusMap[payData.status] || "pending";
+
+  const result: any = {
+    gateway_payment_id: payData.id,
+    status: mappedStatus,
+    raw: payData,
+  };
+
+  if (method === "pix") {
+    const qrRes = await fetch(`${baseUrl}/payments/${payData.id}/pixQrCode`, { headers });
+    const qr = await qrRes.json();
+    if (qrRes.ok) {
+      result.pix_qr_code = qr.payload;
+      result.pix_qr_code_base64 = qr.encodedImage;
+      result.pix_expiration = qr.expirationDate;
+    }
+  }
+
+  if (method === "boleto") {
+    result.boleto_url = payData.bankSlipUrl || payData.invoiceUrl;
+    result.boleto_barcode = payData.identificationField || payData.nossoNumero;
+    result.boleto_expiration = payData.dueDate;
+  }
+
+  if ((method === "credit_card" || method === "debit_card") && mappedStatus === "rejected") {
+    throw new Error("❌ Cartão recusado pelo banco emissor. Tente outro cartão ou método.");
+  }
+  if (payData.creditCard) {
+    result.card_last_four = payData.creditCard.creditCardNumber?.slice(-4);
+    result.card_brand = payData.creditCard.creditCardBrand;
+  }
+
+  return result;
 }
 
 // ===================== MERCADO PAGO =====================
