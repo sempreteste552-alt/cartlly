@@ -262,9 +262,22 @@ function genericBankByName(name: string): BankInfo {
   return BANKS.GENERIC_BLUE;
 }
 
+// Detecta brand pelo nome retornado pela API (Visa, Master, Elo, Amex, Hiper)
+function brandFromApiName(scheme: string): { name: string; Logo: React.FC<{ className?: string }>; gradient: string } | null {
+  const s = scheme.toUpperCase();
+  if (s.includes("VISA")) return { name: "VISA", Logo: VisaLogo, gradient: "from-blue-700 via-blue-600 to-indigo-800" };
+  if (s.includes("MASTER")) return { name: "MASTERCARD", Logo: MastercardLogo, gradient: "from-red-700 via-orange-600 to-yellow-600" };
+  if (s.includes("AMEX") || s.includes("AMERICAN")) return { name: "AMEX", Logo: AmexLogo, gradient: "from-emerald-700 via-emerald-600 to-teal-700" };
+  if (s.includes("ELO")) return { name: "ELO", Logo: EloLogo, gradient: "from-zinc-800 via-zinc-700 to-zinc-900" };
+  if (s.includes("HIPER")) return { name: "HIPERCARD", Logo: HipercardLogo, gradient: "from-rose-700 via-red-600 to-rose-800" };
+  return null;
+}
+
 export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
   const cleanNumber = useMemo(() => number.replace(/\s/g, ""), [number]);
   const [apiBank, setApiBank] = useState<{ info: BankInfo | null; rawName: string } | null>(null);
+
+  const [apiBrand, setApiBrand] = useState<{ name: string; Logo: React.FC<{ className?: string }>; gradient: string } | null>(null);
 
   // Detecção local imediata
   const local = useMemo(() => {
@@ -273,21 +286,33 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
     return { brand: b, bank: bk };
   }, [cleanNumber]);
 
-  // Lookup remoto quando BIN tem 6 dígitos e não foi detectado localmente
+  // Lookup remoto quando BIN tem 6 dígitos (sempre tenta enriquecer com bank + brand)
   useEffect(() => {
     const bin = cleanNumber.slice(0, 6);
-    if (bin.length < 6 || local.bank) {
+    if (bin.length < 6) {
       setApiBank(null);
+      setApiBrand(null);
       return;
     }
     let cancelled = false;
     fetchBinInfo(bin).then((res) => {
-      if (cancelled) return;
-      if (!res || !res.bank) {
+      if (cancelled || !res) {
         setApiBank(null);
+        setApiBrand(null);
         return;
       }
-      setApiBank({ info: bankFromApiName(res.bank), rawName: res.bank });
+      // Banco — só aplica se ainda não temos detecção local
+      if (!local.bank && res.bank) {
+        setApiBank({ info: bankFromApiName(res.bank), rawName: res.bank });
+      } else {
+        setApiBank(null);
+      }
+      // Brand — sempre tenta enriquecer com a info da API
+      if (res.brand) {
+        setApiBrand(brandFromApiName(res.brand));
+      } else {
+        setApiBrand(null);
+      }
     });
     return () => {
       cancelled = true;
@@ -298,7 +323,7 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
   const apiGeneric = !local.bank && apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
   const bank = local.bank || apiBank?.info || apiGeneric || null;
   const bankDisplayLabel = local.bank?.label || apiBank?.info?.label || (apiBank?.rawName ?? null);
-  const brand = local.brand;
+  const brand = apiBrand || local.brand;
   const gradient = bank?.gradient || brand.gradient;
   const textColor = bank?.textColor || "text-white";
   const chipGradient = bank?.chipGradient || "from-yellow-300 to-yellow-500";
