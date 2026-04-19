@@ -193,6 +193,8 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [mpIssuerId, setMpIssuerId] = useState<string>("");
   const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
   const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
+  const [mpIssuerName, setMpIssuerName] = useState("");
+  const [mpBrandName, setMpBrandName] = useState("");
 
   // PIX/Boleto CPF
   const [payerCpf, setPayerCpf] = useState(initialCpf || "");
@@ -300,10 +302,14 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
           if (methods && methods.length > 0) {
             const method = methods[0];
             setMpPaymentMethodId(method.id);
+            setMpBrandName((method.name || method.id || "").toString());
             
             const issuers = await mp.getIssuers({ paymentMethodId: method.id, bin });
             if (issuers && issuers.length > 0) {
               setMpIssuerId(issuers[0].id);
+              setMpIssuerName((issuers[0].name || "").toString());
+            } else {
+              setMpIssuerName(((method.issuer && method.issuer.name) || "").toString());
             }
             
             const installments = await mp.getInstallments({ 
@@ -320,6 +326,12 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
         }
       };
       fetchMPDetails();
+    } else {
+      setMpIssuerId("");
+      setMpPaymentMethodId("");
+      setMpInstallmentsOptions([]);
+      setMpIssuerName("");
+      setMpBrandName("");
     }
   }, [cardNumber, settings?.payment_gateway, settings?.gateway_public_key, total]);
 
@@ -827,6 +839,8 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
             expiry={cardExpiry}
             cvv={cardCvv}
             flipped={cardFocus === "cvv"}
+            gatewayBankName={mpIssuerName}
+            gatewayBrandName={mpBrandName}
           />
 
           <div className="space-y-2">
