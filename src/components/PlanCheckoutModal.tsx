@@ -92,6 +92,7 @@ export default function PlanCheckoutModal({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   // Card fields
@@ -189,7 +190,8 @@ export default function PlanCheckoutModal({
 
   /* ------ Validation ------ */
   const cpfClean = cpf.replace(/\D/g, "");
-  const baseValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11;
+  const phoneClean = phone.replace(/\D/g, "");
+  const baseValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11 && phoneClean.length >= 10;
   const cardDigits = cardNumber.replace(/\D/g, "");
   const expiryDigits = cardExpiry.replace(/\D/g, "");
   const cardValid =
@@ -218,6 +220,7 @@ export default function PlanCheckoutModal({
         plan_id: planId,
         payment_method: selectedMethod,
         document: cpfClean,
+        phone: phoneClean,
         payer_name: fullName.trim(),
         payer_email: email.trim(),
       };
