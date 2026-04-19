@@ -3395,6 +3395,9 @@ export type Database = {
           header_text_color: string | null
           id: string
           instagram_url: string | null
+          installments_free_up_to: number
+          installments_interest_enabled: boolean
+          installments_interest_rate: number
           is_verified: boolean | null
           language: string
           logo_size: number
@@ -3475,6 +3478,9 @@ export type Database = {
           header_text_color?: string | null
           id?: string
           instagram_url?: string | null
+          installments_free_up_to?: number
+          installments_interest_enabled?: boolean
+          installments_interest_rate?: number
           is_verified?: boolean | null
           language?: string
           logo_size?: number
@@ -3555,6 +3561,9 @@ export type Database = {
           header_text_color?: string | null
           id?: string
           instagram_url?: string | null
+          installments_free_up_to?: number
+          installments_interest_enabled?: boolean
+          installments_interest_rate?: number
           is_verified?: boolean | null
           language?: string
           logo_size?: number
