@@ -564,7 +564,14 @@ async function createPagBankPayment(
 
   if (method === "credit_card" && data.charges?.[0]) {
     const charge = data.charges[0];
-    result.status = charge.status === "PAID" ? "approved" : "pending";
+    const chStatus = String(charge.status || "").toUpperCase();
+    if (chStatus === "DECLINED" || chStatus === "CANCELED" || chStatus === "CANCELLED") {
+      const reason = charge.payment_response?.message || charge.payment_response?.reference || "Cartão recusado pelo banco emissor.";
+      console.warn(`PagBank card declined: ${chStatus} - ${reason}`);
+      throw new Error(`❌ Pagamento recusado: ${reason}. Tente outro cartão ou método.`);
+    }
+    result.status = chStatus === "PAID" ? "approved" : "pending";
+    result.status_detail = charge.payment_response?.code || chStatus;
     result.card_last_four = charge.payment_method?.card?.last_digits;
     result.card_brand = charge.payment_method?.card?.brand;
   }
