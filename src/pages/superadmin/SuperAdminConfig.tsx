@@ -586,6 +586,10 @@ export default function SuperAdminConfig() {
               <Label>Token</Label>
               <Input type="password" value={config.pagbank_global_key} onChange={e => updateField("pagbank_global_key", e.target.value)} placeholder="Token PagBank..." />
             </div>
+            <Button variant="outline" size="sm" onClick={() => handleTestGateway("pagbank")} disabled={testing === "pagbank"}>
+              {testing === "pagbank" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Testar Conexão PagBank
+            </Button>
           </div>
         </CardContent>
       </Card>
