@@ -45,6 +45,8 @@ interface PlatformConfig {
   signup_coupon_discount_value: number;
   signup_coupon_auto_show: boolean;
   signup_coupon_text: string;
+  plan_gateway: string;
+  asaas_api_key: string;
 }
 
 const defaultConfig: PlatformConfig = {
