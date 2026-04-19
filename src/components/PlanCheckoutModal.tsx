@@ -613,7 +613,53 @@ export default function PlanCheckoutModal({
             </div>
           )}
 
-          {/* ==================== STEP: SUCCESS ==================== */}
+          {/* ==================== STEP: BOLETO ==================== */}
+          {step === "boleto" && (
+            <div className="space-y-5">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-primary/10">
+                  <FileText className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Boleto gerado!</h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                    O plano será ativado automaticamente após a compensação (1-3 dias úteis).
+                  </p>
+                </div>
+              </div>
+
+              {boletoBarcode && (
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Linha digitável</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 rounded-xl border border-border/60 bg-muted/20 px-3 py-2.5 font-mono text-[11px] break-all max-h-16 overflow-auto text-muted-foreground leading-relaxed">
+                      {boletoBarcode}
+                    </div>
+                    <Button variant="outline" size="icon" className="shrink-0 h-auto rounded-xl" onClick={() => {
+                      navigator.clipboard.writeText(boletoBarcode);
+                      toast.success("Código copiado!");
+                    }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1 h-11" onClick={() => onOpenChange(false)}>
+                  Fechar
+                </Button>
+                {boletoUrl && (
+                  <Button className="flex-1 gap-2 h-11 font-bold" asChild>
+                    <a href={boletoUrl} target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4" /> Abrir boleto
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {step === "success" && (
             <div className="py-2 sm:py-4 space-y-4 sm:space-y-6">
               <div className="flex flex-col items-center gap-3 sm:gap-4 text-center">
