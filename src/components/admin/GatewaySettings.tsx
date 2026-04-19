@@ -37,6 +37,9 @@ export function GatewaySettings() {
   const [showPublicKey, setShowPublicKey] = useState(false);
   const [gatewayEnvironment, setGatewayEnvironment] = useState("sandbox");
   const [maxInstallments, setMaxInstallments] = useState(12);
+  const [installmentsFreeUpTo, setInstallmentsFreeUpTo] = useState(1);
+  const [interestEnabled, setInterestEnabled] = useState(false);
+  const [interestRate, setInterestRate] = useState(2.99);
   const [gatewayActive, setGatewayActive] = useState(false);
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMessage, setTestMessage] = useState("");
@@ -49,6 +52,9 @@ export function GatewaySettings() {
       setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
+      setInstallmentsFreeUpTo((settings as any).installments_free_up_to ?? 1);
+      setInterestEnabled(!!(settings as any).installments_interest_enabled);
+      setInterestRate(Number((settings as any).installments_interest_rate ?? 2.99));
       setGatewayActive(!!(settings.payment_gateway && settings.gateway_public_key && (settings as any).gateway_secret_key));
     }
   }, [settings]);
