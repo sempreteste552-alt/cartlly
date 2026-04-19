@@ -127,6 +127,11 @@ export default function LojaCheckout() {
   const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
   const [reviewsSubmitted, setReviewsSubmitted] = useState<Set<string>>(new Set());
 
+  // Scroll para o topo ao mudar de etapa (essencial em mobile)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [phase]);
+
   // Confetti on success
   useEffect(() => {
     if (phase === "success") {
