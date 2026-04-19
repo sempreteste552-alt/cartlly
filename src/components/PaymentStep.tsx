@@ -168,6 +168,7 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("");
+  const [cardFocus, setCardFocus] = useState<"number" | "name" | "expiry" | "cvv">("number");
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
