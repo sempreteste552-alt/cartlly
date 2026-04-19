@@ -148,7 +148,7 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
   const { brand, bank, gradient, textColor, chipGradient, BankLogoComp } = useMemo(() => {
     const n = number.replace(/\s/g, "");
     const b = detectBrand(n);
-    const bk = detectBank(n.slice(0, 6));
+    const bk = detectBank(n);
     return {
       brand: b,
       bank: bk,
