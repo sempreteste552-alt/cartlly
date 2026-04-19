@@ -761,18 +761,18 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${Math.min(logoSize, 44)}px`, maxWidth: "180px" }}
+                        style={{ height: `${Math.max(64, Math.min(logoSize * 1.6, 88))}px`, maxWidth: "260px" }}
                         className="object-contain"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
                       )}
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-lg sm:text-xl font-bold truncate" style={{ color: headerTextColor }}>{storeName}</span>
+                      <span className="text-2xl sm:text-3xl font-bold truncate" style={{ color: headerTextColor }}>{storeName}</span>
                       {settings?.is_verified && (
-                        <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                        <BadgeCheck className="h-5 w-5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
                       )}
                     </div>
                   )}
