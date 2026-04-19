@@ -334,14 +334,9 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
                   <BankLogoComp className="h-5 sm:h-6 max-w-[120px]" />
                 </div>
               )}
-              {bank && (
-                <span className="text-[9px] font-semibold tracking-widest opacity-80 drop-shadow uppercase">
-                  {bank.label}
-                </span>
-              )}
-              {!bank && fallbackBankLabel && (
-                <span className="text-[10px] font-bold tracking-wider opacity-90 drop-shadow uppercase text-right leading-tight max-w-[140px] truncate">
-                  {fallbackBankLabel}
+              {bankDisplayLabel && (
+                <span className="text-[10px] font-bold tracking-widest opacity-90 drop-shadow uppercase text-right leading-tight max-w-[150px] truncate">
+                  {bankDisplayLabel}
                 </span>
               )}
             </div>
