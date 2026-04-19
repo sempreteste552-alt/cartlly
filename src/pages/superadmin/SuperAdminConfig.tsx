@@ -568,6 +568,10 @@ export default function SuperAdminConfig() {
                 <Input type="password" value={config.amplopay_secret_key} onChange={e => updateField("amplopay_secret_key", e.target.value)} placeholder="Chave secreta Amplopay..." />
               </div>
             </div>
+            <Button variant="outline" size="sm" onClick={() => handleTestGateway("amplopay")} disabled={testing === "amplopay"}>
+              {testing === "amplopay" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Testar Conexão Amplopay
+            </Button>
           </div>
 
           <Separator />
