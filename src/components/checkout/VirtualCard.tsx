@@ -204,22 +204,59 @@ async function fetchBinInfo(bin: string): Promise<{ bank: string; brand: string 
 // Mapeia nome do banco vindo da API para nosso BankInfo
 function bankFromApiName(name: string): BankInfo | null {
   const n = name.toUpperCase();
-  if (n.includes("NU PAGAMENTOS") || n.includes("NUBANK")) return BANKS.NUBANK;
+  // Digitais & big banks
+  if (n.includes("NU PAGAMENTOS") || n.includes("NUBANK") || n.includes("NU FINANCEIRA")) return BANKS.NUBANK;
+  if (n.includes("ITI ")) return BANKS.ITI;
   if (n.includes("ITAU") || n.includes("ITAÚ")) return BANKS.ITAU;
+  if (n.includes("NEXT")) return BANKS.NEXT;
+  if (n.includes("DIGIO")) return BANKS.DIGIO;
   if (n.includes("BRADESCO")) return BANKS.BRADESCO;
-  if (n.includes("BANCO DO BRASIL") || n === "BB" || n.includes("BCO DO BRASIL")) return BANKS.BB;
+  if (n.includes("BANCO DO BRASIL") || n === "BB" || n.includes("BCO DO BRASIL") || n.includes("BANCO BRASIL")) return BANKS.BB;
   if (n.includes("SANTANDER")) return BANKS.SANTANDER;
   if (n.includes("CAIXA")) return BANKS.CAIXA;
   if (n.includes("INTER")) return BANKS.INTER;
   if (n.includes("C6")) return BANKS.C6;
   if (n.includes("BTG")) return BANKS.BTG;
   if (n.includes("BANCO XP") || n === "XP" || n.includes("XP INVEST")) return BANKS.XP;
-  if (n.includes("PICPAY")) return BANKS.PICPAY;
+  if (n.includes("PICPAY") || n.includes("PIC PAY")) return BANKS.PICPAY;
   if (n.includes("MERCADO PAGO") || n.includes("MERCADOPAGO")) return BANKS.MERCADOPAGO;
-  if (n.includes("PAGSEGURO") || n.includes("PAGBANK")) return BANKS.PAGBANK;
+  if (n.includes("PAGSEGURO") || n.includes("PAGBANK") || n.includes("PAG SEGURO")) return BANKS.PAGBANK;
   if (n.includes("SAFRA")) return BANKS.SAFRA;
   if (n.includes("NEON")) return BANKS.NEON;
+  // Outros digitais & médios
+  if (n.includes("WILL") || n.includes("WILLBANK")) return BANKS.WILL;
+  if (n.includes("ORIGINAL")) return BANKS.ORIGINAL;
+  if (n.includes("PAN") || n.includes("BANCO PAN")) return BANKS.PAN;
+  if (n.includes("BMG")) return BANKS.BMG;
+  if (n.includes("MODAL")) return BANKS.MODAL;
+  if (n.includes("DAYCOVAL")) return BANKS.DAYCOVAL;
+  if (n.includes("VOTORANTIM") || n.includes("BANCO BV") || n === "BV") return BANKS.VOTORANTIM;
+  // Cooperativas & regionais
+  if (n.includes("SICOOB") || n.includes("BANCOOB")) return BANKS.SICOOB;
+  if (n.includes("SICREDI")) return BANKS.SICREDI;
+  if (n.includes("BANRISUL")) return BANKS.BANRISUL;
+  if (n.includes("MERCANTIL")) return BANKS.MERCANTIL;
+  if (n.includes("BANESTES")) return BANKS.BANESTES;
+  // Cartões de varejo
+  if (n.includes("RENNER") || n.includes("REALIZE")) return BANKS.RENNER;
+  if (n.includes("CARREFOUR")) return BANKS.CARREFOUR;
+  if (n.includes("LUIZACRED") || n.includes("MAGAZINE LUIZA") || n.includes("MAGALU")) return BANKS.MAGALU;
+  if (n.includes("AMAZON")) return BANKS.AMAZON;
+  // Adquirentes / sub-aquirentes
+  if (n.includes("STONE")) return BANKS.STONE;
+  if (n.includes("SUMUP")) return BANKS.SUMUP;
   return null;
+}
+
+// Quando não temos logo SVG mas API retornou nome, escolhe paleta inteligente
+function genericBankByName(name: string): BankInfo {
+  const n = name.toUpperCase();
+  if (/NU |NU$|ROXO|UNIVERS|ULTRA/.test(n)) return BANKS.GENERIC_PURPLE;
+  if (/RED|VERMELH|ROSE|CRIMSON|BRADESCO|SANTAND/.test(n)) return BANKS.GENERIC_RED;
+  if (/GREEN|VERDE|EMERALD|TEAL|COOP|SICRED|SICOOB|ORIGIN/.test(n)) return BANKS.GENERIC_GREEN;
+  if (/BLACK|NOIR|PRETO|DARK|PRIME|PLATIN/.test(n)) return BANKS.GENERIC_BLACK;
+  if (/ORANGE|LARANJA|ITAÚ|ITAU|INTER|BMG|HIPER/.test(n)) return BANKS.GENERIC_ORANGE;
+  return BANKS.GENERIC_BLUE;
 }
 
 export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
