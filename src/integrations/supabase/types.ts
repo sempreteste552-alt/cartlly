@@ -4580,6 +4580,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_hostname_exists: { Args: { _hostname: string }; Returns: boolean }
       check_pending_domains: { Args: never; Returns: undefined }
       create_default_segments: {
         Args: { _user_id: string }
@@ -4596,6 +4597,13 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      find_customer_by_referral_code: {
+        Args: { _code: string; _store_user_id: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
       }
       generate_referral_code: { Args: never; Returns: string }
       get_ai_work_summary: { Args: { p_user_id: string }; Returns: Json }
@@ -4658,6 +4666,13 @@ export type Database = {
       is_collaborator: {
         Args: { owner_id: string; required_roles?: string[] }
         Returns: boolean
+      }
+      lookup_profile_for_invite: {
+        Args: { _email: string }
+        Returns: {
+          display_name: string
+          user_id: string
+        }[]
       }
       match_customer_insights: {
         Args: {
