@@ -3688,6 +3688,48 @@ export type Database = {
         }
         Relationships: []
       }
+      super_admin_otps: {
+        Row: {
+          action: string
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          max_attempts: number
+          payload: Json
+          super_admin_id: string
+          target_user_id: string
+          used_at: string | null
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          max_attempts?: number
+          payload?: Json
+          super_admin_id: string
+          target_user_id: string
+          used_at?: string | null
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          max_attempts?: number
+          payload?: Json
+          super_admin_id?: string
+          target_user_id?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string | null
