@@ -82,6 +82,8 @@ const defaultConfig: PlatformConfig = {
   signup_coupon_discount_value: 10,
   signup_coupon_auto_show: false,
   signup_coupon_text: "🎉 Use o cupom abaixo e ganhe desconto na sua primeira compra!",
+  plan_gateway: "",
+  asaas_api_key: "",
 };
 
 export default function SuperAdminConfig() {
