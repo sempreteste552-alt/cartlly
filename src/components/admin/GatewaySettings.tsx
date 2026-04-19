@@ -18,6 +18,7 @@ const GATEWAYS = [
   { id: "stripe", name: "Stripe", description: "Pagamentos globais com Apple Pay e Google Pay.", publicKeyLabel: "Publishable Key", publicKeyPlaceholder: "pk_live_xxxxxxxx", docsUrl: "https://stripe.com/docs", color: "#635bff", testEndpoint: "" },
   { id: "pagbank", name: "PagBank (PagSeguro)", description: "Soluções completas de pagamento.", publicKeyLabel: "Token Público", publicKeyPlaceholder: "XXXXXXXX-XXXX", docsUrl: "https://dev.pagbank.uol.com.br", color: "#41b64f", testEndpoint: "" },
   { id: "amplopay", name: "Amplopay", description: "Gateway com PIX e Boleto simplificado.", publicKeyLabel: "Public Key", publicKeyPlaceholder: "pk_xxxxxxxx", docsUrl: "https://app.amplopay.com/docs", color: "#6366f1", testEndpoint: "" },
+  { id: "asaas", name: "Asaas", description: "PIX, Cartão de Crédito e Boleto em uma só API.", publicKeyLabel: "Não utilizado", publicKeyPlaceholder: "(deixe em branco)", docsUrl: "https://docs.asaas.com", color: "#1d8cf8", testEndpoint: "" },
 ];
 
 type TestStatus = "idle" | "testing" | "success" | "error";
