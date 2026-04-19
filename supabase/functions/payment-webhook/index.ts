@@ -583,6 +583,7 @@ async function sendRichPush(targetUserId: string, payload: {
   type?: string;
   data?: any;
   tag?: string;
+  store_user_id?: string;
 }) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -597,15 +598,113 @@ async function sendRichPush(targetUserId: string, payload: {
         type: payload.type || "general",
         data: payload.data || {},
         tag: payload.tag || payload.type || "default",
+        ...(payload.store_user_id ? { store_user_id: payload.store_user_id } : {}),
       }),
     });
     if (!resp.ok) {
       const text = await resp.text();
       console.error("sendRichPush failed:", resp.status, text);
     } else {
-      await resp.text(); // consume body
+      await resp.text();
     }
   } catch (e: any) {
     console.error("sendRichPush error:", e.message);
   }
 }
+
+/**
+ * Notifica o cliente da loja (storefront) sobre mudança de pagamento.
+ * - Insere uma mensagem no sininho da vitrine
+ * - Envia push direto ao cliente (se subscrito)
+ */
+async function notifyCustomerStorefront(supabase: any, args: {
+  storeUserId: string;
+  customerEmail?: string | null;
+  orderId: string;
+  status: "approved" | "rejected" | "pending" | "cancelled";
+  method: string;
+  amount: number;
+  productSummary?: string;
+  storeSlug?: string;
+}) {
+  try {
+    if (!args.customerEmail) return;
+
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, auth_user_id")
+      .eq("store_user_id", args.storeUserId)
+      .eq("email", args.customerEmail)
+      .maybeSingle();
+
+    if (!customer?.auth_user_id) return;
+
+    const firstName = (customer.name || "").split(" ")[0] || "Tudo certo";
+    const formattedTotal = `R$ ${Number(args.amount || 0).toFixed(2).replace(".", ",")}`;
+    const orderId8 = args.orderId.slice(0, 8).toUpperCase();
+    const methodLabel = args.method === "pix" ? "PIX"
+      : args.method === "credit_card" ? "cartão"
+      : args.method === "boleto" ? "boleto"
+      : args.method === "debit_card" ? "cartão de débito"
+      : args.method;
+    const productPart = args.productSummary ? ` (${args.productSummary})` : "";
+    const trackingUrl = args.storeSlug ? `/loja/${args.storeSlug}/rastreio/${args.orderId}` : "/";
+
+    let title = "";
+    let body = "";
+    let messageType = "info";
+
+    if (args.status === "approved") {
+      title = `🎉 ${firstName}, seu pagamento foi aprovado!`;
+      body = `Recebemos ${formattedTotal} no ${methodLabel}. Já estamos preparando seu pedido${productPart} com muito carinho 💛 Pedido #${orderId8}`;
+      messageType = "success";
+    } else if (args.status === "rejected") {
+      title = `😕 Ops, ${firstName}, seu pagamento não passou`;
+      body = `O ${methodLabel} de ${formattedTotal} foi recusado pelo banco. Não desanima! Tenta de novo ou escolhe outra forma — a gente te espera 💛 Pedido #${orderId8}`;
+      messageType = "warning";
+    } else if (args.status === "cancelled") {
+      title = `Pedido cancelado`;
+      body = `${firstName}, o pagamento de ${formattedTotal} (#${orderId8}) foi cancelado. Se foi engano, é só voltar e finalizar de novo 😉`;
+      messageType = "warning";
+    } else if (args.status === "pending") {
+      title = `⏳ ${firstName}, estamos aguardando seu pagamento`;
+      body = `Geramos seu ${methodLabel} de ${formattedTotal}. Assim que cair, avisamos por aqui! Pedido #${orderId8}`;
+      messageType = "info";
+    } else {
+      return;
+    }
+
+    await supabase.from("tenant_messages").insert({
+      source_tenant_id: args.storeUserId,
+      sender_type: "tenant_admin",
+      sender_user_id: args.storeUserId,
+      audience_type: "tenant_admin_to_one_customer",
+      target_area: "public_store",
+      target_tenant_id: args.storeUserId,
+      target_user_id: customer.auth_user_id,
+      channel: "in_app",
+      title,
+      body,
+      message_type: messageType,
+      priority: args.status === "approved" || args.status === "rejected" ? "high" : "normal",
+      is_global: false,
+      status: "sent",
+    });
+
+    await sendRichPush(customer.auth_user_id, {
+      title,
+      body,
+      url: trackingUrl,
+      type: args.status === "approved" ? "payment_approved"
+        : args.status === "rejected" ? "payment_rejected"
+        : args.status === "pending" ? "payment_pending"
+        : "order_update",
+      data: { orderId: args.orderId, status: args.status, method: args.method },
+      tag: `customer_payment_${args.orderId}`,
+      store_user_id: args.storeUserId,
+    });
+  } catch (e: any) {
+    console.error("notifyCustomerStorefront error:", e.message);
+  }
+}
+
