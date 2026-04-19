@@ -401,12 +401,44 @@ export default function SuperAdminConfig() {
             Configure os gateways globais. Tenants sem chaves próprias usarão estas configurações.
           </p>
 
+          <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-3">
+            <Label className="text-base font-semibold">Gateway Ativo para Assinaturas</Label>
+            <p className="text-xs text-muted-foreground">
+              Define qual gateway processa o pagamento das assinaturas dos tenants. Em "Automático", usa o primeiro configurado (Asaas &gt; Mercado Pago &gt; PagBank &gt; Amplopay).
+            </p>
+            <Select value={config.plan_gateway || "auto"} onValueChange={v => updateField("plan_gateway", v === "auto" ? "" : v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Automático (detectar)</SelectItem>
+                <SelectItem value="asaas">Asaas (PIX, Cartão, Boleto)</SelectItem>
+                <SelectItem value="mercadopago">Mercado Pago</SelectItem>
+                <SelectItem value="amplopay">Amplopay (PIX)</SelectItem>
+                <SelectItem value="pagbank">PagBank</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
               <Label>Modo de Teste</Label>
               <p className="text-xs text-muted-foreground">Usar ambiente sandbox para todos os gateways</p>
             </div>
             <Switch checked={config.gateway_test_mode} onCheckedChange={v => updateField("gateway_test_mode", v)} />
+          </div>
+
+          <Separator />
+
+          {/* Asaas */}
+          <div className="space-y-3">
+            <h4 className="font-semibold flex items-center gap-2">
+              <span className="h-6 w-6 rounded bg-sky-500 text-white text-xs flex items-center justify-center font-bold">AS</span>
+              Asaas
+            </h4>
+            <div className="space-y-2">
+              <Label>API Key (opcional — recomendado usar variável de ambiente ASAAS_API_KEY)</Label>
+              <Input type="password" value={config.asaas_api_key} onChange={e => updateField("asaas_api_key", e.target.value)} placeholder="$aact_..." />
+              <p className="text-xs text-muted-foreground">A chave configurada em ASAAS_API_KEY (env) tem prioridade sobre este campo.</p>
+            </div>
           </div>
 
           <Separator />
