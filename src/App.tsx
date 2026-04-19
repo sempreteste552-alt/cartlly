@@ -67,6 +67,7 @@ const SuperAdminIndicacoes = lazy(() => import("./pages/superadmin/SuperAdminInd
 const SuperAdminBanners = lazy(() => import("./pages/superadmin/SuperAdminBanners"));
 const SuperAdminRoulette = lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
 const SuperAdminDominios = lazy(() => import("./pages/superadmin/SuperAdminDominios"));
+const SuperAdminTenantDiagnostics = lazy(() => import("./pages/superadmin/SuperAdminTenantDiagnostics"));
 
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Termos = lazy(() => import("./pages/Termos"));
@@ -160,6 +161,7 @@ const App = () => {
                     <Route path="config" element={<SuperAdminConfig />} />
                     <Route path="roulette" element={<SuperAdminRoulette />} />
                     <Route path="dominios" element={<SuperAdminDominios />} />
+                    <Route path="tenants/:userId/diagnostics" element={<SuperAdminTenantDiagnostics />} />
                   </Route>
                   {/* Tenant Admin */}
                   <Route path="/admin" element={<Navigate to="/" replace />} />
