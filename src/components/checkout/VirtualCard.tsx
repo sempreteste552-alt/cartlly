@@ -3,7 +3,10 @@ import { Wifi } from "lucide-react";
 import {
   NubankLogo, ItauLogo, BBLogo, BradescoLogo, SantanderLogo, CaixaLogo,
   InterLogo, C6Logo, BTGLogo, XPLogo, PicPayLogo, MercadoPagoLogo,
-  PagBankLogo, SafraLogo, NeonLogo,
+  PagBankLogo, SafraLogo, NeonLogo, ItiLogo, NextLogo, DigioLogo, WillLogo,
+  OriginalLogo, PanLogo, BMGLogo, ModalLogo, DaycovalLogo, BVLogo, SicoobLogo,
+  SicrediLogo, BanrisulLogo, MercantilLogo, BanestesLogo, RennerLogo,
+  CarrefourLogo, MagaluLogo, AmazonLogo, StoneLogo, SumUpLogo,
   VisaLogo, MastercardLogo, AmexLogo, EloLogo, HipercardLogo, GenericCardLogo,
 } from "./BankLogos";
 
@@ -157,11 +160,13 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
     case "NUBANK_ULTRA": return NubankLogo;
     case "ITAU":
     case "ITAU_BLACK":
-    case "ITI": return ItauLogo;
+      return ItauLogo;
+    case "ITI": return ItiLogo;
     case "BB":
     case "BB_BLACK": return BBLogo;
-    case "BRADESCO":
-    case "NEXT": return BradescoLogo;
+    case "BRADESCO": return BradescoLogo;
+    case "NEXT": return NextLogo;
+    case "DIGIO": return DigioLogo;
     case "SANTANDER": return SantanderLogo;
     case "CAIXA": return CaixaLogo;
     case "INTER": return InterLogo;
@@ -174,6 +179,24 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
     case "PAGBANK": return PagBankLogo;
     case "SAFRA": return SafraLogo;
     case "NEON": return NeonLogo;
+    case "WILL": return WillLogo;
+    case "ORIGINAL": return OriginalLogo;
+    case "PAN": return PanLogo;
+    case "BMG": return BMGLogo;
+    case "MODAL": return ModalLogo;
+    case "DAYCOVAL": return DaycovalLogo;
+    case "VOTORANTIM": return BVLogo;
+    case "SICOOB": return SicoobLogo;
+    case "SICREDI": return SicrediLogo;
+    case "BANRISUL": return BanrisulLogo;
+    case "MERCANTIL": return MercantilLogo;
+    case "BANESTES": return BanestesLogo;
+    case "RENNER": return RennerLogo;
+    case "CARREFOUR": return CarrefourLogo;
+    case "MAGALU": return MagaluLogo;
+    case "AMAZON": return AmazonLogo;
+    case "STONE": return StoneLogo;
+    case "SUMUP": return SumUpLogo;
     default: return null;
   }
 }
@@ -301,8 +324,7 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
         setApiBrand(null);
         return;
       }
-      // Banco — só aplica se ainda não temos detecção local
-      if (!local.bank && res.bank) {
+      if (res.bank) {
         setApiBank({ info: bankFromApiName(res.bank), rawName: res.bank });
       } else {
         setApiBank(null);
@@ -317,17 +339,18 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
     return () => {
       cancelled = true;
     };
-  }, [cleanNumber, local.bank]);
+  }, [cleanNumber]);
 
-  // Banco final: 1) detecção local por BIN, 2) API binlist (mapeada), 3) paleta inteligente pelo nome cru
-  const apiGeneric = !local.bank && apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
-  const bank = local.bank || apiBank?.info || apiGeneric || null;
-  const bankDisplayLabel = local.bank?.label || apiBank?.info?.label || (apiBank?.rawName ?? null);
+  // Banco final: 1) API bin (mapeada), 2) detecção local, 3) paleta inteligente pelo nome cru
+  const apiGeneric = apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
+  const bank = apiBank?.info || local.bank || apiGeneric || null;
+  const bankDisplayLabel = apiBank?.info?.label || local.bank?.label || (apiBank?.rawName ?? null);
   const brand = apiBrand || local.brand;
   const gradient = bank?.gradient || brand.gradient;
   const textColor = bank?.textColor || "text-white";
   const chipGradient = bank?.chipGradient || "from-yellow-300 to-yellow-500";
   const BankLogoComp = bank ? getBankLogo(bank.key) : null;
+  const rawBankWordmark = !BankLogoComp && bankDisplayLabel ? bankDisplayLabel : null;
 
   const display = (number || "").padEnd(19, "•").slice(0, 19);
   const groups = display.match(/.{1,4}/g) || [];
@@ -353,12 +376,16 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
               <Wifi className="h-4 w-4 rotate-90 opacity-80" />
             </div>
             <div className="flex flex-col items-end gap-1 max-w-[55%]">
-              {BankLogoComp && (
+              {BankLogoComp ? (
                 <div className="flex items-center justify-end">
                   <BankLogoComp className="h-5 sm:h-6 max-w-[120px]" />
                 </div>
-              )}
-              {bankDisplayLabel && (
+              ) : rawBankWordmark ? (
+                <span className="text-sm sm:text-base font-black tracking-tight uppercase text-right leading-none max-w-[140px] truncate drop-shadow">
+                  {rawBankWordmark}
+                </span>
+              ) : null}
+              {bankDisplayLabel && BankLogoComp && (
                 <span className="text-[10px] font-bold tracking-widest opacity-90 drop-shadow uppercase text-right leading-tight max-w-[150px] truncate">
                   {bankDisplayLabel}
                 </span>
