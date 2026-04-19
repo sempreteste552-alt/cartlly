@@ -189,10 +189,18 @@ export default function PlanCheckoutModal({
 
   /* ------ Validation ------ */
   const cpfClean = cpf.replace(/\D/g, "");
-  const isFormValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11;
+  const baseValid = fullName.trim().length >= 3 && email.includes("@") && cpfClean.length === 11;
+  const cardDigits = cardNumber.replace(/\D/g, "");
+  const expiryDigits = cardExpiry.replace(/\D/g, "");
+  const cardValid =
+    cardDigits.length >= 13 &&
+    cardHolder.trim().length >= 3 &&
+    expiryDigits.length === 4 &&
+    cardCvv.length >= 3;
+  const isFormValid = baseValid && (selectedMethod !== "CREDIT_CARD" || cardValid);
 
-  /* ------ Generate PIX ------ */
-  const generatePix = async () => {
+  /* ------ Generate Payment ------ */
+  const generatePayment = async () => {
     if (!isFormValid) {
       toast.error("Preencha todos os campos corretamente.");
       return;
@@ -205,6 +213,26 @@ export default function PlanCheckoutModal({
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+      const payload: any = {
+        user_id: userId,
+        plan_id: planId,
+        payment_method: selectedMethod,
+        document: cpfClean,
+        payer_name: fullName.trim(),
+        payer_email: email.trim(),
+      };
+
+      if (selectedMethod === "CREDIT_CARD") {
+        payload.installments = installments;
+        payload.card = {
+          number: cardDigits,
+          holder: cardHolder.trim(),
+          expiry_month: expiryDigits.slice(0, 2),
+          expiry_year: `20${expiryDigits.slice(2, 4)}`,
+          cvv: cardCvv,
+        };
+      }
+
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
         {
@@ -214,19 +242,14 @@ export default function PlanCheckoutModal({
             apikey: anonKey,
             Authorization: `Bearer ${anonKey}`,
           },
-          body: JSON.stringify({
-            user_id: userId,
-            plan_id: planId,
-            payment_method: "PIX",
-            document: cpfClean,
-            payer_name: fullName.trim(),
-            payer_email: email.trim(),
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao gerar cobrança");
+
+      setTransactionId(data.transaction_id || "");
 
       if (data.status === "approved") {
         setStep("success");
@@ -235,10 +258,9 @@ export default function PlanCheckoutModal({
         return;
       }
 
-      if (data.pix?.qrCode) {
+      if (selectedMethod === "PIX" && data.pix?.qrCode) {
         setPixQrCode(data.pix.qrCode);
         setPixQrBase64(data.pix.qrCodeBase64 || "");
-        setTransactionId(data.transaction_id || "");
         setStep("pix");
 
         setCountdown(PIX_TIMEOUT);
@@ -247,8 +269,15 @@ export default function PlanCheckoutModal({
         }, 1000);
 
         startPolling();
+      } else if (selectedMethod === "BOLETO" && (data.boleto?.url || data.boleto?.barcode)) {
+        setBoletoUrl(data.boleto.url || "");
+        setBoletoBarcode(data.boleto.barcode || "");
+        setStep("boleto");
+        startPolling();
+      } else if (selectedMethod === "CREDIT_CARD") {
+        throw new Error("Pagamento em análise. Aguarde a confirmação ou tente novamente.");
       } else {
-        throw new Error("QR Code não foi gerado. Tente novamente.");
+        throw new Error("Não foi possível gerar a cobrança. Tente novamente.");
       }
     } catch (e: any) {
       setErrorMsg(e.message || "Erro ao processar pagamento");
