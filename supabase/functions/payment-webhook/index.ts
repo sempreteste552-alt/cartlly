@@ -164,7 +164,7 @@ async function handleMercadoPago(req: Request, supabase: any) {
         console.warn("AI learning failed for purchase:", e);
       }
 
-      // 🔔 Push: Payment approved
+      // 🔔 Push: Payment approved (admin)
       await sendRichPush(payment.user_id, {
         title: "✅ Pagamento aprovado!",
         body: `${customerName} pagou ${formattedTotal} via ${methodLabel} 💰 Pedido #${orderId8}`,
@@ -172,17 +172,44 @@ async function handleMercadoPago(req: Request, supabase: any) {
         type: "payment_approved",
         data: { orderId: payment.order_id, paymentId: payment.id, method: payment.method },
       });
+
+      // 🔔 Push + sininho ao cliente da loja
+      const productSummary = (await supabase.from("order_items").select("product_name, quantity").eq("order_id", payment.order_id)).data
+        ?.map((i: any) => `${i.quantity}x ${i.product_name}`).slice(0, 2).join(", ");
+      const { data: storeMeta } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: order?.customer_email,
+        orderId: payment.order_id,
+        status: "approved",
+        method: payment.method,
+        amount: orderTotal,
+        productSummary,
+        storeSlug: storeMeta?.store_slug,
+      });
     } else if (newStatus === "rejected" || newStatus === "cancelled") {
       await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
       await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
 
-      // 🔔 Push: Payment rejected
+      // 🔔 Push: Payment rejected (admin)
       await sendRichPush(payment.user_id, {
         title: "❌ Pagamento recusado!",
         body: `Pagamento de ${formattedTotal} via ${methodLabel} do pedido #${orderId8} (${customerName}) foi recusado.`,
         url: "/admin/pedidos",
         type: "payment_rejected",
         data: { orderId: payment.order_id, paymentId: payment.id },
+      });
+
+      // 🔔 Push + sininho ao cliente da loja
+      const { data: storeMeta2 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: order?.customer_email,
+        orderId: payment.order_id,
+        status: newStatus as any,
+        method: payment.method,
+        amount: orderTotal,
+        storeSlug: storeMeta2?.store_slug,
       });
     }
   }
@@ -243,6 +270,17 @@ async function handlePagBank(req: Request, supabase: any) {
           type: "payment_approved",
           data: { orderId, paymentId: orderPayment.id },
         });
+        const { data: o1 } = await supabase.from("orders").select("customer_email").eq("id", orderId).maybeSingle();
+        const { data: s1 } = await supabase.from("store_settings").select("store_slug").eq("user_id", orderPayment.user_id).maybeSingle();
+        await notifyCustomerStorefront(supabase, {
+          storeUserId: orderPayment.user_id,
+          customerEmail: o1?.customer_email,
+          orderId,
+          status: "approved",
+          method: orderPayment.method,
+          amount: orderPayment.amount,
+          storeSlug: s1?.store_slug,
+        });
       } else if (newStatus === "rejected") {
         await sendRichPush(orderPayment.user_id, {
           title: "❌ Pagamento recusado!",
@@ -250,6 +288,17 @@ async function handlePagBank(req: Request, supabase: any) {
           url: "/admin/pedidos",
           type: "payment_rejected",
           data: { orderId, paymentId: orderPayment.id },
+        });
+        const { data: o2 } = await supabase.from("orders").select("customer_email").eq("id", orderId).maybeSingle();
+        const { data: s2 } = await supabase.from("store_settings").select("store_slug").eq("user_id", orderPayment.user_id).maybeSingle();
+        await notifyCustomerStorefront(supabase, {
+          storeUserId: orderPayment.user_id,
+          customerEmail: o2?.customer_email,
+          orderId,
+          status: "rejected",
+          method: orderPayment.method,
+          amount: orderPayment.amount,
+          storeSlug: s2?.store_slug,
         });
       }
     }
@@ -271,6 +320,29 @@ async function handlePagBank(req: Request, supabase: any) {
         url: "/admin/pedidos",
         type: "payment_approved",
         data: { orderId: payment.order_id, paymentId: payment.id },
+      });
+      const { data: o3 } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+      const { data: s3 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: o3?.customer_email,
+        orderId: payment.order_id,
+        status: "approved",
+        method: payment.method,
+        amount: payment.amount,
+        storeSlug: s3?.store_slug,
+      });
+    } else if (newStatus === "rejected" || newStatus === "cancelled") {
+      const { data: o4 } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+      const { data: s4 } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: payment.user_id,
+        customerEmail: o4?.customer_email,
+        orderId: payment.order_id,
+        status: newStatus as any,
+        method: payment.method,
+        amount: payment.amount,
+        storeSlug: s4?.store_slug,
       });
     }
   }
@@ -353,6 +425,17 @@ async function handleAmplopay(req: Request, supabase: any) {
       type: "payment_approved",
       data: { orderId: payment.order_id, paymentId: payment.id },
     });
+    const { data: oA } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+    const { data: sA } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+    await notifyCustomerStorefront(supabase, {
+      storeUserId: payment.user_id,
+      customerEmail: oA?.customer_email,
+      orderId: payment.order_id,
+      status: "approved",
+      method: payment.method,
+      amount: payment.amount,
+      storeSlug: sA?.store_slug,
+    });
   } else if (newStatus === "rejected" || newStatus === "cancelled") {
     await supabase.from("orders").update({ status: "cancelado" }).eq("id", payment.order_id);
     await supabase.from("order_status_history").insert({ order_id: payment.order_id, status: "cancelado" });
@@ -362,6 +445,17 @@ async function handleAmplopay(req: Request, supabase: any) {
       url: "/admin/pedidos",
       type: "payment_rejected",
       data: { orderId: payment.order_id, paymentId: payment.id },
+    });
+    const { data: oB } = await supabase.from("orders").select("customer_email").eq("id", payment.order_id).maybeSingle();
+    const { data: sB } = await supabase.from("store_settings").select("store_slug").eq("user_id", payment.user_id).maybeSingle();
+    await notifyCustomerStorefront(supabase, {
+      storeUserId: payment.user_id,
+      customerEmail: oB?.customer_email,
+      orderId: payment.order_id,
+      status: newStatus as any,
+      method: payment.method,
+      amount: payment.amount,
+      storeSlug: sB?.store_slug,
     });
   }
 
