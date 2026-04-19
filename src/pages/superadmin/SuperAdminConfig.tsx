@@ -113,32 +113,64 @@ export default function SuperAdminConfig() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const entries = Object.entries(config);
-      let errorCount = 0;
-      for (const [key, val] of entries) {
-        const { error } = await supabase
-          .from("platform_settings")
-          .upsert(
-            { key, value: { value: val } as any, updated_at: new Date().toISOString() },
-            { onConflict: "key" }
-          );
-        if (error) {
-          console.error(`Erro ao salvar ${key}:`, error);
-          errorCount++;
-        }
-      }
-      if (errorCount > 0) {
-        toast.error(`${errorCount} configuração(ões) falharam ao salvar. Verifique se você tem permissão.`);
+      const rows = Object.entries(config).map(([key, val]) => ({
+        key,
+        value: { value: val } as any,
+        updated_at: new Date().toISOString(),
+      }));
+      const { error } = await supabase
+        .from("platform_settings")
+        .upsert(rows, { onConflict: "key" });
+      if (error) {
+        console.error("Erro ao salvar configurações:", error);
+        toast.error(`Falha ao salvar: ${error.message}`);
       } else {
         toast.success("Configurações salvas!");
+        queryClient.invalidateQueries({ queryKey: ["platform_settings"] });
       }
-      queryClient.invalidateQueries({ queryKey: ["platform_settings"] });
     } catch (e: any) {
       toast.error("Erro: " + e.message);
     } finally {
       setSaving(false);
     }
   };
+
+  const [testing, setTesting] = useState<string | null>(null);
+  const handleTestGateway = async (gateway: string) => {
+    setTesting(gateway);
+    try {
+      let api_key = "";
+      let public_key = "";
+      if (gateway === "asaas") api_key = config.asaas_api_key;
+      else if (gateway === "mercadopago") api_key = config.mercadopago_global_key;
+      else if (gateway === "stripe") api_key = config.stripe_global_key;
+      else if (gateway === "pagbank") api_key = config.pagbank_global_key;
+      else if (gateway === "amplopay") {
+        api_key = config.amplopay_secret_key;
+        public_key = config.amplopay_public_key;
+      }
+
+      if (!api_key && gateway !== "asaas") {
+        toast.error("Preencha a chave do gateway antes de testar.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("test-gateway", {
+        body: { gateway, api_key, public_key, test_mode: config.gateway_test_mode },
+      });
+      if (error) throw error;
+      if (data?.ok) {
+        toast.success(`✅ Conexão OK com ${gateway.toUpperCase()}${data.account?.email ? ` (${data.account.email})` : ""}`);
+      } else {
+        toast.error(`❌ ${data?.error || "Falha no teste"}`);
+      }
+    } catch (e: any) {
+      toast.error("Erro no teste: " + (e.message || e));
+    } finally {
+      setTesting(null);
+    }
+  };
+
 
   const updateField = (key: keyof PlatformConfig, value: any) => {
     setConfig(prev => ({ ...prev, [key]: value }));
