@@ -177,6 +177,7 @@ Deno.serve(async (req) => {
 // ===================== HELPERS =====================
 
 function detectGateway(cfg: Record<string, string>): string {
+  if (cfg.asaas_api_key) return "asaas";
   if (cfg.mercadopago_global_key) return "mercadopago";
   if (cfg.pagbank_global_key) return "pagbank";
   if (cfg.amplopay_secret_key) return "amplopay";
@@ -187,6 +188,7 @@ function getGatewayKeys(gw: string, cfg: Record<string, string>) {
   if (gw === "mercadopago") return { secretKey: cfg.mercadopago_global_key, publicKey: cfg.mercadopago_public_key };
   if (gw === "pagbank") return { secretKey: cfg.pagbank_global_key, publicKey: cfg.pagbank_public_key };
   if (gw === "amplopay") return { secretKey: cfg.amplopay_secret_key, publicKey: cfg.amplopay_public_key };
+  if (gw === "asaas") return { secretKey: cfg.asaas_api_key, publicKey: "" };
   return { secretKey: "", publicKey: "" };
 }
 
@@ -194,6 +196,7 @@ function getAvailableMethods(gw: string): string[] {
   if (gw === "mercadopago") return ["PIX", "CREDIT_CARD", "BOLETO"];
   if (gw === "pagbank") return ["PIX", "CREDIT_CARD", "BOLETO"];
   if (gw === "amplopay") return ["PIX", "BOLETO"];
+  if (gw === "asaas") return ["PIX", "CREDIT_CARD", "BOLETO"];
   return [];
 }
 
