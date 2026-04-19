@@ -16,9 +16,13 @@ interface VirtualCardProps {
 }
 
 type BankKey =
-  | "NUBANK" | "NUBANK_ULTRA" | "ITAU" | "ITAU_BLACK" | "BRADESCO"
+  | "NUBANK" | "NUBANK_ULTRA" | "ITAU" | "ITAU_BLACK" | "ITI" | "BRADESCO" | "NEXT" | "DIGIO"
   | "BB" | "BB_BLACK" | "SANTANDER" | "CAIXA" | "INTER" | "C6" | "C6_CARBON"
-  | "BTG" | "XP" | "PICPAY" | "MERCADOPAGO" | "PAGBANK" | "SAFRA" | "NEON";
+  | "BTG" | "XP" | "PICPAY" | "MERCADOPAGO" | "PAGBANK" | "SAFRA" | "NEON"
+  | "WILL" | "ORIGINAL" | "PAN" | "BMG" | "MODAL" | "DAYCOVAL" | "VOTORANTIM"
+  | "SICOOB" | "SICREDI" | "BANRISUL" | "MERCANTIL" | "BANESTES"
+  | "RENNER" | "CARREFOUR" | "MAGALU" | "AMAZON" | "STONE" | "SUMUP"
+  | "GENERIC_PURPLE" | "GENERIC_RED" | "GENERIC_BLUE" | "GENERIC_GREEN" | "GENERIC_BLACK" | "GENERIC_ORANGE";
 
 interface BankInfo {
   key: BankKey;
@@ -33,7 +37,10 @@ const BANKS: Record<BankKey, BankInfo> = {
   NUBANK_ULTRA: { key: "NUBANK_ULTRA", label: "Ultravioleta", gradient: "from-zinc-950 via-purple-950 to-black", textColor: "text-purple-100", chipGradient: "from-purple-300 to-fuchsia-500" },
   ITAU: { key: "ITAU", label: "Itaú", gradient: "from-orange-600 via-orange-500 to-blue-900", textColor: "text-white", chipGradient: "from-yellow-300 to-orange-400" },
   ITAU_BLACK: { key: "ITAU_BLACK", label: "Itaú Black", gradient: "from-zinc-950 via-zinc-900 to-orange-950", textColor: "text-orange-100", chipGradient: "from-orange-400 to-amber-500" },
+  ITI: { key: "ITI", label: "iti Itaú", gradient: "from-pink-500 via-fuchsia-500 to-orange-500", textColor: "text-white", chipGradient: "from-yellow-200 to-pink-300" },
   BRADESCO: { key: "BRADESCO", label: "Bradesco", gradient: "from-red-700 via-red-600 to-red-900", textColor: "text-white", chipGradient: "from-red-200 to-orange-300" },
+  NEXT: { key: "NEXT", label: "Next", gradient: "from-lime-400 via-green-500 to-emerald-700", textColor: "text-zinc-900", chipGradient: "from-lime-200 to-green-300" },
+  DIGIO: { key: "DIGIO", label: "Digio", gradient: "from-cyan-500 via-blue-600 to-indigo-700", textColor: "text-white", chipGradient: "from-cyan-200 to-blue-300" },
   BB: { key: "BB", label: "Banco do Brasil", gradient: "from-yellow-400 via-yellow-500 to-blue-900", textColor: "text-blue-950", chipGradient: "from-yellow-200 to-yellow-400" },
   BB_BLACK: { key: "BB_BLACK", label: "Ourocard Black", gradient: "from-zinc-950 via-stone-900 to-yellow-900", textColor: "text-yellow-100", chipGradient: "from-yellow-300 to-amber-500" },
   SANTANDER: { key: "SANTANDER", label: "Santander", gradient: "from-red-600 via-red-500 to-red-800", textColor: "text-white", chipGradient: "from-red-200 to-red-400" },
@@ -48,6 +55,30 @@ const BANKS: Record<BankKey, BankInfo> = {
   PAGBANK: { key: "PAGBANK", label: "PagBank", gradient: "from-yellow-400 via-yellow-500 to-orange-600", textColor: "text-zinc-900", chipGradient: "from-yellow-200 to-orange-300" },
   SAFRA: { key: "SAFRA", label: "Safra", gradient: "from-blue-900 via-indigo-900 to-slate-900", textColor: "text-white", chipGradient: "from-blue-300 to-indigo-400" },
   NEON: { key: "NEON", label: "Neon", gradient: "from-emerald-500 via-teal-500 to-cyan-600", textColor: "text-white", chipGradient: "from-emerald-200 to-teal-300" },
+  WILL: { key: "WILL", label: "Will Bank", gradient: "from-yellow-300 via-yellow-400 to-orange-500", textColor: "text-zinc-900", chipGradient: "from-yellow-100 to-yellow-300" },
+  ORIGINAL: { key: "ORIGINAL", label: "Original", gradient: "from-emerald-600 via-green-700 to-zinc-900", textColor: "text-white", chipGradient: "from-emerald-200 to-green-300" },
+  PAN: { key: "PAN", label: "Banco Pan", gradient: "from-blue-600 via-cyan-500 to-teal-600", textColor: "text-white", chipGradient: "from-cyan-200 to-blue-300" },
+  BMG: { key: "BMG", label: "BMG", gradient: "from-orange-500 via-red-600 to-red-900", textColor: "text-white", chipGradient: "from-orange-200 to-red-300" },
+  MODAL: { key: "MODAL", label: "Modal", gradient: "from-slate-800 via-slate-900 to-black", textColor: "text-white", chipGradient: "from-slate-300 to-slate-400" },
+  DAYCOVAL: { key: "DAYCOVAL", label: "Daycoval", gradient: "from-blue-800 via-blue-900 to-indigo-900", textColor: "text-white", chipGradient: "from-blue-300 to-indigo-400" },
+  VOTORANTIM: { key: "VOTORANTIM", label: "BV", gradient: "from-orange-500 via-red-500 to-rose-700", textColor: "text-white", chipGradient: "from-orange-200 to-red-300" },
+  SICOOB: { key: "SICOOB", label: "Sicoob", gradient: "from-emerald-700 via-green-700 to-teal-800", textColor: "text-white", chipGradient: "from-emerald-200 to-green-300" },
+  SICREDI: { key: "SICREDI", label: "Sicredi", gradient: "from-green-700 via-emerald-800 to-green-900", textColor: "text-white", chipGradient: "from-green-200 to-emerald-300" },
+  BANRISUL: { key: "BANRISUL", label: "Banrisul", gradient: "from-blue-700 via-sky-700 to-blue-900", textColor: "text-white", chipGradient: "from-sky-200 to-blue-300" },
+  MERCANTIL: { key: "MERCANTIL", label: "Mercantil", gradient: "from-amber-600 via-orange-700 to-red-800", textColor: "text-white", chipGradient: "from-amber-200 to-orange-300" },
+  BANESTES: { key: "BANESTES", label: "Banestes", gradient: "from-blue-600 via-blue-700 to-cyan-800", textColor: "text-white", chipGradient: "from-cyan-200 to-blue-300" },
+  RENNER: { key: "RENNER", label: "Realize Renner", gradient: "from-zinc-800 via-stone-900 to-black", textColor: "text-white", chipGradient: "from-stone-200 to-zinc-300" },
+  CARREFOUR: { key: "CARREFOUR", label: "Carrefour", gradient: "from-blue-600 via-red-600 to-red-800", textColor: "text-white", chipGradient: "from-red-200 to-blue-300" },
+  MAGALU: { key: "MAGALU", label: "Luiza Card", gradient: "from-blue-500 via-cyan-500 to-blue-700", textColor: "text-white", chipGradient: "from-cyan-200 to-blue-300" },
+  AMAZON: { key: "AMAZON", label: "Amazon", gradient: "from-zinc-900 via-stone-900 to-orange-900", textColor: "text-white", chipGradient: "from-orange-300 to-amber-400" },
+  STONE: { key: "STONE", label: "Stone", gradient: "from-emerald-500 via-green-600 to-teal-700", textColor: "text-white", chipGradient: "from-emerald-200 to-green-300" },
+  SUMUP: { key: "SUMUP", label: "SumUp", gradient: "from-cyan-500 via-teal-600 to-blue-700", textColor: "text-white", chipGradient: "from-cyan-200 to-teal-300" },
+  GENERIC_PURPLE: { key: "GENERIC_PURPLE", label: "", gradient: "from-purple-700 via-purple-800 to-indigo-900", textColor: "text-white", chipGradient: "from-purple-200 to-fuchsia-300" },
+  GENERIC_RED: { key: "GENERIC_RED", label: "", gradient: "from-red-700 via-red-800 to-rose-900", textColor: "text-white", chipGradient: "from-red-200 to-orange-300" },
+  GENERIC_BLUE: { key: "GENERIC_BLUE", label: "", gradient: "from-blue-700 via-blue-800 to-indigo-900", textColor: "text-white", chipGradient: "from-blue-200 to-cyan-300" },
+  GENERIC_GREEN: { key: "GENERIC_GREEN", label: "", gradient: "from-emerald-700 via-green-700 to-teal-800", textColor: "text-white", chipGradient: "from-emerald-200 to-green-300" },
+  GENERIC_BLACK: { key: "GENERIC_BLACK", label: "", gradient: "from-zinc-900 via-stone-900 to-black", textColor: "text-white", chipGradient: "from-stone-300 to-zinc-400" },
+  GENERIC_ORANGE: { key: "GENERIC_ORANGE", label: "", gradient: "from-orange-600 via-red-600 to-rose-800", textColor: "text-white", chipGradient: "from-yellow-200 to-orange-300" },
 };
 
 function detectBank(rawNumber: string): BankInfo | null {
@@ -120,15 +151,17 @@ function detectBrand(number: string): { name: string; Logo: React.FC<{ className
   return { name: "CARTÃO", Logo: GenericCardLogo, gradient: "from-slate-800 via-slate-700 to-slate-900" };
 }
 
-function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
+function getBankLogo(key: BankKey): React.FC<{ className?: string }> | null {
   switch (key) {
     case "NUBANK":
     case "NUBANK_ULTRA": return NubankLogo;
     case "ITAU":
-    case "ITAU_BLACK": return ItauLogo;
+    case "ITAU_BLACK":
+    case "ITI": return ItauLogo;
     case "BB":
     case "BB_BLACK": return BBLogo;
-    case "BRADESCO": return BradescoLogo;
+    case "BRADESCO":
+    case "NEXT": return BradescoLogo;
     case "SANTANDER": return SantanderLogo;
     case "CAIXA": return CaixaLogo;
     case "INTER": return InterLogo;
@@ -141,6 +174,7 @@ function getBankLogo(key: BankKey): React.FC<{ className?: string }> {
     case "PAGBANK": return PagBankLogo;
     case "SAFRA": return SafraLogo;
     case "NEON": return NeonLogo;
+    default: return null;
   }
 }
 
@@ -173,22 +207,59 @@ async function fetchBinInfo(bin: string): Promise<{ bank: string; brand: string 
 // Mapeia nome do banco vindo da API para nosso BankInfo
 function bankFromApiName(name: string): BankInfo | null {
   const n = name.toUpperCase();
-  if (n.includes("NU PAGAMENTOS") || n.includes("NUBANK")) return BANKS.NUBANK;
+  // Digitais & big banks
+  if (n.includes("NU PAGAMENTOS") || n.includes("NUBANK") || n.includes("NU FINANCEIRA")) return BANKS.NUBANK;
+  if (n.includes("ITI ")) return BANKS.ITI;
   if (n.includes("ITAU") || n.includes("ITAÚ")) return BANKS.ITAU;
+  if (n.includes("NEXT")) return BANKS.NEXT;
+  if (n.includes("DIGIO")) return BANKS.DIGIO;
   if (n.includes("BRADESCO")) return BANKS.BRADESCO;
-  if (n.includes("BANCO DO BRASIL") || n === "BB" || n.includes("BCO DO BRASIL")) return BANKS.BB;
+  if (n.includes("BANCO DO BRASIL") || n === "BB" || n.includes("BCO DO BRASIL") || n.includes("BANCO BRASIL")) return BANKS.BB;
   if (n.includes("SANTANDER")) return BANKS.SANTANDER;
   if (n.includes("CAIXA")) return BANKS.CAIXA;
   if (n.includes("INTER")) return BANKS.INTER;
   if (n.includes("C6")) return BANKS.C6;
   if (n.includes("BTG")) return BANKS.BTG;
   if (n.includes("BANCO XP") || n === "XP" || n.includes("XP INVEST")) return BANKS.XP;
-  if (n.includes("PICPAY")) return BANKS.PICPAY;
+  if (n.includes("PICPAY") || n.includes("PIC PAY")) return BANKS.PICPAY;
   if (n.includes("MERCADO PAGO") || n.includes("MERCADOPAGO")) return BANKS.MERCADOPAGO;
-  if (n.includes("PAGSEGURO") || n.includes("PAGBANK")) return BANKS.PAGBANK;
+  if (n.includes("PAGSEGURO") || n.includes("PAGBANK") || n.includes("PAG SEGURO")) return BANKS.PAGBANK;
   if (n.includes("SAFRA")) return BANKS.SAFRA;
   if (n.includes("NEON")) return BANKS.NEON;
+  // Outros digitais & médios
+  if (n.includes("WILL") || n.includes("WILLBANK")) return BANKS.WILL;
+  if (n.includes("ORIGINAL")) return BANKS.ORIGINAL;
+  if (n.includes("PAN") || n.includes("BANCO PAN")) return BANKS.PAN;
+  if (n.includes("BMG")) return BANKS.BMG;
+  if (n.includes("MODAL")) return BANKS.MODAL;
+  if (n.includes("DAYCOVAL")) return BANKS.DAYCOVAL;
+  if (n.includes("VOTORANTIM") || n.includes("BANCO BV") || n === "BV") return BANKS.VOTORANTIM;
+  // Cooperativas & regionais
+  if (n.includes("SICOOB") || n.includes("BANCOOB")) return BANKS.SICOOB;
+  if (n.includes("SICREDI")) return BANKS.SICREDI;
+  if (n.includes("BANRISUL")) return BANKS.BANRISUL;
+  if (n.includes("MERCANTIL")) return BANKS.MERCANTIL;
+  if (n.includes("BANESTES")) return BANKS.BANESTES;
+  // Cartões de varejo
+  if (n.includes("RENNER") || n.includes("REALIZE")) return BANKS.RENNER;
+  if (n.includes("CARREFOUR")) return BANKS.CARREFOUR;
+  if (n.includes("LUIZACRED") || n.includes("MAGAZINE LUIZA") || n.includes("MAGALU")) return BANKS.MAGALU;
+  if (n.includes("AMAZON")) return BANKS.AMAZON;
+  // Adquirentes / sub-aquirentes
+  if (n.includes("STONE")) return BANKS.STONE;
+  if (n.includes("SUMUP")) return BANKS.SUMUP;
   return null;
+}
+
+// Quando não temos logo SVG mas API retornou nome, escolhe paleta inteligente
+function genericBankByName(name: string): BankInfo {
+  const n = name.toUpperCase();
+  if (/NU |NU$|ROXO|UNIVERS|ULTRA/.test(n)) return BANKS.GENERIC_PURPLE;
+  if (/RED|VERMELH|ROSE|CRIMSON|BRADESCO|SANTAND/.test(n)) return BANKS.GENERIC_RED;
+  if (/GREEN|VERDE|EMERALD|TEAL|COOP|SICRED|SICOOB|ORIGIN/.test(n)) return BANKS.GENERIC_GREEN;
+  if (/BLACK|NOIR|PRETO|DARK|PRIME|PLATIN/.test(n)) return BANKS.GENERIC_BLACK;
+  if (/ORANGE|LARANJA|ITAÚ|ITAU|INTER|BMG|HIPER/.test(n)) return BANKS.GENERIC_ORANGE;
+  return BANKS.GENERIC_BLUE;
 }
 
 export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardProps) {
@@ -223,8 +294,10 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
     };
   }, [cleanNumber, local.bank]);
 
-  const bank = local.bank || apiBank?.info || null;
-  const fallbackBankLabel = !bank && apiBank?.rawName ? apiBank.rawName : null;
+  // Banco final: 1) detecção local por BIN, 2) API binlist (mapeada), 3) paleta inteligente pelo nome cru
+  const apiGeneric = !local.bank && apiBank?.rawName && !apiBank.info ? genericBankByName(apiBank.rawName) : null;
+  const bank = local.bank || apiBank?.info || apiGeneric || null;
+  const bankDisplayLabel = local.bank?.label || apiBank?.info?.label || (apiBank?.rawName ?? null);
   const brand = local.brand;
   const gradient = bank?.gradient || brand.gradient;
   const textColor = bank?.textColor || "text-white";
@@ -260,14 +333,9 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
                   <BankLogoComp className="h-5 sm:h-6 max-w-[120px]" />
                 </div>
               )}
-              {bank && (
-                <span className="text-[9px] font-semibold tracking-widest opacity-80 drop-shadow uppercase">
-                  {bank.label}
-                </span>
-              )}
-              {!bank && fallbackBankLabel && (
-                <span className="text-[10px] font-bold tracking-wider opacity-90 drop-shadow uppercase text-right leading-tight max-w-[140px] truncate">
-                  {fallbackBankLabel}
+              {bankDisplayLabel && (
+                <span className="text-[10px] font-bold tracking-widest opacity-90 drop-shadow uppercase text-right leading-tight max-w-[150px] truncate">
+                  {bankDisplayLabel}
                 </span>
               )}
             </div>
