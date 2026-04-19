@@ -173,7 +173,21 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
   const [cardInstallments, setCardInstallments] = useState("1");
   const [cardCpf, setCardCpf] = useState(initialCpf || "");
   const [saveCard, setSaveCard] = useState(false);
-  const [cardType, setCardType] = useState<"credit" | "debit">("credit");
+  const [cardType, setCardType] = useState<"credit" | "debit">(
+    settings?.payment_credit_card ? "credit" : (settings as any)?.payment_debit_card ? "debit" : "credit"
+  );
+
+  // Garante que o tipo selecionado sempre respeite o que o lojista habilitou
+  useEffect(() => {
+    const credOn = !!settings?.payment_credit_card;
+    const debOn = !!(settings as any)?.payment_debit_card;
+    if (cardType === "credit" && !credOn && debOn) {
+      setCardType("debit");
+      setCardInstallments("1");
+    } else if (cardType === "debit" && !debOn && credOn) {
+      setCardType("credit");
+    }
+  }, [settings?.payment_credit_card, (settings as any)?.payment_debit_card]);
   const [mpIssuerId, setMpIssuerId] = useState<string>("");
   const [mpPaymentMethodId, setMpPaymentMethodId] = useState<string>("");
   const [mpInstallmentsOptions, setMpInstallmentsOptions] = useState<any[]>([]);
@@ -840,32 +854,34 @@ export default function PaymentStep({ orderId, storeUserId, total, settings, onS
 
           <CpfInputField label="CPF do Titular" value={cardCpf} onChange={setCardCpf} />
 
-          <div className="space-y-2">
-            <Label>Tipo do Cartão</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={cardType === "credit" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => setCardType("credit")}
-              >
-                Crédito
-              </Button>
-              <Button
-                type="button"
-                variant={cardType === "debit" ? "default" : "outline"}
-                className="flex-1"
-                onClick={() => {
-                  setCardType("debit");
-                  setCardInstallments("1");
-                }}
-              >
-                Débito
-              </Button>
+          {(creditEnabled && debitEnabled) && (
+            <div className="space-y-2">
+              <Label>Tipo do Cartão</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={cardType === "credit" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setCardType("credit")}
+                >
+                  Crédito
+                </Button>
+                <Button
+                  type="button"
+                  variant={cardType === "debit" ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    setCardType("debit");
+                    setCardInstallments("1");
+                  }}
+                >
+                  Débito
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {cardType === "credit" && (
+          {cardType === "credit" && creditEnabled && (
             <div className="space-y-2">
               <Label>Parcelas</Label>
               <Select value={cardInstallments} onValueChange={setCardInstallments}>
