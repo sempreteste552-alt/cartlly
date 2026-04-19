@@ -132,6 +132,174 @@ export function NeonLogo({ className = "h-6" }: LogoProps) {
   );
 }
 
+export function ItiLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 52 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="20">iti</text>
+    </svg>
+  );
+}
+
+export function NextLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 70 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">next</text>
+    </svg>
+  );
+}
+
+export function DigioLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 70 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">digio</text>
+    </svg>
+  );
+}
+
+export function WillLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 60 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">will</text>
+    </svg>
+  );
+}
+
+export function OriginalLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 90 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">original</text>
+    </svg>
+  );
+}
+
+export function PanLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 60 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">PAN</text>
+    </svg>
+  );
+}
+
+export function BMGLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 60 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">bmg</text>
+    </svg>
+  );
+}
+
+export function ModalLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 75 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">modal</text>
+    </svg>
+  );
+}
+
+export function DaycovalLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 95 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">daycoval</text>
+    </svg>
+  );
+}
+
+export function BVLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 45 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="20">bv</text>
+    </svg>
+  );
+}
+
+export function SicoobLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 90 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Sicoob</text>
+    </svg>
+  );
+}
+
+export function SicrediLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 95 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Sicredi</text>
+    </svg>
+  );
+}
+
+export function BanrisulLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 95 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Banrisul</text>
+    </svg>
+  );
+}
+
+export function MercantilLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 100 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="15">Mercantil</text>
+    </svg>
+  );
+}
+
+export function BanestesLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 95 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Banestes</text>
+    </svg>
+  );
+}
+
+export function RennerLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 75 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Renner</text>
+    </svg>
+  );
+}
+
+export function CarrefourLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 100 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Carrefour</text>
+    </svg>
+  );
+}
+
+export function MagaluLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 85 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">Magalu</text>
+    </svg>
+  );
+}
+
+export function AmazonLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 90 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">amazon</text>
+    </svg>
+  );
+}
+
+export function StoneLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 75 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="18">stone</text>
+    </svg>
+  );
+}
+
+export function SumUpLogo({ className = "h-6" }: LogoProps) {
+  return (
+    <svg viewBox="0 0 80 30" className={className} fill="currentColor">
+      <text x="0" y="22" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="16">SumUp</text>
+    </svg>
+  );
+}
+
 // Bandeiras
 export function VisaLogo({ className = "h-5" }: LogoProps) {
   return (
