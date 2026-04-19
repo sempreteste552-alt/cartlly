@@ -1131,6 +1131,7 @@ export default function LojaLayout() {
               </nav>
             </div>
           </header>
+          )}
 
           {/* Categories bar for desktop with background image */}
           <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
