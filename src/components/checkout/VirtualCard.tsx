@@ -50,29 +50,61 @@ const BANKS: Record<BankKey, BankInfo> = {
   NEON: { key: "NEON", label: "Neon", gradient: "from-emerald-500 via-teal-500 to-cyan-600", textColor: "text-white", chipGradient: "from-emerald-200 to-teal-300" },
 };
 
-function detectBank(bin: string): BankInfo | null {
-  if (bin.length < 6) return null;
-  // Tier premium primeiro
-  if (/^(540516|540517|552337|554134)/.test(bin)) return BANKS.ITAU_BLACK;
-  if (/^(556610|556611)/.test(bin)) return BANKS.C6_CARBON;
-  if (/^(533559|542530)/.test(bin)) return BANKS.NUBANK_ULTRA;
-  if (/^(556059)/.test(bin)) return BANKS.BB_BLACK;
-  // Bancos comuns
-  if (/^(401178|401179|438935|451416|457631|457632|504175|627780|636297|636368|650487|650488|655595|655596)/.test(bin)) return BANKS.NUBANK;
-  if (/^(498409|498410|516292|516293|549035|549036|627892|636206|636207)/.test(bin)) return BANKS.ITAU;
-  if (/^(438568|448936|453978|516259|548787|552032|636370|627874)/.test(bin)) return BANKS.BRADESCO;
-  if (/^(438476|453211|461353|490951|503879|548132)/.test(bin)) return BANKS.BB;
-  if (/^(411614|438970|448949|451476|452358|460628|516229|529965|540982|548932|552037|552038)/.test(bin)) return BANKS.SANTANDER;
-  if (/^(401723|438622|453974|548126|552241)/.test(bin)) return BANKS.CAIXA;
-  if (/^(458247|526438|527620|530988)/.test(bin)) return BANKS.INTER;
-  if (/^(467481|516454|529961|535129|542502|552641)/.test(bin)) return BANKS.C6;
-  if (/^(467482)/.test(bin)) return BANKS.NEON;
-  if (/^(467483)/.test(bin)) return BANKS.PICPAY;
-  if (/^(467484)/.test(bin)) return BANKS.MERCADOPAGO;
-  if (/^(467485)/.test(bin)) return BANKS.PAGBANK;
-  if (/^(467486)/.test(bin)) return BANKS.SAFRA;
-  if (/^(467487)/.test(bin)) return BANKS.BTG;
-  if (/^(467488)/.test(bin)) return BANKS.XP;
+function detectBank(rawNumber: string): BankInfo | null {
+  const n = rawNumber.replace(/\D/g, "");
+  if (n.length < 4) return null;
+  const bin6 = n.slice(0, 6);
+  const bin4 = n.slice(0, 4);
+
+  // ---- Tiers premium (BIN 6 dígitos exatos) ----
+  if (/^(540516|540517|552337|554134|552641)/.test(bin6)) return BANKS.ITAU_BLACK;
+  if (/^(556610|556611)/.test(bin6)) return BANKS.C6_CARBON;
+  if (/^(533559|542530|552692)/.test(bin6)) return BANKS.NUBANK_ULTRA;
+  if (/^(556059)/.test(bin6)) return BANKS.BB_BLACK;
+
+  // ---- NUBANK (Mastercard 5162/5302/5234, Visa 4011/4389/4514, Elo 6505) ----
+  if (/^(5162|5234|5302|5532|5550|6505|4011|4389|4514|4576|4577)/.test(bin4) &&
+      /^(516292|516293|523445|530217|553248|555036|650516|401178|438935|451416|457631|457632)/.test(bin6)) {
+    return BANKS.NUBANK;
+  }
+  if (/^(401178|438935|451416|457631|457632|516292|516293|523445|530217|553248|555036|650516|650487|650488|655595|655596|627780)/.test(bin6)) return BANKS.NUBANK;
+
+  // ---- ITAÚ ----
+  if (/^(498409|498410|516292|549035|549036|627892|636206|636207|549167|552033)/.test(bin6)) return BANKS.ITAU;
+
+  // ---- BRADESCO ----
+  if (/^(438568|448936|453978|516259|548787|552032|636370|627874|552025|554313)/.test(bin6)) return BANKS.BRADESCO;
+
+  // ---- BANCO DO BRASIL ----
+  if (/^(438476|453211|461353|490951|503879|548132|552032|627871|556057|556058)/.test(bin6)) return BANKS.BB;
+
+  // ---- SANTANDER ----
+  if (/^(411614|438970|448949|451476|452358|460628|516229|529965|540982|548932|552037|552038)/.test(bin6)) return BANKS.SANTANDER;
+
+  // ---- CAIXA ----
+  if (/^(401723|438622|453974|548126|552241|627780|636368)/.test(bin6)) return BANKS.CAIXA;
+
+  // ---- INTER ----
+  if (/^(458247|526438|527620|530988|552689|627892)/.test(bin6)) return BANKS.INTER;
+
+  // ---- C6 BANK ----
+  if (/^(467481|516454|529961|535129|542502)/.test(bin6)) return BANKS.C6;
+
+  // ---- PICPAY ----
+  if (/^(536428|552037|524301)/.test(bin6)) return BANKS.PICPAY;
+
+  // ---- MERCADO PAGO ----
+  if (/^(515590|535113|554115|552037)/.test(bin6)) return BANKS.MERCADOPAGO;
+
+  // ---- PAGBANK ----
+  if (/^(415230|526389|548126|516247)/.test(bin6)) return BANKS.PAGBANK;
+
+  // ---- BTG / XP / SAFRA / NEON ----
+  if (/^(530901|552037|554115)/.test(bin6)) return BANKS.BTG;
+  if (/^(517288|552641)/.test(bin6)) return BANKS.XP;
+  if (/^(553127|516229)/.test(bin6)) return BANKS.SAFRA;
+  if (/^(553035|417400|438876)/.test(bin6)) return BANKS.NEON;
+
   return null;
 }
 
@@ -116,7 +148,7 @@ export function VirtualCard({ number, name, expiry, cvv, flipped }: VirtualCardP
   const { brand, bank, gradient, textColor, chipGradient, BankLogoComp } = useMemo(() => {
     const n = number.replace(/\s/g, "");
     const b = detectBrand(n);
-    const bk = detectBank(n.slice(0, 6));
+    const bk = detectBank(n);
     return {
       brand: b,
       bank: bk,
