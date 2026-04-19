@@ -253,24 +253,84 @@ export function GatewaySettings() {
       {selectedGateway && (
         <Card className="border-border">
           <CardHeader>
-            <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Parcelamento</CardTitle></div>
-            <CardDescription>Configure o número máximo de parcelas aceitas</CardDescription>
+            <div className="flex items-center gap-2"><CreditCard className="h-5 w-5 text-primary" /><CardTitle className="text-lg">Parcelamento e Juros</CardTitle></div>
+            <CardDescription>Configure o parcelamento e a cobrança opcional de juros ao cliente</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Máximo de Parcelas</Label>
-              <Select value={String(maxInstallments)} onValueChange={(v) => setMaxInstallments(parseInt(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}x {n === 1 ? "(à vista)" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Clientes poderão parcelar em até {maxInstallments}x no cartão de crédito</p>
+          <CardContent className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Máximo de Parcelas</Label>
+                <Select value={String(maxInstallments)} onValueChange={(v) => setMaxInstallments(parseInt(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}x {n === 1 ? "(à vista)" : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Parcelas sem juros até</Label>
+                <Select value={String(installmentsFreeUpTo)} onValueChange={(v) => setInstallmentsFreeUpTo(parseInt(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: maxInstallments }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}x sem juros</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium">Cobrar juros do cliente</Label>
+                <p className="text-xs text-muted-foreground">
+                  Aplicado nas parcelas acima de {installmentsFreeUpTo}x. O valor total será maior para o cliente.
+                </p>
+              </div>
+              <Switch checked={interestEnabled} onCheckedChange={setInterestEnabled} />
+            </div>
+
+            {interestEnabled && (
+              <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="space-y-2">
+                  <Label>Taxa de juros (% ao mês — composto)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="20"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
+                    className="max-w-[180px] font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Ex: 2,99% ao mês = juros padrão de mercado para parcelamento.
+                  </p>
+                </div>
+
+                {/* Preview do cálculo */}
+                <div className="rounded-md bg-background p-3 border border-border/60">
+                  <p className="text-xs font-semibold mb-2">📊 Simulação para R$ 100,00:</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs">
+                    {Array.from({ length: maxInstallments }, (_, i) => i + 1).map((n) => {
+                      const base = 100;
+                      const free = n <= installmentsFreeUpTo;
+                      const rate = interestRate / 100;
+                      const total = free ? base : base * (Math.pow(1 + rate, n) * rate) / (Math.pow(1 + rate, n) - 1) * n;
+                      const installmentValue = total / n;
+                      return (
+                        <div key={n} className={`rounded p-1.5 ${free ? "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300" : "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300"}`}>
+                          <div className="font-bold">{n}x R$ {installmentValue.toFixed(2)}</div>
+                          <div className="opacity-75">Total R$ {total.toFixed(2)} {free && "✓ s/ juros"}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
