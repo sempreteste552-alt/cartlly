@@ -213,6 +213,7 @@ export default function PlanCheckoutModal({
     }
 
     setStep("loading");
+    setCardStatus("processing");
     setErrorMsg("");
 
     try {
