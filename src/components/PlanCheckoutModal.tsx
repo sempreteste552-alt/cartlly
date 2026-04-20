@@ -473,8 +473,20 @@ export default function PlanCheckoutModal({
 
               {/* Card fields (only when CREDIT_CARD selected) */}
               {selectedMethod === "CREDIT_CARD" && (
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Dados do cartão</label>
+
+                  {/* 3D Virtual Card Preview */}
+                  <div className="flex justify-center py-2">
+                    <VirtualCard
+                      number={cardNumber}
+                      name={cardHolder}
+                      expiry={cardExpiry}
+                      cvv={cardCvv}
+                      flipped={cardFlipped}
+                    />
+                  </div>
+
                   <div className="relative">
                     <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
                     <Input
@@ -483,6 +495,7 @@ export default function PlanCheckoutModal({
                         const d = e.target.value.replace(/\D/g, "").slice(0, 19);
                         setCardNumber(d.replace(/(\d{4})(?=\d)/g, "$1 ").trim());
                       }}
+                      onFocus={() => setCardFlipped(false)}
                       placeholder="Número do cartão"
                       inputMode="numeric"
                       autoComplete="cc-number"
@@ -492,6 +505,7 @@ export default function PlanCheckoutModal({
                   <Input
                     value={cardHolder}
                     onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                    onFocus={() => setCardFlipped(false)}
                     placeholder="Nome impresso no cartão"
                     autoComplete="cc-name"
                     className="h-10 text-sm uppercase"
@@ -503,6 +517,7 @@ export default function PlanCheckoutModal({
                         const d = e.target.value.replace(/\D/g, "").slice(0, 4);
                         setCardExpiry(d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d);
                       }}
+                      onFocus={() => setCardFlipped(false)}
                       placeholder="MM/AA"
                       inputMode="numeric"
                       autoComplete="cc-exp"
@@ -512,6 +527,8 @@ export default function PlanCheckoutModal({
                     <Input
                       value={cardCvv}
                       onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onFocus={() => setCardFlipped(true)}
+                      onBlur={() => setCardFlipped(false)}
                       placeholder="CVV"
                       inputMode="numeric"
                       autoComplete="cc-csc"
