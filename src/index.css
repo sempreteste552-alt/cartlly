@@ -259,6 +259,15 @@ html {
   animation: slow-spin 2s linear infinite;
 }
 
+/* Pulse glow for premium CTAs */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 4px 14px hsl(var(--primary) / 0.35), 0 0 0 0 hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 6px 20px hsl(var(--primary) / 0.55), 0 0 0 8px hsl(var(--primary) / 0); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* === Premium Gift to Cart animation === */
 @keyframes gift-fly {
   0% {
