@@ -41,12 +41,18 @@ async function autoEnablePushAfterInstall(storeUserId?: string) {
     const json = subscription.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
 
+    // Vincula ao usuário logado se houver, senão usa o tenant da loja como dono lógico
+    // (permite que visitantes anônimos recebam push da loja após instalar).
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const ownerUserId = user?.id || storeUserId;
+    if (!ownerUserId) {
+      console.warn("Push install: sem user logado e sem storeUserId — pulando upsert.");
+      return;
+    }
 
     await supabase.from("push_subscriptions").upsert(
       {
-        user_id: user.id,
+        user_id: ownerUserId,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
@@ -93,6 +99,19 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
     window.addEventListener("appinstalled", onInstalled);
     return () => window.removeEventListener("appinstalled", onInstalled);
   }, [storeUserId, dismissBanner]);
+
+  // iOS não dispara 'appinstalled'. Quando o app já está em standalone e a permissão
+  // ainda não foi decidida, oferecemos push automaticamente na primeira abertura.
+  useEffect(() => {
+    if (!isStandalone()) return;
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+    const key = `pwa_push_auto_${storeUserId || "anon"}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const t = setTimeout(() => autoEnablePushAfterInstall(storeUserId), 1500);
+    return () => clearTimeout(t);
+  }, [storeUserId]);
 
   const handleInstall = async () => {
     if (platform === "android" || platform === "desktop") {
