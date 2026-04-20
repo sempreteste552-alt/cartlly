@@ -111,6 +111,7 @@ export default function PlanCheckoutModal({
   const [boletoBarcode, setBoletoBarcode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [transactionId, setTransactionId] = useState("");
+  const [cardStatus, setCardStatus] = useState<CardTapStatus>("processing");
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
