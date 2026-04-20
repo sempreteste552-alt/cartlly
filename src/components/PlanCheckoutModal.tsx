@@ -564,16 +564,18 @@ export default function PlanCheckoutModal({
           {step === "loading" && (
             <div className="py-8 flex flex-col items-center gap-4">
               {selectedMethod === "CREDIT_CARD" ? (
-                <>
-                  <CardTapAnimation
-                    last4={cardDigits.slice(-4)}
-                    brand={cardHolder.split(" ")[0]?.slice(0, 8) || "CARD"}
-                  />
-                  <div className="text-center space-y-1.5">
-                    <p className="text-lg font-bold text-foreground">Processando pagamento...</p>
-                    <p className="text-sm text-muted-foreground">Aproximando seu cartão da maquininha 💳</p>
-                  </div>
-                </>
+                <CardTapAnimation
+                  last4={cardDigits.slice(-4)}
+                  brand={cardHolder.split(" ")[0]?.slice(0, 8) || "CARD"}
+                  status={cardStatus}
+                  message={
+                    cardStatus === "approved"
+                      ? "🎉 Pagamento aprovado! Liberando seus recursos premium agora..."
+                      : cardStatus === "declined"
+                      ? errorMsg || "Cartão recusado pelo banco emissor. Tente outro cartão."
+                      : "Conectando ao banco emissor... não feche esta janela."
+                  }
+                />
               ) : (
                 <div className="py-6 flex flex-col items-center gap-5">
                   <div className="relative">
