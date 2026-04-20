@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
-import { CardTapAnimation } from "@/components/checkout/CardTapAnimation";
+import { CardTapAnimation, type CardTapStatus } from "@/components/checkout/CardTapAnimation";
 import { VirtualCard } from "@/components/checkout/VirtualCard";
 
 /* ------------------------------------------------------------------ */
@@ -111,6 +111,7 @@ export default function PlanCheckoutModal({
   const [boletoBarcode, setBoletoBarcode] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [transactionId, setTransactionId] = useState("");
+  const [cardStatus, setCardStatus] = useState<CardTapStatus>("processing");
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -212,6 +213,7 @@ export default function PlanCheckoutModal({
     }
 
     setStep("loading");
+    setCardStatus("processing");
     setErrorMsg("");
 
     try {
@@ -258,9 +260,19 @@ export default function PlanCheckoutModal({
       setTransactionId(data.transaction_id || "");
 
       if (data.status === "approved") {
-        setStep("success");
-        fireConfetti();
-        queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+        if (selectedMethod === "CREDIT_CARD") {
+          // Show APPROVED on the POS screen, then celebrate.
+          setCardStatus("approved");
+          setTimeout(() => {
+            setStep("success");
+            fireConfetti();
+            queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+          }, 2200);
+        } else {
+          setStep("success");
+          fireConfetti();
+          queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+        }
         return;
       }
 
@@ -281,13 +293,23 @@ export default function PlanCheckoutModal({
         setStep("boleto");
         startPolling();
       } else if (selectedMethod === "CREDIT_CARD") {
-        throw new Error("Pagamento em análise. Aguarde a confirmação ou tente novamente.");
+        throw new Error("Cartão recusado pelo banco emissor. Verifique os dados ou tente outro cartão.");
       } else {
         throw new Error("Não foi possível gerar a cobrança. Tente novamente.");
       }
     } catch (e: any) {
-      setErrorMsg(e.message || "Erro ao processar pagamento");
-      setStep("error");
+      const msg = e.message || "Erro ao processar pagamento";
+      if (selectedMethod === "CREDIT_CARD" && step !== "error") {
+        // Show RECUSADO on the POS, keep loading screen visible with the error message below.
+        setCardStatus("declined");
+        setErrorMsg(msg);
+        setTimeout(() => {
+          setStep("error");
+        }, 2500);
+      } else {
+        setErrorMsg(msg);
+        setStep("error");
+      }
     }
   };
 
@@ -542,16 +564,18 @@ export default function PlanCheckoutModal({
           {step === "loading" && (
             <div className="py-8 flex flex-col items-center gap-4">
               {selectedMethod === "CREDIT_CARD" ? (
-                <>
-                  <CardTapAnimation
-                    last4={cardDigits.slice(-4)}
-                    brand={cardHolder.split(" ")[0]?.slice(0, 8) || "CARD"}
-                  />
-                  <div className="text-center space-y-1.5">
-                    <p className="text-lg font-bold text-foreground">Processando pagamento...</p>
-                    <p className="text-sm text-muted-foreground">Aproximando seu cartão da maquininha 💳</p>
-                  </div>
-                </>
+                <CardTapAnimation
+                  last4={cardDigits.slice(-4)}
+                  brand={cardHolder.split(" ")[0]?.slice(0, 8) || "CARD"}
+                  status={cardStatus}
+                  message={
+                    cardStatus === "approved"
+                      ? "🎉 Pagamento aprovado! Liberando seus recursos premium agora..."
+                      : cardStatus === "declined"
+                      ? errorMsg || "Cartão recusado pelo banco emissor. Tente outro cartão."
+                      : "Conectando ao banco emissor... não feche esta janela."
+                  }
+                />
               ) : (
                 <div className="py-6 flex flex-col items-center gap-5">
                   <div className="relative">
