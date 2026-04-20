@@ -457,3 +457,132 @@ html {
 .cart-bounce {
   animation: cart-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* === Card → POS Terminal tap animation === */
+@keyframes card-tap-move {
+  0% { transform: translate(-160px, 0) rotate(-18deg) scale(0.92); opacity: 0; }
+  20% { transform: translate(-120px, -4px) rotate(-12deg) scale(0.96); opacity: 1; }
+  45% { transform: translate(-30px, -10px) rotate(-6deg) scale(1); opacity: 1; }
+  60% { transform: translate(-10px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
+  68% { transform: translate(-12px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
+  82% { transform: translate(-50px, -6px) rotate(-10deg) scale(0.98); opacity: 1; }
+  100% { transform: translate(-160px, 0) rotate(-18deg) scale(0.92); opacity: 0; }
+}
+
+@keyframes card-tap-done {
+  0% { transform: translate(-10px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
+  100% { transform: translate(-200px, 40px) rotate(-30deg) scale(0.7); opacity: 0; }
+}
+
+.card-tap-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-top: -38px;
+  margin-left: -55px;
+  width: 110px;
+  height: 70px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, hsl(243 75% 35%), hsl(243 75% 55%) 50%, hsl(260 70% 40%));
+  box-shadow:
+    0 10px 24px -8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+  animation: card-tap-move 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  z-index: 20;
+  will-change: transform, opacity;
+}
+
+.card-tap-card-done {
+  animation: card-tap-done 0.6s ease-out forwards !important;
+}
+
+.card-tap-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-tap-card-chip {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  width: 16px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #d4af37 0%, #f4e4a8 50%, #b8941f 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.card-tap-card-chip::after {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  border-radius: 1px;
+  background:
+    linear-gradient(0deg, transparent 32%, rgba(0, 0, 0, 0.25) 33%, transparent 34%),
+    linear-gradient(0deg, transparent 65%, rgba(0, 0, 0, 0.25) 66%, transparent 67%),
+    linear-gradient(90deg, transparent 49%, rgba(0, 0, 0, 0.25) 50%, transparent 51%);
+}
+
+/* POS terminal */
+.card-tap-pos {
+  position: relative;
+  width: 100px;
+  height: 150px;
+  border-radius: 14px 14px 10px 10px;
+  background: linear-gradient(180deg, hsl(220 12% 22%), hsl(220 14% 14%));
+  box-shadow:
+    0 18px 30px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+  padding: 8px 6px;
+}
+
+.card-tap-pos-screen {
+  width: 100%;
+  height: 60px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #0a1f0a, #062a18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.12);
+}
+
+.card-tap-pos-key {
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, hsl(220 10% 32%), hsl(220 10% 22%));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.card-tap-pos-base {
+  position: absolute;
+  bottom: -6px;
+  left: -8px;
+  right: -8px;
+  height: 10px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(180deg, hsl(220 12% 18%), hsl(220 14% 10%));
+  box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* NFC ripples */
+@keyframes card-tap-ripple {
+  0% { transform: scale(0.4); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.card-tap-ripple {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid hsl(160 80% 50% / 0.6);
+  animation: card-tap-ripple 1.8s ease-out infinite;
+  left: -30px;
+  top: -30px;
+}

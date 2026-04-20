@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
+import { CardTapAnimation } from "@/components/checkout/CardTapAnimation";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -537,15 +538,30 @@ export default function PlanCheckoutModal({
 
           {/* ==================== STEP: LOADING ==================== */}
           {step === "loading" && (
-            <div className="py-14 flex flex-col items-center gap-5">
-              <div className="relative">
-                <div className={`h-20 w-20 rounded-full bg-gradient-to-br ${gradient} opacity-20 animate-ping`} />
-                <Loader2 className="absolute inset-0 m-auto h-10 w-10 text-primary animate-spin" />
-              </div>
-              <div className="text-center space-y-1.5">
-                <p className="text-lg font-bold text-foreground">Gerando cobrança {METHOD_LABELS[selectedMethod]}</p>
-                <p className="text-sm text-muted-foreground">Isso leva apenas alguns segundos...</p>
-              </div>
+            <div className="py-8 flex flex-col items-center gap-4">
+              {selectedMethod === "CREDIT_CARD" ? (
+                <>
+                  <CardTapAnimation
+                    last4={cardDigits.slice(-4)}
+                    brand={cardHolder.split(" ")[0]?.slice(0, 8) || "CARD"}
+                  />
+                  <div className="text-center space-y-1.5">
+                    <p className="text-lg font-bold text-foreground">Processando pagamento...</p>
+                    <p className="text-sm text-muted-foreground">Aproximando seu cartão da maquininha 💳</p>
+                  </div>
+                </>
+              ) : (
+                <div className="py-6 flex flex-col items-center gap-5">
+                  <div className="relative">
+                    <div className={`h-20 w-20 rounded-full bg-gradient-to-br ${gradient} opacity-20 animate-ping`} />
+                    <Loader2 className="absolute inset-0 m-auto h-10 w-10 text-primary animate-spin" />
+                  </div>
+                  <div className="text-center space-y-1.5">
+                    <p className="text-lg font-bold text-foreground">Gerando cobrança {METHOD_LABELS[selectedMethod]}</p>
+                    <p className="text-sm text-muted-foreground">Isso leva apenas alguns segundos...</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
