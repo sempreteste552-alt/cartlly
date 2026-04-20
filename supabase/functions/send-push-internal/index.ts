@@ -312,9 +312,7 @@ Deno.serve(async (req) => {
     }
 
     const payloadStr = JSON.stringify(pushPayload);
-    let sent = 0;
-    let removed = 0;
-    const failures: string[] = [];
+    // sent, removed, failures already declared above
 
     for (const sub of subs) {
       try {
