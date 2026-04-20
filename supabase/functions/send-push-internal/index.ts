@@ -251,6 +251,10 @@ Deno.serve(async (req) => {
     const customerPushTypes = ["store_promotion", "abandoned_cart", "product_view", "inactivity", "new_product", "new_coupon", "review_thankyou", "order_status_update", "tenant_message"];
     const shouldMirrorInAppNotification = !!(store_user_id && target_user_id && target_user_id !== store_user_id && customerPushTypes.includes(type || ""));
 
+    let sent = 0;
+    let removed = 0;
+    const failures: string[] = [];
+
     const mirrorInAppNotification = async () => {
       try {
         const { data: existing } = await supabase
