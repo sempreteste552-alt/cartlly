@@ -14,7 +14,8 @@ import {
   Check, Crown, Zap, Clock, Loader2, Rocket,
   Lock, ArrowUpCircle, Package, CheckCircle2,
   BarChart3, Palette, ShoppingCart, Bot, Code, Shield,
-  Gift, Users, ChevronRight,
+  Gift, Users, ChevronRight, Flame, TrendingUp, Star,
+  Sparkles, Timer, BadgeCheck, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import PlanCheckoutModal from "@/components/PlanCheckoutModal";
