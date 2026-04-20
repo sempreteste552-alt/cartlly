@@ -467,15 +467,13 @@ html {
   animation: cart-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* === Card → POS Terminal tap animation === */
+/* === Card → POS Terminal tap animation (one-shot, stays attached) === */
 @keyframes card-tap-move {
-  0% { transform: translate(-160px, 0) rotate(-18deg) scale(0.92); opacity: 0; }
-  20% { transform: translate(-120px, -4px) rotate(-12deg) scale(0.96); opacity: 1; }
-  45% { transform: translate(-30px, -10px) rotate(-6deg) scale(1); opacity: 1; }
-  60% { transform: translate(-10px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
-  68% { transform: translate(-12px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
-  82% { transform: translate(-50px, -6px) rotate(-10deg) scale(0.98); opacity: 1; }
-  100% { transform: translate(-160px, 0) rotate(-18deg) scale(0.92); opacity: 0; }
+  0% { transform: translate(-180px, 10px) rotate(-22deg) scale(0.85); opacity: 0; }
+  35% { transform: translate(-100px, -2px) rotate(-12deg) scale(0.95); opacity: 1; }
+  75% { transform: translate(-25px, -10px) rotate(-5deg) scale(1); opacity: 1; }
+  90% { transform: translate(-14px, -10px) rotate(-4deg) scale(1.04); opacity: 1; }
+  100% { transform: translate(-12px, -10px) rotate(-4deg) scale(1.02); opacity: 1; }
 }
 
 @keyframes card-tap-done {
@@ -497,7 +495,7 @@ html {
     0 10px 24px -8px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
     inset 0 -2px 4px rgba(0, 0, 0, 0.2);
-  animation: card-tap-move 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation: card-tap-move 1.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
   z-index: 20;
   will-change: transform, opacity;
 }

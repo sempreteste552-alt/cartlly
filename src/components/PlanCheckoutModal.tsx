@@ -17,6 +17,7 @@ import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
 import { CardTapAnimation } from "@/components/checkout/CardTapAnimation";
+import { VirtualCard } from "@/components/checkout/VirtualCard";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -102,6 +103,7 @@ export default function PlanCheckoutModal({
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [installments, setInstallments] = useState(1);
+  const [cardFlipped, setCardFlipped] = useState(false);
 
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrBase64, setPixQrBase64] = useState("");
