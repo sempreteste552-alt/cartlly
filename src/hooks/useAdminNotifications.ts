@@ -36,7 +36,7 @@ export function useAdminNotifications() {
     const { data } = await supabase
       .from("admin_notifications")
       .select("*")
-      .eq("target_user_id", user.id)
+      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
       .order("created_at", { ascending: false })
       .limit(50);
     if (data) setNotifications(data as AdminNotification[]);
@@ -79,7 +79,7 @@ export function useAdminNotifications() {
     await supabase
       .from("admin_notifications")
       .update({ read: true })
-      .eq("target_user_id", user.id)
+      .or(`target_user_id.eq.${user.id},target_user_id.is.null`)
       .eq("read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
@@ -96,7 +96,10 @@ export function useAdminNotifications() {
 
   const clearAll = async () => {
     if (!user) return;
-    const { error } = await supabase.from("admin_notifications").delete().eq("target_user_id", user.id);
+    const { error } = await supabase
+      .from("admin_notifications")
+      .delete()
+      .or(`target_user_id.eq.${user.id},target_user_id.is.null`);
     if (!error) {
       setNotifications([]);
       toast.success("Todas as notificações foram removidas");
