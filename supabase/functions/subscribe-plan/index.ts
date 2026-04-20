@@ -685,9 +685,15 @@ async function processAsaas(
   }
 
   if (method === "BOLETO") {
+    // Asaas returns these fields immediately on creation:
+    //  - bankSlipUrl: direct PDF link (preferred for download)
+    //  - invoiceUrl:  hosted Asaas page with the boleto + payment instructions (always available)
+    //  - identificationField: human-readable boleto line ("linha digitável")
+    // bankSlipUrl can take a few seconds to appear, so we fall back to invoiceUrl.
+    const url = payData.bankSlipUrl || payData.invoiceUrl || "";
     result.boleto = {
-      url: payData.bankSlipUrl || `${BASE_URL}/payments/${payData.id}/identificationField`,
-      barcode: payData.nossoNumero || "",
+      url,
+      barcode: payData.identificationField || payData.nossoNumero || "",
       dueDate: payData.dueDate,
     };
   }
