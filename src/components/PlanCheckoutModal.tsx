@@ -260,9 +260,19 @@ export default function PlanCheckoutModal({
       setTransactionId(data.transaction_id || "");
 
       if (data.status === "approved") {
-        setStep("success");
-        fireConfetti();
-        queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+        if (selectedMethod === "CREDIT_CARD") {
+          // Show APPROVED on the POS screen, then celebrate.
+          setCardStatus("approved");
+          setTimeout(() => {
+            setStep("success");
+            fireConfetti();
+            queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+          }, 2200);
+        } else {
+          setStep("success");
+          fireConfetti();
+          queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+        }
         return;
       }
 
@@ -283,13 +293,23 @@ export default function PlanCheckoutModal({
         setStep("boleto");
         startPolling();
       } else if (selectedMethod === "CREDIT_CARD") {
-        throw new Error("Pagamento em análise. Aguarde a confirmação ou tente novamente.");
+        throw new Error("Cartão recusado pelo banco emissor. Verifique os dados ou tente outro cartão.");
       } else {
         throw new Error("Não foi possível gerar a cobrança. Tente novamente.");
       }
     } catch (e: any) {
-      setErrorMsg(e.message || "Erro ao processar pagamento");
-      setStep("error");
+      const msg = e.message || "Erro ao processar pagamento";
+      if (selectedMethod === "CREDIT_CARD" && step !== "error") {
+        // Show RECUSADO on the POS, keep loading screen visible with the error message below.
+        setCardStatus("declined");
+        setErrorMsg(msg);
+        setTimeout(() => {
+          setStep("error");
+        }, 2500);
+      } else {
+        setErrorMsg(msg);
+        setStep("error");
+      }
     }
   };
 
