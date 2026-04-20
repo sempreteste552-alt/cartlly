@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import paymentMethodsImg from "@/assets/payment-methods.png";
 import securityBadgesImg from "@/assets/security-badges.png";
-import { CardTapAnimation } from "@/components/checkout/CardTapAnimation";
+import { CardTapAnimation, type CardTapStatus } from "@/components/checkout/CardTapAnimation";
 import { VirtualCard } from "@/components/checkout/VirtualCard";
 
 /* ------------------------------------------------------------------ */
