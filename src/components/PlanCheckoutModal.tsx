@@ -103,6 +103,7 @@ export default function PlanCheckoutModal({
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [installments, setInstallments] = useState(1);
+  const [cardFlipped, setCardFlipped] = useState(false);
 
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrBase64, setPixQrBase64] = useState("");
