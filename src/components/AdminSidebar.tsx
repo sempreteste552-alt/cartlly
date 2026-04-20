@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { motion } from "framer-motion";
-import sidebarBg from "@/assets/sidebar-bg.png";
 
 const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
   return (
@@ -139,11 +138,8 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     <Sidebar collapsible="icon" style={themeStyle} className="bg-sidebar border-r border-sidebar-border/20 overflow-hidden group/sidebar">
       {/* Background layer that works on both mobile and desktop */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-sidebar/40 via-sidebar/60 to-sidebar/90" />
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.25] transition-opacity duration-700 group-hover/sidebar:opacity-[0.35]"
-          style={{ backgroundImage: `url(${sidebarBg})` }}
-        />
+        <div className="absolute inset-0 bg-sidebar/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-sidebar/98 via-sidebar/96 to-sidebar/92" />
       </div>
 
       <SidebarHeader className="p-4 relative z-10">
