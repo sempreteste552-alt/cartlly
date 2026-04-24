@@ -125,6 +125,17 @@ export default function SuperAdminConfig() {
     },
   });
 
+  const { data: usageStats, isLoading: loadingStats } = useQuery({
+    queryKey: ["ai_usage_stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_ai_usage_stats", {
+        p_start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+      });
+      if (error) throw error;
+      return data?.[0] || { total_tokens: 0, total_cost: 0, call_count: 0, usage_by_provider: {}, usage_by_feature: {} };
+    },
+  });
+
   const handleSave = async () => {
     setSaving(true);
     try {
