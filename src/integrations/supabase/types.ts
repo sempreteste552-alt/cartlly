@@ -217,6 +217,41 @@ export type Database = {
           },
         ]
       }
+      ai_global_settings: {
+        Row: {
+          default_provider_id: string | null
+          global_daily_limit_usd: number | null
+          global_monthly_limit_usd: number | null
+          id: string
+          is_ai_enabled_globally: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          default_provider_id?: string | null
+          global_daily_limit_usd?: number | null
+          global_monthly_limit_usd?: number | null
+          id?: string
+          is_ai_enabled_globally?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          default_provider_id?: string | null
+          global_daily_limit_usd?: number | null
+          global_monthly_limit_usd?: number | null
+          id?: string
+          is_ai_enabled_globally?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_global_settings_default_provider_id_fkey"
+            columns: ["default_provider_id"]
+            isOneToOne: false
+            referencedRelation: "ai_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_message_templates: {
         Row: {
           channel: string
@@ -256,6 +291,57 @@ export type Database = {
           updated_at?: string
           user_id?: string
           variables?: string[] | null
+        }
+        Relationships: []
+      }
+      ai_providers: {
+        Row: {
+          api_key: string
+          cost_per_image: number | null
+          cost_per_text_token: number | null
+          created_at: string | null
+          daily_limit_usd: number | null
+          id: string
+          is_active: boolean | null
+          model_cheap: string | null
+          model_image_default: string | null
+          model_premium: string | null
+          model_text_default: string | null
+          monthly_limit_usd: number | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          cost_per_image?: number | null
+          cost_per_text_token?: number | null
+          created_at?: string | null
+          daily_limit_usd?: number | null
+          id?: string
+          is_active?: boolean | null
+          model_cheap?: string | null
+          model_image_default?: string | null
+          model_premium?: string | null
+          model_text_default?: string | null
+          monthly_limit_usd?: number | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          cost_per_image?: number | null
+          cost_per_text_token?: number | null
+          created_at?: string | null
+          daily_limit_usd?: number | null
+          id?: string
+          is_active?: boolean | null
+          model_cheap?: string | null
+          model_image_default?: string | null
+          model_premium?: string | null
+          model_text_default?: string | null
+          monthly_limit_usd?: number | null
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -303,12 +389,16 @@ export type Database = {
       }
       ai_usage_logs: {
         Row: {
+          cost_billed: number | null
           created_at: string
+          error_message: string | null
           estimated_cost: number | null
           feature: string | null
           id: string
+          images_count: number | null
           model: string
           provider: string
+          status: string | null
           store_user_id: string | null
           tokens_completion: number
           tokens_prompt: number
@@ -316,12 +406,16 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cost_billed?: number | null
           created_at?: string
+          error_message?: string | null
           estimated_cost?: number | null
           feature?: string | null
           id?: string
+          images_count?: number | null
           model: string
           provider: string
+          status?: string | null
           store_user_id?: string | null
           tokens_completion?: number
           tokens_prompt?: number
@@ -329,12 +423,16 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cost_billed?: number | null
           created_at?: string
+          error_message?: string | null
           estimated_cost?: number | null
           feature?: string | null
           id?: string
+          images_count?: number | null
           model?: string
           provider?: string
+          status?: string | null
           store_user_id?: string | null
           tokens_completion?: number
           tokens_prompt?: number
@@ -3879,6 +3977,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_ai_balances: {
+        Row: {
+          balance: number | null
+          currency: string | null
+          id: string
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          balance?: number | null
+          currency?: string | null
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          balance?: number | null
+          currency?: string | null
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tenant_ai_brain_config: {
         Row: {
           ai_name: string | null
@@ -3979,6 +4101,72 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           metadata?: Json | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tenant_ai_quotas: {
+        Row: {
+          allow_overage: boolean | null
+          daily_token_limit: number | null
+          id: string
+          monthly_image_limit: number | null
+          monthly_push_limit: number | null
+          monthly_text_limit: number | null
+          monthly_token_limit: number | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_overage?: boolean | null
+          daily_token_limit?: number | null
+          id?: string
+          monthly_image_limit?: number | null
+          monthly_push_limit?: number | null
+          monthly_text_limit?: number | null
+          monthly_token_limit?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_overage?: boolean | null
+          daily_token_limit?: number | null
+          id?: string
+          monthly_image_limit?: number | null
+          monthly_push_limit?: number | null
+          monthly_text_limit?: number | null
+          monthly_token_limit?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tenant_ai_settings: {
+        Row: {
+          id: string
+          is_ai_enabled: boolean | null
+          is_image_gen_enabled: boolean | null
+          is_smart_automation_enabled: boolean | null
+          is_text_gen_enabled: boolean | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          is_ai_enabled?: boolean | null
+          is_image_gen_enabled?: boolean | null
+          is_smart_automation_enabled?: boolean | null
+          is_text_gen_enabled?: boolean | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          is_ai_enabled?: boolean | null
+          is_image_gen_enabled?: boolean | null
+          is_smart_automation_enabled?: boolean | null
+          is_text_gen_enabled?: boolean | null
           tenant_id?: string | null
           updated_at?: string | null
         }
