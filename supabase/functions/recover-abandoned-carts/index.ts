@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
 
         if (lovableApiKey) {
           try {
-            const aiMsg = await generateAIMessage(lovableApiKey, {
+            const aiMsg = await generateAIMessage({
               type: "abandoned_cart",
               customerName: customer.name,
               customerGender: customer.gender,
