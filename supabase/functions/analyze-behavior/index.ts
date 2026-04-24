@@ -50,13 +50,14 @@ Deno.serve(async (req) => {
       return json({ processed: 0, message: "No recent events" });
     }
 
-    // 2. Group events by customer
+    // 2. Group events by customer (or session if anonymous)
     const customerEvents = new Map<string, typeof events>();
     for (const ev of events) {
-      if (!ev.customer_id) continue;
-      const existing = customerEvents.get(ev.customer_id) || [];
+      const key = ev.customer_id || ev.session_id;
+      if (!key) continue;
+      const existing = customerEvents.get(key) || [];
       existing.push(ev);
-      customerEvents.set(ev.customer_id, existing);
+      customerEvents.set(key, existing);
     }
 
     let updated = 0;
