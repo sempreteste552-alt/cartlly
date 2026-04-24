@@ -68,6 +68,7 @@ const SuperAdminBanners = lazy(() => import("./pages/superadmin/SuperAdminBanner
 const SuperAdminRoulette = lazy(() => import("./pages/superadmin/SuperAdminRoulette"));
 const SuperAdminDominios = lazy(() => import("./pages/superadmin/SuperAdminDominios"));
 const SuperAdminTenantDiagnostics = lazy(() => import("./pages/superadmin/SuperAdminTenantDiagnostics"));
+const SuperAdminAI = lazy(() => import("./pages/superadmin/SuperAdminAI"));
 
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Termos = lazy(() => import("./pages/Termos"));
