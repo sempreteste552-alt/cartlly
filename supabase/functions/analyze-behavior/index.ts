@@ -167,6 +167,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 trigger_type: "product_view",
                 customer_id: customerId,
+                session_id: sessionId,
                 store_user_id: storeUserId,
                 product_id: lastProductId,
               }),
