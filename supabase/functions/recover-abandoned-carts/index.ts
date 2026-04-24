@@ -938,7 +938,7 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
 
   if (lovableApiKey) {
     try {
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "product_view",
         customerName: customer.name,
         customerGender: customer.gender,
