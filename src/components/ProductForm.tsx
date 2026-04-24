@@ -51,6 +51,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [minStockAlert, setMinStockAlert] = useState("5");
   const [isPrize, setIsPrize] = useState(false);
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
+  const [videoUrlInput, setVideoUrlInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
   const videoFileRef = useRef<HTMLInputElement>(null);
