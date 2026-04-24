@@ -28,7 +28,11 @@ function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClos
   const fileRef = useRef<HTMLInputElement>(null);
   const videoFileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(section.title || "");
-...
+  const [subtitle, setSubtitle] = useState(section.subtitle || "");
+  const [description, setDescription] = useState(section.description || "");
+  const [imageUrl, setImageUrl] = useState(section.image_url || "");
+  const [videoUrl, setVideoUrl] = useState(section.video_url || "");
+  const [buttonText, setButtonText] = useState(section.button_text || "");
   const [buttonLink, setButtonLink] = useState(section.button_link || "");
   const [desktopVisible, setDesktopVisible] = useState(section.desktop_visible);
   const [mobileVisible, setMobileVisible] = useState(section.mobile_visible);
