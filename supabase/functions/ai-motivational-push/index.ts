@@ -195,29 +195,22 @@ Lembre-se: analise as 15 anteriores e mude totalmente a lógica da mensagem.`;
     let selectedMessage: { title: string; body: string } | null = null;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    for (let attempt = 0; attempt < 4 && LOVABLE_API_KEY; attempt++) {
+    for (let attempt = 0; attempt < 4; attempt++) {
       const retryInstruction = attempt === 0
         ? ""
         : `\nREJEIÇÃO ${attempt}: a opção anterior foi recusada por repetição de tema, abertura ou lógica. Troque radicalmente o gancho.`;
 
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-1.5-flash-lite",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `${userPromptBase}${retryInstruction}` },
-          ],
-          temperature: 1,
-        }),
+      const aiData = await callAI({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `${userPromptBase}${retryInstruction}` },
+        ],
+        temperature: 1,
+        feature: "motivational_push",
+        store_user_id: user_id,
       });
 
-      const aiResult = await aiResponse.json();
-      const rawContent = aiResult.choices?.[0]?.message?.content || "";
+      const rawContent = aiData.content || "";
       const candidate = parseGeneratedCopy(rawContent, ["body"]);
 
       if (!candidate) continue;
