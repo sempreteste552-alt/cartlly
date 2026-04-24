@@ -1328,27 +1328,19 @@ Saudação: ${greetings}`;
 
   if (!systemPrompt) return null;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "google/gemini-1.5-flash-lite",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 150,
-      temperature: 0.95,
-    }),
+  const aiData = await callAI({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    max_tokens: 150,
+    temperature: 0.95,
+    feature: "recover_abandoned_carts",
   });
 
-  if (!resp.ok) return null;
+  if (!aiData || typeof aiData === "object" && !("content" in aiData)) return null;
 
-  const data = await resp.json();
-  const content = data.choices?.[0]?.message?.content || "";
+  const content = (aiData as any).content || "";
   const cleaned = content.replace(/```json\n?/g, "").replace(/```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
