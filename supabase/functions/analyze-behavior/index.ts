@@ -65,6 +65,8 @@ Deno.serve(async (req) => {
     for (const [key, evts] of customerEvents) {
       const latestEvent = evts[0]; // already sorted desc
       const storeUserId = latestEvent.user_id;
+      const customerId = latestEvent.customer_id;
+      const sessionId = latestEvent.session_id;
       const eventTypes = evts.map(e => e.event_type);
 
       // Determine intent level
