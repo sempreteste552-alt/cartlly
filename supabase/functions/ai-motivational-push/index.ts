@@ -193,7 +193,7 @@ Produtos ativos: ${productCount || 0}. Clientes cadastrados: ${customerCount || 
 Lembre-se: analise as 15 anteriores e mude totalmente a lógica da mensagem.`;
 
     let selectedMessage: { title: string; body: string } | null = null;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    
 
     for (let attempt = 0; attempt < 4; attempt++) {
       const retryInstruction = attempt === 0
