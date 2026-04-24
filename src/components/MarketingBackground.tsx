@@ -9,9 +9,13 @@ interface MarketingBackgroundProps {
 
 export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen w-full overflow-hidden bg-background">
+    <div className="flex min-h-screen w-full overflow-hidden bg-[#0a0a1a]">
+      {/* Preload images for instant appearance */}
+      <img src={loginBg} className="hidden" aria-hidden="true" fetchPriority="high" />
+      <img src={loginBgMobile} className="hidden" aria-hidden="true" fetchPriority="high" />
+
       {/* Mobile Background (only visible on mobile) */}
-      <div className="lg:hidden fixed inset-0 w-full h-full">
+      <div className="lg:hidden fixed inset-0 w-full h-full bg-[#0a0a1a]">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
