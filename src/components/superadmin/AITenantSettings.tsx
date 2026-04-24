@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,14 +9,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Settings, Save, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function AITenantSettings() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
 
-  // Fetch tenants (store_settings contains store info, user_id is the tenant id)
   const { data: tenants, isLoading } = useQuery({
     queryKey: ["ai-tenants", searchTerm],
     queryFn: async () => {
@@ -57,19 +56,16 @@ export function AITenantSettings() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (variables: { tenant_id: string; settings: any; quotas: any; balance: number }) => {
-      // Upsert settings
       const { error: sError } = await supabase
         .from("tenant_ai_settings")
         .upsert({ tenant_id: variables.tenant_id, ...variables.settings });
       if (sError) throw sError;
 
-      // Upsert quotas
       const { error: qError } = await supabase
         .from("tenant_ai_quotas")
         .upsert({ tenant_id: variables.tenant_id, ...variables.quotas });
       if (qError) throw qError;
 
-      // Upsert balance
       const { error: bError } = await supabase
         .from("tenant_ai_balances")
         .upsert({ tenant_id: variables.tenant_id, balance: variables.balance });
@@ -80,7 +76,7 @@ export function AITenantSettings() {
       toast.success("Configurações do tenant salvas com sucesso");
       setSelectedTenant(null);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(`Erro ao salvar: ${error.message}`);
     },
   });
@@ -109,42 +105,48 @@ export function AITenantSettings() {
       </div>
 
       <div className="grid gap-4">
-        {tenants?.map((tenant) => (
-          <Card key={tenant.user_id} className="hover:border-primary/50 transition-colors">
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold">{tenant.store_name}</h4>
-                    {tenant.tenant_ai_settings?.[0]?.is_ai_enabled ? (
-                      <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none">IA Ativa</Badge>
-                    ) : (
-                      <Badge variant="secondary">IA Inativa</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">ID: {tenant.user_id}</p>
-                </div>
+        {tenants?.map((tenant: any) => {
+          const aiSettings = tenant.tenant_ai_settings?.[0];
+          const aiQuotas = tenant.tenant_ai_quotas?.[0];
+          const aiBalance = tenant.tenant_ai_balances?.[0];
 
-                <div className="flex flex-wrap gap-2 items-center">
-                  <div className="flex gap-4 mr-4">
-                    <div className="text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase">Saldo</p>
-                      <p className="text-sm font-semibold">R$ {tenant.tenant_ai_balances?.[0]?.balance || "0,00"}</p>
+          return (
+            <Card key={tenant.user_id} className="hover:border-primary/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold">{tenant.store_name}</h4>
+                      {aiSettings?.is_ai_enabled ? (
+                        <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-none">IA Ativa</Badge>
+                      ) : (
+                        <Badge variant="secondary">IA Inativa</Badge>
+                      )}
                     </div>
-                    <div className="text-center">
-                      <p className="text-[10px] text-muted-foreground uppercase">Limite Texto</p>
-                      <p className="text-sm font-semibold">{tenant.tenant_ai_quotas?.[0]?.monthly_text_limit || "1000"}</p>
-                    </div>
+                    <p className="text-xs text-muted-foreground">ID: {tenant.user_id}</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setSelectedTenant(tenant)} className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Configurar
-                  </Button>
+
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex gap-4 mr-4">
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase">Saldo</p>
+                        <p className="text-sm font-semibold">R$ {aiBalance?.balance || "0,00"}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground uppercase">Limite Texto</p>
+                        <p className="text-sm font-semibold">{aiQuotas?.monthly_text_limit || "1000"}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedTenant(tenant)} className="gap-2">
+                      <Settings className="h-4 w-4" />
+                      Configurar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {tenants?.length === 0 && (
           <div className="text-center p-12 bg-muted/30 rounded-lg">
