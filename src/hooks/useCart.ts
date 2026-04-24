@@ -62,7 +62,7 @@ export function useCart(slug?: string, storeUserId?: string) {
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     if (items.length > 0) {
       syncTimerRef.current = setTimeout(() => {
-        syncAbandonedCart(items, slugRef.current);
+        syncAbandonedCart(items, slugRef.current, storeUserId);
       }, 5000);
     }
 
