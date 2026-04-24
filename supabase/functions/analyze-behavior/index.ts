@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
     let updated = 0;
 
-    for (const [customerId, evts] of customerEvents) {
+    for (const [key, evts] of customerEvents) {
       const latestEvent = evts[0]; // already sorted desc
       const storeUserId = latestEvent.user_id;
       const eventTypes = evts.map(e => e.event_type);
