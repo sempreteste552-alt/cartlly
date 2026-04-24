@@ -637,7 +637,7 @@ REGRAS:
 - ${specialDate}
 - Seed: ${seed}-${Math.random().toString(36).slice(2, 6)}`;
 
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "review_thankyou",
         _customSystemPrompt: systemPrompt,
         _customUserPrompt: `Cliente: ${customer_name}\nProduto: ${productName}\nEstrelas: ${rating}/5\nComentário: ${comment || "nenhum"}\nLoja: ${storeName}\nDia: ${dayName}\nSaudação: ${greetings}`,
