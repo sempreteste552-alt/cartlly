@@ -371,21 +371,19 @@ CRITICAL RULES:
 - If the payment gateway is NOT configured, DO NOT offer online payment. Suggest WhatsApp or payment on delivery.
 ${customerContext ? `\nCUSTOMER CONTEXT:\n${customerContext}` : ""}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-1.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
-        stream: true,
-      }),
+    const response = await callAI({
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages,
+      ],
+      stream: true,
+      feature: "store_chat",
+      store_user_id: storeUserId,
     });
+
+    if (!(response instanceof Response)) {
+      throw new Error("Expected streaming response but got static data");
+    }
 
     if (!response.ok) {
       if (response.status === 429) {
