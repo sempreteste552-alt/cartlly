@@ -41,8 +41,10 @@ async function autoEnablePushAfterInstall(storeUserId?: string) {
     const json = subscription.toJSON();
     if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
 
+    const sessionId = localStorage.getItem("store_session_id") || `anon_${Math.random().toString(36).substring(2, 15)}`;
+    if (!localStorage.getItem("store_session_id")) localStorage.setItem("store_session_id", sessionId);
+
     // Vincula ao usuário logado se houver, senão usa o tenant da loja como dono lógico
-    // (permite que visitantes anônimos recebam push da loja após instalar).
     const { data: { user } } = await supabase.auth.getUser();
     const ownerUserId = user?.id || storeUserId;
     if (!ownerUserId) {
@@ -53,6 +55,7 @@ async function autoEnablePushAfterInstall(storeUserId?: string) {
     await supabase.from("push_subscriptions").upsert(
       {
         user_id: ownerUserId,
+        session_id: sessionId,
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
