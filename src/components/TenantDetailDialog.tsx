@@ -169,10 +169,16 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
             </div>
             <div>
               <p className="text-lg font-bold">{tenant.display_name || "Sem nome"}</p>
-              <p className="text-sm text-muted-foreground font-normal">
-                {storeSettings?.store_name || tenant.store?.store_name || "Sem loja"}
-                {storeSettings?.store_slug && ` • /${storeSettings.store_slug}`}
-              </p>
+              <div className="flex flex-col gap-0.5">
+                <p className="text-sm text-muted-foreground font-normal">
+                  {storeSettings?.store_name || tenant.store?.store_name || "Sem loja"}
+                  {storeSettings?.store_slug && ` • /${storeSettings.store_slug}`}
+                </p>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Mail className="h-3 w-3" />
+                  <span>{tenant.email || "Sem e-mail informado"}</span>
+                </div>
+              </div>
             </div>
             <div className="ml-auto">{getStatusBadge(tenant.status)}</div>
           </DialogTitle>
@@ -216,39 +222,56 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                 </div>
 
                 {/* Store info */}
-                {storeSettings && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {storeSettings && (
+                    <Card>
+                      <CardContent className="p-4 space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> Configurações da Loja</h4>
+                        <div className="grid grid-cols-1 gap-2 text-sm">
+                          <div><span className="text-muted-foreground">Nome:</span> {storeSettings.store_name}</div>
+                          <div><span className="text-muted-foreground">Slug:</span> /{storeSettings.store_slug || "—"}</div>
+                          <div><span className="text-muted-foreground">Telefone:</span> {storeSettings.store_phone || "—"}</div>
+                          <div><span className="text-muted-foreground">WhatsApp:</span> {storeSettings.store_whatsapp || "—"}</div>
+                          <div><span className="text-muted-foreground">CEP:</span> {storeSettings.store_cep || "—"}</div>
+                          <div><span className="text-muted-foreground">Endereço:</span> {storeSettings.store_address || "—"}</div>
+                          <div><span className="text-muted-foreground">Loja aberta:</span> {storeSettings.store_open ? "Sim ✅" : "Não ❌"}</div>
+                          <div><span className="text-muted-foreground">Gateway:</span> {storeSettings.payment_gateway || "Nenhum"}</div>
+                        </div>
+                        {storeSettings.store_slug && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-2 w-full" 
+                            onClick={() => {
+                              const url = buildStoreUrl({
+                                slug: storeSettings.store_slug,
+                                customDomain: storeSettings.custom_domain,
+                                domainStatus: storeSettings.domain_status,
+                                sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
+                              });
+                              window.open(url, "_blank");
+                            }}
+                          >
+                            <Eye className="mr-2 h-3 w-3" /> Ver Loja
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
                   <Card>
                     <CardContent className="p-4 space-y-2">
-                      <h4 className="font-semibold flex items-center gap-2"><Settings className="h-4 w-4" /> Configurações da Loja</h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-muted-foreground">Nome:</span> {storeSettings.store_name}</div>
-                        <div><span className="text-muted-foreground">Slug:</span> /{storeSettings.store_slug || "—"}</div>
-                        <div><span className="text-muted-foreground">Telefone:</span> {storeSettings.store_phone || "—"}</div>
-                        <div><span className="text-muted-foreground">WhatsApp:</span> {storeSettings.store_whatsapp || "—"}</div>
-                        <div><span className="text-muted-foreground">Loja aberta:</span> {storeSettings.store_open ? "Sim ✅" : "Não ❌"}</div>
-                        <div><span className="text-muted-foreground">Gateway:</span> {storeSettings.payment_gateway || "Nenhum"}</div>
+                      <h4 className="font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Dados do Proprietário</h4>
+                      <div className="grid grid-cols-1 gap-2 text-sm">
+                        <div><span className="text-muted-foreground">Nome:</span> {tenant.display_name || "—"}</div>
+                        <div><span className="text-muted-foreground">E-mail:</span> {tenant.email || "—"}</div>
+                        <div><span className="text-muted-foreground">Status Conta:</span> {tenant.status}</div>
+                        <div><span className="text-muted-foreground">ID do Usuário:</span> <code className="text-[10px] bg-muted px-1 rounded">{tenant.user_id}</code></div>
+                        <div><span className="text-muted-foreground">Membro desde:</span> {formatDate(tenant.created_at)}</div>
                       </div>
-                      {storeSettings.store_slug && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-2" 
-                          onClick={() => {
-                            const url = buildStoreUrl({
-                              slug: storeSettings.store_slug,
-                              customDomain: storeSettings.custom_domain,
-                              domainStatus: storeSettings.domain_status,
-                              sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
-                            });
-                            window.open(url, "_blank");
-                          }}
-                        >
-                          <Eye className="mr-2 h-3 w-3" /> Ver Loja
-                        </Button>
-                      )}
                     </CardContent>
                   </Card>
-                )}
+                </div>
 
                 {/* Plan info */}
                 <Card>
