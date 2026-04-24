@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 const Index = () => {
   const { user, loading } = useAuth();

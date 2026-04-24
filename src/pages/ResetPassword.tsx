@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { MarketingBackground } from "@/components/MarketingBackground";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 import { isPlatformHost } from "@/lib/storeDomain";
 
 export default function ResetPassword() {
