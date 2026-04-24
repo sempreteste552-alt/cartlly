@@ -337,7 +337,7 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
 
     if (lovableApiKey) {
       try {
-        const aiMsg = await generateAIMessage(lovableApiKey, {
+        const aiMsg = await generateAIMessage({
           type: "new_customer",
           customerName: customer.name,
           storeName,
