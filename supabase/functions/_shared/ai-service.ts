@@ -9,6 +9,7 @@ export interface AICallOptions {
   feature?: string;
   store_user_id?: string;
   user_id?: string;
+  stream?: boolean;
 }
 
 export interface AICallResult {
@@ -22,7 +23,7 @@ export interface AICallResult {
   model: string;
 }
 
-export async function callAI(options: AICallOptions): Promise<AICallResult> {
+export async function callAI(options: AICallOptions): Promise<AICallResult | Response> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
@@ -38,7 +39,7 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
   });
 
   const provider = settings.ai_provider || "lovable";
-  const model = options.model || settings.ai_model || "gpt-4o";
+  const model = options.model || settings.ai_model || (provider === "lovable" ? "google/gemini-1.5-flash" : "gpt-4o");
   const openaiKey = settings.ai_api_key_openai;
   const anthropicKey = settings.ai_api_key_anthropic;
   const googleKey = settings.ai_api_key_google;
@@ -51,6 +52,7 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
     messages: options.messages,
     temperature: options.temperature ?? 0.7,
     max_tokens: options.max_tokens,
+    stream: options.stream || false,
   };
 
   if (options.response_format) {
@@ -65,7 +67,7 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
     url = "https://api.anthropic.com/v1/messages";
     headers["x-api-key"] = anthropicKey;
     headers["anthropic-version"] = "2023-06-01";
-    // Convert messages for Anthropic
+    
     const systemMessage = options.messages.find(m => m.role === "system")?.content;
     const userMessages = options.messages.filter(m => m.role !== "system");
     body = {
@@ -73,16 +75,15 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
       system: systemMessage,
       messages: userMessages,
       max_tokens: options.max_tokens || 4096,
+      stream: options.stream || false,
     };
   } else if (provider === "google" && googleKey) {
     url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions?key=${googleKey}`;
-    // Google Gemini API supports OpenAI compatible endpoint
   } else {
-    // Default to Lovable Gateway
     url = "https://ai.gateway.lovable.dev/v1/chat/completions";
     headers["Authorization"] = `Bearer ${lovableApiKey}`;
-    if (provider === "lovable") {
-      body.model = options.model || "google/gemini-1.5-flash";
+    if (provider === "lovable" && !options.model) {
+      body.model = "google/gemini-1.5-flash";
     }
   }
 
@@ -96,6 +97,11 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
     const errorText = await response.text();
     console.error(`AI provider error (${provider}):`, errorText);
     throw new Error(`AI Provider Error: ${response.status} ${errorText}`);
+  }
+
+  // If streaming, return the response object directly
+  if (options.stream) {
+    return response;
   }
 
   const data = await response.json();
@@ -119,22 +125,20 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
     };
   }
 
-  // 3. Log Usage
-  try {
-    const estimatedCost = calculateEstimatedCost(provider, model, usage);
-    await supabase.from("ai_usage_logs").insert({
-      user_id: options.user_id,
-      store_user_id: options.store_user_id,
-      provider,
-      model,
-      tokens_prompt: usage.prompt_tokens,
-      tokens_completion: usage.completion_tokens,
-      estimated_cost: estimatedCost,
-      feature: options.feature,
-    });
-  } catch (logError) {
-    console.warn("Failed to log AI usage:", logError);
-  }
+  // 3. Log Usage (Async)
+  const estimatedCost = calculateEstimatedCost(provider, model, usage);
+  supabase.from("ai_usage_logs").insert({
+    user_id: options.user_id,
+    store_user_id: options.store_user_id,
+    provider,
+    model,
+    tokens_prompt: usage.prompt_tokens,
+    tokens_completion: usage.completion_tokens,
+    estimated_cost: estimatedCost,
+    feature: options.feature,
+  }).then(({ error }) => {
+    if (error) console.warn("Failed to log AI usage:", error);
+  });
 
   return {
     content,
@@ -145,8 +149,6 @@ export async function callAI(options: AICallOptions): Promise<AICallResult> {
 }
 
 function calculateEstimatedCost(provider: string, model: string, usage: { prompt_tokens: number, completion_tokens: number }): number {
-  // Rough estimations in USD converted to local context (if needed)
-  // Prices per 1M tokens
   let promptPrice = 0;
   let completionPrice = 0;
 
@@ -163,11 +165,10 @@ function calculateEstimatedCost(provider: string, model: string, usage: { prompt
     promptPrice = 0.25;
     completionPrice = 1.25;
   } else {
-    // Default fallback
     promptPrice = 1.0;
     completionPrice = 3.0;
   }
 
   const cost = ((usage.prompt_tokens / 1000000) * promptPrice) + ((usage.completion_tokens / 1000000) * completionPrice);
-  return cost * 5.5; // Rough USD to BRL conversion if needed, or just keep in points
+  return cost * 5.5; 
 }
