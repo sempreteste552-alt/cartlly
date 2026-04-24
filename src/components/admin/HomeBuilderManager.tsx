@@ -88,12 +88,24 @@ function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClos
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>URL da Imagem</Label>
-          <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
+          <Label>Imagem / Banner</Label>
+          <div className="flex gap-2">
+            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="URL ou Upload" />
+            <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={uploadFile.isPending}>
+              {uploadFile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            </Button>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "image")} />
         </div>
         <div className="space-y-2">
-          <Label>URL do Vídeo</Label>
-          <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
+          <Label>Vídeo</Label>
+          <div className="flex gap-2">
+            <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="URL ou Upload" />
+            <Button type="button" variant="outline" size="icon" onClick={() => videoFileRef.current?.click()} disabled={uploadFile.isPending}>
+              {uploadFile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            </Button>
+          </div>
+          <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, "video")} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
