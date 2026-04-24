@@ -743,7 +743,7 @@ async function handleNewProduct(supabase: any, supabaseUrl: string, lovableApiKe
 
   if (lovableApiKey) {
     try {
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "new_product",
         storeName,
         productName: product_name || "novo produto",
