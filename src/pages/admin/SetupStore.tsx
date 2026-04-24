@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { MarketingBackground } from "@/components/MarketingBackground";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 export default function SetupStore() {
   const { user } = useAuth();

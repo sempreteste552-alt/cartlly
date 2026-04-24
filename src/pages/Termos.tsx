@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 export default function Termos() {
   return (

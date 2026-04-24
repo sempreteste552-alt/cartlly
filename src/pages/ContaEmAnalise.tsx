@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogOut, Ban, ShieldOff, Wrench, MessageCircle } from "lucide-react";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 export default function ContaEmAnalise() {
   const { user, signOut } = useAuth();
