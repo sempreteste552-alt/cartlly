@@ -1140,7 +1140,7 @@ function detectGender(name: string): string {
   return "neutral";
 }
 
-async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: string; body: string } | null> {
+async function generateAIMessage(ctx: any): Promise<{ title: string; body: string } | null> {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const hour = ctx.hour;
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
