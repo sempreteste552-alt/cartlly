@@ -223,6 +223,8 @@ Deno.serve(async (req) => {
 
     if (target_user_id) {
       query = query.eq("user_id", target_user_id);
+    } else if (session_id) {
+      query = query.eq("session_id", session_id);
     } else if (customer_id) {
       const { data: customerTokens } = await supabase
         .from("customer_push_tokens")
