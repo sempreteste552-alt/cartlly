@@ -235,7 +235,9 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                           <div><span className="text-muted-foreground">CEP:</span> {storeSettings.store_cep || "—"}</div>
                           <div><span className="text-muted-foreground">Endereço:</span> {storeSettings.store_address || "—"}</div>
                           <div><span className="text-muted-foreground">Loja aberta:</span> {storeSettings.store_open ? "Sim ✅" : "Não ❌"}</div>
+                          <div><span className="text-muted-foreground">Categoria:</span> {storeSettings.store_category || "—"}</div>
                           <div><span className="text-muted-foreground">Gateway:</span> {storeSettings.payment_gateway || "Nenhum"}</div>
+                          {storeSettings.instagram_url && <div><span className="text-muted-foreground">Instagram:</span> @{storeSettings.instagram_url.split('/').pop()}</div>}
                         </div>
                         {storeSettings.store_slug && (
                           <Button 
