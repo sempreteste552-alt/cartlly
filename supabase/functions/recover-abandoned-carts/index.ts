@@ -837,7 +837,7 @@ async function handleNewCoupon(supabase: any, supabaseUrl: string, lovableApiKey
     try {
       const dayOfWeek = getNowBrasilia().getDay();
       const hour = getNowBrasilia().getHours();
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "new_coupon",
         storeName,
         couponCode: coupon_code,
