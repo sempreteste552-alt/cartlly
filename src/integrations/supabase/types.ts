@@ -301,6 +301,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_logs: {
+        Row: {
+          created_at: string
+          estimated_cost: number | null
+          feature: string | null
+          id: string
+          model: string
+          provider: string
+          store_user_id: string | null
+          tokens_completion: number
+          tokens_prompt: number
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          estimated_cost?: number | null
+          feature?: string | null
+          id?: string
+          model: string
+          provider: string
+          store_user_id?: string | null
+          tokens_completion?: number
+          tokens_prompt?: number
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          estimated_cost?: number | null
+          feature?: string | null
+          id?: string
+          model?: string
+          provider?: string
+          store_user_id?: string | null
+          tokens_completion?: number
+          tokens_prompt?: number
+          total_tokens?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -4651,6 +4693,16 @@ export type Database = {
         }[]
       }
       generate_referral_code: { Args: never; Returns: string }
+      get_ai_usage_stats: {
+        Args: { p_start_date?: string }
+        Returns: {
+          call_count: number
+          total_cost: number
+          total_tokens: number
+          usage_by_feature: Json
+          usage_by_provider: Json
+        }[]
+      }
       get_ai_work_summary: { Args: { p_user_id: string }; Returns: Json }
       get_best_selling_products: {
         Args: { _limit?: number; _store_user_id: string }
