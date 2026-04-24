@@ -227,7 +227,7 @@ export default function LojaCheckout() {
     const userId = settings?.user_id;
     if (!userId) throw new Error("Loja não configurada");
 
-    const orderId = globalThis.crypto?.randomUUID?.() ?? "00000000-0000-4000-8000-000000000000";
+    const orderId = globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).substring(2) + Date.now().toString(36);
 
     const referralCode = localStorage.getItem(`store_referral_${userId}`);
     const { error: orderErr } = await supabase
