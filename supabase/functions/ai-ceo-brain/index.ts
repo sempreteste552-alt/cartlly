@@ -183,24 +183,18 @@ Se houver problema, entregue solução prática. Se houver oportunidade, entregu
             ? ""
             : `\nREJEIÇÃO ${attempt}: a opção anterior repetiu abertura, lógica ou tema. Gere um insight com outro raciocínio.`;
 
-          const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${lovableApiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-1.5-flash",
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: `${userPromptBase}${retryInstruction}` },
-              ],
-              temperature: 1,
-              response_format: { type: "json_object" },
-            }),
+          const aiData = await callAI({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `${userPromptBase}${retryInstruction}` },
+            ],
+            temperature: 1,
+            response_format: { type: "json_object" },
+            feature: "ceo_brain",
+            store_user_id: userId,
           });
 
-          const aiData = await aiResponse.json();
+          const rawContent = aiData.content || "";
           const rawContent = aiData.choices?.[0]?.message?.content || "";
 
           if (rawContent.includes("[NO_INSIGHT]")) break;
