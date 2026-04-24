@@ -47,6 +47,13 @@ interface PlatformConfig {
   signup_coupon_text: string;
   plan_gateway: string;
   asaas_api_key: string;
+  ai_provider: string;
+  ai_model: string;
+  ai_api_key_openai: string;
+  ai_api_key_anthropic: string;
+  ai_api_key_google: string;
+  ai_monthly_token_limit: number;
+  ai_monthly_cost_limit: number;
 }
 
 const defaultConfig: PlatformConfig = {
@@ -84,6 +91,13 @@ const defaultConfig: PlatformConfig = {
   signup_coupon_text: "🎉 Use o cupom abaixo e ganhe desconto na sua primeira compra!",
   plan_gateway: "",
   asaas_api_key: "",
+  ai_provider: "openai",
+  ai_model: "gpt-4o",
+  ai_api_key_openai: "",
+  ai_api_key_anthropic: "",
+  ai_api_key_google: "",
+  ai_monthly_token_limit: 1000000,
+  ai_monthly_cost_limit: 20.0,
 };
 
 export default function SuperAdminConfig() {
