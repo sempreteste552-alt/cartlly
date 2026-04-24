@@ -104,7 +104,7 @@ export function useCart(slug?: string, storeUserId?: string) {
 }
 
 /** Sync cart to abandoned_carts table for recovery automation */
-async function syncAbandonedCart(items: CartItem[], slug?: string) {
+async function syncAbandonedCart(items: CartItem[], slug?: string, storeUserId?: string) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const sessionId = localStorage.getItem("store_session_id") || `cart_${Math.random().toString(36).substring(2, 15)}`;
@@ -116,16 +116,16 @@ async function syncAbandonedCart(items: CartItem[], slug?: string) {
 
     // Find the customer record for this session if authenticated
     if (authUserId) {
-      const { data: customerData } = await supabase
+      const { data: customerRecord } = await supabase
         .from("customers")
         .select("id, store_user_id")
         .eq("auth_user_id", authUserId)
         .limit(1)
         .maybeSingle();
       
-      if (customerData) {
-        customerId = customerData.id;
-        storeOwnerId = customerData.store_user_id;
+      if (customerRecord) {
+        customerId = customerRecord.id;
+        storeOwnerId = customerRecord.store_user_id;
       }
     }
 
@@ -137,9 +137,9 @@ async function syncAbandonedCart(items: CartItem[], slug?: string) {
     // Upsert: update existing or create new abandoned cart
     await supabase.from("abandoned_carts").upsert(
       {
-        user_id: customerData.store_user_id,
-        customer_id: customerData.id,
-        session_id: sessionId,
+        user_id: storeOwnerId,
+        customer_id: customerId,
+        session_id: uniqueSessionKey,
         items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image_url: i.image_url })),
         total,
         abandoned_at: new Date().toISOString(),
