@@ -18,18 +18,33 @@ import {
   SECTION_TYPES,
   type StoreHomeSection,
 } from "@/hooks/useStoreHomeSections";
+import { useUploadProductImage } from "@/hooks/useProducts";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClose: () => void }) {
   const updateSection = useUpdateHomeSection();
+  const uploadFile = useUploadProductImage();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(section.title || "");
-  const [subtitle, setSubtitle] = useState(section.subtitle || "");
-  const [description, setDescription] = useState(section.description || "");
-  const [imageUrl, setImageUrl] = useState(section.image_url || "");
-  const [videoUrl, setVideoUrl] = useState(section.video_url || "");
-  const [buttonText, setButtonText] = useState(section.button_text || "");
+...
   const [buttonLink, setButtonLink] = useState(section.button_link || "");
   const [desktopVisible, setDesktopVisible] = useState(section.desktop_visible);
   const [mobileVisible, setMobileVisible] = useState(section.mobile_visible);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadFile.mutateAsync(file);
+      if (type === "image") setImageUrl(url);
+      else setVideoUrl(url);
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (err) {
+      // toast shown by hook
+    }
+  };
 
   const handleSave = () => {
     updateSection.mutate({
