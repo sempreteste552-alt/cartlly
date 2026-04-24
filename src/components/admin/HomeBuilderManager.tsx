@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, GripVertical, Trash2, Eye, EyeOff, ChevronUp, ChevronDown, Smartphone, Monitor, Pencil } from "lucide-react";
+import { Loader2, Plus, GripVertical, Trash2, Eye, EyeOff, ChevronUp, ChevronDown, Smartphone, Monitor, Pencil, Upload } from "lucide-react";
 import {
   useStoreHomeSections,
   useCreateHomeSection,
