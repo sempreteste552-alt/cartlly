@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Globe, CreditCard, Shield, Save, Loader2, Phone, Megaphone } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Globe, CreditCard, Shield, Save, Loader2, Phone, Megaphone, Brain, Zap, BarChart3, Key } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
@@ -47,6 +48,13 @@ interface PlatformConfig {
   signup_coupon_text: string;
   plan_gateway: string;
   asaas_api_key: string;
+  ai_provider: string;
+  ai_model: string;
+  ai_api_key_openai: string;
+  ai_api_key_anthropic: string;
+  ai_api_key_google: string;
+  ai_monthly_token_limit: number;
+  ai_monthly_cost_limit: number;
 }
 
 const defaultConfig: PlatformConfig = {
@@ -84,6 +92,13 @@ const defaultConfig: PlatformConfig = {
   signup_coupon_text: "🎉 Use o cupom abaixo e ganhe desconto na sua primeira compra!",
   plan_gateway: "",
   asaas_api_key: "",
+  ai_provider: "openai",
+  ai_model: "gpt-4o",
+  ai_api_key_openai: "",
+  ai_api_key_anthropic: "",
+  ai_api_key_google: "",
+  ai_monthly_token_limit: 1000000,
+  ai_monthly_cost_limit: 20.0,
 };
 
 export default function SuperAdminConfig() {
@@ -107,6 +122,17 @@ export default function SuperAdminConfig() {
       });
       setConfig(merged);
       return data;
+    },
+  });
+
+  const { data: usageStats, isLoading: loadingStats } = useQuery({
+    queryKey: ["ai_usage_stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_ai_usage_stats", {
+        p_start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+      });
+      if (error) throw error;
+      return data?.[0] || { total_tokens: 0, total_cost: 0, call_count: 0, usage_by_provider: {}, usage_by_feature: {} };
     },
   });
 
@@ -404,6 +430,146 @@ export default function SuperAdminConfig() {
               )}
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* AI Configuration */}
+      <Card className="border-border">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Brain className="h-5 w-5 text-purple-500" /> Inteligência Artificial (Global)
+            </CardTitle>
+            <Zap className="h-5 w-5 text-yellow-500" />
+          </div>
+          <CardDescription>
+            Configure o provedor de IA que será usado por todos os tenants para notificações, insights e chat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Provedor de IA Padrão</Label>
+                <Select value={config.ai_provider} onValueChange={v => updateField("ai_provider", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="openai">OpenAI (ChatGPT)</SelectItem>
+                    <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
+                    <SelectItem value="google">Google (Gemini)</SelectItem>
+                    <SelectItem value="lovable">Lovable AI Gateway (Padrão)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Modelo de IA</Label>
+                <Input 
+                  value={config.ai_model} 
+                  onChange={e => updateField("ai_model", e.target.value)} 
+                  placeholder="ex: gpt-4o, claude-3-opus-20240229"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Certifique-se que o modelo é suportado pelo provedor escolhido.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Key className="h-4 w-4" /> API Key (OpenAI)
+                </Label>
+                <Input 
+                  type="password" 
+                  value={config.ai_api_key_openai} 
+                  onChange={e => updateField("ai_api_key_openai", e.target.value)} 
+                  placeholder="sk-..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Key className="h-4 w-4" /> API Key (Anthropic)
+                </Label>
+                <Input 
+                  type="password" 
+                  value={config.ai_api_key_anthropic} 
+                  onChange={e => updateField("ai_api_key_anthropic", e.target.value)} 
+                  placeholder="sk-ant-..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Key className="h-4 w-4" /> API Key (Google Gemini)
+                </Label>
+                <Input 
+                  type="password" 
+                  value={config.ai_api_key_google} 
+                  onChange={e => updateField("ai_api_key_google", e.target.value)} 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6 rounded-lg border border-border p-4 bg-muted/30">
+              <div className="flex items-center gap-2 font-semibold">
+                <BarChart3 className="h-5 w-5 text-primary" /> Uso e Gastos (Mês Atual)
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Tokens Consumidos</span>
+                    <span className="font-medium">
+                      {usageStats?.total_tokens?.toLocaleString() || 0} / {config.ai_monthly_token_limit?.toLocaleString() || "∞"}
+                    </span>
+                  </div>
+                  <Progress value={Math.min(100, ((usageStats?.total_tokens || 0) / (config.ai_monthly_token_limit || 1)) * 100)} className="h-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Custo Estimado</span>
+                    <span className="font-medium">
+                      R$ {(usageStats?.total_cost || 0).toFixed(2)} / R$ {config.ai_monthly_cost_limit?.toFixed(2) || "0.00"}
+                    </span>
+                  </div>
+                  <Progress value={Math.min(100, ((usageStats?.total_cost || 0) / (config.ai_monthly_cost_limit || 0.01)) * 100)} className="h-2" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="rounded-md border border-border p-2 bg-background">
+                    <p className="text-xs text-muted-foreground">Chamadas</p>
+                    <p className="text-lg font-bold">{usageStats?.call_count || 0}</p>
+                  </div>
+                  <div className="rounded-md border border-border p-2 bg-background">
+                    <p className="text-xs text-muted-foreground">Média/Chamada</p>
+                    <p className="text-lg font-bold">
+                      {usageStats?.call_count > 0 ? Math.round(usageStats.total_tokens / usageStats.call_count) : 0} <span className="text-xs font-normal">tk</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Limite Mensal de Tokens</Label>
+                  <Input 
+                    type="number" 
+                    value={config.ai_monthly_token_limit} 
+                    onChange={e => updateField("ai_monthly_token_limit", parseInt(e.target.value) || 0)} 
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Limite Mensal de Gastos (R$)</Label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={config.ai_monthly_cost_limit} 
+                    onChange={e => updateField("ai_monthly_cost_limit", parseFloat(e.target.value) || 0)} 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

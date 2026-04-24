@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callAI } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +39,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    
 
     let triggerType = "abandoned_cart";
     let manualStoreUserId: string | null = null;
@@ -206,7 +207,7 @@ Deno.serve(async (req) => {
 
         if (lovableApiKey) {
           try {
-            const aiMsg = await generateAIMessage(lovableApiKey, {
+            const aiMsg = await generateAIMessage({
               type: "abandoned_cart",
               customerName: customer.name,
               customerGender: customer.gender,
@@ -336,7 +337,7 @@ async function handleNewCustomer(supabase: any, supabaseUrl: string, lovableApiK
 
     if (lovableApiKey) {
       try {
-        const aiMsg = await generateAIMessage(lovableApiKey, {
+        const aiMsg = await generateAIMessage({
           type: "new_customer",
           customerName: customer.name,
           storeName,
@@ -497,7 +498,7 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
 
       if (lovableApiKey) {
         try {
-          const aiMsg = await generateAIMessage(lovableApiKey, {
+          const aiMsg = await generateAIMessage({
             type: "daily_promo",
             storeName,
             storeCategory,
@@ -636,7 +637,7 @@ REGRAS:
 - ${specialDate}
 - Seed: ${seed}-${Math.random().toString(36).slice(2, 6)}`;
 
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "review_thankyou",
         _customSystemPrompt: systemPrompt,
         _customUserPrompt: `Cliente: ${customer_name}\nProduto: ${productName}\nEstrelas: ${rating}/5\nComentário: ${comment || "nenhum"}\nLoja: ${storeName}\nDia: ${dayName}\nSaudação: ${greetings}`,
@@ -742,7 +743,7 @@ async function handleNewProduct(supabase: any, supabaseUrl: string, lovableApiKe
 
   if (lovableApiKey) {
     try {
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "new_product",
         storeName,
         productName: product_name || "novo produto",
@@ -836,7 +837,7 @@ async function handleNewCoupon(supabase: any, supabaseUrl: string, lovableApiKey
     try {
       const dayOfWeek = getNowBrasilia().getDay();
       const hour = getNowBrasilia().getHours();
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "new_coupon",
         storeName,
         couponCode: coupon_code,
@@ -937,7 +938,7 @@ async function handleProductView(supabase: any, supabaseUrl: string, lovableApiK
 
   if (lovableApiKey) {
     try {
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "product_view",
         customerName: customer.name,
         customerGender: customer.gender,
@@ -1007,7 +1008,7 @@ async function handleProductView10x(supabase: any, supabaseUrl: string, lovableA
 
   if (lovableApiKey) {
     try {
-      const aiMsg = await generateAIMessage(lovableApiKey, {
+      const aiMsg = await generateAIMessage({
         type: "product_view_10x",
         customerName: customer?.name,
         customerGender: customer?.gender,
@@ -1139,7 +1140,7 @@ function detectGender(name: string): string {
   return "neutral";
 }
 
-async function generateAIMessage(apiKey: string, ctx: any): Promise<{ title: string; body: string } | null> {
+async function generateAIMessage(ctx: any): Promise<{ title: string; body: string } | null> {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
   const hour = ctx.hour;
   const greetings = hour < 6 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
@@ -1327,27 +1328,19 @@ Saudação: ${greetings}`;
 
   if (!systemPrompt) return null;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "google/gemini-1.5-flash-lite",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 150,
-      temperature: 0.95,
-    }),
+  const aiData = await callAI({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    max_tokens: 150,
+    temperature: 0.95,
+    feature: "recover_abandoned_carts",
   });
 
-  if (!resp.ok) return null;
+  if (!aiData || typeof aiData === "object" && !("content" in aiData)) return null;
 
-  const data = await resp.json();
-  const content = data.choices?.[0]?.message?.content || "";
+  const content = (aiData as any).content || "";
   const cleaned = content.replace(/```json\n?/g, "").replace(/```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
