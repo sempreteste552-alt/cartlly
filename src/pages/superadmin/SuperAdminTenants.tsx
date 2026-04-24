@@ -628,7 +628,6 @@ export default function SuperAdminTenants() {
                           </span>
                         </div>
                       </div>
-                    </div>
                         {tenant.referral_origin && (
                           <div className="flex items-center gap-1 text-xs mt-0.5">
                             <Gift className="h-3 w-3 text-primary" />
