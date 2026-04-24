@@ -105,6 +105,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
   const [coverUrl, setCoverUrl] = useState(highlight.cover_url || "");
   const [uploading, setUploading] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaUrlInput, setMediaUrlInput] = useState("");
 
   const handleSave = () => {
     updateHighlight.mutate(
