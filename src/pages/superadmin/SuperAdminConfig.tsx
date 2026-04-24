@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Globe, CreditCard, Shield, Save, Loader2, Phone, Megaphone } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Globe, CreditCard, Shield, Save, Loader2, Phone, Megaphone, Brain, Zap, BarChart3, Key } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlatformConfig {
