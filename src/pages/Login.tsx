@@ -15,7 +15,7 @@ import { Eye, EyeOff, Mail, CheckCircle2, ShieldCheck, Moon, Sun, Ticket } from 
 import { motion, AnimatePresence } from "framer-motion";
 import { SimpleVerification } from "@/components/SimpleVerification";
 import { MarketingBackground } from "@/components/MarketingBackground";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 import { getAuthRedirectOrigin, getPasswordRecoveryErrorMessage, getPasswordResetRedirectUrl } from "@/lib/authRedirect";
 import { checkIsSuperAdmin } from "@/lib/superAdminCheck";
 import { isPlatformHost } from "@/lib/storeDomain";
