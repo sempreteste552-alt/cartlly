@@ -498,7 +498,7 @@ async function handleDailyPromo(supabase: any, supabaseUrl: string, lovableApiKe
 
       if (lovableApiKey) {
         try {
-          const aiMsg = await generateAIMessage(lovableApiKey, {
+          const aiMsg = await generateAIMessage({
             type: "daily_promo",
             storeName,
             storeCategory,
