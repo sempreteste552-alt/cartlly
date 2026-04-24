@@ -612,7 +612,12 @@ export default function SuperAdminTenants() {
                       <Store className={`h-5 w-5 ${tenant.status === "pending" ? "text-amber-500" : "text-muted-foreground"}`} />
                     </div>
                     <div>
-                      <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{tenant.display_name || "Sem nome"}</p>
+                        <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-mono truncate max-w-[150px] hidden sm:inline-block" title={tenant.email}>
+                          {tenant.email}
+                        </span>
+                      </div>
                       <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 items-center">
                         <span className="font-medium text-foreground/80">{tenant.store?.store_name || "Sem loja"}</span>
                         {tenant.store?.store_slug && <span className="opacity-60">/{tenant.store.store_slug}</span>}
@@ -622,7 +627,8 @@ export default function SuperAdminTenants() {
                             {tenant.is_online ? "Online agora" : `Visto há ${formatLastSeen(tenant.last_seen).replace("Há ", "")}`}
                           </span>
                         </div>
-                        </div>
+                      </div>
+                    </div>
                         {tenant.referral_origin && (
                           <div className="flex items-center gap-1 text-xs mt-0.5">
                             <Gift className="h-3 w-3 text-primary" />
