@@ -105,6 +105,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
   const [coverUrl, setCoverUrl] = useState(highlight.cover_url || "");
   const [uploading, setUploading] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaUrlInput, setMediaUrlInput] = useState("");
 
   const handleSave = () => {
     updateHighlight.mutate(
@@ -187,21 +188,47 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
           </p>
         )}
 
-        <FileUploadButton
-          label="Enviar imagens ou vídeos"
-          accept="image/*,video/*"
-          loading={uploadingMedia}
-          setLoading={setUploadingMedia}
-          userId={userId}
-          onUploaded={(url, type) => {
-            addItem.mutate({
-              highlight_id: highlight.id,
-              media_type: type,
-              media_url: url,
-              sort_order: (highlight.items?.length || 0) * 10,
-            });
-          }}
-        />
+        <div className="space-y-2">
+          <FileUploadButton
+            label="Enviar imagens ou vídeos"
+            accept="image/*,video/*"
+            loading={uploadingMedia}
+            setLoading={setUploadingMedia}
+            userId={userId}
+            onUploaded={(url, type) => {
+              addItem.mutate({
+                highlight_id: highlight.id,
+                media_type: type,
+                media_url: url,
+                sort_order: (highlight.items?.length || 0) * 10,
+              });
+            }}
+          />
+          <div className="flex gap-2">
+            <Input
+              value={mediaUrlInput}
+              onChange={(e) => setMediaUrlInput(e.target.value)}
+              placeholder="Ou cole URL da imagem/vídeo"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (!mediaUrlInput.trim()) return;
+                const type = mediaUrlInput.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv)$/i) ? "video" : "image";
+                addItem.mutate({
+                  highlight_id: highlight.id,
+                  media_type: type,
+                  media_url: mediaUrlInput.trim(),
+                  sort_order: (highlight.items?.length || 0) * 10,
+                });
+                setMediaUrlInput("");
+              }}
+            >
+              Add
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

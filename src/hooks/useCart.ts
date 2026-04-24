@@ -62,7 +62,7 @@ export function useCart(slug?: string, storeUserId?: string) {
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     if (items.length > 0) {
       syncTimerRef.current = setTimeout(() => {
-        syncAbandonedCart(items, slugRef.current);
+        syncAbandonedCart(items, slugRef.current, storeUserId);
       }, 5000);
     }
 
@@ -104,32 +104,42 @@ export function useCart(slug?: string, storeUserId?: string) {
 }
 
 /** Sync cart to abandoned_carts table for recovery automation */
-async function syncAbandonedCart(items: CartItem[], slug?: string) {
+async function syncAbandonedCart(items: CartItem[], slug?: string, storeUserId?: string) {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return; // Only sync for authenticated users
+    const sessionId = localStorage.getItem("store_session_id") || `cart_${Math.random().toString(36).substring(2, 15)}`;
+    if (!localStorage.getItem("store_session_id")) localStorage.setItem("store_session_id", sessionId);
 
-    const userId = session.user.id;
+    const authUserId = session?.user?.id;
+    let customerId = null;
+    let storeOwnerId = storeUserId;
 
-    // Find the customer record & store owner for this session
-    const { data: customerData } = await supabase
-      .from("customers")
-      .select("id, store_user_id")
-      .eq("auth_user_id", userId)
-      .limit(1)
-      .maybeSingle();
+    // Find the customer record for this session if authenticated
+    if (authUserId) {
+      const { data: customerRecord } = await supabase
+        .from("customers")
+        .select("id, store_user_id")
+        .eq("auth_user_id", authUserId)
+        .limit(1)
+        .maybeSingle();
+      
+      if (customerRecord) {
+        customerId = customerRecord.id;
+        storeOwnerId = customerRecord.store_user_id;
+      }
+    }
 
-    if (!customerData) return; // Not a customer, skip
+    if (!storeOwnerId) return; // Need a store context to sync
 
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const sessionId = `${slug || "default"}_${userId}`;
+    const uniqueSessionKey = `${slug || "default"}_${authUserId || sessionId}`;
 
     // Upsert: update existing or create new abandoned cart
     await supabase.from("abandoned_carts").upsert(
       {
-        user_id: customerData.store_user_id,
-        customer_id: customerData.id,
-        session_id: sessionId,
+        user_id: storeOwnerId,
+        customer_id: customerId,
+        session_id: uniqueSessionKey,
         items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity, image_url: i.image_url })),
         total,
         abandoned_at: new Date().toISOString(),

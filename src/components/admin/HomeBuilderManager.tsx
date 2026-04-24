@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, GripVertical, Trash2, Eye, EyeOff, ChevronUp, ChevronDown, Smartphone, Monitor, Pencil } from "lucide-react";
+import { Loader2, Plus, GripVertical, Trash2, Eye, EyeOff, ChevronUp, ChevronDown, Smartphone, Monitor, Pencil, Upload } from "lucide-react";
 import {
   useStoreHomeSections,
   useCreateHomeSection,
@@ -18,9 +18,15 @@ import {
   SECTION_TYPES,
   type StoreHomeSection,
 } from "@/hooks/useStoreHomeSections";
+import { useUploadProductImage } from "@/hooks/useProducts";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClose: () => void }) {
   const updateSection = useUpdateHomeSection();
+  const uploadFile = useUploadProductImage();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(section.title || "");
   const [subtitle, setSubtitle] = useState(section.subtitle || "");
   const [description, setDescription] = useState(section.description || "");
@@ -30,6 +36,19 @@ function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClos
   const [buttonLink, setButtonLink] = useState(section.button_link || "");
   const [desktopVisible, setDesktopVisible] = useState(section.desktop_visible);
   const [mobileVisible, setMobileVisible] = useState(section.mobile_visible);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const url = await uploadFile.mutateAsync(file);
+      if (type === "image") setImageUrl(url);
+      else setVideoUrl(url);
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (err) {
+      // toast shown by hook
+    }
+  };
 
   const handleSave = () => {
     updateSection.mutate({
@@ -69,12 +88,24 @@ function SectionEditor({ section, onClose }: { section: StoreHomeSection; onClos
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>URL da Imagem</Label>
-          <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
+          <Label>Imagem / Banner</Label>
+          <div className="flex gap-2">
+            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="URL ou Upload" />
+            <Button type="button" variant="outline" size="icon" onClick={() => fileRef.current?.click()} disabled={uploadFile.isPending}>
+              {uploadFile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            </Button>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "image")} />
         </div>
         <div className="space-y-2">
-          <Label>URL do Vídeo</Label>
-          <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
+          <Label>Vídeo</Label>
+          <div className="flex gap-2">
+            <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="URL ou Upload" />
+            <Button type="button" variant="outline" size="icon" onClick={() => videoFileRef.current?.click()} disabled={uploadFile.isPending}>
+              {uploadFile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            </Button>
+          </div>
+          <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={(e) => handleFileUpload(e, "video")} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">

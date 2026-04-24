@@ -151,11 +151,11 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { target_user_id, customer_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
+    const { target_user_id, customer_id, session_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
     const effectiveStoreUserId = store_user_id || null;
 
-    if ((!target_user_id && !customer_id) || !title) {
-      return json({ error: "target_user_id or customer_id and title required" }, 400);
+    if ((!target_user_id && !customer_id && !session_id) || !title) {
+      return json({ error: "target_user_id, customer_id or session_id and title required" }, 400);
     }
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
@@ -223,6 +223,8 @@ Deno.serve(async (req) => {
 
     if (target_user_id) {
       query = query.eq("user_id", target_user_id);
+    } else if (session_id) {
+      query = query.eq("session_id", session_id);
     } else if (customer_id) {
       const { data: customerTokens } = await supabase
         .from("customer_push_tokens")

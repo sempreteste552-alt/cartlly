@@ -247,12 +247,13 @@ Deno.serve(async (req) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            target_user_id: customer.auth_user_id,
-            customer_id: cart.customer_id,
+            target_user_id: customer?.auth_user_id || null,
+            customer_id: cart.customer_id || null,
+            session_id: cart.session_id || null,
             title, body,
             url: "/",
             type: "abandoned_cart",
-            store_user_id: customer.store_user_id,
+            store_user_id: cart.user_id,
             data: { cartId: cart.id, itemCount: items.length },
           }),
         });

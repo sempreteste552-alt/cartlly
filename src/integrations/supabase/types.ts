@@ -2166,6 +2166,7 @@ export type Database = {
           id: string
           p256dh: string
           platform: string
+          session_id: string | null
           store_user_id: string | null
           user_id: string
         }
@@ -2176,6 +2177,7 @@ export type Database = {
           id?: string
           p256dh: string
           platform?: string
+          session_id?: string | null
           store_user_id?: string | null
           user_id: string
         }
@@ -2186,6 +2188,7 @@ export type Database = {
           id?: string
           p256dh?: string
           platform?: string
+          session_id?: string | null
           store_user_id?: string | null
           user_id?: string
         }

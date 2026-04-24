@@ -50,20 +50,23 @@ Deno.serve(async (req) => {
       return json({ processed: 0, message: "No recent events" });
     }
 
-    // 2. Group events by customer
+    // 2. Group events by customer (or session if anonymous)
     const customerEvents = new Map<string, typeof events>();
     for (const ev of events) {
-      if (!ev.customer_id) continue;
-      const existing = customerEvents.get(ev.customer_id) || [];
+      const key = ev.customer_id || ev.session_id;
+      if (!key) continue;
+      const existing = customerEvents.get(key) || [];
       existing.push(ev);
-      customerEvents.set(ev.customer_id, existing);
+      customerEvents.set(key, existing);
     }
 
     let updated = 0;
 
-    for (const [customerId, evts] of customerEvents) {
+    for (const [key, evts] of customerEvents) {
       const latestEvent = evts[0]; // already sorted desc
       const storeUserId = latestEvent.user_id;
+      const customerId = latestEvent.customer_id;
+      const sessionId = latestEvent.session_id;
       const eventTypes = evts.map(e => e.event_type);
 
       // Determine intent level
@@ -147,6 +150,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 trigger_type: "product_view_10x",
                 customer_id: customerId,
+                session_id: sessionId,
                 store_user_id: storeUserId,
                 product_id: lastProductId,
               }),
@@ -163,6 +167,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 trigger_type: "product_view",
                 customer_id: customerId,
+                session_id: sessionId,
                 store_user_id: storeUserId,
                 product_id: lastProductId,
               }),

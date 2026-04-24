@@ -51,6 +51,7 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
   const [minStockAlert, setMinStockAlert] = useState("5");
   const [isPrize, setIsPrize] = useState(false);
   const [additionalVideos, setAdditionalVideos] = useState<string[]>([]);
+  const [videoUrlInput, setVideoUrlInput] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const additionalFileRef = useRef<HTMLInputElement>(null);
   const videoFileRef = useRef<HTMLInputElement>(null);
@@ -344,8 +345,30 @@ export function ProductForm({ open, onOpenChange, onSubmit, initialData, loading
                   </div>
                 )}
               </div>
+              <div className="flex gap-2">
+                <Input
+                  value={videoUrlInput}
+                  onChange={(e) => setVideoUrlInput(e.target.value)}
+                  placeholder="Ou cole a URL do vídeo (YouTube, Vimeo, etc)"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (!videoUrlInput.trim()) return;
+                    if (additionalVideos.length >= 4) {
+                      alert("Máximo de 4 vídeos.");
+                      return;
+                    }
+                    setAdditionalVideos((prev) => [...prev, videoUrlInput.trim()]);
+                    setVideoUrlInput("");
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
               <input ref={videoFileRef} type="file" accept="video/*" multiple className="hidden" onChange={handleVideoFileChange} />
-              <p className="text-xs text-muted-foreground">MP4, WebM, MOV. Máx 50MB cada.</p>
+              <p className="text-xs text-muted-foreground">MP4, WebM, MOV ou link externo. Máx 50MB no upload.</p>
             </div>
           )}
 
