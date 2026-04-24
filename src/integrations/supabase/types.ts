@@ -4855,6 +4855,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_use_ai: {
+        Args: {
+          p_estimated_cost?: number
+          p_feature: string
+          p_tenant_id: string
+        }
+        Returns: {
+          allowed: boolean
+          reason: string
+        }[]
+      }
       check_hostname_exists: { Args: { _hostname: string }; Returns: boolean }
       check_pending_domains: { Args: never; Returns: undefined }
       create_default_segments: {
