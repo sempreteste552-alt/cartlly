@@ -119,6 +119,20 @@ export function AIProvidersList() {
                   <Badge variant={provider.is_active ? "default" : "secondary"}>
                     {provider.is_active ? "Ativo" : "Inativo"}
                   </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 text-primary"
+                    onClick={() => handleTestConnection(provider.id)}
+                    disabled={testingProvider === provider.id}
+                    title="Testar Conexão"
+                  >
+                    {testingProvider === provider.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
             </CardHeader>
