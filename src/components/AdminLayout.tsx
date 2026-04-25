@@ -262,7 +262,7 @@ export function AdminLayout() {
         </div>
         {!isCerebroPage && !isSuportePage && <WhatsAppSupportBubble />}
         {!isCerebroPage && !isSuportePage && <AIChatWidget />}
-        {!isCerebroPage && !isSuportePage && <StoreLivePreview />}
+        {!isCerebroPage && !isSuportePage && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
