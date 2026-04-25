@@ -79,6 +79,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return { ...data, isCollaborator: false };
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const isStillLoading = loading || roleLoading || (!isSuperAdmin && (profileLoading || storeLoading));
