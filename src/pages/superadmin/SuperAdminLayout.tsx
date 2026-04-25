@@ -8,6 +8,33 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function SuperAdminLayout() {
   const { dark } = useThemeScope("superadmin");
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Prefetch all tenants and plans
+    queryClient.prefetchQuery({
+      queryKey: ["all_tenants"],
+      queryFn: async () => {
+        const { data, error } = await supabase.rpc("get_all_tenants_admin");
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 1000 * 60 * 5,
+    });
+
+    queryClient.prefetchQuery({
+      queryKey: ["all_plans"],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from("tenant_plans")
+          .select("*")
+          .order("price", { ascending: true });
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 1000 * 60 * 30,
+    });
+  }, [queryClient]);
 
   useLayoutEffect(() => {
     const root = document.documentElement;
