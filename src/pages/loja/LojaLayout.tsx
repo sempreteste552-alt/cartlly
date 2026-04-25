@@ -849,23 +849,23 @@ export default function LojaLayout() {
               <div className="flex items-center gap-1.5">
                 {settings?.instagram_url && (
                   <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                    <img src={iconInstagram} alt="Instagram" className="h-5 w-5 rounded" />
+                    <img src={iconInstagram} alt="Instagram" className="h-6 w-6 rounded" />
                   </a>
                 )}
               </div>
 
-              <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
+              <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
                 {user ? (
-                  isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
+                  isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-6 w-6" />
                 ) : (
-                  <User className="h-5 w-5" />
+                  <User className="h-6 w-6" />
                 )}
               </Button>
 
               <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative hidden md:inline-flex" style={{ color: headerTextColor }}>
-                    <ShoppingCart className="h-5 w-5" data-cart-icon />
+                  <Button variant="ghost" size="icon" className="relative hidden md:inline-flex h-10 w-10" style={{ color: headerTextColor }}>
+                    <ShoppingCart className="h-6 w-6" data-cart-icon />
                     {cart.count > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs" style={{ backgroundColor: primaryColor, color: "#fff" }}>
                         {cart.count}
