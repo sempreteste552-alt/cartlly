@@ -13,6 +13,7 @@ import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { TrialBanner } from "@/components/TrialBanner";
 import { AdminAnnouncementBanner } from "@/components/admin/AdminAnnouncementBanner";
 import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
+import { StoreLivePreview } from "@/components/admin/StoreLivePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
