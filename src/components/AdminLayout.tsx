@@ -45,10 +45,45 @@ export function AdminLayout() {
   const { features, isLoading: featuresLoading } = usePlanFeatures();
   const { ctx, role, isLoading: ctxLoading } = useTenantContext();
   const aiAvailable = canAccess("ai_tools", ctx);
+  const queryClient = useQueryClient();
   useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Prefetch admin data
+  useEffect(() => {
+    if (user?.id) {
+      // Common admin queries prefetch
+      queryClient.prefetchQuery({
+        queryKey: ["products", user.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("products")
+            .select("*, categories(name)")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 1000 * 60 * 5,
+      });
+
+      queryClient.prefetchQuery({
+        queryKey: ["orders", user.id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+    }
+  }, [user?.id, queryClient]);
 
   // Block rendering until all tenant-specific data is resolved
   const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
