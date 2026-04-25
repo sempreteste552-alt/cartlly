@@ -24,7 +24,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Clock, HelpCircle } from "lucide-react";
+import { Crown, Clock, HelpCircle, Eye } from "lucide-react";
 import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
