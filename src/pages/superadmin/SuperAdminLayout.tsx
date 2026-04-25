@@ -1,8 +1,10 @@
-import { useLayoutEffect, Suspense } from "react";
+import { useLayoutEffect, Suspense, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SuperAdminSidebar } from "./SuperAdminSidebar";
 import { Outlet } from "react-router-dom";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SuperAdminLayout() {
   const { dark } = useThemeScope("superadmin");
