@@ -768,15 +768,15 @@ export default function LojaLayout() {
 
                 <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                   {settings?.logo_url ? (
-                    <div className="relative inline-block">
+                    <div className="relative inline-flex items-center shrink-0 pr-3">
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${Math.max(64, Math.min(logoSize * 1.6, 88))}px`, maxWidth: "260px" }}
+                        style={{ height: `${checkoutLogoHeight}px`, width: `${checkoutLogoWidth}px` }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute -top-1 -right-1 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px] drop-shadow" />
+                        <BadgeCheck className="absolute right-0 top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow" style={verifiedBadgeStyle} />
                       )}
                     </div>
                   ) : (
@@ -809,15 +809,15 @@ export default function LojaLayout() {
               <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
                 <div className="relative inline-block">
                   {settings?.logo_url ? (
-                    <div className="relative inline-block">
+                    <div className="relative inline-flex items-center shrink-0 pr-3">
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, maxWidth: `min(140px, ${Math.max(120, logoSize * 5)}px)` }}
-                        className="object-contain sm:max-w-none block"
+                        style={{ height: `${logoSize}px`, width: `${storefrontLogoWidth}px` }}
+                        className="object-contain block"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute -top-1 -right-1 h-3.5 w-3.5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px] drop-shadow" />
+                        <BadgeCheck className="absolute right-0 top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow" style={verifiedBadgeStyle} />
                       )}
                     </div>
                   ) : (
