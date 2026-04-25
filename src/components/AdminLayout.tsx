@@ -217,6 +217,17 @@ export function AdminLayout() {
                     {trialDaysLeft}d {adminText.remaining}
                   </Badge>
                 )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2 h-9 px-3 border-primary/20 hover:border-primary/50 text-foreground hover:bg-primary/5 hidden md:flex"
+                  onClick={() => setIsPreviewOpen(true)}
+                >
+                  <Eye className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold">{adminText.preview}</span>
+                </Button>
+
                 <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
                 <Tooltip>
                   <TooltipTrigger asChild>
