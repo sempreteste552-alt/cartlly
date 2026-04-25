@@ -21,9 +21,30 @@ import {
 } from "@/hooks/useStoreHighlights";
 
 async function uploadFile(file: File, folder: string, userId: string): Promise<string> {
-  const ext = file.name.split(".").pop() || "bin";
+  let fileToUpload = file;
+  
+  // Compress if it's an image and not too small already
+  if (file.type.startsWith("image/") && file.size > 1024 * 500) { // > 500KB
+    try {
+      const options = {
+        maxSizeMB: 0.8,
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      };
+      fileToUpload = await imageCompression(file, options);
+    } catch (err) {
+      console.error("Compression error:", err);
+      // Fallback to original file if compression fails
+    }
+  }
+
+  const ext = fileToUpload.name.split(".").pop() || "bin";
   const path = `${userId}/${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("store-assets").upload(path, file, { upsert: true, contentType: file.type });
+  const { error } = await supabase.storage.from("store-assets").upload(path, fileToUpload, { 
+    upsert: true, 
+    contentType: fileToUpload.type,
+    cacheControl: "3600",
+  });
   if (error) throw error;
   const { data } = supabase.storage.from("store-assets").getPublicUrl(path);
   return data.publicUrl;
