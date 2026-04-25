@@ -160,7 +160,7 @@ export default function SuperAdminTenantDiagnostics() {
         </Button>
       </div>
 
-      <Tabs defaultValue="logs">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="logs"><Activity className="mr-1 h-3.5 w-3.5" />Logs</TabsTrigger>
           <TabsTrigger value="repair"><Wrench className="mr-1 h-3.5 w-3.5" />Reparo</TabsTrigger>
