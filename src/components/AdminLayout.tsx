@@ -308,4 +308,3 @@ export function AdminLayout() {
     </SidebarProvider>
   );
 }
-}
