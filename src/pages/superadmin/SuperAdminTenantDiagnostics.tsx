@@ -33,6 +33,9 @@ const SQL_PRESETS = [
 
 export default function SuperAdminTenantDiagnostics() {
   const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  const autoTest = searchParams.get("autoTest") === "true";
+  const [activeTab, setActiveTab] = useState(autoTest ? "integrity" : "logs");
   const [running, setRunning] = useState<string | null>(null);
   const [presetData, setPresetData] = useState<any[] | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
