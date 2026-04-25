@@ -15,7 +15,7 @@ export default function SuperAdminLayout() {
     queryClient.prefetchQuery({
       queryKey: ["all_tenants"],
       queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_all_tenants_admin");
+        const { data, error } = await supabase.rpc("get_all_tenants_admin" as any);
         if (error) throw error;
         return data;
       },
