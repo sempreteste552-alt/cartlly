@@ -39,6 +39,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const { data: storeSettings, isLoading: storeLoading } = useQuery({
