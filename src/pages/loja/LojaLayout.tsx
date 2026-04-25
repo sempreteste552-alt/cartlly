@@ -757,15 +757,15 @@ export default function LojaLayout() {
 
                 <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                   {settings?.logo_url ? (
-                    <div className="relative inline-flex items-center">
+                    <div className="relative inline-block">
                       <img
                         src={settings.logo_url}
                         alt={storeName}
                         style={{ height: `${Math.max(64, Math.min(logoSize * 1.6, 88))}px`, maxWidth: "260px" }}
-                        className="object-contain"
+                        className="object-contain block"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                        <BadgeCheck className="absolute -top-1 -right-1 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px] drop-shadow" />
                       )}
                     </div>
                   ) : (
@@ -796,17 +796,17 @@ export default function LojaLayout() {
               </Button>
 
               <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
-                <div className="relative inline-flex items-center">
+                <div className="relative inline-block">
                   {settings?.logo_url ? (
-                    <div className="relative">
+                    <div className="relative inline-block">
                       <img
                         src={settings.logo_url}
                         alt={storeName}
                         style={{ height: `${logoSize}px`, maxWidth: `min(140px, ${Math.max(120, logoSize * 5)}px)` }}
-                        className="object-contain sm:max-w-none"
+                        className="object-contain sm:max-w-none block"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute -right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px]" />
+                        <BadgeCheck className="absolute -top-1 -right-1 h-3.5 w-3.5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px] drop-shadow" />
                       )}
                     </div>
                   ) : (
