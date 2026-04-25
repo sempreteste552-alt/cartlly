@@ -224,12 +224,51 @@ function GeneralSettingsTab() {
     }
   }, [settings]);
 
+  const resizeFaviconToPng = (file: File, size = 512): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      // SVGs: keep as-is (vector)
+      if (file.type === "image/svg+xml") return resolve(file);
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Canvas não suportado");
+          // Fit (cover) the image into a square canvas
+          const scale = Math.max(size / img.width, size / img.height);
+          const w = img.width * scale;
+          const h = img.height * scale;
+          ctx.clearRect(0, 0, size, size);
+          ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+          canvas.toBlob((blob) => {
+            URL.revokeObjectURL(url);
+            if (!blob) return reject(new Error("Falha ao gerar imagem"));
+            resolve(blob);
+          }, "image/png", 0.92);
+        } catch (err) {
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida")); };
+      img.src = url;
+    });
+  };
+
   const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 512 * 1024) { toast.error("Favicon deve ter no máximo 512KB"); return; }
     setUploadingFavicon(true);
     try {
+      // Auto-resize/convert to optimized 512x512 PNG (or keep SVG)
+      const processed = await resizeFaviconToPng(file, 512);
+      const isSvg = file.type === "image/svg+xml";
+      const ext = isSvg ? "svg" : "png";
+      const contentType = isSvg ? "image/svg+xml" : "image/png";
+
       // Delete old favicon file if exists
       if (faviconUrl) {
         const oldPath = faviconUrl.split("/store-assets/")[1];
@@ -237,9 +276,8 @@ function GeneralSettingsTab() {
           await supabase.storage.from("store-assets").remove([decodeURIComponent(oldPath)]);
         }
       }
-      const ext = file.name.split(".").pop();
       const fileName = `${user!.id}/favicon-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("store-assets").upload(fileName, file, { contentType: file.type, upsert: true });
+      const { error } = await supabase.storage.from("store-assets").upload(fileName, processed, { contentType, upsert: true });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(fileName);
       const newUrl = urlData.publicUrl;
