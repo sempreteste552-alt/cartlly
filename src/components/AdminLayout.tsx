@@ -102,10 +102,10 @@ export function AdminLayout() {
   const trialEndsAt = currentSub?.trial_ends_at ? new Date(currentSub.trial_ends_at) : null;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
   const adminText = {
-    pt: { panel: "Painel Administrativo", tutorial: "Reiniciar Tutorial", remaining: "restantes" },
-    en: { panel: "Admin Panel", tutorial: "Restart Tutorial", remaining: "remaining" },
-    es: { panel: "Panel Administrativo", tutorial: "Reiniciar tutorial", remaining: "restantes" },
-    fr: { panel: "Panneau Admin", tutorial: "Redémarrer le tutoriel", remaining: "restants" },
+    pt: { panel: "Painel Administrativo", tutorial: "Reiniciar Tutorial", remaining: "restantes", preview: "Ver Loja" },
+    en: { panel: "Admin Panel", tutorial: "Restart Tutorial", remaining: "remaining", preview: "View Store" },
+    es: { panel: "Panel Administrativo", tutorial: "Reiniciar tutorial", remaining: "restantes", preview: "Ver tienda" },
+    fr: { panel: "Panneau Admin", tutorial: "Redémarrer le tutoriel", remaining: "restants", preview: "Voir la boutique" },
   }[locale];
 
   useEffect(() => {
