@@ -35,6 +35,26 @@ export default function SuperAdminTenantDiagnostics() {
   const [running, setRunning] = useState<string | null>(null);
   const [presetData, setPresetData] = useState<any[] | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [integrityResults, setIntegrityResults] = useState<any[] | null>(null);
+  const [testingIntegrity, setTestingIntegrity] = useState(false);
+
+  const runIntegrityTest = async () => {
+    setTestingIntegrity(true);
+    setIntegrityResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action: "test_tenant_integrity", targetUserId: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setIntegrityResults(data.results || []);
+      toast.success("Teste de integridade concluído");
+    } catch (e: any) {
+      toast.error(e.message || "Falha no teste");
+    } finally {
+      setTestingIntegrity(false);
+    }
+  };
 
   const { data: tenant, isLoading: loadingTenant } = useQuery({
     queryKey: ["sa_tenant", userId],
