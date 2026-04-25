@@ -230,6 +230,8 @@ export function usePublicProductPageConfig(storeUserId?: string) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60 * 2, // 2 hours
   });
 }
 
