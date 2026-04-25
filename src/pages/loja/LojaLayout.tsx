@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
 import { AnnouncementBar, FreeShippingBar, PopupCoupon, CountdownBar } from "@/components/storefront/MarketingWidgets";
@@ -354,6 +354,44 @@ export default function LojaLayout() {
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
   const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
   const isMinimalMenu = themeConfig?.header_style === 'minimal';
+  const queryClient = useQueryClient();
+
+  // Prefetch critical data
+  useEffect(() => {
+    if (settings?.user_id) {
+      // Products
+      queryClient.prefetchQuery({
+        queryKey: ["public_products", settings.user_id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("products")
+            .select("*, categories(name)")
+            .eq("published", true)
+            .eq("user_id", settings.user_id)
+            .or("is_prize.is.null,is_prize.eq.false")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 1000 * 60 * 5,
+      });
+
+      // Categories
+      queryClient.prefetchQuery({
+        queryKey: ["public_categories", settings.user_id],
+        queryFn: async () => {
+          const { data, error } = await supabase
+            .from("categories")
+            .select("*")
+            .eq("user_id", settings.user_id)
+            .order("name");
+          if (error) throw error;
+          return data;
+        },
+        staleTime: 1000 * 60 * 10,
+      });
+    }
+  }, [settings?.user_id, queryClient]);
 
   useEffect(() => {
     if (!settingsBySlug?.id || !settingsBySlug?.user_id) return;

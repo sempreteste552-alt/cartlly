@@ -65,6 +65,8 @@ export function useTenantContext() {
 
       return { ctx, subscription: sub, plan };
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
   });
 
   const defaultCtx: TenantContext = {

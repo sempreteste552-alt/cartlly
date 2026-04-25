@@ -22,6 +22,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const isSuperAdmin = roleData?.role === "super_admin";
@@ -38,6 +39,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const { data: storeSettings, isLoading: storeLoading } = useQuery({
@@ -77,6 +79,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return { ...data, isCollaborator: false };
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const isStillLoading = loading || roleLoading || (!isSuperAdmin && (profileLoading || storeLoading));
