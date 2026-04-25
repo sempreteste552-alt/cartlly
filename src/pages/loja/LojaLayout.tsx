@@ -569,7 +569,7 @@ export default function LojaLayout() {
 
   const rawLogoSize = Number((settings as any)?.logo_size ?? 40);
   const logoSize = Number.isFinite(rawLogoSize) ? Math.max(24, Math.min(rawLogoSize, 180)) : 40;
-  const logoBadgeSize = Math.max(13, Math.min(Math.round(logoSize * 0.24), 20));
+  const logoBadgeSize = Math.max(11, Math.min(Math.round(logoSize * 0.20), 17));
   const storefrontLogoWidth = Math.max(150, Math.min(Math.round(logoSize * 6), 340));
   const checkoutLogoHeight = Math.max(48, Math.min(Math.round(logoSize * 1.25), 130));
   const checkoutLogoWidth = Math.max(180, Math.min(Math.round(checkoutLogoHeight * 6), 380));
@@ -768,7 +768,7 @@ export default function LojaLayout() {
 
                  <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                    {settings?.logo_url ? (
-                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 0.55}px` }}>
+                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 1.4}px` }}>
                        <img
                          src={settings.logo_url}
                          alt={storeName}
@@ -778,7 +778,7 @@ export default function LojaLayout() {
                        {settings?.is_verified && (
                          <BadgeCheck
                            className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                           style={{ ...verifiedBadgeStyle, right: `-${logoBadgeSize * 0.15}px` }}
+                           style={{ ...verifiedBadgeStyle, right: `0px` }}
                          />
                        )}
                      </div>
@@ -812,7 +812,7 @@ export default function LojaLayout() {
               <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
                 <div className="relative inline-block">
                   {settings?.logo_url ? (
-                    <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 0.55}px` }}>
+                    <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 1.4}px` }}>
                       <img
                         src={settings.logo_url}
                         alt={storeName}
@@ -822,7 +822,7 @@ export default function LojaLayout() {
                       {settings?.is_verified && (
                         <BadgeCheck
                           className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                          style={{ ...verifiedBadgeStyle, right: `-${logoBadgeSize * 0.15}px` }}
+                          style={{ ...verifiedBadgeStyle, right: `0px` }}
                         />
                       )}
                     </div>
