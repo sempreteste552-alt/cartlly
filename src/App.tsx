@@ -9,7 +9,7 @@ import { I18nProvider } from "@/i18n";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
-import { Loader2 } from "lucide-react";
+
 
 
 const AdminLayout = lazy(() => import("./components/AdminLayout").then(m => ({ default: m.AdminLayout })));
@@ -128,7 +128,7 @@ const App = () => {
           <Sonner />
           
           <BrowserRouter>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-muted-foreground" /></div>}>
+            <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <ScrollToTop />
             <AuthProvider>
               {!isPlatform ? (

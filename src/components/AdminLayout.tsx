@@ -211,15 +211,83 @@ export function AdminLayout() {
     };
   }, [adminDark, adminThemeScope]);
 
-  // Show neutral loading state until tenant data is fully resolved
-  // This prevents flash of wrong theme/permissions from another tenant
-  if (!tenantReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground" />
+  // Render shell even if not ready, using skeletons or just basic background
+  const content = !tenantReady ? (
+    <div className="flex-1 flex flex-col min-w-0">
+      <header className="h-14 border-b border-border/60 bg-card/20 backdrop-blur-md px-4" />
+      <main className="flex-1 p-4 sm:p-6 bg-background">
+        <div className="h-8 w-1/4 bg-muted animate-pulse rounded mb-6" />
+        <div className="space-y-4">
+          <div className="h-32 bg-muted animate-pulse rounded" />
+          <div className="h-64 bg-muted animate-pulse rounded" />
+        </div>
+      </main>
+    </div>
+  ) : (
+    <div className="flex-1 flex flex-col min-w-0">
+      <div className="sticky top-0 z-30 w-full shadow-sm transition-all duration-300">
+        <GlobalMaintenanceBanner />
+        <AdminAnnouncementBanner />
+        <AdminPushBanner />
+        <AdminPendingOrdersAlert />
+        <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="mr-1" />
+            <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
+              {(settings as any)?.store_name || adminText.panel}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {isTrial && trialDaysLeft > 0 && (
+              <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
+                <Clock className="h-3 w-3" />
+                {trialDaysLeft}d {adminText.remaining}
+              </Badge>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 h-9 px-3 border-primary/20 hover:border-primary/50 text-foreground hover:bg-primary/5 hidden md:flex"
+              onClick={() => setIsPreviewOpen(true)}
+            >
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold">{adminText.preview}</span>
+            </Button>
+
+            <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={startTutorial}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{adminText.tutorial}</p>
+              </TooltipContent>
+            </Tooltip>
+            <AdminNotificationsBell />
+          </div>
+        </header>
       </div>
-    );
-  }
+      <main className="flex-1 overflow-auto p-4 sm:p-6">
+        <OnboardingTutorial />
+        <TrialBanner />
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-64">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        }>
+          <Outlet />
+        </Suspense>
+      </main>
+    </div>
+  );
 
   return (
     <SidebarProvider>
@@ -227,77 +295,14 @@ export function AdminLayout() {
         id="admin-layout-root"
         data-tenant={user?.id}
         data-role={role}
-        style={adminThemeStyle}
+        style={tenantReady ? adminThemeStyle : {}}
         className={`h-svh flex w-full bg-background relative overflow-hidden ${adminDark ? "dark" : ""}`}
       >
-        <AdminSidebar themeStyle={adminThemeStyle} />
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="sticky top-0 z-30 w-full shadow-sm transition-all duration-300">
-            <GlobalMaintenanceBanner />
-            {/* Push notification install banner */}
-            <AdminAnnouncementBanner />
-            <AdminPushBanner />
-            <AdminPendingOrdersAlert />
-            <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="mr-1" />
-                <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
-                  {(settings as any)?.store_name || adminText.panel}
-                </h2>
-              </div>
-              <div className="flex items-center gap-2">
-                {isTrial && trialDaysLeft > 0 && (
-                  <Badge variant="outline" className="border-warning/50 text-warning gap-1 text-xs hidden sm:flex">
-                    <Clock className="h-3 w-3" />
-                    {trialDaysLeft}d {adminText.remaining}
-                  </Badge>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2 h-9 px-3 border-primary/20 hover:border-primary/50 text-foreground hover:bg-primary/5 hidden md:flex"
-                  onClick={() => setIsPreviewOpen(true)}
-                >
-                  <Eye className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-semibold">{adminText.preview}</span>
-                </Button>
-
-                <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={startTutorial}
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <HelpCircle className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{adminText.tutorial}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <AdminNotificationsBell />
-              </div>
-            </header>
-          </div>
-          <main className="flex-1 overflow-auto p-4 sm:p-6">
-            <OnboardingTutorial />
-            <TrialBanner />
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-64">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              </div>
-            }>
-              <Outlet />
-            </Suspense>
-          </main>
-        </div>
-        {!isCerebroPage && !isSuportePage && <WhatsAppSupportBubble />}
-        {!isCerebroPage && !isSuportePage && <AIChatWidget />}
-        {!isCerebroPage && !isSuportePage && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
+        <AdminSidebar themeStyle={tenantReady ? adminThemeStyle : {}} />
+        {content}
+        {!isCerebroPage && !isSuportePage && tenantReady && <WhatsAppSupportBubble />}
+        {!isCerebroPage && !isSuportePage && tenantReady && <AIChatWidget />}
+        {!isCerebroPage && !isSuportePage && tenantReady && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>

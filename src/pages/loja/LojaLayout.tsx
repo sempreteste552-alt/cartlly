@@ -639,8 +639,14 @@ export default function LojaLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin-slow rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="h-16 border-b border-border bg-card/50" />
+        <main className="flex-1 max-w-7xl mx-auto w-full p-4 space-y-8">
+          <div className="h-64 bg-muted animate-pulse rounded-xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />)}
+          </div>
+        </main>
       </div>
     );
   }

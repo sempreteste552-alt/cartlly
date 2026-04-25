@@ -85,23 +85,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isStillLoading = loading || roleLoading || (!isSuperAdmin && (profileLoading || storeLoading));
 
   if (isStillLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden">
-        <div className="pointer-events-none fixed inset-0">
-          <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        </div>
-        <div className="relative flex flex-col items-center gap-6 z-10">
-          <div className="relative">
-            <div className="h-20 w-20 animate-spin-slow rounded-full border-4 border-primary/20 border-t-primary" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img src={cartlyLogo} alt="Cartlly" className="h-10 w-auto opacity-80 animate-pulse" />
-            </div>
-          </div>
-          <h2 className="text-sm font-medium text-muted-foreground animate-pulse">Carregando painel...</h2>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen bg-background" />;
   }
 
   if (!session) {
