@@ -821,7 +821,7 @@ function GeneralSettingsTab() {
               {uploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
               {faviconUrl ? "Alterar Favicon" : "Enviar Favicon"}
             </Button>
-            <span className="text-xs text-muted-foreground">PNG, ICO ou SVG (máx. 512KB)</span>
+            <span className="text-xs text-muted-foreground">PNG, JPG, ICO ou SVG — otimizamos automaticamente para 512×512</span>
           </div>
         </CardContent>
       </Card>
