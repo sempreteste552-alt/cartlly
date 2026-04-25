@@ -388,13 +388,11 @@ Deno.serve(async (req) => {
         data = r.data || []; error = r.error;
       } else {
         return new Response(JSON.stringify({ error: "Unknown preset" }), { status: 400, headers: corsHeaders });
-      } else if (preset === "recent_customers") {
-        const r = await adminClient.from("customers").select("*").eq("store_user_id", tUid).order("created_at", { ascending: false }).limit(50);
-        data = r.data || []; error = r.error;
       }
       if (error) throw error;
       return new Response(JSON.stringify({ data }), { headers: corsHeaders });
     }
+
 
     // ===== TEST AI CONNECTION =====
     if (action === "test_ai_provider") {
