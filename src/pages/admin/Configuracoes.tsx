@@ -457,7 +457,7 @@ function GeneralSettingsTab() {
             <div className="flex items-center gap-4">
               {logoUrl ? (
                 <div className="relative">
-                  <img src={logoUrl} alt="Logo" className="rounded-lg object-contain border border-border bg-card p-1" style={{ height: `${logoSize}px` }} />
+                  <img src={logoUrl} alt="Logo" className="rounded-lg object-contain border border-border bg-card p-1" style={{ height: `${logoSize}px`, width: `${Math.max(160, Math.min(logoSize * 6, 360))}px` }} />
                   <button type="button" onClick={() => setLogoUrl("")} className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
@@ -471,7 +471,8 @@ function GeneralSettingsTab() {
           </div>
           <div className="space-y-2">
             <Label>Tamanho da Logo ({logoSize}px)</Label>
-            <Slider value={[logoSize]} onValueChange={([v]) => setLogoSize(v)} min={24} max={120} step={4} />
+            <Slider value={[logoSize]} onValueChange={([v]) => setLogoSize(v)} min={24} max={180} step={4} />
+            <p className="text-xs text-muted-foreground">Use o controle para ajustar a altura real da logo exibida na vitrine.</p>
           </div>
         </CardContent>
       </Card>
