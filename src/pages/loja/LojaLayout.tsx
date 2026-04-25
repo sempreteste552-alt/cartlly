@@ -802,8 +802,8 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, maxWidth: `min(140px, ${Math.max(120, logoSize * 5)}px)` }}
-                        className="object-contain sm:max-w-none block"
+                        style={{ maxHeight: `${Math.min(logoSize, 56)}px`, maxWidth: "160px" }}
+                        className="object-contain block h-auto w-auto"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck className="absolute -top-1 -right-1 h-3.5 w-3.5 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[2.5px] drop-shadow" />
