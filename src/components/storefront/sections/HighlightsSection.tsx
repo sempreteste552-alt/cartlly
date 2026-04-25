@@ -44,7 +44,7 @@ function markSeen(highlightId: string, storeUserId?: string) {
 }
 
 export function HighlightsSection({ storeUserId, primaryColor }: Props) {
-  const { data: highlights } = usePublicHighlights(storeUserId);
+  const { data: highlights, isLoading } = usePublicHighlights(storeUserId);
   const [viewing, setViewing] = useState<StoreHighlight | null>(null);
   const [seenIds, setSeenIds] = useState<Set<string>>(() => getSeenSet(storeUserId));
 
@@ -53,6 +53,21 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
     markSeen(h.id, storeUserId);
     setSeenIds((prev) => new Set([...prev, h.id]));
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 px-1 scrollbar-hide">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 animate-pulse">
+              <div className="w-[72px] h-[72px] rounded-full bg-muted" />
+              <div className="h-3 w-12 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!highlights || highlights.length === 0) return null;
 
