@@ -61,6 +61,12 @@ export default function SuperAdminTenantDiagnostics() {
     }
   };
 
+  useEffect(() => {
+    if (autoTest && userId) {
+      runIntegrityTest();
+    }
+  }, [autoTest, userId]);
+
   const { data: tenant, isLoading: loadingTenant } = useQuery({
     queryKey: ["sa_tenant", userId],
     queryFn: async () => {
