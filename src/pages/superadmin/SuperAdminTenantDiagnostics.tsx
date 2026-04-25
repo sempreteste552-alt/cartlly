@@ -154,6 +154,7 @@ export default function SuperAdminTenantDiagnostics() {
           <TabsTrigger value="logs"><Activity className="mr-1 h-3.5 w-3.5" />Logs</TabsTrigger>
           <TabsTrigger value="repair"><Wrench className="mr-1 h-3.5 w-3.5" />Reparo</TabsTrigger>
           <TabsTrigger value="sql"><Database className="mr-1 h-3.5 w-3.5" />Console</TabsTrigger>
+          <TabsTrigger value="integrity"><ClipboardCheck className="mr-1 h-3.5 w-3.5" />Integridade</TabsTrigger>
         </TabsList>
 
         {/* LOGS */}
