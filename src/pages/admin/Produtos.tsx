@@ -394,6 +394,14 @@ export default function Produtos() {
                               <Layers className="h-4 w-4" />
                             </Button>
                           )}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => window.open(getProductUrl(product), "_blank")}
+                            title="Ver na Loja"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => setEditingProduct(product)}>
                             {isViewer ? <Eye className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                           </Button>
