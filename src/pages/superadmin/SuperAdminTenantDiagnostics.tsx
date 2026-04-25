@@ -287,7 +287,52 @@ export default function SuperAdminTenantDiagnostics() {
             </Card>
           )}
         </TabsContent>
+        {/* Integrity Test */}
+        <TabsContent value="integrity" className="space-y-4 mt-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Verificação de Integridade</h3>
+            <Button 
+              onClick={runIntegrityTest} 
+              disabled={testingIntegrity}
+              className="gap-2"
+            >
+              {testingIntegrity ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
+              Testar Tenant
+            </Button>
+          </div>
+
+          {integrityResults && (
+            <div className="grid gap-3">
+              {integrityResults.map((r, i) => (
+                <Card key={i} className={cn(
+                  "border-l-4",
+                  r.status === "ok" ? "border-l-green-500" : r.status === "warn" ? "border-l-amber-500" : "border-l-red-500"
+                )}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {r.status === "ok" ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : r.status === "warn" ? (
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
+                      <div>
+                        <p className="font-semibold">{r.check}</p>
+                        <p className="text-sm text-muted-foreground">{r.message}</p>
+                      </div>
+                    </div>
+                    <Badge variant={r.status === "ok" ? "default" : r.status === "warn" ? "secondary" : "destructive"}>
+                      {r.status.toUpperCase()}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
