@@ -109,7 +109,13 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
                 {/* Inner circle */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden border-2 border-background bg-muted">
                   {h.cover_url ? (
-                    <img src={h.cover_url} alt={h.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={h.cover_url} 
+                      alt={h.name} 
+                      className="w-full h-full object-cover" 
+                      loading="lazy"
+                      decoding="async"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
                       {h.name.charAt(0).toUpperCase()}
