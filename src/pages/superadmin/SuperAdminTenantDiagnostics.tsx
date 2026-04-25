@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 const REPAIR_TOOLS = [
   { id: "resync_subscription", label: "Ressincronizar assinatura", icon: RefreshCw, desc: "Estende o ciclo atual em 30 dias e marca como ativa" },
