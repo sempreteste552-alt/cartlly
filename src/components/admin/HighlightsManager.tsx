@@ -186,7 +186,7 @@ function HighlightEditor({ highlight, onClose, userId }: { highlight: StoreHighl
               .map((item) => (
                 <div key={item.id} className="relative group rounded-lg overflow-hidden border border-border aspect-square bg-muted">
                   {item.media_type === "video" ? (
-                    <video src={item.media_url} className="w-full h-full object-cover" muted />
+                    <video src={item.media_url} className="w-full h-full object-cover" muted preload="metadata" />
                   ) : (
                     <img src={item.media_url} alt="" className="w-full h-full object-cover" />
                   )}
