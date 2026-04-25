@@ -14,6 +14,7 @@ import {
   ClipboardCheck, CheckCircle2, XCircle, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const REPAIR_TOOLS = [
   { id: "resync_subscription", label: "Ressincronizar assinatura", icon: RefreshCw, desc: "Estende o ciclo atual em 30 dias e marca como ativa" },
