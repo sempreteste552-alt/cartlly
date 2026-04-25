@@ -48,6 +48,7 @@ export function AdminLayout() {
   useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Block rendering until all tenant-specific data is resolved
   const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
