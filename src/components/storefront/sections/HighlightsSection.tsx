@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePublicHighlights, type StoreHighlight, type StoreHighlightItem } from "@/hooks/useStoreHighlights";
-import { X, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Pause, Play, Loader2 } from "lucide-react";
 
 interface Props {
   storeUserId?: string;
@@ -44,7 +44,7 @@ function markSeen(highlightId: string, storeUserId?: string) {
 }
 
 export function HighlightsSection({ storeUserId, primaryColor }: Props) {
-  const { data: highlights } = usePublicHighlights(storeUserId);
+  const { data: highlights, isLoading } = usePublicHighlights(storeUserId);
   const [viewing, setViewing] = useState<StoreHighlight | null>(null);
   const [seenIds, setSeenIds] = useState<Set<string>>(() => getSeenSet(storeUserId));
 
@@ -53,6 +53,21 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
     markSeen(h.id, storeUserId);
     setSeenIds((prev) => new Set([...prev, h.id]));
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex gap-4 overflow-x-auto pb-2 px-1 scrollbar-hide">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 shrink-0 animate-pulse">
+              <div className="w-[72px] h-[72px] rounded-full bg-muted" />
+              <div className="h-3 w-12 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!highlights || highlights.length === 0) return null;
 
@@ -109,7 +124,13 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
                 {/* Inner circle */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden border-2 border-background bg-muted">
                   {h.cover_url ? (
-                    <img src={h.cover_url} alt={h.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={h.cover_url} 
+                      alt={h.name} 
+                      className="w-full h-full object-cover" 
+                      loading="lazy"
+                      decoding="async"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
                       {h.name.charAt(0).toUpperCase()}
@@ -134,6 +155,60 @@ export function HighlightsSection({ storeUserId, primaryColor }: Props) {
   );
 }
 
+function StoryMedia({ 
+  item, 
+  onEnded, 
+  onTimeUpdate, 
+  setPaused, 
+  videoRef 
+}: { 
+  item: StoreHighlightItem; 
+  onEnded: () => void; 
+  onTimeUpdate: () => void;
+  setPaused: (p: boolean) => void;
+  videoRef: React.RefObject<HTMLVideoElement>;
+}) {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <Loader2 className="h-8 w-8 animate-spin text-white/50" />
+        </div>
+      )}
+      
+      {item.media_type === "video" ? (
+        <video
+          ref={videoRef}
+          key={item.id}
+          src={item.media_url}
+          className={`w-full h-full object-contain transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+          autoPlay
+          playsInline
+          muted={false}
+          preload="auto"
+          onEnded={onEnded}
+          onTimeUpdate={onTimeUpdate}
+          onPause={() => setPaused(true)}
+          onPlay={() => setPaused(false)}
+          onLoadedData={() => setLoading(false)}
+          onWaiting={() => setLoading(true)}
+          onPlaying={() => setLoading(false)}
+        />
+      ) : (
+        <img
+          key={item.id}
+          src={item.media_url}
+          alt=""
+          className={`w-full h-full object-contain transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+          onLoad={() => setLoading(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 function StoryViewer({
   highlight,
   onClose,
@@ -149,7 +224,7 @@ function StoryViewer({
   const [progress, setProgress] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const DURATION = 10000;
+  const DURATION = 8000; // Slightly faster default
 
   const goNext = useCallback(() => {
     if (current < items.length - 1) {
@@ -166,6 +241,21 @@ function StoryViewer({
       setProgress(0);
     }
   }, [current]);
+
+  // Preload next items
+  useEffect(() => {
+    if (current < items.length - 1) {
+      const nextItem = items[current + 1];
+      if (nextItem.media_type === "image") {
+        const img = new Image();
+        img.src = nextItem.media_url;
+      } else {
+        const video = document.createElement("video");
+        video.src = nextItem.media_url;
+        video.preload = "auto";
+      }
+    }
+  }, [current, items]);
 
   useEffect(() => {
     if (paused || !items[current] || items[current].media_type === "video") return;
@@ -208,16 +298,16 @@ function StoryViewer({
   const item = items[current];
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center backdrop-blur-sm" onClick={onClose}>
       <div
-        className="relative w-full max-w-md h-[85vh] max-h-[700px] bg-black rounded-2xl overflow-hidden"
+        className="relative w-full max-w-md h-[85vh] max-h-[800px] bg-black rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute top-0 left-0 right-0 z-10 flex gap-1 p-2">
+        <div className="absolute top-0 left-0 right-0 z-20 flex gap-1.5 p-3">
           {items.map((_, i) => (
-            <div key={i} className="flex-1 h-[3px] rounded-full bg-white/30 overflow-hidden">
+            <div key={i} className="flex-1 h-[2.5px] rounded-full bg-white/20 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-100"
+                className="h-full rounded-full transition-all duration-100 ease-linear"
                 style={{
                   backgroundColor: primaryColor,
                   width: i < current ? "100%" : i === current ? `${progress}%` : "0%",
@@ -227,70 +317,65 @@ function StoryViewer({
           ))}
         </div>
 
-        <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-4 pt-2">
-          <div className="flex items-center gap-2">
+        <div className="absolute top-6 left-0 right-0 z-20 flex items-center justify-between px-4">
+          <div className="flex items-center gap-2.5">
             <div
-              className="w-8 h-8 rounded-full overflow-hidden border-2"
+              className="w-9 h-9 rounded-full overflow-hidden border-2 shadow-sm bg-muted"
               style={{ borderColor: primaryColor }}
             >
               {highlight.cover_url ? (
                 <img src={highlight.cover_url} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-full h-full bg-muted flex items-center justify-center text-sm font-bold text-white">
                   {highlight.name.charAt(0)}
                 </div>
               )}
             </div>
-            <span className="text-white text-sm font-semibold">{highlight.name}</span>
+            <span className="text-white text-[15px] font-bold drop-shadow-md">{highlight.name}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setPaused((p) => !p)} className="text-white/80 hover:text-white">
-              {paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setPaused((p) => !p)} 
+              className="text-white/90 hover:text-white transition-colors p-1"
+            >
+              {paused ? <Play className="h-5 w-5 fill-current" /> : <Pause className="h-5 w-5 fill-current" />}
             </button>
-            <button onClick={onClose} className="text-white/80 hover:text-white">
-              <X className="h-5 w-5" />
+            <button 
+              onClick={onClose} 
+              className="text-white/90 hover:text-white transition-colors p-1"
+            >
+              <X className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        <div className="w-full h-full flex items-center justify-center">
-          {item.media_type === "video" ? (
-            <video
-              ref={videoRef}
-              key={item.id}
-              src={item.media_url}
-              className="w-full h-full object-contain"
-              autoPlay
-              playsInline
-              onEnded={goNext}
-              onTimeUpdate={handleVideoTimeUpdate}
-              onPause={() => setPaused(true)}
-              onPlay={() => setPaused(false)}
-            />
-          ) : (
-            <img
-              key={item.id}
-              src={item.media_url}
-              alt=""
-              className="w-full h-full object-contain"
-            />
-          )}
+        <div className="w-full h-full">
+          <StoryMedia 
+            item={item} 
+            onEnded={goNext} 
+            onTimeUpdate={handleVideoTimeUpdate} 
+            setPaused={setPaused}
+            videoRef={videoRef}
+          />
         </div>
 
-        <button
-          className="absolute left-0 top-16 bottom-16 w-1/3 z-10"
-          onClick={goPrev}
-          aria-label="Anterior"
-        />
-        <button
-          className="absolute right-0 top-16 bottom-16 w-1/3 z-10"
-          onClick={goNext}
-          aria-label="Próximo"
-        />
+        {/* Navigation Overlays */}
+        <div className="absolute inset-0 z-10 flex">
+          <button
+            className="w-1/3 h-full cursor-pointer"
+            onClick={goPrev}
+            aria-label="Anterior"
+          />
+          <button
+            className="flex-1 h-full cursor-pointer"
+            onClick={goNext}
+            aria-label="Próximo"
+          />
+        </div>
 
         {current > 0 && (
           <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 rounded-full p-2 text-white/90 hover:text-white transition-all backdrop-blur-sm"
             onClick={goPrev}
           >
             <ChevronLeft className="h-6 w-6" />
@@ -298,7 +383,7 @@ function StoryViewer({
         )}
         {current < items.length - 1 && (
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 rounded-full p-2 text-white/90 hover:text-white hover:bg-black/70 transition-all"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 rounded-full p-2 text-white/90 hover:text-white transition-all backdrop-blur-sm"
             onClick={goNext}
           >
             <ChevronRight className="h-6 w-6" />

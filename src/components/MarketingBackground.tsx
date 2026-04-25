@@ -10,18 +10,15 @@ interface MarketingBackgroundProps {
 export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen w-full overflow-hidden bg-[#0a0a1a]">
-      {/* Preload images for instant appearance */}
-      <img src={loginBg} className="hidden" aria-hidden="true" fetchPriority="high" />
-      <img src={loginBgMobile} className="hidden" aria-hidden="true" fetchPriority="high" />
-
       {/* Mobile Background (only visible on mobile) */}
       <div className="lg:hidden fixed inset-0 w-full h-full bg-[#0a0a1a]">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${loginBgMobile})`,
-            filter: 'contrast(1.1) brightness(0.95)',
-          }}
+        <img 
+          src={loginBgMobile} 
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'contrast(1.1) brightness(0.95)' }}
+          loading="eager"
+          fetchPriority="high"
         />
         {/* Cinematic dark overlays for legibility on mobile */}
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/10 to-background/60" />
@@ -35,12 +32,13 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
       <div className="fixed inset-0 hidden lg:flex w-full h-full">
         {/* Left Side: Main Desktop Image */}
         <div className="relative w-1/2 h-full overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
-            style={{
-              backgroundImage: `url(${loginBg})`,
-              filter: 'contrast(1.05) brightness(0.85)',
-            }}
+          <img 
+            src={loginBg} 
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            style={{ filter: 'contrast(1.05) brightness(0.85)' }}
+            loading="eager"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/80" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/40" />
@@ -49,12 +47,13 @@ export const MarketingBackground: React.FC<MarketingBackgroundProps> = ({ childr
 
         {/* Right Side: Mobile Image as Card Background on Desktop */}
         <div className="w-1/2 h-full relative overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-80"
-            style={{
-              backgroundImage: `url(${loginBgMobile})`,
-              filter: 'contrast(1.05) brightness(0.8)',
-            }}
+          <img 
+            src={loginBgMobile} 
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
+            style={{ filter: 'contrast(1.05) brightness(0.8)' }}
+            loading="eager"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-background/30 via-background/10 to-background/40" />
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
