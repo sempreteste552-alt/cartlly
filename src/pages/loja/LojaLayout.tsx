@@ -812,15 +812,18 @@ export default function LojaLayout() {
               <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
                 <div className="relative inline-block">
                   {settings?.logo_url ? (
-                    <div className="relative inline-flex items-center shrink-0 pr-3">
+                    <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 0.55}px` }}>
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, width: `${storefrontLogoWidth}px` }}
+                        style={{ height: `${logoSize}px`, maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
-                        <BadgeCheck className="absolute right-0 top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow" style={verifiedBadgeStyle} />
+                        <BadgeCheck
+                          className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
+                          style={{ ...verifiedBadgeStyle, right: `-${logoBadgeSize * 0.15}px` }}
+                        />
                       )}
                     </div>
                   ) : (
