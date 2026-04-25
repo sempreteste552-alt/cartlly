@@ -393,6 +393,141 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ data }), { headers: corsHeaders });
     }
 
+
+    // ===== TEST AI CONNECTION =====
+    if (action === "test_ai_provider") {
+      const { providerId } = body;
+      if (!providerId) return new Response(JSON.stringify({ error: "Missing providerId" }), { status: 400, headers: corsHeaders });
+      
+      const { data: provider, error: pErr } = await adminClient
+        .from("ai_providers")
+        .select("*")
+        .eq("id", providerId)
+        .single();
+      
+      if (pErr || !provider) throw new Error("Provedor não encontrado");
+
+      const providerName = provider.name.toLowerCase();
+      let testUrl = "";
+      let testBody = {};
+      let testHeaders: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+
+      if (providerName.includes("openai")) {
+        testUrl = "https://api.openai.com/v1/chat/completions";
+        testHeaders["Authorization"] = `Bearer ${provider.api_key}`;
+        testBody = {
+          model: provider.model_text_default || "gpt-3.5-turbo",
+          messages: [{ role: "user", content: "hi" }],
+          max_tokens: 5
+        };
+      } else if (providerName.includes("gemini") || providerName.includes("google")) {
+        const model = provider.model_text_default || "gemini-pro";
+        testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${provider.api_key}`;
+        testBody = {
+          contents: [{ parts: [{ text: "hi" }] }]
+        };
+      } else if (providerName.includes("anthropic") || providerName.includes("claude")) {
+        testUrl = "https://api.anthropic.com/v1/messages";
+        testHeaders["x-api-key"] = provider.api_key;
+        testHeaders["anthropic-version"] = "2023-06-01";
+        testBody = {
+          model: provider.model_text_default || "claude-3-haiku-20240307",
+          max_tokens: 5,
+          messages: [{ role: "user", content: "hi" }]
+        };
+      } else {
+        // Fallback or generic test?
+        return new Response(JSON.stringify({ error: "Tipo de provedor não suportado para teste automático" }), { status: 400, headers: corsHeaders });
+      }
+
+      try {
+        const resp = await fetch(testUrl, {
+          method: "POST",
+          headers: testHeaders,
+          body: JSON.stringify(testBody)
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: `API error (${resp.status}): ${JSON.stringify(errData)}` 
+          }), { headers: corsHeaders });
+        }
+
+        return new Response(JSON.stringify({ success: true, message: "Conexão estabelecida com sucesso!" }), { headers: corsHeaders });
+      } catch (e: any) {
+        return new Response(JSON.stringify({ success: false, error: e.message }), { headers: corsHeaders });
+      }
+    }
+
+    // ===== TEST TENANT INTEGRITY =====
+    if (action === "test_tenant_integrity") {
+      if (!targetUserId) return new Response(JSON.stringify({ error: "Missing targetUserId" }), { status: 400, headers: corsHeaders });
+      
+      const results: any[] = [];
+      
+      // 1. Check Profile
+      const { data: profile } = await adminClient.from("profiles").select("*").eq("user_id", targetUserId).maybeSingle();
+      results.push({
+        check: "Profile",
+        status: profile ? "ok" : "fail",
+        message: profile ? `OK (Status: ${profile.status})` : "Perfil não encontrado na tabela profiles"
+      });
+
+      // 2. Check Store Settings
+      const { data: store } = await adminClient.from("store_settings").select("*").eq("user_id", targetUserId).maybeSingle();
+      results.push({
+        check: "Store Settings",
+        status: store ? "ok" : "fail",
+        message: store ? `OK (Slug: ${store.store_slug})` : "Configurações da loja não encontradas"
+      });
+
+      // 3. Check Subscription
+      const { data: sub } = await adminClient.from("tenant_subscriptions").select("*").eq("user_id", targetUserId).maybeSingle();
+      results.push({
+        check: "Subscription",
+        status: sub && ["active", "trial"].includes(sub.status) ? "ok" : "warn",
+        message: sub ? `Status: ${sub.status} (Expira: ${sub.current_period_end})` : "Sem assinatura ativa"
+      });
+
+      // 4. Check Payment Methods
+      const hasPix = store?.payment_pix;
+      const hasCard = store?.payment_credit_card;
+      const asaasKey = store?.asaas_api_key;
+      results.push({
+        check: "Pagamentos",
+        status: (hasPix || hasCard) ? (asaasKey ? "ok" : "warn") : "warn",
+        message: (hasPix || hasCard) 
+          ? (asaasKey ? "Ativos e com API Key Asaas" : "Ativos mas SEM API Key Asaas configurada")
+          : "Nenhum método de pagamento ativo"
+      });
+
+      // 5. Check Domains
+      const { data: domains } = await adminClient.from("store_domains").select("*").eq("user_id", targetUserId);
+      const activeDomain = domains?.find(d => d.status === "active");
+      results.push({
+        check: "Domínios",
+        status: domains?.length ? (activeDomain ? "ok" : "warn") : "ok",
+        message: domains?.length 
+          ? (activeDomain ? `Domínio ativo: ${activeDomain.hostname}` : "Domínios cadastrados mas nenhum verificado/ativo")
+          : "Utilizando apenas slug da plataforma"
+      });
+
+      // 6. Check for pending orders
+      const { count: pendingCount } = await adminClient.from("orders").select("*", { count: "exact", head: true }).eq("user_id", targetUserId).eq("status", "pendente");
+      results.push({
+        check: "Pedidos Pendentes",
+        status: (pendingCount || 0) > 20 ? "warn" : "ok",
+        message: `${pendingCount || 0} pedidos pendentes`
+      });
+
+      return new Response(JSON.stringify({ success: true, results }), { headers: corsHeaders });
+    }
+
+
     // ===== EXISTING ACTIONS =====
     switch (action) {
       case "resend_verification": {

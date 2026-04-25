@@ -654,6 +654,16 @@ export default function SuperAdminTenants() {
 
                     {getStatusBadge(tenant)}
 
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                      onClick={() => navigate(`/superadmin/tenants/${tenant.user_id}/diagnostics?autoTest=true`)}
+                      title="Testar Integridade"
+                    >
+                      <Activity className="h-4 w-4" />
+                    </Button>
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">

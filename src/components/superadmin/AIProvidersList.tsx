@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Eye, EyeOff, Save, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, EyeOff, Save, CheckCircle2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -15,6 +15,27 @@ export function AIProvidersList() {
   const queryClient = useQueryClient();
   const [showKey, setShowKey] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
+
+  const handleTestConnection = async (providerId: string) => {
+    setTestingProvider(providerId);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action: "test_ai_provider", providerId }
+      });
+
+      if (error) throw error;
+      if (data.success) {
+        toast.success(data.message || "Conexão estabelecida com sucesso!");
+      } else {
+        toast.error(`Falha na conexão: ${data.error || "Erro desconhecido"}`);
+      }
+    } catch (e: any) {
+      toast.error(`Erro ao testar: ${e.message}`);
+    } finally {
+      setTestingProvider(null);
+    }
+  };
 
   const { data: providers, isLoading } = useQuery({
     queryKey: ["ai-providers"],
@@ -98,6 +119,20 @@ export function AIProvidersList() {
                   <Badge variant={provider.is_active ? "default" : "secondary"}>
                     {provider.is_active ? "Ativo" : "Inativo"}
                   </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 text-primary"
+                    onClick={() => handleTestConnection(provider.id)}
+                    disabled={testingProvider === provider.id}
+                    title="Testar Conexão"
+                  >
+                    {testingProvider === provider.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
             </CardHeader>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +11,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft, Activity, AlertCircle, CreditCard, ShoppingCart, Mail,
   Wrench, Database, LogIn, Loader2, RefreshCw, Globe, BellOff, Unlock,
+  ClipboardCheck, CheckCircle2, XCircle, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 const REPAIR_TOOLS = [
   { id: "resync_subscription", label: "Ressincronizar assinatura", icon: RefreshCw, desc: "Estende o ciclo atual em 30 dias e marca como ativa" },
@@ -31,9 +34,38 @@ const SQL_PRESETS = [
 
 export default function SuperAdminTenantDiagnostics() {
   const { userId } = useParams<{ userId: string }>();
+  const [searchParams] = useSearchParams();
+  const autoTest = searchParams.get("autoTest") === "true";
+  const [activeTab, setActiveTab] = useState(autoTest ? "integrity" : "logs");
   const [running, setRunning] = useState<string | null>(null);
   const [presetData, setPresetData] = useState<any[] | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [integrityResults, setIntegrityResults] = useState<any[] | null>(null);
+  const [testingIntegrity, setTestingIntegrity] = useState(false);
+
+  const runIntegrityTest = async () => {
+    setTestingIntegrity(true);
+    setIntegrityResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action: "test_tenant_integrity", targetUserId: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setIntegrityResults(data.results || []);
+      toast.success("Teste de integridade concluído");
+    } catch (e: any) {
+      toast.error(e.message || "Falha no teste");
+    } finally {
+      setTestingIntegrity(false);
+    }
+  };
+
+  useEffect(() => {
+    if (autoTest && userId) {
+      runIntegrityTest();
+    }
+  }, [autoTest, userId]);
 
   const { data: tenant, isLoading: loadingTenant } = useQuery({
     queryKey: ["sa_tenant", userId],
@@ -128,11 +160,12 @@ export default function SuperAdminTenantDiagnostics() {
         </Button>
       </div>
 
-      <Tabs defaultValue="logs">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="logs"><Activity className="mr-1 h-3.5 w-3.5" />Logs</TabsTrigger>
           <TabsTrigger value="repair"><Wrench className="mr-1 h-3.5 w-3.5" />Reparo</TabsTrigger>
           <TabsTrigger value="sql"><Database className="mr-1 h-3.5 w-3.5" />Console</TabsTrigger>
+          <TabsTrigger value="integrity"><ClipboardCheck className="mr-1 h-3.5 w-3.5" />Integridade</TabsTrigger>
         </TabsList>
 
         {/* LOGS */}
@@ -265,7 +298,52 @@ export default function SuperAdminTenantDiagnostics() {
             </Card>
           )}
         </TabsContent>
+        {/* Integrity Test */}
+        <TabsContent value="integrity" className="space-y-4 mt-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Verificação de Integridade</h3>
+            <Button 
+              onClick={runIntegrityTest} 
+              disabled={testingIntegrity}
+              className="gap-2"
+            >
+              {testingIntegrity ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardCheck className="h-4 w-4" />}
+              Testar Tenant
+            </Button>
+          </div>
+
+          {integrityResults && (
+            <div className="grid gap-3">
+              {integrityResults.map((r, i) => (
+                <Card key={i} className={cn(
+                  "border-l-4",
+                  r.status === "ok" ? "border-l-green-500" : r.status === "warn" ? "border-l-amber-500" : "border-l-red-500"
+                )}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {r.status === "ok" ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : r.status === "warn" ? (
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
+                      <div>
+                        <p className="font-semibold">{r.check}</p>
+                        <p className="text-sm text-muted-foreground">{r.message}</p>
+                      </div>
+                    </div>
+                    <Badge variant={r.status === "ok" ? "default" : r.status === "warn" ? "secondary" : "destructive"}>
+                      {r.status.toUpperCase()}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
+
