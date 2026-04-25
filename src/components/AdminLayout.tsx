@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Crown, Clock, HelpCircle, Eye } from "lucide-react";
 import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
