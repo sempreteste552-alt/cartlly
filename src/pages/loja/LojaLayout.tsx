@@ -766,20 +766,23 @@ export default function LojaLayout() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
 
-                <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
-                  {settings?.logo_url ? (
-                    <div className="relative inline-flex items-center shrink-0 pr-3">
-                      <img
-                        src={settings.logo_url}
-                        alt={storeName}
-                        style={{ height: `${checkoutLogoHeight}px`, width: `${checkoutLogoWidth}px` }}
-                        className="object-contain block"
-                      />
-                      {settings?.is_verified && (
-                        <BadgeCheck className="absolute right-0 top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow" style={verifiedBadgeStyle} />
-                      )}
-                    </div>
-                  ) : (
+                 <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
+                   {settings?.logo_url ? (
+                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 0.55}px` }}>
+                       <img
+                         src={settings.logo_url}
+                         alt={storeName}
+                         style={{ height: `${checkoutLogoHeight}px`, maxWidth: `${checkoutLogoWidth}px`, width: "auto" }}
+                         className="object-contain block"
+                       />
+                       {settings?.is_verified && (
+                         <BadgeCheck
+                           className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
+                           style={{ ...verifiedBadgeStyle, right: `-${logoBadgeSize * 0.15}px` }}
+                         />
+                       )}
+                     </div>
+                   ) : (
                     <div className="flex items-center gap-1.5">
                       <span className="text-2xl sm:text-3xl font-bold truncate" style={{ color: headerTextColor }}>{storeName}</span>
                       {settings?.is_verified && (
