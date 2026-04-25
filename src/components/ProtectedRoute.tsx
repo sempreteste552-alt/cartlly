@@ -22,6 +22,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   const isSuperAdmin = roleData?.role === "super_admin";
