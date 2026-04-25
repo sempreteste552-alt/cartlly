@@ -63,8 +63,9 @@ export default function SuperAdminLayout() {
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">
             <Suspense fallback={
-              <div className="flex items-center justify-center h-64">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="space-y-4">
+                <div className="h-8 w-1/4 bg-muted animate-pulse rounded" />
+                <div className="h-64 bg-muted animate-pulse rounded" />
               </div>
             }>
               <Outlet />
