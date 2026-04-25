@@ -13,6 +13,7 @@ import { AdminPushBanner } from "@/components/AdminPushBanner";
 import { TrialBanner } from "@/components/TrialBanner";
 import { AdminAnnouncementBanner } from "@/components/admin/AdminAnnouncementBanner";
 import { GlobalMaintenanceBanner } from "@/components/GlobalMaintenanceBanner";
+import { StoreLivePreview } from "@/components/admin/StoreLivePreview";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
@@ -23,7 +24,7 @@ import { useTenantContext } from "@/hooks/useTenantContext";
 import { canAccess } from "@/lib/planPermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Clock, HelpCircle } from "lucide-react";
+import { Crown, Clock, HelpCircle, Eye } from "lucide-react";
 import { OnboardingTutorial, startTutorial } from "./OnboardingTutorial";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export function AdminLayout() {
   useMotivationalPush(user ?? null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Block rendering until all tenant-specific data is resolved
   const tenantReady = !settingsLoading && !themeLoading && !featuresLoading && !ctxLoading;
@@ -100,10 +102,10 @@ export function AdminLayout() {
   const trialEndsAt = currentSub?.trial_ends_at ? new Date(currentSub.trial_ends_at) : null;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
   const adminText = {
-    pt: { panel: "Painel Administrativo", tutorial: "Reiniciar Tutorial", remaining: "restantes" },
-    en: { panel: "Admin Panel", tutorial: "Restart Tutorial", remaining: "remaining" },
-    es: { panel: "Panel Administrativo", tutorial: "Reiniciar tutorial", remaining: "restantes" },
-    fr: { panel: "Panneau Admin", tutorial: "Redémarrer le tutoriel", remaining: "restants" },
+    pt: { panel: "Painel Administrativo", tutorial: "Reiniciar Tutorial", remaining: "restantes", preview: "Ver Loja" },
+    en: { panel: "Admin Panel", tutorial: "Restart Tutorial", remaining: "remaining", preview: "View Store" },
+    es: { panel: "Panel Administrativo", tutorial: "Reiniciar tutorial", remaining: "restantes", preview: "Ver tienda" },
+    fr: { panel: "Panneau Admin", tutorial: "Redémarrer le tutoriel", remaining: "restants", preview: "Voir la boutique" },
   }[locale];
 
   useEffect(() => {
@@ -215,6 +217,17 @@ export function AdminLayout() {
                     {trialDaysLeft}d {adminText.remaining}
                   </Badge>
                 )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2 h-9 px-3 border-primary/20 hover:border-primary/50 text-foreground hover:bg-primary/5 hidden md:flex"
+                  onClick={() => setIsPreviewOpen(true)}
+                >
+                  <Eye className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-semibold">{adminText.preview}</span>
+                </Button>
+
                 <ThemeToggle scope={adminThemeScope} applyToRoot={false} />
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -249,6 +262,7 @@ export function AdminLayout() {
         </div>
         {!isCerebroPage && !isSuportePage && <WhatsAppSupportBubble />}
         {!isCerebroPage && !isSuportePage && <AIChatWidget />}
+        {!isCerebroPage && !isSuportePage && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
       </div>
     </SidebarProvider>
