@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft, Activity, AlertCircle, CreditCard, ShoppingCart, Mail,
   Wrench, Database, LogIn, Loader2, RefreshCw, Globe, BellOff, Unlock,
+  ClipboardCheck, CheckCircle2, XCircle, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
