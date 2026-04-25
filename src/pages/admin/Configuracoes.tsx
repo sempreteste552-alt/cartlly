@@ -228,7 +228,7 @@ function GeneralSettingsTab() {
     return new Promise((resolve, reject) => {
       // SVGs: keep as-is (vector)
       if (file.type === "image/svg+xml") return resolve(file);
-      const img = new Image();
+      const img = new window.Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
         try {
