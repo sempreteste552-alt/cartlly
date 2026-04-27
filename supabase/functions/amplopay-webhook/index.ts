@@ -16,8 +16,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const amplopayToken = req.headers.get("x-amplopay-token") || req.headers.get("authorization");
+    const expectedToken = Deno.env.get("AMPLOPAY_WEBHOOK_SECRET");
+
+    if (expectedToken && amplopayToken !== expectedToken) {
+      console.error("[amplopay-webhook] Unauthorized: Invalid token");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+        status: 401, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     const body = await req.json();
     console.log("Amplopay webhook received:", JSON.stringify(body));
+
 
     const { event, token, transaction, subscription: subData, client, orderItems } = body;
 

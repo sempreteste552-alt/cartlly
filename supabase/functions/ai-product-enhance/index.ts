@@ -10,22 +10,54 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt, userId, platform } = await req.json();
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+
+    const { action, productName, productDescription, productPrice, productCategory, imageUrl, customPrompt, userId: requestedUserId, platform } = await req.json();
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Verify caller identity
+    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
+    
+    if (callerError || !caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+
+    // Security check
+    let targetUserId = requestedUserId || caller.id;
+    if (targetUserId !== caller.id) {
+      const adminClient = createClient(supabaseUrl, supabaseKey);
+      const { data: roleData } = await adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", caller.id)
+        .eq("role", "super_admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+      }
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch tenant brain config if userId is provided
+    // Fetch tenant brain config
     let aiConfig = null;
-    if (userId) {
-      const { data } = await supabase
-        .from("tenant_ai_brain_config")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      aiConfig = data;
-    }
+    const { data } = await supabase
+      .from("tenant_ai_brain_config")
+      .select("*")
+      .eq("user_id", targetUserId)
+      .maybeSingle();
+    aiConfig = data;
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
