@@ -56,6 +56,11 @@ export default function SuperAdminTenants() {
   const [msgBody, setMsgBody] = useState("");
   const [msgSending, setMsgSending] = useState(false);
   const [editTenant, setEditTenant] = useState<any>(null);
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
+  const [trialTenant, setTrialTenant] = useState<any>(null);
+  const [trialPlanId, setTrialPlanId] = useState("");
+  const [trialDays, setTrialDays] = useState<number>(7);
+  const [trialSaving, setTrialSaving] = useState(false);
   const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
