@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2 } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2, Sparkles, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 import { SensitiveEditDialog } from "@/components/superadmin/SensitiveEditDialog";
@@ -56,6 +56,11 @@ export default function SuperAdminTenants() {
   const [msgBody, setMsgBody] = useState("");
   const [msgSending, setMsgSending] = useState(false);
   const [editTenant, setEditTenant] = useState<any>(null);
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
+  const [trialTenant, setTrialTenant] = useState<any>(null);
+  const [trialPlanId, setTrialPlanId] = useState("");
+  const [trialDays, setTrialDays] = useState<number>(7);
+  const [trialSaving, setTrialSaving] = useState(false);
   const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
@@ -374,6 +379,78 @@ export default function SuperAdminTenants() {
     }
   };
 
+  const openGrantTrial = (tenant: any) => {
+    setTrialTenant(tenant);
+    setTrialPlanId(tenant.subscription?.plan_id || "");
+    setTrialDays(7);
+    setTrialDialogOpen(true);
+  };
+
+  const handleGrantTrial = async () => {
+    if (!trialTenant || !trialPlanId || !trialDays || trialDays < 1) {
+      toast.error("Selecione um plano e informe a duração em dias");
+      return;
+    }
+    setTrialSaving(true);
+    try {
+      const userId = trialTenant.user_id;
+      const now = new Date();
+      const trialEnd = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
+      const payload: any = {
+        plan_id: trialPlanId,
+        status: "trial",
+        trial_ends_at: trialEnd.toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: trialEnd.toISOString(),
+      };
+
+      if (trialTenant.subscription) {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .update(payload)
+          .eq("user_id", userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .insert({ user_id: userId, ...payload });
+        if (error) throw error;
+      }
+
+      // Unblock store if blocked
+      await supabase.from("store_settings").update({ store_blocked: false }).eq("user_id", userId);
+
+      // Notify tenant
+      const planName = plans?.find(p => p.id === trialPlanId)?.name || "Premium";
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: userId,
+        title: "🎁 Trial Grátis Liberado!",
+        message: `Você ganhou ${trialDays} dia(s) de teste grátis no plano ${planName}. Aproveite todas as funções premium!`,
+        type: "info",
+      } as any);
+
+      try {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            title: "🎁 Trial Grátis Liberado!",
+            body: `Você ganhou ${trialDays} dia(s) grátis no plano ${planName}.`,
+            url: "/admin",
+            targetUserId: userId,
+          },
+        });
+      } catch {}
+
+      toast.success(`Trial de ${trialDays} dia(s) liberado!`);
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      setTrialDialogOpen(false);
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Falha ao liberar trial"));
+    } finally {
+      setTrialSaving(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!msgBody.trim() || !msgTenant) return;
     setMsgSending(true);
@@ -688,6 +765,9 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
                           <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openGrantTrial(tenant)}>
+                          <Gift className="mr-2 h-4 w-4 text-pink-500" /> Liberar Trial Grátis
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {/* Support actions */}
                         <DropdownMenuItem onClick={() => handleResendVerification(tenant)}>
@@ -878,6 +958,87 @@ export default function SuperAdminTenants() {
               {msgSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               {msgSending ? "Enviando..." : "Enviar Agora"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Grant Free Trial Dialog */}
+      <Dialog open={trialDialogOpen} onOpenChange={setTrialDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-pink-500" />
+              Liberar Trial Grátis — {trialTenant?.display_name || trialTenant?.store?.store_name}
+            </DialogTitle>
+            <DialogDescription>
+              Conceda acesso gratuito a um plano por um período personalizado. Ao expirar, o tenant precisará assinar para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> Plano para liberar
+              </Label>
+              <Select value={trialPlanId} onValueChange={setTrialPlanId}>
+                <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
+                <SelectContent>
+                  {plans?.filter(p => p.active).map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/mês
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-primary" /> Duração do trial (dias)
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                value={trialDays}
+                onChange={(e) => setTrialDays(parseInt(e.target.value) || 0)}
+                placeholder="Ex: 7, 14, 30..."
+              />
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[3, 7, 14, 30, 60, 90].map((d) => (
+                  <Button
+                    key={d}
+                    type="button"
+                    variant={trialDays === d ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setTrialDays(d)}
+                  >
+                    {d} dias
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {trialDays > 0 && (
+              <div className="rounded-lg border border-pink-500/20 bg-pink-500/5 p-3 text-sm">
+                <p className="text-muted-foreground">
+                  Trial expira em:{" "}
+                  <span className="font-medium text-foreground">
+                    {new Date(Date.now() + trialDays * 86400000).toLocaleDateString("pt-BR", {
+                      day: "2-digit", month: "2-digit", year: "numeric"
+                    })}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setTrialDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleGrantTrial} disabled={trialSaving || !trialPlanId || trialDays < 1}>
+                {trialSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
+                {trialSaving ? "Liberando..." : "Liberar Trial Grátis"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
