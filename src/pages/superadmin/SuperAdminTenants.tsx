@@ -522,6 +522,7 @@ export default function SuperAdminTenants() {
     }
   };
 
+  const handleSendMessage = async () => {
     if (!msgBody.trim() || !msgTenant) return;
     setMsgSending(true);
     try {
