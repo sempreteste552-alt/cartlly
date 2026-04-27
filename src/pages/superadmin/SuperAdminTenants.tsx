@@ -379,7 +379,77 @@ export default function SuperAdminTenants() {
     }
   };
 
-  const handleSendMessage = async () => {
+  const openGrantTrial = (tenant: any) => {
+    setTrialTenant(tenant);
+    setTrialPlanId(tenant.subscription?.plan_id || "");
+    setTrialDays(7);
+    setTrialDialogOpen(true);
+  };
+
+  const handleGrantTrial = async () => {
+    if (!trialTenant || !trialPlanId || !trialDays || trialDays < 1) {
+      toast.error("Selecione um plano e informe a duração em dias");
+      return;
+    }
+    setTrialSaving(true);
+    try {
+      const userId = trialTenant.user_id;
+      const now = new Date();
+      const trialEnd = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
+      const payload: any = {
+        plan_id: trialPlanId,
+        status: "trial",
+        trial_ends_at: trialEnd.toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: trialEnd.toISOString(),
+      };
+
+      if (trialTenant.subscription) {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .update(payload)
+          .eq("user_id", userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .insert({ user_id: userId, ...payload });
+        if (error) throw error;
+      }
+
+      // Unblock store if blocked
+      await supabase.from("store_settings").update({ store_blocked: false }).eq("user_id", userId);
+
+      // Notify tenant
+      const planName = plans?.find(p => p.id === trialPlanId)?.name || "Premium";
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user!.id,
+        target_user_id: userId,
+        title: "🎁 Trial Grátis Liberado!",
+        message: `Você ganhou ${trialDays} dia(s) de teste grátis no plano ${planName}. Aproveite todas as funções premium!`,
+        type: "info",
+      } as any);
+
+      try {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            title: "🎁 Trial Grátis Liberado!",
+            body: `Você ganhou ${trialDays} dia(s) grátis no plano ${planName}.`,
+            url: "/admin",
+            targetUserId: userId,
+          },
+        });
+      } catch {}
+
+      toast.success(`Trial de ${trialDays} dia(s) liberado!`);
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      setTrialDialogOpen(false);
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Falha ao liberar trial"));
+    } finally {
+      setTrialSaving(false);
+    }
+  };
     if (!msgBody.trim() || !msgTenant) return;
     setMsgSending(true);
     try {
