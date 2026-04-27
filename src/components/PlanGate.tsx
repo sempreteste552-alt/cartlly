@@ -66,7 +66,10 @@ export function PlanGate({ feature, children, inline }: PlanGateProps) {
             </p>
           </div>
           <p className="text-xs text-muted-foreground/70">{reason}</p>
-          <Button onClick={() => navigate(`/admin/plano?upgrade=${minPlan}`)} className={`gap-2 bg-gradient-to-r ${planInfo.gradient} hover:opacity-90 text-white shadow-md`} size="sm">
+          <Button onClick={() => {
+            const slug = window.location.pathname.match(/^\/painel\/([^/]+)/)?.[1] || "";
+            navigate(`/painel/${slug}/plano?upgrade=${minPlan}`);
+          }} className={`gap-2 bg-gradient-to-r ${planInfo.gradient} hover:opacity-90 text-white shadow-md`} size="sm">
             <ArrowUpCircle className="h-4 w-4" /> Quero desbloquear agora
           </Button>
         </div>
