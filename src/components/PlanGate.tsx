@@ -35,7 +35,10 @@ export function PlanGate({ feature, children, inline }: PlanGateProps) {
           <p className="text-sm font-medium text-foreground">{meta?.label ?? feature}</p>
           <p className="text-xs text-muted-foreground truncate">{reason}</p>
         </div>
-        <Button size="sm" variant="outline" className="shrink-0 gap-1.5 text-xs" onClick={() => navigate(`/admin/plano?upgrade=${minPlan}`)}>
+        <Button size="sm" variant="outline" className="shrink-0 gap-1.5 text-xs" onClick={() => {
+          const slug = window.location.pathname.match(/^\/painel\/([^/]+)/)?.[1] || "";
+          navigate(`/painel/${slug}/plano?upgrade=${minPlan}`);
+        }}>
           <Sparkles className="h-3 w-3" /> {minPlan}
         </Button>
       </div>
