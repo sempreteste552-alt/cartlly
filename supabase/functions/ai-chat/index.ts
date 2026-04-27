@@ -106,11 +106,11 @@ serve(async (req) => {
     const lastUserMessage = messages.slice().reverse().find((m: any) => m.role === "user")?.content || "";
     let ragKnowledge: any[] = [];
     try {
-      if (userId && lastUserMessage) {
+      if (targetUserId && lastUserMessage) {
         const { data: ragRes } = await supabase.functions.invoke("ai-memory-manager", {
           body: {
             action: "retrieve-context",
-            tenantId: userId,
+            tenantId: targetUserId,
             content: lastUserMessage
           }
         });
@@ -119,7 +119,7 @@ serve(async (req) => {
         }
       }
     } catch (e) {
-      console.warn(`[ai-chat] RAG retrieval failed for ${userId}`, e);
+      console.warn(`[ai-chat] RAG retrieval failed for ${targetUserId}`, e);
     }
 
     const brainBlock = aiConfig ? [
