@@ -450,6 +450,8 @@ export default function SuperAdminTenants() {
       setTrialSaving(false);
     }
   };
+
+  const handleSendMessage = async () => {
     if (!msgBody.trim() || !msgTenant) return;
     setMsgSending(true);
     try {
