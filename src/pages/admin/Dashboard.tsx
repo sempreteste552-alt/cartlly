@@ -56,7 +56,10 @@ function LockedDashboardCard({ children, locked, minPlan, title, description }: 
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             {description} No plano <strong>{minPlan}</strong> isso é liberado para você parar de decidir no escuro e vender melhor.
           </p>
-          <Button size="sm" className="mt-3" onClick={() => window.location.assign(`/admin/plano?upgrade=${minPlan}`)}>
+          <Button size="sm" className="mt-3" onClick={() => {
+            const slug = window.location.pathname.match(/^\/painel\/([^/]+)/)?.[1] || "";
+            window.location.assign(`/painel/${slug}/plano?upgrade=${minPlan}`);
+          }}>
             Fazer upgrade para {minPlan}
           </Button>
         </div>
