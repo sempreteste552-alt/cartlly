@@ -839,6 +839,9 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => openGrantTrial(tenant)}>
                           <Gift className="mr-2 h-4 w-4 text-pink-500" /> Liberar Trial Grátis
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openOverrides(tenant)}>
+                          <Sparkles className="mr-2 h-4 w-4 text-amber-500" /> Liberar Funcionalidades Extras
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {/* Support actions */}
                         <DropdownMenuItem onClick={() => handleResendVerification(tenant)}>
