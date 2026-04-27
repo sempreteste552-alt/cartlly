@@ -962,6 +962,87 @@ export default function SuperAdminTenants() {
         </DialogContent>
       </Dialog>
 
+      {/* Grant Free Trial Dialog */}
+      <Dialog open={trialDialogOpen} onOpenChange={setTrialDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-pink-500" />
+              Liberar Trial Grátis — {trialTenant?.display_name || trialTenant?.store?.store_name}
+            </DialogTitle>
+            <DialogDescription>
+              Conceda acesso gratuito a um plano por um período personalizado. Ao expirar, o tenant precisará assinar para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> Plano para liberar
+              </Label>
+              <Select value={trialPlanId} onValueChange={setTrialPlanId}>
+                <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
+                <SelectContent>
+                  {plans?.filter(p => p.active).map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/mês
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-primary" /> Duração do trial (dias)
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                value={trialDays}
+                onChange={(e) => setTrialDays(parseInt(e.target.value) || 0)}
+                placeholder="Ex: 7, 14, 30..."
+              />
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[3, 7, 14, 30, 60, 90].map((d) => (
+                  <Button
+                    key={d}
+                    type="button"
+                    variant={trialDays === d ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setTrialDays(d)}
+                  >
+                    {d} dias
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {trialDays > 0 && (
+              <div className="rounded-lg border border-pink-500/20 bg-pink-500/5 p-3 text-sm">
+                <p className="text-muted-foreground">
+                  Trial expira em:{" "}
+                  <span className="font-medium text-foreground">
+                    {new Date(Date.now() + trialDays * 86400000).toLocaleDateString("pt-BR", {
+                      day: "2-digit", month: "2-digit", year: "numeric"
+                    })}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setTrialDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleGrantTrial} disabled={trialSaving || !trialPlanId || trialDays < 1}>
+                {trialSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
+                {trialSaving ? "Liberando..." : "Liberar Trial Grátis"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {editTenant && (
         <SensitiveEditDialog
           open={!!editTenant}
