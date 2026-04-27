@@ -79,7 +79,10 @@ export function LockedFeature({ children, isLocked, featureName, logoUrl, minPla
             <Sparkles className="h-3 w-3" /> Disponível no plano {upgradePlan}+
           </Badge>
           <Button
-            onClick={() => navigate(`/admin/plano?upgrade=${upgradePlan}`)}
+            onClick={() => {
+              const slug = window.location.pathname.match(/^\/painel\/([^/]+)/)?.[1] || "";
+              navigate(`/painel/${slug}/plano?upgrade=${upgradePlan}`);
+            }}
             className="mt-1 gap-2"
             size="sm"
           >
