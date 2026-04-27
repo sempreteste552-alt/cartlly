@@ -457,7 +457,71 @@ export default function SuperAdminTenants() {
     }
   };
 
-  const handleSendMessage = async () => {
+  const openOverrides = (tenant: any) => {
+    setOverridesTenant(tenant);
+    // Pre-select current plan as default — admin pode trocar para um superior
+    setOverridesSourcePlanId(tenant.subscription?.plan_id || "");
+    setOverridesDialogOpen(true);
+  };
+
+  const handleApplyOverrides = async (mode: "grant" | "clear") => {
+    if (!overridesTenant) return;
+    if (mode === "grant" && !overridesSourcePlanId) {
+      toast.error("Selecione o plano cujas funcionalidades serão liberadas");
+      return;
+    }
+    setOverridesSaving(true);
+    try {
+      const userId = overridesTenant.user_id;
+      let overrides: Record<string, any> = {};
+      let sourcePlanName = "";
+
+      if (mode === "grant") {
+        const sourcePlan: any = plans?.find((p) => p.id === overridesSourcePlanId);
+        if (!sourcePlan) throw new Error("Plano de origem não encontrado");
+        sourcePlanName = sourcePlan.name;
+        const feats = (typeof sourcePlan.features === "object" && !Array.isArray(sourcePlan.features))
+          ? (sourcePlan.features as Record<string, any>) : {};
+        // Apenas features booleanas TRUE viram overrides (desbloqueiam)
+        for (const [k, v] of Object.entries(feats)) {
+          if (typeof v === "boolean" && v === true) overrides[k] = true;
+        }
+      }
+
+      if (overridesTenant.subscription) {
+        const { error } = await supabase
+          .from("tenant_subscriptions")
+          .update({ feature_overrides: overrides })
+          .eq("user_id", userId);
+        if (error) throw error;
+      } else {
+        toast.error("Tenant sem assinatura ativa. Atribua um plano antes de liberar funcionalidades.");
+        setOverridesSaving(false);
+        return;
+      }
+
+      if (mode === "grant") {
+        await supabase.from("admin_notifications").insert({
+          sender_user_id: user!.id,
+          target_user_id: userId,
+          title: "🎁 Funcionalidades Extras Liberadas!",
+          message: `A plataforma liberou para você as funcionalidades do plano ${sourcePlanName} sem custo adicional. Aproveite enquanto sua assinatura estiver ativa.`,
+          type: "info",
+        } as any);
+        toast.success(`Funcionalidades do plano ${sourcePlanName} liberadas!`);
+      } else {
+        toast.success("Funcionalidades extras removidas. O tenant volta às features do plano contratado.");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      setOverridesDialogOpen(false);
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Falha ao aplicar overrides"));
+    } finally {
+      setOverridesSaving(false);
+    }
+  };
+
     if (!msgBody.trim() || !msgTenant) return;
     setMsgSending(true);
     try {
