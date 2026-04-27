@@ -765,6 +765,9 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => openAssignPlan(tenant)}>
                           <CreditCard className="mr-2 h-4 w-4" /> Gerenciar Plano
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openGrantTrial(tenant)}>
+                          <Gift className="mr-2 h-4 w-4 text-pink-500" /> Liberar Trial Grátis
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {/* Support actions */}
                         <DropdownMenuItem onClick={() => handleResendVerification(tenant)}>
