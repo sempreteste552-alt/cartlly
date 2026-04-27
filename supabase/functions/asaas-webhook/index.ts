@@ -25,8 +25,20 @@ Deno.serve(async (req) => {
   );
 
   try {
+    const asaasToken = req.headers.get("asaas-access-token");
+    const expectedToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
+    
+    if (expectedToken && asaasToken !== expectedToken) {
+      console.error("[asaas-webhook] Unauthorized: Invalid asaas-access-token");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+        status: 401, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     const payload = await req.json();
     console.log("Asaas webhook received:", JSON.stringify(payload).slice(0, 500));
+
 
     const event = payload.event as string;
     const payment = payload.payment;
