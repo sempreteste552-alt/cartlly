@@ -1117,6 +1117,85 @@ export default function SuperAdminTenants() {
         </DialogContent>
       </Dialog>
 
+      {/* Feature Overrides Dialog */}
+      <Dialog open={overridesDialogOpen} onOpenChange={setOverridesDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Liberar Funcionalidades Extras — {overridesTenant?.display_name || overridesTenant?.store?.store_name}
+            </DialogTitle>
+            <DialogDescription>
+              Mantém o plano atual do tenant, mas libera os recursos de um plano superior. Se a assinatura ficar inadimplente, expirar ou for bloqueada, todas as funcionalidades (inclusive as extras) são automaticamente revogadas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1">
+              <p><span className="text-muted-foreground">Plano contratado atual:</span>{" "}
+                <span className="font-medium text-foreground">{overridesTenant?.subscription?.plan?.name || overridesTenant?.subscription?.tenant_plans?.name || "—"}</span>
+              </p>
+              <p><span className="text-muted-foreground">Status da assinatura:</span>{" "}
+                <span className="font-medium text-foreground">{overridesTenant?.subscription?.status || "—"}</span>
+              </p>
+              {overridesTenant?.subscription?.feature_overrides && Object.keys(overridesTenant.subscription.feature_overrides).length > 0 && (
+                <p className="text-amber-600">
+                  ⚡ Já possui {Object.keys(overridesTenant.subscription.feature_overrides).length} funcionalidade(s) extra(s) liberada(s).
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" /> Liberar funções do plano
+              </Label>
+              <Select value={overridesSourcePlanId} onValueChange={setOverridesSourcePlanId}>
+                <SelectTrigger><SelectValue placeholder="Selecione o plano superior" /></SelectTrigger>
+                <SelectContent>
+                  {plans?.filter((p) => p.active).map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {formatCurrency(plan.price)}/mês
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Todos os recursos ativos desse plano serão desbloqueados para o tenant, sem alterar o valor cobrado.
+              </p>
+            </div>
+
+            {overridesSourcePlanId && (() => {
+              const sp: any = plans?.find((p) => p.id === overridesSourcePlanId);
+              const feats = (typeof sp?.features === "object" && !Array.isArray(sp?.features)) ? sp.features : {};
+              const enabled = Object.entries(feats).filter(([_, v]) => typeof v === "boolean" && v === true).map(([k]) => k);
+              return (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+                  <p className="font-medium text-foreground mb-1">{enabled.length} recursos serão liberados:</p>
+                  <p className="text-muted-foreground leading-relaxed">{enabled.join(", ") || "Nenhum recurso booleano ativo neste plano."}</p>
+                </div>
+              );
+            })()}
+
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 pt-2">
+              <Button
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={() => handleApplyOverrides("clear")}
+                disabled={overridesSaving || !overridesTenant?.subscription?.feature_overrides || Object.keys(overridesTenant?.subscription?.feature_overrides || {}).length === 0}
+              >
+                Remover liberação
+              </Button>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setOverridesDialogOpen(false)}>Cancelar</Button>
+                <Button onClick={() => handleApplyOverrides("grant")} disabled={overridesSaving || !overridesSourcePlanId}>
+                  {overridesSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                  {overridesSaving ? "Liberando..." : "Liberar Funcionalidades"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {editTenant && (
         <SensitiveEditDialog
           open={!!editTenant}
