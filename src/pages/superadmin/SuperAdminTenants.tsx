@@ -61,6 +61,12 @@ export default function SuperAdminTenants() {
   const [trialPlanId, setTrialPlanId] = useState("");
   const [trialDays, setTrialDays] = useState<number>(7);
   const [trialSaving, setTrialSaving] = useState(false);
+
+  // Feature overrides (liberar funcionalidades de planos superiores)
+  const [overridesDialogOpen, setOverridesDialogOpen] = useState(false);
+  const [overridesTenant, setOverridesTenant] = useState<any>(null);
+  const [overridesSourcePlanId, setOverridesSourcePlanId] = useState<string>("");
+  const [overridesSaving, setOverridesSaving] = useState(false);
   const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
