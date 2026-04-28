@@ -1353,11 +1353,7 @@ export default function LojaLayout() {
               <span className="text-[10px] mt-0.5 font-medium">{t.store.home}</span>
             </Link>
             <button
-              onClick={() => {
-                const searchInput = document.querySelector(`input[placeholder="${t.store.searchPlaceholder}"]`) as HTMLInputElement;
-                if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
-                else navigate(basePath);
-              }}
+              onClick={() => setSearchSheetOpen(true)}
               className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground transition-colors"
             >
               <Search className="h-5 w-5" />
