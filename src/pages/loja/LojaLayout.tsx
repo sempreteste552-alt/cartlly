@@ -666,33 +666,34 @@ export default function LojaLayout() {
   }
 
   if (isLoading) {
-    const splashLogo = (settingsBySlug as any)?.logo_url;
-    const splashName = (settingsBySlug as any)?.store_name || slug;
-    const splashBg = (settingsBySlug as any)?.primary_color ? undefined : undefined;
+    const cachedLogo = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_logo_${slug}`) : null;
+    const cachedName = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_name_${slug}`) : null;
+    const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo;
+    const splashName = (settingsBySlug as any)?.store_name || cachedName || slug;
     return (
       <div
-        className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground"
-        style={{ backgroundColor: (settingsBySlug as any)?.background_color || undefined }}
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+        style={{ backgroundColor: "#ffffff" }}
       >
-        <div className="flex flex-col items-center gap-6 animate-in fade-in duration-500">
+        <div className="flex flex-col items-center gap-8">
           {splashLogo ? (
             <img
               src={splashLogo}
               alt={splashName || "Loja"}
               className="object-contain animate-pulse"
-              style={{ maxHeight: "120px", maxWidth: "260px", width: "auto" }}
+              style={{
+                maxHeight: "min(40vh, 320px)",
+                maxWidth: "min(85vw, 420px)",
+                width: "auto",
+                animationDuration: "1.4s",
+              }}
             />
           ) : splashName ? (
-            <div className="text-3xl font-bold tracking-tight animate-pulse">{splashName}</div>
-          ) : (
-            <div className="h-16 w-16 rounded-full border-4 border-muted border-t-primary animate-spin" />
-          )}
-          {splashLogo && (
-            <div className="flex gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="text-4xl sm:text-5xl font-bold tracking-tight text-black animate-pulse" style={{ animationDuration: "1.4s" }}>
+              {splashName}
             </div>
+          ) : (
+            <div className="h-20 w-20 rounded-full border-4 border-gray-200 border-t-gray-800 animate-spin" />
           )}
         </div>
       </div>
