@@ -666,8 +666,8 @@ export default function LojaLayout() {
   }
 
   if (isLoading) {
-    const splashLogo = settingsBySlug?.logo_url;
-    const splashName = settingsBySlug?.store_name || slug;
+    const splashLogo = (settingsBySlug as any)?.logo_url;
+    const splashName = (settingsBySlug as any)?.store_name || slug;
     const splashBg = (settingsBySlug as any)?.primary_color ? undefined : undefined;
     return (
       <div
