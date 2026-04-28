@@ -875,8 +875,8 @@ export default function LojaLayout() {
               </div>
             </header>
           ) : (
-          <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-4 overflow-hidden">
+          <header className="border-b border-border shadow-sm transition-all duration-300 backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
+            <div className={`max-w-7xl mx-auto px-2 sm:px-4 flex items-center gap-1 sm:gap-4 overflow-hidden transition-all duration-300 ${headerCompact ? 'py-0.5 sm:py-1' : 'py-1.5 sm:py-2'}`}>
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
