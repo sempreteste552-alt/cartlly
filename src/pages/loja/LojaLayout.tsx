@@ -169,6 +169,11 @@ export default function LojaLayout() {
   const location = useLocation();
   const basePath = slug ? `/loja/${slug}` : "";
   const localeTag = getLocaleTag(locale);
+
+  useEffect(() => {
+    setMobileMenu(false);
+  }, [location.pathname, location.search]);
+
   const storeText = {
     pt: {
       accessStore: "Acesse uma loja pelo seu endereço específico ou domínio.",
