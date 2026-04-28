@@ -93,6 +93,18 @@ export default function LojaLayout() {
   const lastScrollY = useRef(0);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
+  const [headerCompact, setHeaderCompact] = useState(false);
+
+  // Shrink header on scroll for better navigation
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      setHeaderCompact(y > 40);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
