@@ -129,8 +129,8 @@ export default function LojaHome() {
 
   // While products are loading on the home, keep showing the store splash
   // so the user never sees an empty/half-rendered storefront.
-  if (prodLoading && (!products || products.length === 0)) {
-    return <StoreLogoSplash logoUrl={settings?.logo_url} storeName={settings?.store_name} />;
+  if (prodLoading && (!products || (products as any[]).length === 0)) {
+    return <StoreLogoSplash logoUrl={(settings as any)?.logo_url} storeName={(settings as any)?.store_name} />;
   }
 
   if (!prodLoading && (!products || products.length === 0)) {
