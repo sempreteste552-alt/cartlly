@@ -93,6 +93,18 @@ export default function LojaLayout() {
   const lastScrollY = useRef(0);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
+  const [headerCompact, setHeaderCompact] = useState(false);
+
+  // Shrink header on scroll for better navigation
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop;
+      setHeaderCompact(y > 40);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -863,8 +875,8 @@ export default function LojaLayout() {
               </div>
             </header>
           ) : (
-          <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-4 overflow-hidden">
+          <header className="border-b border-border shadow-sm transition-all duration-300 backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
+            <div className={`max-w-7xl mx-auto px-2 sm:px-4 flex items-center gap-1 sm:gap-4 overflow-hidden transition-all duration-300 ${headerCompact ? 'py-0.5 sm:py-1' : 'py-1.5 sm:py-2'}`}>
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
@@ -876,7 +888,7 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
+                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto", transition: "height 300ms ease" }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
