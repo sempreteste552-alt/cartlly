@@ -1135,51 +1135,124 @@ export default function LojaLayout() {
               </div>
             )}
 
-            {mobileMenu && (
-              <div
-                className="lg:hidden fixed inset-0 z-30 bg-black/35 backdrop-blur-[1px]"
-                onClick={() => setMobileMenu(false)}
-              />
-            )}
+            {/* Backdrop */}
             <div
-              className={`lg:hidden fixed left-0 right-0 top-[56px] z-40 max-h-[calc(100dvh-56px)] overflow-hidden overflow-y-auto border-t border-border shadow-2xl transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                mobileMenu ? "translate-y-0 opacity-100 duration-500 pointer-events-auto" : "-translate-y-3 opacity-0 duration-300 pointer-events-none"
+              className={`lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+                mobileMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+              onClick={() => setMobileMenu(false)}
+              aria-hidden="true"
+            />
+
+            {/* Side drawer (left → right) */}
+            <aside
+              className={`lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-[340px] flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                mobileMenu ? "translate-x-0" : "-translate-x-full"
               }`}
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
               aria-hidden={!mobileMenu}
+              role="dialog"
+              aria-modal="true"
             >
-              <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1 relative z-10">
-                {settings?.instagram_url && (
-                  <div
-                    className="flex items-center gap-3 px-3 pb-3 mb-2 border-b border-border"
-                    style={{
-                      opacity: mobileMenu ? 1 : 0,
-                      transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                      transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 0ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 0ms",
-                    }}
+              {/* Header com logo e fechar */}
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0"
+                style={{ background: `linear-gradient(135deg, ${primaryColor}15, transparent)` }}
+              >
+                <Link to={basePath || "/"} onClick={() => setMobileMenu(false)} className="flex items-center gap-2 min-w-0">
+                  {settings?.logo_url ? (
+                    <img src={settings.logo_url} alt={storeName} className="h-9 max-w-[160px] object-contain" />
+                  ) : (
+                    <span className="font-bold text-base truncate" style={{ color: headerTextColor }}>{storeName}</span>
+                  )}
+                  {settings?.is_verified && (
+                    <BadgeCheck className="h-4 w-4 shrink-0 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                  )}
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full shrink-0"
+                  onClick={() => setMobileMenu(false)}
+                  aria-label="Fechar menu"
+                  style={{ color: headerTextColor }}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Conta do usuário */}
+              <div className="px-4 py-3 border-b border-border shrink-0">
+                {user ? (
+                  <button
+                    onClick={() => { setMobileMenu(false); setProfileModalOpen(true); }}
+                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left"
                   >
-                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                      <img src={iconInstagram} alt="Instagram" className="h-7 w-7 rounded-lg" />
-                    </a>
-                  </div>
+                    <div
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)` }}
+                    >
+                      {(customer?.name || user.email || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{customer?.name || t.store.myAccount}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </button>
+                ) : (
+                  <Button
+                    className="w-full h-10"
+                    style={{ backgroundColor: primaryColor, color: "#fff" }}
+                    onClick={() => { setMobileMenu(false); setAuthModalOpen(true); }}
+                  >
+                    <User className="h-4 w-4 mr-2" /> {t.auth.login}
+                  </Button>
                 )}
-                {!isMinimalMenu && (
-                  <>
-                    <div className="pt-2 pb-1">
-                      <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">{t.store.categories}</p>
-                      <div className="flex flex-wrap gap-2 px-3 mb-4">
-                        {categories?.map((cat, i) => (
+              </div>
+
+              {/* Conteúdo rolável */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                <nav className="px-3 py-3 space-y-4">
+                  {/* Navegação principal */}
+                  <div>
+                    <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">{t.store.menu || "Navegação"}</p>
+                    <div className="space-y-0.5">
+                      {[
+                        { icon: Home, label: t.store.home, to: basePath || "/" },
+                        { icon: Package, label: t.sidebar.products, to: basePath || "/" },
+                        { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
+                        { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
+                      ].map((item, i) => (
+                        <Link
+                          key={i}
+                          to={item.to}
+                          onClick={() => setMobileMenu(false)}
+                          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
+                          style={{ color: headerTextColor }}
+                        >
+                          <div
+                            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                          >
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <span className="text-sm font-medium">{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Categorias */}
+                  {!isMinimalMenu && categories && categories.length > 0 && (
+                    <div>
+                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{t.store.categories}</p>
+                      <div className="flex flex-wrap gap-1.5 px-2">
+                        {categories.map((cat, i) => (
                           <Badge
                             key={cat.id}
                             variant="outline"
-                            className="shrink-0 cursor-pointer transition-all px-3 py-1 text-xs"
-                            style={{
-                              opacity: mobileMenu ? 1 : 0,
-                              transform: mobileMenu ? "translateY(0)" : "translateY(10px)",
-                              transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms`,
-                              borderColor: primaryColor,
-                              color: primaryColor,
-                            }}
+                            className="cursor-pointer transition-all px-2.5 py-1 text-xs hover:scale-105"
+                            style={{ borderColor: `${primaryColor}50`, color: primaryColor, backgroundColor: `${primaryColor}08` }}
                             onClick={() => {
                               setMobileMenu(false);
                               const el = document.getElementById(`category-${cat.name}`);
@@ -1197,123 +1270,98 @@ export default function LojaLayout() {
                         ))}
                       </div>
                     </div>
+                  )}
 
-                    {[
-                      { icon: Home, label: t.store.home, to: basePath || "/" },
-                      { icon: Package, label: t.sidebar.products, to: basePath || "/" },
-                      { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons` },
-                      { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio` },
-                      ...(user ? [{ icon: User, label: t.store.myAccount, to: "#", onClick: () => setProfileModalOpen(true) }] : [{ icon: User, label: t.auth.login, to: "#", onClick: () => setAuthModalOpen(true) }]),
-                      ...(user ? [{ icon: LogOut, label: t.auth.logout, to: "#", onClick: () => signOut() }] : []),
-                    ].map((item: any, i) => {
-                      const content = (
-                        <div className="flex items-center gap-3 w-full">
-                          <item.icon
-                            className="h-5 w-5 transition-all duration-500"
-                            style={{
-                              color: primaryColor,
-                              opacity: mobileMenu ? 1 : 0,
-                              transform: mobileMenu ? "translateX(0) scale(1)" : "translateX(-12px) scale(0.8)",
-                              transitionDelay: mobileMenu ? `${i * 80 + 100}ms` : "0ms",
-                            }}
+                  {/* Localização / CEP */}
+                  {!isMinimalMenu && (
+                    <div className="px-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{t.shipping.calculateShipping}</p>
+                      <div className="rounded-lg border border-border p-3 space-y-2" style={{ backgroundColor: `${primaryColor}05` }}>
+                        {globalCity && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor }} />
+                            <span className="truncate font-medium">{globalCity}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder={t.store.zipPlaceholder}
+                            className="bg-background border-border font-mono h-10 text-sm"
+                            value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                            onChange={(e) => handleGlobalCepChange(e.target.value)}
+                            inputMode="numeric"
+                            maxLength={9}
                           />
-                          <span
-                            className="text-sm font-medium transition-all duration-500"
-                            style={{
-                              opacity: mobileMenu ? 1 : 0,
-                              transform: mobileMenu ? "translateX(0)" : "translateX(-20px)",
-                              transitionDelay: mobileMenu ? `${i * 80 + 160}ms` : "0ms",
-                              filter: mobileMenu ? "blur(0)" : "blur(4px)",
-                            }}
+                          <Button
+                            variant="outline"
+                            className="h-10 aspect-square p-0 shrink-0"
+                            onClick={detectMyLocation}
+                            title={t.store.detectLocation}
                           >
-                            {item.label}
-                          </span>
+                            <LocateFixed className="h-4 w-4" />
+                          </Button>
                         </div>
-                      );
-
-                      const className = "flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/10 active:opacity-70 transition-all duration-300 focus:outline-none select-none touch-manipulation";
-
-                      return (
-                        <div
-                          key={i}
-                          style={{
-                            opacity: mobileMenu ? 1 : 0,
-                            transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                            transition: `opacity 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms`,
-                          }}
-                        >
-                          {item.onClick ? (
-                            <button className={className} onClick={() => { setMobileMenu(false); item.onClick(); }} style={{ color: headerTextColor, width: '100%', textAlign: 'left' }}>
-                              {content}
-                            </button>
-                          ) : item.external ? (
-                            <a href={item.to} target="_blank" rel="noopener noreferrer" className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
-                              {content}
-                            </a>
-                          ) : (
-                            <Link to={item.to} className={className} onClick={() => setMobileMenu(false)} style={{ color: headerTextColor }}>
-                              {content}
-                            </Link>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    <div 
-                      className="px-3 py-4 border-t border-border mt-2 space-y-2"
-                      style={{
-                        opacity: mobileMenu ? 1 : 0,
-                        transform: mobileMenu ? "translateY(0)" : "translateY(12px)",
-                        transition: "opacity 0.4s cubic-bezier(0.16,1,0.3,1) 400ms, transform 0.4s cubic-bezier(0.16,1,0.3,1) 400ms",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="h-4 w-4" style={{ color: primaryColor }} />
-                        <span className="text-sm font-semibold">{t.shipping.calculateShipping}</span>
                       </div>
-                      {globalCity && (
-                        <p className="text-xs text-muted-foreground mb-1">📍 {globalCity}</p>
+                    </div>
+                  )}
+
+                  {/* Preferências */}
+                  {!isMinimalMenu && (
+                    <div>
+                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Preferências</p>
+                      <div className="px-2 py-2 flex items-center justify-between rounded-lg hover:bg-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
+                            <span className="text-sm">🌙</span>
+                          </div>
+                          <span className="text-sm font-medium">{t.misc.darkMode}</span>
+                        </div>
+                        <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
+                      </div>
+                      {settings?.is_premium_plan && (
+                        <div className="px-2 py-1">
+                          <LanguageSelector compact className="flex shrink-0" skipGate />
+                        </div>
                       )}
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder={t.store.zipPlaceholder}
-                          className="bg-secondary border-border font-mono h-11"
-                          value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                          onChange={(e) => handleGlobalCepChange(e.target.value)}
-                          inputMode="numeric"
-                          maxLength={9}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="h-11 aspect-square p-0"
-                          onClick={detectMyLocation}
-                          title={t.store.detectLocation}
-                        >
-                          <LocateFixed className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">{t.store.shippingHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingHelpSuffix}</p>
                     </div>
-                  </>
-                )}
+                  )}
 
-                {!isMinimalMenu && (
-                  <>
-                    <div className="px-3 py-2 border-t border-border mt-2 flex items-center gap-2">
-                      <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
-                      <span className="text-sm">{t.misc.darkMode}</span>
+                  {/* Notificações push */}
+                  <div className="px-2">
+                    <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+                  </div>
+
+                  {/* Social */}
+                  {settings?.instagram_url && (
+                    <div className="px-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Redes sociais</p>
+                      <a
+                        href={settings.instagram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 hover:scale-105 transition-transform"
+                      >
+                        <img src={iconInstagram} alt="Instagram" className="h-9 w-9 rounded-lg" />
+                        <span className="text-sm font-medium">Instagram</span>
+                      </a>
                     </div>
-                    {settings?.is_premium_plan && (
-                      <LanguageSelector compact className="flex shrink-0 px-3 py-2 border-t" skipGate />
-                    )}
-                  </>
-                )}
+                  )}
+                </nav>
+              </div>
 
-                <div className="px-3 py-2">
-                  <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+              {/* Rodapé fixo: logout */}
+              {user && (
+                <div className="border-t border-border px-3 py-3 shrink-0">
+                  <button
+                    onClick={() => { setMobileMenu(false); signOut(); }}
+                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="text-sm font-medium">{t.auth.logout}</span>
+                  </button>
                 </div>
-              </nav>
-            </div>
+              )}
+            </aside>
           </header>
           )}
 
