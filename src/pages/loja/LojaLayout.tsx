@@ -1131,16 +1131,16 @@ export default function LojaLayout() {
 
             {mobileMenu && (
               <div
-                className="lg:hidden fixed inset-0 z-30 bg-black/30"
-                style={{ top: "inherit" }}
+                className="lg:hidden fixed inset-0 z-30 bg-black/35 backdrop-blur-[1px]"
                 onClick={() => setMobileMenu(false)}
               />
             )}
             <div
-              className={`lg:hidden overflow-hidden overflow-y-auto border-t border-border transition-all ease-[cubic-bezier(0.16,1,0.3,1)] relative z-40 ${
-                mobileMenu ? "max-h-[80vh] opacity-100 duration-700" : "max-h-0 opacity-0 duration-500"
+              className={`lg:hidden fixed left-0 right-0 top-[56px] z-40 max-h-[calc(100dvh-56px)] overflow-hidden overflow-y-auto border-t border-border shadow-2xl transition-all ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                mobileMenu ? "translate-y-0 opacity-100 duration-500 pointer-events-auto" : "-translate-y-3 opacity-0 duration-300 pointer-events-none"
               }`}
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
+              aria-hidden={!mobileMenu}
             >
               <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1 relative z-10">
                 {settings?.instagram_url && (
@@ -1439,7 +1439,6 @@ export default function LojaLayout() {
                 <h3 className="font-bold mb-3">{t.store.contact}</h3>
                 <div className="space-y-2 text-sm opacity-60">
                   {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
-                  {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
                   {settings?.store_address && <p>📍 {settings.store_address}</p>}
                   {settings?.google_maps_url && (
                     <a 
