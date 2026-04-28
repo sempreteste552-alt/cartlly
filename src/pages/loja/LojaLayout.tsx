@@ -1340,42 +1340,7 @@ export default function LojaLayout() {
                     </div>
                   )}
 
-                  {/* Contato */}
-                  {(settings?.store_whatsapp || settings?.store_phone) && (
-                    <div>
-                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Contato</p>
-                      <div className="space-y-0.5">
-                        {settings?.store_whatsapp && (
-                          <a
-                            href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-emerald-500/10 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500/15 text-emerald-500">
-                              <MessageCircle className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">WhatsApp</span>
-                          </a>
-                        )}
-                        {settings?.store_phone && (
-                          <a
-                            href={`tel:${settings.store_phone}`}
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
-                              <Phone className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">{settings.store_phone}</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {/* Contato removido — já presente no rodapé e WhatsApp flutuante */}
 
                   {/* Preferências */}
                   {!isMinimalMenu && (
