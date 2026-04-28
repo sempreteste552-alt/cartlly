@@ -1345,6 +1345,7 @@ export default function LojaLayout() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         <div className="border-b border-border bg-secondary/50">
