@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SuperAdminSidebar } from "./SuperAdminSidebar";
 import { Outlet } from "react-router-dom";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { PlatformLogoSplash } from "@/components/PlatformLogoSplash";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,12 +63,7 @@ export default function SuperAdminLayout() {
             <ThemeToggle scope="superadmin" applyToRoot={false} />
           </header>
           <main className="flex-1 overflow-auto p-4 sm:p-6">
-            <Suspense fallback={
-              <div className="space-y-4">
-                <div className="h-8 w-1/4 bg-muted animate-pulse rounded" />
-                <div className="h-64 bg-muted animate-pulse rounded" />
-              </div>
-            }>
+            <Suspense fallback={<PlatformLogoSplash contained />}>
               <Outlet />
             </Suspense>
           </main>
