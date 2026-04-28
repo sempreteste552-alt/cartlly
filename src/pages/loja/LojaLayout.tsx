@@ -864,8 +864,8 @@ export default function LojaLayout() {
             </header>
           ) : (
           <header className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 flex items-center gap-1 sm:gap-4 overflow-hidden">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-4 overflow-hidden">
+              <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
 
@@ -876,8 +876,8 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `${logoSize}px`, maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
-                        className="object-contain block"
+                        style={{ ['--logo-h' as any]: `${Math.round(logoSize * 0.7)}px`, ['--logo-h-sm' as any]: `${logoSize}px`, height: 'var(--logo-h)', maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
+                        className="object-contain block sm:!h-[var(--logo-h-sm)]"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck
