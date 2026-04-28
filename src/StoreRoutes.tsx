@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
+import { StoreLogoSplash } from "@/components/storefront/StoreLogoSplash";
 import React from "react";
 const LojaLayout = React.lazy(() => import("./pages/loja/LojaLayout"));
 const LojaHome = React.lazy(() => import("./pages/loja/LojaHome"));
@@ -13,7 +14,7 @@ const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
 export default function StoreRoutes() {
   return (
     <CustomerAuthProvider>
-      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
+      <React.Suspense fallback={<StoreLogoSplash />}>
       <Routes>
         <Route element={<LojaLayout />}>
           <Route index element={<LojaHome />} />

@@ -9,6 +9,7 @@ import { I18nProvider } from "@/i18n";
 import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
+import { StoreLogoSplash } from "@/components/storefront/StoreLogoSplash";
 
 
 
@@ -118,6 +119,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 
 const App = () => {
   const isPlatform = isPlatformHost(window.location.hostname);
+  const isStorePath = window.location.pathname.startsWith("/loja/") || !isPlatform;
 
   return (
     <ErrorBoundary>
@@ -128,7 +130,7 @@ const App = () => {
           <Sonner />
           
           <BrowserRouter>
-            <Suspense fallback={<div className="min-h-screen bg-background" />}>
+            <Suspense fallback={isStorePath ? <StoreLogoSplash /> : <div className="min-h-screen bg-background" />}>
             <ScrollToTop />
             <AuthProvider>
               {!isPlatform ? (
