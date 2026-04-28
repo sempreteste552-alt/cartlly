@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { useLoja } from "@/contexts/LojaContext";
+import { useLojaContext } from "./LojaLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,9 +50,8 @@ type OrderRow = {
 export default function LojaPedidos() {
   const navigate = useNavigate();
   const { customer, user, customerLoading, loading } = useCustomerAuth();
-  const { settings, basePath } = useLoja() as any;
-  const primaryColor = settings?.primary_color || "#6d28d9";
-  const storeUserId = settings?.user_id;
+  const { settings, basePath, storeUserId } = useLojaContext();
+  const primaryColor = (settings as any)?.primary_color || "#6d28d9";
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
