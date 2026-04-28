@@ -66,6 +66,60 @@ import { createContext, useContext } from "react";
 const LojaContext = createContext<LojaContextType | null>(null);
 export const useLojaContext = () => useContext(LojaContext)!;
 
+function useLogoCrop(src?: string) {
+  const [crop, setCrop] = useState({ left: 0, right: 0, top: 0, bottom: 0, ratio: 4 });
+
+  useEffect(() => {
+    if (!src) return;
+    let cancelled = false;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) return;
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let minX = w, minY = h, maxX = 0, maxY = 0;
+        for (let y = 0; y < h; y += 2) {
+          for (let x = 0; x < w; x += 2) {
+            const i = (y * w + x) * 4;
+            const a = data[i + 3];
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            if (a > 24 && Math.min(r, g, b) < 245) {
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+            }
+          }
+        }
+        if (cancelled || minX >= maxX || minY >= maxY) return;
+        const padX = Math.round(w * 0.015);
+        const padY = Math.round(h * 0.04);
+        minX = Math.max(0, minX - padX);
+        maxX = Math.min(w, maxX + padX);
+        minY = Math.max(0, minY - padY);
+        maxY = Math.min(h, maxY + padY);
+        setCrop({ left: minX / w, right: (w - maxX) / w, top: minY / h, bottom: (h - maxY) / h, ratio: (maxX - minX) / Math.max(1, maxY - minY) });
+      } catch {
+        setCrop({ left: 0, right: 0, top: 0, bottom: 0, ratio: img.naturalWidth / Math.max(1, img.naturalHeight) });
+      }
+    };
+    img.src = src;
+    return () => { cancelled = true; };
+  }, [src]);
+
+  return crop;
+}
+
 export default function LojaLayout() {
   const { slug: rawSlug } = useParams();
   const slug = rawSlug?.toLowerCase();
