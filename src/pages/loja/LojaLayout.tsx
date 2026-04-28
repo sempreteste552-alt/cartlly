@@ -903,17 +903,17 @@ export default function LojaLayout() {
               <Link to={basePath || "/"} className="flex flex-1 min-w-0 lg:flex-none items-center gap-1 sm:gap-2">
                 <div className="relative inline-block min-w-0 max-w-full">
                   {settings?.logo_url ? (
-                    <div className="relative inline-block max-w-full">
+                    <div className="inline-flex max-w-full items-center" style={{ gap: `${logoBadgeGap}px` }}>
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `min(${storefrontLogoWidth}px, 100%)`, width: "auto", transition: "height 300ms ease" }}
+                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `min(${storefrontLogoWidth}px, calc(100% - ${logoBadgeSize + logoBadgeGap}px))`, width: "auto", transition: "height 300ms ease" }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck
-                          className="absolute top-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                          style={{ ...verifiedBadgeStyle, right: `-${logoBadgeOffset}px`, transform: 'translateY(-50%)' }}
+                          className="shrink-0 stroke-white stroke-[2.5px] drop-shadow-md"
+                          style={verifiedBadgeStyle}
                         />
                       )}
                     </div>
