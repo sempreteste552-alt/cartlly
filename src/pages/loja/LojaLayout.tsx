@@ -1215,7 +1215,7 @@ export default function LojaLayout() {
                 <nav className="px-3 py-3 space-y-4">
                   {/* Navegação principal */}
                   <div>
-                    <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">{t.store.menu || "Navegação"}</p>
+                    <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Navegação</p>
                     <div className="space-y-0.5">
                       {[
                         { icon: Home, label: t.store.home, to: basePath || "/" },
