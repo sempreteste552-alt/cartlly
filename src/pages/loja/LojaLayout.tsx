@@ -666,15 +666,35 @@ export default function LojaLayout() {
   }
 
   if (isLoading) {
+    const splashLogo = settingsBySlug?.logo_url;
+    const splashName = settingsBySlug?.store_name || slug;
+    const splashBg = (settingsBySlug as any)?.primary_color ? undefined : undefined;
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="h-16 border-b border-border bg-card/50" />
-        <main className="flex-1 max-w-7xl mx-auto w-full p-4 space-y-8">
-          <div className="h-64 bg-muted animate-pulse rounded-xl" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />)}
-          </div>
-        </main>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground"
+        style={{ backgroundColor: (settingsBySlug as any)?.background_color || undefined }}
+      >
+        <div className="flex flex-col items-center gap-6 animate-in fade-in duration-500">
+          {splashLogo ? (
+            <img
+              src={splashLogo}
+              alt={splashName || "Loja"}
+              className="object-contain animate-pulse"
+              style={{ maxHeight: "120px", maxWidth: "260px", width: "auto" }}
+            />
+          ) : splashName ? (
+            <div className="text-3xl font-bold tracking-tight animate-pulse">{splashName}</div>
+          ) : (
+            <div className="h-16 w-16 rounded-full border-4 border-muted border-t-primary animate-spin" />
+          )}
+          {splashLogo && (
+            <div className="flex gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="h-2 w-2 rounded-full bg-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
