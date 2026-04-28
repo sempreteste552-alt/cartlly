@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
+import { PlatformLogoSplash } from "@/components/PlatformLogoSplash";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -278,11 +279,7 @@ export function AdminLayout() {
       <main className="flex-1 overflow-auto p-4 sm:p-6">
         <OnboardingTutorial />
         <TrialBanner />
-        <Suspense fallback={
-          <div className="flex items-center justify-center h-64">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        }>
+        <Suspense fallback={<PlatformLogoSplash contained />}>
           <Outlet />
         </Suspense>
       </main>

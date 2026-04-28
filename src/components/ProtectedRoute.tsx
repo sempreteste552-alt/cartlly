@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import cartlyLogo from "@/assets/cartly-logo.png";
+import { PlatformLogoSplash } from "@/components/PlatformLogoSplash";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, user, loading, maintenanceMode } = useAuth();
@@ -85,7 +85,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isStillLoading = loading || roleLoading || (!isSuperAdmin && (profileLoading || storeLoading));
 
   if (isStillLoading) {
-    return <div className="min-h-screen bg-background" />;
+    return <PlatformLogoSplash />;
   }
 
   if (!session) {
