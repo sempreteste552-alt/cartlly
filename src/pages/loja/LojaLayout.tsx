@@ -1314,7 +1314,7 @@ export default function LojaLayout() {
                       <div className="space-y-0.5">
                         {storePages.map((page, idx) => (
                           <Link
-                            key={page.id}
+                            key={page.slug}
                             to={`${basePath}/p/${page.slug}`}
                             onClick={() => setMobileMenu(false)}
                             className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
