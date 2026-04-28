@@ -8,6 +8,7 @@ const LojaProduto = React.lazy(() => import("./pages/loja/LojaProduto"));
 const LojaCheckout = React.lazy(() => import("./pages/loja/LojaCheckout"));
 const LojaRastreio = React.lazy(() => import("./pages/loja/LojaRastreio"));
 const LojaCupons = React.lazy(() => import("./pages/loja/LojaCupons"));
+const LojaPedidos = React.lazy(() => import("./pages/loja/LojaPedidos"));
 const LojaPagina = React.lazy(() => import("./pages/loja/LojaPagina"));
 const LojaPolitica = React.lazy(() => import("./pages/loja/LojaPolitica"));
 
@@ -23,6 +24,8 @@ export default function StoreRoutes() {
           <Route path="rastreio" element={<LojaRastreio />} />
           <Route path="rastreio/:orderId" element={<LojaRastreio />} />
           <Route path="cupons" element={<LojaCupons />} />
+          <Route path="pedidos" element={<LojaPedidos />} />
+          <Route path="conta/pedidos" element={<LojaPedidos />} />
           <Route path="p/:pageSlug" element={<LojaPagina />} />
           <Route path="legal/:policySlug" element={<LojaPolitica />} />
         </Route>
