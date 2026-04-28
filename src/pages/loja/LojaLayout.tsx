@@ -656,7 +656,7 @@ export default function LojaLayout() {
   const rawLogoSize = Number((settings as any)?.logo_size ?? 40);
   const logoSize = Number.isFinite(rawLogoSize) ? Math.max(24, Math.min(rawLogoSize, 180)) : 40;
   const logoBadgeSize = Math.max(11, Math.min(Math.round(logoSize * 0.20), 17));
-  const logoBadgeOffset = Math.round(logoBadgeSize * 0.72);
+  const logoBadgeGap = Math.max(4, Math.min(Math.round(logoBadgeSize * 0.34), 6));
   const storefrontLogoWidth = Math.max(150, Math.min(Math.round(logoSize * 6), 340));
   const checkoutLogoHeight = Math.max(48, Math.min(Math.round(logoSize * 1.25), 130));
   const checkoutLogoWidth = Math.max(180, Math.min(Math.round(checkoutLogoHeight * 6), 380));
@@ -859,17 +859,17 @@ export default function LojaLayout() {
 
                  <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                    {settings?.logo_url ? (
-                     <div className="relative inline-block shrink-0">
+                     <div className="inline-flex items-center justify-center shrink-0" style={{ gap: `${logoBadgeGap}px` }}>
                        <img
                          src={settings.logo_url}
                          alt={storeName}
-                         style={{ height: `${checkoutLogoHeight}px`, maxWidth: `${checkoutLogoWidth}px`, width: "auto" }}
+                          style={{ height: `${checkoutLogoHeight}px`, maxWidth: `min(${checkoutLogoWidth}px, calc(100% - ${logoBadgeSize + logoBadgeGap}px))`, width: "auto" }}
                          className="object-contain block"
                        />
                        {settings?.is_verified && (
                          <BadgeCheck
-                           className="absolute top-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                            style={{ ...verifiedBadgeStyle, right: `-${logoBadgeOffset}px`, transform: 'translateY(-50%)' }}
+                            className="shrink-0 stroke-white stroke-[2.5px] drop-shadow-md"
+                            style={verifiedBadgeStyle}
                          />
                        )}
                      </div>
