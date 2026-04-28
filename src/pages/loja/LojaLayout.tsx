@@ -805,6 +805,7 @@ export default function LojaLayout() {
   const buttonTextColor = isDarkMode ? "#ffffff" : (settings?.button_text_color || "#ffffff");
   const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
   const isCheckout = location.pathname.includes("/checkout");
+  const isProductPage = location.pathname.includes("/produto/");
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
@@ -902,7 +903,7 @@ export default function LojaLayout() {
             </div>
           )}
 
-          {isCheckout ? (
+          {isProductPage ? null : isCheckout ? (
             <header
               className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95 sticky top-0 z-40"
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
@@ -1317,6 +1318,7 @@ export default function LojaLayout() {
           )}
 
           {/* Categories bar for desktop with background image */}
+          {!isProductPage && (
           <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
             <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
@@ -1343,8 +1345,10 @@ export default function LojaLayout() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
+        {!isProductPage && (
         <div className="border-b border-border bg-secondary/50">
           <div className="max-w-7xl mx-auto px-4">
             <button
@@ -1391,9 +1395,10 @@ export default function LojaLayout() {
             )}
           </div>
         </div>
+        )}
 
         <main>
-          <Suspense fallback={splash}>
+          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-muted border-t-transparent animate-spin" style={{ borderTopColor: primaryColor }} /></div>}>
             <Outlet />
             <FlyToCart />
           </Suspense>

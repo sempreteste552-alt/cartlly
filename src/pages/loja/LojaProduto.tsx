@@ -423,12 +423,28 @@ export default function LojaProduto() {
 
           <div className="flex items-start justify-between gap-2">
             <h1 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: "var(--store-font-heading)" }}>{localizedProductName || product.name}</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => product && wishlist.toggleWishlist(product.id)} title={uiText.favorite}>
-                <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} />
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => product && wishlist.toggleWishlist(product.id)}
+                title={uiText.favorite}
+                aria-label={uiText.favorite}
+                className="h-10 w-10 rounded-full border-2 shadow-sm hover:scale-110 transition-transform bg-background"
+                style={{ borderColor: product && wishlist.isWishlisted(product.id) ? "#ef4444" : primaryColor }}
+              >
+                <Heart className={`h-5 w-5 transition-colors ${product && wishlist.isWishlisted(product.id) ? "fill-red-500 text-red-500" : ""}`} style={!wishlist.isWishlisted(product.id) ? { color: primaryColor } : undefined} />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleShare} title={uiText.share}>
-                <Share2 className="h-5 w-5" />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleShare}
+                title={uiText.share}
+                aria-label={uiText.share}
+                className="h-10 w-10 rounded-full border-2 shadow-sm hover:scale-110 transition-transform bg-background"
+                style={{ borderColor: primaryColor }}
+              >
+                <Share2 className="h-5 w-5" style={{ color: primaryColor }} />
               </Button>
             </div>
           </div>
