@@ -685,39 +685,32 @@ export default function LojaLayout() {
     );
   }
 
+  const splashKey = slug || currentHostname;
+  const cachedLogo = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_logo_${splashKey}`) : null;
+  const cachedName = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_name_${splashKey}`) : null;
+  const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo || cartlyLogo;
+  const splashName = (settingsBySlug as any)?.store_name || cachedName || slug || currentHostname || "Loja";
+  const StoreLogoSplash = () => (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-card"
+      style={{ backgroundColor: "hsl(0 0% 100%)" }}
+    >
+      <img
+        src={splashLogo}
+        alt={splashName}
+        className="object-contain animate-pulse"
+        style={{
+          maxHeight: "min(48vh, 360px)",
+          maxWidth: "min(88vw, 460px)",
+          width: "auto",
+          animationDuration: "1.25s",
+        }}
+      />
+    </div>
+  );
+
   if (isLoading) {
-    const cachedLogo = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_logo_${slug}`) : null;
-    const cachedName = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_name_${slug}`) : null;
-    const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo;
-    const splashName = (settingsBySlug as any)?.store_name || cachedName || slug;
-    return (
-      <div
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-        style={{ backgroundColor: "#ffffff" }}
-      >
-        <div className="flex flex-col items-center gap-8">
-          {splashLogo ? (
-            <img
-              src={splashLogo}
-              alt={splashName || "Loja"}
-              className="object-contain animate-pulse"
-              style={{
-                maxHeight: "min(40vh, 320px)",
-                maxWidth: "min(85vw, 420px)",
-                width: "auto",
-                animationDuration: "1.4s",
-              }}
-            />
-          ) : splashName ? (
-            <div className="text-4xl sm:text-5xl font-bold tracking-tight text-black animate-pulse" style={{ animationDuration: "1.4s" }}>
-              {splashName}
-            </div>
-          ) : (
-            <div className="h-20 w-20 rounded-full border-4 border-gray-200 border-t-gray-800 animate-spin" />
-          )}
-        </div>
-      </div>
-    );
+    return <StoreLogoSplash />;
   }
 
   if (!settings && !isLoading) {
@@ -769,6 +762,7 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
+      {showEntrySplash && <StoreLogoSplash />}
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
