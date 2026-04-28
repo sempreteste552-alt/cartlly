@@ -961,12 +961,25 @@ export default function LojaLayout() {
                 <div className="relative inline-block min-w-0 max-w-full">
                   {settings?.logo_url ? (
                     <div className="inline-flex max-w-full items-center" style={{ gap: `${logoBadgeGap}px` }}>
-                      <img
-                        src={settings.logo_url}
-                        alt={storeName}
-                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `min(${storefrontLogoWidth}px, calc(100% - ${logoBadgeSize + logoBadgeGap}px))`, width: "auto", transition: "height 300ms ease" }}
-                        className="object-contain block"
-                      />
+                      <div
+                        className="overflow-hidden shrink-0 transition-[height,width] duration-300"
+                        style={{
+                          height: `${logoCropHeight}px`,
+                          width: `min(${croppedLogoWidth}px, calc(100% - ${logoBadgeSize + logoBadgeGap}px))`,
+                        }}
+                      >
+                        <img
+                          src={settings.logo_url}
+                          alt={storeName}
+                          style={{
+                            height: `${logoCropHeight / Math.max(0.1, 1 - logoCrop.top - logoCrop.bottom)}px`,
+                            maxWidth: "none",
+                            width: "auto",
+                            transform: `translate(-${logoCrop.left * 100}%, -${logoCrop.top * 100}%)`,
+                          }}
+                          className="object-contain block"
+                        />
+                      </div>
                       {settings?.is_verified && (
                         <BadgeCheck
                           className="shrink-0 stroke-white stroke-[2.5px] drop-shadow-md"
