@@ -698,12 +698,11 @@ export default function LojaLayout() {
       <img
         src={splashLogo}
         alt={splashName}
-        className="object-contain animate-pulse"
+        className="object-contain store-logo-splash-pulse"
         style={{
           maxHeight: "min(48vh, 360px)",
           maxWidth: "min(88vw, 460px)",
           width: "auto",
-          animationDuration: "1.25s",
         }}
       />
     </div>
