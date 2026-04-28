@@ -157,6 +157,15 @@ export default function LojaLayout() {
     }
   }, [(settingsBySlug as any)?.language, locale, setLocale]);
 
+  // Cache logo for splash screen on next visits
+  useEffect(() => {
+    if (typeof window === "undefined" || !slug) return;
+    const logo = (settingsBySlug as any)?.logo_url;
+    const name = (settingsBySlug as any)?.store_name;
+    if (logo) localStorage.setItem(`splash_logo_${slug}`, logo);
+    if (name) localStorage.setItem(`splash_name_${slug}`, name);
+  }, [slug, (settingsBySlug as any)?.logo_url, (settingsBySlug as any)?.store_name]);
+
   // Auto-redirect to custom domain when accessing via /loja/:slug on a platform host
   useEffect(() => {
     if (typeof window === "undefined") return;
