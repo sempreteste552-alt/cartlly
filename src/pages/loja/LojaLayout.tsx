@@ -1241,8 +1241,6 @@ export default function LojaLayout() {
                         { icon: Package, label: t.sidebar.products, to: basePath || "/", badge: null },
                         { icon: ShoppingCart, label: t.store.cart, action: () => setCartSheetOpen(true), badge: cart.items.length || null },
                         { icon: Bell, label: t.store.notifications || "Notificações", action: () => { /* opens via bell */ }, badge: notifUnread || null, onlyIfUser: true },
-                        { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons`, badge: null },
-                        { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio`, badge: null },
                       ].filter((it: any) => !it.onlyIfUser || user).map((item: any, i) => {
                         const inner = (
                           <>
@@ -1307,26 +1305,7 @@ export default function LojaLayout() {
                     </div>
                   )}
 
-                  {/* Páginas customizadas */}
-                  {storePages && storePages.length > 0 && (
-                    <div>
-                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Páginas</p>
-                      <div className="space-y-0.5">
-                        {storePages.map((page, idx) => (
-                          <Link
-                            key={page.slug}
-                            to={`${basePath}/p/${page.slug}`}
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: primaryColor }} />
-                            <span className="text-sm">{localizedStorePageTitles[idx] || page.title}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Páginas customizadas e Contato removidos do menu — já presentes no rodapé */}
 
                   {/* Localização / CEP */}
                   {!isMinimalMenu && (
@@ -1361,42 +1340,7 @@ export default function LojaLayout() {
                     </div>
                   )}
 
-                  {/* Contato */}
-                  {(settings?.store_whatsapp || settings?.store_phone) && (
-                    <div>
-                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Contato</p>
-                      <div className="space-y-0.5">
-                        {settings?.store_whatsapp && (
-                          <a
-                            href={`https://wa.me/${settings.store_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(storeText.whatsappMessage)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-emerald-500/10 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500/15 text-emerald-500">
-                              <MessageCircle className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">WhatsApp</span>
-                          </a>
-                        )}
-                        {settings?.store_phone && (
-                          <a
-                            href={`tel:${settings.store_phone}`}
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
-                              <Phone className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">{settings.store_phone}</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {/* Contato removido — já presente no rodapé e WhatsApp flutuante */}
 
                   {/* Preferências */}
                   {!isMinimalMenu && (
@@ -1424,21 +1368,7 @@ export default function LojaLayout() {
                     <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
                   </div>
 
-                  {/* Social */}
-                  {settings?.instagram_url && (
-                    <div className="px-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Redes sociais</p>
-                      <a
-                        href={settings.instagram_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 hover:scale-105 transition-transform"
-                      >
-                        <img src={iconInstagram} alt="Instagram" className="h-9 w-9 rounded-lg" />
-                        <span className="text-sm font-medium">Instagram</span>
-                      </a>
-                    </div>
-                  )}
+                  {/* Redes sociais removidas — já presentes no rodapé */}
                 </nav>
               </div>
 
