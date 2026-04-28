@@ -203,6 +203,16 @@ html, body {
   transform-origin: center;
 }
 
+/* Splash overlay fade-out (used by both Platform & Store splashes) */
+.app-splash-overlay {
+  transition: opacity 380ms ease-out, visibility 0s linear 380ms;
+}
+.app-splash-overlay.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Rotating border glow for referral card */
 @keyframes rotate-border {
   0% { --angle: 0deg; }
