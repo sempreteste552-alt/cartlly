@@ -1240,6 +1240,7 @@ export default function LojaLayout() {
                         { icon: Home, label: t.store.home, to: basePath || "/", badge: null as number | null },
                         { icon: Package, label: t.sidebar.products, to: basePath || "/", badge: null },
                         { icon: ShoppingCart, label: t.store.cart, action: () => setCartSheetOpen(true), badge: cart.items.length || null },
+                        { icon: Receipt, label: "Meus Pedidos", to: `${basePath}/conta/pedidos`, badge: null, onlyIfUser: true },
                         { icon: Bell, label: t.store.notifications || "Notificações", action: () => { /* opens via bell */ }, badge: notifUnread || null, onlyIfUser: true },
                       ].filter((it: any) => !it.onlyIfUser || user).map((item: any, i) => {
                         const inner = (
