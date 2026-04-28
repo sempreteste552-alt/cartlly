@@ -24,6 +24,7 @@ import { PrizeNotificationCard } from "@/components/storefront/PrizeNotification
 import { getLocaleTag, useTranslation } from "@/i18n";
 import { toast } from "sonner";
 import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStoreText";
+import { StoreLogoSplash } from "@/components/storefront/StoreLogoSplash";
 
 export default function LojaHome() {
   const location = useLocation();
@@ -125,6 +126,12 @@ export default function LojaHome() {
     const index = categories.findIndex((c: any) => c.id === categoriaParam);
     return index >= 0 ? translatedCategoryNames[index] || categories[index]?.name || null : null;
   }, [categoriaParam, categories, translatedCategoryNames]);
+
+  // While products are loading on the home, keep showing the store splash
+  // so the user never sees an empty/half-rendered storefront.
+  if (prodLoading && (!products || products.length === 0)) {
+    return <StoreLogoSplash logoUrl={settings?.logo_url} storeName={settings?.store_name} />;
+  }
 
   if (!prodLoading && (!products || products.length === 0)) {
     return (
