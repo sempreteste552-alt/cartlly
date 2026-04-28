@@ -1398,7 +1398,7 @@ export default function LojaLayout() {
         )}
 
         <main>
-          <Suspense fallback={splash}>
+          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-muted border-t-transparent animate-spin" style={{ borderTopColor: primaryColor }} /></div>}>
             <Outlet />
             <FlyToCart />
           </Suspense>
