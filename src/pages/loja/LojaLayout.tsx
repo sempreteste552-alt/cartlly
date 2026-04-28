@@ -1318,6 +1318,7 @@ export default function LojaLayout() {
           )}
 
           {/* Categories bar for desktop with background image */}
+          {!isProductPage && (
           <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
             <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
