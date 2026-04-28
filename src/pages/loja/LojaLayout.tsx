@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import securityBadgesImg from "@/assets/security-badges.png";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
-import cartlyLogo from "@/assets/cartly-logo.webp";
+import { StoreLogoSplash } from "@/components/storefront/StoreLogoSplash";
 import iconInstagram from "@/assets/icon-instagram.png";
 import iconTiktok from "@/assets/icon-tiktok.png";
 import iconFacebook from "@/assets/icon-facebook.png";
@@ -688,28 +688,12 @@ export default function LojaLayout() {
   const splashKey = slug || currentHostname;
   const cachedLogo = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_logo_${splashKey}`) : null;
   const cachedName = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_name_${splashKey}`) : null;
-  const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo || cartlyLogo;
+  const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo;
   const splashName = (settingsBySlug as any)?.store_name || cachedName || slug || currentHostname || "Loja";
-  const StoreLogoSplash = () => (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-card"
-      style={{ backgroundColor: "hsl(0 0% 100%)" }}
-    >
-      <img
-        src={splashLogo}
-        alt={splashName}
-        className="object-contain store-logo-splash-pulse"
-        style={{
-          maxHeight: "min(48vh, 360px)",
-          maxWidth: "min(88vw, 460px)",
-          width: "auto",
-        }}
-      />
-    </div>
-  );
+  const splash = <StoreLogoSplash logoUrl={splashLogo} storeName={splashName} cacheKey={splashKey} />;
 
   if (isLoading) {
-    return <StoreLogoSplash />;
+    return splash;
   }
 
   if (!settings && !isLoading) {
@@ -761,7 +745,7 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
-      {showEntrySplash && <StoreLogoSplash />}
+      {showEntrySplash && splash}
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
@@ -1333,7 +1317,7 @@ export default function LojaLayout() {
         </div>
 
         <main>
-          <Suspense fallback={<StoreLogoSplash />}>
+          <Suspense fallback={splash}>
             <Outlet />
             <FlyToCart />
           </Suspense>
