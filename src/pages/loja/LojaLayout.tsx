@@ -151,6 +151,7 @@ export default function LojaLayout() {
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   const [showEntrySplash, setShowEntrySplash] = useState(true);
+  const logoCrop = useLogoCrop((settingsBySlug as any)?.logo_url);
 
   // Shrink header on scroll for better navigation
   useEffect(() => {
