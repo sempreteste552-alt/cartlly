@@ -876,8 +876,8 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ ['--logo-h' as any]: `${Math.round(logoSize * 0.7)}px`, ['--logo-h-sm' as any]: `${logoSize}px`, height: 'var(--logo-h)', maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
-                        className="object-contain block sm:!h-[var(--logo-h-sm)]"
+                        style={{ height: `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
+                        className="object-contain block"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck
