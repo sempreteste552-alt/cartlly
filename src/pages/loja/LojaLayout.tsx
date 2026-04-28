@@ -713,7 +713,7 @@ export default function LojaLayout() {
   const logoBadgeSize = Math.max(11, Math.min(Math.round(logoSize * 0.20), 17));
   const logoBadgeGap = 1;
   const storefrontLogoWidth = Math.max(150, Math.min(Math.round(logoSize * 6), 340));
-  const logoCropHeight = headerCompact ? Math.round(logoSize * 0.55) : logoSize;
+  const logoCropHeight = headerCompact ? Math.round(logoSize * 0.48) : Math.round(logoSize * 0.86);
   const croppedLogoWidth = Math.max(60, Math.min(Math.round(logoCropHeight * logoCrop.ratio), storefrontLogoWidth));
   const checkoutLogoHeight = Math.max(48, Math.min(Math.round(logoSize * 1.25), 130));
   const checkoutLogoWidth = Math.max(180, Math.min(Math.round(checkoutLogoHeight * 6), 380));
