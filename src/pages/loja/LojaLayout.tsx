@@ -870,7 +870,7 @@ export default function LojaLayout() {
                        {settings?.is_verified && (
                          <BadgeCheck
                            className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                           style={{ ...verifiedBadgeStyle, right: `0px`, marginLeft: `-${Math.round(logoBadgeSize * 0.5)}px` }}
+                           style={{ ...verifiedBadgeStyle, right: `0px` }}
                          />
                        )}
                      </div>
