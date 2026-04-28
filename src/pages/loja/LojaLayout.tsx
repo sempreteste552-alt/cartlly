@@ -16,7 +16,7 @@ import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
 import { useCustomerAuth } from "@/hooks/useCustomerAuth";
-import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket, BadgeCheck, LocateFixed, ArrowLeft, Lock } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, MapPin, Phone, MessageCircle, Home, Package, Truck, User, LogOut, Bell, Ticket, BadgeCheck, LocateFixed, ArrowLeft, Lock, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -1240,6 +1240,7 @@ export default function LojaLayout() {
                         { icon: Home, label: t.store.home, to: basePath || "/", badge: null as number | null },
                         { icon: Package, label: t.sidebar.products, to: basePath || "/", badge: null },
                         { icon: ShoppingCart, label: t.store.cart, action: () => setCartSheetOpen(true), badge: cart.items.length || null },
+                        { icon: Receipt, label: "Meus Pedidos", to: `${basePath}/conta/pedidos`, badge: null, onlyIfUser: true },
                         { icon: Bell, label: t.store.notifications || "Notificações", action: () => { /* opens via bell */ }, badge: notifUnread || null, onlyIfUser: true },
                       ].filter((it: any) => !it.onlyIfUser || user).map((item: any, i) => {
                         const inner = (
@@ -1505,6 +1506,11 @@ export default function LojaLayout() {
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
                     <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
                   </Link>
+                  {user && (
+                    <Link to={`${basePath}/conta/pedidos`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                      <Receipt className="h-3.5 w-3.5" /> Meus Pedidos
+                    </Link>
+                  )}
                   {storePages?.map((page, idx) => (
                     <Link
                       key={page.slug}

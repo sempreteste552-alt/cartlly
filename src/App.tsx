@@ -54,6 +54,7 @@ const LojaProduto = lazy(() => import("./pages/loja/LojaProduto"));
 const LojaCheckout = lazy(() => import("./pages/loja/LojaCheckout"));
 const LojaRastreio = lazy(() => import("./pages/loja/LojaRastreio"));
 const LojaCupons = lazy(() => import("./pages/loja/LojaCupons"));
+const LojaPedidos = lazy(() => import("./pages/loja/LojaPedidos"));
 const LojaPagina = lazy(() => import("./pages/loja/LojaPagina"));
 
 // SuperAdmin pages
@@ -146,6 +147,8 @@ const App = () => {
                     <Route path="rastreio" element={<LojaRastreio />} />
                     <Route path="rastreio/:orderId" element={<LojaRastreio />} />
                     <Route path="cupons" element={<LojaCupons />} />
+                    <Route path="pedidos" element={<LojaPedidos />} />
+                    <Route path="conta/pedidos" element={<LojaPedidos />} />
                   </Route>
                   <Route path="/login" element={<Login />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
@@ -210,6 +213,8 @@ const App = () => {
                     <Route path="rastreio" element={<LojaRastreio />} />
                     <Route path="rastreio/:orderId" element={<LojaRastreio />} />
                     <Route path="cupons" element={<LojaCupons />} />
+                    <Route path="pedidos" element={<LojaPedidos />} />
+                    <Route path="conta/pedidos" element={<LojaPedidos />} />
                     <Route path="p/:pageSlug" element={<LojaPagina />} />
                     <Route path="legal/:policySlug" element={<LojaPolitica />} />
                   </Route>
