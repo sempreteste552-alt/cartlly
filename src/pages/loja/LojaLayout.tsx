@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import securityBadgesImg from "@/assets/security-badges.png";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 import iconInstagram from "@/assets/icon-instagram.png";
 import iconTiktok from "@/assets/icon-tiktok.png";
 import iconFacebook from "@/assets/icon-facebook.png";
@@ -68,6 +69,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 export default function LojaLayout() {
   const { slug: rawSlug } = useParams();
   const slug = rawSlug?.toLowerCase();
+  const currentHostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase().replace(/^www\./, "") : "";
   const { t, locale, setLocale } = useTranslation();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
@@ -94,6 +96,7 @@ export default function LojaLayout() {
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
+  const [showEntrySplash, setShowEntrySplash] = useState(true);
 
   // Shrink header on scroll for better navigation
   useEffect(() => {
@@ -159,12 +162,20 @@ export default function LojaLayout() {
 
   // Cache logo for splash screen on next visits
   useEffect(() => {
-    if (typeof window === "undefined" || !slug) return;
+    if (typeof window === "undefined") return;
+    const splashKey = slug || currentHostname;
+    if (!splashKey) return;
     const logo = (settingsBySlug as any)?.logo_url;
     const name = (settingsBySlug as any)?.store_name;
-    if (logo) localStorage.setItem(`splash_logo_${slug}`, logo);
-    if (name) localStorage.setItem(`splash_name_${slug}`, name);
-  }, [slug, (settingsBySlug as any)?.logo_url, (settingsBySlug as any)?.store_name]);
+    if (logo) localStorage.setItem(`splash_logo_${splashKey}`, logo);
+    if (name) localStorage.setItem(`splash_name_${splashKey}`, name);
+  }, [slug, currentHostname, (settingsBySlug as any)?.logo_url, (settingsBySlug as any)?.store_name]);
+
+  useEffect(() => {
+    setShowEntrySplash(true);
+    const timer = window.setTimeout(() => setShowEntrySplash(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [slug, currentHostname]);
 
   // Auto-redirect to custom domain when accessing via /loja/:slug on a platform host
   useEffect(() => {
@@ -674,39 +685,32 @@ export default function LojaLayout() {
     );
   }
 
+  const splashKey = slug || currentHostname;
+  const cachedLogo = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_logo_${splashKey}`) : null;
+  const cachedName = typeof window !== "undefined" && splashKey ? localStorage.getItem(`splash_name_${splashKey}`) : null;
+  const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo || cartlyLogo;
+  const splashName = (settingsBySlug as any)?.store_name || cachedName || slug || currentHostname || "Loja";
+  const StoreLogoSplash = () => (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-card"
+      style={{ backgroundColor: "hsl(0 0% 100%)" }}
+    >
+      <img
+        src={splashLogo}
+        alt={splashName}
+        className="object-contain animate-pulse"
+        style={{
+          maxHeight: "min(48vh, 360px)",
+          maxWidth: "min(88vw, 460px)",
+          width: "auto",
+          animationDuration: "1.25s",
+        }}
+      />
+    </div>
+  );
+
   if (isLoading) {
-    const cachedLogo = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_logo_${slug}`) : null;
-    const cachedName = typeof window !== "undefined" && slug ? localStorage.getItem(`splash_name_${slug}`) : null;
-    const splashLogo = (settingsBySlug as any)?.logo_url || cachedLogo;
-    const splashName = (settingsBySlug as any)?.store_name || cachedName || slug;
-    return (
-      <div
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-        style={{ backgroundColor: "#ffffff" }}
-      >
-        <div className="flex flex-col items-center gap-8">
-          {splashLogo ? (
-            <img
-              src={splashLogo}
-              alt={splashName || "Loja"}
-              className="object-contain animate-pulse"
-              style={{
-                maxHeight: "min(40vh, 320px)",
-                maxWidth: "min(85vw, 420px)",
-                width: "auto",
-                animationDuration: "1.4s",
-              }}
-            />
-          ) : splashName ? (
-            <div className="text-4xl sm:text-5xl font-bold tracking-tight text-black animate-pulse" style={{ animationDuration: "1.4s" }}>
-              {splashName}
-            </div>
-          ) : (
-            <div className="h-20 w-20 rounded-full border-4 border-gray-200 border-t-gray-800 animate-spin" />
-          )}
-        </div>
-      </div>
-    );
+    return <StoreLogoSplash />;
   }
 
   if (!settings && !isLoading) {
@@ -758,6 +762,7 @@ export default function LojaLayout() {
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
+      {showEntrySplash && <StoreLogoSplash />}
       <div 
         id={`store-theme-${slug}`}
         data-tenant={settings?.user_id}
@@ -1329,11 +1334,7 @@ export default function LojaLayout() {
         </div>
 
         <main>
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          }>
+          <Suspense fallback={<StoreLogoSplash />}>
             <Outlet />
             <FlyToCart />
           </Suspense>
