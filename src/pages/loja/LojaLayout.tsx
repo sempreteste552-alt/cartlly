@@ -840,7 +840,7 @@ export default function LojaLayout() {
 
                  <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                    {settings?.logo_url ? (
-                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 1.4}px` }}>
+                     <div className="relative inline-flex flex-col items-center shrink-0" style={{ paddingBottom: `${Math.round(logoBadgeSize * 0.55)}px` }}>
                        <img
                          src={settings.logo_url}
                          alt={storeName}
@@ -849,8 +849,8 @@ export default function LojaLayout() {
                        />
                        {settings?.is_verified && (
                          <BadgeCheck
-                           className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                           style={{ ...verifiedBadgeStyle, right: `0px` }}
+                           className="absolute left-1/2 -translate-x-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
+                           style={{ ...verifiedBadgeStyle, bottom: `-${Math.round(logoBadgeSize * 0.35)}px` }}
                          />
                        )}
                      </div>
