@@ -805,6 +805,7 @@ export default function LojaLayout() {
   const buttonTextColor = isDarkMode ? "#ffffff" : (settings?.button_text_color || "#ffffff");
   const isHomePage = location.pathname === basePath || location.pathname === basePath + "/";
   const isCheckout = location.pathname.includes("/checkout");
+  const isProductPage = location.pathname.includes("/produto/");
 
   return (
     <LojaContext.Provider value={{ cart, settings, productPageConfig, searchTerm, setSearchTerm, storeUserId: settings?.user_id, customer, openCart: () => setCartSheetOpen(true), basePath, globalCep, setGlobalCep }}>
