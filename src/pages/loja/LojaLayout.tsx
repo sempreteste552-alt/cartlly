@@ -1439,7 +1439,6 @@ export default function LojaLayout() {
                 <h3 className="font-bold mb-3">{t.store.contact}</h3>
                 <div className="space-y-2 text-sm opacity-60">
                   {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
-                  {settings?.store_whatsapp && <p>💬 {settings.store_whatsapp}</p>}
                   {settings?.store_address && <p>📍 {settings.store_address}</p>}
                   {settings?.google_maps_url && (
                     <a 
