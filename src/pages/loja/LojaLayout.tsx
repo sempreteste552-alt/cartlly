@@ -1305,26 +1305,7 @@ export default function LojaLayout() {
                     </div>
                   )}
 
-                  {/* Páginas customizadas */}
-                  {storePages && storePages.length > 0 && (
-                    <div>
-                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Páginas</p>
-                      <div className="space-y-0.5">
-                        {storePages.map((page, idx) => (
-                          <Link
-                            key={page.slug}
-                            to={`${basePath}/p/${page.slug}`}
-                            onClick={() => setMobileMenu(false)}
-                            className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
-                            style={{ color: headerTextColor }}
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: primaryColor }} />
-                            <span className="text-sm">{localizedStorePageTitles[idx] || page.title}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Páginas customizadas e Contato removidos do menu — já presentes no rodapé */}
 
                   {/* Localização / CEP */}
                   {!isMinimalMenu && (
