@@ -1348,6 +1348,7 @@ export default function LojaLayout() {
           )}
         </div>
 
+        {!isProductPage && (
         <div className="border-b border-border bg-secondary/50">
           <div className="max-w-7xl mx-auto px-4">
             <button
