@@ -1396,6 +1396,8 @@ export default function LojaLayout() {
           </div>
         </div>
         )}
+
+        <main>
           <Suspense fallback={splash}>
             <Outlet />
             <FlyToCart />
