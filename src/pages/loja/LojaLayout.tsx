@@ -148,6 +148,7 @@ export default function LojaLayout() {
   const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
   const lastScrollY = useRef(0);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   const [showEntrySplash, setShowEntrySplash] = useState(true);
