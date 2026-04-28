@@ -903,7 +903,7 @@ export default function LojaLayout() {
             </div>
           )}
 
-          {isCheckout ? (
+          {isProductPage ? null : isCheckout ? (
             <header
               className="border-b border-border shadow-sm transition-colors backdrop-blur-md bg-opacity-95 sticky top-0 z-40"
               style={{ backgroundColor: headerBgColor, color: headerTextColor }}
