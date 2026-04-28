@@ -1342,6 +1342,307 @@ export default function LojaLayout() {
           </div>
         </footer>
 
+            {/* Backdrop */}
+            <div
+              className={`lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+                mobileMenu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
+              onClick={() => setMobileMenu(false)}
+              aria-hidden="true"
+            />
+
+            {/* Side drawer (left → right) */}
+            <aside
+              className={`lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-[340px] flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                mobileMenu ? "translate-x-0" : "-translate-x-full"
+              }`}
+              style={{ backgroundColor: isDarkMode ? "#0a0a0a" : "#ffffff", color: isDarkMode ? "#fafafa" : "#0a0a0a" }}
+              aria-hidden={!mobileMenu}
+              role="dialog"
+              aria-modal="true"
+            >
+              {/* Header com logo e fechar */}
+              <div
+                className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0"
+                style={{ background: `linear-gradient(135deg, ${primaryColor}15, transparent)` }}
+              >
+                <Link to={basePath || "/"} onClick={() => setMobileMenu(false)} className="flex items-center gap-2 min-w-0">
+                  {settings?.logo_url ? (
+                    <img src={settings.logo_url} alt={storeName} className="h-9 max-w-[160px] object-contain" />
+                  ) : (
+                    <span className="font-bold text-base truncate" style={{ color: headerTextColor }}>{storeName}</span>
+                  )}
+                  {settings?.is_verified && (
+                    <BadgeCheck className="h-4 w-4 shrink-0 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                  )}
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-full shrink-0"
+                  onClick={() => setMobileMenu(false)}
+                  aria-label="Fechar menu"
+                  style={{ color: headerTextColor }}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Conta do usuário */}
+              <div className="px-4 py-3 border-b border-border shrink-0">
+                {user ? (
+                  <button
+                    onClick={() => { setMobileMenu(false); setProfileModalOpen(true); }}
+                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                  >
+                    <div
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)` }}
+                    >
+                      {(customer?.name || user.email || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{customer?.name || t.store.myAccount}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </button>
+                ) : (
+                  <Button
+                    className="w-full h-10"
+                    style={{ backgroundColor: primaryColor, color: "#fff" }}
+                    onClick={() => { setMobileMenu(false); setAuthModalOpen(true); }}
+                  >
+                    <User className="h-4 w-4 mr-2" /> {t.auth.login}
+                  </Button>
+                )}
+              </div>
+
+              {/* Conteúdo rolável */}
+              <div className="flex-1 overflow-y-auto overscroll-contain">
+                <nav className="px-3 py-3 space-y-4">
+                  {/* Busca rápida */}
+                  <div className="px-2">
+                    <div className="relative">
+                      <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <Input
+                        placeholder={t.store.search || "Buscar produtos..."}
+                        className="bg-background border-border h-10 pl-9 text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setMobileMenu(false);
+                            navigate(basePath || "/");
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Navegação principal */}
+                  <div>
+                    <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Navegação</p>
+                    <div className="space-y-0.5">
+                      {[
+                        { icon: Home, label: t.store.home, to: basePath || "/", badge: null as number | null },
+                        { icon: Package, label: t.sidebar.products, to: basePath || "/", badge: null },
+                        { icon: ShoppingCart, label: t.store.cart, action: () => setCartSheetOpen(true), badge: cart.items.length || null },
+                        { icon: Receipt, label: "Meus Pedidos", to: `${basePath}/conta/pedidos`, badge: null, onlyIfUser: true },
+                        { icon: Bell, label: t.store.notifications || "Notificações", action: () => { /* opens via bell */ }, badge: notifUnread || null, onlyIfUser: true },
+                      ].filter((it: any) => !it.onlyIfUser || user).map((item: any, i) => {
+                        const inner = (
+                          <>
+                            <div
+                              className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}
+                            >
+                              <item.icon className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium flex-1">{item.label}</span>
+                            {item.badge ? (
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ backgroundColor: primaryColor, color: "#fff" }}
+                              >
+                                {item.badge}
+                              </span>
+                            ) : null}
+                          </>
+                        );
+                        const cls = "w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors text-left";
+                        return item.action ? (
+                          <button key={i} onClick={() => { setMobileMenu(false); item.action(); }} className={cls} style={{ color: headerTextColor }}>
+                            {inner}
+                          </button>
+                        ) : (
+                          <Link key={i} to={item.to} onClick={() => setMobileMenu(false)} className={cls} style={{ color: headerTextColor }}>
+                            {inner}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Categorias */}
+                  {!isMinimalMenu && categories && categories.length > 0 && (
+                    <div>
+                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{t.store.categories}</p>
+                      <div className="flex flex-wrap gap-1.5 px-2">
+                        {categories.map((cat, i) => (
+                          <Badge
+                            key={cat.id}
+                            variant="outline"
+                            className="cursor-pointer transition-all px-2.5 py-1 text-xs hover:scale-105"
+                            style={{ borderColor: `${primaryColor}50`, color: primaryColor, backgroundColor: `${primaryColor}08` }}
+                            onClick={() => {
+                              setMobileMenu(false);
+                              const el = document.getElementById(`category-${cat.name}`);
+                              if (el) {
+                                const yOffset = -80;
+                                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                                window.scrollTo({ top: y, behavior: "smooth" });
+                              } else {
+                                navigate(`${basePath}?categoria=${cat.id}`);
+                              }
+                            }}
+                          >
+                            {localizedCategoryNames[i] || cat.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Páginas customizadas e Contato removidos do menu — já presentes no rodapé */}
+
+                  {/* Localização / CEP */}
+                  {!isMinimalMenu && (
+                    <div className="px-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">{t.shipping.calculateShipping}</p>
+                      <div className="rounded-lg border border-border p-3 space-y-2" style={{ backgroundColor: `${primaryColor}05` }}>
+                        {globalCity && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: primaryColor }} />
+                            <span className="truncate font-medium">{globalCity}</span>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder={t.store.zipPlaceholder}
+                            className="bg-background border-border font-mono h-10 text-sm"
+                            value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                            onChange={(e) => handleGlobalCepChange(e.target.value)}
+                            inputMode="numeric"
+                            maxLength={9}
+                          />
+                          <Button
+                            variant="outline"
+                            className="h-10 aspect-square p-0 shrink-0"
+                            onClick={detectMyLocation}
+                            title={t.store.detectLocation}
+                          >
+                            <LocateFixed className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contato removido — já presente no rodapé e WhatsApp flutuante */}
+
+                  {/* Preferências */}
+                  {!isMinimalMenu && (
+                    <div>
+                      <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1">Preferências</p>
+                      <div className="px-2 py-2 flex items-center justify-between rounded-lg hover:bg-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
+                            <span className="text-sm">🌙</span>
+                          </div>
+                          <span className="text-sm font-medium">{t.misc.darkMode}</span>
+                        </div>
+                        <ThemeToggle scope={storeThemeScope} applyToRoot={false} />
+                      </div>
+                      {settings?.is_premium_plan && (
+                        <div className="px-2 py-1">
+                          <LanguageSelector compact className="flex shrink-0" skipGate />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Notificações push opt-in */}
+                  <div className="px-2">
+                    <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
+                  </div>
+
+                  {/* Redes sociais removidas — já presentes no rodapé */}
+                </nav>
+              </div>
+
+              {/* Rodapé fixo: logout */}
+              {user && (
+                <div className="border-t border-border px-3 py-3 shrink-0">
+                  <button
+                    onClick={() => { setMobileMenu(false); signOut(); }}
+                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="text-sm font-medium">{t.auth.logout}</span>
+                  </button>
+                </div>
+              )}
+            </aside>
+
+        {/* Search Sheet */}
+        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
+          <SheetContent side="top" className="w-full sm:max-w-full p-0 h-[100dvh] flex flex-col">
+            <div className="flex items-center gap-2 px-3 py-3 border-b border-border" style={{ background: `linear-gradient(135deg, ${primaryColor}10, transparent)` }}>
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setSearchSheetOpen(false)} aria-label="Fechar busca">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1">
+                <SmartSearchBar
+                  products={smartSearchProducts || []}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onProductClick={(pid) => { setSearchSheetOpen(false); navigate(`${basePath}/produto/${pid}`); }}
+                  primaryColor={primaryColor}
+                  storeUserId={settings?.user_id}
+                  className="w-full"
+                />
+              </div>
+              <StoreFilter
+                storeUserId={settings?.user_id || ""}
+                primaryColor={primaryColor}
+                products={smartSearchProducts || []}
+              />
+            </div>
+            {categories && categories.length > 0 && (
+              <div className="px-4 py-4 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-3">{t.store.categories}</p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat, i) => (
+                    <Badge
+                      key={cat.id}
+                      variant="outline"
+                      className="cursor-pointer transition-all px-3 py-1.5 text-xs hover:scale-105"
+                      style={{ borderColor: `${primaryColor}50`, color: primaryColor, backgroundColor: `${primaryColor}08` }}
+                      onClick={() => {
+                        setSearchSheetOpen(false);
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }}
+                    >
+                      {localizedCategoryNames[i] || cat.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+
+
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-around h-14">
             <Link
