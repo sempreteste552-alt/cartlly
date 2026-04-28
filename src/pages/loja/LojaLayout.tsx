@@ -148,6 +148,7 @@ export default function LojaLayout() {
   const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
   const lastScrollY = useRef(0);
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   const [showEntrySplash, setShowEntrySplash] = useState(true);
@@ -1134,6 +1135,212 @@ export default function LojaLayout() {
                 />
               </div>
             )}
+          </header>
+          )}
+
+          {/* Categories bar for desktop with background image */}
+          {!isProductPage && (
+          <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
+            <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
+              <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
+                {categories?.map((cat, i) => (
+                  <button
+                    key={cat.id}
+                    className="whitespace-nowrap text-sm font-medium hover:opacity-70 transition-opacity flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-black/5"
+                    style={{ color: headerTextColor }}
+                    onClick={() => {
+                      const el = document.getElementById(`category-${cat.name}`);
+                      if (el) {
+                        const yOffset = -140; // Space for the double header
+                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      } else {
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }
+                    }}
+                  >
+                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: primaryColor }} />
+                    {localizedCategoryNames[i] || cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          )}
+        </div>
+
+        {!isProductPage && (
+        <div className="border-b border-border bg-secondary/50">
+          <div className="max-w-7xl mx-auto px-4">
+            <button
+              className="w-full flex items-center gap-2 py-2 text-sm hover:opacity-80 transition-opacity"
+              onClick={() => setLocationBarOpen(!locationBarOpen)}
+            >
+              <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
+              <span className="font-medium truncate">
+                {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : t.shipping.calculateShipping)}
+              </span>
+              <span className="text-muted-foreground text-xs ml-auto shrink-0">
+                {locationBarOpen ? t.common.close : t.common.change}
+              </span>
+            </button>
+            {locationBarOpen && (
+              <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t.store.zipPlaceholder}
+                    className="bg-background border-border font-mono h-10"
+                    value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
+                    onChange={(e) => handleGlobalCepChange(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={9}
+                  />
+                  <Button 
+                    variant="outline" 
+                    className="h-10 aspect-square p-0"
+                    onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
+                    title={t.store.detectLocation}
+                  >
+                    <LocateFixed className="h-4 w-4" />
+                  </Button>
+                </div>
+                {globalCity && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    📍 {globalCity}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground">
+                  {t.store.shippingDeliveryHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingDeliveryHelpSuffix}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        )}
+
+        <main>
+          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-muted border-t-transparent animate-spin" style={{ borderTopColor: primaryColor }} /></div>}>
+            <Outlet />
+            <FlyToCart />
+          </Suspense>
+        </main>
+
+
+        <RestockAlertCard
+          storeUserId={settings?.user_id}
+          basePath={basePath}
+          primaryColor={primaryColor}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+        />
+
+        <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
+          <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div>
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-1.5">
+                  {storeName}
+                  {settings?.is_verified && (
+                    <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
+                  )}
+                </h3>
+                {localizedStoreDescription && <p className="opacity-60 text-sm">{localizedStoreDescription}</p>}
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">{t.store.links}</h3>
+                <div className="space-y-2 text-sm opacity-60">
+                  <Link to={`${basePath}/cupons`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                    <Ticket className="h-3.5 w-3.5" /> {t.store.discountCoupons}
+                  </Link>
+                  <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                    <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
+                  </Link>
+                  {user && (
+                    <Link to={`${basePath}/conta/pedidos`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                      <Receipt className="h-3.5 w-3.5" /> Meus Pedidos
+                    </Link>
+                  )}
+                  {storePages?.map((page, idx) => (
+                    <Link
+                      key={page.slug}
+                      to={`${basePath}/p/${page.slug}`}
+                      className="block hover:opacity-100 transition-opacity"
+                    >
+                      {localizedStorePageTitles[idx] || page.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">{t.store.contact}</h3>
+                <div className="space-y-2 text-sm opacity-60">
+                  {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
+                  {settings?.store_address && <p>📍 {settings.store_address}</p>}
+                  {settings?.google_maps_url && (
+                    <a 
+                      href={settings.google_maps_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-1.5 text-primary hover:underline mt-1"
+                    >
+                      <MapPin className="h-3.5 w-3.5" /> Ver no Google Maps
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold mb-3">{t.settings.socialMedia}</h3>
+                <div className="flex gap-4 flex-wrap items-center">
+                  {settings?.instagram_url && (
+                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconInstagram} alt="Instagram" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.facebook_url && (
+                    <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconFacebook} alt="Facebook" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.tiktok_url && (
+                    <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconTiktok} alt="TikTok" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.youtube_url && (
+                    <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <img src={iconYoutube} alt="YouTube" className="h-8 w-8 rounded-lg" />
+                    </a>
+                  )}
+                  {settings?.twitter_url && (
+                    <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Twitter</a>
+                  )}
+                </div>
+                {settings?.google_maps_url && (
+                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 hover:scale-105 transition-transform">
+                    <img src={iconLocation} alt="Localização" className="h-6 w-6" />
+                    <span className="text-sm opacity-70">{t.store.viewOnGoogleMaps}</span>
+                  </a>
+                )}
+              </div>
+            </div>
+            <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
+            <div className="flex flex-col items-center gap-6 mb-6 px-4">
+              <div className="text-center">
+                <p className="text-sm font-semibold mb-3 opacity-70">{t.store.paymentMethods}</p>
+                <PaymentFlags acceptedMethods={(settings as any)?.accepted_payment_methods} />
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xl mx-auto object-contain" />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs opacity-50">
+              <Link to={`${basePath}/legal/politica-de-privacidade`} className="hover:opacity-100 transition-opacity underline">{t.store.privacyPolicy}</Link>
+              <Link to={`${basePath}/legal/termos-de-uso`} className="hover:opacity-100 transition-opacity underline">{t.store.termsOfUse}</Link>
+              <Link to={`${basePath}/legal/cookies`} className="hover:opacity-100 transition-opacity underline">{t.store.cookiePolicy}</Link>
+            </div>
+            <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. {t.store.allRightsReserved}</p>
+          </div>
+        </footer>
 
             {/* Backdrop */}
             <div
@@ -1149,7 +1356,7 @@ export default function LojaLayout() {
               className={`lg:hidden fixed left-0 top-0 bottom-0 z-50 w-[85vw] max-w-[340px] flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 mobileMenu ? "translate-x-0" : "-translate-x-full"
               }`}
-              style={{ backgroundColor: headerBgColor, color: headerTextColor }}
+              style={{ backgroundColor: isDarkMode ? "#0a0a0a" : "#ffffff", color: isDarkMode ? "#fafafa" : "#0a0a0a" }}
               aria-hidden={!mobileMenu}
               role="dialog"
               aria-modal="true"
@@ -1386,212 +1593,55 @@ export default function LojaLayout() {
                 </div>
               )}
             </aside>
-          </header>
-          )}
 
-          {/* Categories bar for desktop with background image */}
-          {!isProductPage && (
-          <div className="hidden lg:block relative border-b border-border shadow-sm overflow-hidden" style={{ backgroundColor: headerBgColor }}>
-            <div className="max-w-7xl mx-auto px-4 py-2 relative z-10">
-              <div className="flex items-center gap-6 overflow-x-auto no-scrollbar scroll-smooth">
-                {categories?.map((cat, i) => (
-                  <button
-                    key={cat.id}
-                    className="whitespace-nowrap text-sm font-medium hover:opacity-70 transition-opacity flex items-center gap-1.5 py-1 px-3 rounded-full hover:bg-black/5"
-                    style={{ color: headerTextColor }}
-                    onClick={() => {
-                      const el = document.getElementById(`category-${cat.name}`);
-                      if (el) {
-                        const yOffset = -140; // Space for the double header
-                        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({ top: y, behavior: "smooth" });
-                      } else {
-                        navigate(`${basePath}?categoria=${cat.id}`);
-                      }
-                    }}
-                  >
-                    <div className="w-1 h-1 rounded-full" style={{ backgroundColor: primaryColor }} />
-                    {localizedCategoryNames[i] || cat.name}
-                  </button>
-                ))}
+        {/* Search Sheet */}
+        <Sheet open={searchSheetOpen} onOpenChange={setSearchSheetOpen}>
+          <SheetContent side="top" className="w-full sm:max-w-full p-0 h-[100dvh] flex flex-col">
+            <div className="flex items-center gap-2 px-3 py-3 border-b border-border" style={{ background: `linear-gradient(135deg, ${primaryColor}10, transparent)` }}>
+              <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setSearchSheetOpen(false)} aria-label="Fechar busca">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex-1">
+                <SmartSearchBar
+                  products={smartSearchProducts || []}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  onProductClick={(pid) => { setSearchSheetOpen(false); navigate(`${basePath}/produto/${pid}`); }}
+                  primaryColor={primaryColor}
+                  storeUserId={settings?.user_id}
+                  className="w-full"
+                />
               </div>
+              <StoreFilter
+                storeUserId={settings?.user_id || ""}
+                primaryColor={primaryColor}
+                products={smartSearchProducts || []}
+              />
             </div>
-          </div>
-          )}
-        </div>
-
-        {!isProductPage && (
-        <div className="border-b border-border bg-secondary/50">
-          <div className="max-w-7xl mx-auto px-4">
-            <button
-              className="w-full flex items-center gap-2 py-2 text-sm hover:opacity-80 transition-opacity"
-              onClick={() => setLocationBarOpen(!locationBarOpen)}
-            >
-              <MapPin className="h-4 w-4 shrink-0" style={{ color: primaryColor }} />
-              <span className="font-medium truncate">
-                {globalCity || (globalCep ? `CEP: ${globalCep.replace(/(\d{5})(\d{3})/, "$1-$2")}` : t.shipping.calculateShipping)}
-              </span>
-              <span className="text-muted-foreground text-xs ml-auto shrink-0">
-                {locationBarOpen ? t.common.close : t.common.change}
-              </span>
-            </button>
-            {locationBarOpen && (
-              <div className="pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t.store.zipPlaceholder}
-                    className="bg-background border-border font-mono h-10"
-                    value={globalCep ? globalCep.replace(/(\d{5})(\d{3})/, "$1-$2") : ""}
-                    onChange={(e) => handleGlobalCepChange(e.target.value)}
-                    inputMode="numeric"
-                    maxLength={9}
-                  />
-                  <Button 
-                    variant="outline" 
-                    className="h-10 aspect-square p-0"
-                    onClick={() => { detectMyLocation(); setLocationBarOpen(false); }}
-                    title={t.store.detectLocation}
-                  >
-                    <LocateFixed className="h-4 w-4" />
-                  </Button>
-                </div>
-                {globalCity && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    📍 {globalCity}
-                  </p>
-                )}
-                <p className="text-[10px] text-muted-foreground">
-                  {t.store.shippingDeliveryHelpPrefix} <LocateFixed className="h-3 w-3 inline" /> {t.store.shippingDeliveryHelpSuffix}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-        )}
-
-        <main>
-          <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-muted border-t-transparent animate-spin" style={{ borderTopColor: primaryColor }} /></div>}>
-            <Outlet />
-            <FlyToCart />
-          </Suspense>
-        </main>
-
-
-        <RestockAlertCard
-          storeUserId={settings?.user_id}
-          basePath={basePath}
-          primaryColor={primaryColor}
-          buttonColor={buttonColor}
-          buttonTextColor={buttonTextColor}
-        />
-
-        <footer style={{ backgroundColor: footerBgColor, color: footerTextColor }} className="mt-12">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div>
-                <h3 className="font-bold text-lg mb-3 flex items-center gap-1.5">
-                  {storeName}
-                  {settings?.is_verified && (
-                    <BadgeCheck className="h-4 w-4 text-[#0095f6] fill-[#0095f6] stroke-white stroke-[1.5px]" />
-                  )}
-                </h3>
-                {localizedStoreDescription && <p className="opacity-60 text-sm">{localizedStoreDescription}</p>}
-              </div>
-              <div>
-                <h3 className="font-bold mb-3">{t.store.links}</h3>
-                <div className="space-y-2 text-sm opacity-60">
-                  <Link to={`${basePath}/cupons`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
-                    <Ticket className="h-3.5 w-3.5" /> {t.store.discountCoupons}
-                  </Link>
-                  <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
-                    <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
-                  </Link>
-                  {user && (
-                    <Link to={`${basePath}/conta/pedidos`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
-                      <Receipt className="h-3.5 w-3.5" /> Meus Pedidos
-                    </Link>
-                  )}
-                  {storePages?.map((page, idx) => (
-                    <Link
-                      key={page.slug}
-                      to={`${basePath}/p/${page.slug}`}
-                      className="block hover:opacity-100 transition-opacity"
+            {categories && categories.length > 0 && (
+              <div className="px-4 py-4 overflow-y-auto">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-3">{t.store.categories}</p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat, i) => (
+                    <Badge
+                      key={cat.id}
+                      variant="outline"
+                      className="cursor-pointer transition-all px-3 py-1.5 text-xs hover:scale-105"
+                      style={{ borderColor: `${primaryColor}50`, color: primaryColor, backgroundColor: `${primaryColor}08` }}
+                      onClick={() => {
+                        setSearchSheetOpen(false);
+                        navigate(`${basePath}?categoria=${cat.id}`);
+                      }}
                     >
-                      {localizedStorePageTitles[idx] || page.title}
-                    </Link>
+                      {localizedCategoryNames[i] || cat.name}
+                    </Badge>
                   ))}
                 </div>
               </div>
-              <div>
-                <h3 className="font-bold mb-3">{t.store.contact}</h3>
-                <div className="space-y-2 text-sm opacity-60">
-                  {settings?.store_phone && <p>📞 {settings.store_phone}</p>}
-                  {settings?.store_address && <p>📍 {settings.store_address}</p>}
-                  {settings?.google_maps_url && (
-                    <a 
-                      href={settings.google_maps_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="flex items-center gap-1.5 text-primary hover:underline mt-1"
-                    >
-                      <MapPin className="h-3.5 w-3.5" /> Ver no Google Maps
-                    </a>
-                  )}
-                </div>
-              </div>
-              <div>
-                <h3 className="font-bold mb-3">{t.settings.socialMedia}</h3>
-                <div className="flex gap-4 flex-wrap items-center">
-                  {settings?.instagram_url && (
-                    <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                      <img src={iconInstagram} alt="Instagram" className="h-8 w-8 rounded-lg" />
-                    </a>
-                  )}
-                  {settings?.facebook_url && (
-                    <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                      <img src={iconFacebook} alt="Facebook" className="h-8 w-8 rounded-lg" />
-                    </a>
-                  )}
-                  {settings?.tiktok_url && (
-                    <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                      <img src={iconTiktok} alt="TikTok" className="h-8 w-8 rounded-lg" />
-                    </a>
-                  )}
-                  {settings?.youtube_url && (
-                    <a href={settings.youtube_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-                      <img src={iconYoutube} alt="YouTube" className="h-8 w-8 rounded-lg" />
-                    </a>
-                  )}
-                  {settings?.twitter_url && (
-                    <a href={settings.twitter_url} target="_blank" rel="noopener noreferrer" className="opacity-60 hover:opacity-100 text-sm">Twitter</a>
-                  )}
-                </div>
-                {settings?.google_maps_url && (
-                  <a href={settings.google_maps_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 hover:scale-105 transition-transform">
-                    <img src={iconLocation} alt="Localização" className="h-6 w-6" />
-                    <span className="text-sm opacity-70">{t.store.viewOnGoogleMaps}</span>
-                  </a>
-                )}
-              </div>
-            </div>
-            <Separator className="my-6" style={{ backgroundColor: `${footerTextColor}20` }} />
-            <div className="flex flex-col items-center gap-6 mb-6 px-4">
-              <div className="text-center">
-                <p className="text-sm font-semibold mb-3 opacity-70">{t.store.paymentMethods}</p>
-                <PaymentFlags acceptedMethods={(settings as any)?.accepted_payment_methods} />
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                <img src={securityBadgesImg} alt="Site Seguro - SSL Certificado" className="w-full max-w-xl mx-auto object-contain" />
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs opacity-50">
-              <Link to={`${basePath}/legal/politica-de-privacidade`} className="hover:opacity-100 transition-opacity underline">{t.store.privacyPolicy}</Link>
-              <Link to={`${basePath}/legal/termos-de-uso`} className="hover:opacity-100 transition-opacity underline">{t.store.termsOfUse}</Link>
-              <Link to={`${basePath}/legal/cookies`} className="hover:opacity-100 transition-opacity underline">{t.store.cookiePolicy}</Link>
-            </div>
-            <p className="text-center text-xs opacity-40">© {new Date().getFullYear()} {storeName}. {t.store.allRightsReserved}</p>
-          </div>
-        </footer>
+            )}
+          </SheetContent>
+        </Sheet>
+
 
         <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-card shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-around h-14">
@@ -1604,11 +1654,7 @@ export default function LojaLayout() {
               <span className="text-[10px] mt-0.5 font-medium">{t.store.home}</span>
             </Link>
             <button
-              onClick={() => {
-                const searchInput = document.querySelector(`input[placeholder="${t.store.searchPlaceholder}"]`) as HTMLInputElement;
-                if (searchInput) { searchInput.focus(); searchInput.scrollIntoView({ behavior: "smooth" }); }
-                else navigate(basePath);
-              }}
+              onClick={() => setSearchSheetOpen(true)}
               className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground transition-colors"
             >
               <Search className="h-5 w-5" />
