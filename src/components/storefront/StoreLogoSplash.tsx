@@ -90,9 +90,25 @@ export function StoreLogoSplash({ logoUrl, storeName, cacheKey }: StoreLogoSplas
     };
   }, [logoUrl, inferred.hostname, inferred.key, inferred.slug]);
 
+  const [logoReady, setLogoReady] = useState(false);
+  useEffect(() => {
+    if (!resolvedLogo) { setLogoReady(false); return; }
+    let cancelled = false;
+    const img = new Image();
+    img.src = resolvedLogo;
+    const done = () => { if (!cancelled) setLogoReady(true); };
+    if ((img as any).decode) {
+      (img as any).decode().then(done).catch(done);
+    } else {
+      img.onload = done;
+      img.onerror = done;
+    }
+    return () => { cancelled = true; };
+  }, [resolvedLogo]);
+
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-card"
+      className="app-splash-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-card"
       style={{ backgroundColor: "hsl(0 0% 100%)" }}
     >
       {resolvedLogo ? (
@@ -100,7 +116,13 @@ export function StoreLogoSplash({ logoUrl, storeName, cacheKey }: StoreLogoSplas
           src={resolvedLogo}
           alt={resolvedName || "Loja"}
           className="object-contain store-logo-splash-pulse"
-          style={{ maxHeight: "min(48vh, 360px)", maxWidth: "min(88vw, 460px)", width: "auto" }}
+          style={{
+            maxHeight: "min(48vh, 360px)",
+            maxWidth: "min(88vw, 460px)",
+            width: "auto",
+            opacity: logoReady ? 1 : 0,
+            transition: "opacity 220ms ease-out",
+          }}
         />
       ) : null}
     </div>
