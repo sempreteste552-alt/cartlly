@@ -10,6 +10,7 @@ import { CustomerAuthProvider } from "@/hooks/useCustomerAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
 import { StoreLogoSplash } from "@/components/storefront/StoreLogoSplash";
+import { PlatformLogoSplash } from "@/components/PlatformLogoSplash";
 
 
 
@@ -130,7 +131,7 @@ const App = () => {
           <Sonner />
           
           <BrowserRouter>
-            <Suspense fallback={isStorePath ? <StoreLogoSplash /> : <div className="min-h-screen bg-background" />}>
+            <Suspense fallback={isStorePath ? <StoreLogoSplash /> : <PlatformLogoSplash />}>
             <ScrollToTop />
             <AuthProvider>
               {!isPlatform ? (
