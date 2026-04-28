@@ -860,7 +860,7 @@ export default function LojaLayout() {
 
                  <Link to={basePath || "/"} className="flex items-center justify-center gap-2 min-w-0">
                    {settings?.logo_url ? (
-                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 1.2}px` }}>
+                     <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${Math.round(logoBadgeSize * 0.4)}px` }}>
                        <img
                          src={settings.logo_url}
                          alt={storeName}
@@ -870,7 +870,7 @@ export default function LojaLayout() {
                        {settings?.is_verified && (
                          <BadgeCheck
                            className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                           style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.1)}px` }}
+                           style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.15)}px` }}
                          />
                        )}
                      </div>
@@ -904,7 +904,7 @@ export default function LojaLayout() {
               <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
                 <div className="relative inline-block">
                   {settings?.logo_url ? (
-                    <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${logoBadgeSize * 1.2}px` }}>
+                    <div className="relative inline-flex items-center shrink-0" style={{ paddingRight: `${Math.round(logoBadgeSize * 0.4)}px` }}>
                       <img
                         src={settings.logo_url}
                         alt={storeName}
@@ -914,7 +914,7 @@ export default function LojaLayout() {
                       {settings?.is_verified && (
                         <BadgeCheck
                           className="absolute top-1/2 -translate-y-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                          style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.1)}px` }}
+                          style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.15)}px` }}
                         />
                       )}
                     </div>
