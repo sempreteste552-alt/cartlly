@@ -1334,11 +1334,7 @@ export default function LojaLayout() {
         </div>
 
         <main>
-          <Suspense fallback={
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          }>
+          <Suspense fallback={<StoreLogoSplash />}>
             <Outlet />
             <FlyToCart />
           </Suspense>
