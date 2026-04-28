@@ -656,6 +656,7 @@ export default function LojaLayout() {
   const rawLogoSize = Number((settings as any)?.logo_size ?? 40);
   const logoSize = Number.isFinite(rawLogoSize) ? Math.max(24, Math.min(rawLogoSize, 180)) : 40;
   const logoBadgeSize = Math.max(11, Math.min(Math.round(logoSize * 0.20), 17));
+  const logoBadgeOffset = Math.round(logoBadgeSize * 0.72);
   const storefrontLogoWidth = Math.max(150, Math.min(Math.round(logoSize * 6), 340));
   const checkoutLogoHeight = Math.max(48, Math.min(Math.round(logoSize * 1.25), 130));
   const checkoutLogoWidth = Math.max(180, Math.min(Math.round(checkoutLogoHeight * 6), 380));
@@ -868,7 +869,7 @@ export default function LojaLayout() {
                        {settings?.is_verified && (
                          <BadgeCheck
                            className="absolute top-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                           style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.55)}px`, transform: 'translateY(-50%)' }}
+                            style={{ ...verifiedBadgeStyle, right: `-${logoBadgeOffset}px`, transform: 'translateY(-50%)' }}
                          />
                        )}
                      </div>
@@ -894,25 +895,25 @@ export default function LojaLayout() {
             </header>
           ) : (
           <header className="border-b border-border shadow-sm transition-all duration-300 backdrop-blur-md bg-opacity-95" style={{ backgroundColor: headerBgColor, color: headerTextColor }}>
-            <div className={`max-w-7xl mx-auto px-2 sm:px-4 flex items-center gap-1 sm:gap-4 overflow-hidden transition-all duration-300 ${headerCompact ? 'py-0.5 sm:py-1' : 'py-1.5 sm:py-2'}`}>
+            <div className={`max-w-7xl mx-auto pl-2 pr-1 sm:px-4 flex items-center gap-1 sm:gap-4 overflow-hidden transition-all duration-300 ${headerCompact ? 'py-0.5 sm:py-1' : 'py-1.5 sm:py-2'}`}>
               <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMobileMenu(!mobileMenu)} style={{ color: headerTextColor }}>
                 {mobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
 
-              <Link to={basePath || "/"} className="flex items-center gap-2 shrink-0">
-                <div className="relative inline-block">
+              <Link to={basePath || "/"} className="flex flex-1 min-w-0 lg:flex-none items-center gap-1 sm:gap-2">
+                <div className="relative inline-block min-w-0 max-w-full">
                   {settings?.logo_url ? (
-                    <div className="relative inline-block shrink-0">
+                    <div className="relative inline-block max-w-full">
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto", transition: "height 300ms ease" }}
+                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `min(${storefrontLogoWidth}px, 100%)`, width: "auto", transition: "height 300ms ease" }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
                         <BadgeCheck
                           className="absolute top-1/2 stroke-white stroke-[2.5px] drop-shadow-md"
-                          style={{ ...verifiedBadgeStyle, right: `-${Math.round(logoBadgeSize * 0.55)}px`, transform: 'translateY(-50%)' }}
+                          style={{ ...verifiedBadgeStyle, right: `-${logoBadgeOffset}px`, transform: 'translateY(-50%)' }}
                         />
                       )}
                     </div>
@@ -946,28 +947,28 @@ export default function LojaLayout() {
                 </div>
               )}
 
-              <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
-              <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
-              {settings?.is_premium_plan && (
-                <LanguageSelector compact className="flex shrink-0" skipGate />
-              )}
-              <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
+              <div className="ml-auto flex shrink-0 items-center justify-end gap-0.5 sm:gap-1">
+                <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} className="hidden sm:flex" />
+                <CustomerNotificationsBell storeUserId={settings?.user_id} primaryColor={primaryColor} headerTextColor={headerTextColor} className="hidden sm:flex" />
+                {settings?.is_premium_plan && (
+                  <LanguageSelector compact className="flex shrink-0" skipGate />
+                )}
+                <ThemeToggle className="hidden sm:flex" scope={storeThemeScope} applyToRoot={false} />
 
-              <div className="flex items-center gap-1.5">
                 {settings?.instagram_url && (
-                  <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center hover:scale-110 transition-transform sm:h-9 sm:w-9">
                     <img src={iconInstagram} alt="Instagram" className="h-5 w-5 rounded" />
                   </a>
                 )}
-              </div>
 
-              <Button variant="ghost" size="icon" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
-                {user ? (
-                  isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
-                ) : (
-                  <User className="h-5 w-5" />
-                )}
-              </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => user ? setProfileModalOpen(true) : setAuthModalOpen(true)} style={{ color: headerTextColor }}>
+                  {user ? (
+                    isAdminPreview ? <span className="text-[10px] font-bold">{storeText.preview}</span> : <User className="h-5 w-5" />
+                  ) : (
+                    <User className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
 
               <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
                 <SheetTrigger asChild>
