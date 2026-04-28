@@ -1241,8 +1241,6 @@ export default function LojaLayout() {
                         { icon: Package, label: t.sidebar.products, to: basePath || "/", badge: null },
                         { icon: ShoppingCart, label: t.store.cart, action: () => setCartSheetOpen(true), badge: cart.items.length || null },
                         { icon: Bell, label: t.store.notifications || "Notificações", action: () => { /* opens via bell */ }, badge: notifUnread || null, onlyIfUser: true },
-                        { icon: Ticket, label: t.store.discountCoupons, to: `${basePath}/cupons`, badge: null },
-                        { icon: Truck, label: t.store.trackOrder, to: `${basePath}/rastreio`, badge: null },
                       ].filter((it: any) => !it.onlyIfUser || user).map((item: any, i) => {
                         const inner = (
                           <>
