@@ -1368,21 +1368,7 @@ export default function LojaLayout() {
                     <StorePushOptIn primaryColor={primaryColor} storeUserId={settings?.user_id} />
                   </div>
 
-                  {/* Social */}
-                  {settings?.instagram_url && (
-                    <div className="px-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-2">Redes sociais</p>
-                      <a
-                        href={settings.instagram_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 hover:scale-105 transition-transform"
-                      >
-                        <img src={iconInstagram} alt="Instagram" className="h-9 w-9 rounded-lg" />
-                        <span className="text-sm font-medium">Instagram</span>
-                      </a>
-                    </div>
-                  )}
+                  {/* Redes sociais removidas — já presentes no rodapé */}
                 </nav>
               </div>
 
