@@ -1506,6 +1506,11 @@ export default function LojaLayout() {
                   <Link to={`${basePath}/rastreio`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
                     <Truck className="h-3.5 w-3.5" /> {t.store.trackOrder}
                   </Link>
+                  {user && (
+                    <Link to={`${basePath}/conta/pedidos`} className="flex items-center gap-1.5 hover:opacity-100 transition-opacity">
+                      <Receipt className="h-3.5 w-3.5" /> Meus Pedidos
+                    </Link>
+                  )}
                   {storePages?.map((page, idx) => (
                     <Link
                       key={page.slug}
