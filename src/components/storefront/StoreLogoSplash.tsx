@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSlugFromHostname, isPlatformHost, normalizeDomain } from "@/lib/storeDomain";
-import cartlyLogo from "@/assets/cartly-logo.webp";
 
 type StoreLogoSplashProps = {
   logoUrl?: string | null;
@@ -81,7 +80,7 @@ export function StoreLogoSplash({ logoUrl, storeName, cacheKey }: StoreLogoSplas
           localStorage.setItem(`splash_name_${inferred.key}`, storeData.store_name);
         }
       } catch {
-        // Keep the branded fallback visible without showing a spinner.
+        // Keep the clean white storefront splash without showing platform branding.
       }
     };
 
@@ -96,12 +95,14 @@ export function StoreLogoSplash({ logoUrl, storeName, cacheKey }: StoreLogoSplas
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-card"
       style={{ backgroundColor: "hsl(0 0% 100%)" }}
     >
-      <img
-        src={resolvedLogo || cartlyLogo}
-        alt={resolvedName || "Loja"}
-        className="object-contain store-logo-splash-pulse"
-        style={{ maxHeight: "min(48vh, 360px)", maxWidth: "min(88vw, 460px)", width: "auto" }}
-      />
+      {resolvedLogo ? (
+        <img
+          src={resolvedLogo}
+          alt={resolvedName || "Loja"}
+          className="object-contain store-logo-splash-pulse"
+          style={{ maxHeight: "min(48vh, 360px)", maxWidth: "min(88vw, 460px)", width: "auto" }}
+        />
+      ) : null}
     </div>
   );
 }
