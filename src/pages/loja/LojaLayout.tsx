@@ -888,7 +888,7 @@ export default function LojaLayout() {
                       <img
                         src={settings.logo_url}
                         alt={storeName}
-                        style={{ height: `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto" }}
+                        style={{ height: headerCompact ? `${Math.round(logoSize * 0.55)}px` : `clamp(${Math.round(logoSize * 0.7)}px, ${Math.round(logoSize * 0.7)}px + 2vw, ${logoSize}px)`, maxWidth: `${storefrontLogoWidth}px`, width: "auto", transition: "height 300ms ease" }}
                         className="object-contain block"
                       />
                       {settings?.is_verified && (
