@@ -17,6 +17,22 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     const el = ref.current;
     if (!el) return;
 
+    // Immediate visibility check: if element is already in viewport on mount,
+    // reveal it right away without waiting for a scroll event (mobile fix)
+    const checkInitial = () => {
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      if (rect.top < vh && rect.bottom > 0 && rect.left < vw && rect.right > 0) {
+        setIsVisible(true);
+        return true;
+      }
+      return false;
+    };
+
+    const alreadyVisible = checkInitial();
+    if (alreadyVisible && once) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -30,7 +46,9 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    // Re-check after first paint in case layout shifted
+    const raf = requestAnimationFrame(() => { checkInitial(); });
+    return () => { observer.disconnect(); cancelAnimationFrame(raf); };
   }, [threshold, rootMargin, once]);
 
   return { ref, isVisible };
