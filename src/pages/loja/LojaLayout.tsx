@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { PaymentFlags } from "@/components/storefront/PaymentFlags";
 import securityBadgesImg from "@/assets/security-badges.png";
 import whatsappIcon from "@/assets/whatsapp-icon.png";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 import iconInstagram from "@/assets/icon-instagram.png";
 import iconTiktok from "@/assets/icon-tiktok.png";
 import iconFacebook from "@/assets/icon-facebook.png";
@@ -68,6 +69,7 @@ export const useLojaContext = () => useContext(LojaContext)!;
 export default function LojaLayout() {
   const { slug: rawSlug } = useParams();
   const slug = rawSlug?.toLowerCase();
+  const currentHostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase().replace(/^www\./, "") : "";
   const { t, locale, setLocale } = useTranslation();
   const storeThemeScope = `store-${slug || "default"}`;
   const { dark: storeDark } = useThemeScope(storeThemeScope);
@@ -94,6 +96,7 @@ export default function LojaLayout() {
   const [cartSheetOpen, setCartSheetOpen] = useState(false);
   const [locationBarOpen, setLocationBarOpen] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
+  const [showEntrySplash, setShowEntrySplash] = useState(true);
 
   // Shrink header on scroll for better navigation
   useEffect(() => {
@@ -159,12 +162,20 @@ export default function LojaLayout() {
 
   // Cache logo for splash screen on next visits
   useEffect(() => {
-    if (typeof window === "undefined" || !slug) return;
+    if (typeof window === "undefined") return;
+    const splashKey = slug || currentHostname;
+    if (!splashKey) return;
     const logo = (settingsBySlug as any)?.logo_url;
     const name = (settingsBySlug as any)?.store_name;
-    if (logo) localStorage.setItem(`splash_logo_${slug}`, logo);
-    if (name) localStorage.setItem(`splash_name_${slug}`, name);
-  }, [slug, (settingsBySlug as any)?.logo_url, (settingsBySlug as any)?.store_name]);
+    if (logo) localStorage.setItem(`splash_logo_${splashKey}`, logo);
+    if (name) localStorage.setItem(`splash_name_${splashKey}`, name);
+  }, [slug, currentHostname, (settingsBySlug as any)?.logo_url, (settingsBySlug as any)?.store_name]);
+
+  useEffect(() => {
+    setShowEntrySplash(true);
+    const timer = window.setTimeout(() => setShowEntrySplash(false), 900);
+    return () => window.clearTimeout(timer);
+  }, [slug, currentHostname]);
 
   // Auto-redirect to custom domain when accessing via /loja/:slug on a platform host
   useEffect(() => {
