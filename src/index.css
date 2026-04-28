@@ -193,6 +193,16 @@ html, body {
   to { opacity: 1; }
 }
 
+@keyframes storeLogoPulse {
+  0%, 100% { opacity: 0.92; transform: scale(0.985); }
+  50% { opacity: 1; transform: scale(1.025); }
+}
+
+.store-logo-splash-pulse {
+  animation: storeLogoPulse 2.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
 /* Rotating border glow for referral card */
 @keyframes rotate-border {
   0% { --angle: 0deg; }
