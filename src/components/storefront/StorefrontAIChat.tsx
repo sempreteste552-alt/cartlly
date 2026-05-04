@@ -70,7 +70,7 @@ function getPresenceLabel(isTyping: boolean, updatedAt?: string | null) {
   return `Visto ${format(new Date(updatedAt), "dd/MM HH:mm")}`;
 }
 
-export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium }: StorefrontAIChatProps) {
+export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, primaryColor, isPremium, storeLogoUrl }: StorefrontAIChatProps) {
   const { locale } = useTranslation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
