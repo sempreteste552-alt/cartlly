@@ -13,7 +13,7 @@ import {
   Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, 
   Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search, 
   Lock, Sparkles, ExternalLink, Calendar, Filter, Activity, Cpu, 
-  Layers, Zap, RefreshCw, ChevronUp, ChevronDown
+  Layers, Zap, RefreshCw, ChevronUp, ChevronDown, ArrowRight
 } from "lucide-react";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
