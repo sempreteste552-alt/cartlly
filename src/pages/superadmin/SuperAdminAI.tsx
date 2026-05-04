@@ -1,21 +1,47 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, BarChart3, Settings2, ShieldCheck, History, Users } from "lucide-react";
+import { BarChart3, Settings2, History, Users, Sparkles, Home } from "lucide-react";
 import { AIProvidersList } from "@/components/superadmin/AIProvidersList";
 import { AITenantSettings } from "@/components/superadmin/AITenantSettings";
 import { AIUsageLogs } from "@/components/superadmin/AIUsageLogs";
 import { AIConsumptionDashboard } from "@/components/superadmin/AIConsumptionDashboard";
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
+  BreadcrumbPage, BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default function SuperAdminAI() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  const tabLabels: Record<string, string> = {
+    dashboard: "Dashboard",
+    providers: "Provedores",
+    tenants: "Tenants",
+    logs: "Logs de Uso",
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild><Link to="/superadmin" className="flex items-center gap-1"><Home className="h-3 w-3" />Super Admin</Link></BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem><BreadcrumbLink asChild><Link to="/superadmin/ai">Central de IA</Link></BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem><BreadcrumbPage>{tabLabels[activeTab]}</BreadcrumbPage></BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Central de IA e Custos</h1>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Sparkles className="h-7 w-7 text-primary" />
+          Central de IA e Custos
+        </h1>
         <p className="text-muted-foreground">
-          Gerencie provedores de IA, limites por tenant e monitore o consumo da plataforma.
+          Gerencie provedores, limites por tenant, monitore margem e detecte abusos.
         </p>
       </div>
 

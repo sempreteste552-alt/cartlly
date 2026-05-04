@@ -55,7 +55,7 @@ export function AITenantSettings() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (variables: { tenant_id: string; settings: any; quotas: any; balance: number }) => {
+    mutationFn: async (variables: { tenant_id: string; settings: any; quotas: any; balance: number; tenant_name?: string }) => {
       const { error: sError } = await supabase
         .from("tenant_ai_settings")
         .upsert({ tenant_id: variables.tenant_id, ...variables.settings });
@@ -70,6 +70,19 @@ export function AITenantSettings() {
         .from("tenant_ai_balances")
         .upsert({ tenant_id: variables.tenant_id, balance: variables.balance });
       if (bError) throw bError;
+
+      // Audit log
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("audit_logs").insert({
+          actor_user_id: user.id,
+          action: "ai.tenant_settings.update",
+          target_type: "tenant",
+          target_id: variables.tenant_id,
+          target_name: variables.tenant_name ?? null,
+          details: { settings: variables.settings, quotas: variables.quotas, balance: variables.balance },
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-tenants"] });
@@ -170,6 +183,7 @@ export function AITenantSettings() {
               const formData = new FormData(e.currentTarget);
               updateSettingsMutation.mutate({
                 tenant_id: selectedTenant.user_id,
+                tenant_name: selectedTenant.store_name,
                 settings: {
                   is_ai_enabled: formData.get("is_ai_enabled") === "on",
                   is_text_gen_enabled: formData.get("is_text_gen_enabled") === "on",
