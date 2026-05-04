@@ -288,7 +288,13 @@ export function AdminLayout() {
   );
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      style={{
+        // Wider sidebar on desktop to fit all menu labels without truncation
+        ["--sidebar-width" as any]: "17.5rem",
+        ["--sidebar-width-mobile" as any]: "19rem",
+      } as CSSProperties}
+    >
       <div
         id="admin-layout-root"
         data-tenant={user?.id}
