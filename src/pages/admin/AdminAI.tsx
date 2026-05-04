@@ -12,10 +12,11 @@ import {
   Sparkles, Zap, AlertTriangle, TrendingUp, Crown, Activity,
   Brain, Settings2, BarChart3, ShieldCheck, ArrowUpRight, CircleDollarSign,
 } from "lucide-react";
-import { useTenantContext } from "@/hooks/useTenantContext";
+import { useParams } from "react-router-dom";
 
 export default function AdminAI() {
-  const { adminBasePath } = useTenantContext();
+  const { slug } = useParams();
+  const adminBasePath = slug ? `/painel/${slug}` : "/admin";
   const { data: usage, isLoading } = useAITenantUsage();
 
   const { data: alerts } = useQuery({
