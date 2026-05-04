@@ -808,29 +808,34 @@ export default function SuperAdminTenants() {
         </Card>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar tenant..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {[
-            { key: "all", label: "Todos", active: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", inactive: "border-primary/40 text-primary hover:bg-primary/10" },
-            { key: "active", label: "Ativos", active: "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500", inactive: "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" },
-            { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}`, active: "bg-amber-500 text-white hover:bg-amber-600 border-amber-500", inactive: "border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" },
-          ].map((f) => (
-            <Button
-              key={f.key}
-              variant="outline"
-              size="sm"
-              onClick={() => setFilter(f.key)}
-              className={filter === f.key ? f.active : f.inactive}
-            >
-              {f.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
+        <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por nome ou loja..." className="pl-9 border-border/60 bg-background/60" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { key: "all", label: "Todos", count: tenants?.length || 0, active: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary shadow-[0_0_15px_-4px_hsl(var(--primary)/0.6)]", inactive: "border-primary/30 text-primary hover:bg-primary/10" },
+              { key: "active", label: "Ativos", count: activeCount, active: "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500 shadow-[0_0_15px_-4px_rgba(16,185,129,0.7)]", inactive: "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" },
+              { key: "pending", label: "Pendentes", count: pendingCount, active: "bg-amber-500 text-white hover:bg-amber-600 border-amber-500 shadow-[0_0_15px_-4px_rgba(245,158,11,0.7)]", inactive: "border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" },
+            ].map((f) => (
+              <Button
+                key={f.key}
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter(f.key)}
+                className={`transition-all duration-200 ${filter === f.key ? f.active : f.inactive}`}
+              >
+                {f.label}
+                <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${filter === f.key ? "bg-white/25" : "bg-current/10"}`}>
+                  {f.count}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
