@@ -233,9 +233,12 @@ export function AdminLayout() {
         <AdminPushBanner />
         <AdminPendingOrdersAlert />
         <header className="h-14 flex items-center justify-between border-b border-border/60 bg-card/20 backdrop-blur-md px-4">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger className="mr-1" />
-            <h2 className="text-sm font-medium text-muted-foreground hidden sm:block">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <SidebarTrigger
+              aria-label="Abrir menu"
+              className="h-10 w-10 md:h-9 md:w-9 shrink-0 hover:bg-primary/10 transition-colors"
+            />
+            <h2 className="text-sm font-semibold text-foreground/80 truncate">
               {(settings as any)?.store_name || adminText.panel}
             </h2>
           </div>
