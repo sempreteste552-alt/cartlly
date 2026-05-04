@@ -252,7 +252,12 @@ export default function Colaboradores() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {collaborators?.map((collab: any) => (
+                  {collaborators?.filter((c: any) => {
+                    if (!search) return true;
+                    const q = search.toLowerCase();
+                    return (c.collaborator?.email || "").toLowerCase().includes(q) ||
+                           (c.collaborator?.full_name || "").toLowerCase().includes(q);
+                  }).map((collab: any) => (
                     <TableRow key={collab.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
