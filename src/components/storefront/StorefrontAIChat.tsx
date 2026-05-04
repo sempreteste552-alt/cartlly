@@ -41,6 +41,7 @@ interface StorefrontAIChatProps {
   aiAvatarUrl?: string;
   primaryColor?: string;
   isPremium?: boolean;
+  storeLogoUrl?: string;
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
