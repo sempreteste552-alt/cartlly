@@ -3,8 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen, Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen, Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare, Bell, Mail, Smartphone, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { AINav } from "@/components/admin/AINav";
 
 const FEATURES: { key: string; label: string; desc: string; icon: any }[] = [
   { key: "is_ai_enabled", label: "IA Geral", desc: "Liga ou desliga TODA a inteligência artificial da sua loja.", icon: Sparkles },
