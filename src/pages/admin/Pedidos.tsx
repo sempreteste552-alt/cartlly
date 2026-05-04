@@ -828,3 +828,37 @@ export default function Pedidos() {
   );
 }
 
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  pulse,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  tone: "primary" | "emerald" | "amber" | "sky" | "green";
+  pulse?: boolean;
+}) {
+  const toneMap: Record<string, string> = {
+    primary: "from-primary/15 to-primary/5 text-primary border-primary/20",
+    emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/25",
+    sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    green: "from-green-500/15 to-green-500/5 text-green-600 dark:text-green-400 border-green-500/20",
+  };
+  return (
+    <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br ${toneMap[tone]} p-3 transition-all hover:scale-[1.02] hover:shadow-md`}>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{label}</span>
+        <div className="relative">
+          <Icon className="h-3.5 w-3.5 opacity-70" />
+          {pulse && <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-current animate-ping" />}
+        </div>
+      </div>
+      <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground">{value}</div>
+    </div>
+  );
+}
+
