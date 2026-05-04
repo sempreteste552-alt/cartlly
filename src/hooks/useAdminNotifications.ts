@@ -47,6 +47,23 @@ export function useAdminNotifications() {
     loadNotifications();
   }, [loadNotifications]);
 
+  // Play alert sound on admin open when there are unread notifications (once per session)
+  useEffect(() => {
+    if (loading || !user) return;
+    const unread = notifications.filter((n) => !n.read).length;
+    if (unread === 0) return;
+    const key = `admin_alert_played_${user.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    setTimeout(() => {
+      playNotificationSound();
+      toast(`🔔 Você tem ${unread} ${unread === 1 ? "aviso pendente" : "avisos pendentes"}`, {
+        description: "Confira a central de notificações no topo.",
+        duration: 4000,
+      });
+    }, 800);
+  }, [loading, user, notifications]);
+
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
