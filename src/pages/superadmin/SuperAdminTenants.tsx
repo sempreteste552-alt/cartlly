@@ -89,6 +89,16 @@ export default function SuperAdminTenants() {
 
 
   const pendingCount = tenants?.filter(t => t.status === "pending").length || 0;
+  const onlineCount = tenants?.filter(t => t.is_online).length || 0;
+  const activeCount = tenants?.filter(t => t.status === "active" || t.subscription?.status === "active").length || 0;
+  const blockedCount = tenants?.filter(t => t.status === "blocked" || t.store?.store_blocked || t.store?.admin_blocked).length || 0;
+  const trialCount = tenants?.filter(t => t.subscription?.status === "trial").length || 0;
+  const paidCount = tenants?.filter(t => {
+    const planName = (t.subscription?.tenant_plans as any)?.name;
+    return t.subscription?.status === "active" && planName && planName !== "FREE";
+  }).length || 0;
+  const totalRevenue = tenants?.reduce((sum, t) => sum + (t.orders?.revenue || 0), 0) || 0;
+  const totalOrders = tenants?.reduce((sum, t) => sum + (t.orders?.count || 0), 0) || 0;
 
   const filtered = tenants?.filter((t) => {
     const matchSearch = !search.trim() ||
