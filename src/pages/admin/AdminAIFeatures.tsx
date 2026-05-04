@@ -177,7 +177,7 @@ export default function AdminAIFeatures() {
           <CardDescription>
             Os limites mensais de uso de IA, alertas automáticos e bloqueio rígido são definidos pela
             equipe da plataforma de acordo com o seu plano. Acompanhe o seu consumo na aba{" "}
-            <Link to={slug ? `/painel/${slug}/ai/usage` : "/admin/ai/usage"} className="underline font-medium">
+            <Link to={usageUrl} className="underline font-medium">
               Consumo
             </Link>
             .
