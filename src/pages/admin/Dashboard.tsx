@@ -302,19 +302,6 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-2">
             {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
 
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[140px] bg-background/60 backdrop-blur-md border-primary/20 h-9 text-xs">
-                <Calendar className="mr-2 h-3.5 w-3.5 text-primary" />
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Hoje</SelectItem>
-                <SelectItem value="7d">Últimos 7 dias</SelectItem>
-                <SelectItem value="30d">Últimos 30 dias</SelectItem>
-                <SelectItem value="year">Este ano</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
               <a href={storeUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -326,6 +313,43 @@ export default function Dashboard() {
               <RefreshCw className="h-3.5 w-3.5" />
               Atualizar
             </Button>
+          </div>
+        </div>
+
+        {/* Pro filter bar — Period selector */}
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-card/60 to-purple-500/5 backdrop-blur-xl p-3 shadow-[0_0_30px_-12px_hsl(var(--primary)/0.4)]">
+          <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-primary/15 blur-3xl" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-md shadow-primary/30">
+                <Calendar className="h-4 w-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold leading-none">Período</p>
+                <p className="text-xs font-semibold text-foreground leading-tight">Filtrar métricas</p>
+              </div>
+            </div>
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-xl bg-background/60 border border-border/40">
+              {[
+                { key: "today", label: "Hoje", icon: "☀️" },
+                { key: "7d", label: "7 dias", icon: "📅" },
+                { key: "30d", label: "30 dias", icon: "📊" },
+                { key: "year", label: "Este ano", icon: "🗓️" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setTimeRange(opt.key)}
+                  className={`relative h-9 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                    timeRange === opt.key
+                      ? "bg-gradient-to-br from-primary to-purple-600 text-white shadow-lg shadow-primary/30 scale-[1.02]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="text-sm">{opt.icon}</span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
