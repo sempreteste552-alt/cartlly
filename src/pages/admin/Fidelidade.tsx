@@ -224,6 +224,15 @@ export default function Fidelidade() {
         <Card>
           <CardHeader>
             <CardTitle>Últimas movimentações</CardTitle>
+            <div className="relative pt-2">
+              <Search className="absolute left-3 top-[calc(50%+4px)] -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por descrição ou tipo..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -236,7 +245,12 @@ export default function Fidelidade() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.slice(0, 20).map((t: any) => (
+                {transactions.filter((t: any) => {
+                  if (!search) return true;
+                  const q = search.toLowerCase();
+                  return (t.description || "").toLowerCase().includes(q) ||
+                         (t.type || "").toLowerCase().includes(q);
+                }).slice(0, 20).map((t: any) => (
                   <TableRow key={t.id}>
                     <TableCell>
                       <Badge variant={t.type === "earn" ? "default" : "secondary"}>
