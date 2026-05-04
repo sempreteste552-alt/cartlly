@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
 import { 
   Users, UserPlus, Shield, Trash2, Mail, 
-  CheckCircle2, AlertCircle, Loader2, Copy, Check 
+  CheckCircle2, AlertCircle, Loader2, Copy, Check, Search 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
