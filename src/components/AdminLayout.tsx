@@ -19,6 +19,7 @@ import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useStoreThemeConfig } from "@/hooks/useStoreThemeConfig";
 import { ThemeToggle, useThemeScope } from "@/components/ThemeToggle";
 import { PlatformLogoSplash } from "@/components/PlatformLogoSplash";
+import { PWAInstallPrompt as PWAInstallPromptPro } from "@/components/storefront/PWAInstallPromptPro";
 import { Badge } from "@/components/ui/badge";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -301,6 +302,13 @@ export function AdminLayout() {
         {!isCerebroPage && !isSuportePage && tenantReady && <AIChatWidget />}
         {!isCerebroPage && !isSuportePage && tenantReady && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
+        {tenantReady && (
+          <PWAInstallPromptPro
+            storeName={(settings as any)?.store_name || adminName}
+            storeIcon={themeConfig?.favicon_url || (settings as any)?.favicon_url || (settings as any)?.logo_url}
+            dismissKey={`pwa_install_admin_${user?.id || 'default'}`}
+          />
+        )}
       </div>
     </SidebarProvider>
   );
