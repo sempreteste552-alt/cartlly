@@ -292,7 +292,7 @@ export default function Colaboradores() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {invitations?.map((invite: any) => (
+                  {invitations?.filter((i: any) => !search || (i.email || "").toLowerCase().includes(search.toLowerCase())).map((invite: any) => (
                     <TableRow key={invite.id} className="opacity-70">
                       <TableCell>
                         <div className="flex items-center gap-3">
