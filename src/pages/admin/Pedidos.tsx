@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { 
   ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, 
   XCircle, Copy, FileText, Download, Search, Calendar as CalendarIcon, Printer,
-  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift
+  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift, TrendingUp, DollarSign, AlertCircle
 } from "lucide-react";
 import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
