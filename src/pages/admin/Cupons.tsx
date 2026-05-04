@@ -46,6 +46,7 @@ export default function Cupons() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("percentage");
