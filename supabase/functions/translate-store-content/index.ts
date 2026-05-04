@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { callAI, aiErrorToResponse } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,17 +34,14 @@ function extractTranslations(content: string, fallback: string[]) {
       continue;
     }
   }
-
   return fallback;
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { texts, targetLocale = "pt", sourceLocale = "pt" } = await req.json();
+    const { texts, targetLocale = "pt", sourceLocale = "pt", store_user_id } = await req.json();
 
     if (!Array.isArray(texts)) {
       return new Response(JSON.stringify({ error: "texts must be an array" }), {
@@ -52,61 +50,47 @@ serve(async (req) => {
       });
     }
 
-    const sanitizedTexts = texts.map((text) => (typeof text === "string" ? text : ""));
-
-    if (targetLocale === "pt" || sanitizedTexts.every((text) => !text.trim())) {
+    const sanitizedTexts = texts.map((t) => (typeof t === "string" ? t : ""));
+    if (targetLocale === "pt" || sanitizedTexts.every((t) => !t.trim())) {
       return new Response(JSON.stringify({ translations: sanitizedTexts }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ translations: sanitizedTexts }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-1.5-flash-lite",
-        temperature: 0.2,
-        messages: [
-          {
-            role: "system",
-            content: `Translate each input text from ${LOCALE_LABELS[sourceLocale] || sourceLocale} to ${LOCALE_LABELS[targetLocale] || targetLocale}. Preserve tone, HTML tags, markdown, line breaks, placeholders, emojis, URLs, coupon codes and brand/product names when appropriate. Return ONLY valid JSON in the format {"translations":["..."]} with exactly the same number of items as received.`,
-          },
-          {
-            role: "user",
-            content: JSON.stringify({ texts: sanitizedTexts }),
-          },
-        ],
-      }),
+    const result = await callAI({
+      model: "google/gemini-2.5-flash-lite",
+      temperature: 0.2,
+      feature: "translate_content",
+      store_user_id,
+      messages: [
+        {
+          role: "system",
+          content: `Translate each input text from ${LOCALE_LABELS[sourceLocale] || sourceLocale} to ${LOCALE_LABELS[targetLocale] || targetLocale}. Preserve tone, HTML tags, markdown, line breaks, placeholders, emojis, URLs, coupon codes and brand/product names when appropriate. Return ONLY valid JSON in the format {"translations":["..."]} with exactly the same number of items as received.`,
+        },
+        { role: "user", content: JSON.stringify({ texts: sanitizedTexts }) },
+      ],
     });
 
-    if (!response.ok) {
+    if (result instanceof Response) {
       return new Response(JSON.stringify({ translations: sanitizedTexts }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const result = await response.json();
-    const content = result?.choices?.[0]?.message?.content || "";
-    const translations = extractTranslations(content, sanitizedTexts);
-
+    const translations = extractTranslations(result.content, sanitizedTexts);
     return new Response(JSON.stringify({ translations }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("translate-store-content error:", error);
-    return new Response(JSON.stringify({ error: "Unexpected translation error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Sempre retorna fallback para não quebrar a UI
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      return new Response(JSON.stringify({ translations: body.texts || [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch {
+      return aiErrorToResponse(error, corsHeaders);
+    }
   }
 });
