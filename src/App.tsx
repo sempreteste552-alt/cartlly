@@ -34,6 +34,9 @@ const Paginas = lazy(() => import("./pages/admin/Paginas"));
 const Automacao = lazy(() => import("./pages/admin/Automacao"));
 const SetupStore = lazy(() => import("./pages/admin/SetupStore"));
 const Cerebro = lazy(() => import("./pages/admin/Cerebro"));
+const AdminAI = lazy(() => import("./pages/admin/AdminAI"));
+const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
+const AdminAIFeatures = lazy(() => import("./pages/admin/AdminAIFeatures"));
 const PlatformReferrals = lazy(() => import("./pages/admin/PlatformReferrals"));
 const CustomerReferrals = lazy(() => import("./pages/admin/CustomerReferrals"));
 const Politicas = lazy(() => import("./pages/admin/Politicas"));
@@ -188,6 +191,10 @@ const App = () => {
                     <Route path="paginas" element={<Paginas />} />
                     <Route path="automacao" element={<Automacao />} />
                     <Route path="cerebro" element={<Cerebro />} />
+                    <Route path="ai" element={<AdminAI />} />
+                    <Route path="ai/usage" element={<AdminAIUsage />} />
+                    <Route path="ai/features" element={<AdminAIFeatures />} />
+                    <Route path="ai/brain" element={<Cerebro />} />
                     <Route path="indicacoes" element={<CustomerReferrals />} />
                     <Route path="indicacoes-plataforma" element={<PlatformReferrals />} />
                     <Route path="fidelidade" element={<Fidelidade />} />
