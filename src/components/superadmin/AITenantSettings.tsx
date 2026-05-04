@@ -183,6 +183,7 @@ export function AITenantSettings() {
               const formData = new FormData(e.currentTarget);
               updateSettingsMutation.mutate({
                 tenant_id: selectedTenant.user_id,
+                tenant_name: selectedTenant.store_name,
                 settings: {
                   is_ai_enabled: formData.get("is_ai_enabled") === "on",
                   is_text_gen_enabled: formData.get("is_text_gen_enabled") === "on",
