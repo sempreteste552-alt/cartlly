@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { CSSProperties } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, ShoppingBag, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2, Crown, Sparkles
+  Store, CreditCard, Truck, Zap, Users, UserCog, Bell, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2, Crown, Sparkles, Dices
 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/i18n";
@@ -98,21 +98,21 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false, show: true },
     { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true, show: true },
     { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false, show: true },
-    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: Users, isNew: true, show: isRealOwner },
+    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: UserCog, isNew: true, show: isRealOwner },
     { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false, show: true },
     { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount, show: true },
   ].filter(i => i.show !== false);
 
+  // Marketing & IA — consolidado: tudo de IA mora dentro de /ai (Cérebro, Automação IA, WhatsApp IA são abas internas)
   const marketingItems = [
     { title: locale === 'pt' ? 'Central de IA' : 'AI Center', url: `${adminBasePath}/ai`, icon: Sparkles, isNew: true, show: true },
-    { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true, show: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: true },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: true },
+    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: true },
     { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true, show: true },
     { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true, show: true },
     { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true, show: true },
-    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: true },
-    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Gift, isNew: true, show: true },
+    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Dices, isNew: true, show: true },
   ].filter(i => i.show !== false);
 
   const configItems = [
