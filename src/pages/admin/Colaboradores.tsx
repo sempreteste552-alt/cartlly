@@ -28,6 +28,7 @@ export default function Colaboradores() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
