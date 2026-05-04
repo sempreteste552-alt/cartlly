@@ -45,7 +45,8 @@ export default function AdminAIFeatures() {
   const { slug } = useParams();
   const { ctx, plan: currentPlan } = useTenantContext();
   const planSlug = (ctx?.planSlug ?? "FREE") as PlanSlug;
-  const planUrl = slug ? `/painel/${slug}/meu-plano` : "/admin/meu-plano";
+  const planUrl = slug ? `/painel/${slug}/plano` : "#";
+  const usageUrl = slug ? `/painel/${slug}/ai/usage` : "#";
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["ai-tenant-settings-self"],
