@@ -226,6 +226,15 @@ export default function Colaboradores() {
             <CardDescription>
               {(collaborators?.length || 0) + (invitations?.length || 0)} {locale === 'pt' ? "membros no total" : "total members"}
             </CardDescription>
+            <div className="relative pt-2">
+              <Search className="absolute left-3 top-1/2 translate-y-0 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={locale === 'pt' ? "Buscar por nome ou e-mail..." : "Search by name or email..."}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
