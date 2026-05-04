@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   FileText, Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Loader2,
-  BookOpen, Shield, HelpCircle, Phone, Info,
+  BookOpen, Shield, HelpCircle, Phone, Info, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PlanGate } from "@/components/PlanGate";
@@ -57,6 +57,7 @@ export default function Paginas() {
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: pages, isLoading } = useQuery({
     queryKey: ["store_pages", user?.id],
@@ -226,6 +227,19 @@ export default function Paginas() {
         </Card>
       )}
 
+      {/* Search */}
+      {pages && pages.length > 0 && (
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por título ou slug..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {/* Pages list */}
       {!pages?.length ? (
         <Card>
@@ -244,7 +258,11 @@ export default function Paginas() {
         </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pages.map((page) => {
+          {pages.filter((page) => {
+            if (!search) return true;
+            const q = search.toLowerCase();
+            return page.title?.toLowerCase().includes(q) || page.slug?.toLowerCase().includes(q);
+          }).map((page) => {
             const template = PAGE_TEMPLATES.find(t => t.slug === page.slug);
             const Icon = template?.icon || FileText;
             return (

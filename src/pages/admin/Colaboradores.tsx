@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "@/i18n";
 import { 
   Users, UserPlus, Shield, Trash2, Mail, 
-  CheckCircle2, AlertCircle, Loader2, Copy, Check 
+  CheckCircle2, AlertCircle, Loader2, Copy, Check, Search 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function Colaboradores() {
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("viewer");
+  const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { data: collaborators, isLoading: isLoadingCollabs } = useQuery({
@@ -225,6 +226,15 @@ export default function Colaboradores() {
             <CardDescription>
               {(collaborators?.length || 0) + (invitations?.length || 0)} {locale === 'pt' ? "membros no total" : "total members"}
             </CardDescription>
+            <div className="relative pt-2">
+              <Search className="absolute left-3 top-1/2 translate-y-0 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={locale === 'pt' ? "Buscar por nome ou e-mail..." : "Search by name or email..."}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -242,7 +252,12 @@ export default function Colaboradores() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {collaborators?.map((collab: any) => (
+                  {collaborators?.filter((c: any) => {
+                    if (!search) return true;
+                    const q = search.toLowerCase();
+                    return (c.collaborator?.email || "").toLowerCase().includes(q) ||
+                           (c.collaborator?.full_name || "").toLowerCase().includes(q);
+                  }).map((collab: any) => (
                     <TableRow key={collab.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -277,7 +292,7 @@ export default function Colaboradores() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  {invitations?.map((invite: any) => (
+                  {invitations?.filter((i: any) => !search || (i.email || "").toLowerCase().includes(search.toLowerCase())).map((invite: any) => (
                     <TableRow key={invite.id} className="opacity-70">
                       <TableCell>
                         <div className="flex items-center gap-3">

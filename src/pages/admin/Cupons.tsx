@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Ticket, Trash2, Pencil, Loader2, Sparkles, Wand2, Lock } from "lucide-react";
+import { Plus, Ticket, Trash2, Pencil, Loader2, Sparkles, Wand2, Lock, Search } from "lucide-react";
 import { useCoupons, useCreateCoupon, useUpdateCoupon, useDeleteCoupon } from "@/hooks/useCoupons";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +46,7 @@ export default function Cupons() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [code, setCode] = useState("");
   const [discountType, setDiscountType] = useState("percentage");
@@ -239,6 +240,18 @@ export default function Cupons() {
 
       {aiContent}
 
+      {coupons && coupons.length > 0 && (
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por código do cupom..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
       {!coupons?.length ? (
         <Card className="border-border">
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -263,7 +276,7 @@ export default function Cupons() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {coupons.map((c: any) => (
+              {coupons.filter((c: any) => !search || c.code?.toLowerCase().includes(search.toLowerCase())).map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>
                   <TableCell>
