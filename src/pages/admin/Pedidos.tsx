@@ -268,34 +268,68 @@ export default function Pedidos() {
     );
   }
 
+  // KPIs profissionais
+  const kpis = useMemo(() => {
+    const list = orders || [];
+    const totalRevenue = list
+      .filter((o: any) => {
+        const ps = o.payments?.[0]?.status;
+        return ps === "approved" || ps === "paid";
+      })
+      .reduce((acc: number, o: any) => acc + Number(o.total || 0), 0);
+    const pending = list.filter((o: any) => o.status === "pendente").length;
+    const processing = list.filter((o: any) => o.status === "processando").length;
+    const shipped = list.filter((o: any) => o.status === "enviado").length;
+    const delivered = list.filter((o: any) => o.status === "entregue").length;
+    return { total: list.length, totalRevenue, pending, processing, shipped, delivered };
+  }, [orders]);
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div id="orders-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Vendas e Carrinhos</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {!isViewer && (
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Configurar Impressora</span>
-            </Button>
-          )}
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
-              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">CSV</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")}>
-              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">XLSX</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("pdf")}>
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">PDF</span>
-            </Button>
+      {/* HEADER PROFISSIONAL */}
+      <div id="orders-header" className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/[0.07] via-card to-purple-500/[0.04] p-5 sm:p-6">
+        <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/25">
+              <ShoppingCart className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Vendas e Carrinhos</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
+            </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {!isViewer && (
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
+                <Printer className="h-4 w-4" />
+                <span className="hidden sm:inline">Impressora</span>
+              </Button>
+            )}
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">CSV</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")}>
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">XLSX</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExport("pdf")}>
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="relative grid grid-cols-2 lg:grid-cols-5 gap-2.5 mt-5">
+          <KpiTile icon={TrendingUp} label="Pedidos" value={kpis.total} tone="primary" />
+          <KpiTile icon={DollarSign} label="Receita Aprovada" value={formatPrice(kpis.totalRevenue)} tone="emerald" />
+          <KpiTile icon={Clock} label="Pendentes" value={kpis.pending} tone="amber" pulse={kpis.pending > 0} />
+          <KpiTile icon={Truck} label="Enviados" value={kpis.shipped} tone="sky" />
+          <KpiTile icon={CheckCircle} label="Entregues" value={kpis.delivered} tone="green" />
         </div>
       </div>
 
