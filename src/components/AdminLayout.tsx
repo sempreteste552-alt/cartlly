@@ -302,6 +302,13 @@ export function AdminLayout() {
         {!isCerebroPage && !isSuportePage && tenantReady && <AIChatWidget />}
         {!isCerebroPage && !isSuportePage && tenantReady && <StoreLivePreview open={isPreviewOpen} onOpenChange={setIsPreviewOpen} />}
         {showWelcome && <WelcomeConfetti userName={welcomeName} />}
+        {tenantReady && (
+          <PWAInstallPromptPro
+            storeName={(settings as any)?.store_name || adminName}
+            storeIcon={themeConfig?.favicon_url || (settings as any)?.favicon_url || (settings as any)?.logo_url}
+            dismissKey={`pwa_install_admin_${user?.id || 'default'}`}
+          />
+        )}
       </div>
     </SidebarProvider>
   );
