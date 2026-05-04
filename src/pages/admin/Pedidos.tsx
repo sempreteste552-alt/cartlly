@@ -351,6 +351,38 @@ export default function Pedidos() {
         </TabsList>
 
         <TabsContent value="pedidos" className="space-y-6 animate-in fade-in-50 duration-300">
+          {/* Chips de status rápidos */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "all", label: "Todos", count: orders?.length || 0, icon: Filter },
+              { key: "pendente", label: "Pendentes", count: kpis.pending, icon: Clock },
+              { key: "processando", label: "Processando", count: kpis.processing, icon: Package },
+              { key: "enviado", label: "Enviados", count: kpis.shipped, icon: Truck },
+              { key: "entregue", label: "Entregues", count: kpis.delivered, icon: CheckCircle },
+              { key: "cancelado", label: "Cancelados", count: (orders || []).filter((o:any)=>o.status==="cancelado").length, icon: XCircle },
+            ].map((c) => {
+              const active = filterStatus === c.key;
+              const Icon = c.icon;
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setFilterStatus(c.key)}
+                  className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-gradient-to-br from-primary to-purple-600 text-white border-transparent shadow-md shadow-primary/30 scale-[1.03]"
+                      : "bg-card hover:bg-muted/60 border-border text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {c.label}
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20" : "bg-muted text-muted-foreground"}`}>
+                    {c.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <Card className="border-border">
             <CardContent className="p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
