@@ -173,6 +173,81 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          severity: string
+          tenant_id: string
+          threshold_percent: number | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          severity?: string
+          tenant_id: string
+          threshold_percent?: number | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          severity?: string
+          tenant_id?: string
+          threshold_percent?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      ai_credit_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          feature: string | null
+          id: string
+          reason: string | null
+          related_usage_log_id: string | null
+          tenant_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          created_by?: string | null
+          feature?: string | null
+          id?: string
+          reason?: string | null
+          related_usage_log_id?: string | null
+          tenant_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          feature?: string | null
+          id?: string
+          reason?: string | null
+          related_usage_log_id?: string | null
+          tenant_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       ai_feedback_loop: {
         Row: {
           action_type: string
@@ -391,11 +466,14 @@ export type Database = {
         Row: {
           cost_billed: number | null
           created_at: string
+          credits_charged: number
           error_message: string | null
           estimated_cost: number | null
           feature: string | null
           id: string
           images_count: number | null
+          latency_ms: number | null
+          metadata: Json | null
           model: string
           provider: string
           status: string | null
@@ -408,11 +486,14 @@ export type Database = {
         Insert: {
           cost_billed?: number | null
           created_at?: string
+          credits_charged?: number
           error_message?: string | null
           estimated_cost?: number | null
           feature?: string | null
           id?: string
           images_count?: number | null
+          latency_ms?: number | null
+          metadata?: Json | null
           model: string
           provider: string
           status?: string | null
@@ -425,11 +506,14 @@ export type Database = {
         Update: {
           cost_billed?: number | null
           created_at?: string
+          credits_charged?: number
           error_message?: string | null
           estimated_cost?: number | null
           feature?: string | null
           id?: string
           images_count?: number | null
+          latency_ms?: number | null
+          metadata?: Json | null
           model?: string
           provider?: string
           status?: string | null
@@ -3981,22 +4065,40 @@ export type Database = {
         Row: {
           balance: number | null
           currency: string | null
+          current_period_end: string
+          current_period_start: string
           id: string
+          monthly_credits_granted: number
+          monthly_credits_used: number
+          overage_credits: number
           tenant_id: string | null
+          topup_credits: number
           updated_at: string | null
         }
         Insert: {
           balance?: number | null
           currency?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
+          monthly_credits_granted?: number
+          monthly_credits_used?: number
+          overage_credits?: number
           tenant_id?: string | null
+          topup_credits?: number
           updated_at?: string | null
         }
         Update: {
           balance?: number | null
           currency?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
+          monthly_credits_granted?: number
+          monthly_credits_used?: number
+          overage_credits?: number
           tenant_id?: string | null
+          topup_credits?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -4067,6 +4169,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           writing_style?: string | null
+        }
+        Relationships: []
+      }
+      tenant_ai_feature_limits: {
+        Row: {
+          block_after_limit: boolean | null
+          created_at: string
+          daily_request_limit: number | null
+          enabled: boolean
+          feature: string
+          id: string
+          monthly_credit_limit: number | null
+          monthly_request_limit: number | null
+          per_customer_daily_limit: number | null
+          per_user_daily_limit: number | null
+          tenant_id: string
+          updated_at: string
+          use_cheaper_model_after_percent: number | null
+        }
+        Insert: {
+          block_after_limit?: boolean | null
+          created_at?: string
+          daily_request_limit?: number | null
+          enabled?: boolean
+          feature: string
+          id?: string
+          monthly_credit_limit?: number | null
+          monthly_request_limit?: number | null
+          per_customer_daily_limit?: number | null
+          per_user_daily_limit?: number | null
+          tenant_id: string
+          updated_at?: string
+          use_cheaper_model_after_percent?: number | null
+        }
+        Update: {
+          block_after_limit?: boolean | null
+          created_at?: string
+          daily_request_limit?: number | null
+          enabled?: boolean
+          feature?: string
+          id?: string
+          monthly_credit_limit?: number | null
+          monthly_request_limit?: number | null
+          per_customer_daily_limit?: number | null
+          per_user_daily_limit?: number | null
+          tenant_id?: string
+          updated_at?: string
+          use_cheaper_model_after_percent?: number | null
         }
         Relationships: []
       }
@@ -4144,30 +4294,66 @@ export type Database = {
       }
       tenant_ai_settings: {
         Row: {
+          admin_assistant_enabled: boolean
+          catalog_ai_enabled: boolean
+          ceo_brain_enabled: boolean
+          coupons_ai_enabled: boolean
+          hard_limit_enabled: boolean
           id: string
           is_ai_enabled: boolean | null
           is_image_gen_enabled: boolean | null
           is_smart_automation_enabled: boolean | null
           is_text_gen_enabled: boolean | null
+          monthly_credit_limit: number
+          product_ai_enabled: boolean
+          push_ai_enabled: boolean
+          rag_memory_enabled: boolean
+          soft_limit_alerts_enabled: boolean
+          storefront_chat_enabled: boolean
           tenant_id: string | null
+          translation_ai_enabled: boolean
           updated_at: string | null
         }
         Insert: {
+          admin_assistant_enabled?: boolean
+          catalog_ai_enabled?: boolean
+          ceo_brain_enabled?: boolean
+          coupons_ai_enabled?: boolean
+          hard_limit_enabled?: boolean
           id?: string
           is_ai_enabled?: boolean | null
           is_image_gen_enabled?: boolean | null
           is_smart_automation_enabled?: boolean | null
           is_text_gen_enabled?: boolean | null
+          monthly_credit_limit?: number
+          product_ai_enabled?: boolean
+          push_ai_enabled?: boolean
+          rag_memory_enabled?: boolean
+          soft_limit_alerts_enabled?: boolean
+          storefront_chat_enabled?: boolean
           tenant_id?: string | null
+          translation_ai_enabled?: boolean
           updated_at?: string | null
         }
         Update: {
+          admin_assistant_enabled?: boolean
+          catalog_ai_enabled?: boolean
+          ceo_brain_enabled?: boolean
+          coupons_ai_enabled?: boolean
+          hard_limit_enabled?: boolean
           id?: string
           is_ai_enabled?: boolean | null
           is_image_gen_enabled?: boolean | null
           is_smart_automation_enabled?: boolean | null
           is_text_gen_enabled?: boolean | null
+          monthly_credit_limit?: number
+          product_ai_enabled?: boolean
+          push_ai_enabled?: boolean
+          rag_memory_enabled?: boolean
+          soft_limit_alerts_enabled?: boolean
+          storefront_chat_enabled?: boolean
           tenant_id?: string | null
+          translation_ai_enabled?: boolean
           updated_at?: string | null
         }
         Relationships: []
@@ -4868,6 +5054,16 @@ export type Database = {
       }
       check_hostname_exists: { Args: { _hostname: string }; Returns: boolean }
       check_pending_domains: { Args: never; Returns: undefined }
+      consume_ai_credits: {
+        Args: {
+          p_credits: number
+          p_feature: string
+          p_reason?: string
+          p_tenant_id: string
+          p_usage_log_id?: string
+        }
+        Returns: Json
+      }
       create_default_segments: {
         Args: { _user_id: string }
         Returns: undefined
@@ -4933,6 +5129,19 @@ export type Database = {
         Returns: {
           user_id: string
         }[]
+      }
+      get_tenant_ai_usage_summary: {
+        Args: { p_tenant_id?: string }
+        Returns: Json
+      }
+      grant_ai_credits: {
+        Args: {
+          p_amount: number
+          p_reason?: string
+          p_tenant_id: string
+          p_type?: string
+        }
+        Returns: Json
       }
       has_role: {
         Args: {

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { CSSProperties } from "react";
 import {
   LayoutDashboard, Package, ShoppingCart, ShoppingBag, Settings, Ticket, ExternalLink, LogOut,
-  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2, Crown
+  Store, CreditCard, Truck, Zap, Users, Bell, Bot, BadgeCheck, FileText, Gift, Shield, Award, DollarSign, BarChart3, MessageCircle, Share2, Crown, Sparkles
 } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useTranslation } from "@/i18n";
@@ -104,6 +104,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   ].filter(i => i.show !== false);
 
   const marketingItems = [
+    { title: locale === 'pt' ? 'Central de IA' : 'AI Center', url: `${adminBasePath}/ai`, icon: Sparkles, isNew: true, show: true },
     { title: t.sidebar.aiBrain, url: `${adminBasePath}/cerebro`, icon: Bot, isNew: true, show: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: true },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: true },
