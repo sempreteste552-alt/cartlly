@@ -26,6 +26,7 @@ export default function Fidelidade() {
   const [minRedemption, setMinRedemption] = useState("100");
   const [referralEnabled, setReferralEnabled] = useState(false);
   const [referralPoints, setReferralPoints] = useState("50");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (config) {
