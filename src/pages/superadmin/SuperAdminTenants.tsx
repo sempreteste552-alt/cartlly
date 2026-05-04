@@ -733,14 +733,17 @@ export default function SuperAdminTenants() {
         </div>
         <div className="flex gap-2 flex-wrap">
           {[
-            { key: "all", label: "Todos" },
-            { key: "online", label: `Online (${tenants?.filter(t => t.is_online).length || 0})` },
-            { key: "active", label: "Ativos" },
-            { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
-            { key: "blocked", label: "Bloqueados" },
-            { key: "no_plan", label: "Sem plano" },
+            { key: "all", label: "Todos", active: "bg-primary text-primary-foreground hover:bg-primary/90 border-primary", inactive: "border-primary/40 text-primary hover:bg-primary/10" },
+            { key: "active", label: "Ativos", active: "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500", inactive: "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10" },
+            { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}`, active: "bg-amber-500 text-white hover:bg-amber-600 border-amber-500", inactive: "border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" },
           ].map((f) => (
-            <Button key={f.key} variant={filter === f.key ? "default" : "outline"} size="sm" onClick={() => setFilter(f.key)}>
+            <Button
+              key={f.key}
+              variant="outline"
+              size="sm"
+              onClick={() => setFilter(f.key)}
+              className={filter === f.key ? f.active : f.inactive}
+            >
               {f.label}
             </Button>
           ))}
