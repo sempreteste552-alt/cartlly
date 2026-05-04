@@ -1,33 +1,52 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen, Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare, Bell, Mail, Smartphone, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen,
+  Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare,
+  Lock, Check, Crown, ArrowUpCircle,
+} from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { AINav } from "@/components/admin/AINav";
+import { AITrainingGuide } from "@/components/admin/AITrainingGuide";
+import { useTenantContext } from "@/hooks/useTenantContext";
+import { planLevel, type PlanSlug } from "@/lib/planPermissions";
 
-const FEATURES: { key: string; label: string; desc: string; icon: any }[] = [
-  { key: "is_ai_enabled", label: "IA Geral", desc: "Liga ou desliga TODA a inteligência artificial da sua loja.", icon: Sparkles },
-  { key: "product_ai_enabled", label: "IA para produtos", desc: "Geração de descrição, SEO, análise de imagem.", icon: ShoppingBag },
-  { key: "catalog_ai_enabled", label: "Importação por catálogo", desc: "IA lê seu catálogo e cadastra produtos.", icon: BookOpen },
-  { key: "storefront_chat_enabled", label: "Chat IA na vitrine", desc: "Atendimento automatizado para seus clientes.", icon: MessageSquare },
-  { key: "admin_assistant_enabled", label: "Assistente do painel", desc: "IA que te ajuda a configurar e operar a loja.", icon: Bot },
-  { key: "ceo_brain_enabled", label: "CEO Brain", desc: "Análise diária com sugestões estratégicas.", icon: Brain },
-  { key: "push_ai_enabled", label: "Push notifications com IA", desc: "Mensagens personalizadas geradas por IA.", icon: Megaphone },
-  { key: "coupons_ai_enabled", label: "Cupons inteligentes", desc: "Sugestão e disparo automático de cupons.", icon: Ticket },
-  { key: "translation_ai_enabled", label: "Tradução automática", desc: "Conteúdo da loja em múltiplos idiomas.", icon: Languages },
-  { key: "is_image_gen_enabled", label: "Geração de imagens", desc: "Banners, fotos de produto e arte com IA.", icon: ImageIcon },
-  { key: "rag_memory_enabled", label: "Memória RAG", desc: "IA aprende com sua loja para respostas melhores.", icon: Database },
+type AIFeature = {
+  key: string;
+  label: string;
+  desc: string;
+  icon: any;
+  minPlan: PlanSlug;
+};
+
+const FEATURES: AIFeature[] = [
+  { key: "is_ai_enabled",            label: "IA Geral",                    desc: "Núcleo de inteligência artificial da sua loja.",          icon: Sparkles,      minPlan: "STARTER" },
+  { key: "product_ai_enabled",       label: "IA para produtos",            desc: "Geração de descrição, SEO e análise de imagem.",          icon: ShoppingBag,   minPlan: "STARTER" },
+  { key: "catalog_ai_enabled",       label: "Importação por catálogo",     desc: "IA lê seu catálogo e cadastra produtos.",                 icon: BookOpen,      minPlan: "PRO" },
+  { key: "storefront_chat_enabled",  label: "Chat IA na vitrine",          desc: "Atendimento automatizado para seus clientes.",            icon: MessageSquare, minPlan: "PREMIUM" },
+  { key: "admin_assistant_enabled",  label: "Assistente do painel",        desc: "IA que te ajuda a configurar e operar a loja.",           icon: Bot,           minPlan: "STARTER" },
+  { key: "ceo_brain_enabled",        label: "CEO Brain",                   desc: "Análise diária com sugestões estratégicas.",              icon: Brain,         minPlan: "PREMIUM" },
+  { key: "push_ai_enabled",          label: "Push notifications com IA",   desc: "Mensagens personalizadas geradas por IA.",                icon: Megaphone,     minPlan: "PRO" },
+  { key: "coupons_ai_enabled",       label: "Cupons inteligentes",         desc: "Sugestão e disparo automático de cupons.",                icon: Ticket,        minPlan: "PRO" },
+  { key: "translation_ai_enabled",   label: "Tradução automática",         desc: "Conteúdo da loja em múltiplos idiomas.",                  icon: Languages,     minPlan: "PREMIUM" },
+  { key: "is_image_gen_enabled",     label: "Geração de imagens",          desc: "Banners, fotos de produto e arte com IA.",                icon: ImageIcon,     minPlan: "PRO" },
+  { key: "rag_memory_enabled",       label: "Memória RAG",                 desc: "IA aprende com sua loja para respostas melhores.",        icon: Database,      minPlan: "PREMIUM" },
 ];
 
+const PLAN_LABEL: Record<PlanSlug, string> = {
+  FREE: "Free", STARTER: "Starter", PRO: "Pro", PREMIUM: "Premium",
+};
+
 export default function AdminAIFeatures() {
-  const qc = useQueryClient();
+  const { slug } = useParams();
+  const { ctx, plan: currentPlan } = useTenantContext();
+  const planSlug = (ctx?.planSlug ?? "FREE") as PlanSlug;
+  const planUrl = slug ? `/painel/${slug}/meu-plano` : "/admin/meu-plano";
+
   const { data: settings, isLoading } = useQuery({
     queryKey: ["ai-tenant-settings-self"],
     queryFn: async () => {
@@ -38,70 +57,111 @@ export default function AdminAIFeatures() {
         .select("*")
         .eq("tenant_id", user.id)
         .maybeSingle();
-      if (data) return data;
-      const { data: created } = await supabase
-        .from("tenant_ai_settings")
-        .insert({ tenant_id: user.id })
-        .select()
-        .single();
-      return created;
+      return data;
     },
-  });
-
-  const toggle = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: boolean }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("not authenticated");
-      const { error } = await supabase
-        .from("tenant_ai_settings")
-        .update({ [key]: value })
-        .eq("tenant_id", user.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ai-tenant-settings-self"] });
-      toast.success("Configuração atualizada");
-    },
-    onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <AINav current="features" />
+
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
           <Settings2 className="h-7 w-7 text-primary" />
           Recursos de IA
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Ative ou desative cada inteligência da sua loja. Desligar reduz consumo de créditos.
+          Veja quais inteligências estão disponíveis no seu plano. A ativação é gerenciada pelo time da plataforma.
         </p>
       </div>
 
+      {/* Plano atual */}
+      <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+        <CardContent className="p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/15">
+              <Crown className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Seu plano atual</div>
+              <div className="font-bold text-base">{currentPlan?.name || PLAN_LABEL[planSlug]}</div>
+            </div>
+          </div>
+          {planSlug !== "PREMIUM" && (
+            <Button asChild size="sm" className="gap-2">
+              <Link to={planUrl}>
+                <ArrowUpCircle className="h-4 w-4" />
+                Fazer upgrade
+              </Link>
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Treinamento */}
+      <AITrainingGuide />
+
+      {/* Lista de recursos (somente leitura) */}
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {FEATURES.map((f) => {
             const Icon = f.icon;
-            const value = (settings as any)?.[f.key] ?? true;
+            const inPlan = planLevel(planSlug) >= planLevel(f.minPlan);
+            const enabled = (settings as any)?.[f.key] ?? inPlan;
+            const active = inPlan && enabled;
+
             return (
-              <Card key={f.key} className={value ? "border-primary/30" : "opacity-70"}>
+              <Card
+                key={f.key}
+                className={
+                  active
+                    ? "border-primary/30"
+                    : inPlan
+                      ? "opacity-80"
+                      : "opacity-70 border-dashed"
+                }
+              >
                 <CardContent className="p-4 flex items-start justify-between gap-3">
-                  <div className="flex gap-3">
-                    <div className={`p-2 rounded-lg shrink-0 ${value ? "bg-primary/10" : "bg-muted"}`}>
-                      <Icon className={`h-5 w-5 ${value ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="flex gap-3 min-w-0">
+                    <div className={`p-2 rounded-lg shrink-0 ${active ? "bg-primary/10" : "bg-muted"}`}>
+                      {inPlan ? (
+                        <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                      ) : (
+                        <Lock className="h-5 w-5 text-muted-foreground" />
+                      )}
                     </div>
-                    <div>
-                      <div className="font-semibold text-sm">{f.label}</div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm flex items-center gap-2 flex-wrap">
+                        {f.label}
+                        {!inPlan && (
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            <Lock className="h-2.5 w-2.5" />
+                            {PLAN_LABEL[f.minPlan]}+
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
                     </div>
                   </div>
-                  <Switch
-                    checked={!!value}
-                    onCheckedChange={(v) => toggle.mutate({ key: f.key, value: v })}
-                    disabled={toggle.isPending}
-                  />
+
+                  <div className="shrink-0">
+                    {active ? (
+                      <Badge className="bg-primary/15 text-primary border-primary/30 gap-1">
+                        <Check className="h-3 w-3" /> Ativo
+                      </Badge>
+                    ) : inPlan ? (
+                      <Badge variant="secondary" className="text-[10px]">Inativo</Badge>
+                    ) : (
+                      <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1">
+                        <Link to={`${planUrl}?upgrade=${f.minPlan}`}>
+                          <ArrowUpCircle className="h-3 w-3" />
+                          Upgrade
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -109,158 +169,20 @@ export default function AdminAIFeatures() {
         </div>
       )}
 
-      <Card className="border-amber-500/30 bg-amber-500/5">
+      {/* Aviso sobre limites */}
+      <Card className="border-muted bg-muted/30">
         <CardHeader>
-          <CardTitle className="text-base">Limites e bloqueio progressivo</CardTitle>
+          <CardTitle className="text-base">Limites e bloqueios</CardTitle>
           <CardDescription>
-            Quando seu uso de IA chegar perto do limite mensal, alertas serão exibidos. Aos 100%,
-            se "limite rígido" estiver ligado, novas chamadas são bloqueadas até o próximo período ou upgrade.
+            Os limites mensais de uso de IA, alertas automáticos e bloqueio rígido são definidos pela
+            equipe da plataforma de acordo com o seu plano. Acompanhe o seu consumo na aba{" "}
+            <Link to={slug ? `/painel/${slug}/ai/usage` : "/admin/ai/usage"} className="underline font-medium">
+              Consumo
+            </Link>
+            .
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3">
-          <ToggleRow
-            label="Limite rígido (bloquear ao atingir 100%)"
-            description="Se desativado, chamadas excedentes são permitidas e podem gerar custo extra."
-            value={(settings as any)?.hard_limit_enabled ?? false}
-            onChange={(v) => toggle.mutate({ key: "hard_limit_enabled", value: v })}
-          />
-          <ToggleRow
-            label="Receber alertas de uso (50%, 75%, 90%, 100%)"
-            description="Avisos no painel quando se aproximar do limite."
-            value={(settings as any)?.soft_limit_alerts_enabled ?? true}
-            onChange={(v) => toggle.mutate({ key: "soft_limit_alerts_enabled", value: v })}
-          />
-        </CardContent>
       </Card>
-
-      <AlertChannelsCard settings={settings} />
-    </div>
-  );
-}
-
-function AlertChannelsCard({ settings }: { settings: any }) {
-  const qc = useQueryClient();
-  const channels = settings?.alert_channels ?? { in_app: true, email: false, push: false };
-  const thresholds: number[] = settings?.alert_thresholds ?? [50, 75, 90, 100];
-  const [email, setEmail] = useState<string>(settings?.alert_email ?? "");
-  const [thresholdsStr, setThresholdsStr] = useState<string>(thresholds.join(", "));
-
-  useEffect(() => {
-    setEmail(settings?.alert_email ?? "");
-    setThresholdsStr((settings?.alert_thresholds ?? [50, 75, 90, 100]).join(", "));
-  }, [settings?.alert_email, settings?.alert_thresholds]);
-
-  const update = useMutation({
-    mutationFn: async (patch: Record<string, any>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("not authenticated");
-      const { error } = await supabase
-        .from("tenant_ai_settings")
-        .update(patch)
-        .eq("tenant_id", user.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ai-tenant-settings-self"] });
-      toast.success("Alertas atualizados");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const setChannel = (k: string, v: boolean) =>
-    update.mutate({ alert_channels: { ...channels, [k]: v } });
-
-  const saveThresholds = () => {
-    const parsed = thresholdsStr
-      .split(",")
-      .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => Number.isFinite(n) && n > 0 && n <= 200)
-      .sort((a, b) => a - b);
-    if (parsed.length === 0) return toast.error("Informe ao menos um limiar válido");
-    update.mutate({ alert_thresholds: parsed });
-  };
-
-  return (
-    <Card className="border-blue-500/30 bg-blue-500/5">
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <Bell className="h-4 w-4" />
-          Alertas automáticos de uso
-        </CardTitle>
-        <CardDescription>
-          Configure por onde quer receber avisos quando seu consumo cruzar os limiares.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <ChannelToggle icon={AlertTriangle} label="No painel" value={!!channels.in_app} onChange={(v) => setChannel("in_app", v)} />
-          <ChannelToggle icon={Mail} label="E-mail" value={!!channels.email} onChange={(v) => setChannel("email", v)} />
-          <ChannelToggle icon={Smartphone} label="Push" value={!!channels.push} onChange={(v) => setChannel("push", v)} />
-        </div>
-
-        {channels.email && (
-          <div className="space-y-1">
-            <Label htmlFor="alert-email" className="text-xs">E-mail para alertas (opcional)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="alert-email"
-                type="email"
-                placeholder="alertas@minhaloja.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Button size="sm" onClick={() => update.mutate({ alert_email: email || null })}>Salvar</Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Se em branco, usaremos o e-mail da sua conta.</p>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label className="text-xs flex items-center justify-between">
-            Limiares de alerta (%)
-            <span className="flex gap-1">
-              {thresholds.map((t) => (
-                <Badge key={t} variant="outline" className="text-[10px]">{t}%</Badge>
-              ))}
-            </span>
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              value={thresholdsStr}
-              onChange={(e) => setThresholdsStr(e.target.value)}
-              placeholder="50, 75, 90, 100"
-            />
-            <Button size="sm" variant="outline" onClick={saveThresholds}>Salvar</Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Mensagens automáticas: 50% “metade usada”, 75% “atenção”, 90% “crítico”, 100% “limite atingido”.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChannelToggle({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className={`flex items-center justify-between p-3 rounded-lg border ${value ? "bg-background border-primary/40" : "bg-muted/30"}`}>
-      <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${value ? "text-primary" : "text-muted-foreground"}`} />
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      <Switch checked={value} onCheckedChange={onChange} />
-    </div>
-  );
-}
-
-function ToggleRow({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-start justify-between gap-3 p-3 rounded-lg border bg-background">
-      <div>
-        <div className="font-medium text-sm">{label}</div>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-      <Switch checked={value} onCheckedChange={onChange} />
     </div>
   );
 }
