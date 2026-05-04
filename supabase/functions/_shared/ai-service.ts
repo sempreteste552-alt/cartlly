@@ -210,14 +210,15 @@ export async function callAI(
   const estimated_cost = (usage.total_tokens / 1000) * costFactor;
   const latency_ms = Date.now() - startedAt;
 
-  // Consome créditos (não bloqueia resposta se falhar)
+  // Consome créditos (1 crédito por ~1k tokens, mínimo 1). Não bloqueia resposta se falhar.
   if (options.store_user_id && !options.skipQuotaCheck) {
+    const credits = Math.max(1, Math.ceil(usage.total_tokens / 1000));
     supabase
       .rpc("consume_ai_credits", {
         p_tenant_id: options.store_user_id,
+        p_credits: credits,
         p_feature: options.feature || "other",
-        p_tokens: usage.total_tokens,
-        p_cost_usd: estimated_cost,
+        p_reason: `${provider}/${model}`,
       })
       .then(({ error }: any) => {
         if (error) console.warn("[ai-service] consume_ai_credits failed:", error.message);
