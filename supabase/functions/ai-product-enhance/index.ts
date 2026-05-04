@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { callAI, aiErrorToResponse } from "../_shared/ai-service.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,8 +60,7 @@ serve(async (req) => {
     aiConfig = data;
 
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
 
     let systemPrompt = "";
     let userContent: any[] = [];
@@ -218,16 +218,14 @@ Regras:
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-1.5-flash",
-        messages: [
-          { role: "system", content: `${systemPrompt}
+    const result = await callAI({
+      feature: `product_${action}`,
+      store_user_id: targetUserId,
+      user_id: caller.id,
+      messages: [
+        {
+          role: "system",
+          content: `${systemPrompt}
             ${aiConfig ? `
             TREINAMENTO OBRIGATÓRIO:
             Identidade: ${aiConfig.brand_identity || ""}
@@ -237,45 +235,25 @@ Regras:
             Persuasão: ${aiConfig.persuasion_style || ""}
             Proibições: ${aiConfig.prohibitions || ""}
             Instruções: ${aiConfig.custom_instructions || ""}
-            ` : ""}`
-          },
-          { role: "user", content: userContent },
-        ],
-        tools: [toolDef],
-        tool_choice: { type: "function", function: { name: toolName } },
-      }),
+            ` : ""}`,
+        },
+        { role: "user", content: userContent },
+      ],
+      tools: [toolDef],
+      tool_choice: { type: "function", function: { name: toolName } },
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA insuficientes para esta operação." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error [${response.status}]`);
-    }
+    if (result instanceof Response) return result;
 
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = result.tool_calls?.[0];
     if (!toolCall) throw new Error("No tool call in response");
+    const out = JSON.parse(toolCall.function.arguments);
 
-    const result = JSON.parse(toolCall.function.arguments);
-
-    return new Response(JSON.stringify({ action, ...result }), {
+    return new Response(JSON.stringify({ action, ...out }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI product enhance error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return aiErrorToResponse(error, corsHeaders);
   }
 });
