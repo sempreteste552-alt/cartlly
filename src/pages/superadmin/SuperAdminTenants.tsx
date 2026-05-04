@@ -625,22 +625,94 @@ export default function SuperAdminTenants() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Tenants</h1>
-        <p className="text-muted-foreground">Gerenciar todas as lojas da plataforma ({tenants?.length || 0} tenants)</p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Store className="h-6 w-6 text-primary" />
+            Tenants
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Gerenciar todas as lojas da plataforma · <span className="font-semibold text-foreground">{tenants?.length || 0}</span> tenants
+          </p>
+        </div>
+      </div>
+
+      {/* Pro KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: "Total", value: tenants?.length || 0, icon: Store, color: "from-primary/20 to-primary/5", text: "text-primary", border: "border-primary/30", glow: "shadow-[0_0_20px_-8px_hsl(var(--primary)/0.5)]" },
+          { label: "Online", value: onlineCount, icon: Activity, color: "from-emerald-500/20 to-emerald-500/5", text: "text-emerald-500", border: "border-emerald-500/30", glow: "shadow-[0_0_20px_-8px_rgba(16,185,129,0.6)]", pulse: true },
+          { label: "Ativos", value: activeCount, icon: CheckCircle, color: "from-green-500/20 to-green-500/5", text: "text-green-500", border: "border-green-500/30", glow: "shadow-[0_0_20px_-8px_rgba(34,197,94,0.5)]" },
+          { label: "Pendentes", value: pendingCount, icon: Clock, color: "from-amber-500/20 to-amber-500/5", text: "text-amber-500", border: "border-amber-500/30", glow: "shadow-[0_0_20px_-8px_rgba(245,158,11,0.5)]" },
+          { label: "Trial", value: trialCount, icon: Sparkles, color: "from-purple-500/20 to-purple-500/5", text: "text-purple-500", border: "border-purple-500/30", glow: "shadow-[0_0_20px_-8px_rgba(168,85,247,0.5)]" },
+          { label: "Bloqueados", value: blockedCount, icon: Ban, color: "from-red-500/20 to-red-500/5", text: "text-red-500", border: "border-red-500/30", glow: "shadow-[0_0_20px_-8px_rgba(239,68,68,0.5)]" },
+        ].map((kpi, i) => {
+          const Icon = kpi.icon;
+          return (
+            <Card
+              key={kpi.label}
+              className={`relative overflow-hidden border ${kpi.border} bg-gradient-to-br ${kpi.color} ${kpi.glow} transition-all duration-300 hover:scale-[1.03] hover:-translate-y-0.5 cursor-pointer group`}
+              style={{ animationDelay: `${i * 50}ms` }}
+              onClick={() => {
+                const map: Record<string, string> = { Total: "all", Online: "online", Ativos: "active", Pendentes: "pending", Trial: "trial", Bloqueados: "blocked" };
+                if (map[kpi.label]) setFilter(map[kpi.label]);
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="p-3 relative">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{kpi.label}</span>
+                  <Icon className={`h-4 w-4 ${kpi.text} ${kpi.pulse && kpi.value > 0 ? "animate-pulse" : ""}`} />
+                </div>
+                <div className={`text-2xl font-bold ${kpi.text} tabular-nums`}>{kpi.value}</div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Revenue strip */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center">
+              <CreditCard className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Receita total</p>
+              <p className="text-xl font-bold text-foreground tabular-nums truncate">{formatCurrency(totalRevenue)}</p>
+            </div>
+            <Badge variant="outline" className="border-primary/40 text-primary text-[10px]">{paidCount} pagos</Badge>
+          </CardContent>
+        </Card>
+        <Card className="border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+              <ShoppingCart className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Pedidos</p>
+              <p className="text-xl font-bold text-foreground tabular-nums truncate">{totalOrders.toLocaleString("pt-BR")}</p>
+            </div>
+            <Badge variant="outline" className="border-emerald-500/40 text-emerald-500 text-[10px]">total</Badge>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Pending alert - informational only */}
       {pendingCount > 0 && (
-        <Card className="border-blue-500/30 bg-blue-500/5">
+        <Card className="border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent shadow-[0_0_20px_-10px_rgba(59,130,246,0.5)]">
           <CardContent className="flex items-center gap-3 p-4">
-            <Mail className="h-5 w-5 text-blue-500" />
-            <div className="flex-1">
-              <p className="font-medium text-blue-600">{pendingCount} novo(s) tenant(s) aguardando verificação de e-mail</p>
+            <div className="h-10 w-10 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+              <Mail className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-blue-600 dark:text-blue-400">{pendingCount} novo(s) tenant(s) aguardando verificação de e-mail</p>
               <p className="text-xs text-muted-foreground">Os tenants são ativados automaticamente após verificar o e-mail</p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => setFilter("pending")}>Ver pendentes</Button>
+            <Button size="sm" variant="outline" className="border-blue-500/40 text-blue-600 hover:bg-blue-500/10" onClick={() => setFilter("pending")}>Ver pendentes</Button>
           </CardContent>
         </Card>
       )}
