@@ -52,24 +52,17 @@ Seja breve, amigável e use um tom de "parabéns" e "estamos orgulhosos".
 Use o nome do dono se souber. 
 Não seja invasivo, apenas um "mimo" para eles se sentirem valorizados.`;
         
-        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-1.5-flash",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: `Gere uma mensagem curta de encorajamento para ${tenant.display_name || "Lojista"} que teve ${count} vendas hoje, totalizando R$ ${totalSales.toFixed(2)}.` }
-            ],
-            temperature: 0.8,
-          }),
+        const result = await callAI({
+          feature: "super_admin_encouragement",
+          temperature: 0.8,
+          skipQuotaCheck: true,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Gere uma mensagem curta de encorajamento para ${tenant.display_name || "Lojista"} que teve ${count} vendas hoje, totalizando R$ ${totalSales.toFixed(2)}.` },
+          ],
         });
-
-        const aiResult = await aiResponse.json();
+        if (result instanceof Response) continue;
+        const aiResult = { choices: [{ message: { content: result.content } }] };
         const msg = aiResult.choices[0].message.content;
 
         // Find a super admin to be the "sender"
