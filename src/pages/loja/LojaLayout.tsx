@@ -1698,6 +1698,7 @@ export default function LojaLayout() {
             aiAvatarUrl={(settings as any).ai_avatar_url}
             primaryColor={settings.primary_color}
             isPremium={(settings as any).is_premium_plan}
+            storeLogoUrl={(settings as any).logo_url}
           />
         )}
 
