@@ -8,14 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, AlertCircle, Clock, History } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAIUsage() {
   const { data: logs, isLoading } = useQuery({
     queryKey: ["ai-usage-logs-tenant"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data, error } = await supabase
         .from("ai_usage_logs")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -24,13 +28,16 @@ export default function AdminAIUsage() {
   });
 
   const { data: dailyAgg } = useQuery({
-    queryKey: ["ai-daily-agg"],
+    queryKey: ["ai-daily-agg-self"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const since = new Date();
       since.setDate(since.getDate() - 30);
       const { data } = await supabase
         .from("ai_usage_logs")
         .select("created_at, credits_charged, estimated_cost, total_tokens")
+        .eq("user_id", user.id)
         .gte("created_at", since.toISOString());
       const buckets = new Map<string, { credits: number; cost: number; tokens: number; count: number }>();
       (data ?? []).forEach((l) => {
@@ -51,6 +58,7 @@ export default function AdminAIUsage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <AINav current="usage" />
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
           <Activity className="h-7 w-7 text-primary" />

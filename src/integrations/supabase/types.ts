@@ -4295,6 +4295,9 @@ export type Database = {
       tenant_ai_settings: {
         Row: {
           admin_assistant_enabled: boolean
+          alert_channels: Json
+          alert_email: string | null
+          alert_thresholds: Json
           catalog_ai_enabled: boolean
           ceo_brain_enabled: boolean
           coupons_ai_enabled: boolean
@@ -4316,6 +4319,9 @@ export type Database = {
         }
         Insert: {
           admin_assistant_enabled?: boolean
+          alert_channels?: Json
+          alert_email?: string | null
+          alert_thresholds?: Json
           catalog_ai_enabled?: boolean
           ceo_brain_enabled?: boolean
           coupons_ai_enabled?: boolean
@@ -4337,6 +4343,9 @@ export type Database = {
         }
         Update: {
           admin_assistant_enabled?: boolean
+          alert_channels?: Json
+          alert_email?: string | null
+          alert_thresholds?: Json
           catalog_ai_enabled?: boolean
           ceo_brain_enabled?: boolean
           coupons_ai_enabled?: boolean

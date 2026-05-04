@@ -3,8 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen, Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Settings2, Sparkles, Brain, Bot, Image as ImageIcon, BookOpen, Megaphone, Ticket, Languages, Database, ShoppingBag, MessageSquare, Bell, Mail, Smartphone, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { AINav } from "@/components/admin/AINav";
 
 const FEATURES: { key: string; label: string; desc: string; icon: any }[] = [
   { key: "is_ai_enabled", label: "IA Geral", desc: "Liga ou desliga TODA a inteligência artificial da sua loja.", icon: Sparkles },
@@ -61,6 +67,7 @@ export default function AdminAIFeatures() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <AINav current="features" />
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
           <Settings2 className="h-7 w-7 text-primary" />
@@ -125,6 +132,123 @@ export default function AdminAIFeatures() {
           />
         </CardContent>
       </Card>
+
+      <AlertChannelsCard settings={settings} />
+    </div>
+  );
+}
+
+function AlertChannelsCard({ settings }: { settings: any }) {
+  const qc = useQueryClient();
+  const channels = settings?.alert_channels ?? { in_app: true, email: false, push: false };
+  const thresholds: number[] = settings?.alert_thresholds ?? [50, 75, 90, 100];
+  const [email, setEmail] = useState<string>(settings?.alert_email ?? "");
+  const [thresholdsStr, setThresholdsStr] = useState<string>(thresholds.join(", "));
+
+  useEffect(() => {
+    setEmail(settings?.alert_email ?? "");
+    setThresholdsStr((settings?.alert_thresholds ?? [50, 75, 90, 100]).join(", "));
+  }, [settings?.alert_email, settings?.alert_thresholds]);
+
+  const update = useMutation({
+    mutationFn: async (patch: Record<string, any>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("not authenticated");
+      const { error } = await supabase
+        .from("tenant_ai_settings")
+        .update(patch)
+        .eq("tenant_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ai-tenant-settings-self"] });
+      toast.success("Alertas atualizados");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const setChannel = (k: string, v: boolean) =>
+    update.mutate({ alert_channels: { ...channels, [k]: v } });
+
+  const saveThresholds = () => {
+    const parsed = thresholdsStr
+      .split(",")
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isFinite(n) && n > 0 && n <= 200)
+      .sort((a, b) => a - b);
+    if (parsed.length === 0) return toast.error("Informe ao menos um limiar válido");
+    update.mutate({ alert_thresholds: parsed });
+  };
+
+  return (
+    <Card className="border-blue-500/30 bg-blue-500/5">
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Bell className="h-4 w-4" />
+          Alertas automáticos de uso
+        </CardTitle>
+        <CardDescription>
+          Configure por onde quer receber avisos quando seu consumo cruzar os limiares.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ChannelToggle icon={AlertTriangle} label="No painel" value={!!channels.in_app} onChange={(v) => setChannel("in_app", v)} />
+          <ChannelToggle icon={Mail} label="E-mail" value={!!channels.email} onChange={(v) => setChannel("email", v)} />
+          <ChannelToggle icon={Smartphone} label="Push" value={!!channels.push} onChange={(v) => setChannel("push", v)} />
+        </div>
+
+        {channels.email && (
+          <div className="space-y-1">
+            <Label htmlFor="alert-email" className="text-xs">E-mail para alertas (opcional)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="alert-email"
+                type="email"
+                placeholder="alertas@minhaloja.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Button size="sm" onClick={() => update.mutate({ alert_email: email || null })}>Salvar</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Se em branco, usaremos o e-mail da sua conta.</p>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label className="text-xs flex items-center justify-between">
+            Limiares de alerta (%)
+            <span className="flex gap-1">
+              {thresholds.map((t) => (
+                <Badge key={t} variant="outline" className="text-[10px]">{t}%</Badge>
+              ))}
+            </span>
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              value={thresholdsStr}
+              onChange={(e) => setThresholdsStr(e.target.value)}
+              placeholder="50, 75, 90, 100"
+            />
+            <Button size="sm" variant="outline" onClick={saveThresholds}>Salvar</Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Mensagens automáticas: 50% “metade usada”, 75% “atenção”, 90% “crítico”, 100% “limite atingido”.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ChannelToggle({ icon: Icon, label, value, onChange }: { icon: any; label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className={`flex items-center justify-between p-3 rounded-lg border ${value ? "bg-background border-primary/40" : "bg-muted/30"}`}>
+      <div className="flex items-center gap-2">
+        <Icon className={`h-4 w-4 ${value ? "text-primary" : "text-muted-foreground"}`} />
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      <Switch checked={value} onCheckedChange={onChange} />
     </div>
   );
 }

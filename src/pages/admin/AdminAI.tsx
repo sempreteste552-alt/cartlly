@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAITenantUsage, getProgressColor } from "@/hooks/useAITenantUsage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -12,7 +12,7 @@ import {
   Sparkles, Zap, AlertTriangle, TrendingUp, Crown, Activity,
   Brain, Settings2, BarChart3, ShieldCheck, ArrowUpRight, CircleDollarSign,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAI() {
   const { slug } = useParams();
@@ -20,11 +20,14 @@ export default function AdminAI() {
   const { data: usage, isLoading } = useAITenantUsage();
 
   const { data: alerts } = useQuery({
-    queryKey: ["ai-alerts"],
+    queryKey: ["ai-alerts-self"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data } = await supabase
         .from("ai_alerts")
         .select("*")
+        .eq("tenant_id", user.id)
         .eq("read", false)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -33,27 +36,31 @@ export default function AdminAI() {
   });
 
   const { data: featureUsage } = useQuery({
-    queryKey: ["ai-feature-usage"],
+    queryKey: ["ai-feature-usage-self"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const since = new Date();
       since.setDate(1);
       const { data } = await supabase
         .from("ai_usage_logs")
-        .select("feature, credits_charged, estimated_cost")
+        .select("feature, model, provider, credits_charged, estimated_cost")
+        .eq("user_id", user.id)
         .gte("created_at", since.toISOString());
-      const map = new Map<string, { credits: number; cost: number; count: number }>();
+      const map = new Map<string, { credits: number; cost: number; count: number; model: string; provider: string }>();
       (data ?? []).forEach((l) => {
         const k = l.feature || "outro";
-        const cur = map.get(k) ?? { credits: 0, cost: 0, count: 0 };
+        const cur = map.get(k) ?? { credits: 0, cost: 0, count: 0, model: l.model || "", provider: l.provider || "" };
         cur.credits += Number(l.credits_charged ?? 0);
         cur.cost += Number(l.estimated_cost ?? 0);
         cur.count += 1;
+        if (!cur.model && l.model) cur.model = l.model;
+        if (!cur.provider && l.provider) cur.provider = l.provider;
         map.set(k, cur);
       });
       return Array.from(map.entries())
         .map(([feature, v]) => ({ feature, ...v }))
-        .sort((a, b) => b.credits - a.credits)
-        .slice(0, 6);
+        .sort((a, b) => b.credits - a.credits);
     },
   });
 
@@ -72,8 +79,24 @@ export default function AdminAI() {
   const pct = usage.usage_percent;
   const level = usage.alert_level;
 
+  // Projection by feature: assume same daily ratio extrapolated to 30 days
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysFactor = daysInMonth / Math.max(1, dayOfMonth);
+
+  const featureProjections = (featureUsage ?? []).map((f) => ({
+    ...f,
+    projectedCredits: Math.round(f.credits * daysFactor),
+    projectedCost: f.cost * daysFactor,
+  }));
+
+  const totalProjectedCost = featureProjections.reduce((s, f) => s + f.projectedCost, 0);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <AINav current="dashboard" />
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -86,12 +109,6 @@ export default function AdminAI() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`${adminBasePath}/ai/usage`}><BarChart3 className="h-4 w-4 mr-2" />Consumo</Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`${adminBasePath}/ai/features`}><Settings2 className="h-4 w-4 mr-2" />Recursos</Link>
-          </Button>
           <Button size="sm" asChild>
             <Link to={`${adminBasePath}/cerebro`}><Brain className="h-4 w-4 mr-2" />Cérebro</Link>
           </Button>
@@ -172,6 +189,9 @@ export default function AdminAI() {
                 <strong className={usage.projected_credits_eom > usage.monthly_credit_limit ? "text-destructive" : ""}>
                   {usage.projected_credits_eom.toLocaleString("pt-BR")} créditos
                 </strong>
+                {totalProjectedCost > 0 && (
+                  <> · <span className="text-muted-foreground">~ R$ {(totalProjectedCost * 5).toFixed(2)} de custo estimado</span></>
+                )}
               </span>
             </div>
           )}
@@ -186,27 +206,38 @@ export default function AdminAI() {
         <KpiCard icon={ShieldCheck} label="Falhas" value={usage.errors.toString()} hint={`${usage.errors === 0 ? "Tudo certo" : "Verifique logs"}`} />
       </div>
 
-      {/* Top features */}
+      {/* Projection by feature/model */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Recursos de IA mais usados</CardTitle>
-          <CardDescription>Ranking deste mês por consumo de créditos</CardDescription>
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Projeção de gasto por recurso
+          </CardTitle>
+          <CardDescription>
+            Simulação extrapolada para o restante do mês ({dayOfMonth}/{daysInMonth} dias). Inclui modelo e provedor.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {!featureUsage || featureUsage.length === 0 ? (
+          {featureProjections.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Nenhuma atividade de IA neste mês.
+              Sem dados ainda. Use a IA para começar a ver projeções.
             </div>
           ) : (
             <div className="space-y-3">
-              {featureUsage.map((f) => {
-                const max = featureUsage[0].credits || 1;
-                const w = (f.credits / max) * 100;
+              {featureProjections.map((f) => {
+                const max = Math.max(...featureProjections.map((x) => x.projectedCredits), 1);
+                const w = (f.projectedCredits / max) * 100;
                 return (
                   <div key={f.feature} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium capitalize">{f.feature.replace(/_/g, " ")}</span>
-                      <span className="text-muted-foreground">{f.credits} créd · {f.count} usos</span>
+                    <div className="flex justify-between text-sm flex-wrap gap-2">
+                      <span className="font-medium capitalize flex items-center gap-2">
+                        {f.feature.replace(/_/g, " ")}
+                        {f.model && <Badge variant="outline" className="text-[9px] font-normal">{f.provider}/{f.model}</Badge>}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        Atual: <strong className="text-foreground">{f.credits}</strong> · Projeção:{" "}
+                        <strong className="text-foreground">{f.projectedCredits} créd</strong> · ~ R$ {(f.projectedCost * 5).toFixed(2)}
+                      </span>
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <div className="h-full bg-primary transition-all" style={{ width: `${w}%` }} />
@@ -248,7 +279,7 @@ export default function AdminAI() {
       <div className="grid gap-3 md:grid-cols-3">
         <QuickLink to={`${adminBasePath}/cerebro`} icon={Brain} title="Cérebro da IA" desc="Personalidade, regras, contexto da loja" />
         <QuickLink to={`${adminBasePath}/ai/usage`} icon={BarChart3} title="Consumo detalhado" desc="Logs, erros, gastos por dia" />
-        <QuickLink to={`${adminBasePath}/ai/features`} icon={Settings2} title="Recursos de IA" desc="Ative/desative features inteligentes" />
+        <QuickLink to={`${adminBasePath}/ai/features`} icon={Settings2} title="Recursos & Alertas" desc="Toggles, canais e limiares de aviso" />
       </div>
     </div>
   );
