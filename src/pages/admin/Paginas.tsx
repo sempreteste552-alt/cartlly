@@ -57,6 +57,7 @@ export default function Paginas() {
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: pages, isLoading } = useQuery({
     queryKey: ["store_pages", user?.id],
