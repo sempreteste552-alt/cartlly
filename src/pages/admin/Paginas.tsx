@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   FileText, Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Loader2,
-  BookOpen, Shield, HelpCircle, Phone, Info,
+  BookOpen, Shield, HelpCircle, Phone, Info, Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PlanGate } from "@/components/PlanGate";
