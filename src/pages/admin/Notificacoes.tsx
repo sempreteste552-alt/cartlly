@@ -18,8 +18,7 @@ export default function Notificacoes() {
         supabase
           .from("push_subscriptions")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", user!.id)
-          .eq("audience_type", "customer"),
+          .eq("store_user_id", user!.id),
         supabase
           .from("admin_notifications")
           .select("*", { count: "exact", head: true })
