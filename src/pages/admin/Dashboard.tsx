@@ -13,7 +13,7 @@ import {
   Package, ShoppingCart, DollarSign, TrendingUp, Users, AlertTriangle, 
   Award, CreditCard, CheckCircle2, XCircle, BarChart3, Eye, Search, 
   Lock, Sparkles, ExternalLink, Calendar, Filter, Activity, Cpu, 
-  Layers, Zap, RefreshCw, ChevronUp, ChevronDown
+  Layers, Zap, RefreshCw, ChevronUp, ChevronDown, ArrowRight
 } from "lucide-react";
 import { buildStoreUrl } from "@/lib/storeDomain";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
@@ -442,55 +442,82 @@ export default function Dashboard() {
           title="Alerta de Estoque"
           description="Você continua correndo risco de anunciar produto sem saldo e perder pedido bom por falta de aviso."
         >
-          <Card className="border-amber-500/30 bg-card/80 dark:bg-card/10 backdrop-blur-md shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Alerta de Estoque</span>
-                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground animate-pulse leading-none">Novo</span>
+          <Card className="relative overflow-hidden border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-red-500/5 backdrop-blur-md shadow-[0_0_30px_-12px_rgba(245,158,11,0.5)]">
+            <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-amber-500/20 blur-3xl" />
+            <CardContent className="p-4 relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center shadow-md">
+                    <AlertTriangle className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Alerta de Estoque</h3>
+                    <p className="text-[11px] text-muted-foreground">Aja antes de perder vendas</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {metrics.outOfStock.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                      {metrics.outOfStock.length} esgotado{metrics.outOfStock.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {metrics.lowStock.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-1 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      {metrics.lowStock.length} baixo{metrics.lowStock.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {metrics.outOfStock.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => navigate(`/painel/${slug}/produtos`, { state: { editProductId: p.id } })}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left w-full"
+                    className="group flex items-center gap-3 p-2.5 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 hover:border-red-500/50 hover:scale-[1.02] transition-all text-left w-full shadow-sm"
                   >
                     {p.image_url ? (
-                      <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                      <img src={p.image_url} alt="" className="h-11 w-11 rounded-lg object-cover flex-shrink-0 ring-1 ring-red-500/30" />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                      <div className="h-11 w-11 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
                         <Package className="h-5 w-5 text-red-500" />
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
-                      <p className="text-xs text-red-600 font-semibold">🚨 Esgotado</p>
+                      <p className="text-sm font-semibold truncate text-foreground">{p.name}</p>
+                      <p className="text-xs text-red-600 dark:text-red-400 font-bold flex items-center gap-1">
+                        🚨 Esgotado
+                      </p>
                     </div>
+                    <ArrowRight className="h-4 w-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
                 {metrics.lowStock.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => navigate(`/painel/${slug}/produtos`, { state: { editProductId: p.id } })}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-left w-full"
+                    className="group flex items-center gap-3 p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/50 hover:scale-[1.02] transition-all text-left w-full shadow-sm"
                   >
                     {p.image_url ? (
-                      <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover flex-shrink-0" />
+                      <img src={p.image_url} alt="" className="h-11 w-11 rounded-lg object-cover flex-shrink-0 ring-1 ring-amber-500/30" />
                     ) : (
-                      <div className="h-10 w-10 rounded bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                      <div className="h-11 w-11 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                         <Package className="h-5 w-5 text-amber-500" />
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate text-foreground">{p.name}</p>
-                      <p className="text-xs text-amber-600 font-semibold">⚠️ {p.stock} restantes</p>
+                      <p className="text-sm font-semibold truncate text-foreground">{p.name}</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                        ⚠️ {p.stock} restante{p.stock > 1 ? "s" : ""}
+                      </p>
                     </div>
+                    <ArrowRight className="h-4 w-4 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
                 {metrics.lowStock.length === 0 && metrics.outOfStock.length === 0 && (
-                  <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                    Nenhum alerta crítico no momento.
+                  <div className="col-span-full rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-2">
+                    ✅ Tudo certo! Nenhum produto com estoque crítico.
                   </div>
                 )}
               </div>

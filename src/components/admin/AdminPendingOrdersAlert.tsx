@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useOrders } from "@/hooks/useOrders";
-import { AlertCircle, ArrowRight, Package, Truck, BellRing } from "lucide-react";
+import { ArrowRight, Package, Truck, BellRing, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -14,86 +13,103 @@ export function AdminPendingOrdersAlert() {
 
   useEffect(() => {
     if (orders) {
-      // Status 'processando' means paid and waiting for shipping/delivery
       const pending = orders.filter((o) => o.status === "processando");
       setPendingOrders(pending);
     }
   }, [orders]);
 
-  // Alert every 5 minutes if there are pending orders
   useEffect(() => {
     if (pendingOrders.length === 0) return;
 
     const checkAndNotify = () => {
       const now = Date.now();
-      // Only notify if 5 minutes have passed since last manual or auto alert
       if (now - lastAlertTime.current >= 5 * 60 * 1000) {
         lastAlertTime.current = now;
-        
+
         toast.warning("🔔 Pedidos Pendentes de Envio", {
-          description: `Você tem ${pendingOrders.length} ${pendingOrders.length === 1 ? 'pedido pago aguardando' : 'pedidos pagos aguardando'} ser entregue ou enviado!`,
-          duration: 15000, // Show for 15 seconds
+          description: `Você tem ${pendingOrders.length} ${pendingOrders.length === 1 ? "pedido pago aguardando" : "pedidos pagos aguardando"} ser entregue ou enviado!`,
+          duration: 15000,
           action: {
             label: "Ver Pedidos",
-            onClick: () => window.location.href = `/painel/${slug}/pedidos`
-          }
+            onClick: () => (window.location.href = `/painel/${slug}/pedidos`),
+          },
         });
-        
-        // Notification sound
+
         try {
           const audio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_78333887.mp3");
           audio.volume = 0.5;
-          audio.play().catch(() => {
-            console.log("Audio alert blocked - waiting for interaction");
-          });
+          audio.play().catch(() => {});
         } catch (e) {}
       }
     };
 
-    // Initial check (don't alert immediately on mount if it's the first time, 
-    // unless we want to be very aggressive)
-    const interval = setInterval(checkAndNotify, 30000); // Check every 30 seconds if it's time to notify
-
+    const interval = setInterval(checkAndNotify, 30000);
     return () => clearInterval(interval);
   }, [pendingOrders]);
 
   if (pendingOrders.length === 0) return null;
 
+  // Calculate oldest pending
+  const oldest = pendingOrders.reduce((acc, o) => {
+    const t = new Date(o.created_at).getTime();
+    return t < acc ? t : acc;
+  }, Date.now());
+  const ageMins = Math.floor((Date.now() - oldest) / 60000);
+  const ageLabel =
+    ageMins < 60 ? `${ageMins}min` : ageMins < 1440 ? `${Math.floor(ageMins / 60)}h` : `${Math.floor(ageMins / 1440)}d`;
+
   return (
     <div className="px-4 pt-4 animate-in fade-in slide-in-from-top-4 duration-700">
-      <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20 text-orange-900 dark:text-orange-100 shadow-xl border-2 ring-2 ring-orange-500/20">
-        <div className="flex items-start gap-4 w-full">
-          <div className="bg-orange-500 p-2 rounded-full animate-pulse mt-1">
-            <BellRing className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <AlertTitle className="font-black text-lg flex items-center gap-2 mb-1">
-                <Package className="h-5 w-5" />
-                ATENÇÃO: {pendingOrders.length} {pendingOrders.length === 1 ? 'Pedido Pago' : 'Pedidos Pagos'}
-              </AlertTitle>
-              <AlertDescription className="text-orange-800 dark:text-orange-200 font-semibold leading-relaxed">
-                Existem pedidos aprovados aguardando entrega ou envio para outra cidade. 
-                <span className="block text-xs mt-1 opacity-80 italic">Lembrete sonoro ativo a cada 5 minutos até marcar como "Enviado".</span>
-              </AlertDescription>
-            </div>
-            <div className="flex flex-col gap-2 min-w-[140px]">
-              <Button 
-                asChild 
-                variant="default" 
-                size="sm" 
-                className="bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-md hover:scale-105 transition-transform"
-              >
-                <Link to={`/painel/${slug}/pedidos`} className="flex items-center gap-2">
-                  <Truck className="h-4 w-4" />
-                  Ver Pedidos
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+      <div className="relative overflow-hidden rounded-2xl border-2 border-orange-500/40 bg-gradient-to-br from-orange-500/15 via-orange-500/5 to-amber-500/10 shadow-[0_0_30px_-8px_rgba(249,115,22,0.5)]">
+        {/* Animated glow */}
+        <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-orange-500/30 blur-3xl animate-pulse" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center gap-4 p-4">
+          {/* Icon */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 rounded-2xl bg-orange-500/40 blur-md animate-pulse" />
+            <div className="relative h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg">
+              <BellRing className="h-7 w-7 text-white animate-[wiggle_1s_ease-in-out_infinite]" />
+              <span className="absolute -top-1.5 -right-1.5 h-6 min-w-6 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center border-2 border-background shadow">
+                {pendingOrders.length}
+              </span>
             </div>
           </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-extrabold text-base sm:text-lg text-orange-900 dark:text-orange-100 tracking-tight">
+                {pendingOrders.length === 1 ? "1 pedido pago aguardando envio" : `${pendingOrders.length} pedidos pagos aguardando envio`}
+              </h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/15 text-orange-800 dark:text-orange-200 px-2 py-0.5 font-semibold">
+                <Clock className="h-3 w-3" /> Mais antigo: {ageLabel}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-200 px-2 py-0.5 font-semibold">
+                🔔 Lembrete a cada 5min
+              </span>
+            </div>
+            <p className="text-xs text-orange-800/80 dark:text-orange-200/80 mt-1.5">
+              Marque como <strong>"Enviado"</strong> assim que despachar para o cliente.
+            </p>
+          </div>
+
+          {/* Action */}
+          <Button
+            asChild
+            size="lg"
+            className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-lg hover:scale-[1.03] transition-all shrink-0"
+          >
+            <Link to={`/painel/${slug}/pedidos`} className="flex items-center gap-2">
+              <Truck className="h-4 w-4" />
+              Ver pedidos
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
-      </Alert>
+      </div>
+      <style>{`@keyframes wiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }`}</style>
     </div>
   );
 }
