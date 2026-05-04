@@ -67,6 +67,7 @@ export default function AdminAIFeatures() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      <AINav current="features" />
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
           <Settings2 className="h-7 w-7 text-primary" />
