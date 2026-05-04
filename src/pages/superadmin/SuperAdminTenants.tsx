@@ -1090,37 +1090,97 @@ export default function SuperAdminTenants() {
       </Dialog>
       {/* Send Message Dialog */}
       <Dialog open={msgDialogOpen} onOpenChange={setMsgDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-primary" />
-              Enviar Mensagem Direta
-            </DialogTitle>
-            <DialogDescription>
-              A mensagem será enviada como notificação push e aparecerá no painel do tenant.
-            </DialogDescription>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30">
+                <Megaphone className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg">Mensagem direta ao tenant</DialogTitle>
+                <DialogDescription className="text-xs">
+                  Enviado via push + sino de notificações no painel
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Para</Label>
-              <Input value={msgTenant?.display_name || msgTenant?.store?.store_name || "Tenant"} disabled />
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <Store className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Destinatário</p>
+                <p className="text-sm font-bold truncate">{msgTenant?.display_name || msgTenant?.store?.store_name || "Tenant"}</p>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Título</Label>
-              <Input value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} placeholder="Título da mensagem" />
+
+            {/* Quick templates */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Modelos rápidos</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: "👋 Boas-vindas", title: "Bem-vindo!", body: "Olá! Estamos felizes em ter você na plataforma. Qualquer dúvida, conte com nosso suporte." },
+                  { label: "🎁 Promoção", title: "Oferta Especial", body: "Aproveite uma condição exclusiva no seu plano por tempo limitado." },
+                  { label: "⚠️ Aviso", title: "Aviso Importante", body: "Por favor, verifique as atualizações recentes em sua conta." },
+                  { label: "✨ Novidade", title: "Nova Funcionalidade", body: "Acabamos de liberar um novo recurso que vai ajudar suas vendas!" },
+                ].map((tpl) => (
+                  <Button
+                    key={tpl.label}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-primary/20 hover:bg-primary/10 hover:border-primary/40"
+                    onClick={() => { setMsgTitle(tpl.title); setMsgBody(tpl.body); }}
+                  >
+                    {tpl.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Mensagem</Label>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Título</Label>
+              <Input value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} placeholder="Título da mensagem" maxLength={60} />
+              <p className="text-[10px] text-muted-foreground text-right">{msgTitle.length}/60</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Mensagem</Label>
               <Textarea
                 value={msgBody}
                 onChange={(e) => setMsgBody(e.target.value)}
                 placeholder="Escreva sua mensagem aqui..."
                 rows={4}
+                maxLength={240}
               />
+              <p className="text-[10px] text-muted-foreground text-right">{msgBody.length}/240</p>
             </div>
-            <Button className="w-full" onClick={handleSendMessage} disabled={msgSending || !msgBody.trim()}>
+
+            {/* Live preview */}
+            {(msgTitle || msgBody) && (
+              <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Pré-visualização</p>
+                <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
+                  <div className="flex items-start gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                      <Megaphone className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold truncate">{msgTitle || "Título"}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{msgBody || "Sua mensagem..."}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button
+              className="w-full bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 font-semibold shadow-lg shadow-primary/30"
+              onClick={handleSendMessage}
+              disabled={msgSending || !msgBody.trim() || !msgTitle.trim()}
+            >
               {msgSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              {msgSending ? "Enviando..." : "Enviar Agora"}
+              {msgSending ? "Enviando..." : "Enviar agora"}
             </Button>
           </div>
         </DialogContent>
