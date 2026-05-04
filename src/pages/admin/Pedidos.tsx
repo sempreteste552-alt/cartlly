@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { 
   ShoppingCart, Loader2, Eye, Clock, MessageSquare, Package, Truck, CheckCircle, 
   XCircle, Copy, FileText, Download, Search, Calendar as CalendarIcon, Printer,
-  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift
+  Filter, FileSpreadsheet, FileJson, Share2, Info, Gift, TrendingUp, DollarSign, AlertCircle
 } from "lucide-react";
 import { useOrders, useOrderItems, useOrderStatusHistory, useOrderPayment, useUpdateOrderStatus, ORDER_STATUS_MAP, type OrderStatus } from "@/hooks/useOrders";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
@@ -268,34 +268,68 @@ export default function Pedidos() {
     );
   }
 
+  // KPIs profissionais
+  const kpis = useMemo(() => {
+    const list = orders || [];
+    const totalRevenue = list
+      .filter((o: any) => {
+        const ps = o.payments?.[0]?.status;
+        return ps === "approved" || ps === "paid";
+      })
+      .reduce((acc: number, o: any) => acc + Number(o.total || 0), 0);
+    const pending = list.filter((o: any) => o.status === "pendente").length;
+    const processing = list.filter((o: any) => o.status === "processando").length;
+    const shipped = list.filter((o: any) => o.status === "enviado").length;
+    const delivered = list.filter((o: any) => o.status === "entregue").length;
+    return { total: list.length, totalRevenue, pending, processing, shipped, delivered };
+  }, [orders]);
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div id="orders-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Vendas e Carrinhos</h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {!isViewer && (
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Configurar Impressora</span>
-            </Button>
-          )}
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
-              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">CSV</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")}>
-              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">XLSX</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport("pdf")}>
-              <Download className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">PDF</span>
-            </Button>
+      {/* HEADER PROFISSIONAL */}
+      <div id="orders-header" className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/[0.07] via-card to-purple-500/[0.04] p-5 sm:p-6">
+        <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg shadow-primary/25">
+              <ShoppingCart className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Vendas e Carrinhos</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm">Acompanhe seus pedidos e recupere vendas perdidas</p>
+            </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {!isViewer && (
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsPrinterDialogOpen(true)}>
+                <Printer className="h-4 w-4" />
+                <span className="hidden sm:inline">Impressora</span>
+              </Button>
+            )}
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">CSV</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")}>
+                <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">XLSX</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExport("pdf")}>
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">PDF</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="relative grid grid-cols-2 lg:grid-cols-5 gap-2.5 mt-5">
+          <KpiTile icon={TrendingUp} label="Pedidos" value={kpis.total} tone="primary" />
+          <KpiTile icon={DollarSign} label="Receita Aprovada" value={formatPrice(kpis.totalRevenue)} tone="emerald" />
+          <KpiTile icon={Clock} label="Pendentes" value={kpis.pending} tone="amber" pulse={kpis.pending > 0} />
+          <KpiTile icon={Truck} label="Enviados" value={kpis.shipped} tone="sky" />
+          <KpiTile icon={CheckCircle} label="Entregues" value={kpis.delivered} tone="green" />
         </div>
       </div>
 
@@ -317,6 +351,38 @@ export default function Pedidos() {
         </TabsList>
 
         <TabsContent value="pedidos" className="space-y-6 animate-in fade-in-50 duration-300">
+          {/* Chips de status rápidos */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "all", label: "Todos", count: orders?.length || 0, icon: Filter },
+              { key: "pendente", label: "Pendentes", count: kpis.pending, icon: Clock },
+              { key: "processando", label: "Processando", count: kpis.processing, icon: Package },
+              { key: "enviado", label: "Enviados", count: kpis.shipped, icon: Truck },
+              { key: "entregue", label: "Entregues", count: kpis.delivered, icon: CheckCircle },
+              { key: "cancelado", label: "Cancelados", count: (orders || []).filter((o:any)=>o.status==="cancelado").length, icon: XCircle },
+            ].map((c) => {
+              const active = filterStatus === c.key;
+              const Icon = c.icon;
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setFilterStatus(c.key)}
+                  className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                    active
+                      ? "bg-gradient-to-br from-primary to-purple-600 text-white border-transparent shadow-md shadow-primary/30 scale-[1.03]"
+                      : "bg-card hover:bg-muted/60 border-border text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {c.label}
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${active ? "bg-white/20" : "bg-muted text-muted-foreground"}`}>
+                    {c.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <Card className="border-border">
             <CardContent className="p-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -790,6 +856,40 @@ export default function Pedidos() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  pulse,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  tone: "primary" | "emerald" | "amber" | "sky" | "green";
+  pulse?: boolean;
+}) {
+  const toneMap: Record<string, string> = {
+    primary: "from-primary/15 to-primary/5 text-primary border-primary/20",
+    emerald: "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/25",
+    sky: "from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    green: "from-green-500/15 to-green-500/5 text-green-600 dark:text-green-400 border-green-500/20",
+  };
+  return (
+    <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br ${toneMap[tone]} p-3 transition-all hover:scale-[1.02] hover:shadow-md`}>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{label}</span>
+        <div className="relative">
+          <Icon className="h-3.5 w-3.5 opacity-70" />
+          {pulse && <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-current animate-ping" />}
+        </div>
+      </div>
+      <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground">{value}</div>
     </div>
   );
 }
