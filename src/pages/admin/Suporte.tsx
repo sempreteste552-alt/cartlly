@@ -429,6 +429,9 @@ export default function Suporte() {
         return [...(old || []), optimisticMsg];
       });
 
+      // Toca som no exato momento em que a mensagem aparece (envio otimista)
+      playMessageSentSound();
+
       return { optimisticMsg };
     },
     onSuccess: (newMsg) => {
@@ -438,7 +441,6 @@ export default function Suporte() {
           return (old || []).map(m => m.id.startsWith("temp-") && m.body === newMsg.body ? newMsg : m);
         });
       }
-      playMessageSentSound();
       queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
     },
   });
