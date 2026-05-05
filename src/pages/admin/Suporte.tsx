@@ -438,16 +438,57 @@ export default function Suporte() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") setRealtimeStatus("connected");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
+        else setRealtimeStatus("connecting");
+      });
 
     return () => {
       if (customerTypingTimeoutRef.current) {
         clearTimeout(customerTypingTimeoutRef.current);
         customerTypingTimeoutRef.current = null;
       }
+      setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
   }, [user, queryClient, selectedConversation?.id]);
+
+  // Anti-flicker for remote "digitando..." indicator + offline suppression
+  useEffect(() => {
+    const ANTI_FLICKER_APPEAR_MS = 250;
+    const MIN_VISIBLE_MS = 700;
+    const rawTyping = !!selectedConversation?.is_typing_customer;
+
+    if (customerTypingAppearTimerRef.current) {
+      clearTimeout(customerTypingAppearTimerRef.current);
+      customerTypingAppearTimerRef.current = null;
+    }
+    if (customerTypingHideTimerRef.current) {
+      clearTimeout(customerTypingHideTimerRef.current);
+      customerTypingHideTimerRef.current = null;
+    }
+
+    if (rawTyping && realtimeStatus === "connected") {
+      if (displayCustomerTyping) return;
+      customerTypingAppearTimerRef.current = setTimeout(() => {
+        setDisplayCustomerTyping(true);
+        customerTypingShownAtRef.current = Date.now();
+      }, ANTI_FLICKER_APPEAR_MS);
+    } else {
+      if (!displayCustomerTyping) return;
+      const elapsed = Date.now() - customerTypingShownAtRef.current;
+      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      customerTypingHideTimerRef.current = setTimeout(() => {
+        setDisplayCustomerTyping(false);
+      }, remaining);
+    }
+
+    return () => {
+      if (customerTypingAppearTimerRef.current) clearTimeout(customerTypingAppearTimerRef.current);
+      if (customerTypingHideTimerRef.current) clearTimeout(customerTypingHideTimerRef.current);
+    };
+  }, [selectedConversation?.is_typing_customer, realtimeStatus, displayCustomerTyping]);
 
   useEffect(() => {
     if (!selectedConversation) return;
