@@ -730,18 +730,17 @@ export default function Suporte() {
 
               {/* Messages — Cartlly logo as faint watermark */}
               <div 
-                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative isolate" 
+                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative" 
                 ref={scrollRef}
-                style={{ backgroundColor: 'hsl(var(--muted) / 0.15)' }}
+                style={{
+                  backgroundColor: 'hsl(var(--muted) / 0.15)',
+                  backgroundImage: `url("${cartlyLogo}")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  backgroundSize: 'min(60%, 340px) auto',
+                  backgroundAttachment: 'local',
+                }}
               >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.10] dark:opacity-[0.12]"
-                  style={{
-                    backgroundImage: `url("/cartly-logo.webp")`,
-                    backgroundSize: 'min(60%, 340px) auto',
-                  }}
-                />
 
                 {loadingMsgs ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Carregando mensagens...</div>
