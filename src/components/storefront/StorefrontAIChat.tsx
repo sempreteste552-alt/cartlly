@@ -45,6 +45,8 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
+const LOCAL_TYPING_IDLE_MS = 800;
+const REMOTE_TYPING_STALE_MS = 1600;
 
 const playNotificationSound = () => {
   try {
@@ -295,6 +297,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               if (alreadyExists) return prev;
               
               if (payload.new.sender_type === "admin") {
+                setIsAdminTyping(false);
+                if (adminTypingTimeoutRef.current) {
+                  clearTimeout(adminTypingTimeoutRef.current);
+                  adminTypingTimeoutRef.current = null;
+                }
                 playNotificationSound();
                 supabase.from("support_messages")
                   .update({ delivered_at: now })
@@ -339,7 +346,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           setIsAdminTyping(adminTyping);
           if (adminTyping) {
             if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
-            adminTypingTimeoutRef.current = setTimeout(() => setIsAdminTyping(false), 4000);
+            adminTypingTimeoutRef.current = setTimeout(() => setIsAdminTyping(false), REMOTE_TYPING_STALE_MS);
           } else if (adminTypingTimeoutRef.current) {
             clearTimeout(adminTypingTimeoutRef.current);
             adminTypingTimeoutRef.current = null;
@@ -349,45 +356,49 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (adminTypingTimeoutRef.current) {
+        clearTimeout(adminTypingTimeoutRef.current);
+        adminTypingTimeoutRef.current = null;
+      }
+      supabase.removeChannel(channel);
+    };
   }, [conversationId, isHumanMode, open]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
 
-    const updateTypingStatus = async (typing: boolean) => {
-      await supabase
+    const updateTypingStatus = (typing: boolean) => {
+      supabase
         .from("support_conversations")
         .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
-        .eq("id", conversationId);
+        .eq("id", conversationId)
+        .then();
     };
 
     const hasText = input.trim().length > 0;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      if (isTyping) {
-        setIsTyping(false);
-        updateTypingStatus(false);
-      }
+      setIsTyping(false);
+      updateTypingStatus(false);
       return;
     }
 
-    if (!isTyping) {
-      setIsTyping(true);
-      updateTypingStatus(true);
-    }
+    setIsTyping(true);
+    updateTypingStatus(true);
 
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       updateTypingStatus(false);
-    }, 1500);
-  }, [input, conversationId, isHumanMode, isTyping]);
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [input, conversationId, isHumanMode]);
 
   // Clear typing flag when chat is closed
   useEffect(() => {
     if (open || !conversationId) return;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    setIsTyping(false);
     supabase
       .from("support_conversations")
       .update({ is_typing_customer: false })
