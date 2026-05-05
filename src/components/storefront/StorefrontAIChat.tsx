@@ -616,6 +616,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       if (inserted?.id) {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: inserted.id } : m));
         pendingMessagesRef.current.delete(tempId);
+        playMessageSentSound();
       }
 
       // Notify admin via push — use support_message type to bypass dedup cooldown
