@@ -398,7 +398,18 @@ export default function Suporte() {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
           setSelectedConversation(prev => {
             if (prev && payload.new.id === prev.id) {
-              return { ...prev, ...payload.new };
+              const merged = { ...prev, ...payload.new };
+              // Auto-expire stale customer typing flag after 4s of no new signals
+              if (payload.new.is_typing_customer) {
+                if (customerTypingTimeoutRef.current) clearTimeout(customerTypingTimeoutRef.current);
+                customerTypingTimeoutRef.current = setTimeout(() => {
+                  setSelectedConversation(p => p ? { ...p, is_typing_customer: false } : p);
+                }, 4000);
+              } else if (customerTypingTimeoutRef.current) {
+                clearTimeout(customerTypingTimeoutRef.current);
+                customerTypingTimeoutRef.current = null;
+              }
+              return merged;
             }
             return prev;
           });
