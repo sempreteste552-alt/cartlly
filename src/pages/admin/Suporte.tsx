@@ -352,6 +352,9 @@ export default function Suporte() {
               customerTypingTimeoutRef.current = null;
             }
             setSelectedConversation(prev => prev?.id === payload.new.conversation_id ? { ...prev, is_typing_customer: false } : prev);
+            queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
+              (old || []).map(conv => conv.id === payload.new.conversation_id ? { ...conv, is_typing_customer: false } : conv)
+            );
             playNotificationSound();
 
             const updates: Record<string, string> = {
@@ -403,6 +406,9 @@ export default function Suporte() {
         { event: "UPDATE", schema: "public", table: "support_conversations" },
         (payload: any) => {
           queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
+          queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
+            (old || []).map(conv => conv.id === payload.new.id ? { ...conv, ...payload.new } : conv)
+          );
           setSelectedConversation(prev => {
             if (prev && payload.new.id === prev.id) {
               const merged = { ...prev, ...payload.new };
@@ -411,6 +417,9 @@ export default function Suporte() {
                 if (customerTypingTimeoutRef.current) clearTimeout(customerTypingTimeoutRef.current);
                 customerTypingTimeoutRef.current = setTimeout(() => {
                   setSelectedConversation(p => p ? { ...p, is_typing_customer: false } : p);
+                  queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
+                    (old || []).map(conv => conv.id === payload.new.id ? { ...conv, is_typing_customer: false } : conv)
+                  );
                 }, REMOTE_TYPING_STALE_MS);
               } else if (customerTypingTimeoutRef.current) {
                 clearTimeout(customerTypingTimeoutRef.current);
