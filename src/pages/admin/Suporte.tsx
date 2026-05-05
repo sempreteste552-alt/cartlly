@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +25,8 @@ if (typeof window !== "undefined") {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 1000;
+const REMOTE_TYPING_STALE_MS = 1500;
 
 const playNotificationSound = () => {
   try {
@@ -71,6 +70,18 @@ type Conversation = {
   };
 };
 
+type TypingPayload = {
+  type: "typing";
+  conversation_id: string;
+  user_id: string;
+  is_typing: boolean;
+  timestamp: number;
+};
+
+type TypingUsers = Record<string, Record<string, boolean>>;
+
+const getTypingTimerKey = (conversationId: string, userId: string) => `${conversationId}:${userId}`;
+
 function formatConversationDate(dateStr?: string | null) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -88,7 +99,6 @@ function getConversationPresenceAt(
 function isConversationOnline(
   conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
-  if (conversation?.is_typing_customer) return true;
   const presenceAt = getConversationPresenceAt(conversation);
   if (!presenceAt) return false;
   return Date.now() - new Date(presenceAt).getTime() < 2 * 60 * 1000;
@@ -98,7 +108,6 @@ function formatCustomerPresence(
   conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
   if (!conversation) return "Offline";
-  if (conversation.is_typing_customer) return "digitando...";
   if (isConversationOnline(conversation)) return "Online";
 
   const presenceAt = getConversationPresenceAt(conversation);
@@ -122,16 +131,100 @@ export default function Suporte() {
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
-  const [displayCustomerTyping, setDisplayCustomerTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const customerTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTypingPushRef = useRef<number>(0);
-  const customerTypingShownAtRef = useRef<number>(0);
-  const customerTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const customerTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const typingChannelRef = useRef<any>(null);
+  const activeTypingConversationRef = useRef<string | null>(null);
+  const remoteTypingTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [typingUsers, setTypingUsers] = useState<TypingUsers>({});
   const autoSelectedConvRef = useRef<string | null>(null);
+
+  const setTypingUser = useCallback((conversationId: string, userId: string, isTyping: boolean) => {
+    setTypingUsers((prev) => {
+      const conversationTyping = { ...(prev[conversationId] || {}) };
+      if (isTyping) conversationTyping[userId] = true;
+      else delete conversationTyping[userId];
+
+      const next = { ...prev };
+      if (Object.keys(conversationTyping).length > 0) next[conversationId] = conversationTyping;
+      else delete next[conversationId];
+      return next;
+    });
+  }, []);
+
+  const clearRemoteTypingTimer = useCallback((conversationId: string, userId: string) => {
+    const key = getTypingTimerKey(conversationId, userId);
+    if (remoteTypingTimersRef.current[key]) {
+      clearTimeout(remoteTypingTimersRef.current[key]);
+      delete remoteTypingTimersRef.current[key];
+    }
+  }, []);
+
+  const clearConversationTyping = useCallback((conversationId: string) => {
+    Object.entries(remoteTypingTimersRef.current).forEach(([key, timer]) => {
+      if (key.startsWith(`${conversationId}:`)) {
+        clearTimeout(timer);
+        delete remoteTypingTimersRef.current[key];
+      }
+    });
+    setTypingUsers((prev) => {
+      if (!prev[conversationId]) return prev;
+      const next = { ...prev };
+      delete next[conversationId];
+      return next;
+    });
+  }, []);
+
+  const sendTypingEvent = useCallback((isTyping: boolean, conversationId?: string | null) => {
+    if (!conversationId || !user?.id || !typingChannelRef.current) return;
+
+    const payload: TypingPayload = {
+      type: "typing",
+      conversation_id: conversationId,
+      user_id: user.id,
+      is_typing: isTyping,
+      timestamp: Date.now(),
+    };
+
+    typingChannelRef.current
+      .send({ type: "broadcast", event: "typing", payload })
+      .catch(() => {});
+  }, [user?.id]);
+
+  const stopLocalTyping = useCallback((conversationId?: string | null) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingEvent(false, conversationId || activeTypingConversationRef.current);
+    activeTypingConversationRef.current = null;
+  }, [sendTypingEvent]);
+
+  const handleMessageChange = useCallback((value: string) => {
+    setNewMessage(value);
+    const conversationId = selectedConversation?.id;
+    if (!conversationId || !user?.id) return;
+
+    activeTypingConversationRef.current = conversationId;
+
+    if (value.trim().length === 0) {
+      stopLocalTyping(conversationId);
+      return;
+    }
+
+    sendTypingEvent(true, conversationId);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingEvent(false, conversationId);
+      activeTypingConversationRef.current = null;
+      typingTimeoutRef.current = null;
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [selectedConversation?.id, sendTypingEvent, stopLocalTyping, user?.id]);
+
+  const displayCustomerTyping = useMemo(() => {
+    if (!selectedConversation || realtimeStatus !== "connected") return false;
+    return Object.values(typingUsers[selectedConversation.id] || {}).some(Boolean);
+  }, [selectedConversation?.id, realtimeStatus, typingUsers]);
 
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
     const now = new Date().toISOString();
@@ -317,14 +410,7 @@ export default function Suporte() {
     onMutate: async (body) => {
       if (!selectedConversation) return;
 
-      // Reset typing status immediately on send
-      setIsAdminTyping(false);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_admin: false, updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id)
-        .then();
+      stopLocalTyping(selectedConversation.id);
       
       const optimisticMsg: Message = {
         id: `temp-${Date.now()}`,
@@ -367,14 +453,7 @@ export default function Suporte() {
           const now = new Date().toISOString();
 
           if (payload.new.sender_type === "customer") {
-            if (customerTypingTimeoutRef.current) {
-              clearTimeout(customerTypingTimeoutRef.current);
-              customerTypingTimeoutRef.current = null;
-            }
-            setSelectedConversation(prev => prev?.id === payload.new.conversation_id ? { ...prev, is_typing_customer: false } : prev);
-            queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
-              (old || []).map(conv => conv.id === payload.new.conversation_id ? { ...conv, is_typing_customer: false } : conv)
-            );
+            clearConversationTyping(payload.new.conversation_id);
             playNotificationSound();
 
             const updates: Record<string, string> = {
@@ -431,21 +510,7 @@ export default function Suporte() {
           );
           setSelectedConversation(prev => {
             if (prev && payload.new.id === prev.id) {
-              const merged = { ...prev, ...payload.new };
-              // Auto-expire stale customer typing flag after 4s of no new signals
-              if (payload.new.is_typing_customer) {
-                if (customerTypingTimeoutRef.current) clearTimeout(customerTypingTimeoutRef.current);
-                customerTypingTimeoutRef.current = setTimeout(() => {
-                  setSelectedConversation(p => p ? { ...p, is_typing_customer: false } : p);
-                  queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
-                    (old || []).map(conv => conv.id === payload.new.id ? { ...conv, is_typing_customer: false } : conv)
-                  );
-                }, REMOTE_TYPING_STALE_MS);
-              } else if (customerTypingTimeoutRef.current) {
-                clearTimeout(customerTypingTimeoutRef.current);
-                customerTypingTimeoutRef.current = null;
-              }
-              return merged;
+              return { ...prev, ...payload.new };
             }
             return prev;
           });
@@ -458,103 +523,46 @@ export default function Suporte() {
       });
 
     return () => {
-      if (customerTypingTimeoutRef.current) {
-        clearTimeout(customerTypingTimeoutRef.current);
-        customerTypingTimeoutRef.current = null;
-      }
       setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient, selectedConversation?.id]);
+  }, [user, queryClient, selectedConversation?.id, clearConversationTyping]);
 
-  // Anti-flicker for remote "digitando..." indicator + offline suppression
   useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
-    const rawTyping = !!selectedConversation?.is_typing_customer;
+    const conversationId = selectedConversation?.id;
+    if (!conversationId || !user?.id) return;
 
-    if (customerTypingAppearTimerRef.current) {
-      clearTimeout(customerTypingAppearTimerRef.current);
-      customerTypingAppearTimerRef.current = null;
-    }
-    if (customerTypingHideTimerRef.current) {
-      clearTimeout(customerTypingHideTimerRef.current);
-      customerTypingHideTimerRef.current = null;
-    }
+    const channel = supabase
+      .channel(`support_typing_${conversationId}`, { config: { broadcast: { self: false } } })
+      .on("broadcast", { event: "typing" }, ({ payload }: { payload: TypingPayload }) => {
+        if (payload?.type !== "typing") return;
+        if (payload.conversation_id !== conversationId) return;
+        if (payload.user_id === user.id) return;
 
-    if (rawTyping && realtimeStatus === "connected") {
-      if (displayCustomerTyping) return;
-      customerTypingAppearTimerRef.current = setTimeout(() => {
-        setDisplayCustomerTyping(true);
-        customerTypingShownAtRef.current = Date.now();
-      }, ANTI_FLICKER_APPEAR_MS);
-    } else {
-      if (!displayCustomerTyping) return;
-      const elapsed = Date.now() - customerTypingShownAtRef.current;
-      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      customerTypingHideTimerRef.current = setTimeout(() => {
-        setDisplayCustomerTyping(false);
-      }, remaining);
-    }
+        clearRemoteTypingTimer(payload.conversation_id, payload.user_id);
+
+        if (payload.is_typing) {
+          setTypingUser(payload.conversation_id, payload.user_id, true);
+          const key = getTypingTimerKey(payload.conversation_id, payload.user_id);
+          remoteTypingTimersRef.current[key] = setTimeout(() => {
+            setTypingUser(payload.conversation_id, payload.user_id, false);
+            delete remoteTypingTimersRef.current[key];
+          }, REMOTE_TYPING_STALE_MS);
+        } else {
+          setTypingUser(payload.conversation_id, payload.user_id, false);
+        }
+      })
+      .subscribe();
+
+    typingChannelRef.current = channel;
 
     return () => {
-      if (customerTypingAppearTimerRef.current) clearTimeout(customerTypingAppearTimerRef.current);
-      if (customerTypingHideTimerRef.current) clearTimeout(customerTypingHideTimerRef.current);
+      stopLocalTyping(conversationId);
+      clearConversationTyping(conversationId);
+      if (typingChannelRef.current === channel) typingChannelRef.current = null;
+      supabase.removeChannel(channel);
     };
-  }, [selectedConversation?.is_typing_customer, realtimeStatus, displayCustomerTyping]);
-
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    const updateTypingStatus = (typing: boolean) => {
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_admin: typing, updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id)
-        .then();
-    };
-
-    const hasText = newMessage.trim().length > 0;
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    if (!hasText) {
-      if (isAdminTyping) {
-        setIsAdminTyping(false);
-        updateTypingStatus(false);
-        lastTypingPushRef.current = 0;
-      }
-      return;
-    }
-
-    const now = Date.now();
-    if (!isAdminTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
-      setIsAdminTyping(true);
-      updateTypingStatus(true);
-      lastTypingPushRef.current = now;
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsAdminTyping(false);
-      updateTypingStatus(false);
-      lastTypingPushRef.current = 0;
-    }, LOCAL_TYPING_IDLE_MS);
-  }, [newMessage, selectedConversation, isAdminTyping]);
-
-  // Clear admin typing flag when switching conversations
-  useEffect(() => {
-    const convId = selectedConversation?.id;
-    return () => {
-      if (convId) {
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        setIsAdminTyping(false);
-        supabase
-          .from("support_conversations")
-          .update({ is_typing_admin: false })
-          .eq("id", convId)
-          .then();
-      }
-    };
-  }, [selectedConversation?.id]);
+  }, [selectedConversation?.id, user?.id, clearConversationTyping, clearRemoteTypingTimer, setTypingUser, stopLocalTyping]);
 
   // NOTE: We intentionally do NOT bump support_conversations.updated_at from the admin side.
   // That field is used to determine whether the CUSTOMER is online (chat panel open & visible).
@@ -670,7 +678,7 @@ export default function Suporte() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      {conv.is_typing_customer ? (
+                      {realtimeStatus === "connected" && Object.values(typingUsers[conv.id] || {}).some(Boolean) ? (
                         <span className="text-xs text-green-600 font-medium animate-pulse italic">digitando...</span>
                       ) : (
                         <p className={`text-xs truncate ${(conv.unread_count || 0) > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
@@ -821,7 +829,7 @@ export default function Suporte() {
                 <Input 
                   placeholder="Digite sua resposta..." 
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => handleMessageChange(e.target.value)}
                   disabled={sendMessage.isPending}
                   className="flex-1 rounded-full bg-muted/50 border-border/30 h-10 text-sm px-4"
                 />

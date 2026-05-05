@@ -45,9 +45,20 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 1000;
+const REMOTE_TYPING_STALE_MS = 1500;
+
+type TypingPayload = {
+  type: "typing";
+  conversation_id: string;
+  user_id: string;
+  is_typing: boolean;
+  timestamp: number;
+};
+
+type TypingUsers = Record<string, Record<string, boolean>>;
+
+const getTypingTimerKey = (conversationId: string, userId: string) => `${conversationId}:${userId}`;
 
 const playNotificationSound = () => {
   try {
@@ -85,18 +96,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [isHumanMode, setIsHumanMode] = useState(!isPremium);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sessionId] = useState(() => getOrCreateChatSessionId());
-  const [isTyping, setIsTyping] = useState(false);
-  const [isAdminTyping, setIsAdminTyping] = useState(false);
-  const [displayAdminTyping, setDisplayAdminTyping] = useState(false);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTypingPushRef = useRef<number>(0);
+  const typingChannelRef = useRef<any>(null);
+  const activeTypingConversationRef = useRef<string | null>(null);
+  const remoteTypingTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [typingUsers, setTypingUsers] = useState<TypingUsers>({});
   const pendingMessagesRef = useRef<Set<string>>(new Set());
-  const adminTypingShownAtRef = useRef<number>(0);
-  const adminTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const adminTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +111,94 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const { chatUnreadCount } = useCustomerNotifications(storeUserId);
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
+
+  const currentUserId = customer?.id || sessionId;
+
+  const setTypingUser = useCallback((targetConversationId: string, userId: string, isTyping: boolean) => {
+    setTypingUsers((prev) => {
+      const conversationTyping = { ...(prev[targetConversationId] || {}) };
+      if (isTyping) conversationTyping[userId] = true;
+      else delete conversationTyping[userId];
+
+      const next = { ...prev };
+      if (Object.keys(conversationTyping).length > 0) next[targetConversationId] = conversationTyping;
+      else delete next[targetConversationId];
+      return next;
+    });
+  }, []);
+
+  const clearRemoteTypingTimer = useCallback((targetConversationId: string, userId: string) => {
+    const key = getTypingTimerKey(targetConversationId, userId);
+    if (remoteTypingTimersRef.current[key]) {
+      clearTimeout(remoteTypingTimersRef.current[key]);
+      delete remoteTypingTimersRef.current[key];
+    }
+  }, []);
+
+  const clearConversationTyping = useCallback((targetConversationId: string) => {
+    Object.entries(remoteTypingTimersRef.current).forEach(([key, timer]) => {
+      if (key.startsWith(`${targetConversationId}:`)) {
+        clearTimeout(timer);
+        delete remoteTypingTimersRef.current[key];
+      }
+    });
+    setTypingUsers((prev) => {
+      if (!prev[targetConversationId]) return prev;
+      const next = { ...prev };
+      delete next[targetConversationId];
+      return next;
+    });
+  }, []);
+
+  const sendTypingEvent = useCallback((isTyping: boolean, targetConversationId?: string | null) => {
+    if (!targetConversationId || !currentUserId || !typingChannelRef.current) return;
+
+    const payload: TypingPayload = {
+      type: "typing",
+      conversation_id: targetConversationId,
+      user_id: currentUserId,
+      is_typing: isTyping,
+      timestamp: Date.now(),
+    };
+
+    typingChannelRef.current
+      .send({ type: "broadcast", event: "typing", payload })
+      .catch(() => {});
+  }, [currentUserId]);
+
+  const stopLocalTyping = useCallback((targetConversationId?: string | null) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingEvent(false, targetConversationId || activeTypingConversationRef.current);
+    activeTypingConversationRef.current = null;
+  }, [sendTypingEvent]);
+
+  const handleInputChange = useCallback((value: string) => {
+    setInput(value);
+    if (!conversationId || !isHumanMode || !currentUserId) return;
+
+    activeTypingConversationRef.current = conversationId;
+
+    if (value.trim().length === 0) {
+      stopLocalTyping(conversationId);
+      return;
+    }
+
+    sendTypingEvent(true, conversationId);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingEvent(false, conversationId);
+      activeTypingConversationRef.current = null;
+      typingTimeoutRef.current = null;
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [conversationId, currentUserId, isHumanMode, sendTypingEvent, stopLocalTyping]);
+
+  const displayAdminTyping = useMemo(() => {
+    if (!conversationId || realtimeStatus !== "connected") return false;
+    return Object.values(typingUsers[conversationId] || {}).some(Boolean);
+  }, [conversationId, realtimeStatus, typingUsers]);
 
   const syncIncomingAdminMessages = useCallback(async (markAsRead: boolean, targetConversationId?: string) => {
     const activeConversationId = targetConversationId || conversationId;
@@ -212,32 +307,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       const initSupport = async () => {
         let currentConvId: string | null = null;
         let currentUpdatedAt: string | null = null;
-        let currentTypingAdmin = false;
-
         if (customer?.id) {
           const { data: customerConv } = await supabase
             .from("support_conversations")
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .eq("tenant_id", storeUserId)
             .eq("customer_id", customer.id)
             .maybeSingle();
 
           currentConvId = customerConv?.id ?? null;
           currentUpdatedAt = customerConv?.updated_at ?? null;
-          currentTypingAdmin = !!customerConv?.is_typing_admin;
         }
 
         if (!currentConvId) {
           const { data: conv } = await supabase
             .from("support_conversations")
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .eq("tenant_id", storeUserId)
             .eq("session_id", sessionId)
             .maybeSingle();
 
           currentConvId = conv?.id ?? null;
           currentUpdatedAt = conv?.updated_at ?? null;
-          currentTypingAdmin = !!conv?.is_typing_admin;
         }
 
         if (!currentConvId) {
@@ -248,21 +339,18 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               session_id: sessionId,
               customer_id: customer?.id || null,
             })
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .single();
 
           if (newConv) {
             currentConvId = newConv.id;
             currentUpdatedAt = newConv.updated_at ?? null;
-            currentTypingAdmin = !!newConv.is_typing_admin;
           }
         }
 
         if (currentConvId) {
           setConversationId(currentConvId);
           setConversationUpdatedAt(currentUpdatedAt);
-          // Always ignore stale typing flag on init — only react to live UPDATE events
-          setIsAdminTyping(false);
 
           const { data: msgs } = await supabase
             .from("support_messages")
@@ -290,10 +378,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId, syncIncomingAdminMessages]);
 
   useEffect(() => {
-    if (!conversationId || !isHumanMode) return;
+    if (!conversationId || !isHumanMode || !open) return;
 
     const channel = supabase
-      .channel(`support_storefront_${conversationId}`)
+      .channel(`support_typing_${conversationId}`, { config: { broadcast: { self: false } } })
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
@@ -305,11 +393,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               if (alreadyExists) return prev;
               
               if (payload.new.sender_type === "admin") {
-                setIsAdminTyping(false);
-                if (adminTypingTimeoutRef.current) {
-                  clearTimeout(adminTypingTimeoutRef.current);
-                  adminTypingTimeoutRef.current = null;
-                }
+                clearConversationTyping(payload.new.conversation_id);
                 playNotificationSound();
                 supabase.from("support_messages")
                   .update({ delivered_at: now })
@@ -350,118 +434,49 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
         (payload: any) => {
-          const adminTyping = !!payload.new.is_typing_admin;
-          setIsAdminTyping(adminTyping);
-          if (adminTyping) {
-            if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
-            adminTypingTimeoutRef.current = setTimeout(() => setIsAdminTyping(false), REMOTE_TYPING_STALE_MS);
-          } else if (adminTypingTimeoutRef.current) {
-            clearTimeout(adminTypingTimeoutRef.current);
-            adminTypingTimeoutRef.current = null;
-          }
           setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
+      .on("broadcast", { event: "typing" }, ({ payload }: { payload: TypingPayload }) => {
+        if (payload?.type !== "typing") return;
+        if (payload.conversation_id !== conversationId) return;
+        if (payload.user_id === currentUserId) return;
+
+        clearRemoteTypingTimer(payload.conversation_id, payload.user_id);
+
+        if (payload.is_typing) {
+          setTypingUser(payload.conversation_id, payload.user_id, true);
+          const key = getTypingTimerKey(payload.conversation_id, payload.user_id);
+          remoteTypingTimersRef.current[key] = setTimeout(() => {
+            setTypingUser(payload.conversation_id, payload.user_id, false);
+            delete remoteTypingTimersRef.current[key];
+          }, REMOTE_TYPING_STALE_MS);
+        } else {
+          setTypingUser(payload.conversation_id, payload.user_id, false);
+        }
+      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") setRealtimeStatus("connected");
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
         else setRealtimeStatus("connecting");
       });
 
+    typingChannelRef.current = channel;
+
     return () => {
-      if (adminTypingTimeoutRef.current) {
-        clearTimeout(adminTypingTimeoutRef.current);
-        adminTypingTimeoutRef.current = null;
-      }
+      stopLocalTyping(conversationId);
+      clearConversationTyping(conversationId);
+      if (typingChannelRef.current === channel) typingChannelRef.current = null;
       setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
-  }, [conversationId, isHumanMode, open]);
-
-  // Anti-flicker: only show "Digitando..." after 250ms continuous true,
-  // keep it visible for at least 700ms, and suppress when realtime is offline.
-  useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
-
-    if (adminTypingAppearTimerRef.current) {
-      clearTimeout(adminTypingAppearTimerRef.current);
-      adminTypingAppearTimerRef.current = null;
-    }
-    if (adminTypingHideTimerRef.current) {
-      clearTimeout(adminTypingHideTimerRef.current);
-      adminTypingHideTimerRef.current = null;
-    }
-
-    if (isAdminTyping && realtimeStatus === "connected") {
-      if (displayAdminTyping) return;
-      adminTypingAppearTimerRef.current = setTimeout(() => {
-        setDisplayAdminTyping(true);
-        adminTypingShownAtRef.current = Date.now();
-      }, ANTI_FLICKER_APPEAR_MS);
-    } else {
-      if (!displayAdminTyping) return;
-      const elapsed = Date.now() - adminTypingShownAtRef.current;
-      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      adminTypingHideTimerRef.current = setTimeout(() => {
-        setDisplayAdminTyping(false);
-      }, remaining);
-    }
-
-    return () => {
-      if (adminTypingAppearTimerRef.current) clearTimeout(adminTypingAppearTimerRef.current);
-      if (adminTypingHideTimerRef.current) clearTimeout(adminTypingHideTimerRef.current);
-    };
-  }, [isAdminTyping, realtimeStatus, displayAdminTyping]);
-
-  useEffect(() => {
-    if (!conversationId || !isHumanMode) return;
-
-    const updateTypingStatus = (typing: boolean) => {
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .then();
-    };
-
-    const hasText = input.trim().length > 0;
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    if (!hasText) {
-      if (isTyping) {
-        setIsTyping(false);
-        updateTypingStatus(false);
-        lastTypingPushRef.current = 0;
-      }
-      return;
-    }
-
-    const now = Date.now();
-    if (!isTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
-      setIsTyping(true);
-      updateTypingStatus(true);
-      lastTypingPushRef.current = now;
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      updateTypingStatus(false);
-      lastTypingPushRef.current = 0;
-    }, LOCAL_TYPING_IDLE_MS);
-  }, [input, conversationId, isHumanMode, isTyping]);
+  }, [conversationId, isHumanMode, open, currentUserId, clearConversationTyping, clearRemoteTypingTimer, setTypingUser, stopLocalTyping]);
 
   // Clear typing flag when chat is closed
   useEffect(() => {
     if (open || !conversationId) return;
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    setIsTyping(false);
-    supabase
-      .from("support_conversations")
-      .update({ is_typing_customer: false })
-      .eq("id", conversationId)
-      .then();
-  }, [open, conversationId]);
+    stopLocalTyping(conversationId);
+  }, [open, conversationId, stopLocalTyping]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
@@ -577,14 +592,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     if (isHumanMode) {
       if (!conversationId) return;
 
-      // Reset typing status immediately on send
-      setIsTyping(false);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_customer: false, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .then();
+      stopLocalTyping(conversationId);
 
       const tempId = `temp-${Date.now()}`;
       const userMsg: Msg = { 
@@ -896,7 +904,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         <Input 
           ref={inputRef} 
           value={input} 
-          onChange={(e) => setInput(e.target.value)} 
+          onChange={(e) => handleInputChange(e.target.value)} 
           placeholder={uiText.placeholder} 
           className="flex-1 rounded-full bg-muted/50 border-border/30 h-10 text-sm px-4 focus-visible:ring-1" 
           style={{ ['--tw-ring-color' as any]: accentColor + "60" }}
