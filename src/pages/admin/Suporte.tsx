@@ -410,14 +410,7 @@ export default function Suporte() {
     onMutate: async (body) => {
       if (!selectedConversation) return;
 
-      // Reset typing status immediately on send
-      setIsAdminTyping(false);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_admin: false, updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id)
-        .then();
+      stopLocalTyping(selectedConversation.id);
       
       const optimisticMsg: Message = {
         id: `temp-${Date.now()}`,
@@ -460,14 +453,7 @@ export default function Suporte() {
           const now = new Date().toISOString();
 
           if (payload.new.sender_type === "customer") {
-            if (customerTypingTimeoutRef.current) {
-              clearTimeout(customerTypingTimeoutRef.current);
-              customerTypingTimeoutRef.current = null;
-            }
-            setSelectedConversation(prev => prev?.id === payload.new.conversation_id ? { ...prev, is_typing_customer: false } : prev);
-            queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
-              (old || []).map(conv => conv.id === payload.new.conversation_id ? { ...conv, is_typing_customer: false } : conv)
-            );
+            clearConversationTyping(payload.new.conversation_id);
             playNotificationSound();
 
             const updates: Record<string, string> = {
@@ -524,21 +510,7 @@ export default function Suporte() {
           );
           setSelectedConversation(prev => {
             if (prev && payload.new.id === prev.id) {
-              const merged = { ...prev, ...payload.new };
-              // Auto-expire stale customer typing flag after 4s of no new signals
-              if (payload.new.is_typing_customer) {
-                if (customerTypingTimeoutRef.current) clearTimeout(customerTypingTimeoutRef.current);
-                customerTypingTimeoutRef.current = setTimeout(() => {
-                  setSelectedConversation(p => p ? { ...p, is_typing_customer: false } : p);
-                  queryClient.setQueryData(["support_conversations", user.id], (old: Conversation[] | undefined) =>
-                    (old || []).map(conv => conv.id === payload.new.id ? { ...conv, is_typing_customer: false } : conv)
-                  );
-                }, REMOTE_TYPING_STALE_MS);
-              } else if (customerTypingTimeoutRef.current) {
-                clearTimeout(customerTypingTimeoutRef.current);
-                customerTypingTimeoutRef.current = null;
-              }
-              return merged;
+              return { ...prev, ...payload.new };
             }
             return prev;
           });
@@ -551,14 +523,10 @@ export default function Suporte() {
       });
 
     return () => {
-      if (customerTypingTimeoutRef.current) {
-        clearTimeout(customerTypingTimeoutRef.current);
-        customerTypingTimeoutRef.current = null;
-      }
       setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient, selectedConversation?.id]);
+  }, [user, queryClient, selectedConversation?.id, clearConversationTyping]);
 
   // Anti-flicker for remote "digitando..." indicator + offline suppression
   useEffect(() => {
