@@ -386,7 +386,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     if (!conversationId || !isHumanMode) return;
 
     const channel = supabase
-      .channel(`support_storefront_${conversationId}`)
+      .channel(`support_typing_${conversationId}`, { config: { broadcast: { self: false } } })
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "support_messages", filter: `conversation_id=eq.${conversationId}` },
