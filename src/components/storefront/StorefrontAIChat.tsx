@@ -908,6 +908,21 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} 
         className="p-3 border-t border-border/50 bg-background flex items-center gap-2"
       >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            const next = !soundsEnabled;
+            setSoundsEnabled(next);
+            setChatSoundsEnabled(next);
+          }}
+          title={soundsEnabled ? "Sons do chat ativados" : "Sons do chat desativados"}
+          aria-label="Alternar sons do chat"
+        >
+          {soundsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+        </Button>
         <Input 
           ref={inputRef} 
           value={input} 
