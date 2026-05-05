@@ -108,6 +108,7 @@ export default function Suporte() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const customerTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoSelectedConvRef = useRef<string | null>(null);
 
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
