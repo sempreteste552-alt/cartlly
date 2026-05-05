@@ -45,9 +45,20 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 1000;
+const REMOTE_TYPING_STALE_MS = 1500;
+
+type TypingPayload = {
+  type: "typing";
+  conversation_id: string;
+  user_id: string;
+  is_typing: boolean;
+  timestamp: number;
+};
+
+type TypingUsers = Record<string, Record<string, boolean>>;
+
+const getTypingTimerKey = (conversationId: string, userId: string) => `${conversationId}:${userId}`;
 
 const playNotificationSound = () => {
   try {
