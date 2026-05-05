@@ -142,6 +142,12 @@ export default function Suporte() {
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
   const [soundsEnabled, setSoundsEnabled] = useState<boolean>(() => isChatSoundsEnabled());
+  // Tick a cada 20s para re-renderizar e expirar status "Online" quando o cliente sair
+  const [, setPresenceTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setPresenceTick(t => t + 1), 20000);
+    return () => window.clearInterval(id);
+  }, []);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
