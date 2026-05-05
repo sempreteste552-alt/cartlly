@@ -381,8 +381,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   // Anti-flicker: only show "Digitando..." after 250ms continuous true,
   // keep it visible for at least 700ms, and suppress when realtime is offline.
   useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
+    const ANTI_FLICKER_APPEAR_MS = 0;
+    const MIN_VISIBLE_MS = 300;
 
     if (adminTypingAppearTimerRef.current) {
       clearTimeout(adminTypingAppearTimerRef.current);
