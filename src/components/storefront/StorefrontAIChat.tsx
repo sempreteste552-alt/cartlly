@@ -477,90 +477,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     };
   }, [conversationId, isHumanMode, open, currentUserId, clearConversationTyping, clearRemoteTypingTimer, setTypingUser, stopLocalTyping]);
 
-  // Anti-flicker: only show "Digitando..." after 250ms continuous true,
-  // keep it visible for at least 700ms, and suppress when realtime is offline.
-  useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
-
-    if (adminTypingAppearTimerRef.current) {
-      clearTimeout(adminTypingAppearTimerRef.current);
-      adminTypingAppearTimerRef.current = null;
-    }
-    if (adminTypingHideTimerRef.current) {
-      clearTimeout(adminTypingHideTimerRef.current);
-      adminTypingHideTimerRef.current = null;
-    }
-
-    if (isAdminTyping && realtimeStatus === "connected") {
-      if (displayAdminTyping) return;
-      adminTypingAppearTimerRef.current = setTimeout(() => {
-        setDisplayAdminTyping(true);
-        adminTypingShownAtRef.current = Date.now();
-      }, ANTI_FLICKER_APPEAR_MS);
-    } else {
-      if (!displayAdminTyping) return;
-      const elapsed = Date.now() - adminTypingShownAtRef.current;
-      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
-      adminTypingHideTimerRef.current = setTimeout(() => {
-        setDisplayAdminTyping(false);
-      }, remaining);
-    }
-
-    return () => {
-      if (adminTypingAppearTimerRef.current) clearTimeout(adminTypingAppearTimerRef.current);
-      if (adminTypingHideTimerRef.current) clearTimeout(adminTypingHideTimerRef.current);
-    };
-  }, [isAdminTyping, realtimeStatus, displayAdminTyping]);
-
-  useEffect(() => {
-    if (!conversationId || !isHumanMode) return;
-
-    const updateTypingStatus = (typing: boolean) => {
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .then();
-    };
-
-    const hasText = input.trim().length > 0;
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-
-    if (!hasText) {
-      if (isTyping) {
-        setIsTyping(false);
-        updateTypingStatus(false);
-        lastTypingPushRef.current = 0;
-      }
-      return;
-    }
-
-    const now = Date.now();
-    if (!isTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
-      setIsTyping(true);
-      updateTypingStatus(true);
-      lastTypingPushRef.current = now;
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      updateTypingStatus(false);
-      lastTypingPushRef.current = 0;
-    }, LOCAL_TYPING_IDLE_MS);
-  }, [input, conversationId, isHumanMode, isTyping]);
-
   // Clear typing flag when chat is closed
   useEffect(() => {
     if (open || !conversationId) return;
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    setIsTyping(false);
-    supabase
-      .from("support_conversations")
-      .update({ is_typing_customer: false })
-      .eq("id", conversationId)
-      .then();
-  }, [open, conversationId]);
+    stopLocalTyping(conversationId);
+  }, [open, conversationId, stopLocalTyping]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
