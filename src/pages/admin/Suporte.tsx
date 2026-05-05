@@ -718,11 +718,13 @@ export default function Suporte() {
                           </span>
                           {msg.sender_type === "admin" && (
                             <>
-                              {msg.read_at 
-                                ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
-                                : msg.delivered_at 
-                                  ? <CheckCheck className="h-3.5 w-3.5 opacity-60" /> 
-                                  : <Check className="h-3.5 w-3.5 opacity-60" />
+                              {msg.id.startsWith("temp-")
+                                ? <Loader2 className="h-3 w-3 animate-spin opacity-60" />
+                                : msg.read_at
+                                  ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" />
+                                  : msg.delivered_at
+                                    ? <CheckCheck className="h-3.5 w-3.5 opacity-60" />
+                                    : <Check className="h-3.5 w-3.5 opacity-60" />
                               }
                             </>
                           )}
@@ -731,7 +733,7 @@ export default function Suporte() {
                           <p className={`text-[9px] text-right mt-0.5 ${
                             msg.read_at ? "text-blue-300" : "text-primary-foreground/40"
                           }`}>
-                            {msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
+                            {msg.id.startsWith("temp-") ? "Enviando..." : msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
                           </p>
                         )}
                       </div>
