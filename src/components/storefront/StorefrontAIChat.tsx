@@ -90,6 +90,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingPushRef = useRef<number>(0);
+  const pendingMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
