@@ -459,19 +459,27 @@ export default function Suporte() {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      setIsAdminTyping(false);
-      updateTypingStatus(false);
+      if (isAdminTyping) {
+        setIsAdminTyping(false);
+        updateTypingStatus(false);
+        lastTypingPushRef.current = 0;
+      }
       return;
     }
 
-    setIsAdminTyping(true);
-    updateTypingStatus(true);
+    const now = Date.now();
+    if (!isAdminTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
+      setIsAdminTyping(true);
+      updateTypingStatus(true);
+      lastTypingPushRef.current = now;
+    }
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsAdminTyping(false);
       updateTypingStatus(false);
+      lastTypingPushRef.current = 0;
     }, LOCAL_TYPING_IDLE_MS);
-  }, [newMessage, selectedConversation]);
+  }, [newMessage, selectedConversation, isAdminTyping]);
 
   // Clear admin typing flag when switching conversations
   useEffect(() => {
