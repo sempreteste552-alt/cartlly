@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Loader2, MessageCircle, Bot, User, Minimize2, Headphones, Check, CheckCheck, ArrowLeft } from "lucide-react";
+import { X, Send, Loader2, MessageCircle, Bot, User, Minimize2, Headphones, Check, CheckCheck, ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { playMessageSentSound, isChatSoundsEnabled, setChatSoundsEnabled } from "@/lib/chatSounds";
 import ReactMarkdown from "react-markdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
