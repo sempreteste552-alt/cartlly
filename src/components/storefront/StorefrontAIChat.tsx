@@ -112,6 +112,94 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const lojaCtx = useLojaContext();
   const queryClient = useQueryClient();
 
+  const currentUserId = customer?.id || sessionId;
+
+  const setTypingUser = useCallback((targetConversationId: string, userId: string, isTyping: boolean) => {
+    setTypingUsers((prev) => {
+      const conversationTyping = { ...(prev[targetConversationId] || {}) };
+      if (isTyping) conversationTyping[userId] = true;
+      else delete conversationTyping[userId];
+
+      const next = { ...prev };
+      if (Object.keys(conversationTyping).length > 0) next[targetConversationId] = conversationTyping;
+      else delete next[targetConversationId];
+      return next;
+    });
+  }, []);
+
+  const clearRemoteTypingTimer = useCallback((targetConversationId: string, userId: string) => {
+    const key = getTypingTimerKey(targetConversationId, userId);
+    if (remoteTypingTimersRef.current[key]) {
+      clearTimeout(remoteTypingTimersRef.current[key]);
+      delete remoteTypingTimersRef.current[key];
+    }
+  }, []);
+
+  const clearConversationTyping = useCallback((targetConversationId: string) => {
+    Object.entries(remoteTypingTimersRef.current).forEach(([key, timer]) => {
+      if (key.startsWith(`${targetConversationId}:`)) {
+        clearTimeout(timer);
+        delete remoteTypingTimersRef.current[key];
+      }
+    });
+    setTypingUsers((prev) => {
+      if (!prev[targetConversationId]) return prev;
+      const next = { ...prev };
+      delete next[targetConversationId];
+      return next;
+    });
+  }, []);
+
+  const sendTypingEvent = useCallback((isTyping: boolean, targetConversationId?: string | null) => {
+    if (!targetConversationId || !currentUserId || !typingChannelRef.current) return;
+
+    const payload: TypingPayload = {
+      type: "typing",
+      conversation_id: targetConversationId,
+      user_id: currentUserId,
+      is_typing: isTyping,
+      timestamp: Date.now(),
+    };
+
+    typingChannelRef.current
+      .send({ type: "broadcast", event: "typing", payload })
+      .catch(() => {});
+  }, [currentUserId]);
+
+  const stopLocalTyping = useCallback((targetConversationId?: string | null) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingEvent(false, targetConversationId || activeTypingConversationRef.current);
+    activeTypingConversationRef.current = null;
+  }, [sendTypingEvent]);
+
+  const handleInputChange = useCallback((value: string) => {
+    setInput(value);
+    if (!conversationId || !isHumanMode || !currentUserId) return;
+
+    activeTypingConversationRef.current = conversationId;
+
+    if (value.trim().length === 0) {
+      stopLocalTyping(conversationId);
+      return;
+    }
+
+    sendTypingEvent(true, conversationId);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingEvent(false, conversationId);
+      activeTypingConversationRef.current = null;
+      typingTimeoutRef.current = null;
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [conversationId, currentUserId, isHumanMode, sendTypingEvent, stopLocalTyping]);
+
+  const displayAdminTyping = useMemo(() => {
+    if (!conversationId || realtimeStatus !== "connected") return false;
+    return Object.values(typingUsers[conversationId] || {}).some(Boolean);
+  }, [conversationId, realtimeStatus, typingUsers]);
+
   const syncIncomingAdminMessages = useCallback(async (markAsRead: boolean, targetConversationId?: string) => {
     const activeConversationId = targetConversationId || conversationId;
     if (!activeConversationId) return new Date().toISOString();
