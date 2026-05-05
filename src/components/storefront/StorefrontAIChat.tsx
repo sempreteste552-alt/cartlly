@@ -87,11 +87,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [sessionId] = useState(() => getOrCreateChatSessionId());
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [displayAdminTyping, setDisplayAdminTyping] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTypingPushRef = useRef<number>(0);
   const pendingMessagesRef = useRef<Set<string>>(new Set());
+  const adminTypingShownAtRef = useRef<number>(0);
+  const adminTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const adminTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
