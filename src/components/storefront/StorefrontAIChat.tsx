@@ -738,15 +738,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">{isHumanMode ? "Atendente" : displayName}</p>
           <p className="text-[11px] text-white/70 flex items-center gap-1">
-            {isAdminTyping ? (
+            {isHumanMode && realtimeStatus !== "connected" ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-yellow-300 inline-block animate-pulse" />
+                <span className="italic">{realtimeStatus === "offline" ? "Reconectando..." : "Conectando..."}</span>
+              </>
+            ) : displayAdminTyping ? (
               <span className="text-white font-medium animate-pulse">{uiText.typing}</span>
-            ) : getPresenceLabel(isAdminTyping, conversationUpdatedAt) === "Online" ? (
+            ) : getPresenceLabel(false, conversationUpdatedAt) === "Online" ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
                 {uiText.humanStatusOnline}
               </>
             ) : (
-              getPresenceLabel(isAdminTyping, conversationUpdatedAt)
+              getPresenceLabel(false, conversationUpdatedAt)
             )}
           </p>
         </div>
