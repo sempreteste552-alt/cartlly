@@ -774,20 +774,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       {/* Messages area — store logo as faint watermark background */}
       <div 
         ref={scrollRef} 
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 relative isolate"
-        style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 relative"
+        style={storeLogoUrl ? {
+          backgroundImage: `linear-gradient(hsl(var(--background) / 0.90), hsl(var(--background) / 0.90)), url("${storeLogoUrl}")`,
+          backgroundRepeat: 'no-repeat, no-repeat',
+          backgroundPosition: 'center, center',
+          backgroundSize: 'cover, min(60%, 260px) auto',
+          backgroundAttachment: 'local, local',
+          backgroundColor: 'hsl(var(--muted) / 0.3)',
+        } : { backgroundColor: 'hsl(var(--muted) / 0.3)' }}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.12] dark:opacity-[0.14]"
-          style={{
-            backgroundImage: storeLogoUrl
-              ? `url("${storeLogoUrl}")`
-              : `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.5'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: storeLogoUrl ? 'min(60%, 280px) auto' : 'auto',
-            backgroundAttachment: 'local',
-          }}
-        />
 
         {messages.length === 0 && (
           <div className="space-y-4 py-4">
