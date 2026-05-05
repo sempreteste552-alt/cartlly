@@ -93,35 +93,44 @@ function formatConversationDate(dateStr?: string | null) {
 }
 
 function getConversationPresenceAt(
-  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at"> | null
+  conversation?: Pick<Conversation, "customer_present_at" | "last_message_at" | "created_at"> | null
 ) {
-  return conversation?.updated_at || conversation?.last_message_at || conversation?.created_at || null;
+  // Only `customer_present_at` reflects real customer presence (chat open + visible + focused).
+  // last_message_at / created_at are used only as a fallback to render "last seen" labels.
+  return conversation?.customer_present_at || null;
+}
+
+function getConversationLastSeenAt(
+  conversation?: Pick<Conversation, "customer_present_at" | "last_message_at" | "created_at"> | null
+) {
+  return conversation?.customer_present_at || conversation?.last_message_at || conversation?.created_at || null;
 }
 
 function isConversationOnline(
-  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
+  conversation?: Pick<Conversation, "customer_present_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
   const presenceAt = getConversationPresenceAt(conversation);
   if (!presenceAt) return false;
-  return Date.now() - new Date(presenceAt).getTime() < 2 * 60 * 1000;
+  // Considered online if customer pinged presence in the last 75s (ping interval is 30s)
+  return Date.now() - new Date(presenceAt).getTime() < 75 * 1000;
 }
 
 function formatCustomerPresence(
-  conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
+  conversation?: Pick<Conversation, "customer_present_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
   if (!conversation) return "Offline";
   if (isConversationOnline(conversation)) return "Online";
 
-  const presenceAt = getConversationPresenceAt(conversation);
-  if (!presenceAt) return "Offline";
+  const lastSeen = getConversationLastSeenAt(conversation);
+  if (!lastSeen) return "Offline";
 
-  const diffMin = Math.max(1, Math.floor((Date.now() - new Date(presenceAt).getTime()) / 60000));
+  const diffMin = Math.max(1, Math.floor((Date.now() - new Date(lastSeen).getTime()) / 60000));
   if (diffMin < 60) return `Visto há ${diffMin} min`;
 
   const diffH = Math.floor(diffMin / 60);
   if (diffH < 24) return `Visto há ${diffH} h`;
 
-  return `Visto ${format(new Date(presenceAt), "dd/MM HH:mm")}`;
+  return `Visto ${format(new Date(lastSeen), "dd/MM HH:mm")}`;
 }
 
 export default function Suporte() {
