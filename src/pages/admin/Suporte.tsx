@@ -622,10 +622,10 @@ export default function Suporte() {
               >
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.06] dark:opacity-[0.08]"
+                  className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.10] dark:opacity-[0.12]"
                   style={{
                     backgroundImage: `url("/cartly-logo.webp")`,
-                    backgroundSize: 'min(55%, 320px) auto',
+                    backgroundSize: 'min(60%, 340px) auto',
                   }}
                 />
 
