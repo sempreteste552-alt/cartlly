@@ -748,19 +748,24 @@ export default function Suporte() {
                 </div>
               </div>
 
-              {/* Messages — Cartlly logo as faint watermark */}
-              <div 
-                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative" 
-                ref={scrollRef}
-                style={{
-                  backgroundColor: 'hsl(var(--muted) / 0.15)',
-                  backgroundImage: `linear-gradient(hsl(var(--background) / 0.92), hsl(var(--background) / 0.92)), url("${cartlyLogo}")`,
-                  backgroundRepeat: 'no-repeat, no-repeat',
-                  backgroundPosition: 'center, center',
-                  backgroundSize: 'cover, min(55%, 320px) auto',
-                  backgroundAttachment: 'local, local',
-                }}
-              >
+              {/* Messages — Cartlly logo as fixed centered watermark (does not scroll) */}
+              <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)' }}>
+                {/* Fixed watermark layer */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  style={{
+                    backgroundImage: `url("${cartlyLogo}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    backgroundSize: 'min(55%, 320px) auto',
+                    opacity: 0.08,
+                  }}
+                />
+                <div
+                  className="absolute inset-0 overflow-y-auto p-3 sm:p-4 space-y-2.5"
+                  ref={scrollRef}
+                >
 
                 {loadingMsgs ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Carregando mensagens...</div>
@@ -822,6 +827,7 @@ export default function Suporte() {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
 
               {/* Input */}
