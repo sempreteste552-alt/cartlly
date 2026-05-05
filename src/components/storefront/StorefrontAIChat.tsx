@@ -661,8 +661,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
-    // Toca som no exato momento que a mensagem do usuário aparece
-    playMessageSentSound();
 
     let assistantSoFar = "";
     try {
