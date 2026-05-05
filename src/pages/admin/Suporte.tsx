@@ -445,9 +445,6 @@ export default function Suporte() {
         return [...(old || []), optimisticMsg];
       });
 
-      // Toca som no exato momento em que a mensagem aparece (envio otimista)
-      playMessageSentSound();
-
       return { optimisticMsg };
     },
     onSuccess: (newMsg) => {
@@ -456,6 +453,8 @@ export default function Suporte() {
         queryClient.setQueryData(["support_messages", selectedConversation.id], (old: Message[] | undefined) => {
           return (old || []).map(m => m.id.startsWith("temp-") && m.body === newMsg.body ? newMsg : m);
         });
+        // Tocar o som apenas quando o primeiro tick (✓ "Enviado") aparece — após confirmação do servidor
+        playMessageSentSound();
       }
       queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
     },
