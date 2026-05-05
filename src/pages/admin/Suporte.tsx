@@ -139,6 +139,93 @@ export default function Suporte() {
   const [typingUsers, setTypingUsers] = useState<TypingUsers>({});
   const autoSelectedConvRef = useRef<string | null>(null);
 
+  const setTypingUser = useCallback((conversationId: string, userId: string, isTyping: boolean) => {
+    setTypingUsers((prev) => {
+      const conversationTyping = { ...(prev[conversationId] || {}) };
+      if (isTyping) conversationTyping[userId] = true;
+      else delete conversationTyping[userId];
+
+      const next = { ...prev };
+      if (Object.keys(conversationTyping).length > 0) next[conversationId] = conversationTyping;
+      else delete next[conversationId];
+      return next;
+    });
+  }, []);
+
+  const clearRemoteTypingTimer = useCallback((conversationId: string, userId: string) => {
+    const key = getTypingTimerKey(conversationId, userId);
+    if (remoteTypingTimersRef.current[key]) {
+      clearTimeout(remoteTypingTimersRef.current[key]);
+      delete remoteTypingTimersRef.current[key];
+    }
+  }, []);
+
+  const clearConversationTyping = useCallback((conversationId: string) => {
+    Object.entries(remoteTypingTimersRef.current).forEach(([key, timer]) => {
+      if (key.startsWith(`${conversationId}:`)) {
+        clearTimeout(timer);
+        delete remoteTypingTimersRef.current[key];
+      }
+    });
+    setTypingUsers((prev) => {
+      if (!prev[conversationId]) return prev;
+      const next = { ...prev };
+      delete next[conversationId];
+      return next;
+    });
+  }, []);
+
+  const sendTypingEvent = useCallback((isTyping: boolean, conversationId?: string | null) => {
+    if (!conversationId || !user?.id || !typingChannelRef.current) return;
+
+    const payload: TypingPayload = {
+      type: "typing",
+      conversation_id: conversationId,
+      user_id: user.id,
+      is_typing: isTyping,
+      timestamp: Date.now(),
+    };
+
+    typingChannelRef.current
+      .send({ type: "broadcast", event: "typing", payload })
+      .catch(() => {});
+  }, [user?.id]);
+
+  const stopLocalTyping = useCallback((conversationId?: string | null) => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingEvent(false, conversationId || activeTypingConversationRef.current);
+    activeTypingConversationRef.current = null;
+  }, [sendTypingEvent]);
+
+  const handleMessageChange = useCallback((value: string) => {
+    setNewMessage(value);
+    const conversationId = selectedConversation?.id;
+    if (!conversationId || !user?.id) return;
+
+    activeTypingConversationRef.current = conversationId;
+
+    if (value.trim().length === 0) {
+      stopLocalTyping(conversationId);
+      return;
+    }
+
+    sendTypingEvent(true, conversationId);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingEvent(false, conversationId);
+      activeTypingConversationRef.current = null;
+      typingTimeoutRef.current = null;
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [selectedConversation?.id, sendTypingEvent, stopLocalTyping, user?.id]);
+
+  const displayCustomerTyping = useMemo(() => {
+    if (!selectedConversation || realtimeStatus !== "connected") return false;
+    return Object.values(typingUsers[selectedConversation.id] || {}).some(Boolean);
+  }, [selectedConversation?.id, realtimeStatus, typingUsers]);
+
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
     const now = new Date().toISOString();
 
