@@ -61,6 +61,7 @@ type Conversation = {
   last_message_at: string;
   created_at: string;
   updated_at: string | null;
+  customer_present_at: string | null;
   last_message?: string;
   unread_count?: number;
   customer?: {
