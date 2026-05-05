@@ -99,7 +99,6 @@ function getConversationPresenceAt(
 function isConversationOnline(
   conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
-  if (conversation?.is_typing_customer) return true;
   const presenceAt = getConversationPresenceAt(conversation);
   if (!presenceAt) return false;
   return Date.now() - new Date(presenceAt).getTime() < 2 * 60 * 1000;
@@ -109,7 +108,6 @@ function formatCustomerPresence(
   conversation?: Pick<Conversation, "updated_at" | "last_message_at" | "created_at" | "is_typing_customer"> | null
 ) {
   if (!conversation) return "Offline";
-  if (conversation.is_typing_customer) return "digitando...";
   if (isConversationOnline(conversation)) return "Online";
 
   const presenceAt = getConversationPresenceAt(conversation);
