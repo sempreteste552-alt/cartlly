@@ -678,7 +678,7 @@ export default function Suporte() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      {conv.is_typing_customer ? (
+                      {realtimeStatus === "connected" && Object.values(typingUsers[conv.id] || {}).some(Boolean) ? (
                         <span className="text-xs text-green-600 font-medium animate-pulse italic">digitando...</span>
                       ) : (
                         <p className={`text-xs truncate ${(conv.unread_count || 0) > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
@@ -829,7 +829,7 @@ export default function Suporte() {
                 <Input 
                   placeholder="Digite sua resposta..." 
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => handleMessageChange(e.target.value)}
                   disabled={sendMessage.isPending}
                   className="flex-1 rounded-full bg-muted/50 border-border/30 h-10 text-sm px-4"
                 />
