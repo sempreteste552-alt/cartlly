@@ -909,7 +909,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         <Input 
           ref={inputRef} 
           value={input} 
-          onChange={(e) => setInput(e.target.value)} 
+          onChange={(e) => handleInputChange(e.target.value)} 
           placeholder={uiText.placeholder} 
           className="flex-1 rounded-full bg-muted/50 border-border/30 h-10 text-sm px-4 focus-visible:ring-1" 
           style={{ ['--tw-ring-color' as any]: accentColor + "60" }}
