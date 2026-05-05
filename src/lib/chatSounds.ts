@@ -18,20 +18,75 @@ export function setChatSoundsEnabled(enabled: boolean) {
   } catch {}
 }
 
-let sendAudio: HTMLAudioElement | null = null;
-function getSendAudio(): HTMLAudioElement {
-  if (!sendAudio) {
-    sendAudio = new Audio(SEND_SOUND_URL);
-    sendAudio.volume = 1.0;
-    sendAudio.preload = "auto";
+let audioCtx: AudioContext | null = null;
+let audioBuffer: AudioBuffer | null = null;
+let loadingPromise: Promise<void> | null = null;
+
+function getCtx(): AudioContext | null {
+  try {
+    if (!audioCtx) {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === "suspended") void audioCtx.resume().catch(() => {});
+    return audioCtx;
+  } catch {
+    return null;
   }
-  return sendAudio;
+}
+
+async function ensureBuffer(): Promise<void> {
+  if (audioBuffer) return;
+  if (loadingPromise) return loadingPromise;
+  const ctx = getCtx();
+  if (!ctx) return;
+  loadingPromise = (async () => {
+    try {
+      const res = await fetch(SEND_SOUND_URL);
+      const arr = await res.arrayBuffer();
+      audioBuffer = await ctx.decodeAudioData(arr);
+    } catch {}
+  })();
+  return loadingPromise;
+}
+
+// Pre-warm the buffer on module load so the first play has zero delay
+if (typeof window !== "undefined") {
+  setTimeout(() => { void ensureBuffer(); }, 100);
+}
+
+// Fallback HTMLAudio element (in case Web Audio is blocked)
+let fallbackAudio: HTMLAudioElement | null = null;
+function getFallbackAudio(): HTMLAudioElement {
+  if (!fallbackAudio) {
+    fallbackAudio = new Audio(SEND_SOUND_URL);
+    fallbackAudio.volume = 1.0;
+    fallbackAudio.preload = "auto";
+  }
+  return fallbackAudio;
 }
 
 export function playMessageSentSound() {
   if (!isChatSoundsEnabled()) return;
+  const ctx = getCtx();
+  if (ctx && audioBuffer) {
+    try {
+      const src = ctx.createBufferSource();
+      src.buffer = audioBuffer;
+      const gain = ctx.createGain();
+      // Volume amplificado (acima de 1.0 só funciona via Web Audio)
+      gain.gain.value = 3.0;
+      src.connect(gain).connect(ctx.destination);
+      src.start(0);
+      return;
+    } catch {}
+  }
+  // Carrega buffer em background para próximas chamadas
+  void ensureBuffer();
+  // Fallback para HTMLAudio (volume máx 1.0)
   try {
-    const a = getSendAudio();
+    const a = getFallbackAudio();
     a.currentTime = 0;
     void a.play().catch(() => {});
   } catch {}
