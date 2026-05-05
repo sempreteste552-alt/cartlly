@@ -469,8 +469,8 @@ export default function Suporte() {
 
   // Anti-flicker for remote "digitando..." indicator + offline suppression
   useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
+    const ANTI_FLICKER_APPEAR_MS = 0;
+    const MIN_VISIBLE_MS = 300;
     const rawTyping = !!selectedConversation?.is_typing_customer;
 
     if (customerTypingAppearTimerRef.current) {
