@@ -779,20 +779,21 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         </div>
       </div>
 
-      {/* Messages area — store logo as faint watermark background */}
-      <div 
-        ref={scrollRef} 
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 relative"
-        style={storeLogoUrl ? {
-          backgroundImage: `linear-gradient(hsl(var(--background) / 0.90), hsl(var(--background) / 0.90)), url("${storeLogoUrl}")`,
-          backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundPosition: 'center, center',
-          backgroundSize: 'cover, min(60%, 260px) auto',
-          backgroundAttachment: 'local, local',
-          backgroundColor: 'hsl(var(--muted) / 0.3)',
-        } : { backgroundColor: 'hsl(var(--muted) / 0.3)' }}
-      >
-        {/* Hidden img to detect storeLogoUrl load failures and warn in console */}
+      {/* Messages area — store logo as fixed centered watermark (does not scroll) */}
+      <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
+        {storeLogoUrl ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            style={{
+              backgroundImage: `url("${storeLogoUrl}")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundSize: 'min(60%, 260px) auto',
+              opacity: 0.10,
+            }}
+          />
+        ) : null}
         {storeLogoUrl ? (
           <img
             src={storeLogoUrl}
@@ -802,6 +803,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
             onError={() => console.warn("[StorefrontAIChat] storeLogoUrl failed to load:", storeLogoUrl)}
           />
         ) : null}
+        <div ref={scrollRef} className="absolute inset-0 overflow-y-auto p-3 sm:p-4 space-y-3">
 
         {messages.length === 0 && (
           <div className="space-y-4 py-4">
