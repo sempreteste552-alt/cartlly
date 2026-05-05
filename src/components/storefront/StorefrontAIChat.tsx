@@ -307,32 +307,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       const initSupport = async () => {
         let currentConvId: string | null = null;
         let currentUpdatedAt: string | null = null;
-        let currentTypingAdmin = false;
-
         if (customer?.id) {
           const { data: customerConv } = await supabase
             .from("support_conversations")
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .eq("tenant_id", storeUserId)
             .eq("customer_id", customer.id)
             .maybeSingle();
 
           currentConvId = customerConv?.id ?? null;
           currentUpdatedAt = customerConv?.updated_at ?? null;
-          currentTypingAdmin = !!customerConv?.is_typing_admin;
         }
 
         if (!currentConvId) {
           const { data: conv } = await supabase
             .from("support_conversations")
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .eq("tenant_id", storeUserId)
             .eq("session_id", sessionId)
             .maybeSingle();
 
           currentConvId = conv?.id ?? null;
           currentUpdatedAt = conv?.updated_at ?? null;
-          currentTypingAdmin = !!conv?.is_typing_admin;
         }
 
         if (!currentConvId) {
@@ -343,13 +339,12 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               session_id: sessionId,
               customer_id: customer?.id || null,
             })
-            .select("id, updated_at, is_typing_admin")
+            .select("id, updated_at")
             .single();
 
           if (newConv) {
             currentConvId = newConv.id;
             currentUpdatedAt = newConv.updated_at ?? null;
-            currentTypingAdmin = !!newConv.is_typing_admin;
           }
         }
 
