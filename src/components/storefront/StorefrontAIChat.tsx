@@ -45,9 +45,9 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 800;
+const REMOTE_TYPING_STALE_MS = 1500;
+const TYPING_THROTTLE_MS = 600;
 
 const playNotificationSound = () => {
   try {
@@ -381,8 +381,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   // Anti-flicker: only show "Digitando..." after 250ms continuous true,
   // keep it visible for at least 700ms, and suppress when realtime is offline.
   useEffect(() => {
-    const ANTI_FLICKER_APPEAR_MS = 250;
-    const MIN_VISIBLE_MS = 700;
+    const ANTI_FLICKER_APPEAR_MS = 0;
+    const MIN_VISIBLE_MS = 300;
 
     if (adminTypingAppearTimerRef.current) {
       clearTimeout(adminTypingAppearTimerRef.current);
