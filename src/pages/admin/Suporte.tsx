@@ -827,6 +827,7 @@ export default function Suporte() {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
 
               {/* Input */}
