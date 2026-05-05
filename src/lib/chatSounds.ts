@@ -22,7 +22,7 @@ let sendAudio: HTMLAudioElement | null = null;
 function getSendAudio(): HTMLAudioElement {
   if (!sendAudio) {
     sendAudio = new Audio(SEND_SOUND_URL);
-    sendAudio.volume = 0.35;
+    sendAudio.volume = 1.0;
     sendAudio.preload = "auto";
   }
   return sendAudio;
