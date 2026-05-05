@@ -437,6 +437,7 @@ export default function Suporte() {
           return (old || []).map(m => m.id.startsWith("temp-") && m.body === newMsg.body ? newMsg : m);
         });
       }
+      playMessageSentSound();
       queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
     },
   });
