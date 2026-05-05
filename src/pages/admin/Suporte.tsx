@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Send, Check, CheckCheck, MessageSquare, ArrowLeft, Loader2 } from "lucide-react";
+import { Search, Send, Check, CheckCheck, MessageSquare, ArrowLeft, Loader2, Volume2, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import cartlyLogo from "@/assets/cartly-logo.webp";
+import { playMessageSentSound, isChatSoundsEnabled, setChatSoundsEnabled } from "@/lib/chatSounds";
 
 // Preload watermark logo once and report if it fails (helps catch 404 / build issues)
 let __cartlyLogoStatus: "loading" | "ok" | "error" = "loading";
@@ -130,6 +131,7 @@ export default function Suporte() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [soundsEnabled, setSoundsEnabled] = useState<boolean>(() => isChatSoundsEnabled());
   const scrollRef = useRef<HTMLDivElement>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -436,6 +438,7 @@ export default function Suporte() {
           return (old || []).map(m => m.id.startsWith("temp-") && m.body === newMsg.body ? newMsg : m);
         });
       }
+      playMessageSentSound();
       queryClient.invalidateQueries({ queryKey: ["support_conversations"] });
     },
   });
@@ -832,6 +835,21 @@ export default function Suporte() {
 
               {/* Input */}
               <form onSubmit={handleSend} className="p-3 border-t bg-background flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-full shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    const next = !soundsEnabled;
+                    setSoundsEnabled(next);
+                    setChatSoundsEnabled(next);
+                  }}
+                  title={soundsEnabled ? "Sons do chat ativados" : "Sons do chat desativados"}
+                  aria-label="Alternar sons do chat"
+                >
+                  {soundsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </Button>
                 <Input 
                   placeholder="Digite sua resposta..." 
                   value={newMessage}
