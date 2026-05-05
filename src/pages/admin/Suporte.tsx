@@ -411,29 +411,51 @@ export default function Suporte() {
   }, [user, queryClient, selectedConversation?.id]);
 
   useEffect(() => {
-    if (selectedConversation) {
-      const updateTypingStatus = async (typing: boolean) => {
-        await supabase
-          .from("support_conversations")
-          .update({ is_typing_admin: typing, updated_at: new Date().toISOString() })
-          .eq("id", selectedConversation.id);
-      };
+    if (!selectedConversation) return;
 
-      if (newMessage.trim() && !isAdminTyping) {
-        setIsAdminTyping(true);
-        updateTypingStatus(true);
-      }
+    const updateTypingStatus = async (typing: boolean) => {
+      await supabase
+        .from("support_conversations")
+        .update({ is_typing_admin: typing, updated_at: new Date().toISOString() })
+        .eq("id", selectedConversation.id);
+    };
 
+    const hasText = newMessage.trim().length > 0;
+
+    if (!hasText) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      
-      typingTimeoutRef.current = setTimeout(() => {
-        if (isAdminTyping) {
-          setIsAdminTyping(false);
-          updateTypingStatus(false);
-        }
-      }, 3000);
+      if (isAdminTyping) {
+        setIsAdminTyping(false);
+        updateTypingStatus(false);
+      }
+      return;
     }
+
+    if (!isAdminTyping) {
+      setIsAdminTyping(true);
+      updateTypingStatus(true);
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsAdminTyping(false);
+      updateTypingStatus(false);
+    }, 1500);
   }, [newMessage, selectedConversation, isAdminTyping]);
+
+  // Clear admin typing flag when switching conversations
+  useEffect(() => {
+    const convId = selectedConversation?.id;
+    return () => {
+      if (convId) {
+        supabase
+          .from("support_conversations")
+          .update({ is_typing_admin: false })
+          .eq("id", convId)
+          .then();
+      }
+    };
+  }, [selectedConversation?.id]);
 
   // NOTE: We intentionally do NOT bump support_conversations.updated_at from the admin side.
   // That field is used to determine whether the CUSTOMER is online (chat panel open & visible).
