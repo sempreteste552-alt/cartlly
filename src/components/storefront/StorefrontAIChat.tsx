@@ -606,7 +606,10 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       pendingMessagesRef.current.add(tempId);
       setMessages(prev => [...prev, userMsg]);
       setInput("");
-      
+
+      // Toca som no exato momento que a mensagem aparece no chat
+      playMessageSentSound();
+
       const { data: inserted } = await supabase.from("support_messages").insert({ 
         conversation_id: conversationId, 
         sender_type: "customer", 
@@ -617,7 +620,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       if (inserted?.id) {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: inserted.id } : m));
         pendingMessagesRef.current.delete(tempId);
-        playMessageSentSound();
       }
 
       // Notify admin via push — use support_message type to bypass dedup cooldown
