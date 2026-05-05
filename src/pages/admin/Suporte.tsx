@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,9 +25,8 @@ if (typeof window !== "undefined") {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 1000;
+const REMOTE_TYPING_STALE_MS = 1500;
 
 const playNotificationSound = () => {
   try {
@@ -70,6 +69,18 @@ type Conversation = {
     auth_user_id?: string | null;
   };
 };
+
+type TypingPayload = {
+  type: "typing";
+  conversation_id: string;
+  user_id: string;
+  is_typing: boolean;
+  timestamp: number;
+};
+
+type TypingUsers = Record<string, Record<string, boolean>>;
+
+const getTypingTimerKey = (conversationId: string, userId: string) => `${conversationId}:${userId}`;
 
 function formatConversationDate(dateStr?: string | null) {
   if (!dateStr) return "";
