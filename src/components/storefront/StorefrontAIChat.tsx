@@ -597,14 +597,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     if (isHumanMode) {
       if (!conversationId) return;
 
-      // Reset typing status immediately on send
-      setIsTyping(false);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      supabase
-        .from("support_conversations")
-        .update({ is_typing_customer: false, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .then();
+      stopLocalTyping(conversationId);
 
       const tempId = `temp-${Date.now()}`;
       const userMsg: Msg = { 
