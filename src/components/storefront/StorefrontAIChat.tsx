@@ -758,13 +758,13 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           </div>
         ))}
 
-        {isLoading && (
-          <div className="flex justify-start">
+        {(isLoading || (isHumanMode && isAdminTyping)) && (
+          <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-200">
             <div className="bg-background px-4 py-3 rounded-2xl rounded-tl-md shadow-sm border border-border/30">
-              <div className="flex gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
-                <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
-                <span className="h-2 w-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+              <div className="flex gap-1.5 items-end h-3">
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:0ms]" />
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:150ms]" />
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/50 animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           </div>
