@@ -708,7 +708,12 @@ export default function Suporte() {
                     {selectedConversation.customer?.name || `Visitante ${selectedConversation.session_id.slice(0, 4)}`}
                   </h3>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    {selectedConversation.is_typing_customer ? (
+                    {realtimeStatus !== "connected" ? (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 inline-block animate-pulse" />
+                        <span className="italic">{realtimeStatus === "offline" ? "Reconectando..." : "Conectando..."}</span>
+                      </>
+                    ) : displayCustomerTyping ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
                     ) : isConversationOnline(selectedConversation) ? (
                       <>
@@ -716,7 +721,7 @@ export default function Suporte() {
                         Online
                       </>
                     ) : (
-                      formatCustomerPresence(selectedConversation)
+                      formatCustomerPresence({ ...selectedConversation, is_typing_customer: false })
                     )}
                   </p>
                 </div>
