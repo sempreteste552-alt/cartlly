@@ -356,8 +356,6 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         if (currentConvId) {
           setConversationId(currentConvId);
           setConversationUpdatedAt(currentUpdatedAt);
-          // Always ignore stale typing flag on init — only react to live UPDATE events
-          setIsAdminTyping(false);
 
           const { data: msgs } = await supabase
             .from("support_messages")
@@ -400,11 +398,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
               if (alreadyExists) return prev;
               
               if (payload.new.sender_type === "admin") {
-                setIsAdminTyping(false);
-                if (adminTypingTimeoutRef.current) {
-                  clearTimeout(adminTypingTimeoutRef.current);
-                  adminTypingTimeoutRef.current = null;
-                }
+                clearConversationTyping(payload.new.conversation_id);
                 playNotificationSound();
                 supabase.from("support_messages")
                   .update({ delivered_at: now })
@@ -445,33 +439,43 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
         (payload: any) => {
-          const adminTyping = !!payload.new.is_typing_admin;
-          setIsAdminTyping(adminTyping);
-          if (adminTyping) {
-            if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
-            adminTypingTimeoutRef.current = setTimeout(() => setIsAdminTyping(false), REMOTE_TYPING_STALE_MS);
-          } else if (adminTypingTimeoutRef.current) {
-            clearTimeout(adminTypingTimeoutRef.current);
-            adminTypingTimeoutRef.current = null;
-          }
           setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
+      .on("broadcast", { event: "typing" }, ({ payload }: { payload: TypingPayload }) => {
+        if (payload?.type !== "typing") return;
+        if (payload.conversation_id !== conversationId) return;
+        if (payload.user_id === currentUserId) return;
+
+        clearRemoteTypingTimer(payload.conversation_id, payload.user_id);
+
+        if (payload.is_typing) {
+          setTypingUser(payload.conversation_id, payload.user_id, true);
+          const key = getTypingTimerKey(payload.conversation_id, payload.user_id);
+          remoteTypingTimersRef.current[key] = setTimeout(() => {
+            setTypingUser(payload.conversation_id, payload.user_id, false);
+            delete remoteTypingTimersRef.current[key];
+          }, REMOTE_TYPING_STALE_MS);
+        } else {
+          setTypingUser(payload.conversation_id, payload.user_id, false);
+        }
+      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") setRealtimeStatus("connected");
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
         else setRealtimeStatus("connecting");
       });
 
+    typingChannelRef.current = channel;
+
     return () => {
-      if (adminTypingTimeoutRef.current) {
-        clearTimeout(adminTypingTimeoutRef.current);
-        adminTypingTimeoutRef.current = null;
-      }
+      stopLocalTyping(conversationId);
+      clearConversationTyping(conversationId);
+      if (typingChannelRef.current === channel) typingChannelRef.current = null;
       setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
-  }, [conversationId, isHumanMode, open]);
+  }, [conversationId, isHumanMode, open, currentUserId, clearConversationTyping, clearRemoteTypingTimer, setTypingUser, stopLocalTyping]);
 
   // Anti-flicker: only show "Digitando..." after 250ms continuous true,
   // keep it visible for at least 700ms, and suppress when realtime is offline.
