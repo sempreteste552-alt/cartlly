@@ -732,15 +732,18 @@ export default function Suporte() {
               <div 
                 className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative" 
                 ref={scrollRef}
-                style={{
-                  backgroundColor: 'hsl(var(--muted) / 0.15)',
-                  backgroundImage: `url("${cartlyLogo}")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center',
-                  backgroundSize: 'min(60%, 340px) auto',
-                  backgroundAttachment: 'local',
-                }}
+                style={{ backgroundColor: 'hsl(var(--muted) / 0.15)' }}
               >
+                <div
+                  aria-hidden
+                  className="pointer-events-none fixed sm:absolute inset-0 bg-center bg-no-repeat opacity-[0.08] dark:opacity-[0.10]"
+                  style={{
+                    backgroundImage: `url("${cartlyLogo}")`,
+                    backgroundSize: 'min(55%, 320px) auto',
+                    zIndex: 0,
+                  }}
+                />
+                <div className="relative" style={{ zIndex: 1 }}>
 
                 {loadingMsgs ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Carregando mensagens...</div>
