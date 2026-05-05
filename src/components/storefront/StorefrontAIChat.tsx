@@ -362,16 +362,57 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") setRealtimeStatus("connected");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
+        else setRealtimeStatus("connecting");
+      });
 
     return () => {
       if (adminTypingTimeoutRef.current) {
         clearTimeout(adminTypingTimeoutRef.current);
         adminTypingTimeoutRef.current = null;
       }
+      setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
   }, [conversationId, isHumanMode, open]);
+
+  // Anti-flicker: only show "Digitando..." after 250ms continuous true,
+  // keep it visible for at least 700ms, and suppress when realtime is offline.
+  useEffect(() => {
+    const ANTI_FLICKER_APPEAR_MS = 250;
+    const MIN_VISIBLE_MS = 700;
+
+    if (adminTypingAppearTimerRef.current) {
+      clearTimeout(adminTypingAppearTimerRef.current);
+      adminTypingAppearTimerRef.current = null;
+    }
+    if (adminTypingHideTimerRef.current) {
+      clearTimeout(adminTypingHideTimerRef.current);
+      adminTypingHideTimerRef.current = null;
+    }
+
+    if (isAdminTyping && realtimeStatus === "connected") {
+      if (displayAdminTyping) return;
+      adminTypingAppearTimerRef.current = setTimeout(() => {
+        setDisplayAdminTyping(true);
+        adminTypingShownAtRef.current = Date.now();
+      }, ANTI_FLICKER_APPEAR_MS);
+    } else {
+      if (!displayAdminTyping) return;
+      const elapsed = Date.now() - adminTypingShownAtRef.current;
+      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      adminTypingHideTimerRef.current = setTimeout(() => {
+        setDisplayAdminTyping(false);
+      }, remaining);
+    }
+
+    return () => {
+      if (adminTypingAppearTimerRef.current) clearTimeout(adminTypingAppearTimerRef.current);
+      if (adminTypingHideTimerRef.current) clearTimeout(adminTypingHideTimerRef.current);
+    };
+  }, [isAdminTyping, realtimeStatus, displayAdminTyping]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
