@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 const LOCAL_TYPING_IDLE_MS = 1200;
@@ -729,18 +730,17 @@ export default function Suporte() {
 
               {/* Messages — Cartlly logo as faint watermark */}
               <div 
-                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative isolate" 
+                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 relative" 
                 ref={scrollRef}
-                style={{ backgroundColor: 'hsl(var(--muted) / 0.15)' }}
+                style={{
+                  backgroundColor: 'hsl(var(--muted) / 0.15)',
+                  backgroundImage: `linear-gradient(hsl(var(--background) / 0.92), hsl(var(--background) / 0.92)), url("${cartlyLogo}")`,
+                  backgroundRepeat: 'no-repeat, no-repeat',
+                  backgroundPosition: 'center, center',
+                  backgroundSize: 'cover, min(55%, 320px) auto',
+                  backgroundAttachment: 'local, local',
+                }}
               >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.10] dark:opacity-[0.12]"
-                  style={{
-                    backgroundImage: `url("/cartly-logo.webp")`,
-                    backgroundSize: 'min(60%, 340px) auto',
-                  }}
-                />
 
                 {loadingMsgs ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Carregando mensagens...</div>
