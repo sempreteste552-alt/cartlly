@@ -92,6 +92,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [soundsEnabled, setSoundsEnabled] = useState<boolean>(() => isChatSoundsEnabled());
   const [whatsappRedirect, setWhatsappRedirect] = useState<{ phone: string; summary: string } | null>(null);
   
   const [isHumanMode, setIsHumanMode] = useState(!isPremium);
