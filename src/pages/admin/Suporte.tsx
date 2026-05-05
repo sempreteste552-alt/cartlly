@@ -110,9 +110,14 @@ export default function Suporte() {
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
+  const [displayCustomerTyping, setDisplayCustomerTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const customerTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTypingPushRef = useRef<number>(0);
+  const customerTypingShownAtRef = useRef<number>(0);
+  const customerTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const customerTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSelectedConvRef = useRef<string | null>(null);
 
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
