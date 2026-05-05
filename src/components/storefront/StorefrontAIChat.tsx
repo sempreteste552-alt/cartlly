@@ -87,11 +87,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [sessionId] = useState(() => getOrCreateChatSessionId());
   const [isTyping, setIsTyping] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [displayAdminTyping, setDisplayAdminTyping] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTypingPushRef = useRef<number>(0);
   const pendingMessagesRef = useRef<Set<string>>(new Set());
+  const adminTypingShownAtRef = useRef<number>(0);
+  const adminTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const adminTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -357,16 +362,57 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") setRealtimeStatus("connected");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
+        else setRealtimeStatus("connecting");
+      });
 
     return () => {
       if (adminTypingTimeoutRef.current) {
         clearTimeout(adminTypingTimeoutRef.current);
         adminTypingTimeoutRef.current = null;
       }
+      setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
   }, [conversationId, isHumanMode, open]);
+
+  // Anti-flicker: only show "Digitando..." after 250ms continuous true,
+  // keep it visible for at least 700ms, and suppress when realtime is offline.
+  useEffect(() => {
+    const ANTI_FLICKER_APPEAR_MS = 250;
+    const MIN_VISIBLE_MS = 700;
+
+    if (adminTypingAppearTimerRef.current) {
+      clearTimeout(adminTypingAppearTimerRef.current);
+      adminTypingAppearTimerRef.current = null;
+    }
+    if (adminTypingHideTimerRef.current) {
+      clearTimeout(adminTypingHideTimerRef.current);
+      adminTypingHideTimerRef.current = null;
+    }
+
+    if (isAdminTyping && realtimeStatus === "connected") {
+      if (displayAdminTyping) return;
+      adminTypingAppearTimerRef.current = setTimeout(() => {
+        setDisplayAdminTyping(true);
+        adminTypingShownAtRef.current = Date.now();
+      }, ANTI_FLICKER_APPEAR_MS);
+    } else {
+      if (!displayAdminTyping) return;
+      const elapsed = Date.now() - adminTypingShownAtRef.current;
+      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      adminTypingHideTimerRef.current = setTimeout(() => {
+        setDisplayAdminTyping(false);
+      }, remaining);
+    }
+
+    return () => {
+      if (adminTypingAppearTimerRef.current) clearTimeout(adminTypingAppearTimerRef.current);
+      if (adminTypingHideTimerRef.current) clearTimeout(adminTypingHideTimerRef.current);
+    };
+  }, [isAdminTyping, realtimeStatus, displayAdminTyping]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
@@ -692,15 +738,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">{isHumanMode ? "Atendente" : displayName}</p>
           <p className="text-[11px] text-white/70 flex items-center gap-1">
-            {isAdminTyping ? (
+            {isHumanMode && realtimeStatus !== "connected" ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-yellow-300 inline-block animate-pulse" />
+                <span className="italic">{realtimeStatus === "offline" ? "Reconectando..." : "Conectando..."}</span>
+              </>
+            ) : displayAdminTyping ? (
               <span className="text-white font-medium animate-pulse">{uiText.typing}</span>
-            ) : getPresenceLabel(isAdminTyping, conversationUpdatedAt) === "Online" ? (
+            ) : getPresenceLabel(false, conversationUpdatedAt) === "Online" ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-green-400 inline-block" />
                 {uiText.humanStatusOnline}
               </>
             ) : (
-              getPresenceLabel(isAdminTyping, conversationUpdatedAt)
+              getPresenceLabel(false, conversationUpdatedAt)
             )}
           </p>
         </div>
@@ -818,7 +869,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           </div>
         ))}
 
-        {(isLoading || (isHumanMode && isAdminTyping)) && (
+        {(isLoading || (isHumanMode && displayAdminTyping)) && (
           <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-200">
             <div className="bg-background px-4 py-3 rounded-2xl rounded-tl-md shadow-sm border border-border/30">
               <div className="flex gap-1.5 items-end h-3">

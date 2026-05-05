@@ -110,9 +110,14 @@ export default function Suporte() {
   const [search, setSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
+  const [displayCustomerTyping, setDisplayCustomerTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const customerTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTypingPushRef = useRef<number>(0);
+  const customerTypingShownAtRef = useRef<number>(0);
+  const customerTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const customerTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSelectedConvRef = useRef<string | null>(null);
 
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
@@ -433,16 +438,57 @@ export default function Suporte() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") setRealtimeStatus("connected");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setRealtimeStatus("offline");
+        else setRealtimeStatus("connecting");
+      });
 
     return () => {
       if (customerTypingTimeoutRef.current) {
         clearTimeout(customerTypingTimeoutRef.current);
         customerTypingTimeoutRef.current = null;
       }
+      setRealtimeStatus("connecting");
       supabase.removeChannel(channel);
     };
   }, [user, queryClient, selectedConversation?.id]);
+
+  // Anti-flicker for remote "digitando..." indicator + offline suppression
+  useEffect(() => {
+    const ANTI_FLICKER_APPEAR_MS = 250;
+    const MIN_VISIBLE_MS = 700;
+    const rawTyping = !!selectedConversation?.is_typing_customer;
+
+    if (customerTypingAppearTimerRef.current) {
+      clearTimeout(customerTypingAppearTimerRef.current);
+      customerTypingAppearTimerRef.current = null;
+    }
+    if (customerTypingHideTimerRef.current) {
+      clearTimeout(customerTypingHideTimerRef.current);
+      customerTypingHideTimerRef.current = null;
+    }
+
+    if (rawTyping && realtimeStatus === "connected") {
+      if (displayCustomerTyping) return;
+      customerTypingAppearTimerRef.current = setTimeout(() => {
+        setDisplayCustomerTyping(true);
+        customerTypingShownAtRef.current = Date.now();
+      }, ANTI_FLICKER_APPEAR_MS);
+    } else {
+      if (!displayCustomerTyping) return;
+      const elapsed = Date.now() - customerTypingShownAtRef.current;
+      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      customerTypingHideTimerRef.current = setTimeout(() => {
+        setDisplayCustomerTyping(false);
+      }, remaining);
+    }
+
+    return () => {
+      if (customerTypingAppearTimerRef.current) clearTimeout(customerTypingAppearTimerRef.current);
+      if (customerTypingHideTimerRef.current) clearTimeout(customerTypingHideTimerRef.current);
+    };
+  }, [selectedConversation?.is_typing_customer, realtimeStatus, displayCustomerTyping]);
 
   useEffect(() => {
     if (!selectedConversation) return;
@@ -662,7 +708,12 @@ export default function Suporte() {
                     {selectedConversation.customer?.name || `Visitante ${selectedConversation.session_id.slice(0, 4)}`}
                   </h3>
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                    {selectedConversation.is_typing_customer ? (
+                    {realtimeStatus !== "connected" ? (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-500 inline-block animate-pulse" />
+                        <span className="italic">{realtimeStatus === "offline" ? "Reconectando..." : "Conectando..."}</span>
+                      </>
+                    ) : displayCustomerTyping ? (
                       <span className="text-green-600 font-medium animate-pulse">digitando...</span>
                     ) : isConversationOnline(selectedConversation) ? (
                       <>
@@ -670,7 +721,7 @@ export default function Suporte() {
                         Online
                       </>
                     ) : (
-                      formatCustomerPresence(selectedConversation)
+                      formatCustomerPresence({ ...selectedConversation, is_typing_customer: false })
                     )}
                   </p>
                 </div>
@@ -740,7 +791,7 @@ export default function Suporte() {
                     </div>
                   ))
                 )}
-                {selectedConversation?.is_typing_customer && (
+                {displayCustomerTyping && (
                   <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="bg-background px-4 py-3 rounded-2xl rounded-tl-md shadow-sm border border-border/30">
                       <div className="flex gap-1.5 items-end h-3">
