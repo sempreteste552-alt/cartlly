@@ -12,6 +12,18 @@ import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import cartlyLogo from "@/assets/cartly-logo.webp";
 
+// Preload watermark logo once and report if it fails (helps catch 404 / build issues)
+let __cartlyLogoStatus: "loading" | "ok" | "error" = "loading";
+if (typeof window !== "undefined") {
+  const img = new Image();
+  img.onload = () => { __cartlyLogoStatus = "ok"; };
+  img.onerror = () => {
+    __cartlyLogoStatus = "error";
+    console.warn("[Suporte] Cartly watermark logo failed to load:", cartlyLogo);
+  };
+  img.src = cartlyLogo;
+}
+
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 const LOCAL_TYPING_IDLE_MS = 1200;
 const REMOTE_TYPING_STALE_MS = 2000;
