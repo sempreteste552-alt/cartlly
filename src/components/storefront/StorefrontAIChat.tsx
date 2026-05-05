@@ -86,6 +86,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -250,7 +251,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         if (currentConvId) {
           setConversationId(currentConvId);
           setConversationUpdatedAt(currentUpdatedAt);
-          setIsAdminTyping(currentTypingAdmin);
+          // Always ignore stale typing flag on init — only react to live UPDATE events
+          setIsAdminTyping(false);
 
           const { data: msgs } = await supabase
             .from("support_messages")
@@ -333,7 +335,15 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "support_conversations", filter: `id=eq.${conversationId}` },
         (payload: any) => {
-          setIsAdminTyping(!!payload.new.is_typing_admin);
+          const adminTyping = !!payload.new.is_typing_admin;
+          setIsAdminTyping(adminTyping);
+          if (adminTyping) {
+            if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
+            adminTypingTimeoutRef.current = setTimeout(() => setIsAdminTyping(false), 4000);
+          } else if (adminTypingTimeoutRef.current) {
+            clearTimeout(adminTypingTimeoutRef.current);
+            adminTypingTimeoutRef.current = null;
+          }
           setConversationUpdatedAt(payload.new.updated_at || payload.new.last_message_at || null);
         }
       )
