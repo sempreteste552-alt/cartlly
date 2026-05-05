@@ -3961,6 +3961,7 @@ export type Database = {
         Row: {
           created_at: string | null
           customer_id: string | null
+          customer_present_at: string | null
           id: string
           is_active: boolean | null
           is_typing_admin: boolean | null
@@ -3973,6 +3974,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           customer_id?: string | null
+          customer_present_at?: string | null
           id?: string
           is_active?: boolean | null
           is_typing_admin?: boolean | null
@@ -3985,6 +3987,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           customer_id?: string | null
+          customer_present_at?: string | null
           id?: string
           is_active?: boolean | null
           is_typing_admin?: boolean | null
