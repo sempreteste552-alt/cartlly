@@ -96,18 +96,14 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [isHumanMode, setIsHumanMode] = useState(!isPremium);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sessionId] = useState(() => getOrCreateChatSessionId());
-  const [isTyping, setIsTyping] = useState(false);
-  const [isAdminTyping, setIsAdminTyping] = useState(false);
-  const [displayAdminTyping, setDisplayAdminTyping] = useState(false);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTypingPushRef = useRef<number>(0);
+  const typingChannelRef = useRef<any>(null);
+  const activeTypingConversationRef = useRef<string | null>(null);
+  const remoteTypingTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const [typingUsers, setTypingUsers] = useState<TypingUsers>({});
   const pendingMessagesRef = useRef<Set<string>>(new Set());
-  const adminTypingShownAtRef = useRef<number>(0);
-  const adminTypingAppearTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const adminTypingHideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
