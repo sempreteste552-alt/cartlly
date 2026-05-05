@@ -383,7 +383,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   }, [isHumanMode, open, conversationId, customer?.id, sessionId, storeUserId, syncIncomingAdminMessages]);
 
   useEffect(() => {
-    if (!conversationId || !isHumanMode) return;
+    if (!conversationId || !isHumanMode || !open) return;
 
     const channel = supabase
       .channel(`support_typing_${conversationId}`, { config: { broadcast: { self: false } } })
