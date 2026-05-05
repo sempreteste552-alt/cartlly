@@ -131,6 +131,7 @@ export default function Suporte() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [soundsEnabled, setSoundsEnabled] = useState<boolean>(() => isChatSoundsEnabled());
   const scrollRef = useRef<HTMLDivElement>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<"connected" | "connecting" | "offline">("connecting");
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
