@@ -12,6 +12,8 @@ import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
+const LOCAL_TYPING_IDLE_MS = 800;
+const REMOTE_TYPING_STALE_MS = 1600;
 
 const playNotificationSound = () => {
   try {
@@ -345,6 +347,11 @@ export default function Suporte() {
           const now = new Date().toISOString();
 
           if (payload.new.sender_type === "customer") {
+            if (customerTypingTimeoutRef.current) {
+              clearTimeout(customerTypingTimeoutRef.current);
+              customerTypingTimeoutRef.current = null;
+            }
+            setSelectedConversation(prev => prev?.id === payload.new.conversation_id ? { ...prev, is_typing_customer: false } : prev);
             playNotificationSound();
 
             const updates: Record<string, string> = {
@@ -404,7 +411,7 @@ export default function Suporte() {
                 if (customerTypingTimeoutRef.current) clearTimeout(customerTypingTimeoutRef.current);
                 customerTypingTimeoutRef.current = setTimeout(() => {
                   setSelectedConversation(p => p ? { ...p, is_typing_customer: false } : p);
-                }, 4000);
+                }, REMOTE_TYPING_STALE_MS);
               } else if (customerTypingTimeoutRef.current) {
                 clearTimeout(customerTypingTimeoutRef.current);
                 customerTypingTimeoutRef.current = null;
@@ -418,6 +425,10 @@ export default function Suporte() {
       .subscribe();
 
     return () => {
+      if (customerTypingTimeoutRef.current) {
+        clearTimeout(customerTypingTimeoutRef.current);
+        customerTypingTimeoutRef.current = null;
+      }
       supabase.removeChannel(channel);
     };
   }, [user, queryClient, selectedConversation?.id]);
@@ -425,41 +436,39 @@ export default function Suporte() {
   useEffect(() => {
     if (!selectedConversation) return;
 
-    const updateTypingStatus = async (typing: boolean) => {
-      await supabase
+    const updateTypingStatus = (typing: boolean) => {
+      supabase
         .from("support_conversations")
         .update({ is_typing_admin: typing, updated_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id);
+        .eq("id", selectedConversation.id)
+        .then();
     };
 
     const hasText = newMessage.trim().length > 0;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      if (isAdminTyping) {
-        setIsAdminTyping(false);
-        updateTypingStatus(false);
-      }
+      setIsAdminTyping(false);
+      updateTypingStatus(false);
       return;
     }
 
-    if (!isAdminTyping) {
-      setIsAdminTyping(true);
-      updateTypingStatus(true);
-    }
+    setIsAdminTyping(true);
+    updateTypingStatus(true);
 
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       setIsAdminTyping(false);
       updateTypingStatus(false);
-    }, 1500);
-  }, [newMessage, selectedConversation, isAdminTyping]);
+    }, LOCAL_TYPING_IDLE_MS);
+  }, [newMessage, selectedConversation]);
 
   // Clear admin typing flag when switching conversations
   useEffect(() => {
     const convId = selectedConversation?.id;
     return () => {
       if (convId) {
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        setIsAdminTyping(false);
         supabase
           .from("support_conversations")
           .update({ is_typing_admin: false })
