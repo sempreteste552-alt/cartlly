@@ -45,9 +45,9 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 1200;
-const REMOTE_TYPING_STALE_MS = 2000;
-const TYPING_THROTTLE_MS = 900;
+const LOCAL_TYPING_IDLE_MS = 800;
+const REMOTE_TYPING_STALE_MS = 1500;
+const TYPING_THROTTLE_MS = 600;
 
 const playNotificationSound = () => {
   try {
