@@ -383,19 +383,27 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      setIsTyping(false);
-      updateTypingStatus(false);
+      if (isTyping) {
+        setIsTyping(false);
+        updateTypingStatus(false);
+        lastTypingPushRef.current = 0;
+      }
       return;
     }
 
-    setIsTyping(true);
-    updateTypingStatus(true);
+    const now = Date.now();
+    if (!isTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
+      setIsTyping(true);
+      updateTypingStatus(true);
+      lastTypingPushRef.current = now;
+    }
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       updateTypingStatus(false);
+      lastTypingPushRef.current = 0;
     }, LOCAL_TYPING_IDLE_MS);
-  }, [input, conversationId, isHumanMode]);
+  }, [input, conversationId, isHumanMode, isTyping]);
 
   // Clear typing flag when chat is closed
   useEffect(() => {
