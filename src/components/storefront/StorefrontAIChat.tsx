@@ -784,6 +784,16 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
           backgroundColor: 'hsl(var(--muted) / 0.3)',
         } : { backgroundColor: 'hsl(var(--muted) / 0.3)' }}
       >
+        {/* Hidden img to detect storeLogoUrl load failures and warn in console */}
+        {storeLogoUrl ? (
+          <img
+            src={storeLogoUrl}
+            alt=""
+            aria-hidden="true"
+            className="hidden"
+            onError={() => console.warn("[StorefrontAIChat] storeLogoUrl failed to load:", storeLogoUrl)}
+          />
+        ) : null}
 
         {messages.length === 0 && (
           <div className="space-y-4 py-4">
