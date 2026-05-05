@@ -343,29 +343,47 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   }, [conversationId, isHumanMode, open]);
 
   useEffect(() => {
-    if (conversationId && isHumanMode) {
-      const updateTypingStatus = async (typing: boolean) => {
-        await supabase
-          .from("support_conversations")
-          .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
-          .eq("id", conversationId);
-      };
+    if (!conversationId || !isHumanMode) return;
 
-      if (input.trim() && !isTyping) {
-        setIsTyping(true);
-        updateTypingStatus(true);
-      }
+    const updateTypingStatus = async (typing: boolean) => {
+      await supabase
+        .from("support_conversations")
+        .update({ is_typing_customer: typing, updated_at: new Date().toISOString() })
+        .eq("id", conversationId);
+    };
 
+    const hasText = input.trim().length > 0;
+
+    if (!hasText) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      
-      typingTimeoutRef.current = setTimeout(() => {
-        if (isTyping) {
-          setIsTyping(false);
-          updateTypingStatus(false);
-        }
-      }, 3000);
+      if (isTyping) {
+        setIsTyping(false);
+        updateTypingStatus(false);
+      }
+      return;
     }
+
+    if (!isTyping) {
+      setIsTyping(true);
+      updateTypingStatus(true);
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      updateTypingStatus(false);
+    }, 1500);
   }, [input, conversationId, isHumanMode, isTyping]);
+
+  // Clear typing flag when chat is closed
+  useEffect(() => {
+    if (open || !conversationId) return;
+    supabase
+      .from("support_conversations")
+      .update({ is_typing_customer: false })
+      .eq("id", conversationId)
+      .then();
+  }, [open, conversationId]);
 
   useEffect(() => {
     if (!conversationId || !isHumanMode) return;
