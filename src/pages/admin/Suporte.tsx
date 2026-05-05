@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Send, Check, CheckCheck, MessageSquare, ArrowLeft } from "lucide-react";
+import { Search, Send, Check, CheckCheck, MessageSquare, ArrowLeft, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,8 +12,9 @@ import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 800;
-const REMOTE_TYPING_STALE_MS = 1600;
+const LOCAL_TYPING_IDLE_MS = 1800;
+const REMOTE_TYPING_STALE_MS = 2500;
+const TYPING_THROTTLE_MS = 1200;
 
 const playNotificationSound = () => {
   try {
@@ -111,6 +112,7 @@ export default function Suporte() {
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const customerTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingPushRef = useRef<number>(0);
   const autoSelectedConvRef = useRef<string | null>(null);
 
   const syncSelectedConversationReception = async (conversationId: string, markAsRead: boolean) => {
@@ -457,19 +459,27 @@ export default function Suporte() {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      setIsAdminTyping(false);
-      updateTypingStatus(false);
+      if (isAdminTyping) {
+        setIsAdminTyping(false);
+        updateTypingStatus(false);
+        lastTypingPushRef.current = 0;
+      }
       return;
     }
 
-    setIsAdminTyping(true);
-    updateTypingStatus(true);
+    const now = Date.now();
+    if (!isAdminTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
+      setIsAdminTyping(true);
+      updateTypingStatus(true);
+      lastTypingPushRef.current = now;
+    }
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsAdminTyping(false);
       updateTypingStatus(false);
+      lastTypingPushRef.current = 0;
     }, LOCAL_TYPING_IDLE_MS);
-  }, [newMessage, selectedConversation]);
+  }, [newMessage, selectedConversation, isAdminTyping]);
 
   // Clear admin typing flag when switching conversations
   useEffect(() => {
@@ -708,11 +718,13 @@ export default function Suporte() {
                           </span>
                           {msg.sender_type === "admin" && (
                             <>
-                              {msg.read_at 
-                                ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
-                                : msg.delivered_at 
-                                  ? <CheckCheck className="h-3.5 w-3.5 opacity-60" /> 
-                                  : <Check className="h-3.5 w-3.5 opacity-60" />
+                              {msg.id.startsWith("temp-")
+                                ? <Loader2 className="h-3 w-3 animate-spin opacity-60" />
+                                : msg.read_at
+                                  ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" />
+                                  : msg.delivered_at
+                                    ? <CheckCheck className="h-3.5 w-3.5 opacity-60" />
+                                    : <Check className="h-3.5 w-3.5 opacity-60" />
                               }
                             </>
                           )}
@@ -721,7 +733,7 @@ export default function Suporte() {
                           <p className={`text-[9px] text-right mt-0.5 ${
                             msg.read_at ? "text-blue-300" : "text-primary-foreground/40"
                           }`}>
-                            {msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
+                            {msg.id.startsWith("temp-") ? "Enviando..." : msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
                           </p>
                         )}
                       </div>

@@ -45,8 +45,9 @@ interface StorefrontAIChatProps {
 }
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
-const LOCAL_TYPING_IDLE_MS = 800;
-const REMOTE_TYPING_STALE_MS = 1600;
+const LOCAL_TYPING_IDLE_MS = 1800;
+const REMOTE_TYPING_STALE_MS = 2500;
+const TYPING_THROTTLE_MS = 1200;
 
 const playNotificationSound = () => {
   try {
@@ -89,6 +90,8 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
   const [conversationUpdatedAt, setConversationUpdatedAt] = useState<string | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const adminTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTypingPushRef = useRef<number>(0);
+  const pendingMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -380,19 +383,27 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     if (!hasText) {
-      setIsTyping(false);
-      updateTypingStatus(false);
+      if (isTyping) {
+        setIsTyping(false);
+        updateTypingStatus(false);
+        lastTypingPushRef.current = 0;
+      }
       return;
     }
 
-    setIsTyping(true);
-    updateTypingStatus(true);
+    const now = Date.now();
+    if (!isTyping || now - lastTypingPushRef.current > TYPING_THROTTLE_MS) {
+      setIsTyping(true);
+      updateTypingStatus(true);
+      lastTypingPushRef.current = now;
+    }
 
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       updateTypingStatus(false);
+      lastTypingPushRef.current = 0;
     }, LOCAL_TYPING_IDLE_MS);
-  }, [input, conversationId, isHumanMode]);
+  }, [input, conversationId, isHumanMode, isTyping]);
 
   // Clear typing flag when chat is closed
   useEffect(() => {
@@ -529,20 +540,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         .eq("id", conversationId)
         .then();
 
+      const tempId = `temp-${Date.now()}`;
       const userMsg: Msg = { 
+        id: tempId,
         role: "user", 
         content: text.trim(), 
         created_at: new Date().toISOString() 
       };
+      pendingMessagesRef.current.add(tempId);
       setMessages(prev => [...prev, userMsg]);
       setInput("");
       
-      await supabase.from("support_messages").insert({ 
+      const { data: inserted } = await supabase.from("support_messages").insert({ 
         conversation_id: conversationId, 
         sender_type: "customer", 
         sender_id: customer?.id || null,
         body: text.trim() 
-      });
+      }).select("id").single();
+
+      if (inserted?.id) {
+        setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: inserted.id } : m));
+        pendingMessagesRef.current.delete(tempId);
+      }
 
       // Notify admin via push — use support_message type to bypass dedup cooldown
       try {
@@ -779,18 +798,20 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
                   </span>
                 )}
                 {isHumanMode && msg.role === "user" && (
-                  msg.read_at 
-                    ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
-                    : msg.delivered_at
-                      ? <CheckCheck className="h-3.5 w-3.5 text-white/50" />
-                      : <Check className="h-3.5 w-3.5 text-white/50" />
+                  msg.id?.startsWith("temp-")
+                    ? <Loader2 className="h-3 w-3 animate-spin text-white/60" />
+                    : msg.read_at 
+                      ? <CheckCheck className="h-3.5 w-3.5 text-blue-300" /> 
+                      : msg.delivered_at
+                        ? <CheckCheck className="h-3.5 w-3.5 text-white/50" />
+                        : <Check className="h-3.5 w-3.5 text-white/50" />
                 )}
               </div>
               {isHumanMode && msg.role === "user" && (
                 <p className={`text-[9px] text-right mt-0.5 ${
                   msg.read_at ? "text-blue-300" : "text-white/40"
                 }`}>
-                  {msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
+                  {msg.id?.startsWith("temp-") ? "Enviando..." : msg.read_at ? "Visualizado" : msg.delivered_at ? "Entregue" : "Enviado"}
                 </p>
               )}
             </div>
