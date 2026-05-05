@@ -486,7 +486,15 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     const pingPresence = () => {
       supabase
         .from("support_conversations")
-        .update({ updated_at: new Date().toISOString() })
+        .update({ customer_present_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .then();
+    };
+
+    const clearPresence = () => {
+      supabase
+        .from("support_conversations")
+        .update({ customer_present_at: null })
         .eq("id", conversationId)
         .then();
     };
