@@ -540,20 +540,28 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
         .eq("id", conversationId)
         .then();
 
+      const tempId = `temp-${Date.now()}`;
       const userMsg: Msg = { 
+        id: tempId,
         role: "user", 
         content: text.trim(), 
         created_at: new Date().toISOString() 
       };
+      pendingMessagesRef.current.add(tempId);
       setMessages(prev => [...prev, userMsg]);
       setInput("");
       
-      await supabase.from("support_messages").insert({ 
+      const { data: inserted } = await supabase.from("support_messages").insert({ 
         conversation_id: conversationId, 
         sender_type: "customer", 
         sender_id: customer?.id || null,
         body: text.trim() 
-      });
+      }).select("id").single();
+
+      if (inserted?.id) {
+        setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: inserted.id } : m));
+        pendingMessagesRef.current.delete(tempId);
+      }
 
       // Notify admin via push — use support_message type to bypass dedup cooldown
       try {
