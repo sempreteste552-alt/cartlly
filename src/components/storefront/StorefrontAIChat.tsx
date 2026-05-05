@@ -896,6 +896,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Input area */}
