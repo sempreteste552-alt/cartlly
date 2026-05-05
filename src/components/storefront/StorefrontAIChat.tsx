@@ -486,7 +486,15 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     const pingPresence = () => {
       supabase
         .from("support_conversations")
-        .update({ updated_at: new Date().toISOString() })
+        .update({ customer_present_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .then();
+    };
+
+    const clearPresence = () => {
+      supabase
+        .from("support_conversations")
+        .update({ customer_present_at: null })
         .eq("id", conversationId)
         .then();
     };
@@ -496,13 +504,19 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
     const syncVisibleStatuses = () => {
       const markAsRead = open && document.visibilityState === "visible";
       syncIncomingAdminMessages(markAsRead).then();
-      if (isActive()) pingPresence();
+      if (isActive()) {
+        pingPresence();
+      } else {
+        clearPresence();
+      }
     };
 
     syncVisibleStatuses();
     document.addEventListener("visibilitychange", syncVisibleStatuses);
     window.addEventListener("focus", syncVisibleStatuses);
     window.addEventListener("blur", syncVisibleStatuses);
+    window.addEventListener("pagehide", clearPresence);
+    window.addEventListener("beforeunload", clearPresence);
 
     const interval = window.setInterval(() => {
       // Only mark as online while the chat panel is actually open and visible
@@ -513,7 +527,11 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
       document.removeEventListener("visibilitychange", syncVisibleStatuses);
       window.removeEventListener("focus", syncVisibleStatuses);
       window.removeEventListener("blur", syncVisibleStatuses);
+      window.removeEventListener("pagehide", clearPresence);
+      window.removeEventListener("beforeunload", clearPresence);
       window.clearInterval(interval);
+      // On unmount/close, immediately clear presence so admin sees offline
+      clearPresence();
     };
   }, [conversationId, isHumanMode, open, syncIncomingAdminMessages]);
 
