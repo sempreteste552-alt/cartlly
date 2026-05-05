@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isToday, isYesterday } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
+import cartlyLogo from "@/assets/cartly-logo.webp";
 
 const NOTIFICATION_SOUND = "/sounds/notification.mp3";
 const LOCAL_TYPING_IDLE_MS = 1200;
