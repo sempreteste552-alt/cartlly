@@ -657,7 +657,7 @@ export function StorefrontAIChat({ storeUserId, storeName, aiName, aiAvatarUrl, 
 
       if (!resp.ok) throw new Error("Erro na conexão");
       if (!resp.body) throw new Error("Sem resposta");
-      playMessageSentSound();
+      
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
