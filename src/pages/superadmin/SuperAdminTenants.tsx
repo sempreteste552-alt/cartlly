@@ -609,6 +609,8 @@ export default function SuperAdminTenants() {
         return;
       }
 
+      logAudit("apply_overrides", "tenant", userId, overridesTenant.display_name || "—", { mode, plan_id: overridesSourcePlanId });
+
       if (mode === "grant") {
         await supabase.from("admin_notifications").insert({
           sender_user_id: user!.id,
