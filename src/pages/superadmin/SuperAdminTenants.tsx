@@ -958,6 +958,9 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => handleSendPasswordReset(tenant)}>
                           <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha (link)
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleImpersonate(tenant)}>
+                          <LogIn className="mr-2 h-4 w-4 text-emerald-500" /> Entrar na Loja (sem senha)
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditTenant(tenant)}>
                           <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" /> Editar Email/Senha/Slug (OTP)
                         </DropdownMenuItem>
