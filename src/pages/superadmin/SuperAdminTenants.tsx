@@ -90,19 +90,31 @@ export default function SuperAdminTenants() {
   const handleImpersonate = async (tenant: any) => {
     try {
       const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
-        body: { action: "impersonate", targetUserId: tenant.user_id },
+        body: { action: "impersonate", targetUserId: tenant.user_id, origin: window.location.origin },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      if (data?.action_link) {
-        window.open(data.action_link, "_blank");
-        toast.success("Acesso liberado em nova aba (suporte/manutenção)");
-        logAudit("impersonate_tenant", "tenant", tenant.user_id, tenant.display_name || "—");
-      } else {
+      const link = data?.action_link;
+      if (!link) {
+        console.error("Impersonate: resposta sem action_link", data);
         toast.error("Não foi possível gerar o link de acesso");
+        return;
       }
+      const win = window.open(link, "_blank", "noopener,noreferrer");
+      if (!win) {
+        try {
+          await navigator.clipboard.writeText(link);
+          toast.success("Popup bloqueado. Link copiado para a área de transferência — cole em uma nova aba.");
+        } catch {
+          toast.error("Popup bloqueado. Permita popups e tente novamente.");
+        }
+      } else {
+        toast.success("Acesso liberado em nova aba (suporte/manutenção)");
+      }
+      logAudit("impersonate_tenant", "tenant", tenant.user_id, tenant.display_name || "—");
     } catch (e: any) {
-      toast.error(e.message || "Falha ao entrar na loja");
+      console.error("Impersonate falhou:", e);
+      toast.error(e?.message || "Falha ao entrar na loja");
     }
   };
 

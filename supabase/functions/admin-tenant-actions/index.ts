@@ -280,36 +280,57 @@ Deno.serve(async (req) => {
     // ===== IMPERSONATE (magic link) =====
     if (action === "impersonate") {
       if (!targetUserId) return new Response(JSON.stringify({ error: "Missing targetUserId" }), { status: 400, headers: corsHeaders });
-      const { data: tUser } = await adminClient.auth.admin.getUserById(targetUserId);
+      const { data: tUser, error: getUserErr } = await adminClient.auth.admin.getUserById(targetUserId);
+      if (getUserErr) {
+        console.error("[impersonate] getUserById error:", getUserErr);
+        return new Response(JSON.stringify({ error: getUserErr.message || "Tenant não encontrado" }), { status: 400, headers: corsHeaders });
+      }
       const email = tUser?.user?.email;
-      if (!email) throw new Error("Tenant sem email");
+      if (!email) {
+        return new Response(JSON.stringify({ error: "Tenant sem email cadastrado" }), { status: 400, headers: corsHeaders });
+      }
       const origin = getSafeAppOrigin(req.headers.get("origin") || body.origin);
-      const { data: linkData, error } = await adminClient.auth.admin.generateLink({
+      const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo: `${origin}/` },
+        options: { redirectTo: `${origin}/admin` },
       });
-      if (error) throw error;
+      if (linkErr) {
+        console.error("[impersonate] generateLink error:", linkErr);
+        return new Response(JSON.stringify({ error: linkErr.message || "Falha ao gerar link" }), { status: 500, headers: corsHeaders });
+      }
 
-      // Audit
-      await adminClient.from("audit_logs").insert({
-        actor_user_id: caller.id,
-        action: "impersonate_tenant",
-        target_type: "tenant",
-        target_id: targetUserId,
-        target_name: email,
-      });
+      const actionLink = (linkData as any)?.properties?.action_link
+        || (linkData as any)?.action_link
+        || (linkData as any)?.properties?.actionLink;
 
-      // Notify tenant
-      await adminClient.from("admin_notifications").insert({
-        sender_user_id: caller.id,
-        target_user_id: targetUserId,
-        title: "🔍 Acesso de suporte",
-        message: "Um administrador da plataforma acessou sua conta para fins de diagnóstico/suporte.",
-        type: "info",
-      });
+      if (!actionLink) {
+        console.error("[impersonate] linkData missing action_link:", JSON.stringify(linkData));
+        return new Response(JSON.stringify({ error: "Link não retornado pela autenticação" }), { status: 500, headers: corsHeaders });
+      }
 
-      return new Response(JSON.stringify({ action_link: linkData.properties?.action_link }), { headers: corsHeaders });
+      // Best-effort audit + notify (do not fail impersonation if these fail)
+      try {
+        await adminClient.from("audit_logs").insert({
+          actor_user_id: caller.id,
+          action: "impersonate_tenant",
+          target_type: "tenant",
+          target_id: targetUserId,
+          target_name: email,
+        });
+      } catch (e) { console.error("[impersonate] audit_logs insert failed:", e); }
+
+      try {
+        await adminClient.from("admin_notifications").insert({
+          sender_user_id: caller.id,
+          target_user_id: targetUserId,
+          title: "🔍 Acesso de suporte",
+          message: "Um administrador da plataforma acessou sua conta para fins de diagnóstico/suporte.",
+          type: "info",
+        });
+      } catch (e) { console.error("[impersonate] admin_notifications insert failed:", e); }
+
+      return new Response(JSON.stringify({ action_link: actionLink, email }), { headers: corsHeaders });
     }
 
     // ===== REPAIR TOOLS =====
