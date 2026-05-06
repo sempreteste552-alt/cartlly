@@ -57,6 +57,7 @@ export function useAllTenants() {
         throw error;
       }
 
+
       // Get store settings for each tenant
       const { data: stores } = await supabase
         .from("store_settings")
