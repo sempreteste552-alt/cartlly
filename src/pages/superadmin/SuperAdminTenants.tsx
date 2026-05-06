@@ -688,6 +688,7 @@ export default function SuperAdminTenants() {
     if (tenant.subscription) {
       const planName = (tenant.subscription.tenant_plans as any)?.name || "—";
       const subStatus = tenant.subscription.status;
+      const customPrice = tenant.subscription.custom_price;
       const isTrial = subStatus === "trial";
       const isFree = planName === "FREE";
       const isPaid = !isFree && !isTrial && subStatus === "active";
