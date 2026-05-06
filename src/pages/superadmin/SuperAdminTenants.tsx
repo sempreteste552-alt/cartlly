@@ -67,6 +67,11 @@ export default function SuperAdminTenants() {
   const [overridesTenant, setOverridesTenant] = useState<any>(null);
   const [overridesSourcePlanId, setOverridesSourcePlanId] = useState<string>("");
   const [overridesSaving, setOverridesSaving] = useState(false);
+  const [customPriceDialogOpen, setCustomPriceDialogOpen] = useState(false);
+  const [customPriceTenant, setCustomPriceTenant] = useState<any>(null);
+  const [customPriceValue, setCustomPriceValue] = useState("");
+  const [customPriceReason, setCustomPriceReason] = useState("");
+  const [customPriceSaving, setCustomPriceSaving] = useState(false);
   const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
