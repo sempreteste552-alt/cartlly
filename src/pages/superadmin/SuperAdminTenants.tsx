@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2, Sparkles, Calendar } from "lucide-react";
+import { MoreVertical, Search, Store, Package, ShoppingCart, Eye, Ban, Unlock, CreditCard, UserCog, CheckCircle, XCircle, Clock, Settings, ArrowUp, ArrowDown, ShieldOff, ShieldCheck, StoreIcon, Trash2, AlertTriangle, Mail, KeyRound, UserCheck, Globe, Megaphone, Gift, Send, Loader2, Sparkles, Calendar, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { TenantDetailDialog } from "@/components/TenantDetailDialog";
 import { SensitiveEditDialog } from "@/components/superadmin/SensitiveEditDialog";
@@ -87,6 +87,24 @@ export default function SuperAdminTenants() {
     return lastSeen.toLocaleDateString("pt-BR");
   };
 
+  const handleImpersonate = async (tenant: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action: "impersonate", targetUserId: tenant.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.action_link) {
+        window.open(data.action_link, "_blank");
+        toast.success("Acesso liberado em nova aba (suporte/manutenção)");
+        logAudit("impersonate_tenant", "tenant", tenant.user_id, tenant.display_name || "—");
+      } else {
+        toast.error("Não foi possível gerar o link de acesso");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao entrar na loja");
+    }
+  };
 
   const pendingCount = tenants?.filter(t => t.status === "pending").length || 0;
   const onlineCount = tenants?.filter(t => t.is_online).length || 0;
@@ -939,6 +957,9 @@ export default function SuperAdminTenants() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendPasswordReset(tenant)}>
                           <KeyRound className="mr-2 h-4 w-4" /> Redefinir Senha (link)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleImpersonate(tenant)}>
+                          <LogIn className="mr-2 h-4 w-4 text-emerald-500" /> Entrar na Loja (sem senha)
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditTenant(tenant)}>
                           <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" /> Editar Email/Senha/Slug (OTP)
