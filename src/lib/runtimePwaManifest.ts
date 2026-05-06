@@ -17,6 +17,8 @@ export interface PwaManifestOptions {
   iconVersion?: string;
   startUrl?: string;
   scope?: string;
+  socialImageUrl?: string;
+  description?: string;
 }
 
 function getCurrentPath() {
