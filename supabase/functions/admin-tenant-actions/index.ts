@@ -335,21 +335,75 @@ Deno.serve(async (req) => {
 
     // ===== REPAIR TOOLS =====
     if (action === "repair") {
-      const { tool, targetUserId: tUid } = body;
+      const { tool, targetUserId: tUid, planId, customPrice, reason } = body;
       if (!tUid || !tool) return new Response(JSON.stringify({ error: "Missing tool or targetUserId" }), { status: 400, headers: corsHeaders });
       const out: Record<string, any> = {};
 
       if (tool === "resync_subscription") {
         const { data: sub } = await adminClient.from("tenant_subscriptions").select("*").eq("user_id", tUid).maybeSingle();
+        const now = new Date();
+        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        
         if (sub) {
           await adminClient.from("tenant_subscriptions").update({
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            current_period_end: periodEnd,
             status: "active",
+            trial_ends_at: null,
+            updated_at: now.toISOString(),
+            ...(planId ? { plan_id: planId } : {}),
+            ...(customPrice !== undefined ? { custom_price: customPrice, custom_price_reason: reason } : {}),
           }).eq("id", sub.id);
-          out.message = "Assinatura ressincronizada (+30 dias)";
+          out.message = "Assinatura renovada e ativada (+30 dias)";
         } else {
-          out.message = "Sem assinatura para ressincronizar";
+          // Create new subscription if missing
+          if (!planId) {
+            // Get default plan if not provided
+            const { data: defaultPlan } = await adminClient.from("tenant_plans").select("id").order("price", { ascending: true }).limit(1).single();
+            if (!defaultPlan) throw new Error("Nenhum plano disponível no sistema");
+            
+            await adminClient.from("tenant_subscriptions").insert({
+              user_id: tUid,
+              plan_id: defaultPlan.id,
+              status: "active",
+              current_period_start: now.toISOString(),
+              current_period_end: periodEnd,
+              ...(customPrice !== undefined ? { custom_price: customPrice, custom_price_reason: reason } : {}),
+            });
+          } else {
+            await adminClient.from("tenant_subscriptions").insert({
+              user_id: tUid,
+              plan_id: planId,
+              status: "active",
+              current_period_start: now.toISOString(),
+              current_period_end: periodEnd,
+              ...(customPrice !== undefined ? { custom_price: customPrice, custom_price_reason: reason } : {}),
+            });
+          }
+          out.message = "Nova assinatura criada e ativada";
         }
+        
+        // Ensure profile is active
+        await adminClient.from("profiles").update({ status: "active" }).eq("user_id", tUid);
+        
+        await adminClient.from("admin_notifications").insert({
+          sender_user_id: caller.id,
+          target_user_id: tUid,
+          title: "🚀 Assinatura ativada manualmente",
+          message: "Sua assinatura foi ativada/ajustada por um administrador. Verifique seu painel.",
+          type: "plan_activated",
+        });
+
+      } else if (tool === "set_custom_price") {
+        const { data: sub } = await adminClient.from("tenant_subscriptions").select("id").eq("user_id", tUid).maybeSingle();
+        if (!sub) return new Response(JSON.stringify({ error: "Tenant não possui assinatura ativa para ajustar preço" }), { status: 400, headers: corsHeaders });
+        
+        await adminClient.from("tenant_subscriptions").update({
+          custom_price: customPrice,
+          custom_price_reason: reason,
+          updated_at: new Date().toISOString()
+        }).eq("id", sub.id);
+        
+        out.message = customPrice ? `Preço customizado definido para R$ ${customPrice}` : "Preço customizado removido";
       } else if (tool === "reset_domain_token") {
         const { data: domains } = await adminClient.from("store_domains").select("id").eq("user_id", tUid);
         if (domains?.length) {
