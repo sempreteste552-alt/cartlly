@@ -54,9 +54,8 @@ Deno.serve(async (req) => {
     
     if (planMatch) {
       const [, planId, userId] = planMatch;
-      console.log(`[asaas-webhook] Sub Event: ${event}, Plan: ${planId}, User: ${userId}`);
+      console.log(`[asaas-webhook] Plan Event: ${event}, Plan: ${planId}, User: ${userId}`);
 
-      // Confirmation events
       const isPaid = [
         "PAYMENT_CONFIRMED", 
         "PAYMENT_RECEIVED", 
@@ -74,49 +73,111 @@ Deno.serve(async (req) => {
       ].includes(event);
 
       if (isPaid) {
-        console.log(`[asaas-webhook] Processing payment for user ${userId}`);
+        console.log(`[asaas-webhook] Processing successful payment for user ${userId}`);
         
-        // Activate subscription
-        const { data: plan, error: planErr } = await supabase
-          .from("tenant_plans")
-          .select("name, price")
-          .eq("id", planId)
-          .single();
-
-        if (planErr) console.error("[asaas-webhook] Error fetching plan:", planErr);
-
-        const now = new Date();
-        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-        const { data: existing } = await supabase
+        // 1. Check if user already has an active subscription
+        const { data: currentSub } = await supabase
           .from("tenant_subscriptions")
-          .select("id")
+          .select("*")
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (existing) {
-          await supabase
-            .from("tenant_subscriptions")
-            .update({
+        const isActive = currentSub?.status === "active";
+        const hasAsaasSub = !!currentSub?.asaas_subscription_id;
+
+        // 2. If no active Asaas subscription, create one automatically (Conversion logic)
+        // Only convert if this payment is NOT already linked to a subscription
+        if (!hasAsaasSub && !payment.subscription) {
+          console.log(`[asaas-webhook] Converting one-off payment to subscription for user ${userId}`);
+          
+          try {
+            const nextDueDate = new Date();
+            nextDueDate.setDate(nextDueDate.getDate() + 30);
+            const formattedDate = nextDueDate.toISOString().split('T')[0];
+
+            const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
+            const subRes = await fetch("https://api.asaas.com/v3/subscriptions", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "access_token": asaasApiKey!,
+              },
+              body: JSON.stringify({
+                customer: payment.customer,
+                billingType: payment.billingType,
+                value: payment.value,
+                nextDueDate: formattedDate,
+                cycle: "MONTHLY",
+                externalReference: ref,
+                description: `Assinatura automática convertida do pagamento ${payment.id}`
+              })
+            });
+
+            const subData = await subRes.json();
+            if (subRes.ok && subData.id) {
+              console.log(`[asaas-webhook] Asaas subscription created: ${subData.id}`);
+              
+              const updateData = {
+                user_id: userId,
+                plan_id: planId,
+                status: "active",
+                asaas_subscription_id: subData.id,
+                asaas_customer_id: payment.customer,
+                billing_type: payment.billingType,
+                next_due_date: nextDueDate.toISOString(),
+                current_period_start: new Date().toISOString(),
+                current_period_end: nextDueDate.toISOString(),
+                updated_at: new Date().toISOString()
+              };
+
+              if (currentSub) {
+                await supabase.from("tenant_subscriptions").update(updateData).eq("id", currentSub.id);
+              } else {
+                await supabase.from("tenant_subscriptions").insert(updateData);
+              }
+            } else {
+              console.error("[asaas-webhook] Error creating Asaas subscription:", subData);
+            }
+          } catch (err) {
+            console.error("[asaas-webhook] Exception creating subscription:", err);
+          }
+        } else {
+          // Standard update for existing subscriptions
+          const now = new Date();
+          const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+          if (currentSub) {
+            await supabase
+              .from("tenant_subscriptions")
+              .update({
+                plan_id: planId,
+                status: "active",
+                current_period_start: now.toISOString(),
+                current_period_end: periodEnd.toISOString(),
+                next_due_date: periodEnd.toISOString(),
+                updated_at: now.toISOString(),
+              })
+              .eq("id", currentSub.id);
+          } else {
+            await supabase.from("tenant_subscriptions").insert({
+              user_id: userId,
               plan_id: planId,
               status: "active",
               current_period_start: now.toISOString(),
               current_period_end: periodEnd.toISOString(),
-              trial_ends_at: null,
-              updated_at: now.toISOString(),
-            })
-            .eq("id", existing.id);
-        } else {
-          await supabase.from("tenant_subscriptions").insert({
-            user_id: userId,
-            plan_id: planId,
-            status: "active",
-            current_period_start: now.toISOString(),
-            current_period_end: periodEnd.toISOString(),
-          });
+              next_due_date: periodEnd.toISOString(),
+            });
+          }
         }
 
-        // Record payment
+        // Standard profile and plan update
+        const { data: plan } = await supabase.from("tenant_plans").select("name").eq("id", planId).single();
+        await supabase.from("profiles").update({ 
+          status: "active",
+          plan: plan?.name?.toLowerCase() || "premium"
+        }).eq("user_id", userId);
+
+        // Record payment in local payments table
         await supabase.from("payments").insert({
           user_id: userId,
           amount: payment.value,
@@ -126,17 +187,12 @@ Deno.serve(async (req) => {
           external_id: payment.id,
         });
 
-        // Resolve pending plan-change requests
-        await supabase
-          .from("plan_change_requests")
-          .update({ status: "approved", resolved_at: now.toISOString() })
+        // Resolve plan requests
+        await supabase.from("plan_change_requests")
+          .update({ status: "approved", resolved_at: new Date().toISOString() })
           .eq("user_id", userId)
           .eq("status", "pending");
 
-        // Ensure profile is active
-        await supabase.from("profiles").update({ status: "active" }).eq("user_id", userId);
-
-        // Audit log
         await supabase.from("audit_logs").insert({
           action: "asaas_payment_confirmed",
           target_type: "tenant",
@@ -145,26 +201,33 @@ Deno.serve(async (req) => {
           details: { payment_id: payment.id, event, value: payment.value, plan_id: planId },
         });
 
-        // Notify tenant
         await supabase.from("admin_notifications").insert({
           sender_user_id: userId,
           target_user_id: userId,
           title: "✅ Pagamento confirmado!",
-          message: `Plano ${plan?.name ?? ""} ativado com sucesso. Aproveite todos os recursos!`,
+          message: `Sua assinatura ${plan?.name ?? ""} está ativa. Acesso liberado!`,
           type: "plan_activated",
         });
+
       } else if (isFailed) {
+        await supabase.from("tenant_subscriptions")
+          .update({ status: "pending", updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+          
+        await supabase.from("profiles").update({ status: "inativo" }).eq("user_id", userId);
+
         await supabase.from("audit_logs").insert({
           action: "asaas_payment_failed",
           target_type: "tenant",
           target_id: userId,
           details: { payment_id: payment.id, event },
         });
+
         await supabase.from("admin_notifications").insert({
           sender_user_id: userId,
           target_user_id: userId,
-          title: "⚠️ Pagamento não concluído",
-          message: `Sua cobrança (${event}) não foi processada ou foi estornada.`,
+          title: "⚠️ Pagamento pendente ou falhou",
+          message: `Sua cobrança via ${payment.billingType} está atrasada ou foi cancelada.`,
           type: "payment_failed",
         });
       }
@@ -249,8 +312,8 @@ async function processStorePaymentUpdate(supabase: any, orderId: string, status:
 
     try {
       const { data: storeMeta } = await supabase.from("store_settings").select("store_slug").eq("user_id", userId).maybeSingle();
-      const productSummary = (await supabase.from("order_items").select("product_name, quantity").eq("order_id", orderId)).data
-        ?.map((i: any) => `${i.quantity}x ${i.product_name}`).slice(0, 2).join(", ");
+      const { data: orderItems } = await supabase.from("order_items").select("product_name, quantity").eq("order_id", orderId);
+      const productSummary = (orderItems || []).map((i: any) => `${i.quantity}x ${i.product_name}`).slice(0, 2).join(", ");
         
       await notifyCustomerStorefront(supabase, {
         storeUserId: userId,
