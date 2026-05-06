@@ -28,6 +28,17 @@ Deno.serve(async (req) => {
       return await handleAmplopay(req, supabase);
     } else if (gateway === "stripe") {
       return await handleStripe(req, supabase);
+    } else if (gateway === "asaas") {
+      // Redirect or proxy to asaas-webhook for better management
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const asaasWebhookUrl = `${supabaseUrl}/functions/v1/asaas-webhook`;
+      
+      const forwardRes = await fetch(asaasWebhookUrl, {
+        method: "POST",
+        headers: req.headers,
+        body: await req.text()
+      });
+      return forwardRes;
     }
 
     return new Response(JSON.stringify({ error: "Gateway não especificado" }), {
