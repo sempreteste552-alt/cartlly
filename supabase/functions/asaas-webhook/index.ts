@@ -37,13 +37,13 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    console.log("Asaas webhook received:", JSON.stringify(payload).slice(0, 500));
-
+    console.log("[asaas-webhook] Payload received:", JSON.stringify(payload));
 
     const event = payload.event as string;
     const payment = payload.payment;
 
     if (!payment) {
+      console.warn("[asaas-webhook] No payment object in payload");
       return new Response(JSON.stringify({ ok: true, ignored: "no payment" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -53,8 +53,10 @@ Deno.serve(async (req) => {
     // externalReference format: plan_<planId>_user_<userId>_<ts>
     const ref = String(payment.externalReference || "");
     const match = ref.match(/^plan_([a-f0-9-]+)_user_([a-f0-9-]+)/i);
+    
     if (!match) {
-      console.warn("Asaas webhook: invalid externalReference", ref);
+      console.warn("[asaas-webhook] Invalid externalReference:", ref);
+      // Try to find by customer id or other fields if possible, but for now stick to externalReference
       return new Response(JSON.stringify({ ok: true, ignored: "invalid ref" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -62,30 +64,57 @@ Deno.serve(async (req) => {
     }
 
     const [, planId, userId] = match;
+    console.log(`[asaas-webhook] Event: ${event}, Plan: ${planId}, User: ${userId}`);
 
-    // Confirmation events
-    const isPaid = event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED";
-    const isFailed = event === "PAYMENT_OVERDUE" || event === "PAYMENT_DELETED" || event === "PAYMENT_REFUNDED";
+    // Confirmation events: https://docs.asaas.com/docs/webhooks#eventos-de-pagamento
+    const isPaid = [
+      "PAYMENT_CONFIRMED", 
+      "PAYMENT_RECEIVED", 
+      "PAYMENT_CREDITED",
+      "SUBSCRIPTION_PAYMENT_CONFIRMED",
+      "SUBSCRIPTION_PAYMENT_RECEIVED"
+    ].includes(event);
+    
+    const isFailed = [
+      "PAYMENT_OVERDUE", 
+      "PAYMENT_DELETED", 
+      "PAYMENT_REFUNDED",
+      "PAYMENT_CHARGEBACK_REQUESTED",
+      "PAYMENT_CHARGEBACK_DISPUTE",
+      "PAYMENT_AWAITING_CHARGEBACK_REVERSAL"
+    ].includes(event);
 
     if (isPaid) {
+      console.log(`[asaas-webhook] Processing payment for user ${userId}`);
+      
       // Activate subscription
-      const { data: plan } = await supabase
+      const { data: plan, error: planErr } = await supabase
         .from("tenant_plans")
         .select("name, price")
         .eq("id", planId)
         .single();
 
-      const now = new Date();
-      const periodEnd = new Date(now.getTime() + 30 * 86400 * 1000);
+      if (planErr) {
+        console.error("[asaas-webhook] Error fetching plan:", planErr);
+      }
 
-      const { data: existing } = await supabase
+      const now = new Date();
+      // Subscriptions are usually 30 days
+      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      const { data: existing, error: subErr } = await supabase
         .from("tenant_subscriptions")
         .select("id")
         .eq("user_id", userId)
         .maybeSingle();
 
+      if (subErr) {
+        console.error("[asaas-webhook] Error fetching existing sub:", subErr);
+      }
+
       if (existing) {
-        await supabase
+        console.log(`[asaas-webhook] Updating existing subscription ${existing.id}`);
+        const { error: updateErr } = await supabase
           .from("tenant_subscriptions")
           .update({
             plan_id: planId,
@@ -96,15 +125,30 @@ Deno.serve(async (req) => {
             updated_at: now.toISOString(),
           })
           .eq("id", existing.id);
+          
+        if (updateErr) console.error("[asaas-webhook] Update subscription error:", updateErr);
       } else {
-        await supabase.from("tenant_subscriptions").insert({
+        console.log(`[asaas-webhook] Creating new subscription for user ${userId}`);
+        const { error: insertErr } = await supabase.from("tenant_subscriptions").insert({
           user_id: userId,
           plan_id: planId,
           status: "active",
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),
         });
+        
+        if (insertErr) console.error("[asaas-webhook] Insert subscription error:", insertErr);
       }
+
+      // Record payment
+      await supabase.from("payments").insert({
+        user_id: userId,
+        amount: payment.value,
+        gateway: "asaas",
+        method: payment.billingType?.toLowerCase() || "unknown",
+        status: "approved",
+        external_id: payment.id,
+      });
 
       // Resolve any pending plan-change requests
       await supabase
@@ -121,12 +165,15 @@ Deno.serve(async (req) => {
         message: `Plano ${plan?.name ?? ""} ativado com sucesso. Aproveite todos os recursos!`,
         type: "plan_activated",
       });
+      
+      console.log(`[asaas-webhook] Subscription successfully ${existing ? 'updated' : 'created'} for user ${userId}`);
     } else if (isFailed) {
+      console.log(`[asaas-webhook] Payment failed/refunded for user ${userId}: ${event}`);
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
         target_user_id: userId,
         title: "⚠️ Pagamento não concluído",
-        message: `Sua cobrança (${event}) não foi processada. Tente novamente ou contate o suporte.`,
+        message: `Sua cobrança (${event}) não foi processada ou foi estornada. Tente novamente ou contate o suporte.`,
         type: "payment_failed",
       });
     }
