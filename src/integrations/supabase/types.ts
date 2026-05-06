@@ -2290,6 +2290,7 @@ export type Database = {
           id: string
           is_online: boolean | null
           last_seen: string | null
+          plan: string | null
           status: string
           updated_at: string
           user_id: string
@@ -2302,6 +2303,7 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
+          plan?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -2314,6 +2316,7 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
+          plan?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -4471,6 +4474,9 @@ export type Database = {
       }
       tenant_subscriptions: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
+          billing_type: string | null
           created_at: string
           current_period_end: string
           current_period_start: string
@@ -4479,6 +4485,7 @@ export type Database = {
           downgrade_applied_at: string | null
           feature_overrides: Json
           id: string
+          next_due_date: string | null
           plan_id: string
           plan_reminders_sent: number[]
           status: string
@@ -4487,6 +4494,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_type?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
@@ -4495,6 +4505,7 @@ export type Database = {
           downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
+          next_due_date?: string | null
           plan_id: string
           plan_reminders_sent?: number[]
           status?: string
@@ -4503,6 +4514,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_type?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
@@ -4511,6 +4525,7 @@ export type Database = {
           downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
+          next_due_date?: string | null
           plan_id?: string
           plan_reminders_sent?: number[]
           status?: string
