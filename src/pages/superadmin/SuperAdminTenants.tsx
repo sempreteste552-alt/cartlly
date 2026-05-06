@@ -206,6 +206,48 @@ export default function SuperAdminTenants() {
     }
   };
 
+  const handleManualResync = async (tenant: any) => {
+    try {
+      const res = await invokeAdminTenantAction({
+        action: "repair",
+        tool: "resync_subscription",
+        targetUserId: tenant.user_id,
+        planId: tenant.subscription?.plan_id,
+      });
+      if (res) {
+        toast.success(res.message || "Assinatura ativada manualmente!");
+        logAudit("manual_resync_subscription", "tenant", tenant.user_id, tenant.display_name || "—");
+        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao liberar plano");
+    }
+  };
+
+  const handleSetCustomPrice = async () => {
+    if (!customPriceTenant) return;
+    setCustomPriceSaving(true);
+    try {
+      const res = await invokeAdminTenantAction({
+        action: "repair",
+        tool: "set_custom_price",
+        targetUserId: customPriceTenant.user_id,
+        customPrice: customPriceValue ? parseFloat(customPriceValue) : null,
+        reason: customPriceReason,
+      });
+      if (res) {
+        toast.success(res.message);
+        logAudit("set_custom_price", "tenant", customPriceTenant.user_id, customPriceTenant.display_name || "—", { price: customPriceValue, reason: customPriceReason });
+        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+        setCustomPriceDialogOpen(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao definir preço");
+    } finally {
+      setCustomPriceSaving(false);
+    }
+  };
+
   const logAudit = async (action: string, targetType: string, targetId: string, targetName: string, details?: any) => {
     try {
       await supabase.from("audit_logs").insert({
