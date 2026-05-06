@@ -449,15 +449,20 @@ export default function LojaLayout() {
     return "cartlly-store-default";
   }, [slug, hostname, isCustomDomain, settings?.id]);
 
+  const socialName = settings?.store_name?.trim() || storeInstallName;
   usePwaManifest({
     id: manifestId,
-    name: storeInstallName,
-    shortName: storeInstallName.slice(0, 12),
+    name: socialName,
+    shortName: (settings?.store_name?.trim() || storeInstallName).slice(0, 12),
     themeColor: settings?.primary_color || undefined,
     iconUrl: storeIconUrl,
     iconVersion: storeIconVersion,
     startUrl: storeStartUrl,
     scope: storeStartUrl,
+    socialImageUrl: settings?.logo_url || storeIconUrl,
+    description: settings?.store_description
+      ? String(settings.store_description).slice(0, 160)
+      : (settings?.store_name ? `${settings.store_name} - loja online` : undefined),
   });
 
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;

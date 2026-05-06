@@ -17,6 +17,8 @@ export interface PwaManifestOptions {
   iconVersion?: string;
   startUrl?: string;
   scope?: string;
+  socialImageUrl?: string;
+  description?: string;
 }
 
 function getCurrentPath() {
@@ -43,6 +45,16 @@ function upsertMeta(name: string, content: string) {
   if (!meta) {
     meta = document.createElement("meta");
     meta.setAttribute("name", name);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+}
+
+function upsertMetaProperty(property: string, content: string) {
+  let meta = document.querySelector(`meta[property='${property}']`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("property", property);
     document.head.appendChild(meta);
   }
   meta.setAttribute("content", content);
@@ -134,6 +146,27 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   upsertMeta("theme-color", manifest.theme_color);
   upsertMeta("application-name", appName);
   upsertMeta("apple-mobile-web-app-title", shortName);
+
+  // Social share meta (Open Graph + Twitter)
+  const description = options.description || `Confira ${appName} - loja online`;
+  const socialImage = options.socialImageUrl
+    ? withCacheBust(options.socialImageUrl, options.iconVersion)
+    : resolvedIconUrl;
+
+  upsertMeta("description", description);
+  upsertMetaProperty("og:type", "website");
+  upsertMetaProperty("og:site_name", appName);
+  upsertMetaProperty("og:title", appName);
+  upsertMetaProperty("og:description", description);
+  upsertMetaProperty("og:url", window.location.href);
+  upsertMeta("twitter:card", socialImage ? "summary_large_image" : "summary");
+  upsertMeta("twitter:title", appName);
+  upsertMeta("twitter:description", description);
+  if (socialImage) {
+    upsertMetaProperty("og:image", socialImage);
+    upsertMetaProperty("og:image:alt", appName);
+    upsertMeta("twitter:image", socialImage);
+  }
 
   if (resolvedIconUrl) {
     upsertLink('link[rel="icon"]', { rel: "icon" }, resolvedIconUrl);
