@@ -50,6 +50,16 @@ function upsertMeta(name: string, content: string) {
   meta.setAttribute("content", content);
 }
 
+function upsertMetaProperty(property: string, content: string) {
+  let meta = document.querySelector(`meta[property='${property}']`) as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("property", property);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
+}
+
 function upsertLink(selector: string, attributes: Record<string, string>, href: string) {
   const existing = document.querySelector(selector) as HTMLLinkElement | null;
   const link = existing ?? document.createElement("link");
