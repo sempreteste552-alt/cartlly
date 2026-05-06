@@ -87,14 +87,36 @@ export default function SuperAdminTenants() {
     return lastSeen.toLocaleDateString("pt-BR");
   };
 
+  const invokeAdminTenantAction = async (body: Record<string, unknown>) => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error("Sessão expirada. Faça login novamente.");
+
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-tenant-actions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.error) {
+      throw new Error(payload?.error || payload?.message || `Falha na ação administrativa (${response.status})`);
+    }
+    return payload;
+  };
+
   const handleImpersonate = async (tenant: any) => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
-        body: { action: "impersonate", targetUserId: tenant.user_id, origin: window.location.origin },
+      const data = await invokeAdminTenantAction({
+        action: "impersonate",
+        targetUserId: tenant.user_id,
+        origin: window.location.origin,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      const link = data?.action_link;
+      const link = data?.action_link || data?.properties?.action_link || data?.url;
       if (!link) {
         console.error("Impersonate: resposta sem action_link", data);
         toast.error("Não foi possível gerar o link de acesso");
@@ -148,12 +170,7 @@ export default function SuperAdminTenants() {
   // Admin tenant actions via edge function
   const handleAdminAction = async (action: string, targetUserId: string, targetEmail?: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
-        body: { action, targetUserId, targetEmail },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+      return await invokeAdminTenantAction({ action, targetUserId, targetEmail });
     } catch (err: any) {
       toast.error(err.message || "Erro na ação");
       return null;
