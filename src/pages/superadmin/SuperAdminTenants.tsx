@@ -1024,6 +1024,17 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => openGrantTrial(tenant)}>
                           <Gift className="mr-2 h-4 w-4 text-pink-500" /> Liberar Trial Grátis
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setCustomPriceTenant(tenant);
+                          setCustomPriceValue(tenant.subscription?.custom_price?.toString() || "");
+                          setCustomPriceReason(tenant.subscription?.custom_price_reason || "");
+                          setCustomPriceDialogOpen(true);
+                        }}>
+                          <CreditCard className="mr-2 h-4 w-4 text-blue-500" /> Definir Preço Customizado
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleManualResync(tenant)}>
+                          <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Liberar/Ativar Plano (+30 dias)
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openOverrides(tenant)}>
                           <Sparkles className="mr-2 h-4 w-4 text-amber-500" /> Liberar Funcionalidades Extras
                         </DropdownMenuItem>
