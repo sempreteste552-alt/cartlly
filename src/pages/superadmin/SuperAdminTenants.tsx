@@ -29,7 +29,7 @@ export default function SuperAdminTenants() {
   const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
 
-  console.log("SuperAdminTenants rendering:", { tenantsCount: tenants?.length, isLoading, isError, filter });
+  
 
 
   // Fetch pending plan change requests
