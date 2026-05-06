@@ -48,14 +48,17 @@ export function useAllTenants() {
   return useQuery({
     queryKey: ["all_tenants"],
     queryFn: async () => {
-      console.log("Fetching all tenants...");
+      console.log("Fetching all tenants queryFn started");
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("*, status");
+      
       if (error) {
         console.error("Profiles fetch error:", error);
         throw error;
       }
+      console.log("Profiles fetched count:", profiles?.length);
+
 
       // Get store settings for each tenant
       const { data: stores } = await supabase
