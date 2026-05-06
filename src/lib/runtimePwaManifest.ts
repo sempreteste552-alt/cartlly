@@ -147,6 +147,27 @@ export function applyRuntimePwaManifest(options: PwaManifestOptions = {}) {
   upsertMeta("application-name", appName);
   upsertMeta("apple-mobile-web-app-title", shortName);
 
+  // Social share meta (Open Graph + Twitter)
+  const description = options.description || `Confira ${appName} - loja online`;
+  const socialImage = options.socialImageUrl
+    ? withCacheBust(options.socialImageUrl, options.iconVersion)
+    : resolvedIconUrl;
+
+  upsertMeta("description", description);
+  upsertMetaProperty("og:type", "website");
+  upsertMetaProperty("og:site_name", appName);
+  upsertMetaProperty("og:title", appName);
+  upsertMetaProperty("og:description", description);
+  upsertMetaProperty("og:url", window.location.href);
+  upsertMeta("twitter:card", socialImage ? "summary_large_image" : "summary");
+  upsertMeta("twitter:title", appName);
+  upsertMeta("twitter:description", description);
+  if (socialImage) {
+    upsertMetaProperty("og:image", socialImage);
+    upsertMetaProperty("og:image:alt", appName);
+    upsertMeta("twitter:image", socialImage);
+  }
+
   if (resolvedIconUrl) {
     upsertLink('link[rel="icon"]', { rel: "icon" }, resolvedIconUrl);
     upsertLink('link[rel="shortcut icon"]', { rel: "shortcut icon" }, resolvedIconUrl);
