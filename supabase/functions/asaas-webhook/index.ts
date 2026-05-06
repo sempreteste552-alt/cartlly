@@ -160,6 +160,20 @@ Deno.serve(async (req) => {
       // Ensure profile is active
       await supabase.from("profiles").update({ status: "active" }).eq("user_id", userId);
 
+      // Audit log
+      await supabase.from("audit_logs").insert({
+        action: "asaas_payment_confirmed",
+        target_type: "tenant",
+        target_id: userId,
+        target_name: plan?.name || "Premium",
+        details: { 
+          payment_id: payment.id, 
+          event, 
+          value: payment.value,
+          plan_id: planId
+        },
+      });
+
       // Notify tenant
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
@@ -172,6 +186,15 @@ Deno.serve(async (req) => {
       console.log(`[asaas-webhook] Subscription successfully ${existing ? 'updated' : 'created'} for user ${userId}`);
     } else if (isFailed) {
       console.log(`[asaas-webhook] Payment failed/refunded for user ${userId}: ${event}`);
+      
+      // Audit log for failure
+      await supabase.from("audit_logs").insert({
+        action: "asaas_payment_failed",
+        target_type: "tenant",
+        target_id: userId,
+        details: { payment_id: payment.id, event },
+      });
+
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
         target_user_id: userId,
