@@ -7,12 +7,7 @@ const corsHeaders = {
 
 /**
  * Asaas webhook receiver.
- * Configure in Asaas dashboard → Integrações → Webhooks:
- *   URL: https://<project>.supabase.co/functions/v1/asaas-webhook
- *   Events: PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PAYMENT_OVERDUE, PAYMENT_REFUNDED, PAYMENT_DELETED
- *
- * Webhook payload reference: https://docs.asaas.com/docs/webhooks
- * { event: "PAYMENT_CONFIRMED", payment: { id, status, externalReference, value, ... } }
+ * Handles both Platform Subscriptions (plan_...) and Store Sales (UUID orderId).
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
