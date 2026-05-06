@@ -67,6 +67,11 @@ export default function SuperAdminTenants() {
   const [overridesTenant, setOverridesTenant] = useState<any>(null);
   const [overridesSourcePlanId, setOverridesSourcePlanId] = useState<string>("");
   const [overridesSaving, setOverridesSaving] = useState(false);
+  const [customPriceDialogOpen, setCustomPriceDialogOpen] = useState(false);
+  const [customPriceTenant, setCustomPriceTenant] = useState<any>(null);
+  const [customPriceValue, setCustomPriceValue] = useState("");
+  const [customPriceReason, setCustomPriceReason] = useState("");
+  const [customPriceSaving, setCustomPriceSaving] = useState(false);
   const navigate = useNavigate();
 
   const formatCurrency = (v: number) =>
@@ -198,6 +203,48 @@ export default function SuperAdminTenants() {
       toast.success("Conta ativada manualmente!");
       logAudit("manual_activate", "tenant", tenant.user_id, tenant.display_name || "—");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+    }
+  };
+
+  const handleManualResync = async (tenant: any) => {
+    try {
+      const res = await invokeAdminTenantAction({
+        action: "repair",
+        tool: "resync_subscription",
+        targetUserId: tenant.user_id,
+        planId: tenant.subscription?.plan_id,
+      });
+      if (res) {
+        toast.success(res.message || "Assinatura ativada manualmente!");
+        logAudit("manual_resync_subscription", "tenant", tenant.user_id, tenant.display_name || "—");
+        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao liberar plano");
+    }
+  };
+
+  const handleSetCustomPrice = async () => {
+    if (!customPriceTenant) return;
+    setCustomPriceSaving(true);
+    try {
+      const res = await invokeAdminTenantAction({
+        action: "repair",
+        tool: "set_custom_price",
+        targetUserId: customPriceTenant.user_id,
+        customPrice: customPriceValue ? parseFloat(customPriceValue) : null,
+        reason: customPriceReason,
+      });
+      if (res) {
+        toast.success(res.message);
+        logAudit("set_custom_price", "tenant", customPriceTenant.user_id, customPriceTenant.display_name || "—", { price: customPriceValue, reason: customPriceReason });
+        queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
+        setCustomPriceDialogOpen(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao definir preço");
+    } finally {
+      setCustomPriceSaving(false);
     }
   };
 
@@ -641,6 +688,7 @@ export default function SuperAdminTenants() {
     if (tenant.subscription) {
       const planName = (tenant.subscription.tenant_plans as any)?.name || "—";
       const subStatus = tenant.subscription.status;
+      const customPrice = tenant.subscription.custom_price;
       const isTrial = subStatus === "trial";
       const isFree = planName === "FREE";
       const isPaid = !isFree && !isTrial && subStatus === "active";
@@ -650,7 +698,12 @@ export default function SuperAdminTenants() {
         const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000)) : 0;
         badges.push(<Badge key="sub" variant="outline" className="border-purple-500/50 text-purple-600 text-xs"><Clock className="mr-1 h-3 w-3" />Trial {daysLeft}d</Badge>);
       } else if (isPaid) {
-        badges.push(<Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs"><CreditCard className="mr-1 h-3 w-3" />{planName}</Badge>);
+        badges.push(
+          <Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs">
+            <CreditCard className="mr-2 h-3 w-3" />
+            {planName} {customPrice ? `(R$ ${customPrice})` : ""}
+          </Badge>
+        );
       } else if (isFree) {
         badges.push(<Badge key="sub" variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs">FREE</Badge>);
       } else {
@@ -976,6 +1029,17 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => openGrantTrial(tenant)}>
                           <Gift className="mr-2 h-4 w-4 text-pink-500" /> Liberar Trial Grátis
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setCustomPriceTenant(tenant);
+                          setCustomPriceValue(tenant.subscription?.custom_price?.toString() || "");
+                          setCustomPriceReason(tenant.subscription?.custom_price_reason || "");
+                          setCustomPriceDialogOpen(true);
+                        }}>
+                          <CreditCard className="mr-2 h-4 w-4 text-blue-500" /> Definir Preço Customizado
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleManualResync(tenant)}>
+                          <CheckCircle className="mr-2 h-4 w-4 text-green-500" /> Liberar/Ativar Plano (+30 dias)
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openOverrides(tenant)}>
                           <Sparkles className="mr-2 h-4 w-4 text-amber-500" /> Liberar Funcionalidades Extras
                         </DropdownMenuItem>
@@ -1138,6 +1202,49 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Custom Price Dialog */}
+      <Dialog open={customPriceDialogOpen} onOpenChange={setCustomPriceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-blue-500" />
+              Preço Customizado — {customPriceTenant?.display_name}
+            </DialogTitle>
+            <DialogDescription>
+              Defina um valor de cobrança específico para este tenant, ignorando o valor padrão do plano.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Novo Valor (R$)</Label>
+              <Input
+                type="number"
+                placeholder="Ex: 100.00"
+                value={customPriceValue}
+                onChange={(e) => setCustomPriceValue(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">Deixe vazio para voltar ao preço original do plano.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Motivo / Observação</Label>
+              <Textarea
+                placeholder="Ex: Acordo especial feito via WhatsApp"
+                value={customPriceReason}
+                onChange={(e) => setCustomPriceReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCustomPriceDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSetCustomPrice} disabled={customPriceSaving}>
+                {customPriceSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alteração
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Send Message Dialog */}
       <Dialog open={msgDialogOpen} onOpenChange={setMsgDialogOpen}>
         <DialogContent className="max-w-lg">
