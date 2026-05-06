@@ -698,7 +698,12 @@ export default function SuperAdminTenants() {
         const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000)) : 0;
         badges.push(<Badge key="sub" variant="outline" className="border-purple-500/50 text-purple-600 text-xs"><Clock className="mr-1 h-3 w-3" />Trial {daysLeft}d</Badge>);
       } else if (isPaid) {
-        badges.push(<Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs"><CreditCard className="mr-1 h-3 w-3" />{planName}</Badge>);
+        badges.push(
+          <Badge key="sub" variant="outline" className="border-primary/50 text-primary text-xs">
+            <CreditCard className="mr-2 h-3 w-3" />
+            {planName} {customPrice ? `(R$ ${customPrice})` : ""}
+          </Badge>
+        );
       } else if (isFree) {
         badges.push(<Badge key="sub" variant="outline" className="border-muted-foreground/30 text-muted-foreground text-xs">FREE</Badge>);
       } else {
