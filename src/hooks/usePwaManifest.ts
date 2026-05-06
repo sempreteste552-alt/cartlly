@@ -22,5 +22,7 @@ export function usePwaManifest(options: PwaManifestOptions) {
     options.iconVersion,
     options.startUrl,
     options.scope,
+    options.socialImageUrl,
+    options.description,
   ]);
 }
