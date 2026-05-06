@@ -87,6 +87,24 @@ export default function SuperAdminTenants() {
     return lastSeen.toLocaleDateString("pt-BR");
   };
 
+  const handleImpersonate = async (tenant: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-tenant-actions", {
+        body: { action: "impersonate", targetUserId: tenant.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.action_link) {
+        window.open(data.action_link, "_blank");
+        toast.success("Acesso liberado em nova aba (suporte/manutenção)");
+        logAudit("impersonate_tenant", "tenant", tenant.user_id, tenant.display_name || "—");
+      } else {
+        toast.error("Não foi possível gerar o link de acesso");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Falha ao entrar na loja");
+    }
+  };
 
   const pendingCount = tenants?.filter(t => t.status === "pending").length || 0;
   const onlineCount = tenants?.filter(t => t.is_online).length || 0;
