@@ -1197,6 +1197,49 @@ export default function SuperAdminTenants() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Custom Price Dialog */}
+      <Dialog open={customPriceDialogOpen} onOpenChange={setCustomPriceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-blue-500" />
+              Preço Customizado — {customPriceTenant?.display_name}
+            </DialogTitle>
+            <DialogDescription>
+              Defina um valor de cobrança específico para este tenant, ignorando o valor padrão do plano.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Novo Valor (R$)</Label>
+              <Input
+                type="number"
+                placeholder="Ex: 100.00"
+                value={customPriceValue}
+                onChange={(e) => setCustomPriceValue(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">Deixe vazio para voltar ao preço original do plano.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Motivo / Observação</Label>
+              <Textarea
+                placeholder="Ex: Acordo especial feito via WhatsApp"
+                value={customPriceReason}
+                onChange={(e) => setCustomPriceReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCustomPriceDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSetCustomPrice} disabled={customPriceSaving}>
+                {customPriceSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alteração
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Send Message Dialog */}
       <Dialog open={msgDialogOpen} onOpenChange={setMsgDialogOpen}>
         <DialogContent className="max-w-lg">
