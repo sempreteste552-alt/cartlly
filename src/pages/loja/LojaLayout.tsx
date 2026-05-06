@@ -458,6 +458,10 @@ export default function LojaLayout() {
     iconVersion: storeIconVersion,
     startUrl: storeStartUrl,
     scope: storeStartUrl,
+    socialImageUrl: settings?.logo_url || storeIconUrl,
+    description: settings?.store_name
+      ? `${settings.store_name}${settings?.store_description ? ` - ${String(settings.store_description).slice(0, 140)}` : ' - loja online'}`
+      : undefined,
   });
 
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
