@@ -74,110 +74,104 @@ Deno.serve(async (req) => {
       ].includes(event);
 
       if (isPaid) {
-      console.log(`[asaas-webhook] Processing payment for user ${userId}`);
-      
-      // Activate subscription
-      const { data: plan, error: planErr } = await supabase
-        .from("tenant_plans")
-        .select("name, price")
-        .eq("id", planId)
-        .single();
+        console.log(`[asaas-webhook] Processing payment for user ${userId}`);
+        
+        // Activate subscription
+        const { data: plan, error: planErr } = await supabase
+          .from("tenant_plans")
+          .select("name, price")
+          .eq("id", planId)
+          .single();
 
-      if (planErr) {
-        console.error("[asaas-webhook] Error fetching plan:", planErr);
-      }
+        if (planErr) console.error("[asaas-webhook] Error fetching plan:", planErr);
 
-      const now = new Date();
-      // Subscriptions are usually 30 days
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const now = new Date();
+        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-      const { data: existing, error: subErr } = await supabase
-        .from("tenant_subscriptions")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (subErr) {
-        console.error("[asaas-webhook] Error fetching existing sub:", subErr);
-      }
-
-      if (existing) {
-        console.log(`[asaas-webhook] Updating existing subscription ${existing.id}`);
-        const { error: updateErr } = await supabase
+        const { data: existing } = await supabase
           .from("tenant_subscriptions")
-          .update({
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("tenant_subscriptions")
+            .update({
+              plan_id: planId,
+              status: "active",
+              current_period_start: now.toISOString(),
+              current_period_end: periodEnd.toISOString(),
+              trial_ends_at: null,
+              updated_at: now.toISOString(),
+            })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("tenant_subscriptions").insert({
+            user_id: userId,
             plan_id: planId,
             status: "active",
             current_period_start: now.toISOString(),
             current_period_end: periodEnd.toISOString(),
-            trial_ends_at: null,
-            updated_at: now.toISOString(),
-          })
-          .eq("id", existing.id);
-          
-        if (updateErr) console.error("[asaas-webhook] Update subscription error:", updateErr);
-      } else {
-        console.log(`[asaas-webhook] Creating new subscription for user ${userId}`);
-        const { error: insertErr } = await supabase.from("tenant_subscriptions").insert({
+          });
+        }
+
+        // Record payment
+        await supabase.from("payments").insert({
           user_id: userId,
-          plan_id: planId,
-          status: "active",
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString(),
+          amount: payment.value,
+          gateway: "asaas",
+          method: payment.billingType?.toLowerCase() || "unknown",
+          status: "approved",
+          external_id: payment.id,
         });
-        
-        if (insertErr) console.error("[asaas-webhook] Insert subscription error:", insertErr);
+
+        // Resolve pending plan-change requests
+        await supabase
+          .from("plan_change_requests")
+          .update({ status: "approved", resolved_at: now.toISOString() })
+          .eq("user_id", userId)
+          .eq("status", "pending");
+
+        // Ensure profile is active
+        await supabase.from("profiles").update({ status: "active" }).eq("user_id", userId);
+
+        // Audit log
+        await supabase.from("audit_logs").insert({
+          action: "asaas_payment_confirmed",
+          target_type: "tenant",
+          target_id: userId,
+          target_name: plan?.name || "Premium",
+          details: { payment_id: payment.id, event, value: payment.value, plan_id: planId },
+        });
+
+        // Notify tenant
+        await supabase.from("admin_notifications").insert({
+          sender_user_id: userId,
+          target_user_id: userId,
+          title: "✅ Pagamento confirmado!",
+          message: `Plano ${plan?.name ?? ""} ativado com sucesso. Aproveite todos os recursos!`,
+          type: "plan_activated",
+        });
+      } else if (isFailed) {
+        await supabase.from("audit_logs").insert({
+          action: "asaas_payment_failed",
+          target_type: "tenant",
+          target_id: userId,
+          details: { payment_id: payment.id, event },
+        });
+        await supabase.from("admin_notifications").insert({
+          sender_user_id: userId,
+          target_user_id: userId,
+          title: "⚠️ Pagamento não concluído",
+          message: `Sua cobrança (${event}) não foi processada ou foi estornada.`,
+          type: "payment_failed",
+        });
       }
-
-      // Record payment
-      await supabase.from("payments").insert({
-        user_id: userId,
-        amount: payment.value,
-        gateway: "asaas",
-        method: payment.billingType?.toLowerCase() || "unknown",
-        status: "approved",
-        external_id: payment.id,
-      });
-
-      // Resolve any pending plan-change requests
-      await supabase
-        .from("plan_change_requests")
-        .update({ status: "approved", resolved_at: now.toISOString() })
-        .eq("user_id", userId)
-        .eq("status", "pending");
-
-      // Ensure profile is active
-      await supabase.from("profiles").update({ status: "active" }).eq("user_id", userId);
-
-      // Audit log
-      await supabase.from("audit_logs").insert({
-        action: "asaas_payment_confirmed",
-        target_type: "tenant",
-        target_id: userId,
-        target_name: plan?.name || "Premium",
-        details: { 
-          payment_id: payment.id, 
-          event, 
-          value: payment.value,
-          plan_id: planId
-        },
-      });
-
-      // Notify tenant
-      await supabase.from("admin_notifications").insert({
-        sender_user_id: userId,
-        target_user_id: userId,
-        title: "✅ Pagamento confirmado!",
-        message: `Plano ${plan?.name ?? ""} ativado com sucesso. Aproveite todos os recursos!`,
-        type: "plan_activated",
-      });
-      
-      console.log(`[asaas-webhook] Subscription successfully ${existing ? 'updated' : 'created'} for user ${userId}`);
     } else if (orderMatch) {
       const orderId = ref;
       console.log(`[asaas-webhook] Order Event: ${event}, OrderId: ${orderId}`);
 
-      // Map Asaas status to our system status
       const isPaid = [
         "PAYMENT_CONFIRMED", 
         "PAYMENT_RECEIVED", 
@@ -245,7 +239,6 @@ async function processStorePaymentUpdate(supabase: any, orderId: string, status:
     await supabase.from("orders").update({ status: "processando" }).eq("id", orderId);
     await supabase.from("order_status_history").insert({ order_id: orderId, status: "pago" });
 
-    // Notify merchant
     await sendRichPush(userId, {
       title: "✅ Pagamento aprovado!",
       body: `${customerName} pagou ${formattedTotal} via Asaas 💰 Pedido #${orderId8}`,
@@ -254,7 +247,6 @@ async function processStorePaymentUpdate(supabase: any, orderId: string, status:
       data: { orderId, paymentId: payment.id, gateway },
     });
 
-    // Notify customer
     try {
       const { data: storeMeta } = await supabase.from("store_settings").select("store_slug").eq("user_id", userId).maybeSingle();
       const productSummary = (await supabase.from("order_items").select("product_name, quantity").eq("order_id", orderId)).data
