@@ -50,41 +50,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // externalReference format: plan_<planId>_user_<userId>_<ts>
+    // externalReference format:
+    // 1. plan_<planId>_user_<userId>_<ts> (Platform Subscriptions)
+    // 2. <orderId> (Store Sales)
     const ref = String(payment.externalReference || "");
-    const match = ref.match(/^plan_([a-f0-9-]+)_user_([a-f0-9-]+)/i);
+    const planMatch = ref.match(/^plan_([a-f0-9-]+)_user_([a-f0-9-]+)/i);
+    const orderMatch = ref.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     
-    if (!match) {
-      console.warn("[asaas-webhook] Invalid externalReference:", ref);
-      // Try to find by customer id or other fields if possible, but for now stick to externalReference
-      return new Response(JSON.stringify({ ok: true, ignored: "invalid ref" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (planMatch) {
+      const [, planId, userId] = planMatch;
+      console.log(`[asaas-webhook] Sub Event: ${event}, Plan: ${planId}, User: ${userId}`);
 
-    const [, planId, userId] = match;
-    console.log(`[asaas-webhook] Event: ${event}, Plan: ${planId}, User: ${userId}`);
+      // Confirmation events
+      const isPaid = [
+        "PAYMENT_CONFIRMED", 
+        "PAYMENT_RECEIVED", 
+        "PAYMENT_CREDITED",
+        "SUBSCRIPTION_PAYMENT_CONFIRMED",
+        "SUBSCRIPTION_PAYMENT_RECEIVED"
+      ].includes(event);
+      
+      const isFailed = [
+        "PAYMENT_OVERDUE", 
+        "PAYMENT_DELETED", 
+        "PAYMENT_REFUNDED",
+        "PAYMENT_CHARGEBACK_REQUESTED",
+        "PAYMENT_CHARGEBACK_DISPUTE"
+      ].includes(event);
 
-    // Confirmation events: https://docs.asaas.com/docs/webhooks#eventos-de-pagamento
-    const isPaid = [
-      "PAYMENT_CONFIRMED", 
-      "PAYMENT_RECEIVED", 
-      "PAYMENT_CREDITED",
-      "SUBSCRIPTION_PAYMENT_CONFIRMED",
-      "SUBSCRIPTION_PAYMENT_RECEIVED"
-    ].includes(event);
-    
-    const isFailed = [
-      "PAYMENT_OVERDUE", 
-      "PAYMENT_DELETED", 
-      "PAYMENT_REFUNDED",
-      "PAYMENT_CHARGEBACK_REQUESTED",
-      "PAYMENT_CHARGEBACK_DISPUTE",
-      "PAYMENT_AWAITING_CHARGEBACK_REVERSAL"
-    ].includes(event);
-
-    if (isPaid) {
+      if (isPaid) {
       console.log(`[asaas-webhook] Processing payment for user ${userId}`);
       
       // Activate subscription
