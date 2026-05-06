@@ -470,6 +470,7 @@ export default function SuperAdminTenants() {
       if (error) { toast.error("Erro: " + error.message); return; }
     }
 
+    logAudit("assign_plan", "tenant", userId, selectedTenant.display_name || "—", { plan_id: selectedPlanId });
     toast.success("Plano atribuído com sucesso!");
     queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
     setPlanDialogOpen(false);
@@ -477,12 +478,14 @@ export default function SuperAdminTenants() {
 
   const handleRemovePlan = async () => {
     if (!selectedTenant?.subscription) return;
+    const userId = selectedTenant.user_id;
     const { error } = await supabase
       .from("tenant_subscriptions")
       .delete()
-      .eq("user_id", selectedTenant.user_id);
+      .eq("user_id", userId);
     if (error) toast.error("Erro: " + error.message);
     else {
+      logAudit("remove_plan", "tenant", userId, selectedTenant.display_name || "—");
       toast.success("Plano removido");
       queryClient.invalidateQueries({ queryKey: ["all_tenants"] });
       setPlanDialogOpen(false);
@@ -526,6 +529,8 @@ export default function SuperAdminTenants() {
           .insert({ user_id: userId, ...payload });
         if (error) throw error;
       }
+
+      logAudit("grant_trial", "tenant", userId, trialTenant.display_name || "—", { plan_id: trialPlanId, days: trialDays });
 
       // Unblock store if blocked
       await supabase.from("store_settings").update({ store_blocked: false }).eq("user_id", userId);
@@ -603,6 +608,8 @@ export default function SuperAdminTenants() {
         setOverridesSaving(false);
         return;
       }
+
+      logAudit("apply_overrides", "tenant", userId, overridesTenant.display_name || "—", { mode, plan_id: overridesSourcePlanId });
 
       if (mode === "grant") {
         await supabase.from("admin_notifications").insert({

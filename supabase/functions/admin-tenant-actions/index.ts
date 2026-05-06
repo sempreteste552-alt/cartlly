@@ -624,12 +624,28 @@ Deno.serve(async (req) => {
         if (profileError) throw profileError;
         const { error: authError } = await adminClient.auth.admin.updateUserById(targetUserId, { email_confirm: true });
         if (authError) console.error("Auth confirm error:", authError);
+        
+        await adminClient.from("audit_logs").insert({
+          actor_user_id: caller.id,
+          action: "manual_activate",
+          target_type: "tenant",
+          target_id: targetUserId,
+        });
+
         return new Response(JSON.stringify({ success: true, message: "Account manually activated" }), { headers: corsHeaders });
       }
       case "deactivate": {
         if (!targetUserId) return new Response(JSON.stringify({ error: "Missing targetUserId" }), { status: 400, headers: corsHeaders });
         const { error } = await adminClient.from("profiles").update({ status: "blocked" }).eq("user_id", targetUserId);
         if (error) throw error;
+
+        await adminClient.from("audit_logs").insert({
+          actor_user_id: caller.id,
+          action: "deactivate",
+          target_type: "tenant",
+          target_id: targetUserId,
+        });
+
         return new Response(JSON.stringify({ success: true, message: "Account deactivated" }), { headers: corsHeaders });
       }
       case "get_user_info": {
