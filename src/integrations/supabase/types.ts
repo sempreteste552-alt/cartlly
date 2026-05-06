@@ -4474,6 +4474,8 @@ export type Database = {
           created_at: string
           current_period_end: string
           current_period_start: string
+          custom_price: number | null
+          custom_price_reason: string | null
           downgrade_applied_at: string | null
           feature_overrides: Json
           id: string
@@ -4488,6 +4490,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          custom_price?: number | null
+          custom_price_reason?: string | null
           downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
@@ -4502,6 +4506,8 @@ export type Database = {
           created_at?: string
           current_period_end?: string
           current_period_start?: string
+          custom_price?: number | null
+          custom_price_reason?: string | null
           downgrade_applied_at?: string | null
           feature_overrides?: Json
           id?: string
