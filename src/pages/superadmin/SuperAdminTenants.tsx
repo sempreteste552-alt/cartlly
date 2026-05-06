@@ -530,6 +530,8 @@ export default function SuperAdminTenants() {
         if (error) throw error;
       }
 
+      logAudit("grant_trial", "tenant", userId, trialTenant.display_name || "—", { plan_id: trialPlanId, days: trialDays });
+
       // Unblock store if blocked
       await supabase.from("store_settings").update({ store_blocked: false }).eq("user_id", userId);
 
