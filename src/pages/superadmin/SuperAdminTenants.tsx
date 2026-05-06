@@ -22,7 +22,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Activity, ShieldAlert } from "lucide-react";
 
 export default function SuperAdminTenants() {
-  const { data: tenants, isLoading } = useAllTenants();
+  const { data: tenants, isLoading, isError, error: tenantsError } = useAllTenants();
   const { data: plans } = useAllPlans();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
@@ -728,7 +728,30 @@ export default function SuperAdminTenants() {
 
 
   if (isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-64" /></div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-end">
+          <div className="space-y-2"><Skeleton className="h-8 w-48" /><Skeleton className="h-4 w-64" /></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-destructive/30 bg-destructive/5 m-6">
+        <CardContent className="p-8 text-center space-y-4">
+          <ShieldAlert className="h-12 w-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-bold text-destructive">Erro ao carregar tenants</h2>
+          <p className="text-muted-foreground">{(tenantsError as any)?.message || "Ocorreu um problema ao buscar os dados do banco de dados."}</p>
+          <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["all_tenants"] })}>Tentar Novamente</Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

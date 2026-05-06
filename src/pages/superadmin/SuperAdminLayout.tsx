@@ -12,19 +12,12 @@ export default function SuperAdminLayout() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Prefetch all tenants and plans
+    // We don't prefetch tenants here because the hook useAllTenants 
+    // in SuperAdminTenants.tsx has a complex logic and its own cache.
+    // Redundant or broken prefetches with same key ["all_tenants"] can cause UI issues.
+    
     queryClient.prefetchQuery({
-      queryKey: ["all_tenants"],
-      queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_all_tenants_admin" as any);
-        if (error) throw error;
-        return data;
-      },
-      staleTime: 1000 * 60 * 5,
-    });
-
-    queryClient.prefetchQuery({
-      queryKey: ["all_plans"],
+      queryKey: ["tenant_plans"],
       queryFn: async () => {
         const { data, error } = await supabase
           .from("tenant_plans")

@@ -579,21 +579,21 @@ async function processAsaas(
     customerId = createData.id;
   }
 
-  // 2) Create payment
+  // 2) Create subscription
   const today = new Date();
-  const dueDate = new Date(today.getTime() + (method === "BOLETO" ? 3 : 1) * 86400 * 1000)
-    .toISOString().split("T")[0];
+  const nextDueDate = new Date(today.getTime() + 86400 * 1000).toISOString().split("T")[0]; // Amanhã
 
   const billingType = method === "PIX" ? "PIX"
     : method === "BOLETO" ? "BOLETO"
     : method === "CREDIT_CARD" ? "CREDIT_CARD"
     : "UNDEFINED";
 
-  const paymentBody: any = {
+  const subscriptionBody: any = {
     customer: customerId,
     billingType,
     value: Number(plan.price),
-    dueDate,
+    nextDueDate,
+    cycle: "MONTHLY",
     description: `Assinatura plano ${plan.name}`,
     externalReference: `plan_${plan.id}_user_${userId}_${Date.now()}`,
   };
@@ -627,10 +627,10 @@ async function processAsaas(
     }
   }
 
-  const payRes = await fetch(`${BASE_URL}/payments`, {
+  const payRes = await fetch(`${BASE_URL}/subscriptions`, {
     method: "POST",
     headers,
-    body: JSON.stringify(paymentBody),
+    body: JSON.stringify(subscriptionBody),
   });
   const payData = await payRes.json();
 
@@ -673,29 +673,49 @@ async function processAsaas(
 
   // 3) Get PIX QR Code if applicable
   if (method === "PIX") {
-    const qrRes = await fetch(`${BASE_URL}/payments/${payData.id}/pixQrCode`, { headers });
-    const qrData = await qrRes.json();
-    if (qrRes.ok) {
-      result.pix = {
-        qrCode: qrData.payload,
-        qrCodeBase64: qrData.encodedImage,
-        expiration: qrData.expirationDate,
-      };
+    // Para assinaturas PIX, o Asaas gera a primeira cobrança (payment)
+    // Precisamos buscar esse pagamento para pegar o QR Code
+    try {
+      const paymentsRes = await fetch(`${BASE_URL}/subscriptions/${payData.id}/payments`, { headers });
+      const paymentsData = await paymentsRes.json();
+      const firstPaymentId = paymentsData?.data?.[0]?.id;
+      
+      if (firstPaymentId) {
+        const qrRes = await fetch(`${BASE_URL}/payments/${firstPaymentId}/pixQrCode`, { headers });
+        const qrData = await qrRes.json();
+        if (qrRes.ok) {
+          result.pix = {
+            qrCode: qrData.payload,
+            qrCodeBase64: qrData.encodedImage,
+            expiration: qrData.expirationDate,
+          };
+          result.gateway_payment_id = firstPaymentId; // Usar o ID do pagamento para tracking
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao buscar PIX da assinatura:", e);
     }
   }
 
   if (method === "BOLETO") {
-    // Asaas returns these fields immediately on creation:
-    //  - bankSlipUrl: direct PDF link (preferred for download)
-    //  - invoiceUrl:  hosted Asaas page with the boleto + payment instructions (always available)
-    //  - identificationField: human-readable boleto line ("linha digitável")
-    // bankSlipUrl can take a few seconds to appear, so we fall back to invoiceUrl.
-    const url = payData.bankSlipUrl || payData.invoiceUrl || "";
-    result.boleto = {
-      url,
-      barcode: payData.identificationField || payData.nossoNumero || "",
-      dueDate: payData.dueDate,
-    };
+    // Para boletos em assinaturas, o primeiro pagamento é gerado
+    try {
+      const paymentsRes = await fetch(`${BASE_URL}/subscriptions/${payData.id}/payments`, { headers });
+      const paymentsData = await paymentsRes.json();
+      const firstPayment = paymentsData?.data?.[0];
+      
+      if (firstPayment) {
+        const url = firstPayment.bankSlipUrl || firstPayment.invoiceUrl || "";
+        result.boleto = {
+          url,
+          barcode: firstPayment.identificationField || firstPayment.nossoNumero || "",
+          dueDate: firstPayment.dueDate,
+        };
+        result.gateway_payment_id = firstPayment.id;
+      }
+    } catch (e) {
+      console.error("Erro ao buscar Boleto da assinatura:", e);
+    }
   }
 
   if (method === "CREDIT_CARD") {
