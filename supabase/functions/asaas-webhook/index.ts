@@ -173,27 +173,39 @@ Deno.serve(async (req) => {
       });
       
       console.log(`[asaas-webhook] Subscription successfully ${existing ? 'updated' : 'created'} for user ${userId}`);
-    } else if (isFailed) {
-      console.log(`[asaas-webhook] Payment failed/refunded for user ${userId}: ${event}`);
-      
-      // Audit log for failure
-      await supabase.from("audit_logs").insert({
-        action: "asaas_payment_failed",
-        target_type: "tenant",
-        target_id: userId,
-        details: { payment_id: payment.id, event },
-      });
+    } else if (orderMatch) {
+      const orderId = ref;
+      console.log(`[asaas-webhook] Order Event: ${event}, OrderId: ${orderId}`);
 
-      await supabase.from("admin_notifications").insert({
-        sender_user_id: userId,
-        target_user_id: userId,
-        title: "⚠️ Pagamento não concluído",
-        message: `Sua cobrança (${event}) não foi processada ou foi estornada. Tente novamente ou contate o suporte.`,
-        type: "payment_failed",
+      // Map Asaas status to our system status
+      const isPaid = [
+        "PAYMENT_CONFIRMED", 
+        "PAYMENT_RECEIVED", 
+        "PAYMENT_CREDITED",
+        "RECEIVED_IN_CASH"
+      ].includes(event);
+      
+      const isFailed = [
+        "PAYMENT_OVERDUE", 
+        "PAYMENT_DELETED", 
+        "PAYMENT_REFUNDED",
+        "PAYMENT_CHARGEBACK_REQUESTED"
+      ].includes(event);
+
+      const status = isPaid ? "approved" : isFailed ? "rejected" : "pending";
+      
+      if (isPaid || isFailed) {
+        await processStorePaymentUpdate(supabase, orderId, status, "asaas", payment.id, payment);
+      }
+    } else {
+      console.warn("[asaas-webhook] Invalid externalReference:", ref);
+      return new Response(JSON.stringify({ ok: true, ignored: "invalid ref" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, event, planId, userId }), {
+    return new Response(JSON.stringify({ ok: true, event }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -205,3 +217,157 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+async function processStorePaymentUpdate(supabase: any, orderId: string, status: string, gateway: string, gatewayPaymentId: string, rawResponse: any) {
+  console.log(`[asaas-webhook] Processing status update for order ${orderId}: ${status}`);
+  
+  const { data: payment, error: pErr } = await supabase
+    .from("payments")
+    .update({ status, raw_response: rawResponse })
+    .eq("order_id", orderId)
+    .eq("gateway", gateway)
+    .select("*, orders(*)")
+    .maybeSingle();
+
+  if (pErr || !payment) {
+    console.error(`[asaas-webhook] Payment not found for order ${orderId} and gateway ${gateway}`, pErr);
+    return;
+  }
+
+  const order = payment.orders;
+  const userId = payment.user_id;
+  const customerName = order?.customer_name || "Cliente";
+  const orderTotal = payment.amount || order?.total || 0;
+  const formattedTotal = `R$ ${Number(orderTotal).toFixed(2).replace(".", ",")}`;
+  const orderId8 = orderId.slice(0, 8).toUpperCase();
+
+  if (status === "approved") {
+    await supabase.from("orders").update({ status: "processando" }).eq("id", orderId);
+    await supabase.from("order_status_history").insert({ order_id: orderId, status: "pago" });
+
+    // Notify merchant
+    await sendRichPush(userId, {
+      title: "✅ Pagamento aprovado!",
+      body: `${customerName} pagou ${formattedTotal} via Asaas 💰 Pedido #${orderId8}`,
+      url: "/admin/pedidos",
+      type: "payment_approved",
+      data: { orderId, paymentId: payment.id, gateway },
+    });
+
+    // Notify customer
+    try {
+      const { data: storeMeta } = await supabase.from("store_settings").select("store_slug").eq("user_id", userId).maybeSingle();
+      const productSummary = (await supabase.from("order_items").select("product_name, quantity").eq("order_id", orderId)).data
+        ?.map((i: any) => `${i.quantity}x ${i.product_name}`).slice(0, 2).join(", ");
+        
+      await notifyCustomerStorefront(supabase, {
+        storeUserId: userId,
+        customerEmail: order?.customer_email,
+        orderId: orderId,
+        status: "approved",
+        method: payment.method,
+        amount: orderTotal,
+        productSummary,
+        storeSlug: storeMeta?.store_slug,
+      });
+    } catch (e) {
+      console.error("[asaas-webhook] Failed to notify customer:", e);
+    }
+  } else if (status === "rejected") {
+    await supabase.from("orders").update({ status: "cancelado" }).eq("id", orderId);
+    await supabase.from("order_status_history").insert({ order_id: orderId, status: "cancelado" });
+
+    await sendRichPush(userId, {
+      title: "❌ Pagamento recusado!",
+      body: `Pagamento de ${formattedTotal} do pedido #${orderId8} foi recusado via Asaas.`,
+      url: "/admin/pedidos",
+      type: "payment_rejected",
+      data: { orderId, paymentId: payment.id },
+    });
+  }
+}
+
+async function sendRichPush(targetUserId: string, payload: any) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    await fetch(`${supabaseUrl}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: targetUserId,
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/admin",
+        type: payload.type || "general",
+        data: payload.data || {},
+        tag: payload.tag || payload.type || "default",
+      }),
+    });
+  } catch (e: any) {
+    console.error("sendRichPush error:", e.message);
+  }
+}
+
+async function notifyCustomerStorefront(supabase: any, args: any) {
+  try {
+    if (!args.customerEmail) return;
+
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, auth_user_id")
+      .eq("store_user_id", args.storeUserId)
+      .eq("email", args.customerEmail)
+      .maybeSingle();
+
+    if (!customer?.auth_user_id) return;
+
+    const firstName = (customer.name || "").split(" ")[0] || "Cliente";
+    const formattedTotal = `R$ ${Number(args.amount || 0).toFixed(2).replace(".", ",")}`;
+    const orderId8 = args.orderId.slice(0, 8).toUpperCase();
+    const trackingUrl = args.storeSlug ? `/loja/${args.storeSlug}/rastreio/${args.orderId}` : "/";
+
+    let title = "";
+    let body = "";
+    let messageType = "info";
+
+    if (args.status === "approved") {
+      title = `🎉 ${firstName}, seu pagamento foi aprovado!`;
+      body = `Recebemos ${formattedTotal}. Já estamos preparando seu pedido com muito carinho 💛 Pedido #${orderId8}`;
+      messageType = "success";
+    } else if (args.status === "rejected") {
+      title = `😕 Ops, ${firstName}, seu pagamento não passou`;
+      body = `O pagamento de ${formattedTotal} foi recusado. Tente novamente ou escolha outra forma 💛 Pedido #${orderId8}`;
+      messageType = "warning";
+    } else {
+      return;
+    }
+
+    await supabase.from("tenant_messages").insert({
+      source_tenant_id: args.storeUserId,
+      sender_type: "tenant_admin",
+      sender_user_id: args.storeUserId,
+      audience_type: "tenant_admin_to_one_customer",
+      target_area: "public_store",
+      target_tenant_id: args.storeUserId,
+      target_user_id: customer.auth_user_id,
+      channel: "in_app",
+      title,
+      body,
+      message_type: messageType,
+      priority: "high",
+      is_global: false,
+      status: "sent",
+    });
+
+    await sendRichPush(customer.auth_user_id, {
+      title,
+      body,
+      url: trackingUrl,
+      type: args.status === "approved" ? "payment_approved" : "payment_rejected",
+      data: { orderId: args.orderId, status: args.status },
+      store_user_id: args.storeUserId,
+    });
+  } catch (e: any) {
+    console.error("notifyCustomerStorefront error:", e.message);
+  }
+}
