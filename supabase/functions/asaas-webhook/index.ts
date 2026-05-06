@@ -157,6 +157,9 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .eq("status", "pending");
 
+      // Ensure profile is active
+      await supabase.from("profiles").update({ status: "active" }).eq("user_id", userId);
+
       // Notify tenant
       await supabase.from("admin_notifications").insert({
         sender_user_id: userId,
