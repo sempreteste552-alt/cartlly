@@ -204,14 +204,17 @@ export function AdminLayout() {
     const root = document.documentElement;
     root.dataset.themeScope = adminThemeScope;
     root.classList.toggle("dark", adminDark);
+    root.classList.add("app-shell");
 
     return () => {
       if (root.dataset.themeScope === adminThemeScope) {
         root.classList.remove("dark");
         delete root.dataset.themeScope;
       }
+      root.classList.remove("app-shell");
     };
   }, [adminDark, adminThemeScope]);
+
 
   // Render shell even if not ready, using skeletons or just basic background
   const content = !tenantReady ? (
