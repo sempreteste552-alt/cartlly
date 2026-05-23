@@ -156,20 +156,35 @@ export function GatewaySettings() {
             <Switch
               checked={gatewayActive}
               onCheckedChange={(checked) => {
-                if (checked && (!paymentGateway || !gatewayPublicKey || !gatewaySecretKey)) {
-                  toast.error("Configure o gateway e as chaves antes de ativar.");
-                  return;
+                if (checked) {
+                  const gw = paymentGateway || settings?.payment_gateway || "";
+                  const pk = gatewayPublicKey || settings?.gateway_public_key || "";
+                  const sk = gatewaySecretKey || (settings as any)?.gateway_secret_key || "";
+                  const gwMeta = GATEWAYS.find((g) => g.id === gw);
+                  if (!gw) {
+                    toast.error("Selecione um gateway antes de ativar.");
+                    return;
+                  }
+                  if (gwMeta?.requiresPublicKey && !pk) {
+                    toast.error("Preencha a chave pública e clique em Salvar antes de ativar.");
+                    return;
+                  }
+                  if (!sk) {
+                    toast.error("Preencha a chave secreta e clique em Salvar antes de ativar.");
+                    return;
+                  }
                 }
                 setGatewayActive(checked);
                 if (settings) {
                   updateSettings.mutate({
                     id: settings.id,
-                    payment_gateway: checked ? paymentGateway : null,
+                    payment_gateway: checked ? (paymentGateway || settings.payment_gateway) : null,
                   } as any);
                   toast.success(checked ? "✅ Gateway ativado!" : "❌ Gateway desativado!");
                 }
               }}
             />
+
           </div>
         </CardContent>
       </Card>

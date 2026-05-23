@@ -34,14 +34,17 @@ export default function SuperAdminLayout() {
     const root = document.documentElement;
     root.dataset.themeScope = "superadmin";
     root.classList.toggle("dark", dark);
+    root.classList.add("app-shell");
 
     return () => {
       if (root.dataset.themeScope === "superadmin") {
         root.classList.remove("dark");
         delete root.dataset.themeScope;
       }
+      root.classList.remove("app-shell");
     };
   }, [dark]);
+
 
   return (
     <SidebarProvider>
