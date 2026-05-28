@@ -63,7 +63,7 @@ export default function Produtos() {
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,
-    path: `/p/${product.slug}`
+    path: `/produto/${product.id}`
   });
 
   // Auto-open product editor when navigating from dashboard low-stock alert
