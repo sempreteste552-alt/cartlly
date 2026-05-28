@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", requiresPublicKey: true, publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", secretKeyLabel: "Access Token", secretKeyPlaceholder: "APP_USR-xxxxxxxx-xxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
