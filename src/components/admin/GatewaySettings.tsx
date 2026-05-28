@@ -47,17 +47,24 @@ export function GatewaySettings() {
 
   useEffect(() => {
     if (settings) {
-      setPaymentGateway(settings.payment_gateway ?? "");
-      setGatewayPublicKey(settings.gateway_public_key ?? "");
-      setGatewaySecretKey((settings as any).gateway_secret_key ?? "");
+      const gw = settings.payment_gateway ?? "";
+      const pk = settings.gateway_public_key ?? "";
+      const sk = (settings as any).gateway_secret_key ?? "";
+      const gwMeta = GATEWAYS.find((g) => g.id === gw);
+      setPaymentGateway(gw);
+      setGatewayPublicKey(pk);
+      setGatewaySecretKey(sk);
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
       setInstallmentsFreeUpTo((settings as any).installments_free_up_to ?? 1);
       setInterestEnabled(!!(settings as any).installments_interest_enabled);
       setInterestRate(Number((settings as any).installments_interest_rate ?? 2.99));
-      setGatewayActive(!!(settings.payment_gateway && settings.gateway_public_key && (settings as any).gateway_secret_key));
+      // Asaas (e outros sem public key) só exigem secret key
+      const hasRequiredKeys = !!sk && (!gwMeta?.requiresPublicKey || !!pk);
+      setGatewayActive(!!(gw && hasRequiredKeys));
     }
   }, [settings]);
+
 
   const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
 
