@@ -5140,6 +5140,7 @@ export type Database = {
         }[]
       }
       get_dashboard_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_my_gateway_secret_key: { Args: never; Returns: string }
       get_platform_banner_config_public: {
         Args: never
         Returns: {

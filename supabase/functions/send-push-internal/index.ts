@@ -150,6 +150,30 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // === AUTH GATE ===
+    // Despite the "internal" name, this function is internet-accessible by default.
+    // Accept callers that present EITHER the service-role key (for server-to-server
+    // calls from other edge functions) OR a valid Supabase user JWT (for browser
+    // callers via supabase.functions.invoke, which forwards the user's access token).
+    const authHeader = req.headers.get("Authorization") || "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const isService = !!serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`;
+
+    if (!isService) {
+      const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+      if (!token) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+      const authClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data: { user }, error: userErr } = await authClient.auth.getUser();
+      if (userErr || !user) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+    }
+
     const body = await req.json();
     const { target_user_id, customer_id, session_id, title, body: msgBody, url, type, data: extraData, tag, store_user_id } = body;
     const effectiveStoreUserId = store_user_id || null;
@@ -157,6 +181,7 @@ Deno.serve(async (req) => {
     if ((!target_user_id && !customer_id && !session_id) || !title) {
       return json({ error: "target_user_id, customer_id or session_id and title required" }, 400);
     }
+
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");

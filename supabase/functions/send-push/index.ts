@@ -257,17 +257,45 @@ serve(async (req) => {
 
     const isAdminCall = authHeader?.includes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "impossible-key");
 
+    let callerUserId: string | null = null;
+    let callerIsSuperAdmin = false;
     if (!isAdminCall) {
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
       }
+      callerUserId = user.id;
+      // Check super_admin role for cross-user targeting
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "super_admin")
+        .maybeSingle();
+      callerIsSuperAdmin = !!roleRow;
     }
 
     const { title, body, url, targetUserId } = await req.json();
 
     if (!title) {
       return new Response(JSON.stringify({ error: "Title is required" }), { status: 400, headers: corsHeaders });
+    }
+
+    // === AUTHORIZATION ===
+    // Require an explicit targetUserId (no "send to all" fallback) and only allow
+    // the caller to target themselves unless they are a service-role caller or
+    // a super_admin.
+    if (!targetUserId) {
+      return new Response(
+        JSON.stringify({ error: "targetUserId is required" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+    if (!isAdminCall && !callerIsSuperAdmin && targetUserId !== callerUserId) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: cannot target another user" }),
+        { status: 403, headers: corsHeaders }
+      );
     }
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
@@ -279,10 +307,8 @@ serve(async (req) => {
 
     const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    let query = serviceClient.from("push_subscriptions").select("*");
-    if (targetUserId) {
-      query = query.eq("user_id", targetUserId);
-    }
+    const query = serviceClient.from("push_subscriptions").select("*").eq("user_id", targetUserId);
+
 
     const { data: subscriptions, error: subErr } = await query;
     if (subErr) throw subErr;

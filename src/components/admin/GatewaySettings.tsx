@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { LockedFeature } from "@/components/LockedFeature";
 import { usePlanFeatures } from "@/hooks/usePlanFeatures";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const GATEWAYS = [
   { id: "mercadopago", name: "Mercado Pago", description: "Gateway líder na América Latina.", requiresPublicKey: true, publicKeyLabel: "Public Key", publicKeyPlaceholder: "APP_USR-xxxxxxxx", secretKeyLabel: "Access Token", secretKeyPlaceholder: "APP_USR-xxxxxxxx-xxxxxx", docsUrl: "https://www.mercadopago.com.br/developers/pt/docs", color: "#009ee3", testEndpoint: "https://api.mercadopago.com/v1/payment_methods" },
@@ -49,21 +50,27 @@ export function GatewaySettings() {
     if (settings) {
       const gw = settings.payment_gateway ?? "";
       const pk = settings.gateway_public_key ?? "";
-      const sk = (settings as any).gateway_secret_key ?? "";
       const gwMeta = GATEWAYS.find((g) => g.id === gw);
       setPaymentGateway(gw);
       setGatewayPublicKey(pk);
-      setGatewaySecretKey(sk);
       setGatewayEnvironment(settings.gateway_environment ?? "sandbox");
       setMaxInstallments((settings as any).max_installments ?? 12);
       setInstallmentsFreeUpTo((settings as any).installments_free_up_to ?? 1);
       setInterestEnabled(!!(settings as any).installments_interest_enabled);
       setInterestRate(Number((settings as any).installments_interest_rate ?? 2.99));
-      // Asaas (e outros sem public key) só exigem secret key
-      const hasRequiredKeys = !!sk && (!gwMeta?.requiresPublicKey || !!pk);
-      setGatewayActive(!!(gw && hasRequiredKeys));
+
+      // Secret key is no longer exposed via the base table SELECT — fetch it through
+      // the secure RPC that only returns it to the store owner (or super admin).
+      (async () => {
+        const { data: sk } = await supabase.rpc("get_my_gateway_secret_key");
+        const skVal = (sk as string) ?? "";
+        setGatewaySecretKey(skVal);
+        const hasRequiredKeys = !!skVal && (!gwMeta?.requiresPublicKey || !!pk);
+        setGatewayActive(!!(gw && hasRequiredKeys));
+      })();
     }
   }, [settings]);
+
 
 
   const selectedGateway = GATEWAYS.find((g) => g.id === paymentGateway);
@@ -166,7 +173,7 @@ export function GatewaySettings() {
                 if (checked) {
                   const gw = paymentGateway || settings?.payment_gateway || "";
                   const pk = gatewayPublicKey || settings?.gateway_public_key || "";
-                  const sk = gatewaySecretKey || (settings as any)?.gateway_secret_key || "";
+                  const sk = gatewaySecretKey || "";
                   const gwMeta = GATEWAYS.find((g) => g.id === gw);
                   if (!gw) {
                     toast.error("Selecione um gateway antes de ativar.");
