@@ -173,7 +173,7 @@ export function GatewaySettings() {
                 if (checked) {
                   const gw = paymentGateway || settings?.payment_gateway || "";
                   const pk = gatewayPublicKey || settings?.gateway_public_key || "";
-                  const sk = gatewaySecretKey || (settings as any)?.gateway_secret_key || "";
+                  const sk = gatewaySecretKey || "";
                   const gwMeta = GATEWAYS.find((g) => g.id === gw);
                   if (!gw) {
                     toast.error("Selecione um gateway antes de ativar.");
