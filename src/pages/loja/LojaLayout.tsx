@@ -11,7 +11,7 @@ import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicProductsLite, usePublicCategories } from "@/hooks/usePublicStore";
 import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
@@ -386,7 +386,7 @@ export default function LojaLayout() {
 
   const settings = settingsBySlug;
   const isLoading = slugLoading;
-  const { data: smartSearchProducts } = usePublicProducts(settings?.user_id);
+  const { data: smartSearchProducts } = usePublicProductsLite(settings?.user_id);
   const { data: categories } = usePublicCategories(settings?.user_id);
   const { unreadCount: notifUnread } = useCustomerNotifications(settings?.user_id);
   const { data: marketingConfig, refetch: refetchMarketing } = usePublicMarketingConfig(settings?.user_id);
