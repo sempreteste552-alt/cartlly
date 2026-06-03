@@ -47,6 +47,7 @@ import { useLocalizedText, useLocalizedTextList } from "@/hooks/useLocalizedStor
 import { VideoShopping } from "@/components/storefront/VideoShopping";
 import { FlyToCart } from "@/components/storefront/FlyToCart";
 import sidebarBg from "@/assets/sidebar-bg.png";
+import { WorldCupOverlay } from "@/components/storefront/WorldCupOverlay";
 
 export interface LojaContextType {
   cart: ReturnType<typeof useCart>;
