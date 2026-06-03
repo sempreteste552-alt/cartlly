@@ -35,7 +35,7 @@ export function usePublicProductsLite(storeUserId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, image_url, stock, category_id, slug")
+        .select("id, name, price, image_url, stock, category_id")
         .eq("published", true)
         .eq("user_id", storeUserId!)
         .or("is_prize.is.null,is_prize.eq.false")
