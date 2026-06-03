@@ -11,7 +11,7 @@ import { PWAInstallBanner } from "@/components/storefront/PWAInstallBanner";
 import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
-import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
+import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicProductsLite, usePublicCategories } from "@/hooks/usePublicStore";
 import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
