@@ -91,16 +91,15 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
 
   if (!banners.length) return null;
 
-  // Same aspect across mobile and desktop — desktop mirrors mobile experience
-  // without breaking layout (constrained by max-w-7xl wrapper).
-  const aspectClass =
+  // Mobile aspect ratio based on format
+  const mobileAspect =
     mobileFormat === "square" ? "aspect-square" :
     mobileFormat === "portrait" ? "aspect-[4/5]" :
-    "aspect-[16/9]"; // landscape default — works great on desktop too
+    "h-48";
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-4">
-      <div className={`relative w-full ${aspectClass} max-h-[70vh] rounded-lg overflow-hidden bg-muted`}>
+      <div className={`relative w-full ${mobileAspect} sm:h-64 md:h-80 rounded-lg overflow-hidden bg-muted`}>
         {banners.map((banner, index) => {
           const active = index === current;
           const isVideo = banner.media_type === "video";
@@ -117,7 +116,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
                       videoRefs.current[index] = element;
                     }}
                     src={banner.image_url}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     muted
                     playsInline
                     preload="metadata"
@@ -131,7 +130,7 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
                   <img
                     src={banner.image_url}
                     alt="Banner"
-                    className={`w-full h-full object-cover ${active ? "animate-ken-burns" : ""}`}
+                    className={`w-full h-full object-contain ${active ? "animate-ken-burns" : ""}`}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                 </MaybeLink>

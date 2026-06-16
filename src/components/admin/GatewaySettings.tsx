@@ -249,46 +249,11 @@ export function GatewaySettings() {
               <div className="space-y-2">
                 <Label>{selectedGateway.secretKeyLabel || "Chave Secreta"}</Label>
                 <div className="relative">
-                  <Input
-                    type={showSecretKey ? "text" : "password"}
-                    value={gatewaySecretKey}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setGatewaySecretKey(v);
-                      // Auto-detect Asaas environment from key prefix to prevent
-                      // "A chave de API informada não pertence a este ambiente"
-                      if (paymentGateway === "asaas") {
-                        const k = v.trim().toLowerCase();
-                        if (k.includes("_hmlg_") || k.includes("sandbox")) {
-                          if (gatewayEnvironment !== "sandbox") {
-                            setGatewayEnvironment("sandbox");
-                            toast.info("Chave de homologação detectada — ambiente ajustado para Sandbox.");
-                          }
-                        } else if (k.startsWith("$aact_prod_") || k.startsWith("$aact_ya")) {
-                          if (gatewayEnvironment !== "production") {
-                            setGatewayEnvironment("production");
-                            toast.info("Chave de produção detectada — ambiente ajustado para Produção.");
-                          }
-                        }
-                      }
-                    }}
-                    placeholder={selectedGateway.secretKeyPlaceholder || "Chave secreta do gateway"}
-                    className="font-mono text-xs pr-10"
-                    maxLength={500}
-                  />
+                  <Input type={showSecretKey ? "text" : "password"} value={gatewaySecretKey} onChange={(e) => setGatewaySecretKey(e.target.value)} placeholder={selectedGateway.secretKeyPlaceholder || "Chave secreta do gateway"} className="font-mono text-xs pr-10" maxLength={500} />
                   <button type="button" onClick={() => setShowSecretKey(!showSecretKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {paymentGateway === "asaas" && gatewaySecretKey && (
-                  (gatewaySecretKey.trim().toLowerCase().includes("_hmlg_") && gatewayEnvironment === "production") ||
-                  (!gatewaySecretKey.trim().toLowerCase().includes("_hmlg_") && gatewayEnvironment === "sandbox" && gatewaySecretKey.trim().startsWith("$aact_prod_"))
-                ) && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    A chave não combina com o ambiente selecionado — pagamentos vão falhar.
-                  </p>
-                )}
               </div>
 
               <div className="flex items-start gap-2 rounded-md bg-muted p-3">

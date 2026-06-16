@@ -127,52 +127,6 @@ Deno.serve(async (req) => {
           return json({ test_ok: true, message: "✅ Stripe conectado (Chave API válida)!", owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
         }
 
-        if (gateway === "asaas") {
-          const asaasKey = String(testSettings.gateway_secret_key || "").trim();
-          const keyIsSandbox = asaasKey.includes("_hmlg_") || asaasKey.toLowerCase().includes("sandbox");
-          const envIsProd = testSettings.gateway_environment === "production";
-          const baseUrl = envIsProd
-            ? "https://api.asaas.com/v3"
-            : "https://api-sandbox.asaas.com/v3";
-
-          // Detect early environment/key mismatch with a friendly message
-          if (envIsProd && keyIsSandbox) {
-            return json({
-              test_ok: false,
-              error: "❌ Sua chave do Asaas é de HOMOLOGAÇÃO (sandbox) mas o ambiente está como PRODUÇÃO. Mude o ambiente para 'Sandbox (Testes)' OU gere uma chave de produção no painel do Asaas.",
-            });
-          }
-          if (!envIsProd && !keyIsSandbox && asaasKey.startsWith("$aact_prod_")) {
-            return json({
-              test_ok: false,
-              error: "❌ Sua chave do Asaas é de PRODUÇÃO mas o ambiente está como SANDBOX. Mude o ambiente para 'Produção' OU gere uma chave de homologação.",
-            });
-          }
-
-          const aRes = await fetch(`${baseUrl}/customers?limit=1`, {
-            headers: { access_token: asaasKey, "User-Agent": "LovableStore" },
-          });
-          if (aRes.ok) {
-            return json({
-              test_ok: true,
-              message: `✅ Asaas conectado com sucesso (${envIsProd ? "Produção" : "Sandbox"})!`,
-              owner_name: ownerName,
-              owner_email: ownerEmail,
-              store_name: testSettings.store_name,
-            });
-          }
-          const aBody = await aRes.text();
-          let aErr = `Erro Asaas (${aRes.status})`;
-          try {
-            const j = JSON.parse(aBody);
-            aErr = j?.errors?.[0]?.description || j?.message || aErr;
-          } catch {}
-          return json({
-            test_ok: false,
-            error: `❌ ${aErr}. Verifique a chave e o ambiente (Sandbox vs Produção) no painel do Asaas.`,
-          });
-        }
-
         return json({ test_ok: true, message: `Gateway ${gateway} configurado. Teste real disponível ao processar pagamentos.`, owner_name: ownerName, owner_email: ownerEmail, store_name: testSettings.store_name });
       } catch (testError: any) {
         return json({ test_ok: false, error: "Erro de conexão com o gateway: " + testError.message });
@@ -351,22 +305,13 @@ async function createAsaasPayment(
   payerFirstName?: string,
   payerLastName?: string,
 ) {
-  const trimmedKey = String(apiKey || "").trim();
-  const keyIsSandbox = trimmedKey.includes("_hmlg_") || trimmedKey.toLowerCase().includes("sandbox");
-  const envIsProd = environment === "production";
-
-  // Fail fast with a clear, user-friendly message when the key doesn't match the env
-  if (envIsProd && keyIsSandbox) {
-    throw new Error("A chave do Asaas configurada é de HOMOLOGAÇÃO (sandbox), mas a loja está em ambiente de Produção. Peça ao lojista para mudar o ambiente para Sandbox ou gerar uma chave de produção no painel do Asaas.");
-  }
-
-  const baseUrl = envIsProd
+  const baseUrl = environment === "production"
     ? "https://api.asaas.com/v3"
     : "https://api-sandbox.asaas.com/v3";
 
   const headers = {
     "Content-Type": "application/json",
-    "access_token": trimmedKey,
+    "access_token": apiKey,
     "User-Agent": "LovableStore",
   };
 
