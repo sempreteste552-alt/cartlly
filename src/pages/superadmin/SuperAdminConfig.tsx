@@ -55,6 +55,7 @@ interface PlatformConfig {
   ai_api_key_google: string;
   ai_monthly_token_limit: number;
   ai_monthly_cost_limit: number;
+  world_cup_mode_enabled: boolean;
 }
 
 const defaultConfig: PlatformConfig = {
