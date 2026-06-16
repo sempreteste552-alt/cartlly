@@ -100,6 +100,7 @@ const defaultConfig: PlatformConfig = {
   ai_api_key_google: "",
   ai_monthly_token_limit: 1000000,
   ai_monthly_cost_limit: 20.0,
+  world_cup_mode_enabled: false,
 };
 
 export default function SuperAdminConfig() {
