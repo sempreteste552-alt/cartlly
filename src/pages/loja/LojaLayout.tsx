@@ -137,6 +137,26 @@ export default function LojaLayout() {
       document.documentElement.classList.remove("dark");
     };
   }, []);
+
+  // Defensive: if a Sheet/Dialog leaves the scroll locked (overflow:hidden /
+  // data-scroll-locked) and is no longer mounted, restore wheel scrolling.
+  useEffect(() => {
+    const restore = () => {
+      const hasOpenOverlay = document.querySelector(
+        '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]'
+      );
+      if (!hasOpenOverlay) {
+        if (document.body.style.overflow === "hidden") document.body.style.overflow = "";
+        if (document.body.hasAttribute("data-scroll-locked")) {
+          document.body.removeAttribute("data-scroll-locked");
+        }
+        if (document.body.style.pointerEvents === "none") document.body.style.pointerEvents = "";
+      }
+    };
+    restore();
+    const id = window.setInterval(restore, 1000);
+    return () => window.clearInterval(id);
+  }, []);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
   const [mobileMenu, setMobileMenu] = useState(false);
