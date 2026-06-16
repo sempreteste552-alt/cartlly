@@ -1,19 +1,15 @@
 /**
  * WorldCupOverlay
  *
- * Tema festivo da Copa do Mundo aplicado em todas as lojas.
- * Para desativar, troque WORLD_CUP_ACTIVE para false.
+ * Tema festivo da Copa do Mundo aplicado em todas as lojas quando
+ * o flag `world_cup_mode_enabled` estiver ligado no Super Admin.
  *
- * Visual profissional, vibrante e visível:
- * - Faixa animada de cores no topo
- * - Badge "Copa 2026" elegante no canto
- * - Bolas de futebol flutuantes com sombra realista
- * - Confetes sutis nos cantos
- * - Brilho ambiente sutil
+ * - Não bloqueia rolagem (todos os elementos usam pointer-events: none,
+ *   exceto o badge que pode ser fechado).
+ * - Renderiza apenas em telas grandes para não pesar mobile.
  */
 import { useMemo, useState, useEffect } from "react";
-
-export const WORLD_CUP_ACTIVE = true;
+import { supabase } from "@/integrations/supabase/client";
 
 const FLOATING_BALLS = [
   { left: "3%", top: "14%", size: 54, delay: "0s", duration: "11s", opacity: 0.45 },
@@ -26,13 +22,7 @@ const FLOATING_BALLS = [
 const CONFETTI_COLORS = ["#009739", "#ffcd00", "#002776", "#c8102e", "#ffffff"];
 
 const SoccerBall = ({ size }: { size: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 64 64"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
+  <svg width={size} height={size} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
       <radialGradient id={`bs-${size}`} cx="35%" cy="30%" r="75%">
         <stop offset="0%" stopColor="#ffffff" />
@@ -51,7 +41,29 @@ const SoccerBall = ({ size }: { size: number }) => (
 );
 
 export function WorldCupOverlay() {
-  if (!WORLD_CUP_ACTIVE) return null;
+  const [enabled, setEnabled] = useState(false);
+  const [showBadge, setShowBadge] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("platform_banner_config_public")
+          .select("key, value")
+          .eq("key", "world_cup_mode_enabled")
+          .maybeSingle();
+        if (cancelled) return;
+        const v = (data?.value as any)?.value;
+        setEnabled(v === true || v === "true");
+      } catch {
+        if (!cancelled) setEnabled(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const balls = useMemo(() => FLOATING_BALLS, []);
   const confetti = useMemo(
@@ -66,63 +78,23 @@ export function WorldCupOverlay() {
     []
   );
 
-  const [showBadge, setShowBadge] = useState(true);
+  if (!enabled) return null;
 
   return (
     <>
       <style>{`
-        @keyframes wc-float {
-          0%,100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-22px) rotate(180deg); }
-        }
-        @keyframes wc-shine {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-        @keyframes wc-confetti {
-          0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.85; }
-          90% { opacity: 0.85; }
-          100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-        }
-        @keyframes wc-badge-in {
-          from { transform: translateY(-10px) scale(0.9); opacity: 0; }
-          to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        @keyframes wc-pulse {
-          0%,100% { box-shadow: 0 0 0 0 rgba(255,205,0,0.55); }
-          50% { box-shadow: 0 0 0 10px rgba(255,205,0,0); }
-        }
-        .wc-strip {
-          background: linear-gradient(
-            90deg,
-            #009739 0%, #009739 20%,
-            #ffcd00 20%, #ffcd00 40%,
-            #ffffff 40%, #ffffff 60%,
-            #002776 60%, #002776 80%,
-            #c8102e 80%, #c8102e 100%
-          );
-          background-size: 200% 100%;
-          animation: wc-shine 14s linear infinite;
-        }
-        .wc-badge {
-          background: linear-gradient(135deg, #009739 0%, #00b347 50%, #ffcd00 100%);
-          animation: wc-badge-in 0.6s ease-out, wc-pulse 2.6s ease-in-out infinite 0.6s;
-        }
-        .wc-confetti-piece {
-          position: absolute;
-          top: -20px;
-          border-radius: 2px;
-        }
+        @keyframes wc-float { 0%,100% { transform: translateY(0) rotate(0deg);} 50% { transform: translateY(-22px) rotate(180deg);} }
+        @keyframes wc-shine { 0% { background-position: 0% 50%;} 100% { background-position: 200% 50%;} }
+        @keyframes wc-confetti { 0% { transform: translateY(-20px) rotate(0deg); opacity: 0;} 10% { opacity: .85;} 90% { opacity: .85;} 100% { transform: translateY(110vh) rotate(720deg); opacity: 0;} }
+        @keyframes wc-badge-in { from { transform: translateY(-10px) scale(.9); opacity: 0;} to { transform: translateY(0) scale(1); opacity: 1;} }
+        @keyframes wc-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,205,0,.55);} 50% { box-shadow: 0 0 0 10px rgba(255,205,0,0);} }
+        .wc-strip { background: linear-gradient(90deg,#009739 0%,#009739 20%,#ffcd00 20%,#ffcd00 40%,#ffffff 40%,#ffffff 60%,#002776 60%,#002776 80%,#c8102e 80%,#c8102e 100%); background-size: 200% 100%; animation: wc-shine 14s linear infinite; }
+        .wc-badge { background: linear-gradient(135deg,#009739 0%,#00b347 50%,#ffcd00 100%); animation: wc-badge-in .6s ease-out, wc-pulse 2.6s ease-in-out infinite .6s; }
+        .wc-confetti-piece { position: absolute; top: -20px; border-radius: 2px; }
       `}</style>
 
-      {/* Faixa animada no topo */}
-      <div
-        aria-hidden="true"
-        className="wc-strip fixed top-0 left-0 right-0 h-[5px] z-[60] pointer-events-none"
-      />
+      <div aria-hidden="true" className="wc-strip fixed top-0 left-0 right-0 h-[5px] z-[60] pointer-events-none" />
 
-      {/* Badge Copa 2026 */}
       {showBadge && (
         <button
           onClick={() => setShowBadge(false)}
@@ -136,11 +108,7 @@ export function WorldCupOverlay() {
         </button>
       )}
 
-      {/* Bolas flutuantes */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-[5] overflow-hidden hidden sm:block"
-      >
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none z-[5] overflow-hidden hidden md:block">
         {balls.map((b, i) => (
           <div
             key={i}
@@ -158,11 +126,7 @@ export function WorldCupOverlay() {
         ))}
       </div>
 
-      {/* Confetes caindo */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none z-[4] overflow-hidden hidden md:block"
-      >
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none z-[4] overflow-hidden hidden lg:block">
         {confetti.map((c, i) => (
           <span
             key={i}
