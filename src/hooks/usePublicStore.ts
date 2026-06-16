@@ -22,34 +22,6 @@ export function usePublicProducts(storeUserId?: string) {
   });
 }
 
-/**
- * Slim version of usePublicProducts: only the columns needed by the
- * top-bar smart search. Cuts payload size dramatically (no description,
- * no SEO/AI fields, no metadata) so the storefront paints faster.
- * Capped at 500 items — search beyond that should hit a server endpoint.
- */
-export function usePublicProductsLite(storeUserId?: string) {
-  return useQuery({
-    queryKey: ["public_products_lite", storeUserId],
-    enabled: !!storeUserId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, price, image_url, stock, category_id")
-        .eq("published", true)
-        .eq("user_id", storeUserId!)
-        .or("is_prize.is.null,is_prize.eq.false")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 60,
-  });
-}
-
-
 // NOTE: This hook is legacy and should not be used for tenant-scoped data.
 // Use useResolvedPublicStore(slug) or usePublicStoreBySlug(slug) instead.
 export function usePublicStoreSettings() {
