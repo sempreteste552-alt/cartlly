@@ -133,19 +133,29 @@ export default function LojaLayout() {
   // Clean up any leaked dark class from admin/superadmin on <html>
   useLayoutEffect(() => {
     document.documentElement.classList.remove("dark");
-    // Defensive: ensure mouse-wheel scroll is never blocked by a stale
-    // overflow:hidden / position:fixed left behind by a closed Sheet/Dialog.
-    const restoreScroll = () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.documentElement.style.overflow = "";
-    };
-    restoreScroll();
-    const id = window.setInterval(restoreScroll, 1500);
     return () => {
-      window.clearInterval(id);
       document.documentElement.classList.remove("dark");
     };
+  }, []);
+
+  // Defensive: if a Sheet/Dialog leaves the scroll locked (overflow:hidden /
+  // data-scroll-locked) and is no longer mounted, restore wheel scrolling.
+  useEffect(() => {
+    const restore = () => {
+      const hasOpenOverlay = document.querySelector(
+        '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]'
+      );
+      if (!hasOpenOverlay) {
+        if (document.body.style.overflow === "hidden") document.body.style.overflow = "";
+        if (document.body.hasAttribute("data-scroll-locked")) {
+          document.body.removeAttribute("data-scroll-locked");
+        }
+        if (document.body.style.pointerEvents === "none") document.body.style.pointerEvents = "";
+      }
+    };
+    restore();
+    const id = window.setInterval(restore, 1000);
+    return () => window.clearInterval(id);
   }, []);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
