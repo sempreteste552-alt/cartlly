@@ -133,7 +133,17 @@ export default function LojaLayout() {
   // Clean up any leaked dark class from admin/superadmin on <html>
   useLayoutEffect(() => {
     document.documentElement.classList.remove("dark");
+    // Defensive: ensure mouse-wheel scroll is never blocked by a stale
+    // overflow:hidden / position:fixed left behind by a closed Sheet/Dialog.
+    const restoreScroll = () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.documentElement.style.overflow = "";
+    };
+    restoreScroll();
+    const id = window.setInterval(restoreScroll, 1500);
     return () => {
+      window.clearInterval(id);
       document.documentElement.classList.remove("dark");
     };
   }, []);
