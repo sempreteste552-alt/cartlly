@@ -351,13 +351,22 @@ async function createAsaasPayment(
   payerFirstName?: string,
   payerLastName?: string,
 ) {
-  const baseUrl = environment === "production"
+  const trimmedKey = String(apiKey || "").trim();
+  const keyIsSandbox = trimmedKey.includes("_hmlg_") || trimmedKey.toLowerCase().includes("sandbox");
+  const envIsProd = environment === "production";
+
+  // Fail fast with a clear, user-friendly message when the key doesn't match the env
+  if (envIsProd && keyIsSandbox) {
+    throw new Error("A chave do Asaas configurada é de HOMOLOGAÇÃO (sandbox), mas a loja está em ambiente de Produção. Peça ao lojista para mudar o ambiente para Sandbox ou gerar uma chave de produção no painel do Asaas.");
+  }
+
+  const baseUrl = envIsProd
     ? "https://api.asaas.com/v3"
     : "https://api-sandbox.asaas.com/v3";
 
   const headers = {
     "Content-Type": "application/json",
-    "access_token": apiKey,
+    "access_token": trimmedKey,
     "User-Agent": "LovableStore",
   };
 
