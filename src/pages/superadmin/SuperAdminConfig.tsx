@@ -604,8 +604,16 @@ export default function SuperAdminConfig() {
             </div>
             <Switch checked={config.maintenance_mode} onCheckedChange={v => updateField("maintenance_mode", v)} />
           </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <Label className="flex items-center gap-2">⚽ Tema Copa do Mundo</Label>
+              <p className="text-xs text-muted-foreground">Ativa o overlay festivo (faixa, bolas e confetes) em todas as lojas. Desktop apenas; não afeta rolagem.</p>
+            </div>
+            <Switch checked={config.world_cup_mode_enabled} onCheckedChange={v => updateField("world_cup_mode_enabled", v)} />
+          </div>
         </CardContent>
       </Card>
+
 
       {/* Payment Gateways */}
       <Card className="border-border">
