@@ -130,32 +130,58 @@ export default function LojaLayout() {
   const { dark: storeDark } = useThemeScope(storeThemeScope);
   const { data: settingsBySlug, isLoading: slugLoading, refetch: refetchSettings } = useResolvedPublicStore(slug);
 
-  // Clean up any leaked dark class from admin/superadmin on <html>
+  // Storefronts must always use the browser's native page scroll. Admin shells,
+  // dialogs and sheets can leave global locks behind during route changes.
   useLayoutEffect(() => {
-    document.documentElement.classList.remove("dark");
+    const root = document.documentElement;
+    root.classList.remove("dark", "app-shell");
+    root.style.removeProperty("position");
+    root.style.removeProperty("height");
+    root.style.removeProperty("overflow");
+    root.style.removeProperty("overflow-y");
+    document.body.style.removeProperty("position");
+    document.body.style.removeProperty("height");
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("overflow-y");
+    document.body.style.removeProperty("pointer-events");
+    document.body.removeAttribute("data-scroll-locked");
     return () => {
-      document.documentElement.classList.remove("dark");
+      root.classList.remove("dark");
     };
   }, []);
 
-  // Defensive: if a Sheet/Dialog leaves the scroll locked (overflow:hidden /
-  // data-scroll-locked) and is no longer mounted, restore wheel scrolling.
+  // Defensive: if a Sheet/Dialog or the admin app-shell leaves the scroll locked
+  // after closing, restore wheel/touch scrolling immediately.
   useEffect(() => {
     const restore = () => {
       const hasOpenOverlay = document.querySelector(
         '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]'
       );
       if (!hasOpenOverlay) {
-        if (document.body.style.overflow === "hidden") document.body.style.overflow = "";
-        if (document.body.hasAttribute("data-scroll-locked")) {
-          document.body.removeAttribute("data-scroll-locked");
-        }
-        if (document.body.style.pointerEvents === "none") document.body.style.pointerEvents = "";
+        document.documentElement.classList.remove("app-shell");
+        document.documentElement.style.removeProperty("position");
+        document.documentElement.style.removeProperty("height");
+        document.documentElement.style.removeProperty("overflow");
+        document.documentElement.style.removeProperty("overflow-y");
+        document.body.style.removeProperty("position");
+        document.body.style.removeProperty("height");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("overflow-y");
+        document.body.style.removeProperty("pointer-events");
+        document.body.removeAttribute("data-scroll-locked");
       }
     };
     restore();
-    const id = window.setInterval(restore, 1000);
-    return () => window.clearInterval(id);
+    window.addEventListener("scroll", restore, { passive: true });
+    window.addEventListener("wheel", restore, { passive: true });
+    window.addEventListener("touchmove", restore, { passive: true });
+    const id = window.setInterval(restore, 300);
+    return () => {
+      window.removeEventListener("scroll", restore);
+      window.removeEventListener("wheel", restore);
+      window.removeEventListener("touchmove", restore);
+      window.clearInterval(id);
+    };
   }, []);
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
