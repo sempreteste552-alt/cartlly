@@ -28,14 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
         const { data } = await supabase
           .from("platform_settings")
           .select("value")
           .eq("key", "maintenance_mode")
           .maybeSingle();
-        
+
         const isMaintenance = (data?.value as any)?.value === true;
         setMaintenanceMode(isMaintenance);
 
@@ -50,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setSession(currentSession);
-        
+
         if (currentSession && localStorage.getItem("stay_connected") !== "true") {
           const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000;
           let inactivityTimer: ReturnType<typeof setTimeout>;
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
 
           const events = ["mousedown", "keydown", "scroll", "touchstart"];
-          events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+          events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
           resetTimer();
         }
 
@@ -76,46 +78,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (_event === "SIGNED_OUT") {
-          queryClient.clear();
-          clearRuntimePwaManifest();
-          document.documentElement.style.removeProperty("--primary");
-          document.documentElement.style.removeProperty("--ring");
-          document.documentElement.style.removeProperty("--sidebar-primary");
-          document.documentElement.style.removeProperty("--sidebar-ring");
-          document.documentElement.style.removeProperty("--accent-foreground");
-          document.documentElement.style.removeProperty("--store-primary");
-          document.documentElement.style.removeProperty("--store-secondary");
-          document.documentElement.style.removeProperty("--store-accent");
-          document.documentElement.style.removeProperty("--store-button-bg");
-          document.documentElement.style.removeProperty("--store-button-text");
-          document.documentElement.style.removeProperty("--store-bg-base");
-          document.documentElement.style.removeProperty("--store-text-base");
-          document.documentElement.classList.remove("dark");
-        }
-        setSession(session);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (_event === "SIGNED_OUT") {
+        queryClient.clear();
+        clearRuntimePwaManifest();
+        document.documentElement.style.removeProperty("--primary");
+        document.documentElement.style.removeProperty("--ring");
+        document.documentElement.style.removeProperty("--sidebar-primary");
+        document.documentElement.style.removeProperty("--sidebar-ring");
+        document.documentElement.style.removeProperty("--accent-foreground");
+        document.documentElement.style.removeProperty("--store-primary");
+        document.documentElement.style.removeProperty("--store-secondary");
+        document.documentElement.style.removeProperty("--store-accent");
+        document.documentElement.style.removeProperty("--store-button-bg");
+        document.documentElement.style.removeProperty("--store-button-text");
+        document.documentElement.style.removeProperty("--store-bg-base");
+        document.documentElement.style.removeProperty("--store-text-base");
+        document.documentElement.classList.remove("dark");
+      }
+      setSession(session);
 
-        if (_event === "SIGNED_IN" && session?.user) {
-          try {
-            const ctxStr = localStorage.getItem("auth_context");
-            if (ctxStr) {
-              const ctx = JSON.parse(ctxStr);
-              if (ctx.referral_code) {
-                const existingRef = session.user.user_metadata?.referral_code;
-                if (!existingRef) {
-                  await supabase.auth.updateUser({
-                    data: { referral_code: ctx.referral_code },
-                  });
-                }
-                localStorage.removeItem("referral_code");
+      if (_event === "SIGNED_IN" && session?.user) {
+        try {
+          const ctxStr = localStorage.getItem("auth_context");
+          if (ctxStr) {
+            const ctx = JSON.parse(ctxStr);
+            if (ctx.referral_code) {
+              const existingRef = session.user.user_metadata?.referral_code;
+              if (!existingRef) {
+                await supabase.auth.updateUser({
+                  data: { referral_code: ctx.referral_code },
+                });
               }
+              localStorage.removeItem("referral_code");
             }
-          } catch { /* ignore */ }
+          }
+        } catch {
+          /* ignore */
         }
       }
-    );
+    });
 
     const maintenanceChannel = supabase
       .channel("platform-settings-changes")
@@ -130,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         async (payload) => {
           const isMaintenance = (payload.new as any)?.value?.value === true;
           setMaintenanceMode(isMaintenance);
-          
+
           if (isMaintenance && session?.user) {
             const isAdmin = await checkIsSuperAdmin(session.user.id);
             if (!isAdmin) {
@@ -140,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }, 1000);
             }
           }
-        }
+        },
       )
       .subscribe();
 
