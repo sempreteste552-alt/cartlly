@@ -129,13 +129,18 @@ export function GatewaySettings() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!settings) return;
+    // Persist the gateway secret key separately (service-role-only table) via secure RPC
+    try {
+      await supabase.rpc("set_my_gateway_secret_key", { p_key: gatewaySecretKey.trim() || "" });
+    } catch (e) {
+      console.error("Failed to persist gateway secret key", e);
+    }
     updateSettings.mutate({
       id: settings.id,
       payment_gateway: paymentGateway || null,
       gateway_public_key: gatewayPublicKey.trim() || null,
-      gateway_secret_key: gatewaySecretKey.trim() || null,
       gateway_environment: gatewayEnvironment,
       max_installments: maxInstallments,
       installments_free_up_to: installmentsFreeUpTo,
@@ -143,6 +148,7 @@ export function GatewaySettings() {
       installments_interest_rate: interestRate,
     } as any);
   };
+
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
       const { data: testSettings, error: testErr } = await supabase
         .from("store_settings")
-        .select("payment_gateway, gateway_public_key, gateway_secret_key, gateway_environment, store_name")
+        .select("payment_gateway, gateway_public_key, gateway_environment, store_name")
         .eq("user_id", testStoreUserId)
         .single();
 
@@ -52,9 +52,17 @@ Deno.serve(async (req) => {
         return json({ test_ok: false, error: "Configurações da loja não encontradas. Salve o gateway primeiro." }, 404);
       }
 
+      const { data: testCred } = await supabase
+        .from("store_gateway_credentials")
+        .select("gateway_secret_key")
+        .eq("user_id", testStoreUserId)
+        .maybeSingle();
+      (testSettings as any).gateway_secret_key = testCred?.gateway_secret_key ?? null;
+
       if (!testSettings.gateway_secret_key) {
         return json({ test_ok: false, error: "Chave secreta / Access Token não configurada. Salve o gateway primeiro." }, 400);
       }
+
 
       const { data: ownerProfile } = await supabase.from("profiles").select("display_name").eq("user_id", testStoreUserId).single();
       const { data: authData } = await supabase.auth.admin.getUserById(testStoreUserId);
@@ -153,10 +161,17 @@ Deno.serve(async (req) => {
       return json({ error: "Configurações da loja não encontradas. O proprietário deve configurar o gateway de pagamento." }, 404);
     }
 
+    const { data: credRow } = await supabase
+      .from("store_gateway_credentials")
+      .select("gateway_secret_key")
+      .eq("user_id", store_user_id)
+      .maybeSingle();
+
     const gateway = settings.payment_gateway;
-    const secretKey = settings.gateway_secret_key;
+    const secretKey = credRow?.gateway_secret_key ?? null;
     const publicKey = settings.gateway_public_key;
     const environment = settings.gateway_environment;
+
 
     if (!gateway) {
       return json({ error: "Nenhum gateway de pagamento configurado nesta loja. Contacte o proprietário." }, 400);

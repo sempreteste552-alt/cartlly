@@ -3152,6 +3152,27 @@ export type Database = {
           },
         ]
       }
+      store_gateway_credentials: {
+        Row: {
+          created_at: string
+          gateway_secret_key: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gateway_secret_key?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gateway_secret_key?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       store_highlight_items: {
         Row: {
           created_at: string
@@ -3619,7 +3640,6 @@ export type Database = {
           footer_text_color: string
           gateway_environment: string
           gateway_public_key: string | null
-          gateway_secret_key: string | null
           google_maps_url: string | null
           header_bg_color: string
           header_text_color: string | null
@@ -3702,7 +3722,6 @@ export type Database = {
           footer_text_color?: string
           gateway_environment?: string
           gateway_public_key?: string | null
-          gateway_secret_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string
           header_text_color?: string | null
@@ -3785,7 +3804,6 @@ export type Database = {
           footer_text_color?: string
           gateway_environment?: string
           gateway_public_key?: string | null
-          gateway_secret_key?: string | null
           google_maps_url?: string | null
           header_bg_color?: string
           header_text_color?: string | null
@@ -5163,6 +5181,69 @@ export type Database = {
           value: Json
         }[]
       }
+      get_public_product_page_config: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          delivery_estimation_text: string
+          enable_buy_together: boolean
+          enable_category_best_sellers: boolean
+          enable_delivery_estimation: boolean
+          enable_faq: boolean
+          enable_image_zoom: boolean
+          enable_recently_viewed: boolean
+          enable_related_products: boolean
+          enable_reviews: boolean
+          enable_size_guide: boolean
+          enable_sticky_add_to_cart: boolean
+          enable_stock_urgency: boolean
+          enable_trust_badges: boolean
+          enable_video_gallery: boolean
+          id: string
+          size_guide_content: string | null
+          stock_urgency_threshold: number
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "store_product_page_config"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_public_theme_config: {
+        Args: { p_user_id: string }
+        Returns: {
+          background_color: string | null
+          card_border_radius: number
+          card_shadow: string
+          created_at: string
+          custom_css: string | null
+          favicon_url: string | null
+          font_body: string
+          font_heading: string
+          footer_style: string
+          header_style: string
+          id: string
+          layout_width: string
+          primary_color: string | null
+          product_grid_columns: number
+          product_grid_columns_mobile: number
+          product_grid_gap: number
+          secondary_color: string | null
+          text_color: string | null
+          theme_mode: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "store_theme_config"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_store_rich_insights: { Args: { p_user_id: string }; Returns: Json }
       get_store_sales_stats: { Args: { p_user_id: string }; Returns: Json }
       get_storefront_banner_status: {
@@ -5287,6 +5368,7 @@ export type Database = {
         }
         Returns: number
       }
+      set_my_gateway_secret_key: { Args: { p_key: string }; Returns: undefined }
     }
     Enums: {
       app_role: "super_admin" | "tenant"
