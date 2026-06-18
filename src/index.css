@@ -26,7 +26,7 @@ html, body {
 
 /* App-like fixed shell for Admin and Super Admin on mobile */
 @media (max-width: 768px) {
-  html.app-shell, html.app-shell body {
+  html.app-shell:not(.storefront-scroll), html.app-shell:not(.storefront-scroll) body {
     position: fixed;
     inset: 0;
     width: 100%;
@@ -35,11 +35,12 @@ html, body {
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }
-  html.app-shell #root {
+  html.app-shell:not(.storefront-scroll) #root {
     height: 100%;
     overflow: hidden;
   }
 }
+
 
 
 @layer base {
