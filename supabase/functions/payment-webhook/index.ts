@@ -105,14 +105,22 @@ async function handleMercadoPago(req: Request, supabase: any) {
   // Get store settings to fetch payment details from MP
   const { data: settings } = await supabase
     .from("store_settings")
-    .select("gateway_secret_key, store_name")
+    .select("store_name")
     .eq("user_id", payment.user_id)
     .single();
 
-  if (settings?.gateway_secret_key) {
+  const { data: cred } = await supabase
+    .from("store_gateway_credentials")
+    .select("gateway_secret_key")
+    .eq("user_id", payment.user_id)
+    .maybeSingle();
+  const secretKey: string | null = cred?.gateway_secret_key ?? null;
+
+  if (secretKey) {
     const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: { Authorization: `Bearer ${settings.gateway_secret_key}` },
+      headers: { Authorization: `Bearer ${secretKey}` },
     });
+
     const mpData = await mpResponse.json();
 
     const newStatus = mapMPStatus(mpData.status);
