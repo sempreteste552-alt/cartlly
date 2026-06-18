@@ -132,12 +132,16 @@ export default function LojaLayout() {
 
   // Clean up any leaked dark class from admin/superadmin on <html>
   useLayoutEffect(() => {
-    document.documentElement.classList.remove("dark");
-    document.documentElement.classList.remove("app-shell");
+    const root = document.documentElement;
+    root.classList.remove("dark");
+    root.classList.remove("app-shell");
+    root.classList.add("storefront-scroll");
     return () => {
-      document.documentElement.classList.remove("dark");
+      root.classList.remove("dark");
+      root.classList.remove("storefront-scroll");
     };
   }, []);
+
 
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
