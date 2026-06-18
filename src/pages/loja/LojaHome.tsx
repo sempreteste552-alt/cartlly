@@ -399,7 +399,7 @@ function ProductGrid({ products, formatPrice, cart, ratings, productImagesMap, b
           ? additionalImages 
           : additionalImages.slice(1);
         return (
-          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group" onMouseEnter={() => prefetchProduct(product.id)} style={{ ...getItemStyle(index), fontFamily: "var(--store-font-body)" }}>
+          <Link key={product.id} to={`${basePath}/produto/${product.id}`} className="group" onMouseEnter={() => prefetchProduct(product.id)} onTouchStart={() => prefetchProduct(product.id)} onPointerDown={() => prefetchProduct(product.id)} style={{ ...getItemStyle(index), fontFamily: "var(--store-font-body)" }}>
             <Card 
               className="overflow-hidden border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative bg-card"
               style={{ 
