@@ -28,17 +28,15 @@ export function usePublicThemeConfig(storeUserId?: string) {
     queryKey: ["public_theme_config", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_theme_config" as any)
-        .select("*")
-        .eq("user_id", storeUserId!)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("get_public_theme_config", { p_user_id: storeUserId });
       if (error) throw error;
-      return data as unknown as StoreThemeConfig | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row ?? null) as unknown as StoreThemeConfig | null;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 10,
   });
 }
+
 
 export function usePublicMarketingConfig(storeUserId?: string) {
   return useQuery({
@@ -62,14 +60,12 @@ export function usePublicProductPageConfig(storeUserId?: string) {
     queryKey: ["public_product_page_config", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_product_page_config" as any)
-        .select("*")
-        .eq("user_id", storeUserId!)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("get_public_product_page_config", { p_user_id: storeUserId });
       if (error) throw error;
-      return data as unknown as StoreProductPageConfig | null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row ?? null) as unknown as StoreProductPageConfig | null;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 10,
   });
 }
+

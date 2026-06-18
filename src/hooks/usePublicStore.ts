@@ -46,20 +46,15 @@ export function usePublicThemeConfig(storeUserId?: string) {
     queryKey: ["public_theme_config", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_theme_config" as any)
-        .select("*")
-        .eq("user_id", storeUserId!)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("get_public_theme_config", { p_user_id: storeUserId });
       if (error) throw error;
-      return data as any;
+      return (Array.isArray(data) ? data[0] : data) ?? null;
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 15,
+    gcTime: 1000 * 60 * 60,
   });
 }
+
 
 export function usePublicStoreBySlug(slug: string | undefined) {
   return useQuery({
@@ -224,18 +219,15 @@ export function usePublicProductPageConfig(storeUserId?: string) {
     queryKey: ["public_product_page_config", storeUserId],
     enabled: !!storeUserId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_product_page_config")
-        .select("*")
-        .eq("user_id", storeUserId!)
-        .maybeSingle();
+      const { data, error } = await (supabase as any).rpc("get_public_product_page_config", { p_user_id: storeUserId });
       if (error) throw error;
-      return data;
+      return (Array.isArray(data) ? data[0] : data) ?? null;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    gcTime: 1000 * 60 * 60 * 2, // 2 hours
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60 * 2,
   });
 }
+
 
 export function usePublicProductVariants(productIds: string[]) {
   return useQuery({
