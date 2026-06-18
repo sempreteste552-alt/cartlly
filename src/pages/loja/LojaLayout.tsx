@@ -133,10 +133,12 @@ export default function LojaLayout() {
   // Clean up any leaked dark class from admin/superadmin on <html>
   useLayoutEffect(() => {
     document.documentElement.classList.remove("dark");
+    document.documentElement.classList.remove("app-shell");
     return () => {
       document.documentElement.classList.remove("dark");
     };
   }, []);
+
   const { user, customer, signOut } = useCustomerAuth();
   const cart = useCart(slug, settingsBySlug?.user_id);
   const [mobileMenu, setMobileMenu] = useState(false);
