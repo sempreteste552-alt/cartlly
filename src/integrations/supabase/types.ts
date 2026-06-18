@@ -4566,6 +4566,21 @@ export type Database = {
       }
     }
     Views: {
+      platform_banner_config_public: {
+        Row: {
+          key: string | null
+          value: Json | null
+        }
+        Insert: {
+          key?: string | null
+          value?: Json | null
+        }
+        Update: {
+          key?: string | null
+          value?: Json | null
+        }
+        Relationships: []
+      }
       product_reviews_public: {
         Row: {
           comment: string | null
