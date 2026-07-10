@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 interface Banner {
   id: string;
@@ -10,73 +10,32 @@ interface Banner {
   category_id?: string | null;
 }
 
-const ZOOM_DURATION = 8000;
+const ROTATE_DURATION = 8000;
 
 export function BannerCarousel({ banners, mobileFormat = "landscape", basePath = "" }: { banners: Banner[]; mobileFormat?: string; basePath?: string }) {
   const [current, setCurrent] = useState(0);
+  const [openedVideo, setOpenedVideo] = useState<Record<string, boolean>>({});
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const goTo = useCallback(
-    (idx: number) => {
-      setCurrent((idx + banners.length) % banners.length);
-    },
+    (idx: number) => setCurrent((idx + banners.length) % banners.length),
+    [banners.length]
+  );
+  const goNext = useCallback(
+    () => setCurrent((prev) => (prev + 1) % banners.length),
+    [banners.length]
+  );
+  const goPrev = useCallback(
+    () => setCurrent((prev) => (prev - 1 + banners.length) % banners.length),
     [banners.length]
   );
 
-  const goNext = useCallback(() => {
-    setCurrent((prev) => (prev + 1) % banners.length);
-  }, [banners.length]);
-
-  const goPrev = useCallback(() => {
-    setCurrent((prev) => (prev - 1 + banners.length) % banners.length);
-  }, [banners.length]);
-
+  // Simple rotation — never autoplay videos (keeps stores lightweight)
   useEffect(() => {
-    if (!banners.length) return;
-
+    if (banners.length < 2) return;
     clearTimeout(timerRef.current);
-
-    videoRefs.current.forEach((video, index) => {
-      if (!video) return;
-      if (index !== current) {
-        video.pause();
-        video.currentTime = 0;
-      }
-    });
-
-    const activeBanner = banners[current];
-    const activeIsVideo = activeBanner?.media_type === "video";
-
-    if (!activeIsVideo) {
-      timerRef.current = setTimeout(goNext, ZOOM_DURATION);
-      return () => clearTimeout(timerRef.current);
-    }
-
-    const activeVideo = videoRefs.current[current];
-    if (!activeVideo) return;
-
-    const startPlayback = () => {
-      activeVideo.currentTime = 0;
-      activeVideo.play().catch(() => undefined);
-    };
-
-    if (activeVideo.readyState >= 2) {
-      startPlayback();
-      return;
-    }
-
-    const handleLoadedData = () => {
-      startPlayback();
-      activeVideo.removeEventListener("loadeddata", handleLoadedData);
-    };
-
-    activeVideo.addEventListener("loadeddata", handleLoadedData);
-
-    return () => {
-      activeVideo.removeEventListener("loadeddata", handleLoadedData);
-      clearTimeout(timerRef.current);
-    };
+    timerRef.current = setTimeout(goNext, ROTATE_DURATION);
+    return () => clearTimeout(timerRef.current);
   }, [banners, current, goNext]);
 
   useEffect(() => {
@@ -84,14 +43,12 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrev]);
 
   if (!banners.length) return null;
 
-  // Mobile aspect ratio based on format
   const mobileAspect =
     mobileFormat === "square" ? "aspect-square" :
     mobileFormat === "portrait" ? "aspect-[4/5]" :
@@ -103,6 +60,8 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
         {banners.map((banner, index) => {
           const active = index === current;
           const isVideo = banner.media_type === "video";
+          const opened = !!openedVideo[banner.id];
+          const href = banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url;
 
           return (
             <div
@@ -110,23 +69,36 @@ export function BannerCarousel({ banners, mobileFormat = "landscape", basePath =
               className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"}`}
             >
               {isVideo ? (
-                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
+                opened && active ? (
                   <video
-                    ref={(element) => {
-                      videoRefs.current[index] = element;
-                    }}
                     src={banner.image_url}
-                    className="w-full h-full object-contain"
-                    muted
+                    className="w-full h-full object-contain bg-black"
+                    controls
+                    autoPlay
                     playsInline
                     preload="metadata"
-                    onEnded={() => {
-                      if (index === current) goNext();
-                    }}
                   />
-                </MaybeLink>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenedVideo((prev) => ({ ...prev, [banner.id]: true }))}
+                    className="relative w-full h-full flex items-center justify-center bg-black group"
+                    aria-label="Reproduzir vídeo"
+                  >
+                    <video
+                      src={`${banner.image_url}#t=0.1`}
+                      className="absolute inset-0 w-full h-full object-contain opacity-70"
+                      preload="metadata"
+                      muted
+                      playsInline
+                    />
+                    <span className="relative z-10 rounded-full bg-white/90 p-4 shadow-lg transition-transform group-hover:scale-110">
+                      <Play className="h-8 w-8 fill-black text-black" />
+                    </span>
+                  </button>
+                )
               ) : (
-                <MaybeLink href={banner.category_id ? `${basePath}?categoria=${banner.category_id}` : banner.link_url} disabled={!active}>
+                <MaybeLink href={href} disabled={!active}>
                   <img
                     src={banner.image_url}
                     alt="Banner"
@@ -207,10 +179,7 @@ function MaybeLink({
       })();
 
       return (
-        <div
-          className="block h-full w-full cursor-pointer"
-          onClick={() => navigate(path)}
-        >
+        <div className="block h-full w-full cursor-pointer" onClick={() => navigate(path)}>
           {children}
         </div>
       );

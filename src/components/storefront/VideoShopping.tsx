@@ -111,16 +111,6 @@ export function VideoShopping() {
           onClick={() => setIsOpen(true)}
           className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-lg transition-transform hover:scale-110 active:scale-95 overflow-hidden border-2 border-white"
         >
-          <div className="absolute inset-0 opacity-40">
-             <video 
-              src={videos[0].video_url} 
-              className="h-full w-full object-cover" 
-              autoPlay 
-              muted 
-              loop 
-              playsInline 
-            />
-          </div>
           <div className="relative z-10 flex flex-col items-center">
             <Play className="h-6 w-6 text-white fill-white animate-pulse" />
             <span className="text-[10px] font-bold text-white uppercase tracking-tighter">Shop</span>
