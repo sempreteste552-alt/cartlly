@@ -204,6 +204,7 @@ export function AdminLayout() {
     const root = document.documentElement;
     root.dataset.themeScope = adminThemeScope;
     root.classList.toggle("dark", adminDark);
+    root.classList.remove("storefront-scroll");
     root.classList.add("app-shell");
 
     return () => {

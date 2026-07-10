@@ -34,6 +34,7 @@ export default function SuperAdminLayout() {
     const root = document.documentElement;
     root.dataset.themeScope = "superadmin";
     root.classList.toggle("dark", dark);
+    root.classList.remove("storefront-scroll");
     root.classList.add("app-shell");
 
     return () => {
