@@ -148,7 +148,7 @@ html, body {
   }
 
   body {
-    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    @apply bg-background text-foreground antialiased;
     font-family: var(--store-font-body, 'Inter'), system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     width: 100%;
