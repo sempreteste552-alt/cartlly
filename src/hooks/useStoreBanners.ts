@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,11 +18,16 @@ export function useStoreBanners() {
       return data;
     },
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 }
 
 export function usePublicBanners(userId?: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["public_banners", userId],
     enabled: !!userId,
     queryFn: async () => {
@@ -34,9 +40,48 @@ export function usePublicBanners(userId?: string) {
       if (error) throw error;
       return data;
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    gcTime: 1000 * 60 * 60, // 1 hour
+    // Keep data fresh so a newly published banner appears without cache tricks.
+    staleTime: 30 * 1000, // 30s
+    gcTime: 5 * 60 * 1000, // 5 min
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
+
+  // Realtime sync: any INSERT / UPDATE / DELETE on this tenant's banners
+  // immediately invalidates the public cache for every visitor.
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`public-banners-rt-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "store_banners",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["public_banners", userId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, queryClient]);
+
+  return query;
+}
+
+function invalidateBannerCaches(queryClient: ReturnType<typeof useQueryClient>, userId?: string) {
+  queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+  queryClient.invalidateQueries({ queryKey: ["public_banners"] });
+  if (userId) {
+    queryClient.invalidateQueries({ queryKey: ["public_banners", userId] });
+  }
 }
 
 export function useCreateBanner() {
@@ -50,7 +95,7 @@ export function useCreateBanner() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+      invalidateBannerCaches(queryClient, user?.id);
       toast.success("Banner adicionado!");
     },
     onError: (e) => toast.error("Erro: " + e.message),
@@ -59,11 +104,13 @@ export function useCreateBanner() {
 
 export function useUpdateBannerLink() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ id, link_url, category_id }: { id: string; link_url?: string | null; category_id?: string | null }) => {
+    mutationFn: async ({ id, link_url, category_id, active }: { id: string; link_url?: string | null; category_id?: string | null; active?: boolean }) => {
       const updates: Record<string, any> = {};
       if (link_url !== undefined) updates.link_url = link_url;
       if (category_id !== undefined) updates.category_id = category_id;
+      if (active !== undefined) updates.active = active;
       const { error } = await supabase
         .from("store_banners")
         .update(updates as any)
@@ -71,8 +118,7 @@ export function useUpdateBannerLink() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
-      queryClient.invalidateQueries({ queryKey: ["public_banners"] });
+      invalidateBannerCaches(queryClient, user?.id);
       toast.success("Banner atualizado!");
     },
     onError: (e) => toast.error("Erro: " + e.message),
@@ -81,6 +127,7 @@ export function useUpdateBannerLink() {
 
 export function useReorderBanners() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (orderedIds: string[]) => {
       const updates = orderedIds.map((id, index) =>
@@ -91,7 +138,7 @@ export function useReorderBanners() {
       if (err?.error) throw err.error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+      invalidateBannerCaches(queryClient, user?.id);
     },
     onError: (e) => toast.error("Erro ao reordenar: " + e.message),
   });
@@ -99,13 +146,14 @@ export function useReorderBanners() {
 
 export function useDeleteBanner() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("store_banners").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["store_banners"] });
+      invalidateBannerCaches(queryClient, user?.id);
       toast.success("Banner removido!");
     },
     onError: (e) => toast.error("Erro: " + e.message),
