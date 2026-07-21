@@ -473,7 +473,42 @@ export default function LojaLayout() {
   });
 
   const isAdminPreview = !!user && !!settingsBySlug && user.id === settingsBySlug.user_id;
-  const isDarkMode = themeConfig?.theme_mode === 'dark' || storeDark;
+
+  // ============================================================================
+  // THEME PRIORITY (admin choice is ABSOLUTE):
+  //   theme_mode === 'light'  -> ALWAYS light (ignore system + client toggle)
+  //   theme_mode === 'dark'   -> ALWAYS dark
+  //   theme_mode === 'system' -> follow the visitor's OS preference (live)
+  //   (no config yet)         -> fall back to cached mode or client toggle
+  // ============================================================================
+  const themeMode = (themeConfig as any)?.theme_mode as 'light' | 'dark' | 'system' | undefined;
+  const [systemDark, setSystemDark] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+  });
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mq) return;
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener?.("change", handler);
+    return () => mq.removeEventListener?.("change", handler);
+  }, []);
+
+  const isDarkMode =
+    themeMode === 'dark' ? true :
+    themeMode === 'light' ? false :
+    themeMode === 'system' ? systemDark :
+    storeDark; // config still loading -> use last known client toggle
+
+  // Persist the resolved mode per host/slug so the preboot script in index.html
+  // can apply the correct theme BEFORE React hydrates (no FOUC).
+  useEffect(() => {
+    if (typeof window === "undefined" || !themeMode) return;
+    const host = window.location.hostname.toLowerCase().replace(/^www\./, "");
+    const key = slug ? `store_theme_mode_slug_${slug}` : `store_theme_mode_host_${host}`;
+    try { localStorage.setItem(key, themeMode); } catch { /* ignore */ }
+  }, [themeMode, slug]);
+
   const isMinimalMenu = themeConfig?.header_style === 'minimal';
   const queryClient = useQueryClient();
 
