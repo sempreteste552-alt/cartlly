@@ -16,6 +16,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
 import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner";
+import { CategoryCircles } from "@/components/storefront/CategoryCircles";
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
