@@ -26,15 +26,31 @@ html, body {
     inset: 0;
     width: 100%;
     height: 100%;
+    height: 100dvh;
     overflow: hidden;
     overscroll-behavior: none;
-    -webkit-overflow-scrolling: touch;
+    /* kills double-tap zoom without blocking scroll inside panes */
+    touch-action: manipulation;
   }
   html.app-shell #root {
     height: 100%;
     overflow: hidden;
   }
+  /* inner scroll panes keep momentum scrolling */
+  html.app-shell main,
+  html.app-shell [data-scroll-pane] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+  /* avoid iOS auto-zoom when focusing inputs */
+  html.app-shell input,
+  html.app-shell select,
+  html.app-shell textarea {
+    font-size: 16px;
+  }
 }
+
 
 
 
