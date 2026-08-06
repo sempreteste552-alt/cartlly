@@ -61,3 +61,22 @@ export function useDeleteCategory() {
     onError: (e) => toast.error("Erro: " + e.message),
   });
 }
+
+export function useUpdateCategoryImage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, imageUrl }: { id: string; imageUrl: string | null }) => {
+      const { error } = await supabase
+        .from("categories")
+        .update({ image_url: imageUrl } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["public_categories"] });
+      toast.success("Imagem da categoria atualizada!");
+    },
+    onError: (e: any) => toast.error("Erro: " + e.message),
+  });
+}

@@ -16,6 +16,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { DynamicHomeSections } from "@/components/storefront/DynamicHomeSections";
 import { HighlightsSection } from "@/components/storefront/sections/HighlightsSection";
 import { ActiveCouponsBanner } from "@/components/storefront/ActiveCouponsBanner";
+import { CategoryCircles } from "@/components/storefront/CategoryCircles";
 import { BannerCarousel } from "@/components/storefront/BannerCarousel";
 import { useStaggeredReveal, useScrollReveal } from "@/hooks/useScrollReveal";
 import { CartNotification, useCartNotification } from "@/components/storefront/CartNotification";
@@ -178,33 +179,25 @@ export default function LojaHome() {
       )}
 
       {categories && categories.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 mt-6">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((cat) => (
-              <Badge
-                key={cat.id}
-                variant="outline"
-                className="shrink-0 cursor-pointer transition-colors px-4 py-1.5 hover:text-white"
-                style={{ borderColor: primaryColor, color: primaryColor }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = primaryColor; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = primaryColor; }}
-                onClick={() => {
-                   const el = document.getElementById(`category-${cat.name}`);
-                   if (el) {
-                     const yOffset = -80;
-                     const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                     window.scrollTo({ top: y, behavior: "smooth" });
-                   } else {
-                     navigate(`${basePath}?categoria=${cat.id}`);
-                   }
-                 }}
-              >
-                {translatedCategoryNames[categories.findIndex((item: any) => item.id === cat.id)] || cat.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
+        <CategoryCircles
+          categories={categories as any}
+          primaryColor={primaryColor}
+          labels={Object.fromEntries(
+            (categories as any[]).map((c, i) => [c.id, translatedCategoryNames[i] || c.name])
+          )}
+          onSelect={(cat) => {
+            const el = document.getElementById(`category-${cat.name}`);
+            if (el) {
+              const yOffset = -80;
+              const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: "smooth" });
+            } else {
+              navigate(`${basePath}?categoria=${cat.id}`);
+            }
+          }}
+        />
       )}
+
 
       <div className={`max-w-7xl mx-auto px-4 ${searchTerm.trim() ? "mt-4" : "mt-8"} space-y-10 pb-8`}>
         {prodLoading ? (
