@@ -450,19 +450,22 @@ export default function Produtos() {
             <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="Nova categoria" maxLength={100} />
             <Button type="submit" size="sm" disabled={createCategory.isPending}>Adicionar</Button>
           </form>
-          <div className="mt-2 space-y-1 max-h-60 overflow-auto">
+          <p className="text-xs text-muted-foreground">
+            Envie uma imagem redonda para cada categoria — ela aparece na vitrine no estilo destaques e leva direto para a aba da categoria.
+          </p>
+          <div className="mt-2 space-y-1.5 max-h-72 overflow-auto">
             {categories?.length === 0 && (
               <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma categoria criada</p>
             )}
             {categories?.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-                <span className="text-sm">{cat.name}</span>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteCategory.mutate(cat.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              <CategoryImageRow
+                key={cat.id}
+                category={cat as any}
+                onDelete={() => deleteCategory.mutate(cat.id)}
+              />
             ))}
           </div>
+
         </DialogContent>
       </Dialog>
 
