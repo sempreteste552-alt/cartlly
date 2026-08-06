@@ -27,6 +27,7 @@ import { canAccess, canCreateProduct, getProductLimitReason, getPlanLimits } fro
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FeatureTutorialCard } from "@/components/admin/FeatureTutorialCard";
+import { CategoryImageRow } from "@/components/admin/CategoryImageRow";
 import { CatalogPdfGenerator } from "@/components/admin/CatalogPdfGenerator";
 import { useTranslation } from "@/i18n";
 import { buildStoreUrl } from "@/lib/storeDomain";
