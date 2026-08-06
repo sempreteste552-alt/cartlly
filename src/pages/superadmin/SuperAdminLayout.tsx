@@ -49,23 +49,24 @@ export default function SuperAdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className={`min-h-screen flex w-full bg-background ${dark ? "dark" : ""}`}>
+      <div className={`h-svh min-h-0 flex w-full bg-background overflow-hidden ${dark ? "dark" : ""}`}>
         <SuperAdminSidebar />
-        <div className="flex-1 flex flex-col min-w-0 relative">
-          <header className="h-14 flex items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+          <header className="h-14 shrink-0 flex items-center justify-between border-b border-border bg-card/80 backdrop-blur-sm px-4 sticky top-0 z-30">
             <div className="flex items-center">
               <SidebarTrigger className="mr-4" />
               <h2 className="text-sm font-medium text-muted-foreground">Super Admin</h2>
             </div>
             <ThemeToggle scope="superadmin" applyToRoot={false} />
           </header>
-          <main className="flex-1 overflow-auto p-4 sm:p-6">
+          <main data-scroll-pane className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain p-4 sm:p-6">
             <Suspense fallback={<PlatformLogoSplash contained />}>
               <Outlet />
             </Suspense>
           </main>
         </div>
       </div>
+
     </SidebarProvider>
   );
 }
