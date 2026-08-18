@@ -13,7 +13,6 @@ import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
-import { domainServesStore } from "@/hooks/useStorePublicUrl";
 import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
@@ -247,29 +246,6 @@ export default function LojaLayout() {
     const timer = window.setTimeout(() => setShowEntrySplash(false), 900);
     return () => window.clearTimeout(timer);
   }, [slug, currentHostname]);
-
-  // Redireciona para o domínio personalizado APENAS se ele realmente servir a loja.
-  // (domínios só "conectados" redirecionam para o domínio da plataforma e o
-  //  cliente acabava caindo na página inicial/login em vez da loja)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const customDomain = (settingsBySlug as any)?.custom_domain;
-    const domainStatus = (settingsBySlug as any)?.domain_status;
-    if (!customDomain) return;
-    if (!(domainStatus === "verified" || domainStatus === "active")) return;
-    const currentHost = window.location.hostname.toLowerCase().replace(/^www\./, "");
-    const target = String(customDomain).toLowerCase().replace(/^www\./, "");
-    if (!isPlatformHost(currentHost)) return;
-    if (currentHost === target) return;
-
-    let active = true;
-    domainServesStore(target).then((ok) => {
-      if (!active || !ok) return;
-      const stripped = location.pathname.replace(/^\/loja\/[^/]+/, "") || "/";
-      window.location.replace(`https://${target}${stripped}${location.search}`);
-    });
-    return () => { active = false; };
-  }, [settingsBySlug, location.pathname, location.search]);
 
   // Real-time store status monitoring moved down to avoid hook violation
 

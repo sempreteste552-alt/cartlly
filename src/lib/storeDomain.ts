@@ -70,17 +70,6 @@ export function getStoreBasePath(slug?: string | null) {
   return slug ? `/loja/${slug}` : "";
 }
 
-/**
- * Origem pública da plataforma. Se o admin estiver aberto em um domínio
- * personalizado de loja, usamos o domínio oficial para montar links /loja/slug.
- */
-export function getPlatformOrigin() {
-  if (typeof window === "undefined") return "https://cartlly.store";
-  const host = window.location.hostname;
-  if (isPlatformHost(host)) return window.location.origin;
-  return "https://cartlly.store";
-}
-
 export function buildStoreUrl({
   slug,
   customDomain,
@@ -96,19 +85,23 @@ export function buildStoreUrl({
 }) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
+  const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
 
-  // Prioridade 1: domínio personalizado verificado/ativo
-  if (domain && ["verified", "active", "published", "live"].includes(String(domainStatus || ""))) {
+  // Preserve o tenant no caminho. Se a hospedagem redirecionar um domínio
+  // secundário ao principal, ela mantém /loja/:slug e abre a vitrine correta.
+  if (domain) {
+    if (cleanSlug) {
+      const base = `/loja/${cleanSlug}`;
+      return `https://${domain}${normalizedPath === "/" ? base : `${base}${normalizedPath}`}`;
+    }
     return `https://${domain}${normalizedPath === "/" ? "/" : normalizedPath}`;
   }
 
-  // Prioridade 2: slug na plataforma (sempre absoluto, para funcionar
-  // mesmo quando o admin está aberto em um domínio personalizado)
-  const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
+  // Sem domínio próprio, preserve o roteamento original por slug na mesma
+  // origem em que o painel está aberto (produção, preview ou desenvolvimento).
   if (cleanSlug) {
     const base = `/loja/${cleanSlug}`;
-    const resultPath = normalizedPath === "/" ? base : `${base}${normalizedPath}`;
-    return `${getPlatformOrigin()}${resultPath}`;
+    return normalizedPath === "/" ? base : `${base}${normalizedPath}`;
   }
 
   // Sem slug e sem domínio: não há loja pública para abrir

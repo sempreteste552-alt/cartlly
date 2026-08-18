@@ -124,6 +124,21 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 
 const App = () => {
   const isPlatform = isPlatformHost(window.location.hostname);
+
+  // Em domínios próprios, /loja/:slug é uma ponte que mantém a identidade do
+  // tenant durante redirecionamentos da hospedagem. Internamente a vitrine usa
+  // apenas o restante do caminho.
+  if (!isPlatform) {
+    const storeBridge = window.location.pathname.match(/^\/loja\/[^/]+(\/.*)?$/);
+    if (storeBridge) {
+      window.history.replaceState(
+        null,
+        "",
+        `${storeBridge[1] || "/"}${window.location.search}${window.location.hash}`,
+      );
+    }
+  }
+
   const isStorePath = window.location.pathname.startsWith("/loja/") || !isPlatform;
 
   return (
