@@ -81,7 +81,11 @@ export function usePlanFeatures() {
       const isTrialExpired = isTrial && trialDaysLeft <= 0;
       const isActive = sub.status === "active" || (isTrial && !isTrialExpired);
       const isBlocked = ["trial_expired", "past_due", "canceled", "suspended"].includes(sub.status) || isTrialExpired;
-      const shouldBlock = isBlocked;
+      // Plano pago (liberado pelo super admin ou pago pelo cliente) não sofre
+      // restrição de recursos, mesmo com status pendente de cobrança.
+      const planNameCheck = ((plan.name as string) || "FREE").toUpperCase();
+      const hasPaidPlan = planNameCheck !== "FREE";
+      const shouldBlock = isBlocked && !hasPaidPlan;
 
       // Normalize plan name (ELITE -> PREMIUM)
       const planNameRaw = (plan.name as string)?.toUpperCase() || "FREE";

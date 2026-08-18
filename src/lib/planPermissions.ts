@@ -224,6 +224,10 @@ export function isTenantActive(ctx: TenantContext): boolean {
 /** Check if tenant is in a blocked state */
 export function isBlocked(ctx: TenantContext): boolean {
   if (!ctx.subscriptionStatus) return true;
+  // Plano pago atribuído (manualmente pelo super admin ou por pagamento
+  // aprovado) nunca deve sofrer restrições de recursos.
+  const hasPaidPlan = planLevel(ctx.planSlug) > planLevel("FREE");
+  if (hasPaidPlan) return false;
   const blockedStatuses: SubscriptionStatus[] = ["trial_expired", "past_due", "canceled", "suspended"];
   if (blockedStatuses.includes(ctx.subscriptionStatus)) return true;
   if (ctx.isTrial && ctx.isTrialExpired) return true;
