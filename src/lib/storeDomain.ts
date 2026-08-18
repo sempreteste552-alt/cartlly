@@ -70,6 +70,17 @@ export function getStoreBasePath(slug?: string | null) {
   return slug ? `/loja/${slug}` : "";
 }
 
+/**
+ * Origem pública da plataforma. Se o admin estiver aberto em um domínio
+ * personalizado de loja, usamos o domínio oficial para montar links /loja/slug.
+ */
+export function getPlatformOrigin() {
+  if (typeof window === "undefined") return "https://cartlly.store";
+  const host = window.location.hostname;
+  if (isPlatformHost(host)) return window.location.origin;
+  return "https://cartlly.store";
+}
+
 export function buildStoreUrl({
   slug,
   customDomain,
@@ -86,20 +97,21 @@ export function buildStoreUrl({
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
 
-  // Priority 1: Verified Custom Domain with SSL
-  // Status 'active' or 'verified' are considered valid for public use
-  if (domain && (domainStatus === "verified" || domainStatus === "active")) {
-    // If sslReady is explicitly false, we might want to wait, 
-    // but usually if status is 'active', SSL is already verified by the edge function
-    return `https://${domain}${normalizedPath}`;
+  // Prioridade 1: domínio personalizado verificado/ativo
+  if (domain && ["verified", "active", "published", "live"].includes(String(domainStatus || ""))) {
+    return `https://${domain}${normalizedPath === "/" ? "/" : normalizedPath}`;
   }
 
-  // Priority 2: Platform Slug-based URL (Fallback)
-  if (slug) {
-    const base = `/loja/${slug}`;
+  // Prioridade 2: slug na plataforma (sempre absoluto, para funcionar
+  // mesmo quando o admin está aberto em um domínio personalizado)
+  const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
+  if (cleanSlug) {
+    const base = `/loja/${cleanSlug}`;
     const resultPath = normalizedPath === "/" ? base : `${base}${normalizedPath}`;
-    return resultPath;
+    return `${getPlatformOrigin()}${resultPath}`;
   }
 
-  return normalizedPath;
+  // Sem slug e sem domínio: não há loja pública para abrir
+  return "";
 }
+
