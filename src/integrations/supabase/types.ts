@@ -2906,6 +2906,305 @@ export type Database = {
         }
         Relationships: []
       }
+      social_connection_secrets: {
+        Row: {
+          access_token: string
+          connection_id: string
+          refresh_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          connection_id: string
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          connection_id?: string
+          refresh_token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_connection_secrets_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "social_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_connections: {
+        Row: {
+          account_name: string | null
+          account_username: string | null
+          connected_at: string
+          created_at: string
+          id: string
+          last_error: string | null
+          metadata: Json
+          page_id: string | null
+          provider: string
+          provider_account_id: string | null
+          scopes: string[]
+          status: string
+          tenant_id: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_username?: string | null
+          connected_at?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          metadata?: Json
+          page_id?: string | null
+          provider: string
+          provider_account_id?: string | null
+          scopes?: string[]
+          status?: string
+          tenant_id: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_username?: string | null
+          connected_at?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          metadata?: Json
+          page_id?: string | null
+          provider?: string
+          provider_account_id?: string | null
+          scopes?: string[]
+          status?: string
+          tenant_id?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      social_import_analytics: {
+        Row: {
+          ai_requests: number
+          created_at: string
+          credits_consumed: number
+          day: string
+          id: string
+          posts_detected: number
+          products_detected: number
+          products_ignored: number
+          products_imported: number
+          products_rejected: number
+          provider: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_requests?: number
+          created_at?: string
+          credits_consumed?: number
+          day?: string
+          id?: string
+          posts_detected?: number
+          products_detected?: number
+          products_ignored?: number
+          products_imported?: number
+          products_rejected?: number
+          provider: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_requests?: number
+          created_at?: string
+          credits_consumed?: number
+          day?: string
+          id?: string
+          posts_detected?: number
+          products_detected?: number
+          products_ignored?: number
+          products_imported?: number
+          products_rejected?: number
+          provider?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      social_media_posts: {
+        Row: {
+          ai_analysis: Json | null
+          caption: string | null
+          connection_id: string | null
+          created_at: string
+          detected_product: boolean
+          error_message: string | null
+          external_post_id: string
+          id: string
+          media_url: string | null
+          post_url: string | null
+          processed_at: string | null
+          processing_status: string
+          provider: string
+          published_at: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          caption?: string | null
+          connection_id?: string | null
+          created_at?: string
+          detected_product?: boolean
+          error_message?: string | null
+          external_post_id: string
+          id?: string
+          media_url?: string | null
+          post_url?: string | null
+          processed_at?: string | null
+          processing_status?: string
+          provider: string
+          published_at?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          caption?: string | null
+          connection_id?: string | null
+          created_at?: string
+          detected_product?: boolean
+          error_message?: string | null
+          external_post_id?: string
+          id?: string
+          media_url?: string | null
+          post_url?: string | null
+          processed_at?: string | null
+          processing_status?: string
+          provider?: string
+          published_at?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_posts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "social_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_product_links: {
+        Row: {
+          created_at: string
+          external_post_id: string | null
+          id: string
+          product_id: string
+          provider: string
+          social_post_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_post_id?: string | null
+          id?: string
+          product_id: string
+          provider: string
+          social_post_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          external_post_id?: string | null
+          id?: string
+          product_id?: string
+          provider?: string
+          social_post_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_product_links_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_product_suggestions: {
+        Row: {
+          ai_confidence: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          product_id: string | null
+          social_post_id: string | null
+          status: string
+          suggested_brand: string | null
+          suggested_category: string | null
+          suggested_description: string | null
+          suggested_name: string | null
+          suggested_price: number | null
+          suggested_sku: string | null
+          suggested_tags: string[]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          product_id?: string | null
+          social_post_id?: string | null
+          status?: string
+          suggested_brand?: string | null
+          suggested_category?: string | null
+          suggested_description?: string | null
+          suggested_name?: string | null
+          suggested_price?: number | null
+          suggested_sku?: string | null
+          suggested_tags?: string[]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          product_id?: string | null
+          social_post_id?: string | null
+          status?: string
+          suggested_brand?: string | null
+          suggested_category?: string | null
+          suggested_description?: string | null
+          suggested_name?: string | null
+          suggested_price?: number | null
+          suggested_sku?: string | null
+          suggested_tags?: string[]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_product_suggestions_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_notify_subscriptions: {
         Row: {
           created_at: string
@@ -4496,6 +4795,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_social_settings: {
+        Row: {
+          auto_create_draft: boolean
+          auto_detect_products: boolean
+          auto_generate_description: boolean
+          auto_import_products: boolean
+          auto_notify: boolean
+          created_at: string
+          facebook_enabled: boolean
+          instagram_enabled: boolean
+          notification_channel: string
+          require_approval: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_create_draft?: boolean
+          auto_detect_products?: boolean
+          auto_generate_description?: boolean
+          auto_import_products?: boolean
+          auto_notify?: boolean
+          created_at?: string
+          facebook_enabled?: boolean
+          instagram_enabled?: boolean
+          notification_channel?: string
+          require_approval?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_create_draft?: boolean
+          auto_detect_products?: boolean
+          auto_generate_description?: boolean
+          auto_import_products?: boolean
+          auto_notify?: boolean
+          created_at?: string
+          facebook_enabled?: boolean
+          instagram_enabled?: boolean
+          notification_channel?: string
+          require_approval?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenant_subscriptions: {
         Row: {
           asaas_customer_id: string | null
@@ -5125,6 +5469,15 @@ export type Database = {
           p_order_id: string
           p_order_total: number
           p_store_user_id: string
+        }
+        Returns: undefined
+      }
+      bump_social_analytics: {
+        Args: {
+          p_amount?: number
+          p_field: string
+          p_provider: string
+          p_tenant_id: string
         }
         Returns: undefined
       }
