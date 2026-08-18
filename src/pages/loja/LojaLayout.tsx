@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { Outlet, Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { StorefrontAIChat } from "@/components/storefront/StorefrontAIChat";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicMarketingConfig } from "@/hooks/usePublicStoreConfig";
@@ -122,6 +123,7 @@ function useLogoCrop(src?: string) {
 }
 
 export default function LojaLayout() {
+  const { aiEnabled: aiPlatformEnabled } = useAIPlatformStatus();
   const { slug: rawSlug } = useParams();
   const slug = rawSlug?.toLowerCase();
   const currentHostname = typeof window !== "undefined" ? window.location.hostname.toLowerCase().replace(/^www\./, "") : "";
@@ -1738,7 +1740,7 @@ export default function LojaLayout() {
           </div>
         </nav>
 
-        {settings?.user_id && ((settings as any).is_premium_plan || (settings as any).is_pro_plan) && (
+        {aiPlatformEnabled && settings?.user_id && ((settings as any).is_premium_plan || (settings as any).is_pro_plan) && (
           <StorefrontAIChat
             storeUserId={settings.user_id}
             storeName={settings.store_name || storeText.defaultStore}
