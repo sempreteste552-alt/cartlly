@@ -66,6 +66,8 @@ export default function AdminAIUsage() {
   const errors = (logs ?? []).filter((l) => l.status !== "success");
   const maxBar = Math.max(1, ...(dailyAgg ?? []).map((d) => d.credits));
 
+  if (aiGate) return aiGate;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <AINav current="usage" />
