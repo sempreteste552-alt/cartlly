@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Monitor, Smartphone, RefreshCw, ExternalLink, X } from "lucide-react";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
-import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { useTranslation } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,11 +19,11 @@ export function StoreLivePreview({ open, onOpenChange, forceMobile }: StoreLiveP
   const [key, setKey] = useState(0); // For reloading iframe
   const { locale } = useTranslation();
 
-  const storeUrl = settings ? buildStoreUrl({
-    slug: settings.store_slug,
-    customDomain: settings.custom_domain,
-    domainStatus: settings.domain_status,
-  }) : "";
+  const storeUrl = useStorePublicUrl({
+    slug: settings?.store_slug,
+    customDomain: settings?.custom_domain,
+    domainStatus: settings?.domain_status,
+  });
 
   // Add a preview parameter to avoid some tracking if needed
   const previewUrl = storeUrl ? `${storeUrl}${storeUrl.includes("?") ? "&" : "?"}preview=true` : "";

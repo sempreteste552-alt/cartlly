@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { motion } from "framer-motion";
 
 const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
@@ -79,7 +79,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     fr: { defaultStore: "Ma Boutique", new: "Nouveau", push: "Push" },
   }[locale];
 
-  const storeUrl = buildStoreUrl({
+  const storeUrl = useStorePublicUrl({
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,

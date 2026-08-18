@@ -15,7 +15,7 @@ import {
   Lock, Sparkles, ExternalLink, Calendar, Filter, Activity, Cpu, 
   Layers, Zap, RefreshCw, ChevronUp, ChevronDown, ArrowRight
 } from "lucide-react";
-import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
@@ -75,7 +75,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: settings } = useStoreSettings();
-  const storeUrl = buildStoreUrl({
+  const storeUrl = useStorePublicUrl({
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,
