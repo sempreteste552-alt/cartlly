@@ -67,8 +67,10 @@ export default function SuperAdminAI() {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-4">
+          <AIGlobalSwitch />
           <AIConsumptionDashboard />
         </TabsContent>
+
 
         <TabsContent value="providers" className="space-y-4">
           <AIProvidersList />
