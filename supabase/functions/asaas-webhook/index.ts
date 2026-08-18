@@ -209,6 +209,23 @@ Deno.serve(async (req) => {
           type: "plan_activated",
         });
 
+        // Desbloqueia a loja e limpa o ciclo de cobrança/atraso
+        await supabase.from("store_settings").update({ store_blocked: false }).eq("user_id", userId);
+        await supabase.from("tenant_subscriptions").update({
+          blocked_at: null,
+          grace_ends_at: null,
+          last_due_warning_at: null,
+          last_overdue_notice_at: null,
+        }).eq("user_id", userId);
+
+        await pushTenant(
+          supabase,
+          userId,
+          "✅ Pagamento confirmado!",
+          `Sua assinatura ${plan?.name ?? ""} está ativa e o acesso foi liberado.`,
+          "plan_activated"
+        );
+
       } else if (isFailed) {
         await supabase.from("tenant_subscriptions")
           .update({ status: "pending", updated_at: new Date().toISOString() })
@@ -230,6 +247,14 @@ Deno.serve(async (req) => {
           message: `Sua cobrança via ${payment.billingType} está atrasada ou foi cancelada.`,
           type: "payment_failed",
         });
+
+        await pushTenant(
+          supabase,
+          userId,
+          "⚠️ Pagamento em atraso",
+          `Sua cobrança via ${payment.billingType} está atrasada. Regularize para não ter a loja bloqueada.`,
+          "payment_failed"
+        );
       }
     } else if (orderMatch) {
       const orderId = ref;
@@ -274,6 +299,22 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+
+async function pushTenant(supabase: any, userId: string, title: string, body: string, type: string) {
+  try {
+    await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-internal`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ target_user_id: userId, title, body, url: "/admin/plano", type, tag: type }),
+    });
+  } catch (e) {
+    console.error("[asaas-webhook] push error", (e as Error).message);
+  }
+}
 
 async function processStorePaymentUpdate(supabase: any, orderId: string, status: string, gateway: string, gatewayPaymentId: string, rawResponse: any) {
   console.log(`[asaas-webhook] Processing status update for order ${orderId}: ${status}`);

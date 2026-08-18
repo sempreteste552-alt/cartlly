@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ const RESPONSE_TEMPLATES = [
 ];
 
 export default function WhatsAppIA() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
   const { slug } = useParams();
   const { data: settings } = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
@@ -75,6 +78,14 @@ export default function WhatsAppIA() {
       toast.error("Erro ao salvar configurações");
     }
   };
+
+  if (!aiLoading && !aiEnabled) {
+    return (
+      <div className="p-4 md:p-6">
+        <AIDisabledNotice featureName="WhatsApp IA" />
+      </div>
+    );
+  }
 
   if (locked) {
     return (

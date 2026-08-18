@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +13,14 @@ import { ptBR } from "date-fns/locale";
 import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAIUsage() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
+
+  const aiGate = !aiLoading && !aiEnabled ? (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AIDisabledNotice featureName="Consumo de IA" />
+    </div>
+  ) : null;
+
   const { data: logs, isLoading } = useQuery({
     queryKey: ["ai-usage-logs-tenant"],
     queryFn: async () => {
@@ -55,6 +65,8 @@ export default function AdminAIUsage() {
 
   const errors = (logs ?? []).filter((l) => l.status !== "success");
   const maxBar = Math.max(1, ...(dailyAgg ?? []).map((d) => d.credits));
+
+  if (aiGate) return aiGate;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

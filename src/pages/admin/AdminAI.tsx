@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { Link, useParams } from "react-router-dom";
 import { useAITenantUsage, getProgressColor } from "@/hooks/useAITenantUsage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +17,7 @@ import {
 import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAI() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
   const { slug } = useParams();
   const adminBasePath = slug ? `/painel/${slug}` : "/admin";
   const { data: usage, isLoading } = useAITenantUsage();
@@ -63,6 +66,15 @@ export default function AdminAI() {
         .sort((a, b) => b.credits - a.credits);
     },
   });
+
+  if (!aiLoading && !aiEnabled) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <AINav current="dashboard" />
+        <AIDisabledNotice featureName="Central de IA" />
+      </div>
+    );
+  }
 
   if (isLoading || !usage) {
     return (

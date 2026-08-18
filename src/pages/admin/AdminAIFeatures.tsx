@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +44,14 @@ const PLAN_LABEL: Record<PlanSlug, string> = {
 };
 
 export default function AdminAIFeatures() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
+
+  const aiGate = !aiLoading && !aiEnabled ? (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AIDisabledNotice featureName="Recursos de IA" />
+    </div>
+  ) : null;
+
   const { slug } = useParams();
   const { ctx, plan: currentPlan } = useTenantContext();
   const planSlug = (ctx?.planSlug ?? "FREE") as PlanSlug;
@@ -61,6 +71,8 @@ export default function AdminAIFeatures() {
       return data;
     },
   });
+
+  if (aiGate) return aiGate;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

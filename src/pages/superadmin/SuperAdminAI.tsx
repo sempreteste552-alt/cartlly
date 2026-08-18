@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Settings2, History, Users, Sparkles, Home } from "lucide-react";
 import { AIProvidersList } from "@/components/superadmin/AIProvidersList";
+import { AIGlobalSwitch } from "@/components/superadmin/AIGlobalSwitch";
 import { AITenantSettings } from "@/components/superadmin/AITenantSettings";
 import { AIUsageLogs } from "@/components/superadmin/AIUsageLogs";
 import { AIConsumptionDashboard } from "@/components/superadmin/AIConsumptionDashboard";
@@ -66,8 +67,10 @@ export default function SuperAdminAI() {
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-4">
+          <AIGlobalSwitch />
           <AIConsumptionDashboard />
         </TabsContent>
+
 
         <TabsContent value="providers" className="space-y-4">
           <AIProvidersList />
