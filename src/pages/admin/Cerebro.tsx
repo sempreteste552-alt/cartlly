@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantContext } from "@/hooks/useTenantContext";
@@ -634,6 +636,7 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
 }
 
 export default function Cerebro() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");

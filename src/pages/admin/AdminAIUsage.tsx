@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAIUsage() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
   const { data: logs, isLoading } = useQuery({
     queryKey: ["ai-usage-logs-tenant"],
     queryFn: async () => {

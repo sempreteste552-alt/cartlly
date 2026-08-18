@@ -1,3 +1,5 @@
+import { AIDisabledNotice } from "@/components/admin/AIDisabledNotice";
+import { useAIPlatformStatus } from "@/hooks/useAIPlatformStatus";
 import { Link, useParams } from "react-router-dom";
 import { useAITenantUsage, getProgressColor } from "@/hooks/useAITenantUsage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +17,7 @@ import {
 import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAI() {
+  const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
   const { slug } = useParams();
   const adminBasePath = slug ? `/painel/${slug}` : "/admin";
   const { data: usage, isLoading } = useAITenantUsage();
