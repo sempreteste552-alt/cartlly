@@ -91,19 +91,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ==================== TRIAL STATUS ====================
-    if (body.action === "trial_status") {
-      const { data: sub } = await supabase
-        .from("tenant_subscriptions")
-        .select("trial_used, status, trial_ends_at")
-        .eq("user_id", body.user_id)
-        .maybeSingle();
-      return json({
-        trial_used: !!sub?.trial_used,
-        status: sub?.status ?? null,
-        trial_ends_at: sub?.trial_ends_at ?? null,
-      });
-    }
+
+
 
     // ==================== PROCESS PAYMENT ====================
     const { user_id, plan_id, payment_method, document, phone, card, card_token, installments, device_id, payment_method_id, issuer_id, payer_name, payer_email } = body;
