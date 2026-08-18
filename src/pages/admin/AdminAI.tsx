@@ -64,6 +64,15 @@ export default function AdminAI() {
     },
   });
 
+  if (!aiLoading && !aiEnabled) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <AINav current="dashboard" />
+        <AIDisabledNotice featureName="Central de IA" />
+      </div>
+    );
+  }
+
   if (isLoading || !usage) {
     return (
       <div className="space-y-6 p-1">
