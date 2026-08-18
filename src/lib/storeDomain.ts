@@ -87,13 +87,10 @@ export function buildStoreUrl({
   const domain = normalizeDomain(customDomain);
   const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
 
-  // Preserve o tenant no caminho. Se a hospedagem redirecionar um domínio
-  // secundário ao principal, ela mantém /loja/:slug e abre a vitrine correta.
+  // Domínio próprio ativo abre a vitrine diretamente na raiz e preserva sua
+  // identidade na barra de endereço. O slug pertence apenas ao domínio da
+  // plataforma e nunca deve ser anexado a um domínio personalizado.
   if (domain) {
-    if (cleanSlug) {
-      const base = `/loja/${cleanSlug}`;
-      return `https://${domain}${normalizedPath === "/" ? base : `${base}${normalizedPath}`}`;
-    }
     return `https://${domain}${normalizedPath === "/" ? "/" : normalizedPath}`;
   }
 
