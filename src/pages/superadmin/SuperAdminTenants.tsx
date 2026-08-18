@@ -1052,7 +1052,8 @@ export default function SuperAdminTenants() {
                             domainStatus: tenant.store?.domain_status,
                             sslReady: tenant.store?.domain_verify_details?.sslReady
                           });
-                          window.open(url, "_blank");
+                          if (!url) { toast.error("Este tenant ainda não tem slug ou domínio configurado."); return; }
+                          window.open(url, "_blank", "noopener");
                         }}>
                           <Eye className="mr-2 h-4 w-4" /> Ver Loja
                         </DropdownMenuItem>

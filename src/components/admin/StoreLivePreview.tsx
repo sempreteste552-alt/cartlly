@@ -26,7 +26,7 @@ export function StoreLivePreview({ open, onOpenChange, forceMobile }: StoreLiveP
   }) : "";
 
   // Add a preview parameter to avoid some tracking if needed
-  const previewUrl = storeUrl ? `${storeUrl}?preview=true` : "";
+  const previewUrl = storeUrl ? `${storeUrl}${storeUrl.includes("?") ? "&" : "?"}preview=true` : "";
 
   const text = {
     pt: { title: "Prévia da Loja", desktop: "Desktop", mobile: "Celular", reload: "Recarregar", external: "Abrir em nova aba", tip: "Dica: salve as alterações para vê-las refletidas aqui." },
@@ -70,7 +70,7 @@ export function StoreLivePreview({ open, onOpenChange, forceMobile }: StoreLiveP
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setKey(k => k + 1)} title={text.reload}>
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => window.open(storeUrl, "_blank")} title={text.external}>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => storeUrl && window.open(storeUrl, "_blank", "noopener")} title={text.external}>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
@@ -86,12 +86,18 @@ export function StoreLivePreview({ open, onOpenChange, forceMobile }: StoreLiveP
             {viewMode === "mobile" && (
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-20" />
             )}
-            <iframe
-              key={key}
-              src={previewUrl}
-              className="w-full h-full border-none"
-              title={text.title}
-            />
+            {previewUrl ? (
+              <iframe
+                key={key}
+                src={previewUrl}
+                className="w-full h-full border-none"
+                title={text.title}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center p-6 text-center text-sm text-muted-foreground">
+                Defina o endereço (slug) da sua loja em Configurações para visualizar a vitrine.
+              </div>
+            )}
           </div>
         </div>
         
