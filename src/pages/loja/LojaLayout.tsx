@@ -13,7 +13,6 @@ import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
-import { domainServesStore } from "@/hooks/useStorePublicUrl";
 import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
@@ -248,9 +247,8 @@ export default function LojaLayout() {
     return () => window.clearTimeout(timer);
   }, [slug, currentHostname]);
 
-  // Redireciona para o domínio personalizado APENAS se ele realmente servir a loja.
-  // (domínios só "conectados" redirecionam para o domínio da plataforma e o
-  //  cliente acabava caindo na página inicial/login em vez da loja)
+  // Quando uma loja é aberta pelo slug, preserve o comportamento original:
+  // domínios próprios verificados são a URL pública principal do tenant.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const customDomain = (settingsBySlug as any)?.custom_domain;
@@ -262,13 +260,8 @@ export default function LojaLayout() {
     if (!isPlatformHost(currentHost)) return;
     if (currentHost === target) return;
 
-    let active = true;
-    domainServesStore(target).then((ok) => {
-      if (!active || !ok) return;
-      const stripped = location.pathname.replace(/^\/loja\/[^/]+/, "") || "/";
-      window.location.replace(`https://${target}${stripped}${location.search}`);
-    });
-    return () => { active = false; };
+    const stripped = location.pathname.replace(/^\/loja\/[^/]+/, "") || "/";
+    window.location.replace(`https://${target}${stripped}${location.search}`);
   }, [settingsBySlug, location.pathname, location.search]);
 
   // Real-time store status monitoring moved down to avoid hook violation
