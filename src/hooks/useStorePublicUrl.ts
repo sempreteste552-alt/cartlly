@@ -17,14 +17,16 @@ export async function domainServesStore(domain: string): Promise<boolean> {
   if (cached !== null) return cached === "1";
 
   try {
-    const res = await fetch(`https://${host}/favicon.ico?probe=${Date.now()}`, {
-      method: "GET",
-      mode: "no-cors",
-      redirect: "manual",
-      cache: "no-store",
-    });
-    // "opaqueredirect" = o domínio redireciona para outro lugar (não serve a loja)
-    const ok = res.type !== "opaqueredirect";
+    const base = import.meta.env.VITE_SUPABASE_URL;
+    const res = await fetch(
+      `${base}/functions/v1/domain-probe?host=${encodeURIComponent(host)}`,
+      {
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string },
+      }
+    );
+    if (!res.ok) return true;
+    const json = await res.json();
+    const ok = json?.serves !== false;
     sessionStorage.setItem(cacheKey, ok ? "1" : "0");
     return ok;
   } catch {
@@ -32,6 +34,7 @@ export async function domainServesStore(domain: string): Promise<boolean> {
     return true;
   }
 }
+
 
 type Params = {
   slug?: string | null;
