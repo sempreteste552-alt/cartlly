@@ -77,12 +77,34 @@ export async function callAI(
     }
   }
 
+  // 1.5 Switch global da plataforma (padrão: DESLIGADO até o suporte liberar)
+  const { data: globalSettings } = await supabase
+    .from("ai_global_settings")
+    .select("is_ai_enabled_globally, disabled_message")
+    .limit(1)
+    .maybeSingle();
+
+  if (!globalSettings?.is_ai_enabled_globally && !options.skipQuotaCheck) {
+    throw new Error(
+      `AI_PLATFORM_DISABLED:${
+        globalSettings?.disabled_message ||
+        "Os recursos de IA ainda não foram liberados. Fale com o suporte."
+      }`
+    );
+  }
+
   // 2. Seleção de provedor (DB-driven, com fallback Lovable Gateway)
   const { data: activeProviders } = await supabase
     .from("ai_providers")
     .select("*")
     .eq("is_active", true)
     .order("created_at", { ascending: true });
+
+  if (!activeProviders?.length && !options.skipQuotaCheck) {
+    throw new Error(
+      "AI_PLATFORM_DISABLED:Nenhum provedor de IA configurado. Fale com o suporte para liberar."
+    );
+  }
 
   const providerData = activeProviders?.[0];
   let provider = (providerData?.name || "lovable").toLowerCase();
