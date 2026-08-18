@@ -75,6 +75,15 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [atTop, setAtTop] = useState(true);
+
+  // Só aparece quando o cliente está no topo da página; some ao rolar
+  useEffect(() => {
+    const onScroll = () => setAtTop(window.scrollY <= 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (isStandalone()) return;
