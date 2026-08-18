@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, Settings2, History, Users, Sparkles, Home } from "lucide-react";
 import { AIProvidersList } from "@/components/superadmin/AIProvidersList";
+import { AIGlobalSwitch } from "@/components/superadmin/AIGlobalSwitch";
 import { AITenantSettings } from "@/components/superadmin/AITenantSettings";
 import { AIUsageLogs } from "@/components/superadmin/AIUsageLogs";
 import { AIConsumptionDashboard } from "@/components/superadmin/AIConsumptionDashboard";
