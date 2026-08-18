@@ -144,8 +144,21 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // --- C) Fim da tolerância: bloqueia loja + painel ---
+      // --- C) Fim da tolerância ---
       if (s.blocked_at) continue;
+
+      // Nunca bloquear lojas liberadas manualmente pelo super admin
+      // (sem assinatura real no gateway) nem planos de cortesia.
+      const hasRealSubscription = !!(s.asaas_subscription_id || s.gateway_subscription_id);
+      if (!hasRealSubscription) {
+        await notify(
+          s.user_id,
+          "🚨 Pagamento pendente",
+          `Identificamos pendência em ${planName}${valor}. Regularize para manter todos os recursos ativos.`,
+          "subscription_past_due"
+        );
+        continue;
+      }
 
       const newStatus = s.status === "trial" ? "trial_expired" : "suspended";
 
