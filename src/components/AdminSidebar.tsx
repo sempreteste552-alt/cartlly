@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { motion } from "framer-motion";
+import { isFeatureNew } from "@/lib/newFeatureBadges";
 
 const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
   return (
@@ -96,23 +97,23 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
     { title: t.sidebar.dashboard, url: adminBasePath, icon: LayoutDashboard, isNew: false, show: true },
     { title: t.sidebar.products, url: `${adminBasePath}/produtos`, icon: Package, isNew: false, show: true },
     { title: t.sidebar.orders, url: `${adminBasePath}/pedidos`, icon: ShoppingCart, isNew: false, show: true },
-    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: true, show: true },
+    { title: locale === 'pt' ? 'Vendas Externas' : 'External Sales', url: `${adminBasePath}/vendas-externas`, icon: ShoppingBag, isNew: isFeatureNew('vendas_externas'), show: true },
     { title: t.sidebar.customers, url: `${adminBasePath}/clientes`, icon: Users, isNew: false, show: true },
-    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: UserCog, isNew: true, show: isRealOwner },
+    { title: t.sidebar.collaborators, url: `${adminBasePath}/colaboradores`, icon: UserCog, isNew: isFeatureNew('colaboradores'), show: isRealOwner },
     { title: t.sidebar.notifications, url: `${adminBasePath}/notificacoes`, icon: Bell, isNew: false, show: true },
     { title: t.sidebar.support, url: `${adminBasePath}/suporte`, icon: MessageCircle, isNew: false, badgeCount: supportUnreadCount, show: true },
   ].filter(i => i.show !== false);
 
   // Marketing & IA — consolidado: tudo de IA mora dentro de /ai (Cérebro, Automação IA, WhatsApp IA são abas internas)
   const marketingItems = [
-    { title: locale === 'pt' ? 'Central de IA' : 'AI Center', url: `${adminBasePath}/ai`, icon: Sparkles, isNew: true, show: true },
+    { title: locale === 'pt' ? 'Central de IA' : 'AI Center', url: `${adminBasePath}/ai`, icon: Sparkles, isNew: isFeatureNew('central_ia'), show: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: true },
-    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: true, show: true },
-    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: true, show: true },
-    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: true, show: true },
-    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: true, show: true },
-    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: true, show: true },
-    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Dices, isNew: true, show: true },
+    { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: isFeatureNew('automacao'), show: true },
+    { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: isFeatureNew('whatsapp_ia'), show: true },
+    { title: t.sidebar.referrals, url: `${adminBasePath}/indicacoes`, icon: Gift, isNew: isFeatureNew('indicacoes'), show: true },
+    { title: t.sidebar.platformReferrals, url: `${adminBasePath}/indicacoes-plataforma`, icon: Share2, isNew: isFeatureNew('indicacoes_plataforma'), show: true },
+    { title: t.sidebar.loyalty, url: `${adminBasePath}/fidelidade`, icon: Award, isNew: isFeatureNew('fidelidade'), show: true },
+    { title: t.sidebar.roulette, url: `${adminBasePath}/roleta`, icon: Dices, isNew: isFeatureNew('roleta'), show: true },
   ].filter(i => i.show !== false);
 
   const configItems = [

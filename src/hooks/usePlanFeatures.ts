@@ -87,15 +87,23 @@ export function usePlanFeatures() {
       const planNameRaw = (plan.name as string)?.toUpperCase() || "FREE";
       const planName = planNameRaw === "ELITE" ? "PREMIUM" : planNameRaw;
 
+      // Liberação manual (override do super admin) tem prioridade sobre bloqueio de cobrança
+      const resolve = (key: keyof PlanFeatures, fallback: boolean) => {
+        if (overrides[key] === true) return true;
+        if (overrides[key] === false) return false;
+        if (shouldBlock) return false;
+        return (features_obj as any)[key] ?? fallback;
+      };
+
       const resolvedFeatures: PlanFeatures = {
-        gateway: shouldBlock ? false : (overrides.gateway ?? features_obj.gateway ?? false),
-        ai_tools: shouldBlock ? false : (overrides.ai_tools ?? features_obj.ai_tools ?? false),
-        coupons: shouldBlock ? false : (overrides.coupons ?? features_obj.coupons ?? false),
-        shipping_zones: shouldBlock ? false : (overrides.shipping_zones ?? features_obj.shipping_zones ?? true),
-        banners: shouldBlock ? false : (overrides.banners ?? features_obj.banners ?? false),
-        custom_domain: shouldBlock ? false : (overrides.custom_domain ?? features_obj.custom_domain ?? false),
-        whatsapp_sales: shouldBlock ? false : (overrides.whatsapp_sales ?? features_obj.whatsapp_sales ?? true),
-        reviews: shouldBlock ? false : (overrides.reviews ?? features_obj.reviews ?? true),
+        gateway: resolve("gateway", false),
+        ai_tools: resolve("ai_tools", false),
+        coupons: resolve("coupons", false),
+        shipping_zones: resolve("shipping_zones", true),
+        banners: resolve("banners", false),
+        custom_domain: resolve("custom_domain", false),
+        whatsapp_sales: resolve("whatsapp_sales", true),
+        reviews: resolve("reviews", true),
         max_products: shouldBlock ? 5 : (plan.max_products ?? 5),
         max_orders_month: shouldBlock ? 0 : (plan.max_orders_month ?? 20),
       };

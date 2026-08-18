@@ -167,6 +167,11 @@ export interface TenantContext {
 
 /** Check if a tenant can access a specific feature */
 export function canAccess(feature: FeatureKey, ctx: TenantContext): boolean {
+  // Liberação manual (super admin / overrides) tem prioridade máxima
+  const explicit = ctx.planFeatures?.[feature];
+  if (explicit === true) return true;
+  if (explicit === false) return false;
+
   if (ctx.isTrial && !ctx.isTrialExpired) return true;
   if (isBlocked(ctx)) {
     const basicFeatures: FeatureKey[] = ["manage_products", "manage_categories", "manage_orders", "analytics_basic"];
