@@ -37,7 +37,7 @@ export default function MeuPlano() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
+  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number; trial?: boolean } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Auto-open checkout when navigated with ?upgrade=PRO etc.
@@ -61,9 +61,29 @@ export default function MeuPlano() {
         `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
         { method: "POST", headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` }, body: JSON.stringify({ action: "check_gateway" }) }
       );
-      return res.json() as Promise<{ gateway: string | null; methods: string[] }>;
+      return res.json() as Promise<{ gateway: string | null; methods: string[]; trial_days?: number }>;
     },
   });
+
+  // Elegibilidade ao teste grátis (exige cartão antecipado)
+  const { data: trialStatus } = useQuery({
+    queryKey: ["trial_status", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
+        { method: "POST", headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` }, body: JSON.stringify({ action: "trial_status", user_id: user!.id }) }
+      );
+      return res.json() as Promise<{ eligible: boolean; trial_days: number; trial_used?: boolean }>;
+    },
+  });
+
+  const trialDays = trialStatus?.trial_days ?? gatewayInfo?.trial_days ?? 0;
+  const trialEligible = !!trialStatus?.eligible && trialDays > 0
+    && (gatewayInfo?.methods || []).includes("CREDIT_CARD");
+
 
   const { data: pendingRequest } = useQuery({
     queryKey: ["pending_plan_request", user?.id],
@@ -332,6 +352,20 @@ export default function MeuPlano() {
 
                   {isCurrent ? (
                     <Button variant="outline" className="w-full mt-auto" disabled><Check className="h-4 w-4 mr-1" /> Plano Atual</Button>
+                  ) : trialEligible && plan.price > 0 ? (
+                    <div className="mt-auto space-y-2">
+                      <Button
+                        className={`w-full ${slug !== "FREE" ? `bg-gradient-to-r ${info?.gradient} hover:opacity-90 text-white` : ""}`}
+                        onClick={() => setCheckoutDialog({ planId: plan.id, planName: plan.name, price: Number(plan.price), trial: true })}
+                        disabled={!!pendingRequest}
+                      >
+                        <Sparkles className="h-4 w-4 mr-1" />
+                        Testar {trialDays} dias grátis
+                      </Button>
+                      <p className="text-[10px] text-center text-muted-foreground leading-tight">
+                        Cartão obrigatório · cobrança só após o teste
+                      </p>
+                    </div>
                   ) : (
                     <Button
                       className={`w-full mt-auto ${slug !== "FREE" ? `bg-gradient-to-r ${info?.gradient} hover:opacity-90 text-white` : ""}`}
@@ -343,6 +377,7 @@ export default function MeuPlano() {
                       {plan.price > (currentPlan?.price ?? 0) ? "Fazer Upgrade" : "Mudar"}
                     </Button>
                   )}
+
                 </CardContent>
               </Card>
             );
@@ -362,7 +397,8 @@ export default function MeuPlano() {
           planName={checkoutDialog.planName}
           planPrice={checkoutDialog.price}
           userId={user.id}
-          availableMethods={gatewayInfo?.methods || ["PIX"]}
+          availableMethods={checkoutDialog.trial ? ["CREDIT_CARD"] : (gatewayInfo?.methods || ["PIX"])}
+          trialDays={checkoutDialog.trial ? trialDays : 0}
         />
       )}
       </div>
