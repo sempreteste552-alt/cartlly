@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { motion } from "framer-motion";
+import { isFeatureNew } from "@/lib/newFeatureBadges";
 
 const AnimatedText = ({ text, className, delay = 0 }: { text: string; className?: string; delay?: number }) => {
   return (
