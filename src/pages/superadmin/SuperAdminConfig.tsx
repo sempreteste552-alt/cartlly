@@ -250,7 +250,7 @@ export default function SuperAdminConfig() {
             </div>
             <div className="space-y-2">
               <Label>E-mail da Plataforma</Label>
-              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@cartlly.lovable.app" />
+              <Input type="email" value={config.platform_email} onChange={e => updateField("platform_email", e.target.value)} placeholder="contato@cartlly.store" />
             </div>
           </div>
           <div className="space-y-2">
