@@ -61,9 +61,29 @@ export default function MeuPlano() {
         `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
         { method: "POST", headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` }, body: JSON.stringify({ action: "check_gateway" }) }
       );
-      return res.json() as Promise<{ gateway: string | null; methods: string[] }>;
+      return res.json() as Promise<{ gateway: string | null; methods: string[]; trial_days?: number }>;
     },
   });
+
+  // Elegibilidade ao teste grátis (exige cartão antecipado)
+  const { data: trialStatus } = useQuery({
+    queryKey: ["trial_status", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/subscribe-plan`,
+        { method: "POST", headers: { "Content-Type": "application/json", apikey: anonKey, Authorization: `Bearer ${anonKey}` }, body: JSON.stringify({ action: "trial_status", user_id: user!.id }) }
+      );
+      return res.json() as Promise<{ eligible: boolean; trial_days: number; trial_used?: boolean }>;
+    },
+  });
+
+  const trialDays = trialStatus?.trial_days ?? gatewayInfo?.trial_days ?? 0;
+  const trialEligible = !!trialStatus?.eligible && trialDays > 0
+    && (gatewayInfo?.methods || []).includes("CREDIT_CARD");
+
 
   const { data: pendingRequest } = useQuery({
     queryKey: ["pending_plan_request", user?.id],
