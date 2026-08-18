@@ -13,6 +13,7 @@ import { SmartSearchBar } from "@/components/storefront/SmartSearchBar";
 import { StoreFilter } from "@/components/storefront/StoreFilter";
 import { PushPermissionPrompt } from "@/components/storefront/PushPermissionPrompt";
 import { usePublicThemeConfig, usePublicProductPageConfig, useResolvedPublicStore, usePublicProducts, usePublicCategories } from "@/hooks/usePublicStore";
+import { domainServesStore } from "@/hooks/useStorePublicUrl";
 import { isPlatformHost } from "@/lib/storeDomain";
 import { usePwaManifest } from "@/hooks/usePwaManifest";
 import { useCart } from "@/hooks/useCart";
@@ -247,7 +248,9 @@ export default function LojaLayout() {
     return () => window.clearTimeout(timer);
   }, [slug, currentHostname]);
 
-  // Auto-redirect to custom domain when accessing via /loja/:slug on a platform host
+  // Redireciona para o domínio personalizado APENAS se ele realmente servir a loja.
+  // (domínios só "conectados" redirecionam para o domínio da plataforma e o
+  //  cliente acabava caindo na página inicial/login em vez da loja)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const customDomain = (settingsBySlug as any)?.custom_domain;
@@ -258,9 +261,14 @@ export default function LojaLayout() {
     const target = String(customDomain).toLowerCase().replace(/^www\./, "");
     if (!isPlatformHost(currentHost)) return;
     if (currentHost === target) return;
-    // Strip the /loja/:slug prefix and redirect to the custom domain root
-    const stripped = location.pathname.replace(/^\/loja\/[^/]+/, "") || "/";
-    window.location.replace(`https://${target}${stripped}${location.search}`);
+
+    let active = true;
+    domainServesStore(target).then((ok) => {
+      if (!active || !ok) return;
+      const stripped = location.pathname.replace(/^\/loja\/[^/]+/, "") || "/";
+      window.location.replace(`https://${target}${stripped}${location.search}`);
+    });
+    return () => { active = false; };
   }, [settingsBySlug, location.pathname, location.search]);
 
   // Real-time store status monitoring moved down to avoid hook violation
