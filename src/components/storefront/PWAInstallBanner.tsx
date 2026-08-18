@@ -155,7 +155,11 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   return (
     <>
       {/* Inline sticky install card — stays at top until installed */}
-      <div className="w-full bg-card border-b border-border shadow-sm">
+      <div
+        className={`w-full bg-card border-b border-border shadow-sm overflow-hidden transition-all duration-300 ${
+          atTop ? "max-h-24 opacity-100" : "max-h-0 opacity-0 border-b-0"
+        }`}
+      >
         <div className="max-w-md mx-auto flex items-center gap-3 p-2.5">
           <div className="relative shrink-0">
             {logoUrl ? (
