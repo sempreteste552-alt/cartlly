@@ -76,6 +76,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { data: settings } = useStoreSettings();
   const storeUrl = useStorePublicUrl({
+    storeId: settings?.id,
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,
