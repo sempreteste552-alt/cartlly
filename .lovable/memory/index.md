@@ -11,3 +11,4 @@ Admin store management system (Loja Admin V0). Portuguese UI language.
 ## Memories
 - [Theme isolation](mem://design/theme-isolation) — Dark/light theme isolated per tenant/store
 - [Amplopay integration](mem://features/amplopay) — API docs, endpoints, webhook format
+- [Fallback Link Ver Loja](mem://infra/dominios-redirecionamento-vitrine) — domain-probe + fallback automático para /loja/slug

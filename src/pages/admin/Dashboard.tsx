@@ -15,7 +15,7 @@ import {
   Lock, Sparkles, ExternalLink, Calendar, Filter, Activity, Cpu, 
   Layers, Zap, RefreshCw, ChevronUp, ChevronDown, ArrowRight
 } from "lucide-react";
-import { buildStoreUrl } from "@/lib/storeDomain";
+import { useStorePublicUrl } from "@/hooks/useStorePublicUrl";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area, CartesianGrid } from "recharts";
@@ -75,7 +75,7 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: settings } = useStoreSettings();
-  const storeUrl = buildStoreUrl({
+  const storeUrl = useStorePublicUrl({
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,
@@ -302,12 +302,19 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-2">
             {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
 
-            <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
-              <a href={storeUrl} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild disabled={!storeUrl}>
+              <a
+                href={storeUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { if (!storeUrl) { e.preventDefault(); navigate(`${slug ? `/${slug}` : ""}/admin/configuracoes`); } }}
+                className={!storeUrl ? "opacity-60" : ""}
+              >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Ver Minha Loja
               </a>
             </Button>
+
 
             <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
               <RefreshCw className="h-3.5 w-3.5" />

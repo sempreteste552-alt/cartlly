@@ -251,7 +251,8 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                                 domainStatus: storeSettings.domain_status,
                                 sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
                               });
-                              window.open(url, "_blank");
+                              if (!url) { toast.error("Este tenant ainda não tem slug ou domínio configurado."); return; }
+                          window.open(url, "_blank", "noopener");
                             }}
                           >
                             <Eye className="mr-2 h-3 w-3" /> Ver Loja
@@ -511,7 +512,8 @@ export function TenantDetailDialog({ open, onOpenChange, tenant }: TenantDetailD
                         domainStatus: storeSettings.domain_status,
                         sslReady: (storeSettings as any)?.domain_verify_details?.sslReady
                       });
-                      window.open(url, "_blank");
+                      if (!url) { toast.error("Loja sem slug ou domínio configurado."); return; }
+                      window.open(url, "_blank", "noopener");
                     }}>
                       <Eye className="mr-2 h-3 w-3" /> Ver Loja
                     </Button>
