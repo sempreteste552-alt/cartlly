@@ -997,6 +997,8 @@ export default function Cerebro() {
     sendMessage.mutate(content);
   };
 
+  if (aiGate) return aiGate;
+
   return (
     <PlanGate feature="ai_tools">
       <div className="flex flex-col gap-4 p-1">
