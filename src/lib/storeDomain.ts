@@ -19,6 +19,7 @@ export function isPlatformHost(hostname?: string | null) {
     "cartlly.lovable.app",
     "cartlly.com.br",
     "cartlly.com",
+    "cartlly.store",
     "app.cartlly.com.br",
     "app.cartlly.com",
   ];
@@ -48,7 +49,7 @@ export function isPlatformHost(hostname?: string | null) {
 
 export function getSlugFromHostname(hostname: string) {
   const host = normalizeDomain(hostname);
-  const platformDomains = ["cartlly.com", "cartlly.com.br", "lovable.app", "lovableproject.com"];
+  const platformDomains = ["cartlly.com", "cartlly.com.br", "cartlly.store", "lovable.app", "lovableproject.com"];
   
   // Only proceed if it ends with one of our platform domains
   const baseDomain = platformDomains.find(d => host.endsWith("." + d));

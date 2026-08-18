@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     // 4. Fallback to Subdomain (Existing system)
     // Example: my-store.cartlly.com.br -> my-store
     // Assuming the platform domains are known
-    const platformDomains = ["cartlly.com", "cartlly.com.br", "lovable.app", "lovableproject.com"];
+    const platformDomains = ["cartlly.com", "cartlly.com.br", "cartlly.store", "lovable.app", "lovableproject.com"];
     const domainParts = fullHostname.split(".");
     
     // Check if it's a subdomain of a platform domain
