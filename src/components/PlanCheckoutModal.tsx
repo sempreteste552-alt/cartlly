@@ -820,24 +820,43 @@ export default function PlanCheckoutModal({
                   <CheckCircle2 className="h-9 w-9 sm:h-11 sm:w-11 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">Pagamento Aprovado! 🎉</h3>
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-foreground leading-tight">
+                    {isTrial ? "Teste grátis ativado! 🎉" : "Pagamento Aprovado! 🎉"}
+                  </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                    Seu plano <strong className="text-foreground">{planName}</strong> foi ativado com sucesso. Todos os recursos premium já estão disponíveis.
+                    {isTrial ? (
+                      <>Você tem <strong className="text-foreground">{trialDays} dias grátis</strong> no plano <strong className="text-foreground">{planName}</strong>. Nenhum valor foi cobrado do seu cartão.</>
+                    ) : (
+                      <>Seu plano <strong className="text-foreground">{planName}</strong> foi ativado com sucesso. Todos os recursos premium já estão disponíveis.</>
+                    )}
                   </p>
                 </div>
               </div>
 
               {/* Receipt */}
               <div className="rounded-xl bg-muted/30 border border-border/40 p-3.5 sm:p-5 space-y-2 sm:space-y-3 text-[13px] sm:text-sm">
-                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wide">Comprovante</p>
+                <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  {isTrial ? "Resumo do teste" : "Comprovante"}
+                </p>
                 <div className="space-y-2">
-                  {[
-                    ["Plano", planName],
-                    ["Valor", formatPrice(planPrice)],
-                    ["Método", "PIX"],
-                    ["Pagador", fullName || "—"],
-                    ["Data", new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })],
-                  ].map(([label, value]) => (
+                  {(isTrial
+                    ? [
+                        ["Plano", planName],
+                        ["Cobrado hoje", "R$ 0,00"],
+                        ["Após o teste", `${formatPrice(planPrice)}/mês`],
+                        ["1ª cobrança", trialEndsAt
+                          ? new Date(trialEndsAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+                          : trialEndDateLabel],
+                        ["Titular", fullName || "—"],
+                      ]
+                    : [
+                        ["Plano", planName],
+                        ["Valor", formatPrice(planPrice)],
+                        ["Método", "PIX"],
+                        ["Pagador", fullName || "—"],
+                        ["Data", new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })],
+                      ]
+                  ).map(([label, value]) => (
                     <div key={label} className="flex justify-between items-center">
                       <span className="text-muted-foreground">{label}</span>
                       <span className="font-semibold text-foreground">{value}</span>
@@ -845,8 +864,11 @@ export default function PlanCheckoutModal({
                   ))}
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] font-bold">✓ Aprovado</Badge>
+                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] font-bold">
+                      {isTrial ? "✓ Em teste" : "✓ Aprovado"}
+                    </Badge>
                   </div>
+
                   {transactionId && (
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">ID</span>
