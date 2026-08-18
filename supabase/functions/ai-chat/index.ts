@@ -287,7 +287,7 @@ FORMATOS DE AÇÃO (coloque no FINAL da resposta, após o texto):
 
    | Tipo | Nome/Host | Valor |
    |------|-----------|-------|
-   | CNAME | www | www.cartlly.lovable.app |
+   | CNAME | www | www.cartlly.store |
    | A | @ | 185.158.133.1 |
    | TXT | _lovable | lovable_verify=[TOKEN_DA_LOJA] |
 
