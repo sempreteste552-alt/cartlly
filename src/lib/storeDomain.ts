@@ -85,16 +85,20 @@ export function buildStoreUrl({
 }) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const domain = normalizeDomain(customDomain);
+  const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
 
-  // Domínio próprio pertence à vitrine do tenant. O domínio oficial da
-  // plataforma nunca deve substituir um domínio de loja já configurado.
+  // Preserve o tenant no caminho. Se a hospedagem redirecionar um domínio
+  // secundário ao principal, ela mantém /loja/:slug e abre a vitrine correta.
   if (domain) {
+    if (cleanSlug) {
+      const base = `/loja/${cleanSlug}`;
+      return `https://${domain}${normalizedPath === "/" ? base : `${base}${normalizedPath}`}`;
+    }
     return `https://${domain}${normalizedPath === "/" ? "/" : normalizedPath}`;
   }
 
   // Sem domínio próprio, preserve o roteamento original por slug na mesma
   // origem em que o painel está aberto (produção, preview ou desenvolvimento).
-  const cleanSlug = (slug || "").trim().replace(/^\/+|\/+$/g, "");
   if (cleanSlug) {
     const base = `/loja/${cleanSlug}`;
     return normalizedPath === "/" ? base : `${base}${normalizedPath}`;
