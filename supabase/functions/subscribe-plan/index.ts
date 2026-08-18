@@ -24,7 +24,26 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({} as any));
+    const action = typeof body?.action === "string" ? body.action.trim() : "";
+
+    // ==================== TRIAL STATUS ====================
+    if (action === "trial_status") {
+      if (!body.user_id) {
+        return json({ trial_used: false, status: null, trial_ends_at: null });
+      }
+      const { data: sub } = await supabase
+        .from("tenant_subscriptions")
+        .select("trial_used, status, trial_ends_at")
+        .eq("user_id", body.user_id)
+        .maybeSingle();
+      return json({
+        trial_used: !!sub?.trial_used,
+        status: sub?.status ?? null,
+        trial_ends_at: sub?.trial_ends_at ?? null,
+      });
+    }
+
 
     // ==================== CHECK GATEWAY ====================
     if (body.action === "check_gateway") {
