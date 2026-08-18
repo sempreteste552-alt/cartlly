@@ -295,26 +295,32 @@ export type Database = {
       ai_global_settings: {
         Row: {
           default_provider_id: string | null
+          disabled_message: string | null
           global_daily_limit_usd: number | null
           global_monthly_limit_usd: number | null
           id: string
           is_ai_enabled_globally: boolean | null
+          support_contact: string | null
           updated_at: string | null
         }
         Insert: {
           default_provider_id?: string | null
+          disabled_message?: string | null
           global_daily_limit_usd?: number | null
           global_monthly_limit_usd?: number | null
           id?: string
           is_ai_enabled_globally?: boolean | null
+          support_contact?: string | null
           updated_at?: string | null
         }
         Update: {
           default_provider_id?: string | null
+          disabled_message?: string | null
           global_daily_limit_usd?: number | null
           global_monthly_limit_usd?: number | null
           id?: string
           is_ai_enabled_globally?: boolean | null
+          support_contact?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -4495,6 +4501,7 @@ export type Database = {
           asaas_customer_id: string | null
           asaas_subscription_id: string | null
           billing_type: string | null
+          blocked_at: string | null
           created_at: string
           current_period_end: string
           current_period_start: string
@@ -4502,7 +4509,10 @@ export type Database = {
           custom_price_reason: string | null
           downgrade_applied_at: string | null
           feature_overrides: Json
+          grace_ends_at: string | null
           id: string
+          last_due_warning_at: string | null
+          last_overdue_notice_at: string | null
           next_due_date: string | null
           plan_id: string
           plan_reminders_sent: number[]
@@ -4519,6 +4529,7 @@ export type Database = {
           asaas_customer_id?: string | null
           asaas_subscription_id?: string | null
           billing_type?: string | null
+          blocked_at?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
@@ -4526,7 +4537,10 @@ export type Database = {
           custom_price_reason?: string | null
           downgrade_applied_at?: string | null
           feature_overrides?: Json
+          grace_ends_at?: string | null
           id?: string
+          last_due_warning_at?: string | null
+          last_overdue_notice_at?: string | null
           next_due_date?: string | null
           plan_id: string
           plan_reminders_sent?: number[]
@@ -4543,6 +4557,7 @@ export type Database = {
           asaas_customer_id?: string | null
           asaas_subscription_id?: string | null
           billing_type?: string | null
+          blocked_at?: string | null
           created_at?: string
           current_period_end?: string
           current_period_start?: string
@@ -4550,7 +4565,10 @@ export type Database = {
           custom_price_reason?: string | null
           downgrade_applied_at?: string | null
           feature_overrides?: Json
+          grace_ends_at?: string | null
           id?: string
+          last_due_warning_at?: string | null
+          last_overdue_notice_at?: string | null
           next_due_date?: string | null
           plan_id?: string
           plan_reminders_sent?: number[]
@@ -5166,6 +5184,15 @@ export type Database = {
         }[]
       }
       generate_referral_code: { Args: never; Returns: string }
+      get_ai_platform_status: {
+        Args: never
+        Returns: {
+          enabled: boolean
+          has_provider: boolean
+          message: string
+          support_contact: string
+        }[]
+      }
       get_ai_usage_stats: {
         Args: { p_start_date?: string }
         Returns: {
