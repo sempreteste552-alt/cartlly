@@ -397,7 +397,8 @@ export default function MeuPlano() {
           planName={checkoutDialog.planName}
           planPrice={checkoutDialog.price}
           userId={user.id}
-          availableMethods={gatewayInfo?.methods || ["PIX"]}
+          availableMethods={checkoutDialog.trial ? ["CREDIT_CARD"] : (gatewayInfo?.methods || ["PIX"])}
+          trialDays={checkoutDialog.trial ? trialDays : 0}
         />
       )}
       </div>
