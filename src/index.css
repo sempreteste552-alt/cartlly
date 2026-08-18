@@ -93,6 +93,47 @@ html, body {
   }
 }
 
+/* ---- App-like layout hardening (global, no visual redesign) ---- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* nunca deixar mídia estourar o container */
+img, video, canvas, svg, iframe {
+  max-width: 100%;
+}
+img, video {
+  height: auto;
+}
+
+/* textos longos (URLs, SKUs, nomes) não quebram o layout */
+p, span, a, li, h1, h2, h3, h4, h5, h6, label, button, td, th {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* filhos flex/grid podem encolher em vez de estourar */
+.flex > *, .grid > * { min-width: 0; }
+
+/* modais sempre dentro do viewport */
+[role="dialog"], [data-radix-popper-content-wrapper] > * {
+  max-width: calc(100vw - 16px);
+}
+
+/* tabelas com scroll próprio, nunca na página */
+table { max-width: 100%; }
+
+/* alvos de toque confortáveis no mobile */
+@media (max-width: 768px) {
+  button, [role="button"], a[href] {
+    touch-action: manipulation;
+  }
+}
+
 
 
 
