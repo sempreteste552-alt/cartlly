@@ -302,12 +302,19 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-2">
             {loadingStats && <Badge variant="outline" className="animate-pulse text-xs bg-primary/10 border-primary/30 text-primary">{t.common.loading}</Badge>}
 
-            <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild>
-              <a href={storeUrl} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" variant="outline" className="gap-2 border-primary/20 h-9 text-xs bg-background/60 backdrop-blur-md" asChild disabled={!storeUrl}>
+              <a
+                href={storeUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => { if (!storeUrl) { e.preventDefault(); navigate(`${slug ? `/${slug}` : ""}/admin/configuracoes`); } }}
+                className={!storeUrl ? "opacity-60" : ""}
+              >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Ver Minha Loja
               </a>
             </Button>
+
 
             <Button size="sm" className="gap-2 h-9 text-xs shadow-lg shadow-primary/20">
               <RefreshCw className="h-3.5 w-3.5" />
