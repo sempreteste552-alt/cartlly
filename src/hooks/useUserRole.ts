@@ -63,6 +63,12 @@ export function useAllTenants() {
         .from("store_settings")
         .select("*");
 
+      // Registered domains are authoritative; store_settings.custom_domain is
+      // retained only as a legacy fallback.
+      const { data: registeredDomains } = await supabase
+        .from("store_domains_public")
+        .select("store_id, hostname, is_primary");
+
       // Get subscriptions
       const { data: subs } = await supabase
         .from("tenant_subscriptions")
@@ -124,7 +130,14 @@ export function useAllTenants() {
         ?.filter((p: any) => !superAdminIds.has(p.user_id))
         .map((p: any) => ({
           ...p,
-          store: stores?.find((s: any) => s.user_id === p.user_id),
+          store: (() => {
+            const store = stores?.find((s: any) => s.user_id === p.user_id);
+            if (!store) return store;
+            const domain = registeredDomains
+              ?.filter((d: any) => d.store_id === store.id)
+              .sort((a: any, b: any) => Number(b.is_primary) - Number(a.is_primary))[0];
+            return { ...store, registered_domain: domain?.hostname || null };
+          })(),
           subscription: subs?.find((s: any) => s.user_id === p.user_id),
           productCount: productCounts[p.user_id] || 0,
           orders: orderData[p.user_id] || { count: 0, revenue: 0 },

@@ -1048,7 +1048,7 @@ export default function SuperAdminTenants() {
                         <DropdownMenuItem onClick={() => {
                           const url = buildStoreUrl({
                             slug: tenant.store?.store_slug,
-                            customDomain: tenant.store?.custom_domain,
+                            customDomain: tenant.store?.registered_domain || tenant.store?.custom_domain,
                             domainStatus: tenant.store?.domain_status,
                             sslReady: tenant.store?.domain_verify_details?.sslReady
                           });

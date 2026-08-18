@@ -94,11 +94,17 @@ export function buildStoreUrl({
     return `https://${domain}${normalizedPath === "/" ? "/" : normalizedPath}`;
   }
 
-  // Sem domínio próprio, preserve o roteamento original por slug na mesma
-  // origem em que o painel está aberto (produção, preview ou desenvolvimento).
+  // Sem domínio próprio, use sempre o domínio oficial em produção. Isso evita
+  // que um painel aberto por outro host gere links da vitrine no host errado.
   if (cleanSlug) {
     const base = `/loja/${cleanSlug}`;
-    return normalizedPath === "/" ? base : `${base}${normalizedPath}`;
+    const storePath = normalizedPath === "/" ? base : `${base}${normalizedPath}`;
+    if (typeof window !== "undefined") {
+      const currentHost = normalizeDomain(window.location.hostname);
+      const isLocalOrPreview = currentHost === "localhost" || currentHost === "127.0.0.1" || currentHost.includes("-preview-") || currentHost.includes("--");
+      if (isLocalOrPreview) return `${window.location.origin}${storePath}`;
+    }
+    return `https://cartlly.store${storePath}`;
   }
 
   // Sem slug e sem domínio: não há loja pública para abrir

@@ -81,6 +81,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   }[locale];
 
   const storeUrl = useStorePublicUrl({
+    storeId: settings?.id,
     slug: settings?.store_slug,
     customDomain: settings?.custom_domain,
     domainStatus: settings?.domain_status,

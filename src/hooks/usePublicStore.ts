@@ -109,22 +109,8 @@ export function useResolvedPublicStore(slug?: string) {
         if (domainError) throw domainError;
 
         if (domainData) {
-          // Check for redirection if not primary
-          if (!domainData.is_primary) {
-            const { data: primaryDomain } = await supabase
-              .from("store_domains_public")
-              .select("hostname")
-              .eq("store_id", domainData.store_id)
-              .eq("is_primary", true)
-              .maybeSingle();
-            
-            if (primaryDomain && primaryDomain.hostname !== hostname) {
-              // Perform client-side redirect
-              window.location.replace(`https://${primaryDomain.hostname}${window.location.pathname}${window.location.search}`);
-              return null;
-            }
-          }
-
+          // Every registered custom domain serves the tenant directly. Never
+          // replace it with the platform host or another domain in the browser.
           const { data: storeData, error: storeError } = await supabase
             .from("store_settings_public")
             .select("*")
