@@ -75,6 +75,15 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   const [platform, setPlatform] = useState<Platform>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [atTop, setAtTop] = useState(true);
+
+  // Só aparece quando o cliente está no topo da página; some ao rolar
+  useEffect(() => {
+    const onScroll = () => setAtTop(window.scrollY <= 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -146,7 +155,11 @@ export function PWAInstallBanner({ storeName, logoUrl, primaryColor, storeUserId
   return (
     <>
       {/* Inline sticky install card — stays at top until installed */}
-      <div className="w-full bg-card border-b border-border shadow-sm">
+      <div
+        className={`w-full bg-card border-b border-border shadow-sm overflow-hidden transition-all duration-300 ${
+          atTop ? "max-h-24 opacity-100" : "max-h-0 opacity-0 border-b-0"
+        }`}
+      >
         <div className="max-w-md mx-auto flex items-center gap-3 p-2.5">
           <div className="relative shrink-0">
             {logoUrl ? (
