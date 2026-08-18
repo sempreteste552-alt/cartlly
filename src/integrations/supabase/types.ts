@@ -4507,7 +4507,11 @@ export type Database = {
           plan_id: string
           plan_reminders_sent: number[]
           status: string
+          trial_card_brand: string | null
+          trial_card_last4: string | null
           trial_ends_at: string | null
+          trial_started_at: string | null
+          trial_used: boolean
           updated_at: string
           user_id: string
         }
@@ -4527,7 +4531,11 @@ export type Database = {
           plan_id: string
           plan_reminders_sent?: number[]
           status?: string
+          trial_card_brand?: string | null
+          trial_card_last4?: string | null
           trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_used?: boolean
           updated_at?: string
           user_id: string
         }
@@ -4547,7 +4555,11 @@ export type Database = {
           plan_id?: string
           plan_reminders_sent?: number[]
           status?: string
+          trial_card_brand?: string | null
+          trial_card_last4?: string | null
           trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_used?: boolean
           updated_at?: string
           user_id?: string
         }

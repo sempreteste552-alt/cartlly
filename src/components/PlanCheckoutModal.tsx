@@ -52,6 +52,8 @@ interface PlanCheckoutModalProps {
   planPrice: number;
   userId: string;
   availableMethods: string[];
+  /** Quando > 0, inicia um teste grátis exigindo cartão de crédito antecipadamente */
+  trialDays?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -85,9 +87,10 @@ const PLAN_GRADIENT: Record<string, string> = {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 export default function PlanCheckoutModal({
-  open, onOpenChange, planId, planName, planPrice, userId, availableMethods,
+  open, onOpenChange, planId, planName, planPrice, userId, availableMethods, trialDays = 0,
 }: PlanCheckoutModalProps) {
   const queryClient = useQueryClient();
+  const isTrial = trialDays > 0;
 
   const [step, setStep] = useState<CheckoutStep>("form");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("PIX");
@@ -112,6 +115,7 @@ export default function PlanCheckoutModal({
   const [countdown, setCountdown] = useState(0);
   const [transactionId, setTransactionId] = useState("");
   const [cardStatus, setCardStatus] = useState<CardTapStatus>("processing");
+  const [trialEndsAt, setTrialEndsAt] = useState<string>("");
 
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -119,6 +123,10 @@ export default function PlanCheckoutModal({
   const planSlug = planName.toUpperCase();
   const PlanIcon = PLAN_ICON[planSlug] || Sparkles;
   const gradient = PLAN_GRADIENT[planSlug] || "from-primary to-primary/80";
+
+  const trialEndDateLabel = new Date(Date.now() + trialDays * 86400 * 1000)
+    .toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
 
   useEffect(() => {
     if (!open) {
@@ -135,14 +143,16 @@ export default function PlanCheckoutModal({
         setCountdown(0);
         setTransactionId("");
         setErrorMsg("");
+        setTrialEndsAt("");
       }, 300);
       return () => clearTimeout(t);
     } else {
-      // Pick first available method as default
-      const first = (availableMethods[0] as PaymentMethod) || "PIX";
+      // No teste grátis o cartão é obrigatório (cobrança automática ao fim do teste)
+      const first = isTrial ? "CREDIT_CARD" : ((availableMethods[0] as PaymentMethod) || "PIX");
       setSelectedMethod(first);
     }
-  }, [open, availableMethods]);
+  }, [open, availableMethods, isTrial]);
+
 
   useEffect(() => {
     if (countdown <= 0 && countdownRef.current) {
@@ -230,6 +240,8 @@ export default function PlanCheckoutModal({
         payer_email: email.trim(),
       };
 
+      if (isTrial) payload.start_trial = true;
+
       if (selectedMethod === "CREDIT_CARD") {
         payload.installments = 1;
         payload.card = {
@@ -259,6 +271,19 @@ export default function PlanCheckoutModal({
 
       setTransactionId(data.transaction_id || "");
 
+      // Teste grátis iniciado: cartão validado e cobrança agendada
+      if (data.status === "trial") {
+        setTrialEndsAt(data.trial_ends_at || "");
+        setCardStatus("approved");
+        setTimeout(() => {
+          setStep("success");
+          fireConfetti();
+          queryClient.invalidateQueries({ queryKey: ["tenant_context"] });
+          queryClient.invalidateQueries({ queryKey: ["trial_status"] });
+        }, 2000);
+        return;
+      }
+
       if (data.status === "approved") {
         if (selectedMethod === "CREDIT_CARD") {
           // Show APPROVED on the POS screen, then celebrate.
@@ -275,6 +300,7 @@ export default function PlanCheckoutModal({
         }
         return;
       }
+
 
       if (selectedMethod === "PIX" && data.pix?.qrCode) {
         setPixQrCode(data.pix.qrCode);
@@ -353,14 +379,26 @@ export default function PlanCheckoutModal({
               <PlanIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <p className="text-[10px] sm:text-xs font-medium text-white/70 uppercase tracking-wider">Checkout seguro</p>
+              <p className="text-[10px] sm:text-xs font-medium text-white/70 uppercase tracking-wider">
+                {isTrial ? `Teste grátis de ${trialDays} dias` : "Checkout seguro"}
+              </p>
               <h2 className="text-lg sm:text-xl font-bold leading-tight">Plano {planName}</h2>
               <div className="flex items-baseline gap-1 mt-0">
-                <span className="text-xl sm:text-2xl font-extrabold">{formatPrice(planPrice)}</span>
-                <span className="text-xs sm:text-sm text-white/70">/mês</span>
+                {isTrial ? (
+                  <>
+                    <span className="text-xl sm:text-2xl font-extrabold">R$ 0,00</span>
+                    <span className="text-xs sm:text-sm text-white/70">hoje · depois {formatPrice(planPrice)}/mês</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl sm:text-2xl font-extrabold">{formatPrice(planPrice)}</span>
+                    <span className="text-xs sm:text-sm text-white/70">/mês</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
+
 
         </div>
 
@@ -370,9 +408,24 @@ export default function PlanCheckoutModal({
           {step === "form" && (
             <div className="space-y-4">
 
+              {/* Trial explainer */}
+              {isTrial && (
+                <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 space-y-2">
+                  <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" /> {trialDays} dias grátis, sem cobrança hoje
+                  </p>
+                  <ul className="space-y-1.5 text-xs text-muted-foreground">
+                    <li className="flex gap-2"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" /> Pedimos o cartão apenas para validar sua conta e manter o acesso sem interrupção.</li>
+                    <li className="flex gap-2"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" /> Em <strong className="text-foreground">{trialEndDateLabel}</strong> a assinatura de {formatPrice(planPrice)}/mês é cobrada automaticamente.</li>
+                    <li className="flex gap-2"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" /> Cancele a qualquer momento antes do fim do teste e nada será cobrado.</li>
+                  </ul>
+                </div>
+              )}
+
               {/* Payment method */}
-              <div className="space-y-2">
+              <div className={`space-y-2 ${isTrial ? "hidden" : ""}`}>
                 <label className="text-xs font-semibold text-foreground uppercase tracking-tight opacity-70">Forma de pagamento</label>
+
                 <div className={`grid gap-2 sm:gap-3 ${availableMethods.length >= 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
                   {(["PIX", "CREDIT_CARD", "BOLETO"] as PaymentMethod[]).map((m) => {
                     const enabled = availableMethods.includes(m);
@@ -552,9 +605,17 @@ export default function PlanCheckoutModal({
                   <span className="text-muted-foreground font-medium">Ciclo de faturamento</span>
                   <span className="text-muted-foreground font-medium">Mensal</span>
                 </div>
+                {isTrial && (
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
+                    <span className="text-muted-foreground font-medium">1ª cobrança</span>
+                    <span className="font-semibold text-foreground">{trialEndDateLabel}</span>
+                  </div>
+                )}
                 <div className="border-t border-border/30 pt-1.5 mt-1 flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground">Total à pagar</span>
-                  <span className="text-lg sm:text-xl font-extrabold text-foreground">{formatPrice(planPrice)}</span>
+                  <span className="text-sm font-bold text-foreground">{isTrial ? "Total hoje" : "Total à pagar"}</span>
+                  <span className="text-lg sm:text-xl font-extrabold text-foreground">
+                    {isTrial ? "R$ 0,00" : formatPrice(planPrice)}
+                  </span>
                 </div>
               </div>
 
@@ -564,11 +625,28 @@ export default function PlanCheckoutModal({
                 disabled={!isFormValid}
                 onClick={generatePayment}
               >
-                {selectedMethod === "PIX" && <QrCode className="h-5 w-5" />}
-                {selectedMethod === "CREDIT_CARD" && <CreditCard className="h-5 w-5" />}
-                {selectedMethod === "BOLETO" && <FileText className="h-5 w-5" />}
-                Pagar com {METHOD_LABELS[selectedMethod]} — {formatPrice(planPrice)}
+                {isTrial ? (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Iniciar {trialDays} dias grátis
+                  </>
+                ) : (
+                  <>
+                    {selectedMethod === "PIX" && <QrCode className="h-5 w-5" />}
+                    {selectedMethod === "CREDIT_CARD" && <CreditCard className="h-5 w-5" />}
+                    {selectedMethod === "BOLETO" && <FileText className="h-5 w-5" />}
+                    Pagar com {METHOD_LABELS[selectedMethod]} — {formatPrice(planPrice)}
+                  </>
+                )}
               </Button>
+
+              {isTrial && (
+                <p className="text-[11px] text-center text-muted-foreground -mt-1">
+                  <Lock className="h-3 w-3 inline mr-1" />
+                  Nenhum valor é cobrado agora. Renovação automática de {formatPrice(planPrice)}/mês após o teste, cancelável a qualquer momento.
+                </p>
+              )}
+
 
               <div className="flex flex-col items-center gap-3 mt-3 pt-4 border-t border-border/30 bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                 <img src={securityBadgesImg} alt="Compra 100% Segura" className="h-9 sm:h-11 w-auto object-contain" />

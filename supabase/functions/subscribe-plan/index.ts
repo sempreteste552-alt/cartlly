@@ -57,14 +57,38 @@ Deno.serve(async (req) => {
       const gateway = cfg.plan_gateway || detectGateway(cfg);
       const hasKeys = !!getGatewayKeys(gateway, cfg).secretKey;
 
+      const { data: trialSetting } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "plan_trial_days")
+        .maybeSingle();
+      const trialDays = Number(trialSetting?.value?.value ?? trialSetting?.value ?? 7) || 0;
+
       return json({
         gateway: hasKeys ? gateway : null,
         methods: hasKeys ? getAvailableMethods(gateway) : [],
+        // Teste grátis só é possível com cartão salvo (hoje suportado no Asaas)
+        trial_days: hasKeys && gateway === "asaas" ? trialDays : 0,
+      });
+    }
+
+    // ==================== TRIAL STATUS ====================
+    if (body.action === "trial_status") {
+      const { data: sub } = await supabase
+        .from("tenant_subscriptions")
+        .select("trial_used, status, trial_ends_at")
+        .eq("user_id", body.user_id)
+        .maybeSingle();
+      return json({
+        trial_used: !!sub?.trial_used,
+        status: sub?.status ?? null,
+        trial_ends_at: sub?.trial_ends_at ?? null,
       });
     }
 
     // ==================== PROCESS PAYMENT ====================
     const { user_id, plan_id, payment_method, document, phone, card, card_token, installments, device_id, payment_method_id, issuer_id, payer_name, payer_email } = body;
+    const wantsTrial = body.start_trial === true;
 
     if (!user_id || !plan_id) {
       return json({ error: "Dados incompletos" }, 400);
@@ -79,6 +103,36 @@ Deno.serve(async (req) => {
 
     if (planErr || !plan) return json({ error: "Plano não encontrado" }, 404);
     if (plan.price <= 0) return json({ error: "Plano gratuito não requer pagamento" }, 400);
+
+    // ---------- Trial eligibility (card required upfront) ----------
+    let trialDays = 0;
+    if (wantsTrial) {
+      const { data: trialSetting } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "plan_trial_days")
+        .maybeSingle();
+      trialDays = Number(trialSetting?.value?.value ?? trialSetting?.value ?? 7) || 0;
+
+      if (trialDays <= 0) return json({ error: "Teste grátis indisponível no momento." }, 400);
+      if ((payment_method || "") !== "CREDIT_CARD") {
+        return json({ error: "O teste grátis exige um cartão de crédito válido." }, 400);
+      }
+
+      const { data: existing } = await supabase
+        .from("tenant_subscriptions")
+        .select("id, trial_used, status")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      if (existing?.trial_used) {
+        return json({ error: "Você já utilizou o período de teste grátis." }, 400);
+      }
+      if (existing?.status === "active") {
+        return json({ error: "Sua assinatura já está ativa." }, 400);
+      }
+    }
+
 
     // Get platform gateway settings
     const { data: settings } = await supabase
@@ -120,6 +174,10 @@ Deno.serve(async (req) => {
     const method = payment_method || "PIX";
     let result: any;
 
+    if (trialDays > 0 && gateway !== "asaas") {
+      return json({ error: "Teste grátis indisponível para o gateway configurado." }, 400);
+    }
+
     try {
       if (gateway === "mercadopago") {
         result = await processMercadoPago(keys.secretKey, plan, method, tenantEmail, tenantName, document, card_token, installments, user_id, device_id, payment_method_id, issuer_id);
@@ -128,13 +186,70 @@ Deno.serve(async (req) => {
       } else if (gateway === "amplopay") {
         result = await processAmplopay(keys.secretKey, keys.publicKey, plan, method, tenantEmail, tenantName, document, phone, user_id);
       } else if (gateway === "asaas") {
-        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, card, installments, user_id);
+        result = await processAsaas(keys.secretKey, plan, method, tenantEmail, tenantName, document, phone, card_token, card, installments, user_id, trialDays);
       } else {
         return json({ error: `Gateway "${gateway}" não suportado` }, 400);
       }
     } catch (gwErr: any) {
       console.error(`Subscribe gateway ${gateway} error:`, gwErr.message);
       return json({ error: gwErr.message, gateway_error: true }, 502);
+    }
+
+    // ---------- Trial started: card saved, first charge scheduled ----------
+    if (result.status === "trial") {
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + trialDays * 86400 * 1000);
+
+      const { data: existingSub } = await supabase
+        .from("tenant_subscriptions")
+        .select("id")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      const payload: any = {
+        plan_id,
+        status: "trial",
+        trial_used: true,
+        trial_started_at: now.toISOString(),
+        trial_ends_at: trialEnd.toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: trialEnd.toISOString(),
+        asaas_subscription_id: result.subscription_id || null,
+        asaas_customer_id: result.customer_id || null,
+        billing_type: "CREDIT_CARD",
+        next_due_date: result.next_due_date || null,
+        trial_card_last4: result.card_last4 || null,
+        trial_card_brand: result.card_brand || null,
+        updated_at: now.toISOString(),
+      };
+
+      if (existingSub) {
+        await supabase.from("tenant_subscriptions").update(payload).eq("id", existingSub.id);
+      } else {
+        await supabase.from("tenant_subscriptions").insert({ user_id, ...payload });
+      }
+
+      await supabase.from("admin_notifications").insert({
+        sender_user_id: user_id,
+        target_user_id: user_id,
+        title: "🎁 Teste grátis ativado!",
+        message: `Você tem ${trialDays} dias grátis no plano ${plan.name}. A primeira cobrança de R$ ${Number(plan.price).toFixed(2)} será feita automaticamente no cartão final ${result.card_last4 || "****"} em ${trialEnd.toLocaleDateString("pt-BR")}. Cancele antes e nada será cobrado.`,
+        type: "trial_started",
+      });
+
+      return json({
+        success: true,
+        status: "trial",
+        method,
+        gateway,
+        plan_name: plan.name,
+        plan_price: plan.price,
+        trial_days: trialDays,
+        trial_ends_at: trialEnd.toISOString(),
+        first_charge_date: result.next_due_date,
+        card: { lastFour: result.card_last4, brand: result.card_brand },
+        transaction_id: result.subscription_id,
+      });
     }
 
     // If card payment approved immediately, activate subscription
@@ -168,6 +283,7 @@ Deno.serve(async (req) => {
       boleto: result.boleto || null,
       card: result.card || null,
     });
+
   } catch (error: any) {
     console.error("Subscribe error:", error);
     return json({ error: error.message }, 500);
@@ -536,7 +652,8 @@ async function processAmplopay(
 async function processAsaas(
   apiKey: string, plan: any, method: string,
   email: string, name: string, document: string, phone: string,
-  cardToken: string | undefined, card: any | undefined, installments: number | undefined, userId: string
+  cardToken: string | undefined, card: any | undefined, installments: number | undefined, userId: string,
+  trialDays = 0, planValue?: number
 ) {
   const BASE_URL = "https://api.asaas.com/v3";
   const headers = {
@@ -581,35 +698,42 @@ async function processAsaas(
 
   // 2) Create subscription
   const today = new Date();
-  const nextDueDate = new Date(today.getTime() + 86400 * 1000).toISOString().split("T")[0]; // Amanhã
+  // Trial: a primeira cobrança só acontece quando o teste terminar.
+  const firstChargeInDays = trialDays > 0 ? trialDays : 1;
+  const nextDueDate = new Date(today.getTime() + firstChargeInDays * 86400 * 1000)
+    .toISOString().split("T")[0];
 
   const billingType = method === "PIX" ? "PIX"
     : method === "BOLETO" ? "BOLETO"
     : method === "CREDIT_CARD" ? "CREDIT_CARD"
     : "UNDEFINED";
 
+  const value = Number(planValue ?? plan.price);
+
   const subscriptionBody: any = {
     customer: customerId,
     billingType,
-    value: Number(plan.price),
+    value,
     nextDueDate,
     cycle: "MONTHLY",
-    description: `Assinatura plano ${plan.name}`,
+    description: trialDays > 0
+      ? `Assinatura plano ${plan.name} (após ${trialDays} dias de teste grátis)`
+      : `Assinatura plano ${plan.name}`,
     externalReference: `plan_${plan.id}_user_${userId}_${Date.now()}`,
   };
 
   if (method === "CREDIT_CARD") {
     if (cardToken) {
-      paymentBody.creditCardToken = cardToken;
+      subscriptionBody.creditCardToken = cardToken;
     } else if (card?.number && card?.holder && card?.expiry_month && card?.expiry_year && card?.cvv) {
-      paymentBody.creditCard = {
+      subscriptionBody.creditCard = {
         holderName: card.holder,
         number: String(card.number).replace(/\D/g, ""),
         expiryMonth: String(card.expiry_month).padStart(2, "0"),
         expiryYear: String(card.expiry_year),
         ccv: String(card.cvv),
       };
-      paymentBody.creditCardHolderInfo = {
+      subscriptionBody.creditCardHolderInfo = {
         name: name || card.holder,
         email,
         cpfCnpj: cleanDoc,
@@ -621,11 +745,14 @@ async function processAsaas(
       throw new Error("Dados do cartão são obrigatórios.");
     }
 
-    if (installments && installments > 1) {
-      paymentBody.installmentCount = installments;
-      paymentBody.totalValue = Number(plan.price);
+    if (trialDays <= 0 && installments && installments > 1) {
+      subscriptionBody.installmentCount = installments;
+      subscriptionBody.totalValue = value;
     }
+  } else if (trialDays > 0) {
+    throw new Error("O teste grátis exige cartão de crédito.");
   }
+
 
   const payRes = await fetch(`${BASE_URL}/subscriptions`, {
     method: "POST",
@@ -665,11 +792,25 @@ async function processAsaas(
     throw new Error(friendly);
   }
 
-  const status = payData.status === "CONFIRMED" || payData.status === "RECEIVED" ? "approved"
+  const status = trialDays > 0 ? "trial"
+    : payData.status === "CONFIRMED" || payData.status === "RECEIVED" ? "approved"
     : payData.status === "REFUSED" || payData.status === "REFUNDED" ? "rejected"
     : "pending";
 
-  const result: any = { gateway_payment_id: payData.id, status };
+  const result: any = {
+    gateway_payment_id: payData.id,
+    status,
+    subscription_id: payData.id,
+    customer_id: customerId,
+    next_due_date: payData.nextDueDate || nextDueDate,
+    card_last4: payData.creditCard?.creditCardNumber?.slice(-4) || null,
+    card_brand: payData.creditCard?.creditCardBrand || null,
+  };
+
+  // Teste grátis: nada é cobrado agora, a cobrança já fica agendada no cartão.
+  if (trialDays > 0) return result;
+
+
 
   // 3) Get PIX QR Code if applicable
   if (method === "PIX") {
