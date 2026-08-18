@@ -59,7 +59,7 @@ interface PlatformConfig {
 
 const defaultConfig: PlatformConfig = {
   platform_name: "Cartlly",
-  platform_email: "contato@cartlly.lovable.app",
+  platform_email: "contato@cartlly.store",
   default_trial_days: 7,
   auto_confirm_emails: false,
   maintenance_mode: false,

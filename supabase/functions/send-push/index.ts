@@ -329,7 +329,7 @@ serve(async (req) => {
           sub.endpoint,
           vapidPublicKey,
           vapidPrivateKey,
-          "mailto:noreply@www.cartlly.lovable.app"
+          "mailto:noreply@cartlly.store"
         );
 
         // Encrypt the payload using Web Push encryption (aes128gcm)

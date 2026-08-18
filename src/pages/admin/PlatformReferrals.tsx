@@ -173,7 +173,7 @@ export default function Indicacoes() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [emailSearch, setEmailSearch] = useState("");
 
-  const PRODUCTION_ORIGIN = "https://www.cartlly.lovable.app";
+  const PRODUCTION_ORIGIN = "https://www.cartlly.store";
   const referralLink = code?.code ? `${PRODUCTION_ORIGIN}/login?ref=${code.code}` : "";
 
   const filteredReferrals = useMemo(() => {

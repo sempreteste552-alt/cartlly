@@ -1,4 +1,4 @@
-const FALLBACK_APP_ORIGIN = "https://www.cartlly.lovable.app";
+const FALLBACK_APP_ORIGIN = "https://www.cartlly.store";
 
 function isPreviewHost(hostname: string) {
   return (
