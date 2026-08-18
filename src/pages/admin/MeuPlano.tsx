@@ -37,7 +37,7 @@ export default function MeuPlano() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number } | null>(null);
+  const [checkoutDialog, setCheckoutDialog] = useState<{ planId: string; planName: string; price: number; trial?: boolean } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Auto-open checkout when navigated with ?upgrade=PRO etc.
