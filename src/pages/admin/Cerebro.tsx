@@ -637,6 +637,13 @@ Apresente-se brevemente ao lojista mostrando como você vai se comportar a parti
 
 export default function Cerebro() {
   const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
+
+  const aiGate = !aiLoading && !aiEnabled ? (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AIDisabledNotice featureName="Cérebro da IA" />
+    </div>
+  ) : null;
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [input, setInput] = useState("");

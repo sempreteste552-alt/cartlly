@@ -45,6 +45,13 @@ const PLAN_LABEL: Record<PlanSlug, string> = {
 
 export default function AdminAIFeatures() {
   const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
+
+  const aiGate = !aiLoading && !aiEnabled ? (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AIDisabledNotice featureName="Recursos de IA" />
+    </div>
+  ) : null;
+
   const { slug } = useParams();
   const { ctx, plan: currentPlan } = useTenantContext();
   const planSlug = (ctx?.planSlug ?? "FREE") as PlanSlug;

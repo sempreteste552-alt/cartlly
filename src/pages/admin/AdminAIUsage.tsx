@@ -14,6 +14,13 @@ import { AINav } from "@/components/admin/AINav";
 
 export default function AdminAIUsage() {
   const { aiEnabled, isLoading: aiLoading } = useAIPlatformStatus();
+
+  const aiGate = !aiLoading && !aiEnabled ? (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AIDisabledNotice featureName="Consumo de IA" />
+    </div>
+  ) : null;
+
   const { data: logs, isLoading } = useQuery({
     queryKey: ["ai-usage-logs-tenant"],
     queryFn: async () => {
