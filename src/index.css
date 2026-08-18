@@ -51,6 +51,49 @@ html, body {
   }
 }
 
+/* ---- Installed PWA (standalone) : lock the shell on every device ---- */
+@media all and (display-mode: standalone) {
+  html, body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+  /* storefront still needs to scroll — but inside the shell, not the page */
+  html.storefront-scroll #root {
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  main,
+  [data-scroll-pane] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  input, select, textarea { font-size: 16px; }
+}
+
+/* iOS standalone: respect notch / home indicator */
+@supports (padding: env(safe-area-inset-top)) {
+  @media all and (display-mode: standalone) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
+
+
 
 
 
