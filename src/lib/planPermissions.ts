@@ -45,7 +45,8 @@ export type FeatureKey =
   | "profit_reports"
   | "payment_dashboard"
   | "whatsapp_ai"
-  | "manual_sales";
+  | "manual_sales"
+  | "social_product_import";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
