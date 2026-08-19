@@ -45,7 +45,8 @@ export type FeatureKey =
   | "profit_reports"
   | "payment_dashboard"
   | "whatsapp_ai"
-  | "manual_sales";
+  | "manual_sales"
+  | "social_product_import";
 
 export type PlanSlug = "FREE" | "STARTER" | "PRO" | "PREMIUM";
 
@@ -136,6 +137,7 @@ export const FEATURE_CATALOG: Record<FeatureKey, FeatureMeta> = {
   payment_dashboard:    { label: "Dashboard de Pagamentos", description: "Painel de pagamentos e transações", minPlan: "STARTER", category: "marketing" },
   whatsapp_ai:          { label: "WhatsApp IA", description: "Atendimento automatizado via WhatsApp", minPlan: "PREMIUM", category: "ai" },
   manual_sales:         { label: "Vendas Externas", description: "Registrar vendas fora do site", minPlan: "STARTER", category: "basic" },
+  social_product_import:{ label: "Integração com Redes Sociais", description: "Transforme posts do Instagram e Facebook em produtos com IA", minPlan: "PREMIUM", category: "ai" },
 };
 
 // ─── Plan hierarchy ───────────────────────────────────────────────

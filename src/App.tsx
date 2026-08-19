@@ -48,6 +48,9 @@ const Notificacoes = lazy(() => import("./pages/admin/Notificacoes"));
 const Suporte = lazy(() => import("./pages/admin/Suporte"));
 const MinhaRoleta = lazy(() => import("./pages/admin/MinhaRoleta"));
 const VendasExternas = lazy(() => import("./pages/admin/VendasExternas"));
+const SocialIntegrations = lazy(() => import("./pages/admin/SocialIntegrations"));
+const SocialProductReview = lazy(() => import("./pages/admin/SocialProductReview"));
+const SocialHistory = lazy(() => import("./pages/admin/SocialHistory"));
 
 // Store/Shop pages
 const LojaPolitica = lazy(() => import("./pages/loja/LojaPolitica"));
@@ -221,6 +224,9 @@ const App = () => {
                     <Route path="suporte" element={<Suporte />} />
                     <Route path="roleta" element={<MinhaRoleta />} />
                     <Route path="vendas-externas" element={<VendasExternas />} />
+                    <Route path="social" element={<SocialIntegrations />} />
+                    <Route path="social/produtos/:id" element={<SocialProductReview />} />
+                    <Route path="social/historico" element={<SocialHistory />} />
                   </Route>
                   {/* Auth redirects and legacy handlers */}
                   <Route path="/auth/*" element={<Navigate to="/" replace />} />
