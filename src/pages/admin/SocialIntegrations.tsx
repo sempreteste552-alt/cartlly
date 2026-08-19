@@ -32,6 +32,7 @@ export default function SocialIntegrations() {
 
 function SocialIntegrationsInner() {
   const { slug } = useParams();
+  const base = slug ? `/painel/${slug}` : "/admin";
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { data: connections = [], refetch } = useSocialConnections();
@@ -108,7 +109,7 @@ function SocialIntegrationsInner() {
             <p className="text-sm flex-1 min-w-0">
               <strong>{pending.length}</strong> possível(is) produto(s) aguardando sua revisão.
             </p>
-            <Button size="sm" onClick={() => navigate(`/painel/${slug}/social/produtos/${pending[0].id}`)}>
+            <Button size="sm" onClick={() => navigate(`${base}/social/produtos/${pending[0].id}`)}>
               Revisar agora
             </Button>
           </CardContent>
@@ -203,7 +204,7 @@ function SocialIntegrationsInner() {
         ))}
       </div>
 
-      <Button variant="outline" onClick={() => navigate(`/painel/${slug}/social/historico`)}>
+      <Button variant="outline" onClick={() => navigate(`${base}/social/historico`)}>
         <History className="h-4 w-4 mr-2" /> Ver histórico
       </Button>
 

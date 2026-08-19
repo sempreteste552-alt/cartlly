@@ -25,6 +25,7 @@ export default function SocialHistory() {
 
 function HistoryInner() {
   const { slug } = useParams();
+  const base = slug ? `/painel/${slug}` : "/admin";
   const navigate = useNavigate();
   const { data: all = [], isLoading } = useSocialSuggestions();
 
@@ -37,7 +38,7 @@ function HistoryInner() {
 
   return (
     <div className="space-y-5">
-      <Button variant="ghost" size="sm" onClick={() => navigate(`/painel/${slug}/social`)}>
+      <Button variant="ghost" size="sm" onClick={() => navigate(`${base}/social`)}>
         <ArrowLeft className="h-4 w-4 mr-1.5" /> Voltar
       </Button>
       <h1 className="text-2xl font-bold">Histórico de importações</h1>
@@ -59,7 +60,7 @@ function HistoryInner() {
               const Icon = provider === "facebook" ? Facebook : Instagram;
               return (
                 <Card key={s.id} className="cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() => navigate(`/painel/${slug}/social/produtos/${s.id}`)}>
+                  onClick={() => navigate(`${base}/social/produtos/${s.id}`)}>
                   <CardContent className="p-3 flex items-center gap-3">
                     {s.image_url ? (
                       <img src={s.image_url} alt={s.suggested_name || "Produto"} loading="lazy"

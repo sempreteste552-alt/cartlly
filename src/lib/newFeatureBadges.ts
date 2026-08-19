@@ -9,6 +9,7 @@ export const NEW_BADGE_DAYS = 30;
 // basta adicionar/atualizar a data aqui — o selo expira sozinho em 30 dias.
 export const FEATURE_RELEASE_DATES: Record<string, string> = {
   vendas_externas: "2025-11-01",
+  redes_sociais: "2026-08-19",
   colaboradores: "2025-09-15",
   central_ia: "2025-10-01",
   automacao: "2025-08-20",

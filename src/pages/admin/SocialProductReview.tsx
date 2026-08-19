@@ -23,6 +23,7 @@ export default function SocialProductReview() {
 
 function ReviewInner() {
   const { slug, id } = useParams();
+  const base = slug ? `/painel/${slug}` : "/admin";
   const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -113,7 +114,7 @@ function ReviewInner() {
       if (data?.error) throw new Error(data.error);
       toast.success("Produto adicionado à sua loja com sucesso.");
       qc.invalidateQueries({ queryKey: ["social_suggestions"] });
-      navigate(`/painel/${slug}/produtos`);
+      navigate(`${base}/produtos`);
     } catch (e: any) {
       toast.error(e.message || "Não conseguimos adicionar o produto.");
     } finally {
@@ -125,7 +126,7 @@ function ReviewInner() {
     await supabase.from("social_product_suggestions" as any).update({ status: "REJECTED" }).eq("id", id);
     qc.invalidateQueries({ queryKey: ["social_suggestions"] });
     toast.success("Publicação ignorada.");
-    navigate(`/painel/${slug}/social`);
+    navigate(`${base}/social`);
   };
 
   if (isLoading) return <div className="p-6 flex justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
@@ -135,7 +136,7 @@ function ReviewInner() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <Button variant="ghost" size="sm" onClick={() => navigate(`/painel/${slug}/social`)}>
+      <Button variant="ghost" size="sm" onClick={() => navigate(`${base}/social`)}>
         <ArrowLeft className="h-4 w-4 mr-1.5" /> Voltar
       </Button>
 
