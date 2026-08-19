@@ -133,30 +133,40 @@ export function useSocialAnalytics() {
   });
 }
 
-export async function startSocialConnect(provider: SocialProvider) {
-  const { data, error } = await supabase.functions.invoke("social-oauth", {
-    body: { action: "authorize_url", provider, return_url: window.location.href },
-  });
-  if (error) throw new Error(error.message);
-  if (data?.error === "META_NOT_CONFIGURED") {
-    throw new Error("A integração com a Meta ainda não foi configurada pela plataforma.");
+const SOCIAL_ERRORS: Record<string, string> = {
+  META_NOT_CONFIGURED: "A conexão com Instagram/Facebook ainda não foi liberada pela plataforma. Fale com o suporte.",
+  PLAN_REQUIRED: "Recurso disponível apenas no plano Premium.",
+};
+
+/** Lê o corpo JSON mesmo quando a função responde com status de erro (400/500). */
+async function invokeSocial(body: Record<string, unknown>) {
+  const { data, error } = await supabase.functions.invoke("social-oauth", { body });
+  let payload: any = data;
+  if (error) {
+    const res = (error as any)?.context;
+    if (res && typeof res.json === "function") {
+      try { payload = await res.json(); } catch { /* corpo não-JSON */ }
+    }
+    if (!payload?.error) throw new Error(error.message || "Falha na comunicação com o servidor.");
   }
-  if (data?.error === "PLAN_REQUIRED") throw new Error("Recurso disponível apenas no plano Premium.");
-  if (!data?.url) throw new Error(data?.error || "Não foi possível iniciar a conexão.");
+  if (payload?.error) throw new Error(SOCIAL_ERRORS[payload.error] || payload.error);
+  return payload;
+}
+
+export async function startSocialConnect(provider: SocialProvider) {
+  const data = await invokeSocial({
+    action: "authorize_url",
+    provider,
+    return_url: window.location.href,
+  });
+  if (!data?.url) throw new Error("Não foi possível iniciar a conexão.");
   window.location.href = data.url;
 }
 
 export async function disconnectSocial(connectionId: string) {
-  const { data, error } = await supabase.functions.invoke("social-oauth", {
-    body: { action: "disconnect", connection_id: connectionId },
-  });
-  if (error || data?.error) throw new Error(data?.error || error?.message);
+  await invokeSocial({ action: "disconnect", connection_id: connectionId });
 }
 
 export async function syncSocialNow(connectionId: string) {
-  const { data, error } = await supabase.functions.invoke("social-oauth", {
-    body: { action: "sync_now", connection_id: connectionId },
-  });
-  if (error || data?.error) throw new Error(data?.error || error?.message);
-  return data as { new_posts: number };
+  return (await invokeSocial({ action: "sync_now", connection_id: connectionId })) as { new_posts: number };
 }
