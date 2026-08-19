@@ -108,6 +108,7 @@ export function AdminSidebar({ themeStyle }: { themeStyle?: CSSProperties }) {
   // Marketing & IA — consolidado: tudo de IA mora dentro de /ai (Cérebro, Automação IA, WhatsApp IA são abas internas)
   const marketingItems = [
     { title: locale === 'pt' ? 'Central de IA' : 'AI Center', url: `${adminBasePath}/ai`, icon: Sparkles, isNew: isFeatureNew('central_ia'), show: true },
+    { title: locale === 'pt' ? 'Redes Sociais' : 'Social Media', url: `${adminBasePath}/social`, icon: Instagram, isNew: isFeatureNew('redes_sociais'), show: true },
     { title: t.sidebar.coupons, url: `${adminBasePath}/cupons`, icon: Ticket, isNew: false, show: true },
     { title: t.sidebar.automation, url: `${adminBasePath}/automacao`, icon: Zap, isNew: isFeatureNew('automacao'), show: true },
     { title: t.sidebar.whatsappAi, url: `${adminBasePath}/whatsapp-ia`, icon: MessageCircle, isNew: isFeatureNew('whatsapp_ia'), show: true },
