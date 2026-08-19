@@ -164,16 +164,9 @@ export async function startSocialConnect(provider: SocialProvider) {
 }
 
 export async function disconnectSocial(connectionId: string) {
-  const { data, error } = await supabase.functions.invoke("social-oauth", {
-    body: { action: "disconnect", connection_id: connectionId },
-  });
-  if (error || data?.error) throw new Error(data?.error || error?.message);
+  await invokeSocial({ action: "disconnect", connection_id: connectionId });
 }
 
 export async function syncSocialNow(connectionId: string) {
-  const { data, error } = await supabase.functions.invoke("social-oauth", {
-    body: { action: "sync_now", connection_id: connectionId },
-  });
-  if (error || data?.error) throw new Error(data?.error || error?.message);
-  return data as { new_posts: number };
+  return (await invokeSocial({ action: "sync_now", connection_id: connectionId })) as { new_posts: number };
 }
